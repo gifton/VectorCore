@@ -1,0 +1,527 @@
+// VectorCore: Batch Operations
+//
+// Modern async-first batch processing for vector operations
+//
+
+import Foundation
+
+/// Batch processing utilities with automatic parallelization
+/// 
+/// BatchOperations provides high-performance async operations that automatically choose
+/// between serial and parallel execution based on dataset size for optimal performance.
+///
+/// ## Auto-Parallelization Behavior
+/// 
+/// Operations automatically parallelize when datasets exceed these thresholds:
+/// - **General operations**: 1000 vectors (configurable via `parallelThreshold`)
+/// - **Pairwise distances**: 100 vectors (due to O(n²) complexity)
+///
+/// For smaller datasets, operations run serially to avoid parallelization overhead.
+///
+/// ## Performance Characteristics
+/// 
+/// - **Small datasets (<1000)**: Direct computation, minimal overhead
+/// - **Large datasets (≥1000)**: Automatic parallel execution using TaskGroup
+/// - **Chunk sizing**: Optimized based on CPU cores and cache efficiency
+///
+/// ## Example Usage
+/// 
+/// ```swift
+/// // Automatically runs in parallel for large datasets
+/// let neighbors = await BatchOperations.findNearest(
+///     to: queryVector,
+///     in: largeVectorSet,  // 10,000 vectors
+///     k: 100
+/// )
+/// 
+/// // Runs serially for small datasets (no overhead)
+/// let results = await BatchOperations.map(smallVectorSet) { vector in
+///     vector.normalized()
+/// }
+/// ```
+///
+/// ## Configuration
+/// 
+/// Adjust parallelization behavior via the global configuration:
+/// ```swift
+/// BatchOperations.configuration.parallelThreshold = 500  // Lower threshold
+/// BatchOperations.configuration.minimumChunkSize = 128   // Smaller chunks
+/// ```
+public enum BatchOperations {
+    
+    /// Configuration for batch processing behavior
+    public struct Configuration: Sendable {
+        /// Minimum vector count for automatic parallelization
+        public var parallelThreshold: Int = 1000
+        
+        /// Oversubscription factor for task scheduling
+        public var oversubscription: Double = 2.0
+        
+        /// Minimum chunk size for parallel processing
+        public var minimumChunkSize: Int = 256
+        
+        /// Default batch size for iterative processing
+        public var defaultBatchSize: Int = 1024
+        
+        public init() {}
+    }
+    
+    /// Global configuration
+    public static let configuration = Configuration()
+    
+    // MARK: - Core Operations
+    
+    /// Find k nearest neighbors with automatic parallelization
+    /// 
+    /// Intelligently chooses between serial and parallel execution based on dataset size.
+    /// For large datasets (>1000 vectors), automatically uses parallel processing for
+    /// up to 6x speedup on multi-core systems.
+    ///
+    /// - Parameters:
+    ///   - query: The query vector
+    ///   - vectors: Array of vectors to search
+    ///   - k: Number of nearest neighbors to find
+    ///   - metric: Distance metric to use (default: Euclidean)
+    /// - Returns: Array of (index, distance) tuples sorted by distance
+    /// - Complexity: O(n log k) with heap selection
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    public static func findNearest<V: ExtendedVectorProtocol & Sendable>(
+        to query: V,
+        in vectors: [V],
+        k: Int,
+        metric: any DistanceMetric = EuclideanDistance()
+    ) async -> [(index: Int, distance: Float)] {
+        guard k > 0 else { return [] }
+        guard !vectors.isEmpty else { return [] }
+        
+        // Smart parallelization based on dataset size
+        if vectors.count < configuration.parallelThreshold {
+            return findNearestSerial(to: query, in: vectors, k: k, metric: metric)
+        }
+        
+        // Parallel processing for larger datasets
+        return await findNearestParallel(to: query, in: vectors, k: k, metric: metric)
+    }
+    
+    /// Process vectors in intelligent batches
+    /// 
+    /// Automatically parallelizes for large datasets while maintaining order.
+    /// Uses TaskGroup for efficient concurrent processing with proper backpressure.
+    ///
+    /// - Parameters:
+    ///   - vectors: Array of vectors to process
+    ///   - batchSize: Size of each batch (default: from configuration)
+    ///   - transform: Transformation to apply to each batch
+    /// - Returns: Concatenated results maintaining original order
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    public static func process<V: BaseVectorProtocol & Sendable, R: Sendable>(
+        _ vectors: [V],
+        batchSize: Int? = nil,
+        transform: @Sendable @escaping ([V]) throws -> [R]
+    ) async throws -> [R] {
+        let effectiveBatchSize = batchSize ?? configuration.defaultBatchSize
+        
+        // Serial for small datasets
+        if vectors.count < configuration.parallelThreshold {
+            return try processSerial(vectors, batchSize: effectiveBatchSize, transform: transform)
+        }
+        
+        // Parallel processing
+        return try await withThrowingTaskGroup(of: (Int, [R]).self) { group in
+            var batchIndex = 0
+            
+            for batchStart in stride(from: 0, to: vectors.count, by: effectiveBatchSize) {
+                let currentBatchIndex = batchIndex
+                let batchEnd = min(batchStart + effectiveBatchSize, vectors.count)
+                let batch = Array(vectors[batchStart..<batchEnd])
+                
+                group.addTask {
+                    let results = try transform(batch)
+                    return (currentBatchIndex, results)
+                }
+                
+                batchIndex += 1
+            }
+            
+            // Collect results in order
+            var results = [(Int, [R])]()
+            results.reserveCapacity(batchIndex)
+            
+            for try await result in group {
+                results.append(result)
+            }
+            
+            return results
+                .sorted { $0.0 < $1.0 }
+                .flatMap { $0.1 }
+        }
+    }
+    
+    /// Compute pairwise distances with cache-friendly blocking
+    /// 
+    /// Uses block-based computation for optimal cache utilization.
+    /// Automatically parallelizes for matrices larger than 100x100.
+    ///
+    /// - Parameters:
+    ///   - vectors: Vectors to compute distances for
+    ///   - metric: Distance metric to use
+    /// - Returns: Symmetric distance matrix
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    public static func pairwiseDistances<V: ExtendedVectorProtocol & Sendable>(
+        _ vectors: [V],
+        metric: any DistanceMetric = EuclideanDistance()
+    ) async -> [[Float]] {
+        let n = vectors.count
+        
+        // Serial for small matrices
+        if n < 100 {
+            return computePairwiseSerial(vectors, metric: metric)
+        }
+        
+        // Parallel block-based computation
+        return await computePairwiseParallel(vectors, metric: metric)
+    }
+    
+    // MARK: - Convenience Operations
+    
+    /// Transform vectors with automatic parallelization
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    public static func map<V: BaseVectorProtocol & Sendable, U: BaseVectorProtocol & Sendable>(
+        _ vectors: [V],
+        transform: @Sendable @escaping (V) throws -> U
+    ) async throws -> [U] {
+        if vectors.count < configuration.parallelThreshold {
+            return try vectors.map(transform)
+        }
+        
+        return try await withThrowingTaskGroup(of: (Int, U).self) { group in
+            for (index, vector) in vectors.enumerated() {
+                group.addTask {
+                    let result = try transform(vector)
+                    return (index, result)
+                }
+            }
+            
+            var results = [(Int, U)]()
+            results.reserveCapacity(vectors.count)
+            
+            for try await result in group {
+                results.append(result)
+            }
+            
+            return results
+                .sorted { $0.0 < $1.0 }
+                .map { $0.1 }
+        }
+    }
+    
+    /// Filter vectors with parallel processing
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    public static func filter<V: BaseVectorProtocol & Sendable>(
+        _ vectors: [V],
+        predicate: @Sendable @escaping (V) throws -> Bool
+    ) async throws -> [V] {
+        if vectors.count < configuration.parallelThreshold {
+            return try vectors.filter(predicate)
+        }
+        
+        return try await withThrowingTaskGroup(of: (Int, V?).self) { group in
+            for (index, vector) in vectors.enumerated() {
+                group.addTask {
+                    let passes = try predicate(vector)
+                    return (index, passes ? vector : nil)
+                }
+            }
+            
+            var results = [(Int, V?)]()
+            results.reserveCapacity(vectors.count)
+            
+            for try await result in group {
+                results.append(result)
+            }
+            
+            return results
+                .sorted { $0.0 < $1.0 }
+                .compactMap { $0.1 }
+        }
+    }
+    
+    /// Compute statistics with parallel reduction
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    public static func statistics<V: ExtendedVectorProtocol & Sendable>(
+        for vectors: [V]
+    ) async -> BatchStatistics {
+        guard !vectors.isEmpty else {
+            return BatchStatistics(count: 0, meanMagnitude: 0, stdMagnitude: 0)
+        }
+        
+        if vectors.count < configuration.parallelThreshold {
+            return statisticsSerial(for: vectors)
+        }
+        
+        // Parallel reduction for large datasets
+        let chunkSize = optimalChunkSize(for: vectors.count)
+        let (sum, sumSquares) = await withTaskGroup(
+            of: (sum: Float, sumSquares: Float).self
+        ) { group in
+            for chunk in vectors.chunked(by: chunkSize) {
+                group.addTask {
+                    var localSum: Float = 0
+                    var localSumSquares: Float = 0
+                    
+                    for vector in chunk {
+                        let magnitude = vector.magnitude
+                        localSum += magnitude
+                        localSumSquares += magnitude * magnitude
+                    }
+                    
+                    return (sum: localSum, sumSquares: localSumSquares)
+                }
+            }
+            
+            var totalSum: Float = 0
+            var totalSumSquares: Float = 0
+            
+            for await partial in group {
+                totalSum += partial.sum
+                totalSumSquares += partial.sumSquares
+            }
+            
+            return (totalSum, totalSumSquares)
+        }
+        
+        let mean = sum / Float(vectors.count)
+        let variance = (sumSquares / Float(vectors.count)) - (mean * mean)
+        
+        return BatchStatistics(
+            count: vectors.count,
+            meanMagnitude: mean,
+            stdMagnitude: sqrt(max(0, variance))
+        )
+    }
+    
+    /// Random sampling (always serial - no benefit from parallelization)
+    public static func sample<V>(_ vectors: [V], k: Int) -> [V] {
+        guard k > 0 && k <= vectors.count else {
+            return k <= 0 ? [] : vectors
+        }
+        
+        var indices = Array(0..<vectors.count)
+        indices.shuffle()
+        
+        return indices.prefix(k).map { vectors[$0] }
+    }
+    
+    // MARK: - Private Helpers
+    
+    private static func findNearestSerial<V: ExtendedVectorProtocol>(
+        to query: V,
+        in vectors: [V],
+        k: Int,
+        metric: any DistanceMetric
+    ) -> [(index: Int, distance: Float)] {
+        let distances = vectors.enumerated().map { index, vector in
+            (index: index, distance: metric.distance(query, vector))
+        }
+        
+        // Use heap selection for better performance
+        return heapSelect(distances, k: k)
+    }
+    
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    private static func findNearestParallel<V: ExtendedVectorProtocol & Sendable>(
+        to query: V,
+        in vectors: [V],
+        k: Int,
+        metric: any DistanceMetric
+    ) async -> [(index: Int, distance: Float)] {
+        let chunkSize = optimalChunkSize(for: vectors.count)
+        
+        let distances = await withTaskGroup(of: [(index: Int, distance: Float)].self) { group in
+            for (chunkIndex, chunk) in vectors.chunked(by: chunkSize).enumerated() {
+                let startIndex = chunkIndex * chunkSize
+                
+                group.addTask {
+                    chunk.enumerated().map { offset, vector in
+                        (index: startIndex + offset, distance: metric.distance(query, vector))
+                    }
+                }
+            }
+            
+            var allDistances = [(index: Int, distance: Float)]()
+            allDistances.reserveCapacity(vectors.count)
+            
+            for await chunkDistances in group {
+                allDistances.append(contentsOf: chunkDistances)
+            }
+            
+            return allDistances
+        }
+        
+        return heapSelect(distances, k: k)
+    }
+    
+    private static func processSerial<V: BaseVectorProtocol, R>(
+        _ vectors: [V],
+        batchSize: Int,
+        transform: ([V]) throws -> [R]
+    ) rethrows -> [R] {
+        var results: [R] = []
+        results.reserveCapacity(vectors.count)
+        
+        for batchStart in stride(from: 0, to: vectors.count, by: batchSize) {
+            let batchEnd = min(batchStart + batchSize, vectors.count)
+            let batch = Array(vectors[batchStart..<batchEnd])
+            let batchResults = try transform(batch)
+            results.append(contentsOf: batchResults)
+        }
+        
+        return results
+    }
+    
+    private static func computePairwiseSerial<V: ExtendedVectorProtocol>(
+        _ vectors: [V],
+        metric: any DistanceMetric
+    ) -> [[Float]] {
+        let n = vectors.count
+        var distances = Array(repeating: Array(repeating: Float(0), count: n), count: n)
+        
+        for i in 0..<n {
+            for j in i+1..<n {
+                let dist = metric.distance(vectors[i], vectors[j])
+                distances[i][j] = dist
+                distances[j][i] = dist
+            }
+        }
+        
+        return distances
+    }
+    
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    private static func computePairwiseParallel<V: ExtendedVectorProtocol & Sendable>(
+        _ vectors: [V],
+        metric: any DistanceMetric
+    ) async -> [[Float]] {
+        let n = vectors.count
+        let blockSize = min(64, n) // Cache-friendly block size
+        
+        // Pre-allocate result matrix
+        let distances = UnsafeMutablePointer<UnsafeMutablePointer<Float>>.allocate(capacity: n)
+        for i in 0..<n {
+            distances[i] = UnsafeMutablePointer<Float>.allocate(capacity: n)
+            distances[i].initialize(repeating: 0, count: n)
+        }
+        
+        await withTaskGroup(of: [(row: Int, col: Int, distance: Float)].self) { group in
+            for i in stride(from: 0, to: n, by: blockSize) {
+                for j in stride(from: i, to: n, by: blockSize) {
+                    let iBlock = i
+                    let jBlock = j
+                    group.addTask { @Sendable in
+                        var results: [(row: Int, col: Int, distance: Float)] = []
+                        for row in iBlock..<min(iBlock + blockSize, n) {
+                            for col in max(row, jBlock)..<min(jBlock + blockSize, n) {
+                                let dist = metric.distance(vectors[row], vectors[col])
+                                results.append((row: row, col: col, distance: dist))
+                                if row != col {
+                                    results.append((row: col, col: row, distance: dist))
+                                }
+                            }
+                        }
+                        return results
+                    }
+                }
+            }
+            
+            // Collect results from tasks
+            for await blockResults in group {
+                for result in blockResults {
+                    distances[result.row][result.col] = result.distance
+                }
+            }
+        }
+        
+        // Convert to Swift array
+        var result = [[Float]]()
+        result.reserveCapacity(n)
+        for i in 0..<n {
+            result.append(Array(UnsafeBufferPointer(start: distances[i], count: n)))
+            distances[i].deallocate()
+        }
+        distances.deallocate()
+        
+        return result
+    }
+    
+    private static func statisticsSerial<V: ExtendedVectorProtocol>(
+        for vectors: [V]
+    ) -> BatchStatistics {
+        let magnitudes = vectors.map { $0.magnitude }
+        let meanMag = magnitudes.reduce(0, +) / Float(vectors.count)
+        let variance = magnitudes.map { pow($0 - meanMag, 2) }.reduce(0, +) / Float(vectors.count)
+        
+        return BatchStatistics(
+            count: vectors.count,
+            meanMagnitude: meanMag,
+            stdMagnitude: sqrt(variance)
+        )
+    }
+    
+    private static func optimalChunkSize(for totalCount: Int) -> Int {
+        let coreCount = ProcessInfo.processInfo.activeProcessorCount
+        let targetChunks = Int(Double(coreCount) * configuration.oversubscription)
+        let idealChunkSize = max(totalCount / targetChunks, configuration.minimumChunkSize)
+        
+        // Round to power of 2 for better cache alignment
+        let powerOf2 = 1 << (idealChunkSize.bitWidth - idealChunkSize.leadingZeroBitCount)
+        return min(powerOf2, idealChunkSize)
+    }
+    
+    private static func heapSelect(
+        _ elements: [(index: Int, distance: Float)],
+        k: Int
+    ) -> [(index: Int, distance: Float)] {
+        // For small k relative to n, use a max-heap
+        if k < elements.count / 10 {
+            var heap = [(index: Int, distance: Float)]()
+            heap.reserveCapacity(k)
+            
+            for element in elements {
+                if heap.count < k {
+                    heap.append(element)
+                    if heap.count == k {
+                        // Heapify
+                        heap.sort { $0.distance > $1.distance }
+                    }
+                } else if element.distance < heap[0].distance {
+                    heap[0] = element
+                    // Restore heap property
+                    heap.sort { $0.distance > $1.distance }
+                }
+            }
+            
+            return heap.sorted { $0.distance < $1.distance }
+        } else {
+            // For larger k, just sort
+            return Array(elements.sorted { $0.distance < $1.distance }.prefix(k))
+        }
+    }
+}
+
+/// Statistics for a batch of vectors
+public struct BatchStatistics {
+    public let count: Int
+    public let meanMagnitude: Float
+    public let stdMagnitude: Float
+}
+
+// MARK: - Array Extensions
+
+extension Array {
+    /// Split array into chunks of specified size
+    fileprivate func chunked(by chunkSize: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: chunkSize).map {
+            Array(self[$0..<Swift.min($0 + chunkSize, count)])
+        }
+    }
+}

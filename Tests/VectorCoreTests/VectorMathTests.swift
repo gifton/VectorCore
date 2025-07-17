@@ -426,7 +426,7 @@ final class VectorMathTests: XCTestCase {
         }
         
         // Off-diagonal should be sqrt(2) for these unit vectors
-        let expectedDist = sqrt(2.0)
+        let expectedDist: Float = sqrt(2.0)
         for i in 0..<3 {
             for j in 0..<3 where i != j {
                 XCTAssertEqual(distances[i][j], expectedDist, accuracy: 1e-6)

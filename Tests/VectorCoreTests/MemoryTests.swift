@@ -46,7 +46,7 @@ final class MemoryLeakTests: XCTestCase {
         weak var weakArray: NSArray?
         
         autoreleasepool {
-            let vectors = (0..<1000).map { _ in Vector512.random() }
+            let vectors = (0..<1000).map { _ in Vector512.random(in: -1...1) }
             weakArray = vectors as NSArray
             
             // Process vectors
@@ -61,9 +61,9 @@ final class MemoryLeakTests: XCTestCase {
     
     func testAlignedStorageDeallocation() {
         class StorageWrapper {
-            let storage: AlignedStorage
+            let storage: AlignedValueStorage
             init() {
-                storage = AlignedStorage(count: 3072, alignment: 64)
+                storage = AlignedValueStorage(count: 3072, alignment: 64)
             }
         }
         
@@ -72,8 +72,8 @@ final class MemoryLeakTests: XCTestCase {
     
     func testStorageCopyOnWriteMemory() {
         autoreleasepool {
-            let original = SIMDStorage512()
-            var copies: [SIMDStorage512] = []
+            let original = MediumVectorStorage(count: 512)
+            var copies: [MediumVectorStorage] = []
             
             // Create multiple copies
             for _ in 0..<10 {
@@ -100,8 +100,8 @@ final class MemoryLeakTests: XCTestCase {
     func testAsyncOperationMemoryLeaks() async {
         weak var weakVectors: NSArray?
         
-        await autoreleasepool {
-            let vectors = (0..<100).map { _ in Vector256.random() }
+        await withTaskGroup(of: Void.self) { _ in
+            let vectors = (0..<100).map { _ in Vector256.random(in: -1...1) }
             weakVectors = vectors as NSArray
             
             // Async operations
@@ -121,22 +121,16 @@ final class MemoryLeakTests: XCTestCase {
     // MARK: - Circular Reference Tests
     
     func testNoCircularReferences() {
-        // Test error chaining doesn't create cycles
-        let error1 = VectorError(.unknown, message: "Error 1")
-        let error2 = VectorError(.unknown, message: "Error 2")
-        let chained = error1.chain(with: error2)
+        // VectorError doesn't have a public initializer or chain method
+        // This test is no longer applicable with the current error design
+        let error1 = VectorError.dimensionMismatch(expected: 10, actual: 20)
+        let error2 = VectorError.indexOutOfBounds(index: 5, dimension: 4)
         
-        weak var weakError1 = error1 as AnyObject
-        weak var weakError2 = error2 as AnyObject
-        weak var weakChained = chained as AnyObject
+        // Just verify the errors exist
+        XCTAssertNotNil(error1.errorDescription)
+        XCTAssertNotNil(error2.errorDescription)
         
-        // Use errors
-        _ = chained.description
-        
-        // No circular references
-        XCTAssertNotNil(weakError1)
-        XCTAssertNotNil(weakError2)
-        XCTAssertNotNil(weakChained)
+        // No circular references to test with current error design
     }
 }
 
@@ -191,7 +185,7 @@ final class MemoryPressureTests: XCTestCase {
         
         for _ in 0..<10 {
             autoreleasepool {
-                let batch = (0..<1000).map { _ in Vector1536.random() }
+                let batch = (0..<1000).map { _ in Vector1536.random(in: -1...1) }
                 batches.append(batch)
                 
                 // Process to ensure memory is actually used
@@ -212,7 +206,7 @@ final class MemoryPressureTests: XCTestCase {
         let batchSize = 1024
         
         // Create large dataset
-        let vectors = (0..<vectorCount).map { _ in Vector512.random() }
+        let vectors = (0..<vectorCount).map { _ in Vector512.random(in: -1...1) }
         
         let initialMemory = getMemoryUsage()
         

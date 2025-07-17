@@ -91,12 +91,9 @@ final class VectorTypeTests: XCTestCase {
     // MARK: - Vector512 Tests
     
     func testVector512Initialization() {
-        // Test initializer with unsafe buffer
-        let vector = Vector512(unsafeUninitializedCapacity: 512) { buffer in
-            for i in 0..<512 {
-                buffer[i] = Float(i) * 0.5
-            }
-        }
+        // Test initializer with array
+        let values = (0..<512).map { Float($0) * 0.5 }
+        let vector = Vector512(values)
         
         for i in 0..<512 {
             XCTAssertEqual(vector[i], Float(i) * 0.5, accuracy: 0.001)
@@ -126,7 +123,14 @@ final class VectorTypeTests: XCTestCase {
     
     func testVector512BatchCreation() {
         let flatArray = (0..<1024).map { Float($0) }
-        let vectors = Vector512.createBatch(from: flatArray)
+        // Manually create batch instead of using removed method
+        var vectors: [Vector512] = []
+        for i in stride(from: 0, to: flatArray.count, by: 512) {
+            let slice = Array(flatArray[i..<min(i+512, flatArray.count)])
+            if slice.count == 512 {
+                vectors.append(Vector512(slice))
+            }
+        }
         
         XCTAssertEqual(vectors.count, 2)
         
@@ -242,7 +246,14 @@ final class VectorTypeTests: XCTestCase {
         let data = (0..<51200).map { Float($0) } // 100 Vector512s
         
         measure {
-            _ = Vector512.createBatch(from: data)
+            var vectors: [Vector512] = []
+            vectors.reserveCapacity(data.count / 512)
+            for i in stride(from: 0, to: data.count, by: 512) {
+                let slice = Array(data[i..<min(i+512, data.count)])
+                if slice.count == 512 {
+                    vectors.append(Vector512(slice))
+                }
+            }
         }
     }
 }

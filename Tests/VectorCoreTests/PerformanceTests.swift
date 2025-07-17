@@ -15,6 +15,152 @@ final class PerformanceTests: XCTestCase {
     
     // MARK: - Vector Operation Performance
     
+    // MARK: Vector Addition Performance Tests
+    
+    func testVector32AdditionPerformance() {
+        let a = Vector<Dim32>.random(in: -1...1)
+        let b = Vector<Dim32>.random(in: -1...1)
+        
+        measure {
+            for _ in 0..<iterations {
+                _ = a + b
+            }
+        }
+    }
+    
+    func testVector128AdditionPerformance() {
+        let a = Vector<Dim128>.random(in: -1...1)
+        let b = Vector<Dim128>.random(in: -1...1)
+        
+        measure {
+            for _ in 0..<iterations {
+                _ = a + b
+            }
+        }
+    }
+    
+    func testVector256AdditionPerformance() {
+        let a = Vector<Dim256>.random(in: -1...1)
+        let b = Vector<Dim256>.random(in: -1...1)
+        
+        measure {
+            for _ in 0..<iterations {
+                _ = a + b
+            }
+        }
+    }
+    
+    func testVector512AdditionPerformance() {
+        let a = Vector<Dim512>.random(in: -1...1)
+        let b = Vector<Dim512>.random(in: -1...1)
+        
+        measure {
+            for _ in 0..<iterations {
+                _ = a + b
+            }
+        }
+    }
+    
+    /// Compare addition performance to dot product baseline
+    func testAdditionVsDotProductComparison() {
+        print("\n=== Vector Addition vs Dot Product Performance ===")
+        
+        // Test different dimensions
+        compareAdditionToDotProduct32()
+        compareAdditionToDotProduct128()
+        compareAdditionToDotProduct256()
+        compareAdditionToDotProduct512()
+    }
+    
+    private func compareAdditionToDotProduct32() {
+        let a = Vector<Dim32>.random(in: -1...1)
+        let b = Vector<Dim32>.random(in: -1...1)
+        compareAdditionToDotProduct(a: a, b: b, dimension: 32)
+    }
+    
+    private func compareAdditionToDotProduct128() {
+        let a = Vector<Dim128>.random(in: -1...1)
+        let b = Vector<Dim128>.random(in: -1...1)
+        compareAdditionToDotProduct(a: a, b: b, dimension: 128)
+    }
+    
+    private func compareAdditionToDotProduct256() {
+        let a = Vector<Dim256>.random(in: -1...1)
+        let b = Vector<Dim256>.random(in: -1...1)
+        compareAdditionToDotProduct(a: a, b: b, dimension: 256)
+    }
+    
+    private func compareAdditionToDotProduct512() {
+        let a = Vector<Dim512>.random(in: -1...1)
+        let b = Vector<Dim512>.random(in: -1...1)
+        compareAdditionToDotProduct(a: a, b: b, dimension: 512)
+    }
+    
+    private func compareAdditionToDotProduct<V: VectorType>(
+        a: V,
+        b: V,
+        dimension: Int
+    ) where V: ExtendedVectorProtocol {
+        let testIterations = 5000
+        
+        // Measure addition - need to cast to specific Vector type
+        var additionTime: TimeInterval = 0
+        
+        if let va = a as? Vector<Dim32>, let vb = b as? Vector<Dim32> {
+            additionTime = measureTime {
+                for _ in 0..<testIterations {
+                    _ = va + vb
+                }
+            }
+        } else if let va = a as? Vector<Dim128>, let vb = b as? Vector<Dim128> {
+            additionTime = measureTime {
+                for _ in 0..<testIterations {
+                    _ = va + vb
+                }
+            }
+        } else if let va = a as? Vector<Dim256>, let vb = b as? Vector<Dim256> {
+            additionTime = measureTime {
+                for _ in 0..<testIterations {
+                    _ = va + vb
+                }
+            }
+        } else if let va = a as? Vector<Dim512>, let vb = b as? Vector<Dim512> {
+            additionTime = measureTime {
+                for _ in 0..<testIterations {
+                    _ = va + vb
+                }
+            }
+        }
+        
+        // Measure dot product
+        let dotProductTime = measureTime {
+            for _ in 0..<testIterations {
+                _ = a.dotProduct(b)
+            }
+        }
+        
+        let additionOpsPerSec = Double(testIterations) / additionTime
+        let dotProductOpsPerSec = Double(testIterations) / dotProductTime
+        let ratio = additionOpsPerSec / dotProductOpsPerSec
+        
+        print("\nDimension \(dimension):")
+        print("  Addition: \(String(format: "%.2f", additionOpsPerSec / 1_000_000))M ops/sec")
+        print("  Dot Product: \(String(format: "%.2f", dotProductOpsPerSec / 1_000_000))M ops/sec")
+        print("  Ratio: \(String(format: "%.2f%%", ratio * 100)) (addition vs dot product)")
+        
+        if dimension >= 128 && ratio < 0.5 {
+            print("  ⚠️ WARNING: Addition is \(String(format: "%.1f", 1.0/ratio))x slower!")
+        }
+    }
+    
+    private func createRandomVector<V: ExtendedVectorProtocol>(
+        type: V.Type,
+        dimension: Int
+    ) -> V where V: Equatable {
+        let values = (0..<dimension).map { _ in Float.random(in: -1...1) }
+        return V(from: values)
+    }
+    
     func testVector512DotProductPerformance() {
         let a = Vector512(repeating: 0.5)
         let b = Vector512(repeating: 0.7)
@@ -147,8 +293,8 @@ final class PerformanceTests: XCTestCase {
         measure {
             for _ in 0..<iterations {
                 do {
-                    let serialized = try vector.serialize()
-                    _ = try Vector512.deserialize(from: serialized)
+                    let serialized = try vector.encodeBinary()
+                    _ = try Vector512.decodeBinary(from: serialized)
                 } catch {
                     XCTFail("Serialization failed: \(error)")
                 }
@@ -162,8 +308,11 @@ final class PerformanceTests: XCTestCase {
         measure {
             for _ in 0..<100 { // Fewer iterations for JSON
                 do {
-                    let json = try vector.serializeToJSON()
-                    _ = try Vector256.deserializeFromJSON(json)
+                    // JSON serialization not implemented
+                    let encoder = JSONEncoder()
+                    let data = try encoder.encode(vector)
+                    let decoder = JSONDecoder()
+                    _ = try decoder.decode(Vector256.self, from: data)
                 } catch {
                     XCTFail("JSON serialization failed: \(error)")
                 }
@@ -177,7 +326,14 @@ final class PerformanceTests: XCTestCase {
         let flatArray = (0..<51200).map { Float($0) } // 100 Vector512s
         
         measure {
-            _ = Vector512.createBatch(from: flatArray)
+            var vectors: [Vector512] = []
+            vectors.reserveCapacity(flatArray.count / 512)
+            for i in stride(from: 0, to: flatArray.count, by: 512) {
+                let slice = Array(flatArray[i..<min(i+512, flatArray.count)])
+                if slice.count == 512 {
+                    vectors.append(Vector512(slice))
+                }
+            }
         }
     }
     

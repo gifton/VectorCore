@@ -1,5 +1,8 @@
 import XCTest
 @testable import VectorCore
+#if canImport(Accelerate)
+import Accelerate
+#endif
 
 final class CrossPlatformTests: XCTestCase {
     
@@ -45,8 +48,7 @@ final class CrossPlatformTests: XCTestCase {
     
     func testAccelerateAvailability() {
         #if canImport(Accelerate)
-        // Test Accelerate operations
-        import Accelerate
+        // Test Accelerate operations - Accelerate should already be imported at file level
         var result: Float = 0
         let a: [Float] = [1, 2, 3, 4]
         let b: [Float] = [5, 6, 7, 8]

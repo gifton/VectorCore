@@ -59,6 +59,73 @@ extension Vector {
         }
         return result
     }
+    
+    /// Safe element-wise division with zero checking
+    ///
+    /// Computes: cᵢ = aᵢ / bᵢ for all i, with zero protection
+    ///
+    /// - Parameters:
+    ///   - lhs: Dividend vector
+    ///   - rhs: Divisor vector
+    /// - Throws: `VectorError.divisionByZero` if any element in rhs is zero
+    /// - Returns: Result of element-wise division
+    ///
+    /// Performance note: Adds zero-checking overhead compared to `./`
+    public static func safeDivide(_ lhs: Vector<D>, by rhs: Vector<D>) throws -> Vector<D> {
+        // Check for zeros in divisor
+        var hasZero = false
+        var zeroIndices: [Int] = []
+        
+        rhs.storage.withUnsafeBufferPointer { buffer in
+            for i in 0..<D.value {
+                if buffer[i] == 0 {
+                    hasZero = true
+                    zeroIndices.append(i)
+                }
+            }
+        }
+        
+        if hasZero {
+            throw VectorError.divisionByZero(operation: "safeDivide")
+        }
+        
+        // Perform division
+        return lhs ./ rhs
+    }
+    
+    /// Safe element-wise division with default value for division by zero
+    ///
+    /// Computes: cᵢ = (bᵢ ≠ 0) ? aᵢ / bᵢ : defaultValue
+    ///
+    /// - Parameters:
+    ///   - lhs: Dividend vector
+    ///   - rhs: Divisor vector
+    ///   - defaultValue: Value to use when divisor is zero (default: 0)
+    /// - Returns: Result with defaultValue where division by zero would occur
+    ///
+    /// Use cases:
+    /// - Masked operations where zeros indicate "ignore"
+    /// - Regularized division with safe fallback
+    @inlinable
+    public static func safeDivide(
+        _ lhs: Vector<D>,
+        by rhs: Vector<D>,
+        default defaultValue: Float = 0
+    ) -> Vector<D> {
+        var result = Vector<D>()
+        
+        result.storage.withUnsafeMutableBufferPointer { dest in
+            lhs.storage.withUnsafeBufferPointer { src1 in
+                rhs.storage.withUnsafeBufferPointer { src2 in
+                    for i in 0..<D.value {
+                        dest[i] = src2[i] != 0 ? src1[i] / src2[i] : defaultValue
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
 }
 
 // MARK: - Norms
@@ -69,9 +136,9 @@ extension Vector where D.Storage: VectorStorageOperations {
     /// Computes: Σ|xᵢ|
     ///
     /// Performance characteristics:
-    /// - vDSP_vabs + vDSP_sve: Two-pass SIMD implementation
-    /// - Temporary buffer allocation for absolute values
-    /// - Consider Manhattan distance metric for direct computation
+    /// - Small vectors (≤32): Direct loop to avoid allocation overhead
+    /// - Large vectors: vDSP_vabs + vDSP_sve SIMD implementation
+    /// - Optimized memory usage with single allocation
     ///
     /// Mathematical properties:
     /// - Always non-negative
@@ -80,12 +147,20 @@ extension Vector where D.Storage: VectorStorageOperations {
     @inlinable
     public var l1Norm: Float {
         var result: Float = 0
-        var temp = [Float](repeating: 0, count: D.value)
         storage.withUnsafeBufferPointer { buffer in
-            temp.withUnsafeMutableBufferPointer { tempBuffer in
-                vDSP_vabs(buffer.baseAddress!, 1,
-                         tempBuffer.baseAddress!, 1, vDSP_Length(D.value))
-                vDSP_sve(tempBuffer.baseAddress!, 1, &result, vDSP_Length(D.value))
+            // Small vector optimization
+            if D.value <= 32 {
+                for i in 0..<D.value {
+                    result += abs(buffer[i])
+                }
+            } else {
+                // Large vector: use vDSP
+                var temp = [Float](repeating: 0, count: D.value)
+                temp.withUnsafeMutableBufferPointer { tempBuffer in
+                    vDSP_vabs(buffer.baseAddress!, 1,
+                             tempBuffer.baseAddress!, 1, vDSP_Length(D.value))
+                    vDSP_sve(tempBuffer.baseAddress!, 1, &result, vDSP_Length(D.value))
+                }
             }
         }
         return result
@@ -194,9 +269,42 @@ extension Vector {
 
 extension Vector where D.Storage: VectorStorageOperations {
     /// Manhattan distance to another vector
+    ///
+    /// Optimized implementation that fuses operations for better performance
     @inlinable
     public func manhattanDistance(to other: Vector<D>) -> Float {
-        (self - other).l1Norm
+        var result: Float = 0
+        
+        storage.withUnsafeBufferPointer { buffer1 in
+            other.storage.withUnsafeBufferPointer { buffer2 in
+                // Small vector optimization: avoid allocation
+                if D.value <= 32 {
+                    for i in 0..<D.value {
+                        result += abs(buffer1[i] - buffer2[i])
+                    }
+                } else {
+                    // Large vector: use vDSP with fused operations
+                    var temp = [Float](repeating: 0, count: D.value)
+                    temp.withUnsafeMutableBufferPointer { tempBuffer in
+                        // Fused subtract and absolute value
+                        vDSP_vsub(buffer2.baseAddress!, 1,
+                                 buffer1.baseAddress!, 1,
+                                 tempBuffer.baseAddress!, 1,
+                                 vDSP_Length(D.value))
+                        
+                        vDSP_vabs(tempBuffer.baseAddress!, 1,
+                                 tempBuffer.baseAddress!, 1,
+                                 vDSP_Length(D.value))
+                        
+                        vDSP_sve(tempBuffer.baseAddress!, 1,
+                                &result,
+                                vDSP_Length(D.value))
+                    }
+                }
+            }
+        }
+        
+        return result
     }
     
     /// Chebyshev distance (L∞ distance)
@@ -295,6 +403,23 @@ extension Vector {
 
 // MARK: - Batch Operations
 
+/// Advanced mathematical operations for vectors.
+///
+/// `VectorMath` provides a collection of sophisticated vector operations
+/// beyond basic arithmetic, including nearest neighbor search, clustering
+/// support, and statistical computations. All operations are optimized
+/// for performance using Accelerate framework.
+///
+/// ## Categories
+/// - **Nearest Neighbor Search**: Find similar vectors efficiently
+/// - **Clustering Support**: Operations for k-means and related algorithms
+/// - **Statistical Operations**: Mean, variance, and other statistics
+/// - **Matrix Operations**: Batch vector operations
+///
+/// ## Performance Notes
+/// - Uses vDSP for optimal SIMD performance
+/// - Operations are designed for batch processing
+/// - Consider approximate methods for very large datasets
 public enum VectorMath {
     /// Find k nearest neighbors by distance
     ///
@@ -385,5 +510,109 @@ extension Vector {
     /// Create a vector filled with ones
     public static var one: Vector<D> {
         Vector(repeating: 1)
+    }
+    
+    /// Create a vector filled with zeros (method for compatibility)
+    public static func zeros() -> Vector<D> {
+        Vector()
+    }
+    
+    /// Create a vector filled with ones (method for compatibility)
+    public static func ones() -> Vector<D> {
+        Vector(repeating: 1)
+    }
+}
+
+// MARK: - Quality Metrics
+
+extension Vector where D.Storage: VectorStorageOperations {
+    /// Calculate sparsity (proportion of near-zero elements)
+    ///
+    /// - Parameter threshold: Values with absolute value <= threshold are considered zero
+    /// - Returns: Proportion of sparse elements (0.0 = dense, 1.0 = all zeros)
+    ///
+    /// Use cases:
+    /// - Compression decisions (sparse vectors can be stored efficiently)
+    /// - Quality assessment (very sparse vectors may indicate issues)
+    /// - Feature selection (identify uninformative features)
+    @inlinable
+    public func sparsity(threshold: Float = Float.ulpOfOne) -> Float {
+        var sparseCount = 0
+        for i in 0..<D.value {
+            let value = self[i]
+            // Non-finite values (NaN, Infinity) are not considered sparse
+            if value.isFinite && abs(value) <= threshold {
+                sparseCount += 1
+            }
+        }
+        return Float(sparseCount) / Float(D.value)
+    }
+    
+    /// Calculate Shannon entropy
+    ///
+    /// Treats the vector as a probability distribution after normalization.
+    /// Higher values indicate more uniform distribution of values.
+    ///
+    /// Formula: H(X) = -Σ(p_i * log(p_i)) where p_i = |x_i| / Σ|x_j|
+    ///
+    /// Returns:
+    /// - 0.0 for zero vectors or single-spike vectors
+    /// - Higher values for more distributed vectors
+    /// - Maximum entropy = log(n) for uniform distribution
+    ///
+    /// Use cases:
+    /// - Measure information content
+    /// - Detect concentrated vs distributed patterns
+    /// - Feature quality assessment
+    @inlinable
+    public var entropy: Float {
+        // Use optimized implementation for better performance
+        return entropyFast
+    }
+    
+    /// Comprehensive quality assessment
+    ///
+    /// Returns a VectorQuality struct containing multiple metrics for
+    /// assessing vector characteristics and quality.
+    public var quality: VectorQuality {
+        VectorQuality(
+            magnitude: magnitude,
+            variance: variance,
+            sparsity: sparsity(),
+            entropy: entropy
+        )
+    }
+}
+
+// MARK: - Serialization
+
+extension Vector where D.Storage: VectorStorageOperations {
+    /// Base64-encoded representation of the vector
+    ///
+    /// Uses the binary encoding format with CRC32 checksum for data integrity.
+    /// Useful for:
+    /// - Transmitting vectors over text-based protocols
+    /// - Storing vectors in JSON/XML
+    /// - Embedding vectors in URLs
+    public var base64Encoded: String {
+        guard let data = try? encodeBinary() else {
+            return ""  // Should not happen for valid vectors
+        }
+        return data.base64EncodedString()
+    }
+    
+    /// Decode vector from base64 string
+    ///
+    /// - Parameter base64String: Base64-encoded vector data
+    /// - Returns: Decoded vector
+    /// - Throws: VectorError if decoding fails or dimension mismatch
+    public static func base64Decoded(from base64String: String) throws -> Vector<D> {
+        guard let data = Data(base64Encoded: base64String) else {
+            throw VectorError.invalidDataFormat(
+                expected: "base64",
+                actual: "invalid base64 string"
+            )
+        }
+        return try decodeBinary(from: data)
     }
 }

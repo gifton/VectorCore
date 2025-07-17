@@ -1,0 +1,34 @@
+# CODEOWNERS for VectorCore
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence, they will be requested for
+# review when someone opens a pull request.
+
+# Global owners
+* @yourusername
+
+# Core library code
+/Sources/VectorCore/Core/ @yourusername
+/Sources/VectorCore/Operations/ @yourusername
+/Sources/VectorCore/Storage/ @yourusername
+
+# Performance-critical code requires careful review
+/Sources/VectorCore/Storage/ConsolidatedStorage/ @yourusername
+/Sources/VectorCore/Operations/VectorCoreOperations.swift @yourusername
+/Sources/VectorCore/Math/ @yourusername
+
+# Benchmarks and performance tests
+/Benchmarks/ @yourusername
+/Sources/VectorCore/Testing/ @yourusername
+/Sources/PerformanceRegression* @yourusername
+
+# Documentation
+/Documentation/ @yourusername
+/README.md @yourusername
+*.md @yourusername
+
+# CI/CD configuration
+/.github/ @yourusername
+
+# Package configuration
+/Package.swift @yourusername
+/Package.resolved @yourusername

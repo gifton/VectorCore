@@ -1,18 +1,47 @@
-// VectorCore: Modern Error System
+// VectorCore: Error System
 //
-// Rich error handling with context, chaining, and telemetry support
+// Comprehensive error handling with context, chaining, and telemetry support
 //
 
 import Foundation
 
 // MARK: - Error Context
 
-/// Rich error context with source location
+/// Rich error context with source location and debugging information.
+///
+/// `ErrorContext` captures comprehensive debugging information at the
+/// point where an error occurs, including source location, timestamp,
+/// and additional contextual data. In release builds, source location
+/// is omitted for performance and binary size optimization.
+///
+/// ## Example Usage
+/// ```swift
+/// let context = ErrorContext(
+///     additionalInfo: [
+///         "dimension": "128",
+///         "operation": "normalization"
+///     ]
+/// )
+/// ```
 public struct ErrorContext: Sendable {
+    /// Source file where the error occurred (debug builds only).
     public let file: StaticString
+    
+    /// Line number where the error occurred (debug builds only).
     public let line: UInt
+    
+    /// Function name where the error occurred (debug builds only).
     public let function: StaticString
+    
+    /// Timestamp when the error was created.
     public let timestamp: Date
+    
+    /// Additional contextual information as key-value pairs.
+    ///
+    /// Common keys include:
+    /// - "message": Human-readable error description
+    /// - "dimension": Vector dimension involved
+    /// - "index": Array index that caused the error
     public let additionalInfo: [String: String]
     
     #if DEBUG
@@ -45,16 +74,51 @@ public struct ErrorContext: Sendable {
     #endif
 }
 
-// MARK: - Modern Error Type
+// MARK: - Rich Error Type
 
-/// Modern error type with rich context and chaining
+/// Error type with enhanced context, chaining, and telemetry support.
+///
+/// `VectorError` provides a sophisticated error handling system with:
+/// - Categorized error types for analytics and handling
+/// - Rich context including source location and timestamps
+/// - Error chaining for root cause analysis
+/// - Telemetry-friendly severity and categorization
+///
+/// ## Error Handling Pattern
+/// ```swift
+/// do {
+///     try riskyOperation()
+/// } catch let error as VectorError {
+///     logger.log(error, severity: error.kind.severity)
+///     if error.kind == .dimensionMismatch {
+///         // Handle specific error type
+///     }
+/// }
+/// ```
+///
+/// ## Error Chaining
+/// ```swift
+/// let rootError = VectorError(.invalidData, message: "Corrupted header")
+/// let chainedError = VectorError(.operationFailed, message: "Load failed")
+///     .chain(with: rootError)
+/// ```
 public struct VectorError: Error, Sendable {
+    /// The specific type of error that occurred.
     public let kind: ErrorKind
+    
+    /// Contextual information about where and when the error occurred.
     public let context: ErrorContext
+    
+    /// Optional underlying system or library error.
     public let underlyingError: (any Error)?
+    
+    /// Chain of errors leading to this error (for root cause analysis).
     public var errorChain: [VectorError]
     
-    /// Error categories for telemetry
+    /// Error categories for telemetry and systematic handling.
+    ///
+    /// Each error kind has associated severity and category metadata
+    /// for proper handling, logging, and monitoring.
     public enum ErrorKind: String, CaseIterable, Sendable {
         // Dimension errors
         case dimensionMismatch
@@ -126,7 +190,30 @@ public struct VectorError: Error, Sendable {
 
 // MARK: - Error Builder
 
-/// Fluent error builder
+/// Fluent builder for constructing detailed error instances.
+///
+/// `ErrorBuilder` provides a convenient API for creating `VectorError`
+/// instances with rich context and proper error chaining. It uses the
+/// builder pattern for readable error construction.
+///
+/// ## Example Usage
+/// ```swift
+/// throw ErrorBuilder(.dimensionMismatch)
+///     .message("Cannot add vectors of different sizes")
+///     .dimension(expected: 128, actual: 256)
+///     .build()
+/// ```
+///
+/// ## Complex Example
+/// ```swift
+/// let error = ErrorBuilder(.operationFailed)
+///     .message("Matrix multiplication failed")
+///     .parameter("matrixA_dims", value: "128x256")
+///     .parameter("matrixB_dims", value: "512x128")
+///     .underlying(systemError)
+///     .chain(previousError)
+///     .build()
+/// ```
 public struct ErrorBuilder {
     private var kind: VectorError.ErrorKind
     private var context: ErrorContext
@@ -274,6 +361,99 @@ public extension VectorError {
         return ErrorBuilder(.allocationFailed, file: file, line: line, function: function)
             .message(message)
             .parameter("requested_size", value: String(size))
+            .build()
+    }
+    
+    /// Invalid dimension error
+    static func invalidDimension(
+        _ dimension: Int,
+        reason: String,
+        file: StaticString = #fileID,
+        line: UInt = #line,
+        function: StaticString = #function
+    ) -> VectorError {
+        ErrorBuilder(.invalidDimension, file: file, line: line, function: function)
+            .message("Invalid dimension \(dimension): \(reason)")
+            .parameter("dimension", value: String(dimension))
+            .parameter("reason", value: reason)
+            .build()
+    }
+    
+    /// Invalid values error
+    static func invalidValues(
+        indices: [Int],
+        reason: String,
+        file: StaticString = #fileID,
+        line: UInt = #line,
+        function: StaticString = #function
+    ) -> VectorError {
+        ErrorBuilder(.invalidData, file: file, line: line, function: function)
+            .message("Invalid values at indices \(indices): \(reason)")
+            .parameter("indices", value: indices.map(String.init).joined(separator: ","))
+            .parameter("reason", value: reason)
+            .build()
+    }
+    
+    /// Division by zero error
+    static func divisionByZero(
+        operation: String,
+        file: StaticString = #fileID,
+        line: UInt = #line,
+        function: StaticString = #function
+    ) -> VectorError {
+        .invalidOperation(operation, reason: "Division by zero", file: file, line: line, function: function)
+    }
+    
+    /// Zero vector error
+    static func zeroVectorError(
+        operation: String,
+        file: StaticString = #fileID,
+        line: UInt = #line,
+        function: StaticString = #function
+    ) -> VectorError {
+        .invalidOperation(operation, reason: "Cannot perform operation on zero vector", file: file, line: line, function: function)
+    }
+    
+    /// Insufficient data error
+    static func insufficientData(
+        expected: Int,
+        actual: Int,
+        file: StaticString = #fileID,
+        line: UInt = #line,
+        function: StaticString = #function
+    ) -> VectorError {
+        ErrorBuilder(.insufficientData, file: file, line: line, function: function)
+            .message("Insufficient data: expected \(expected) bytes, got \(actual)")
+            .parameter("expected_bytes", value: String(expected))
+            .parameter("actual_bytes", value: String(actual))
+            .build()
+    }
+    
+    /// Invalid data format error
+    static func invalidDataFormat(
+        expected: String,
+        actual: String,
+        file: StaticString = #fileID,
+        line: UInt = #line,
+        function: StaticString = #function
+    ) -> VectorError {
+        ErrorBuilder(.invalidData, file: file, line: line, function: function)
+            .message("Invalid data format: expected \(expected), got \(actual)")
+            .parameter("expected_format", value: expected)
+            .parameter("actual_format", value: actual)
+            .build()
+    }
+    
+    /// Data corruption error
+    static func dataCorruption(
+        reason: String,
+        file: StaticString = #fileID,
+        line: UInt = #line,
+        function: StaticString = #function
+    ) -> VectorError {
+        ErrorBuilder(.dataCorruption, file: file, line: line, function: function)
+            .message("Data corruption detected: \(reason)")
+            .parameter("reason", value: reason)
             .build()
     }
 }

@@ -485,10 +485,12 @@ final class BatchOperationsTests: XCTestCase {
         let largeSet = (0..<100000).map { _ in Vector128.random(in: -1...1) }
         
         // Process in batches should use less memory than processing all at once
-        await autoreleasepool {
+        do {
             _ = try await BatchOperations.process(largeSet, batchSize: 1000) { batch in
                 batch.map { $0.normalized() }
             }
+        } catch {
+            XCTFail("Batch processing failed: \(error)")
         }
         
         // If we got here without crashing, memory usage is reasonable

@@ -260,19 +260,15 @@ func analyzeMemoryUsage() {
         let overhead: Int
         
         switch dim {
-        case 1...32:
-            overhead = MemoryLayout<SIMDStorage32>.size - (32 * floatSize)
-        case 33...64:
-            overhead = MemoryLayout<SIMDStorage64>.size - (64 * floatSize)
-        case 65...128:
-            overhead = MemoryLayout<SIMDStorage128>.size - (128 * floatSize)
-        case 129...256:
-            overhead = MemoryLayout<SIMDStorage256>.size - (256 * floatSize)
-        case 257...512:
-            overhead = MemoryLayout<SIMDStorage512>.size - (512 * floatSize)
+        case 1...64:
+            // SmallVectorStorage uses SIMD64
+            overhead = MemoryLayout<SmallVectorStorage>.size - (dim * floatSize)
+        case 65...512:
+            // MediumVectorStorage uses AlignedValueStorage
+            overhead = MemoryLayout<MediumVectorStorage>.size - (dim * floatSize)
         default:
-            // Array storage
-            overhead = 24 // Array struct overhead
+            // LargeVectorStorage uses COWDynamicStorage
+            overhead = 24 // Approximate COW wrapper overhead
         }
         
         let totalSize = vectorSize + overhead
@@ -345,11 +341,11 @@ func compareImplementations() {
 // MARK: - SIMD Storage Benchmarks
 
 func benchmarkSIMDStorageOptimizations() {
-    print("\n\n=== SIMD Storage Optimization Benchmarks ===\n")
-    print("Comparing original vs optimized implementations\n")
+    print("\n\n=== Consolidated Storage Architecture Benchmarks ===\n")
+    print("Benchmarking the three-tier storage system\n")
     
-    // Run the comprehensive SIMD storage benchmarks
-    SIMDStorageBenchmark.runAllBenchmarks()
+    // TODO: Implement consolidated storage benchmarks
+    print("Consolidated storage benchmarks coming soon...")
 }
 
 // MARK: - Auto-Parallelization Benchmarks

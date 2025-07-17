@@ -1,0 +1,48 @@
+name: Swift
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, macos-13]
+        swift: [5.9]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+      
+    - name: Swift version
+      run: swift --version
+      
+    - name: Build
+      run: swift build -v
+      
+    - name: Run tests
+      run: swift test -v --parallel
+      
+    - name: Build Release
+      run: swift build -c release -v
+
+  benchmark:
+    name: Benchmark
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+      
+    - name: Run Benchmarks
+      run: swift run -c release VectorCoreBenchmarks
+      continue-on-error: true

@@ -14,7 +14,7 @@ public extension XCTestCase {
         _ message: String = "",
         file: StaticString = #file,
         line: UInt = #line
-    ) {
+    ) where V.Scalar == Float {
         XCTAssertEqual(v1.scalarCount, v2.scalarCount,
                       "Vector dimensions don't match",
                       file: file, line: line)
@@ -32,7 +32,7 @@ public extension XCTestCase {
         accuracy: Float = 1e-5,
         file: StaticString = #file,
         line: UInt = #line
-    ) {
+    ) where V.Scalar == Float {
         XCTAssertEqual(vector.magnitude, magnitude, accuracy: accuracy,
                       "Vector magnitude mismatch",
                       file: file, line: line)
@@ -45,7 +45,7 @@ public extension XCTestCase {
         count: Int,
         range: ClosedRange<Float> = -1...1,
         seed: UInt64? = nil
-    ) -> [V] {
+    ) -> [V] where V.Scalar == Float {
         if let seed = seed {
             // Use seeded random for reproducible tests
             var generator = SeededRandomGenerator(seed: seed)
@@ -95,9 +95,9 @@ public extension XCTestCase {
     
     // MARK: - Async Test Helpers
     
-    func asyncTest<T>(
+    func asyncTest<T: Sendable>(
         timeout: TimeInterval = 5.0,
-        _ block: () async throws -> T
+        _ block: @Sendable @escaping () async throws -> T
     ) async throws -> T {
         try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask {

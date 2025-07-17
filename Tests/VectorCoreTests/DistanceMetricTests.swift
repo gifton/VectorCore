@@ -62,8 +62,8 @@ final class DistanceMetricTests: XCTestCase {
         XCTAssertEqual(parallelDist, 0.0, accuracy: 0.001)
         
         // Test with normalized vectors
-        let normalized1 = SIMD4<Float>(1, 0, 0, 0)
-        let normalized2 = SIMD4<Float>(0, 1, 0, 0)
+        let normalized1 = DynamicVector(dimension: 4, values: [1, 0, 0, 0])
+        let normalized2 = DynamicVector(dimension: 4, values: [0, 1, 0, 0])
         let orthogonalDist = metric.distance(normalized1, normalized2)
         XCTAssertEqual(orthogonalDist, 1.0, accuracy: 0.001) // Orthogonal vectors
     }
@@ -72,13 +72,13 @@ final class DistanceMetricTests: XCTestCase {
         let metric = CosineDistance()
         
         // Zero vector handling
-        let zeroVector = SIMD8<Float>(repeating: 0)
+        let zeroVector = DynamicVector(dimension: 8, repeating: 0)
         let dist = metric.distance(vectorA, zeroVector)
         XCTAssertEqual(dist, 1.0) // Maximum distance for zero vector
         
         // Opposite vectors
-        let opposite = SIMD4<Float>(1, 0, 0, 0)
-        let negativeOpposite = SIMD4<Float>(-1, 0, 0, 0)
+        let opposite = DynamicVector(dimension: 4, values: [1, 0, 0, 0])
+        let negativeOpposite = DynamicVector(dimension: 4, values: [-1, 0, 0, 0])
         let oppositeDist = metric.distance(opposite, negativeOpposite)
         XCTAssertEqual(oppositeDist, 2.0, accuracy: 0.001) // 1 - (-1) = 2
     }
@@ -137,8 +137,8 @@ final class DistanceMetricTests: XCTestCase {
         XCTAssertEqual(dist, 8.0) // All 8 positions are different
         
         // Some different
-        let partial1 = SIMD4<Float>(1, 2, 3, 4)
-        let partial2 = SIMD4<Float>(1, 2, 0, 0)
+        let partial1 = DynamicVector(dimension: 4, values: [1, 2, 3, 4])
+        let partial2 = DynamicVector(dimension: 4, values: [1, 2, 0, 0])
         let partialDist = metric.distance(partial1, partial2)
         XCTAssertEqual(partialDist, 2.0) // 2 positions differ
     }
@@ -158,8 +158,8 @@ final class DistanceMetricTests: XCTestCase {
         XCTAssertEqual(dist, 8.0, accuracy: 0.001)
         
         // Test with specific max difference
-        let v1 = SIMD4<Float>(1, 2, 3, 4)
-        let v2 = SIMD4<Float>(1, 2, 3, 14) // Max diff = 10
+        let v1 = DynamicVector(dimension: 4, values: [1, 2, 3, 4])
+        let v2 = DynamicVector(dimension: 4, values: [1, 2, 3, 14]) // Max diff = 10
         let maxDist = metric.distance(v1, v2)
         XCTAssertEqual(maxDist, 10.0, accuracy: 0.001)
     }
@@ -206,8 +206,8 @@ final class DistanceMetricTests: XCTestCase {
         XCTAssertEqual(dist, 1.0, accuracy: 0.001) // No intersection
         
         // Partial overlap
-        let v1 = SIMD4<Float>(1, 1, 0, 0)
-        let v2 = SIMD4<Float>(1, 0, 1, 0)
+        let v1 = DynamicVector(dimension: 4, values: [1, 1, 0, 0])
+        let v2 = DynamicVector(dimension: 4, values: [1, 0, 1, 0])
         let overlap = metric.distance(v1, v2)
         // Intersection = 1, Union = 3, Distance = 1 - 1/3 = 2/3
         XCTAssertEqual(overlap, 2.0/3.0, accuracy: 0.001)
@@ -227,16 +227,16 @@ final class DistanceMetricTests: XCTestCase {
     }
     
     func testDistanceComputationUtility() {
-        let a = SIMD4<Float>(1, 2, 3, 4)
-        let b = SIMD4<Float>(5, 6, 7, 8)
+        let a = DynamicVector(dimension: 4, values: [1, 2, 3, 4])
+        let b = DynamicVector(dimension: 4, values: [5, 6, 7, 8])
         
         // Test squared euclidean (avoids sqrt)
         let squared = DistanceCalculator.euclideanSquared(a, b)
         XCTAssertEqual(squared, 64.0, accuracy: 0.001) // 4^2 * 4
         
         // Test normalized cosine (assumes pre-normalized)
-        let norm1 = SIMD4<Float>(1, 0, 0, 0)
-        let norm2 = SIMD4<Float>(0.6, 0.8, 0, 0)
+        let norm1 = DynamicVector(dimension: 4, values: [1, 0, 0, 0])
+        let norm2 = DynamicVector(dimension: 4, values: [0.6, 0.8, 0, 0])
         let cosDist = DistanceCalculator.normalizedCosine(norm1, norm2)
         XCTAssertEqual(cosDist, 0.4, accuracy: 0.001) // 1 - 0.6
     }
@@ -244,9 +244,9 @@ final class DistanceMetricTests: XCTestCase {
     // MARK: - Edge Cases
     
     func testDistanceMetricsWithSpecialValues() {
-        let normal = SIMD4<Float>(1, 2, 3, 4)
-        let withNaN = SIMD4<Float>(1, 2, Float.nan, 4)
-        let withInf = SIMD4<Float>(1, 2, Float.infinity, 4)
+        let normal = DynamicVector(dimension: 4, values: [1, 2, 3, 4])
+        let withNaN = DynamicVector(dimension: 4, values: [1, 2, Float.nan, 4])
+        let withInf = DynamicVector(dimension: 4, values: [1, 2, Float.infinity, 4])
         
         // Euclidean with NaN
         let euclidean = EuclideanDistance()
@@ -259,7 +259,7 @@ final class DistanceMetricTests: XCTestCase {
         
         // Cosine with zero vector
         let cosine = CosineDistance()
-        let zeroVec = SIMD4<Float>(repeating: 0)
+        let zeroVec = DynamicVector(dimension: 3, repeating: 0)
         let zeroDist = cosine.distance(normal, zeroVec)
         XCTAssertEqual(zeroDist, 1.0) // Maximum distance
     }

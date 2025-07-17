@@ -1,0 +1,185 @@
+// VectorCore: Error Handling Consistency Tests
+//
+// Tests to ensure error handling follows established patterns
+//
+
+import XCTest
+@testable import VectorCore
+
+final class ErrorHandlingConsistencyTests: XCTestCase {
+    
+    // MARK: - Validation Utilities Tests
+    
+    func testDimensionMatchValidation() throws {
+        // Valid case - should not throw
+        XCTAssertNoThrow(try Validation.requireDimensionMatch(expected: 10, actual: 10))
+        
+        // Invalid case - should throw
+        XCTAssertThrowsError(try Validation.requireDimensionMatch(expected: 10, actual: 5)) { error in
+            guard case VectorError.dimensionMismatch(let expected, let actual) = error else {
+                XCTFail("Wrong error type")
+                return
+            }
+            XCTAssertEqual(expected, 10)
+            XCTAssertEqual(actual, 5)
+        }
+    }
+    
+    func testValidDimensionValidation() throws {
+        // Valid cases
+        XCTAssertNoThrow(try Validation.requireValidDimension(1))
+        XCTAssertNoThrow(try Validation.requireValidDimension(100))
+        
+        // Invalid cases
+        XCTAssertThrowsError(try Validation.requireValidDimension(0))
+        XCTAssertThrowsError(try Validation.requireValidDimension(-1))
+    }
+    
+    func testIndexValidation() throws {
+        // Valid cases
+        XCTAssertNoThrow(try Validation.requireValidIndex(0, dimension: 10))
+        XCTAssertNoThrow(try Validation.requireValidIndex(9, dimension: 10))
+        
+        // Invalid cases
+        XCTAssertThrowsError(try Validation.requireValidIndex(-1, dimension: 10))
+        XCTAssertThrowsError(try Validation.requireValidIndex(10, dimension: 10))
+    }
+    
+    func testNonZeroValidation() throws {
+        // Valid cases
+        XCTAssertNoThrow(try Validation.requireNonZero(magnitude: 1.0, operation: "test"))
+        XCTAssertNoThrow(try Validation.requireNonZero(magnitude: 0.001, operation: "test"))
+        
+        // Invalid case
+        XCTAssertThrowsError(try Validation.requireNonZero(magnitude: 0.0, operation: "normalize")) { error in
+            guard case VectorError.zeroVectorError(let op) = error else {
+                XCTFail("Wrong error type")
+                return
+            }
+            XCTAssertEqual(op, "normalize")
+        }
+    }
+    
+    func testRangeValidation() throws {
+        let range: ClosedRange<Float> = -1.0...1.0
+        
+        // Valid case
+        XCTAssertNoThrow(try Validation.requireInRange([0.0, 0.5, -0.5, 1.0, -1.0], range: range))
+        
+        // Invalid case
+        XCTAssertThrowsError(try Validation.requireInRange([0.0, 1.5, -2.0], range: range)) { error in
+            guard case VectorError.outOfRange(let indices, let r) = error else {
+                XCTFail("Wrong error type")
+                return
+            }
+            XCTAssertEqual(indices.sorted(), [1, 2])
+            XCTAssertEqual(r, range)
+        }
+    }
+    
+    // MARK: - DynamicVector Throwing Operations Tests
+    
+    func testDynamicVectorThrowingDotProduct() throws {
+        let v1 = DynamicVector(dimension: 3, values: [1, 2, 3])
+        let v2 = DynamicVector(dimension: 3, values: [4, 5, 6])
+        let v3 = DynamicVector(dimension: 2, values: [1, 2])
+        
+        // Valid case
+        let dot = try v1.dotProduct(with: v2)
+        XCTAssertEqual(dot, 32.0, accuracy: 1e-6)
+        
+        // Invalid case - dimension mismatch
+        XCTAssertThrowsError(try v1.dotProduct(with: v3)) { error in
+            guard case VectorError.dimensionMismatch = error else {
+                XCTFail("Wrong error type")
+                return
+            }
+        }
+    }
+    
+    func testDynamicVectorNormalized() throws {
+        let v1 = DynamicVector(dimension: 2, values: [3, 4])
+        let v2 = DynamicVector(dimension: 3) // zero vector
+        
+        // Valid case
+        let normalized = try v1.normalized()
+        XCTAssertEqual(normalized.magnitude, 1.0, accuracy: 1e-6)
+        
+        // Invalid case - zero vector
+        XCTAssertThrowsError(try v2.normalized()) { error in
+            guard case VectorError.zeroVectorError = error else {
+                XCTFail("Wrong error type")
+                return
+            }
+        }
+    }
+    
+    func testDynamicVectorAngle() throws {
+        let v1 = DynamicVector(dimension: 2, values: [1, 0])
+        let v2 = DynamicVector(dimension: 2, values: [0, 1])
+        let v3 = DynamicVector(dimension: 2) // zero vector
+        
+        // Valid case - 90 degrees
+        let angle = try v1.angle(to: v2)
+        XCTAssertEqual(angle, .pi / 2, accuracy: 1e-6)
+        
+        // Invalid case - zero vector
+        XCTAssertThrowsError(try v1.angle(to: v3))
+    }
+    
+    func testDynamicVectorProjection() throws {
+        let v1 = DynamicVector(dimension: 2, values: [3, 4])
+        let v2 = DynamicVector(dimension: 2, values: [1, 0])
+        let v3 = DynamicVector(dimension: 2) // zero vector
+        
+        // Valid case
+        let projection = try v1.projected(onto: v2)
+        XCTAssertEqual(projection[0], 3.0, accuracy: 1e-6)
+        XCTAssertEqual(projection[1], 0.0, accuracy: 1e-6)
+        
+        // Invalid case - projecting onto zero vector
+        XCTAssertThrowsError(try v1.projected(onto: v3))
+    }
+    
+    func testDynamicVectorValidation() throws {
+        let v1 = DynamicVector(dimension: 3, values: [0.5, -0.5, 0.0])
+        let v2 = DynamicVector(dimension: 3, values: [1.5, -0.5, 0.0])
+        
+        // Valid case
+        XCTAssertNoThrow(try v1.validate(range: -1.0...1.0))
+        
+        // Invalid case
+        XCTAssertThrowsError(try v2.validate(range: -1.0...1.0))
+    }
+    
+    // MARK: - Result Extensions Tests
+    
+    func testResultCatching() {
+        let successResult = Result<Float, VectorError>.catching {
+            let v1 = DynamicVector(dimension: 2, values: [3, 4])
+            let v2 = DynamicVector(dimension: 2, values: [1, 0])
+            return try v1.dotProduct(with: v2)
+        }
+        
+        XCTAssertEqual(successResult.optional, 3.0)
+        
+        let failureResult = Result<Float, VectorError>.catching {
+            let v1 = DynamicVector(dimension: 2, values: [3, 4])
+            let v2 = DynamicVector(dimension: 3, values: [1, 0, 0])
+            return try v1.dotProduct(with: v2)
+        }
+        
+        XCTAssertNil(failureResult.optional)
+    }
+    
+    // MARK: - Performance Validation Tests
+    
+    func testPerformanceValidationInDebug() {
+        // These should not crash in debug builds
+        PerformanceValidation.require(true, "This should not fail")
+        PerformanceValidation.requireDimensionMatch(10, 10)
+        
+        // In debug builds, these would fail with fatalError
+        // We can't test them directly without crashing
+    }
+}

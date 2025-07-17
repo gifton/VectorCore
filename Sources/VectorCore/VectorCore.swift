@@ -66,7 +66,7 @@ public enum VectorCore {
     
     /// Get version information
     public static var version: String {
-        "3.0.0"
+        VectorCoreVersion.versionString
     }
     
     /// Check if a dimension has optimized SIMD support

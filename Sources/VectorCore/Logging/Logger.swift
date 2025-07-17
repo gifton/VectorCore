@@ -6,12 +6,37 @@
 import Foundation
 import os.log
 
-/// Log levels for VectorCore
+/// Log levels for VectorCore logging system.
+///
+/// `LogLevel` defines the severity hierarchy for log messages,
+/// from detailed debugging information to critical errors.
+///
+/// ## Levels (in order of severity)
+/// - **debug**: Detailed information for debugging
+/// - **info**: General informational messages
+/// - **warning**: Potentially harmful situations
+/// - **error**: Error events that might still allow continued operation
+/// - **critical**: Severe errors that likely cause termination
+///
+/// ## Example Usage
+/// ```swift
+/// logger.log("Vector operation completed", level: .info)
+/// logger.log("Memory allocation failed", level: .critical)
+/// ```
 public enum LogLevel: Int, Comparable, Sendable {
+    /// Detailed information for debugging purposes.
     case debug = 0
+    
+    /// General informational messages.
     case info = 1
+    
+    /// Warning messages for potentially harmful situations.
     case warning = 2
+    
+    /// Error events that might still allow continued operation.
     case error = 3
+    
+    /// Critical errors that likely cause termination.
     case critical = 4
     
     public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
@@ -39,11 +64,24 @@ public enum LogLevel: Int, Comparable, Sendable {
     }
 }
 
-/// Configuration for logging
+/// Configuration for the VectorCore logging system.
+///
+/// `LogConfiguration` provides thread-safe configuration for controlling
+/// logging behavior, including minimum log levels and output options.
+///
+/// ## Example Usage
+/// ```swift
+/// LogConfiguration.shared.minimumLevel = .warning
+/// LogConfiguration.shared.enableOSLog = true
+/// ```
 public final class LogConfiguration: @unchecked Sendable {
     private var _minimumLevel: LogLevel
     private let lock = NSLock()
     
+    /// Minimum log level to output.
+    ///
+    /// Messages below this level are ignored.
+    /// Thread-safe property with internal locking.
     public var minimumLevel: LogLevel {
         get {
             lock.lock()
@@ -129,7 +167,7 @@ public struct Logger: Sendable {
                      function: String = #function,
                      line: Int = #line) {
         let errorMessage = message ?? error.description
-        log(level: .error, "\(errorMessage): \(error)", file: file, function: function, line: line)
+        log(level: .error, "\(errorMessage)", file: file, function: function, line: line)
     }
     
     /// Log with specific level
@@ -170,19 +208,29 @@ public struct Logger: Sendable {
 
 // MARK: - Global Loggers
 
-/// Core operations logger
+/// Logger for core vector operations.
+///
+/// Use for logging vector creation, manipulation, and basic operations.
 public let coreLogger = Logger(category: "Core")
 
-/// Storage operations logger  
+/// Logger for storage and memory operations.
+///
+/// Use for logging memory allocation, deallocation, and storage management.
 public let storageLogger = Logger(category: "Storage")
 
-/// Batch operations logger
+/// Logger for batch operations.
+///
+/// Use for logging batch processing, parallel operations, and bulk computations.
 public let batchLogger = Logger(category: "Batch")
 
-/// Distance metrics logger
+/// Logger for distance metric calculations.
+///
+/// Use for logging distance computations, similarity measurements, and metric selection.
 public let metricsLogger = Logger(category: "Metrics")
 
-/// Performance logger
+/// Logger for performance monitoring.
+///
+/// Use for logging timing information, benchmarks, and performance analysis.
 public let performanceLogger = Logger(category: "Performance")
 
 // MARK: - Performance Logging

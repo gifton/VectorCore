@@ -1,0 +1,176 @@
+Building for production...
+[0/4] Write sources
+[1/4] Write swift-version--58304C5D6DBC2206.txt
+[3/5] Compiling VectorCoreBenchmarks ComprehensiveBenchmark.swift
+/Users/goftin/dev/gsuite/VSK/VectorCore/Benchmarks/Sources/VectorCoreBenchmarks/ComprehensiveBenchmark.swift:169:13: warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+167 |     
+168 |     static func benchmarkVector128(v1: Vector128, v2: Vector128) {
+169 |         let scalar: Float = 2.5
+    |             `- warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+170 |         
+171 |         let addTime = measure {
+
+/Users/goftin/dev/gsuite/VSK/VectorCore/Benchmarks/Sources/VectorCoreBenchmarks/ComprehensiveBenchmark.swift:194:13: warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+192 |     
+193 |     static func benchmarkVector256(v1: Vector256, v2: Vector256) {
+194 |         let scalar: Float = 2.5
+    |             `- warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+195 |         
+196 |         let addTime = measure {
+
+/Users/goftin/dev/gsuite/VSK/VectorCore/Benchmarks/Sources/VectorCoreBenchmarks/ComprehensiveBenchmark.swift:219:13: warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+217 |     
+218 |     static func benchmarkVector512(v1: Vector512, v2: Vector512) {
+219 |         let scalar: Float = 2.5
+    |             `- warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+220 |         
+221 |         let addTime = measure {
+
+/Users/goftin/dev/gsuite/VSK/VectorCore/Benchmarks/Sources/VectorCoreBenchmarks/ComprehensiveBenchmark.swift:244:13: warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+242 |     
+243 |     static func benchmarkVector768(v1: Vector768, v2: Vector768) {
+244 |         let scalar: Float = 2.5
+    |             `- warning: immutable value 'scalar' was never used; consider replacing with '_' or removing it
+245 |         
+246 |         let addTime = measure {
+[3/5] Write Objects.LinkFileList
+[4/5] Linking VectorCoreBenchmarks
+Build of product 'VectorCoreBenchmarks' complete! (8.37s)
+VectorCore Performance Benchmarks
+=================================
+
+Running Comprehensive VectorCore Benchmarks
+==========================================
+Platform: Apple Silicon (ARM64)
+Iterations per test: 1000
+
+
+=== Vector Operations Benchmarks ===
+
+Vector size: 32
+  Addition: 37.909 µs (26.38M ops/sec)
+  Subtraction: 24.915 µs (40.14M ops/sec)
+  Scalar multiply: 15.020 µs (66.58M ops/sec)
+  Dot product: 24.080 µs (41.53M ops/sec)
+  Magnitude: 21.935 µs (45.59M ops/sec)
+  Normalize: 43.988 µs (22.73M ops/sec)
+
+Vector size: 64
+  Addition: 27.061 µs (36.95M ops/sec)
+  Subtraction: 26.941 µs (37.12M ops/sec)
+  Scalar multiply: 16.928 µs (59.07M ops/sec)
+  Dot product: 26.941 µs (37.12M ops/sec)
+  Magnitude: 25.988 µs (38.48M ops/sec)
+  Normalize: 52.094 µs (19.20M ops/sec)
+
+Vector size: 128
+  Addition: 272.989 µs (3.66M ops/sec)
+  Dot product: 20.027 µs (49.93M ops/sec)
+  Magnitude: 26.941 µs (37.12M ops/sec)
+
+Vector size: 256
+  Addition: 396.013 µs (2.53M ops/sec)
+  Dot product: 31.948 µs (31.30M ops/sec)
+  Magnitude: 41.008 µs (24.39M ops/sec)
+
+Vector size: 512
+  Addition: 618.935 µs (1.62M ops/sec)
+  Dot product: 59.009 µs (16.95M ops/sec)
+  Magnitude: 66.996 µs (14.93M ops/sec)
+
+Vector size: 768
+  Addition: 1.182 ms (846.05K ops/sec)
+  Dot product: 274.897 µs (3.64M ops/sec)
+  Magnitude: 339.031 µs (2.95M ops/sec)
+
+=== Storage Type Benchmarks ===
+
+SmallVectorStorage (1-64 elements):
+
+  32 elements:
+    Element access: 2.027 µs (15790.32M ops/sec)
+    Dot product: 23.007 µs (43.46M ops/sec)
+    Copy + COW: 0.000 µs (infM ops/sec)
+
+  64 elements:
+    Element access: 2.027 µs (31580.64M ops/sec)
+    Dot product: 26.941 µs (37.12M ops/sec)
+    Copy + COW: 0.000 µs (infM ops/sec)
+
+MediumVectorStorage (65-512 elements):
+
+  128 elements:
+    Element access: 0.954 µs (104857.60M ops/sec)
+    Dot product: 19.073 µs (52.43M ops/sec)
+    Copy + COW: 3.934 µs (254.20M ops/sec)
+
+  256 elements:
+    Element access: 0.954 µs (104857.60M ops/sec)
+    Dot product: 32.067 µs (31.18M ops/sec)
+    Copy + COW: 2.980 µs (335.54M ops/sec)
+
+LargeVectorStorage (513+ elements):
+
+  768 elements:
+    Element access: 16.093 µs (6213.78M ops/sec)
+    Dot product: 242.949 µs (4.12M ops/sec)
+    Copy + COW: 12.994 µs (76.96M ops/sec)
+
+  1536 elements:
+    Element access: 16.093 µs (6213.78M ops/sec)
+    Dot product: 324.965 µs (3.08M ops/sec)
+    Copy + COW: 24.915 µs (40.14M ops/sec)
+
+=== Distance Metric Benchmarks ===
+  Euclidean distance: 331.044 µs (3.02M ops/sec)
+  Cosine similarity: 95.010 µs (10.53M ops/sec)
+  Manhattan distance: 666.976 µs (1.50M ops/sec)
+  L1 norm: 311.971 µs (3.21M ops/sec)
+  L2 norm: 60.081 µs (16.64M ops/sec)
+
+=== Quality Metric Benchmarks ===
+
+Sparse vector (78% zeros):
+  Sparsity: 0.000 µs (infM ops/sec)
+  Entropy: 319.958 µs (3.13M ops/sec)
+  Quality: 1.786 ms (559.91K ops/sec)
+  Base64 encode: 47.046 ms (21.26K ops/sec)
+  Base64 decode: 37.009 ms (27.02K ops/sec)
+
+Dense vector (random values):
+  Sparsity: 0.000 µs (infM ops/sec)
+  Entropy: 386.953 µs (2.58M ops/sec)
+  Quality: 3.956 ms (252.78K ops/sec)
+  Base64 encode: 47.421 ms (21.09K ops/sec)
+  Base64 decode: 29.026 ms (34.45K ops/sec)
+
+=== Dynamic Vector Benchmarks ===
+
+Dynamic vector size: 128
+  Addition: 122.905 µs (8.14M ops/sec)
+  Dot product: 59.009 µs (16.95M ops/sec)
+  Euclidean distance: 123.024 µs (8.13M ops/sec)
+  Magnitude: 43.988 µs (22.73M ops/sec)
+
+Dynamic vector size: 384
+  Addition: 118.971 µs (8.41M ops/sec)
+  Dot product: 84.996 µs (11.77M ops/sec)
+  Euclidean distance: 193.954 µs (5.16M ops/sec)
+  Magnitude: 70.930 µs (14.10M ops/sec)
+
+Dynamic vector size: 768
+  Addition: 362.992 µs (2.75M ops/sec)
+  Dot product: 128.031 µs (7.81M ops/sec)
+  Euclidean distance: 573.993 µs (1.74M ops/sec)
+  Magnitude: 113.964 µs (8.77M ops/sec)
+
+Dynamic vector size: 1536
+  Addition: 422.001 µs (2.37M ops/sec)
+  Dot product: 213.027 µs (4.69M ops/sec)
+  Euclidean distance: 887.990 µs (1.13M ops/sec)
+  Magnitude: 200.033 µs (5.00M ops/sec)
+
+==========================================
+Benchmarks completed successfully
+
+Benchmarks completed.

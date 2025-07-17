@@ -24,6 +24,7 @@ let package = Package(
         .target(
             name: "VectorCore",
             dependencies: [],
+            exclude: ["GPU.disabled"],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),
                 .enableUpcomingFeature("ExistentialAny")
@@ -43,16 +44,42 @@ let package = Package(
             path: "Benchmarks/Sources/VectorCoreBenchmarks"
         ),
         .executableTarget(
-            name: "ModernAPIExample",
+            name: "VectorCoreAPIExample",
             dependencies: ["VectorCore"],
             path: "Examples",
-            sources: ["ModernAPIExample.swift"]
+            sources: ["VectorCoreAPIExample.swift"]
         ),
         .executableTarget(
             name: "ErrorHandlingExample",
             dependencies: ["VectorCore"],
             path: "Examples",
             sources: ["ErrorHandlingExample.swift"]
+        ),
+        .executableTarget(
+            name: "PerformanceRegression",
+            dependencies: ["VectorCore"]
+        ),
+        .executableTarget(
+            name: "SyncBatchOperationsExample",
+            dependencies: ["VectorCore"],
+            path: "Examples",
+            sources: ["SyncBatchOperationsExample.swift"]
+        ),
+        .executableTarget(
+            name: "NaNInfinityHandlingExample",
+            dependencies: ["VectorCore"],
+            path: "Examples",
+            sources: ["NaNInfinityHandlingExample.swift"]
+        ),
+        .executableTarget(
+            name: "PerformanceRegressionRunner",
+            dependencies: ["VectorCore"]
+        ),
+        .executableTarget(
+            name: "PerformanceRegressionExample",
+            dependencies: ["VectorCore"],
+            path: "Examples",
+            sources: ["PerformanceRegressionExample.swift"]
         ),
     ]
 )

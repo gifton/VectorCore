@@ -1,0 +1,232 @@
+name: Performance Comparison
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: 'Base reference (branch, tag, or commit)'
+        required: true
+        default: 'main'
+        type: string
+      compare_ref:
+        description: 'Compare reference (branch, tag, or commit)'
+        required: true
+        default: 'HEAD'
+        type: string
+      benchmark_iterations:
+        description: 'Number of benchmark iterations'
+        required: false
+        default: '10'
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  performance-comparison:
+    name: Compare Performance
+    runs-on: macos-14
+    timeout-minutes: 90
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.0"
+      
+      - name: System Configuration
+        run: |
+          # Ensure consistent system state
+          sudo pmset -a disablesleep 1 || true
+          
+          # Document system info
+          echo "## System Configuration" > comparison_report.md
+          echo "**CPU**: $(sysctl -n machdep.cpu.brand_string)" >> comparison_report.md
+          echo "**Memory**: $(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 )) GB" >> comparison_report.md
+          echo "**macOS**: $(sw_vers -productVersion)" >> comparison_report.md
+          echo "**Swift**: $(swift --version | head -1)" >> comparison_report.md
+          echo "" >> comparison_report.md
+      
+      - name: Benchmark Base Reference
+        run: |
+          echo "## Benchmarking base: ${{ github.event.inputs.base_ref }}" | tee -a comparison_report.md
+          echo "" >> comparison_report.md
+          
+          # Checkout base reference
+          git checkout ${{ github.event.inputs.base_ref }}
+          
+          # Clean build
+          rm -rf .build
+          
+          # Build benchmarks
+          swift build -c release --target VectorCoreBenchmarks
+          
+          # Run benchmarks
+          .build/release/VectorCoreBenchmarks \
+            --format json \
+            --iterations ${{ github.event.inputs.benchmark_iterations }} \
+            > base_benchmarks.json
+          
+          # Also save human-readable format
+          .build/release/VectorCoreBenchmarks \
+            --iterations ${{ github.event.inputs.benchmark_iterations }} \
+            > base_benchmarks.txt
+          
+          echo "Base benchmarks completed" >> comparison_report.md
+      
+      - name: Benchmark Compare Reference
+        run: |
+          echo "" >> comparison_report.md
+          echo "## Benchmarking compare: ${{ github.event.inputs.compare_ref }}" | tee -a comparison_report.md
+          echo "" >> comparison_report.md
+          
+          # Checkout compare reference
+          git checkout ${{ github.event.inputs.compare_ref }}
+          
+          # Clean build
+          rm -rf .build
+          
+          # Build benchmarks
+          swift build -c release --target VectorCoreBenchmarks
+          
+          # Run benchmarks
+          .build/release/VectorCoreBenchmarks \
+            --format json \
+            --iterations ${{ github.event.inputs.benchmark_iterations }} \
+            > compare_benchmarks.json
+          
+          # Also save human-readable format
+          .build/release/VectorCoreBenchmarks \
+            --iterations ${{ github.event.inputs.benchmark_iterations }} \
+            > compare_benchmarks.txt
+          
+          echo "Compare benchmarks completed" >> comparison_report.md
+      
+      - name: Generate Comparison Report
+        run: |
+          # Create comparison script
+          cat > compare_results.py << 'EOF'
+          import json
+          import sys
+          
+          def load_results(filename):
+              with open(filename, 'r') as f:
+                  return json.load(f)
+          
+          def calculate_change(base, compare):
+              if base == 0:
+                  return float('inf') if compare > 0 else 0
+              return ((compare - base) / base) * 100
+          
+          base = load_results('base_benchmarks.json')
+          compare = load_results('compare_benchmarks.json')
+          
+          print("\n## Performance Comparison Results\n")
+          print("| Benchmark | Base (ns) | Compare (ns) | Change | Status |")
+          print("|-----------|-----------|--------------|--------|--------|")
+          
+          # This is a template - adjust based on actual benchmark JSON structure
+          improvements = 0
+          regressions = 0
+          
+          for b_name in base.get('benchmarks', []):
+              base_time = b_name.get('time_ns', 0)
+              compare_time = 0
+              
+              # Find matching benchmark in compare results
+              for c_name in compare.get('benchmarks', []):
+                  if c_name.get('name') == b_name.get('name'):
+                      compare_time = c_name.get('time_ns', 0)
+                      break
+              
+              if compare_time > 0:
+                  change = calculate_change(base_time, compare_time)
+                  status = "🟢" if change < -5 else "🔴" if change > 5 else "🟡"
+                  
+                  if change < -5:
+                      improvements += 1
+                  elif change > 5:
+                      regressions += 1
+                  
+                  print(f"| {b_name.get('name')} | {base_time:,.0f} | {compare_time:,.0f} | {change:+.1f}% | {status} |")
+          
+          print(f"\n### Summary")
+          print(f"- **Improvements**: {improvements}")
+          print(f"- **Regressions**: {regressions}")
+          print(f"- **Benchmark iterations**: {sys.argv[1]}")
+          
+          if regressions > 0:
+              sys.exit(1)
+          EOF
+          
+          # Run comparison
+          if command -v python3 &> /dev/null; then
+            python3 compare_results.py "${{ github.event.inputs.benchmark_iterations }}" >> comparison_report.md || true
+          else
+            # Fallback to simple diff
+            echo "## Comparison Results" >> comparison_report.md
+            echo "" >> comparison_report.md
+            echo "### Base Reference Results:" >> comparison_report.md
+            echo '```' >> comparison_report.md
+            head -50 base_benchmarks.txt >> comparison_report.md
+            echo '```' >> comparison_report.md
+            echo "" >> comparison_report.md
+            echo "### Compare Reference Results:" >> comparison_report.md
+            echo '```' >> comparison_report.md
+            head -50 compare_benchmarks.txt >> comparison_report.md
+            echo '```' >> comparison_report.md
+          fi
+      
+      - name: Display Results
+        run: |
+          cat comparison_report.md >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload Comparison Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-comparison-${{ github.run_id }}
+          path: |
+            comparison_report.md
+            base_benchmarks.json
+            base_benchmarks.txt
+            compare_benchmarks.json
+            compare_benchmarks.txt
+          retention-days: 30
+      
+      - name: Create Issue with Results
+        if: github.event.inputs.compare_ref != 'HEAD'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('comparison_report.md', 'utf8');
+            
+            const issueBody = `# Performance Comparison Report
+            
+            **Base**: \`${{ github.event.inputs.base_ref }}\`
+            **Compare**: \`${{ github.event.inputs.compare_ref }}\`
+            **Run**: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ${report}
+            
+            ---
+            📎 [Download full artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `;
+            
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Performance Comparison: ${context.payload.inputs.base_ref} vs ${context.payload.inputs.compare_ref}`,
+              body: issueBody,
+              labels: ['performance', 'benchmark']
+            });
+            
+            console.log(`Created issue #${issue.data.number}`);
+            core.notice(`Performance comparison results posted to issue #${issue.data.number}`);
+        continue-on-error: true

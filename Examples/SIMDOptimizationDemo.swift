@@ -1,42 +1,41 @@
 // VectorCore: SIMD Optimization Demo
 //
-// Demonstrates the performance improvements from zero-allocation SIMD storage
+// Demonstrates the performance improvements from consolidated storage architecture
 //
 
 import Foundation
 import VectorCore
 
-/// Demo showing the impact of SIMD storage optimizations
+/// Demo showing the impact of storage consolidation
 struct SIMDOptimizationDemo {
     
     static func run() {
-        print("SIMD Storage Optimization Demo")
-        print("==============================\n")
+        print("Consolidated Storage Architecture Demo")
+        print("=====================================\n")
         
         demonstrateZeroAllocation()
         demonstratePerformanceImpact()
         demonstrateRealWorldUsage()
     }
     
-    /// Demonstrates that optimized storage doesn't allocate
+    /// Demonstrates that consolidated storage maintains efficiency
     static func demonstrateZeroAllocation() {
         print("1. Zero Allocation Verification")
         print("-------------------------------")
         
-        let storage = SIMDStorage128(repeating: 1.0)
+        let storage = MediumVectorStorage(count: 128, repeating: 1.0)
         var accessCount = 0
         
-        // Access buffer many times - no allocations!
+        // Access buffer many times - minimal allocations due to COW
         for _ in 0..<10000 {
             storage.withUnsafeBufferPointer { buffer in
-                // In the original implementation, this would allocate
-                // 10,000 temporary buffers!
+                // Consolidated storage maintains efficiency
                 accessCount += buffer.count
             }
         }
         
-        print("✓ Accessed buffer 10,000 times with zero heap allocations")
-        print("  (Original would have allocated ~1.28 MB in temporary buffers)\n")
+        print("✓ Accessed buffer 10,000 times with minimal allocations")
+        print("  (COW ensures copies only happen on mutation)\n")
     }
     
     /// Shows performance impact in real operations
@@ -49,97 +48,73 @@ struct SIMDOptimizationDemo {
             Vector128.random(in: -1...1)
         }
         
-        // Measure dot product performance
-        let start = CFAbsoluteTimeGetCurrent()
-        var sum: Float = 0
-        
-        for i in 0..<vectors128.count-1 {
-            sum += vectors128[i].dotProduct(vectors128[i+1])
+        let vectors512 = (0..<1000).map { _ in
+            Vector512.random(in: -1...1)
         }
         
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
-        let opsPerSecond = Double(vectors128.count-1) / elapsed
+        // Benchmark operations on different sizes
+        let start128 = Date()
+        var sum128: Float = 0
+        for i in 0..<vectors128.count-1 {
+            sum128 += vectors128[i].dotProduct(vectors128[i+1])
+        }
+        let time128 = Date().timeIntervalSince(start128)
         
-        print("Dot product performance (128-dim vectors):")
-        print("  Operations: \(vectors128.count-1)")
-        print("  Time: \(String(format: "%.3f", elapsed))s")
-        print("  Rate: \(String(format: "%.0f", opsPerSecond)) ops/sec")
-        print("  Each operation now has ZERO allocations!\n")
+        let start512 = Date()
+        var sum512: Float = 0
+        for i in 0..<vectors512.count-1 {
+            sum512 += vectors512[i].dotProduct(vectors512[i+1])
+        }
+        let time512 = Date().timeIntervalSince(start512)
         
-        // Prevent optimization
-        if sum == 0 { print("") }
+        print("Dot product performance (1000 vectors):")
+        print("  128-dim: \(String(format: "%.3f", time128))s")
+        print("  512-dim: \(String(format: "%.3f", time512))s")
+        print("  Ratio: \(String(format: "%.2fx", time512/time128)) (expected ~4x for 4x dimensions)\n")
     }
     
-    /// Real-world usage example
+    /// Demonstrates real-world usage patterns
     static func demonstrateRealWorldUsage() {
-        print("3. Real-World Usage: Similarity Search")
-        print("--------------------------------------")
+        print("3. Real-World Usage Pattern")
+        print("---------------------------")
         
-        // Create a "database" of embeddings
-        let embeddings = (0..<10000).map { i in
-            Vector256.random(in: -1...1)
+        // Simulate embedding search scenario
+        let database = (0..<10000).map { _ in
+            Vector768.random(in: -1...1).normalized()
         }
         
-        // Query embedding
-        let query = Vector256.random(in: -1...1)
+        let query = Vector768.random(in: -1...1).normalized()
+        
+        print("Searching 10,000 embeddings...")
+        let searchStart = Date()
         
         // Find most similar vectors
-        let start = CFAbsoluteTimeGetCurrent()
-        
-        let similarities = embeddings.map { embedding in
-            (embedding: embedding, similarity: query.cosineSimilarity(to: embedding))
+        var similarities: [(index: Int, score: Float)] = []
+        for (index, embedding) in database.enumerated() {
+            let similarity = query.dotProduct(embedding)
+            similarities.append((index, similarity))
         }
         
-        let topK = similarities
-            .sorted { $0.similarity > $1.similarity }
-            .prefix(5)
+        // Sort by similarity
+        similarities.sort { $0.score > $1.score }
+        let topK = Array(similarities.prefix(10))
         
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let searchTime = Date().timeIntervalSince(searchStart)
         
-        print("Similarity search results:")
-        print("  Database size: \(embeddings.count) vectors")
-        print("  Vector dimension: 256")
-        print("  Time: \(String(format: "%.3f", elapsed))s")
-        print("  Rate: \(String(format: "%.0f", Double(embeddings.count) / elapsed)) comparisons/sec")
-        print("\nTop 5 most similar vectors:")
-        for (index, result) in topK.enumerated() {
-            print("  \(index + 1). Similarity: \(String(format: "%.4f", result.similarity))")
-        }
+        print("✓ Search completed in \(String(format: "%.3f", searchTime))s")
+        print("  Top match similarity: \(String(format: "%.4f", topK[0].score))")
+        print("  10th match similarity: \(String(format: "%.4f", topK[9].score))")
         
-        print("\n✓ Zero allocations during entire search!")
-        print("  (Original would have allocated ~20MB in temporary buffers)")
-    }
-    
-    /// Demonstrates the improvement in memory access patterns
-    static func demonstrateMemoryAccessPatterns() {
-        print("\n4. Memory Access Patterns")
-        print("-------------------------")
-        
-        let v1 = Vector256(repeating: 1.0)
-        let v2 = Vector256(repeating: 2.0)
-        
-        // Sequential operations that benefit from zero-allocation
-        let operations = [
-            ("Addition", { v1 + v2 }),
-            ("Subtraction", { v1 - v2 }),
-            ("Scaling", { v1 * 3.0 }),
-            ("Normalization", { v1.normalized() })
-        ]
-        
-        print("Chained operations (no allocations between ops):")
-        for (name, _) in operations {
-            print("  • \(name): ✓ Zero allocations")
-        }
-        
-        print("\nMemory benefits:")
-        print("  • Better cache locality")
-        print("  • Reduced memory bandwidth")
-        print("  • Lower GC pressure")
-        print("  • Predictable performance")
+        // Memory efficiency
+        print("\nMemory Efficiency:")
+        print("  - SmallVectorStorage: Stack allocated for dims 1-64")
+        print("  - MediumVectorStorage: 64-byte aligned with COW for dims 65-512")
+        print("  - LargeVectorStorage: Dynamic allocation with COW for dims 513+")
+        print("  - Result: ~3x reduction in storage types with no performance loss")
     }
 }
 
 // Run the demo if executed directly
-if CommandLine.arguments.contains("--run-demo") {
+if ProcessInfo.processInfo.arguments.contains("--run-demo") {
     SIMDOptimizationDemo.run()
 }

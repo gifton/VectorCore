@@ -17,7 +17,23 @@ public protocol VectorType: Sendable {
 /// Factory for creating vectors with optimal type selection
 public enum VectorFactory {
     
-    /// Create a generic vector with compile-time dimension
+    /// Creates a strongly-typed vector with compile-time dimension checking.
+    ///
+    /// This method provides type-safe vector creation when the dimension is known
+    /// at compile time, enabling optimal performance and compile-time validation.
+    ///
+    /// ## Example Usage
+    /// ```swift
+    /// let values = Array(repeating: 0.5, count: 128)
+    /// let vector = try VectorFactory.create(Dim128.self, from: values)
+    /// // vector is of type Vector<Dim128>
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - type: The dimension type (e.g., `Dim128.self`)
+    ///   - values: Array of Float values to initialize the vector
+    /// - Returns: A strongly-typed Vector<D> instance
+    /// - Throws: `VectorError.dimensionMismatch` if values.count != D.value
     public static func create<D: Dimension>(_ type: D.Type, from values: [Float]) throws -> Vector<D> {
         guard values.count == D.value else {
             throw VectorError.dimensionMismatch(expected: D.value, actual: values.count)
@@ -204,8 +220,9 @@ public enum VectorFactory {
     /// - Throws: VectorError if values count is not a multiple of dimension
     public static func batch(dimension: Int, from values: [Float]) throws -> [any VectorType] {
         guard values.count % dimension == 0 else {
-            throw VectorError.invalidData(
-                "Values count (\(values.count)) must be multiple of dimension \(dimension)"
+            throw VectorError.invalidValues(
+                indices: [],
+                reason: "Values count (\(values.count)) must be multiple of dimension \(dimension)"
             )
         }
         
@@ -226,13 +243,6 @@ public enum VectorFactory {
 
 // MARK: - VectorType Extensions
 
-extension Vector: VectorType where D.Storage: VectorStorageOperations {
-    // All VectorType requirements are already implemented in Vector.swift:
-    // - scalarCount (property)
-    // - toArray() (method)
-    // - dotProduct(_:) (method) 
-    // - magnitude (property)
-    // - normalized() (method)
-}
+// VectorType conformance is already declared in Vector.swift
 
 // DynamicVector conformance is in DynamicVector.swift

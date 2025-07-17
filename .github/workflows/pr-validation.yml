@@ -1,0 +1,156 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Check PR Title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Configure allowed types
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          # Configure allowed scopes (optional)
+          scopes: |
+            core
+            storage
+            operations
+            math
+            distance
+            error
+            benchmark
+            ci
+            deps
+            docs
+          # Ensure the subject doesn't start with uppercase
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
+          # Ensure the subject doesn't end with a period
+          validateSingleCommit: false
+
+  check-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check PR Size
+        run: |
+          # Get diff stats
+          ADDITIONS=$(git diff --numstat origin/${{ github.base_ref }}...${{ github.sha }} | awk '{sum+=$1} END {print sum}')
+          DELETIONS=$(git diff --numstat origin/${{ github.base_ref }}...${{ github.sha }} | awk '{sum+=$2} END {print sum}')
+          TOTAL_CHANGES=$((ADDITIONS + DELETIONS))
+          
+          echo "## PR Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- Additions: +$ADDITIONS" >> $GITHUB_STEP_SUMMARY
+          echo "- Deletions: -$DELETIONS" >> $GITHUB_STEP_SUMMARY
+          echo "- Total changes: $TOTAL_CHANGES" >> $GITHUB_STEP_SUMMARY
+          
+          # Warning for large PRs
+          if [ $TOTAL_CHANGES -gt 1000 ]; then
+            echo "::warning::This PR contains $TOTAL_CHANGES changes. Consider breaking it into smaller PRs for easier review."
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **Large PR Warning**: This PR contains $TOTAL_CHANGES changes. Consider breaking it into smaller PRs for easier review." >> $GITHUB_STEP_SUMMARY
+          elif [ $TOTAL_CHANGES -gt 500 ]; then
+            echo "::notice::This PR contains $TOTAL_CHANGES changes. This is approaching the recommended size limit."
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📝 **Note**: This PR contains $TOTAL_CHANGES changes. This is approaching the recommended size limit." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  verify-files:
+    name: Verify Critical Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check Critical Files
+        run: |
+          # List of critical files that require extra attention
+          CRITICAL_FILES=(
+            "Sources/VectorCore/Core/VectorProtocol.swift"
+            "Sources/VectorCore/Storage/VectorStorage.swift"
+            "Sources/VectorCore/Operations/VectorCoreOperations.swift"
+            "Package.swift"
+          )
+          
+          echo "## Critical Files Check" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if any critical files are modified
+          MODIFIED_CRITICAL=()
+          for file in "${CRITICAL_FILES[@]}"; do
+            if git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} | grep -q "^$file$"; then
+              MODIFIED_CRITICAL+=("$file")
+              echo "- ⚠️ Modified: \`$file\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          if [ ${#MODIFIED_CRITICAL[@]} -gt 0 ]; then
+            echo "::warning::This PR modifies critical files. Please ensure thorough testing and review."
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Note**: This PR modifies ${#MODIFIED_CRITICAL[@]} critical file(s). Please ensure thorough testing and review." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No critical files modified" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  check-documentation:
+    name: Documentation Requirements
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check Documentation Updates
+        run: |
+          echo "## Documentation Check" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if code changes require documentation updates
+          CODE_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} | grep -E '\.(swift)$' | wc -l || echo "0")
+          DOC_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} | grep -E '\.(md)$' | wc -l || echo "0")
+          
+          echo "- Code files changed: $CODE_CHANGES" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation files changed: $DOC_CHANGES" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for new public APIs without documentation
+          NEW_PUBLIC_APIS=$(git diff origin/${{ github.base_ref }}...${{ github.sha }} | grep -E '^\+.*public (func|class|struct|enum|protocol|var|let)' | wc -l || echo "0")
+          
+          if [ "$NEW_PUBLIC_APIS" -gt 0 ] && [ "$DOC_CHANGES" -eq 0 ]; then
+            echo "::warning::This PR adds $NEW_PUBLIC_APIS new public APIs but no documentation updates were found."
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **Documentation Warning**: This PR adds $NEW_PUBLIC_APIS new public APIs but no documentation updates were found." >> $GITHUB_STEP_SUMMARY
+          fi

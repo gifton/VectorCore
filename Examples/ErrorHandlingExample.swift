@@ -1,254 +1,208 @@
-// VectorCore - Error Handling Example
+// VectorCore: Error Handling Example
 //
-// Demonstrates error handling and logging
+// Demonstrates error handling patterns in VectorCore
 //
 
-import VectorCore
 import Foundation
+import VectorCore
 
-// MARK: - Basic Error Handling
-
-func basicErrorHandling() {
-    print("=== Basic Error Handling ===\n")
+/// Example showing various error handling scenarios
+struct ErrorHandlingExample {
     
-    // Example 1: Dimension mismatch
-    do {
-        let v1 = Vector512.random(in: -1...1)
-        let v2data = Array(repeating: Float(1.0), count: 256)
-        _ = try VectorFactory.vector(of: 512, from: v2data)
-    } catch let error as VectorError {
-        // Log the error
-        error.log(message: "Failed to create vector")
+    static func run() {
+        print("VectorCore Error Handling Examples")
+        print("==================================\n")
         
-        print("Caught error: \(error)")
-        print("Error kind: \(error.kind)\n")
-    } catch {
-        coreLogger.error("Unexpected error: \(error)")
-    }
-    
-    // Example 2: Index out of bounds
-    do {
-        _ = try VectorFactory.basis(dimension: 10, index: 15)
-    } catch let error as VectorError {
-        // Log with default logger
-        error.log()
-        print("Caught error: \(error)\n")
-    } catch {
-        coreLogger.error("Unexpected error: \(error)")
-    }
-}
-
-// MARK: - Error Chaining
-
-func errorChainingExample() throws {
-    print("=== Error Chaining ===\n")
-    
-    func loadVectorData() throws -> [Float] {
-        coreLogger.debug("Attempting to load vector data")
-        throw VectorError.invalidData("File format incorrect")
-    }
-    
-    func processVector() throws -> Vector512 {
+        // Example 1: Dimension mismatch
         do {
-            let data = try loadVectorData()
-            return try Vector512(data)
+            let v1 = Vector512.random(in: -1...1)
+            let v2data = Array(repeating: Float(1.0), count: 256)
+            _ = try VectorFactory.vector(of: 512, from: v2data)
         } catch let error as VectorError {
-            coreLogger.warning("Failed to process vector: \(error)")
-            throw error.chain(with: VectorError(
-                .operationFailed,
-                message: "Failed to process vector from file"
-            ))
+            print("1. Dimension Mismatch Error:")
+            print("   Error Type: \(error.kind.rawValue)")
+            print("   Description: \(error.errorDescription ?? "")")
+            print("   Severity: \(error.kind.severity.rawValue)\n")
+        } catch {
+            print("Unexpected error: \(error)")
+        }
+        
+        // Example 2: Index out of bounds
+        do {
+            let vector = Vector256.zeros()
+            // This would be caught at compile time in real usage
+            if let dynamicVector = vector as? DynamicVector {
+                _ = dynamicVector[300] // Out of bounds
+            }
+        } catch {
+            print("2. Index Out of Bounds: This is prevented by type safety\n")
+        }
+        
+        // Example 3: Numerical validation
+        demonstrateNumericalValidation()
+        
+        // Example 4: Batch operation errors
+        demonstrateBatchErrorHandling()
+        
+        // Example 5: Custom error handling
+        demonstrateCustomErrorHandling()
+    }
+    
+    /// Demonstrates numerical validation errors
+    static func demonstrateNumericalValidation() {
+        print("3. Numerical Validation:")
+        
+        // Create vectors with invalid values
+        var values = Array(repeating: Float(1.0), count: 512)
+        values[10] = .nan
+        values[20] = .infinity
+        values[30] = -.infinity
+        
+        do {
+            let vector = Vector512(values)
+            
+            // Check for invalid values
+            let invalidIndices = values.enumerated().compactMap { index, value in
+                (!value.isFinite) ? index : nil
+            }
+            
+            if !invalidIndices.isEmpty {
+                throw VectorError.invalidValues(
+                    indices: invalidIndices,
+                    reason: "Vector contains non-finite values"
+                )
+            }
+            
+            // Attempt normalization
+            let normalized = vector.normalized()
+            print("   Vector normalized successfully")
+        } catch let error as VectorError {
+            print("   Error: \(error.errorDescription ?? "")")
+            print("   Error Type: \(error.kind.rawValue)\n")
+        } catch {
+            print("   Unexpected error: \(error)\n")
         }
     }
     
-    func analyzeVectors() throws {
-        do {
-            _ = try processVector()
-        } catch let error as VectorError {
-            coreLogger.error("Analysis failed: \(error)")
-            throw error.chain(with: VectorError(
-                .operationFailed,
-                message: "Analysis pipeline failed"
-            ))
-        }
-    }
-    
-    // Try the chained operation
-    do {
-        try analyzeVectors()
-    } catch let error as VectorError {
-        error.log(message: "Complete pipeline failure")
-        print("Error with chain:")
-        print(error)
-        print("\nChain length: \(error.errorChain.count)")
-    }
-}
-
-// MARK: - Performance Logging
-
-func performanceLoggingExample() {
-    print("\n=== Performance Logging ===\n")
-    
-    // Time a vector operation
-    let timer = PerformanceTimer(operation: "vector_normalization")
-    let vector = Vector512.random(in: -1...1)
-    let normalized = vector.normalized()
-    timer.log() // Only logs if > 1ms by default
-    
-    print("Normalized vector magnitude: \(normalized.magnitude)")
-    
-    // Time a batch operation
-    let batchTimer = PerformanceTimer(operation: "batch_creation")
-    let vectors = (0..<1000).map { _ in Vector256.random(in: -1...1) }
-    batchTimer.log(threshold: 0.0001) // Log if > 0.1ms
-    
-    batchLogger.info("Created \(vectors.count) vectors")
-}
-
-// MARK: - Custom Error Building
-
-func customErrorBuildingExample() {
-    print("\n=== Custom Error Building ===\n")
-    
-    // Build a detailed error
-    let error = ErrorBuilder(.allocationFailed)
-        .message("Failed to allocate memory for large vector batch")
-        .parameter("requested_size", value: "1073741824")
-        .parameter("available_memory", value: "536870912")
-        .parameter("vector_count", value: "10000")
-        .parameter("dimension", value: "3072")
-        .build()
-    
-    // Log the error
-    error.log(to: storageLogger, message: "Memory allocation failed")
-    
-    print("Custom error:")
-    print(error.debugDescription)
-}
-
-// MARK: - Different Log Levels
-
-func logLevelExample() {
-    print("\n=== Log Levels Example ===\n")
-    
-    // Different loggers for different subsystems
-    coreLogger.debug("This is a debug message")
-    storageLogger.info("Storage initialized successfully")
-    batchLogger.warning("Batch size exceeds recommended limit")
-    metricsLogger.error("Failed to compute distance metric")
-    performanceLogger.critical("Performance degradation detected")
-    
-    // Conditional logging
-    let vectorCount = 10000
-    if vectorCount > 5000 {
-        batchLogger.warning("Processing large batch of \(vectorCount) vectors")
-    }
-}
-
-// MARK: - Real-World Scenario
-
-func realWorldScenario() throws {
-    print("\n=== Real-World Scenario ===\n")
-    
-    // Configure minimum log level for production
-    #if !DEBUG
-    Logger.configuration.minimumLevel = .warning
-    #endif
-    
-    // Batch processing with error handling and logging
-    func processBatch(_ vectors: [Vector512]) throws -> [Float] {
-        batchLogger.info("Starting batch processing of \(vectors.count) vectors")
+    /// Demonstrates batch operation error handling
+    static func demonstrateBatchErrorHandling() {
+        print("4. Batch Operation Error Handling:")
         
-        var results: [Float] = []
-        var errors: [VectorError] = []
-        
-        for (index, vector) in vectors.enumerated() {
-            do {
-                // Time individual operations
-                let timer = PerformanceTimer(operation: "process_vector_\(index)")
-                
-                // Simulate processing that might fail
-                if vector.magnitude < 0.1 {
-                    throw VectorError.invalidOperation(
-                        "process",
-                        reason: "Vector magnitude too small"
-                    )
-                }
-                
-                let result = vector.magnitude
-                results.append(result)
-                
-                timer.log(threshold: 0.01) // Log if slower than 10ms
-                
-            } catch let error as VectorError {
-                // Log individual errors
-                error.log(to: batchLogger, message: "Failed at index \(index)")
-                
-                // Chain with batch context
-                let batchError = error.chain(with: VectorError(
-                    .operationFailed,
-                    message: "Failed at batch index \(index)"
-                ))
-                errors.append(batchError)
+        // Create a batch with mixed valid/invalid vectors
+        var vectors: [Vector256] = []
+        for i in 0..<10 {
+            if i == 5 {
+                // Create a zero vector that will fail normalization
+                vectors.append(Vector256.zeros())
+            } else {
+                vectors.append(Vector256.random(in: -1...1))
             }
         }
         
-        // Log batch summary
-        if errors.isEmpty {
-            batchLogger.info("Batch completed successfully: \(results.count) vectors processed")
-        } else {
-            batchLogger.warning("Batch completed with \(errors.count) errors out of \(vectors.count) vectors")
-            
-            // Log aggregated error
-            let batchError = ErrorBuilder(.operationFailed)
-                .message("Batch processing completed with errors")
-                .parameter("total_vectors", value: "\(vectors.count)")
-                .parameter("failed_vectors", value: "\(errors.count)")
-                .parameter("success_rate", value: "\(Int(100 * results.count / vectors.count))%")
-                .chain(errors[0])  // Include first error for context
-                .build()
-            
-            batchError.log(to: batchLogger)
+        // Process batch with error collection
+        var results: [Vector256] = []
+        var errors: [(index: Int, error: VectorError)] = []
+        
+        for (index, vector) in vectors.enumerated() {
+            do {
+                // Check for zero vector
+                if vector.magnitude == 0 {
+                    throw VectorError.zeroVectorError(operation: "normalization")
+                }
+                
+                let normalized = vector.normalized()
+                results.append(normalized)
+            } catch let error as VectorError {
+                errors.append((index: index, error: error))
+            } catch {
+                let genericError = VectorError.invalidData(
+                    "Unknown error at index \(index)"
+                )
+                errors.append((index: index, error: genericError))
+            }
         }
         
-        return results
+        print("   Processed \(vectors.count) vectors:")
+        print("   - Successful: \(results.count)")
+        print("   - Failed: \(errors.count)")
+        
+        for (index, error) in errors {
+            print("   - Error at index \(index): \(error.errorDescription ?? "")")
+        }
+        print()
     }
     
-    // Create test batch
-    let timer = PerformanceTimer(operation: "create_test_batch")
-    let vectors = (0..<100).map { _ in Vector512.random(in: -1...1) }
-    timer.log()
-    
-    // Process
-    let results = try processBatch(vectors)
-    print("\nProcessed \(results.count) vectors successfully")
+    /// Demonstrates custom error handling patterns
+    static func demonstrateCustomErrorHandling() {
+        print("5. Custom Error Handling Patterns:")
+        
+        // Pattern 1: Result type for cleaner error handling
+        func safeDotProduct(_ v1: Vector512, _ v2: Vector512) -> Result<Float, VectorError> {
+            // Validate inputs
+            if v1.magnitude == 0 || v2.magnitude == 0 {
+                return .failure(VectorError.zeroVectorError(operation: "dot product"))
+            }
+            
+            let result = v1.dotProduct(v2)
+            
+            // Check for numerical issues
+            if !result.isFinite {
+                return .failure(VectorError.invalidValues(indices: [], reason: "Numerical instability in dot product"))
+            }
+            
+            return .success(result)
+        }
+        
+        // Use the safe function
+        let v1 = Vector512.random(in: -1...1)
+        let v2 = Vector512.zeros()
+        
+        switch safeDotProduct(v1, v2) {
+        case .success(let result):
+            print("   Dot product: \(result)")
+        case .failure(let error):
+            print("   Safe operation prevented error: \(error.errorDescription ?? "")")
+        }
+        
+        // Pattern 2: Error aggregation
+        func processVectorBatch(_ vectors: [Vector512]) -> (results: [Float], errors: [VectorError]) {
+            var results: [Float] = []
+            var errors: [VectorError] = []
+            
+            for vector in vectors {
+                if vector.magnitude == 0 {
+                    errors.append(VectorError.zeroVectorError(operation: "magnitude calculation"))
+                } else if vector.toArray().contains(where: { !$0.isFinite }) {
+                    let indices = vector.toArray().enumerated().compactMap { 
+                        !$1.isFinite ? $0 : nil 
+                    }
+                    errors.append(.invalidValues(indices: indices, reason: "Non-finite values"))
+                } else {
+                    results.append(vector.magnitude)
+                }
+            }
+            
+            return (results, errors)
+        }
+        
+        // Test batch processing
+        let testBatch = [
+            Vector512.random(in: -1...1),
+            Vector512.zeros(),
+            Vector512.random(in: -1...1)
+        ]
+        
+        let (magnitudes, batchErrors) = processVectorBatch(testBatch)
+        print("   Batch processing results:")
+        print("   - Computed \(magnitudes.count) magnitudes")
+        print("   - Encountered \(batchErrors.count) errors")
+    }
 }
 
-// MARK: - Main
-
+// Main entry point
 @main
-struct ErrorHandlingExample {
-    static func main() throws {
-        print("VectorCore Error Handling and Logging Examples\n")
-        
-        basicErrorHandling()
-        
-        try errorChainingExample()
-        
-        performanceLoggingExample()
-        
-        customErrorBuildingExample()
-        
-        logLevelExample()
-        
-        try realWorldScenario()
-        
-        print("\n=== Summary ===")
-        print("✓ Simple, lightweight logging system")
-        print("✓ Integration with os.log for system console")
-        print("✓ Performance timing with minimal overhead")
-        print("✓ Rich error context with logging")
-        print("✓ Different log levels for different scenarios")
-        print("✓ Zero overhead with @autoclosure for disabled logs")
+struct ErrorHandlingExampleMain {
+    static func main() async throws {
+        ErrorHandlingExample.run()
     }
 }

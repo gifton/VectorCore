@@ -35,15 +35,22 @@ final class IntegrationTests: XCTestCase {
             distances.append(distance)
         }
         
-        // 4. Create vector data with metadata
-        let vectorData = VectorData(
+        // 4. Create a simple data structure for testing
+        struct TestVectorData: Codable {
+            let id: String
+            let values: [Float]
+            let metadata: [String: String]
+            let distances: [Float]
+        }
+        
+        let vectorData = TestVectorData(
             id: "test-vector-001",
-            vector: normalized,
+            values: normalized.toArray(),
             metadata: [
                 "source": "integration_test",
-                "timestamp": Date().timeIntervalSince1970,
-                "distances": distances
-            ]
+                "timestamp": "\(Date().timeIntervalSince1970)"
+            ],
+            distances: distances
         )
         
         // 5. Serialize to JSON
@@ -53,19 +60,19 @@ final class IntegrationTests: XCTestCase {
         
         // 6. Deserialize back
         let decoder = JSONDecoder()
-        let decoded = try! decoder.decode(VectorData<Vector256, [String: Any]>.self, from: jsonData)
+        let decoded = try! decoder.decode(TestVectorData.self, from: jsonData)
         
         // 7. Verify round-trip
         XCTAssertEqual(decoded.id, vectorData.id)
-        XCTAssertEqual(decoded.timestamp, vectorData.timestamp)
+        XCTAssertEqual(decoded.metadata["source"], "integration_test")
         
         // Vector values should match
         for i in 0..<256 {
-            XCTAssertEqual(decoded.vector[i], normalized[i], accuracy: 1e-6)
+            XCTAssertEqual(decoded.values[i], normalized[i], accuracy: 1e-6)
         }
     }
     
-    func testBatchProcessingWorkflow() {
+    func testBatchProcessingWorkflow() async throws {
         // 1. Generate a dataset
         let datasetSize = 1000
         let vectors = (0..<datasetSize).map { _ in
@@ -73,19 +80,21 @@ final class IntegrationTests: XCTestCase {
         }
         
         // 2. Preprocess: normalize all vectors
-        let normalized = BatchOperations.map(vectors, batchSize: 128) { vector in
+        let normalized = try await BatchOperations.map(vectors) { vector in
             vector.normalized()
         }
         
         // 3. Compute statistics
-        let stats = BatchOperations.statistics(for: normalized)
+        let stats = try await BatchOperations.statistics(for: normalized)
         XCTAssertEqual(stats.count, datasetSize)
         XCTAssertEqual(stats.meanMagnitude, 1.0, accuracy: 0.01) // All normalized
         
-        // 4. Filter high-quality vectors
-        let filtered = BatchOperations.filter(normalized) { vector in
-            let quality = VectorQuality.assessQuality(of: vector.toArray())
-            return quality.overallScore > 0.7
+        // 4. Filter high-quality vectors (simplified - VectorQuality doesn't exist)
+        let filtered = try await BatchOperations.filter(normalized) { vector in
+            // Simple quality check - variance > 0.1
+            let mean = vector.toArray().reduce(0, +) / Float(vector.scalarCount)
+            let variance = vector.toArray().map { pow($0 - mean, 2) }.reduce(0, +) / Float(vector.scalarCount)
+            return variance > 0.1
         }
         
         XCTAssertGreaterThan(filtered.count, 0)
@@ -93,7 +102,7 @@ final class IntegrationTests: XCTestCase {
         
         // 5. Find similar vectors
         let query = normalized.first!
-        let similar = BatchOperations.findNearest(
+        let similar = await BatchOperations.findNearest(
             to: query,
             in: filtered,
             k: 10,
@@ -107,7 +116,7 @@ final class IntegrationTests: XCTestCase {
         
         // 6. Compute pairwise similarities for clustering
         let sample = BatchOperations.sample(filtered, k: min(50, filtered.count))
-        let distances = BatchOperations.pairwiseDistances(sample, metric: EuclideanDistance())
+        let distances = try await BatchOperations.pairwiseDistances(sample, metric: EuclideanDistance())
         
         XCTAssertEqual(distances.count, sample.count)
         XCTAssertEqual(distances[0].count, sample.count)
@@ -138,32 +147,30 @@ final class IntegrationTests: XCTestCase {
         
         for vector in vectors {
             XCTAssertGreaterThan(vector.scalarCount, 0)
-            _ = vector.dotProduct(vector)
+            // VectorType doesn't have dotProduct method
             _ = vector.magnitude
             _ = vector.normalized()
         }
     }
     
-    func testMemoryPressureScenario() {
+    func testMemoryPressureScenario() async throws {
         // Simulate high memory usage scenario
-        autoreleasepool {
-            // Create many large vectors
-            let vectors = (0..<1000).map { _ in
-                Vector1536.random(in: -1...1)
-            }
-            
-            // Process in batches to manage memory
-            let _ = BatchOperations.process(vectors, batchSize: 50) { batch in
-                batch.map { vector in
-                    // Expensive operations
-                    let normalized = vector.normalized()
-                    let softmaxed = normalized.softmax()
-                    return softmaxed.magnitude
-                }
-            }
-            
-            // Vectors should be released after this block
+        // Create many large vectors
+        let vectors = (0..<1000).map { _ in
+            Vector1536.random(in: -1...1)
         }
+        
+        // Process in batches to manage memory
+        let _ = try await BatchOperations.process(vectors, batchSize: 50) { batch in
+            batch.map { vector in
+                // Expensive operations
+                let normalized = vector.normalized()
+                let softmaxed = normalized.softmax()
+                return softmaxed.magnitude
+            }
+        }
+        
+        // Vectors should be released after this block
         
         // If we get here without crashing, memory management is working
         XCTAssertTrue(true)
@@ -240,7 +247,7 @@ final class IntegrationTests: XCTestCase {
         }
     }
     
-    func testLargeScaleOperations() {
+    func testLargeScaleOperations() async throws {
         // Test operations at scale
         let vectorCount = 10_000
         let dimension = 256
@@ -258,7 +265,7 @@ final class IntegrationTests: XCTestCase {
         // 2. Batch normalization
         print("Normalizing vectors...")
         let startNorm = Date()
-        let normalized = BatchOperations.map(vectors, batchSize: 1024) { $0.normalized() }
+        let normalized = try await BatchOperations.map(vectors) { $0.normalized() }
         let normTime = Date().timeIntervalSince(startNorm)
         print("Normalization took \(normTime) seconds")
         
@@ -268,7 +275,7 @@ final class IntegrationTests: XCTestCase {
         let queries = BatchOperations.sample(normalized, k: 10)
         
         for query in queries {
-            let neighbors = BatchOperations.findNearest(
+            let neighbors = try await BatchOperations.findNearest(
                 to: query,
                 in: normalized,
                 k: 100,
@@ -287,7 +294,7 @@ final class IntegrationTests: XCTestCase {
         
         // 4. Compute aggregate statistics
         print("Computing statistics...")
-        let stats = BatchOperations.statistics(for: normalized)
+        let stats = try await BatchOperations.statistics(for: normalized)
         XCTAssertEqual(stats.count, vectorCount)
         XCTAssertEqual(stats.meanMagnitude, 1.0, accuracy: 0.01)
         
@@ -309,7 +316,7 @@ final class IntegrationTests: XCTestCase {
             let values = [Float](repeating: 1.0, count: 100)
             _ = try VectorFactory.vector(of: 128, from: values)
             XCTFail("Should have thrown dimension mismatch error")
-        } catch let error as VectorCoreError {
+        } catch let error as VectorError {
             XCTAssertEqual(error.code, "DIMENSION_MISMATCH")
         } catch {
             XCTFail("Wrong error type: \(error)")
@@ -325,7 +332,7 @@ final class IntegrationTests: XCTestCase {
     
     // MARK: - Performance Regression Tests
     
-    func testPerformanceRegression() {
+    func testPerformanceRegression() async throws {
         // Establish baseline performance expectations
         
         // 1. Vector creation
@@ -351,9 +358,10 @@ final class IntegrationTests: XCTestCase {
         // 3. Batch operations
         let vectors = (0..<1000).map { _ in Vector256.random(in: -1...1) }
         
-        let batchTime = measureTime {
-            _ = BatchOperations.map(vectors) { $0.normalized() }
-        }
+        // Batch operations are async, measure them differently
+        let batchStart = Date()
+        _ = try await BatchOperations.map(vectors) { $0.normalized() }
+        let batchTime = Date().timeIntervalSince(batchStart)
         XCTAssertLessThan(batchTime, 0.5, "Batch processing too slow")
     }
     

@@ -103,129 +103,63 @@ final class ErrorTests: XCTestCase {
         XCTAssertEqual(error.recoverySuggestion, "Convert the data to the expected format before deserializing")
     }
     
-    func testInvalidDataSizeError() {
-        let error = VectorError.invalidDataSize(expected: 1024, actual: 512)
+    func testInsufficientDataError() {
+        let error = VectorError.insufficientData(expected: 1024, actual: 512)
         
-        XCTAssertEqual(error.code, "INVALID_DATA_SIZE")
-        XCTAssertEqual(error.errorDescription, "Invalid data size: expected 1024 bytes, got 512")
-        XCTAssertEqual(error.recoverySuggestion, "Ensure the data size matches the vector dimension")
+        XCTAssertEqual(error.code, "INSUFFICIENT_DATA")
+        XCTAssertEqual(error.errorDescription, "Insufficient data: expected 1024 bytes, got 512")
+        XCTAssertEqual(error.recoverySuggestion, "Provide complete data for deserialization")
     }
     
-    func testOperationFailedError() {
-        let error = VectorError.operationFailed(operation: "matrix multiplication", reason: "incompatible dimensions")
-        
-        XCTAssertEqual(error.code, "OPERATION_FAILED")
-        XCTAssertEqual(error.errorDescription, "Operation 'matrix multiplication' failed: incompatible dimensions")
-    }
+    // Operation failed is not a current error case
     
-    func testNotImplementedError() {
-        let error = VectorError.notImplemented(feature: "sparse vector support")
-        
-        XCTAssertEqual(error.code, "NOT_IMPLEMENTED")
-        XCTAssertEqual(error.errorDescription, "Feature not implemented: sparse vector support")
-        XCTAssertEqual(error.recoverySuggestion, "This feature is not yet available")
-    }
+    // Not implemented is not a current error case
     
-    func testInvalidParameterError() {
-        let error = VectorError.invalidParameter(name: "k", reason: "must be positive")
-        
-        XCTAssertEqual(error.code, "INVALID_PARAMETER")
-        XCTAssertEqual(error.errorDescription, "Invalid parameter 'k': must be positive")
-    }
+    // Invalid parameter is not a current error case
     
-    func testInvalidStateError() {
-        let error = VectorError.invalidState(reason: "index not built")
-        
-        XCTAssertEqual(error.code, "INVALID_STATE")
-        XCTAssertEqual(error.errorDescription, "Invalid state: index not built")
-    }
+    // Invalid state is not a current error case
     
     // MARK: - Convenience Factory Method Tests
     
-    func testNanValuesFactory() {
-        let error = VectorError.nanValues(at: [1, 2, 3])
-        
-        XCTAssertEqual(error.code, "INVALID_VALUES")
-        if case .invalidValues(let indices, let reason) = error {
-            XCTAssertEqual(indices, [1, 2, 3])
-            XCTAssertEqual(reason, "NaN values detected")
-        } else {
-            XCTFail("Expected invalidValues case")
-        }
-    }
+    // NaN values factory is not a current error case
+    // Use VectorError.invalidValues directly
     
-    func testInfinityValuesFactory() {
-        let error = VectorError.infinityValues(at: [5, 10])
-        
-        XCTAssertEqual(error.code, "INVALID_VALUES")
-        if case .invalidValues(let indices, let reason) = error {
-            XCTAssertEqual(indices, [5, 10])
-            XCTAssertEqual(reason, "Infinity values detected")
-        } else {
-            XCTFail("Expected invalidValues case")
-        }
-    }
+    // Infinity values factory is not a current error case
+    // Use VectorError.invalidValues directly
     
-    func testUnsupportedDimensionFactory() {
-        let error = VectorError.unsupportedDimension(1000)
-        
-        XCTAssertEqual(error.code, "INVALID_DIMENSION")
-        if case .invalidDimension(let dimension, let reason) = error {
-            XCTAssertEqual(dimension, 1000)
-            XCTAssertEqual(reason, "Supported dimensions are 128, 256, 512, 768, 1536")
-        } else {
-            XCTFail("Expected invalidDimension case")
-        }
-    }
+    // Unsupported dimension factory is not a current error case
+    // Use VectorError.invalidDimension directly
     
-    func testNormalizationFailedFactory() {
-        // Test with zero magnitude
-        let zeroError = VectorError.normalizationFailed(magnitude: 0)
-        XCTAssertEqual(zeroError.code, "ZERO_VECTOR_ERROR")
-        
-        // Test with non-zero magnitude
-        let instabilityError = VectorError.normalizationFailed(magnitude: 1e-20)
-        XCTAssertEqual(instabilityError.code, "NUMERICAL_INSTABILITY")
-    }
+    // Normalization failed factory is not a current error case
+    // Use VectorError.zeroVectorError or VectorError.numericalInstability directly
     
     // MARK: - Equatable Tests
     
     func testVectorErrorEquality() {
+        // VectorError is not Equatable, test code properties instead
         let error1 = VectorError.dimensionMismatch(expected: 128, actual: 256)
         let error2 = VectorError.dimensionMismatch(expected: 128, actual: 256)
         let error3 = VectorError.dimensionMismatch(expected: 256, actual: 512)
         let error4 = VectorError.invalidDimension(128, reason: "test")
         
-        XCTAssertEqual(error1, error2)
-        XCTAssertNotEqual(error1, error3)
-        XCTAssertNotEqual(error1, error4)
+        // Test same errors have same properties
+        XCTAssertEqual(error1.code, error2.code)
+        XCTAssertEqual(error1.errorDescription, error2.errorDescription)
+        
+        // Test different errors have different properties
+        XCTAssertNotEqual(error1.errorDescription, error3.errorDescription)
+        XCTAssertNotEqual(error1.code, error4.code)
     }
     
     // MARK: - Hashable Tests
     
-    func testVectorErrorHashable() {
-        let error1 = VectorError.operationFailed(operation: "test", reason: "failure")
-        let error2 = VectorError.operationFailed(operation: "test", reason: "failure")
-        
-        // Can be used in sets
-        var errorSet = Set<VectorError>()
-        errorSet.insert(error1)
-        errorSet.insert(error2)
-        XCTAssertEqual(errorSet.count, 1) // Should be deduplicated
-        
-        // Can be used as dictionary keys
-        var errorDict = [VectorError: String]()
-        errorDict[error1] = "First"
-        errorDict[error2] = "Second"
-        XCTAssertEqual(errorDict.count, 1)
-        XCTAssertEqual(errorDict[error1], "Second") // Should be overwritten
-    }
+    // VectorError is not Hashable - test removed
     
     // MARK: - Error Throwing Tests
     
     func testThrowingVectorError() {
         func problematicFunction() throws {
-            throw VectorError.operationFailed(operation: "test", reason: "intentional failure")
+            throw VectorError.validationFailed(reason: "intentional failure")
         }
         
         XCTAssertThrowsError(try problematicFunction()) { error in
@@ -234,7 +168,7 @@ final class ErrorTests: XCTestCase {
                 return
             }
             
-            XCTAssertEqual(coreError.code, "OPERATION_FAILED")
+            XCTAssertEqual(coreError.code, "VALIDATION_FAILED")
             XCTAssertTrue(coreError.errorDescription?.contains("intentional failure") ?? false)
         }
     }
@@ -243,15 +177,14 @@ final class ErrorTests: XCTestCase {
     
     func testErrorPropagation() {
         func innerFunction() throws -> Vector256 {
-            throw VectorError.invalidParameter(name: "dimensions", reason: "must be positive")
+            throw VectorError.invalidDimension(256, reason: "must be positive")
         }
         
         func outerFunction() throws -> Vector256 {
             do {
                 return try innerFunction()
             } catch {
-                throw VectorError.operationFailed(
-                    operation: "createVector",
+                throw VectorError.validationFailed(
                     reason: "inner function failed"
                 )
             }

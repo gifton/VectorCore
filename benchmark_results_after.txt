@@ -1,0 +1,42 @@
+  Entropy:   0.018765 M ops/sec
+  Magnitude: 1.958491 M ops/sec
+  Variance:  0.583572 M ops/sec
+  Entropy:   0.007211 M ops/sec
+Edge Case Performance:
+  Zero vectors:   0.353431 M ops/sec
+  Sparse vectors: 0.014932 M ops/sec
+  L1 norm:  0.712884 M ops/sec
+  L2 norm:  1.974533 M ops/sec
+  Manhattan distance:  0.58092 M ops/sec
+  Separate ops:        0.307968 M ops/sec
+  Euclidean distance:  0.430941 M ops/sec
+  Manhattan distance:  0.300924 M ops/sec
+  Euclidean distance:  0.295116 M ops/sec
+  Already normalized: 1.880938 M ops/sec
+  Regular vectors:    0.476712 M ops/sec
+  normalized():     0.47751 M ops/sec
+  normalize():      0.886839 M ops/sec
+  magnitude only:   1.972769 M ops/sec
+  division only:    0.585482 M ops/sec
+  normalized():     0.366085 M ops/sec
+  magnitude only:   2.213411 M ops/sec
+  Addition: 2.15M ops/sec
+  Dot Product: 2.43M ops/sec
+  Addition: 1.44M ops/sec
+  Dot Product: 2.27M ops/sec
+  Addition: 1.24M ops/sec
+  Dot Product: 1.95M ops/sec
+  Addition: 0.71M ops/sec
+  Dot Product: 1.84M ops/sec
+Speedup: 2.404059854044353x
+  *= 1:    4.981359 M ops/sec
+  *= 2.5:  1.730091 M ops/sec
+  /= 1:    6.055226 M ops/sec
+  /= 2.5:  1.880938 M ops/sec
+  Baseline (×2.5):  0.657075 M ops/sec
+  Multiply by 0:    0.824981 M ops/sec (1.255536× speedup)
+  Multiply by 1:    4.799524 M ops/sec (7.304383× speedup)
+  Multiply by -1:   0.65503 M ops/sec (0.996888× speedup)
+  Divide by 1:      4.796094 M ops/sec (7.299162× speedup)
+  Baseline (×2.5):  0.436577 M ops/sec
+  Multiply by 1:    4.808741 M ops/sec (11.014646× speedup)

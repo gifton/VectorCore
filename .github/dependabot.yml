@@ -1,0 +1,43 @@
+version: 2
+updates:
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    pull-request-branch-name:
+      separator: "-"
+    reviewers:
+      - "@yourusername" # Replace with actual username
+    open-pull-requests-limit: 5
+
+  # Swift Package Manager updates
+  # Note: Dependabot doesn't currently support Swift Package Manager directly
+  # This is included for future compatibility when support is added
+  # - package-ecosystem: "swift"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "09:00"
+  #     timezone: "America/New_York"
+  #   labels:
+  #     - "dependencies"
+  #     - "swift"
+  #   commit-message:
+  #     prefix: "deps"
+  #     include: "scope"
+  #   pull-request-branch-name:
+  #     separator: "-"
+  #   reviewers:
+  #     - "@yourusername" # Replace with actual username
+  #   open-pull-requests-limit: 5

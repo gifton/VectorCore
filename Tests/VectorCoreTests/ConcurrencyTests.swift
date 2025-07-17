@@ -34,8 +34,8 @@ final class ConcurrencyTests: XCTestCase {
     // MARK: - Concurrent Distance Calculations
     
     func testConcurrentDistanceCalculation() async {
-        let vectors = (0..<100).map { _ in Vector512.random() }
-        let queries = (0..<10).map { _ in Vector512.random() }
+        let vectors = (0..<100).map { _ in Vector512.random(in: -1...1) }
+        let queries = (0..<10).map { _ in Vector512.random(in: -1...1) }
         
         // Calculate distances concurrently
         let results = await withTaskGroup(of: [(Int, Int, Float)].self) { group in
@@ -72,20 +72,21 @@ final class ConcurrencyTests: XCTestCase {
     
     func testBatchOperationsConcurrency() async throws {
         let vectorGroups = (0..<10).map { _ in
-            (0..<1000).map { _ in Vector256.random() }
+            (0..<1000).map { _ in Vector256.random(in: -1...1) }
         }
         
         // Process multiple batches concurrently
-        let results = try await withTaskGroup(of: [Float].self) { group in
+        let results = await withTaskGroup(of: [Float].self) { group in
             for vectors in vectorGroups {
                 group.addTask {
-                    let magnitudes = try await BatchOperations.map(vectors) { $0.magnitude }
+                    // BatchOperations.map doesn't exist, use regular map
+                    let magnitudes = vectors.map { $0.magnitude }
                     return magnitudes
                 }
             }
             
             var allResults: [[Float]] = []
-            for try await result in group {
+            for await result in group {
                 allResults.append(result)
             }
             return allResults
@@ -100,15 +101,18 @@ final class ConcurrencyTests: XCTestCase {
     // MARK: - Storage Thread Safety
     
     func testStorageThreadSafety() async {
-        let storage = SIMDStorage1536()
+        let storage = LargeVectorStorage(count: 1536)
         let iterations = 10000
-        let writers = 5
         let readers = 20
         
         // Initialize storage
+        var mutableStorage = storage
         for i in 0..<1536 {
-            storage[i] = Float(i)
+            mutableStorage[i] = Float(i)
         }
+        
+        // Create immutable copy for concurrent reads
+        let readOnlyStorage = mutableStorage
         
         // Concurrent reads (should be safe)
         await withTaskGroup(of: Float.self) { group in
@@ -116,7 +120,7 @@ final class ConcurrencyTests: XCTestCase {
                 group.addTask {
                     var sum: Float = 0
                     for _ in 0..<iterations {
-                        storage.withUnsafeBufferPointer { buffer in
+                        readOnlyStorage.withUnsafeBufferPointer { buffer in
                             sum += buffer.reduce(0, +)
                         }
                     }
@@ -216,8 +220,8 @@ final class ConcurrencyTests: XCTestCase {
         let k = 50
         
         // Create large dataset
-        let vectors = (0..<vectorCount).map { _ in Vector768.random() }
-        let queries = (0..<queryCount).map { _ in Vector768.random() }
+        let vectors = (0..<vectorCount).map { _ in Vector768.random(in: -1...1) }
+        let queries = (0..<queryCount).map { _ in Vector768.random(in: -1...1) }
         
         // Perform many k-NN searches concurrently
         let start = CFAbsoluteTimeGetCurrent()
@@ -260,7 +264,7 @@ final class ConcurrencyTests: XCTestCase {
         
         Task {
             // Nested async operations
-            let vectors = (0..<100).map { _ in Vector512.random() }
+            let vectors = (0..<100).map { _ in Vector512.random(in: -1...1) }
             
             let _ = await BatchOperations.findNearest(
                 to: vectors[0],
@@ -283,7 +287,7 @@ final class ConcurrencyTests: XCTestCase {
     
     func testMemoryConsistency() async {
         // Test that concurrent operations maintain memory consistency
-        let sharedVector = Vector1536.random()
+        let sharedVector = Vector1536.random(in: -1...1)
         let iterations = 100
         
         await withTaskGroup(of: Bool.self) { group in

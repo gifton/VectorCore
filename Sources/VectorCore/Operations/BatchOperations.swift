@@ -44,8 +44,10 @@ import Foundation
 /// 
 /// Adjust parallelization behavior via the global configuration:
 /// ```swift
-/// BatchOperations.configuration.parallelThreshold = 500  // Lower threshold
-/// BatchOperations.configuration.minimumChunkSize = 128   // Smaller chunks
+/// BatchOperations.updateConfiguration { config in
+///     config.parallelThreshold = 500  // Lower threshold
+///     config.minimumChunkSize = 128   // Smaller chunks
+/// }
 /// ```
 public enum BatchOperations {
     
@@ -66,8 +68,31 @@ public enum BatchOperations {
         public init() {}
     }
     
-    /// Global configuration
-    public static let configuration = Configuration()
+    /// Thread-safe global configuration
+    /// 
+    /// Access configuration via:
+    /// - Modern: `await BatchOperations.configuration()`
+    /// - Legacy: `BatchOperations.currentConfiguration`
+    private static let _configuration = LegacyThreadSafeConfiguration(Configuration())
+    
+    /// Get current configuration (legacy synchronous API)
+    public static var currentConfiguration: Configuration {
+        _configuration.get()
+    }
+    
+    /// Get configuration (modern async API)
+    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    public static func configuration() async -> Configuration {
+        _configuration.get()
+    }
+    
+    /// Update configuration safely
+    /// - Parameter update: Closure to update configuration properties
+    public static func updateConfiguration(_ update: (inout Configuration) -> Void) {
+        var config = _configuration.get()
+        update(&config)
+        _configuration.update(config)
+    }
     
     // MARK: - Core Operations
     
@@ -95,7 +120,7 @@ public enum BatchOperations {
         guard !vectors.isEmpty else { return [] }
         
         // Smart parallelization based on dataset size
-        if vectors.count < configuration.parallelThreshold {
+        if vectors.count < currentConfiguration.parallelThreshold {
             return findNearestSerial(to: query, in: vectors, k: k, metric: metric)
         }
         
@@ -119,10 +144,10 @@ public enum BatchOperations {
         batchSize: Int? = nil,
         transform: @Sendable @escaping ([V]) throws -> [R]
     ) async throws -> [R] {
-        let effectiveBatchSize = batchSize ?? configuration.defaultBatchSize
+        let effectiveBatchSize = batchSize ?? currentConfiguration.defaultBatchSize
         
         // Serial for small datasets
-        if vectors.count < configuration.parallelThreshold {
+        if vectors.count < currentConfiguration.parallelThreshold {
             return try processSerial(vectors, batchSize: effectiveBatchSize, transform: transform)
         }
         
@@ -190,7 +215,7 @@ public enum BatchOperations {
         _ vectors: [V],
         transform: @Sendable @escaping (V) throws -> U
     ) async throws -> [U] {
-        if vectors.count < configuration.parallelThreshold {
+        if vectors.count < currentConfiguration.parallelThreshold {
             return try vectors.map(transform)
         }
         
@@ -221,7 +246,7 @@ public enum BatchOperations {
         _ vectors: [V],
         predicate: @Sendable @escaping (V) throws -> Bool
     ) async throws -> [V] {
-        if vectors.count < configuration.parallelThreshold {
+        if vectors.count < currentConfiguration.parallelThreshold {
             return try vectors.filter(predicate)
         }
         
@@ -255,7 +280,7 @@ public enum BatchOperations {
             return BatchStatistics(count: 0, meanMagnitude: 0, stdMagnitude: 0)
         }
         
-        if vectors.count < configuration.parallelThreshold {
+        if vectors.count < currentConfiguration.parallelThreshold {
             return statisticsSerial(for: vectors)
         }
         
@@ -403,54 +428,40 @@ public enum BatchOperations {
         metric: any DistanceMetric
     ) async -> [[Float]] {
         let n = vectors.count
-        let blockSize = min(64, n) // Cache-friendly block size
         
-        // Pre-allocate result matrix
-        let distances = UnsafeMutablePointer<UnsafeMutablePointer<Float>>.allocate(capacity: n)
-        for i in 0..<n {
-            distances[i] = UnsafeMutablePointer<Float>.allocate(capacity: n)
-            distances[i].initialize(repeating: 0, count: n)
-        }
-        
-        await withTaskGroup(of: [(row: Int, col: Int, distance: Float)].self) { group in
-            for i in stride(from: 0, to: n, by: blockSize) {
-                for j in stride(from: i, to: n, by: blockSize) {
-                    let iBlock = i
-                    let jBlock = j
-                    group.addTask { @Sendable in
-                        var results: [(row: Int, col: Int, distance: Float)] = []
-                        for row in iBlock..<min(iBlock + blockSize, n) {
-                            for col in max(row, jBlock)..<min(jBlock + blockSize, n) {
-                                let dist = metric.distance(vectors[row], vectors[col])
-                                results.append((row: row, col: col, distance: dist))
-                                if row != col {
-                                    results.append((row: col, col: row, distance: dist))
-                                }
-                            }
+        // Process rows in parallel, each task owns its row data
+        let rows = await withTaskGroup(of: (Int, [Float]).self) { group in
+            // Process each row independently
+            for i in 0..<n {
+                group.addTask {
+                    var row = Array(repeating: Float(0), count: n)
+                    
+                    // Compute distances for this row
+                    for j in 0..<n {
+                        if i == j {
+                            row[j] = 0
+                        } else {
+                            row[j] = metric.distance(vectors[i], vectors[j])
                         }
-                        return results
                     }
+                    
+                    return (i, row)
                 }
             }
             
-            // Collect results from tasks
-            for await blockResults in group {
-                for result in blockResults {
-                    distances[result.row][result.col] = result.distance
-                }
+            // Collect results in order
+            var results = [(Int, [Float])]()
+            results.reserveCapacity(n)
+            
+            for await rowData in group {
+                results.append(rowData)
             }
+            
+            // Sort by row index to maintain order
+            return results.sorted { $0.0 < $1.0 }.map { $0.1 }
         }
         
-        // Convert to Swift array
-        var result = [[Float]]()
-        result.reserveCapacity(n)
-        for i in 0..<n {
-            result.append(Array(UnsafeBufferPointer(start: distances[i], count: n)))
-            distances[i].deallocate()
-        }
-        distances.deallocate()
-        
-        return result
+        return rows
     }
     
     private static func statisticsSerial<V: ExtendedVectorProtocol>(
@@ -469,12 +480,18 @@ public enum BatchOperations {
     
     private static func optimalChunkSize(for totalCount: Int) -> Int {
         let coreCount = ProcessInfo.processInfo.activeProcessorCount
-        let targetChunks = Int(Double(coreCount) * configuration.oversubscription)
-        let idealChunkSize = max(totalCount / targetChunks, configuration.minimumChunkSize)
+        let config = currentConfiguration
+        let targetChunks = Int(Double(coreCount) * config.oversubscription)
+        let idealChunkSize = max(totalCount / targetChunks, config.minimumChunkSize)
         
-        // Round to power of 2 for better cache alignment
-        let powerOf2 = 1 << (idealChunkSize.bitWidth - idealChunkSize.leadingZeroBitCount)
-        return min(powerOf2, idealChunkSize)
+        // Round to nearest power of 2 for better cache alignment
+        let bitsRequired = idealChunkSize.bitWidth - idealChunkSize.leadingZeroBitCount
+        let lowerPowerOf2 = 1 << (bitsRequired - 1)
+        let upperPowerOf2 = 1 << bitsRequired
+        
+        // Choose the nearest power of 2, but ensure it's at least minimumChunkSize
+        let nearestPowerOf2 = (idealChunkSize - lowerPowerOf2 < upperPowerOf2 - idealChunkSize) ? lowerPowerOf2 : upperPowerOf2
+        return max(nearestPowerOf2, currentConfiguration.minimumChunkSize)
     }
     
     private static func heapSelect(

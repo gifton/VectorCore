@@ -1,0 +1,276 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  SWIFT_VERSION: 6.0
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS 14 (Sonoma) - Apple Silicon
+          - os: macOS-14
+            runner: macos-14
+            swift: "6.0"
+            xcode: "16.0"
+          
+          # macOS 13 (Ventura) - Intel
+          - os: macOS-13
+            runner: macos-13
+            swift: "6.0"
+            xcode: "15.4"
+          
+          # Future Swift versions can be added here
+          # - os: macOS-14
+          #   runner: macos-14
+          #   swift: "6.1"
+          #   xcode: "16.1"
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+      
+      - name: Swift Version
+        run: swift --version
+      
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ matrix.swift }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-${{ matrix.swift }}-
+            ${{ runner.os }}-spm-
+      
+      - name: Build
+        run: |
+          swift build -c debug
+          swift build -c release
+      
+      - name: Run Tests
+        run: |
+          swift test --parallel --enable-code-coverage
+      
+      - name: Generate Coverage Report
+        if: matrix.os == 'macOS-14' && matrix.swift == '6.0'
+        run: |
+          xcrun llvm-cov export \
+            .build/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests \
+            -instr-profile .build/debug/codecov/default.profdata \
+            -format="lcov" > coverage.lcov
+      
+      - name: Upload Coverage
+        if: matrix.os == 'macOS-14' && matrix.swift == '6.0'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.lcov
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-sanitizers:
+    name: Test with ${{ matrix.sanitizer }} Sanitizer
+    runs-on: macos-14
+    timeout-minutes: 45
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [thread, address]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.0"
+      
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-sanitizer-${{ matrix.sanitizer }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-sanitizer-${{ matrix.sanitizer }}-
+            ${{ runner.os }}-spm-
+      
+      - name: Build with Sanitizer
+        run: |
+          swift build -c debug --sanitize=${{ matrix.sanitizer }}
+      
+      - name: Test with Sanitizer
+        run: |
+          swift test -c debug --sanitize=${{ matrix.sanitizer }}
+        env:
+          TSAN_OPTIONS: "halt_on_error=1"
+          ASAN_OPTIONS: "halt_on_error=1:detect_leaks=1"
+
+  verify-examples:
+    name: Verify Examples
+    runs-on: macos-14
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.0"
+      
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-examples-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-examples-
+            ${{ runner.os }}-spm-
+      
+      - name: Build Examples
+        run: |
+          swift build --target VectorCoreAPIExample
+          swift build --target ErrorHandlingExample
+          swift build --target SyncBatchOperationsExample
+          swift build --target NaNInfinityHandlingExample
+          swift build --target PerformanceRegressionExample
+      
+      - name: Run Verification
+        run: |
+          swift run VectorCoreVerify
+
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: macos-14
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.0"
+      
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-bench-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-bench-
+            ${{ runner.os }}-spm-
+      
+      - name: Build Benchmarks (Release)
+        run: |
+          swift build -c release --target VectorCoreBenchmarks
+      
+      - name: Run Benchmarks
+        run: |
+          .build/release/VectorCoreBenchmarks > benchmark_results.json
+      
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark_results.json
+          retention-days: 30
+      
+      - name: Check Performance Regression
+        run: |
+          swift run PerformanceRegressionRunner
+      
+      # For PRs, download base branch results and compare
+      - name: Download Base Benchmarks
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results-${{ github.event.pull_request.base.sha }}
+          path: base-benchmarks
+        continue-on-error: true
+      
+      - name: Compare Benchmarks
+        if: github.event_name == 'pull_request' && success()
+        run: |
+          if [ -f base-benchmarks/benchmark_results.json ]; then
+            echo "## Performance Comparison" >> $GITHUB_STEP_SUMMARY
+            echo "Comparing current branch with base branch..." >> $GITHUB_STEP_SUMMARY
+            # Add comparison logic here
+          fi
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-14
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      
+      - name: Run SwiftLint
+        run: |
+          if [ -f .swiftlint.yml ]; then
+            swiftlint --reporter github-actions-logging
+          else
+            echo "No .swiftlint.yml found, skipping linting"
+          fi
+
+  documentation:
+    name: Build Documentation
+    runs-on: macos-14
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.0"
+      
+      - name: Build Documentation
+        run: |
+          swift package generate-documentation
+        continue-on-error: true

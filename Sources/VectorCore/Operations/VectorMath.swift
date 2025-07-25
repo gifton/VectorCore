@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Accelerate
 import simd
 
 // MARK: - Element-wise Operations
@@ -26,14 +25,10 @@ extension Vector {
     /// - Probability computations
     @inlinable
     public static func .* (lhs: Vector<D>, rhs: Vector<D>) -> Vector<D> {
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vmul(dest.baseAddress!, 1, src.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(D.value))
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.elementWiseMultiply(lhsArray, rhsArray)
+        return Vector<D>(result)
     }
     
     /// Element-wise division
@@ -50,14 +45,10 @@ extension Vector {
     /// - Results in ±Inf for division by zero
     @inlinable
     public static func ./ (lhs: Vector<D>, rhs: Vector<D>) -> Vector<D> {
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vdiv(src.baseAddress!, 1, dest.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(D.value))
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.elementWiseDivide(lhsArray, rhsArray)
+        return Vector<D>(result)
     }
     
     /// Safe element-wise division with zero checking
@@ -154,13 +145,10 @@ extension Vector where D.Storage: VectorStorageOperations {
                     result += abs(buffer[i])
                 }
             } else {
-                // Large vector: use vDSP
-                var temp = [Float](repeating: 0, count: D.value)
-                temp.withUnsafeMutableBufferPointer { tempBuffer in
-                    vDSP_vabs(buffer.baseAddress!, 1,
-                             tempBuffer.baseAddress!, 1, vDSP_Length(D.value))
-                    vDSP_sve(tempBuffer.baseAddress!, 1, &result, vDSP_Length(D.value))
-                }
+                // Large vector: use SIMD provider
+                let array = self.toArray()
+                let absArray = Operations.simdProvider.abs(array)
+                result = absArray.reduce(0, +)
             }
         }
         return result
@@ -187,11 +175,9 @@ extension Vector where D.Storage: VectorStorageOperations {
     /// - Submultiplicative: ||xy||∞ ≤ ||x||∞||y||∞
     @inlinable
     public var lInfinityNorm: Float {
-        var result: Float = 0
-        storage.withUnsafeBufferPointer { buffer in
-            vDSP_maxmgv(buffer.baseAddress!, 1, &result, vDSP_Length(D.value))
-        }
-        return result
+        let array = self.toArray()
+        let absArray = Operations.simdProvider.abs(array)
+        return absArray.max() ?? 0
     }
 }
 
@@ -201,21 +187,15 @@ extension Vector {
     /// Mean value of all elements
     @inlinable
     public var mean: Float {
-        var result: Float = 0
-        storage.withUnsafeBufferPointer { buffer in
-            vDSP_meanv(buffer.baseAddress!, 1, &result, vDSP_Length(D.value))
-        }
-        return result
+        let array = self.toArray()
+        return Operations.simdProvider.mean(array)
     }
     
     /// Sum of all elements
     @inlinable
     public var sum: Float {
-        var result: Float = 0
-        storage.withUnsafeBufferPointer { buffer in
-            vDSP_sve(buffer.baseAddress!, 1, &result, vDSP_Length(D.value))
-        }
-        return result
+        let array = self.toArray()
+        return Operations.simdProvider.sum(array)
     }
     
     /// Variance of all elements
@@ -237,23 +217,11 @@ extension Vector {
         let m = mean
         var result: Float = 0
         
-        storage.withUnsafeBufferPointer { buffer in
-            // Compute sum of squared differences from mean
-            var temp = [Float](repeating: 0, count: D.value)
-            temp.withUnsafeMutableBufferPointer { tempBuffer in
-                // Subtract mean
-                var negMean = -m
-                vDSP_vsadd(buffer.baseAddress!, 1, &negMean,
-                          tempBuffer.baseAddress!, 1, vDSP_Length(D.value))
-                
-                // Square the differences
-                vDSP_vsq(tempBuffer.baseAddress!, 1,
-                        tempBuffer.baseAddress!, 1, vDSP_Length(D.value))
-                
-                // Sum
-                vDSP_sve(tempBuffer.baseAddress!, 1, &result, vDSP_Length(D.value))
-            }
-        }
+        // Compute sum of squared differences from mean
+        let array = self.toArray()
+        let diffs = array.map { $0 - m }
+        let squaredDiffs = diffs.map { $0 * $0 }
+        result = squaredDiffs.reduce(0, +)
         
         return result / Float(D.value)
     }
@@ -283,23 +251,12 @@ extension Vector where D.Storage: VectorStorageOperations {
                         result += abs(buffer1[i] - buffer2[i])
                     }
                 } else {
-                    // Large vector: use vDSP with fused operations
-                    var temp = [Float](repeating: 0, count: D.value)
-                    temp.withUnsafeMutableBufferPointer { tempBuffer in
-                        // Fused subtract and absolute value
-                        vDSP_vsub(buffer2.baseAddress!, 1,
-                                 buffer1.baseAddress!, 1,
-                                 tempBuffer.baseAddress!, 1,
-                                 vDSP_Length(D.value))
-                        
-                        vDSP_vabs(tempBuffer.baseAddress!, 1,
-                                 tempBuffer.baseAddress!, 1,
-                                 vDSP_Length(D.value))
-                        
-                        vDSP_sve(tempBuffer.baseAddress!, 1,
-                                &result,
-                                vDSP_Length(D.value))
-                    }
+                    // Large vector: use SIMD provider
+                    let arr1 = self.toArray()
+                    let arr2 = other.toArray()
+                    let diffs = Operations.simdProvider.subtract(arr1, arr2)
+                    let absDiffs = Operations.simdProvider.abs(diffs)
+                    result = absDiffs.reduce(0, +)
                 }
             }
         }
@@ -345,29 +302,19 @@ extension Vector {
         var result = self
         
         // Find max for numerical stability
-        var maxVal: Float = 0
-        storage.withUnsafeBufferPointer { buffer in
-            vDSP_maxv(buffer.baseAddress!, 1, &maxVal, vDSP_Length(D.value))
-        }
+        let array = self.toArray()
+        let maxVal = Operations.simdProvider.max(array)
         
-        result.storage.withUnsafeMutableBufferPointer { buffer in
-            // Subtract max and exp
-            var negMax = -maxVal
-            vDSP_vsadd(buffer.baseAddress!, 1, &negMax,
-                      buffer.baseAddress!, 1, vDSP_Length(D.value))
-            
-            // Apply exp
-            var count = Int32(D.value)
-            vvexpf(buffer.baseAddress!, buffer.baseAddress!, &count)
-            
-            // Sum for normalization
-            var sum: Float = 0
-            vDSP_sve(buffer.baseAddress!, 1, &sum, vDSP_Length(D.value))
-            
-            // Normalize
-            vDSP_vsdiv(buffer.baseAddress!, 1, &sum,
-                      buffer.baseAddress!, 1, vDSP_Length(D.value))
-        }
+        // Subtract max and exp
+        let shifted = array.map { $0 - maxVal }
+        let expValues = shifted.map { Foundation.exp($0) }
+        
+        // Sum for normalization
+        let sum = expValues.reduce(0, +)
+        
+        // Normalize
+        let normalized = Operations.simdProvider.divide(expValues, by: sum)
+        result = Vector<D>(normalized)
         
         return result
     }
@@ -390,12 +337,9 @@ extension Vector {
     public func clamped(to range: ClosedRange<Float>) -> Vector<D> {
         var result = self
         
-        result.storage.withUnsafeMutableBufferPointer { buffer in
-            var lower = range.lowerBound
-            var upper = range.upperBound
-            vDSP_vclip(buffer.baseAddress!, 1, &lower, &upper,
-                      buffer.baseAddress!, 1, vDSP_Length(D.value))
-        }
+        let array = result.toArray()
+        let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
+        result = Vector<D>(clamped)
         
         return result
     }

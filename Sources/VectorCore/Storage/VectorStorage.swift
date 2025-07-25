@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Accelerate
 
 /// Protocol defining the storage interface for vectors
 public protocol VectorStorage: Sendable {
@@ -39,14 +38,11 @@ public protocol VectorStorageOperations: VectorStorage {
 // MARK: - Storage Operations Extension
 
 extension VectorStorageOperations {
-    /// Default dot product implementation using vDSP
+    /// Default dot product implementation using SwiftSIMDProvider
     public func dotProduct(_ other: Self) -> Float {
-        var result: Float = 0
-        self.withUnsafeBufferPointer { a in
-            other.withUnsafeBufferPointer { b in
-                vDSP_dotpr(a.baseAddress!, 1, b.baseAddress!, 1, &result, vDSP_Length(count))
-            }
-        }
-        return result
+        // Convert to arrays and use SIMD provider
+        let a = self.withUnsafeBufferPointer { Array($0) }
+        let b = other.withUnsafeBufferPointer { Array($0) }
+        return Operations.simdProvider.dot(a, b)
     }
 }

@@ -4,7 +4,9 @@
 //
 
 import Foundation
+#if canImport(Accelerate)
 import Accelerate
+#endif
 
 /// Synchronous batch processing utilities for vector operations
 ///

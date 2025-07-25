@@ -1,0 +1,170 @@
+Building for debugging...
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+Build of product 'VectorCoreBenchmarks' complete! (0.95s)
+Debug results for Vector Addition - 768D:
+
+Time (wall clock):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+2873098239.000 0.000000000000          1           1.00
+2873098239.000 1.000000000000          1
+#[Mean    = 2872049664.000, StdDeviation   =        0.000]
+#[Max     = 2873098239.000, Total count    =            1]
+#[Buckets =           22, SubBuckets     =         2048]
+
+
+Time (total CPU):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+532414463.000 0.000000000000          1           1.00
+532414463.000 1.000000000000          1
+#[Mean    = 532283392.000, StdDeviation   =        0.000]
+#[Max     = 532414463.000, Total count    =            1]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Malloc / free Δ:
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+       0.000 0.000000000000          1           1.00
+       0.000 1.000000000000          1
+#[Mean    =        0.000, StdDeviation   =        0.000]
+#[Max     =        0.000, Total count    =            1]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Malloc (total):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+ 3846143.000 0.000000000000          1           1.00
+ 3846143.000 1.000000000000          1
+#[Mean    =  3845120.000, StdDeviation   =        0.000]
+#[Max     =  3846143.000, Total count    =            1]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+
+Debug results for Vector Dot Product - 768D:
+
+Time (wall clock):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+1673527295.000 0.000000000000          1           1.00
+1673527295.000 1.000000000000          1
+#[Mean    = 1673003008.000, StdDeviation   =        0.000]
+#[Max     = 1673527295.000, Total count    =            1]
+#[Buckets =           21, SubBuckets     =         2048]
+
+
+Time (total CPU):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+519307263.000 0.000000000000          1           1.00
+519307263.000 1.000000000000          1
+#[Mean    = 519176192.000, StdDeviation   =        0.000]
+#[Max     = 519307263.000, Total count    =            1]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Throughput (# / s):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+       1.000 0.000000000000          1           1.00
+       1.000 1.000000000000          1
+#[Mean    =        1.000, StdDeviation   =        0.000]
+#[Max     =        1.000, Total count    =            1]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Malloc / free Δ:
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+       0.000 0.000000000000          1           1.00
+       0.000 1.000000000000          1
+#[Mean    =        0.000, StdDeviation   =        0.000]
+#[Max     =        0.000, Total count    =            1]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Malloc (total):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+ 3844095.000 0.000000000000          1           1.00
+ 3844095.000 1.000000000000          1
+#[Mean    =  3843072.000, StdDeviation   =        0.000]
+#[Max     =  3844095.000, Total count    =            1]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+
+Debug results for Euclidean Distance - 768D:
+
+Time (wall clock):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+316145663.000 0.000000000000          1           1.00
+316145663.000 0.100000000000          1           1.11
+316145663.000 0.200000000000          1           1.25
+316145663.000 0.300000000000          1           1.43
+335020031.000 0.400000000000          2           1.67
+335020031.000 0.500000000000          2           2.00
+335020031.000 0.550000000000          2           2.22
+335020031.000 0.600000000000          2           2.50
+335020031.000 0.650000000000          2           2.86
+348127231.000 0.700000000000          3           3.33
+348127231.000 1.000000000000          3
+#[Mean    = 332966570.667, StdDeviation   = 13126991.493]
+#[Max     = 348127231.000, Total count    =            3]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Time (total CPU):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+171311103.000 0.000000000000          1           1.00
+171311103.000 0.100000000000          1           1.11
+171311103.000 0.200000000000          1           1.25
+171311103.000 0.300000000000          1           1.43
+174063615.000 0.400000000000          2           1.67
+174063615.000 0.500000000000          2           2.00
+174063615.000 0.550000000000          2           2.22
+174063615.000 0.600000000000          2           2.50
+174063615.000 0.650000000000          2           2.86
+174325759.000 0.700000000000          3           3.33
+174325759.000 1.000000000000          3
+#[Mean    = 173167957.333, StdDeviation   =  1363540.839]
+#[Max     = 174325759.000, Total count    =            3]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Throughput (# / s):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+       3.000 0.000000000000          3           1.00
+       3.000 1.000000000000          3
+#[Mean    =        3.000, StdDeviation   =        0.000]
+#[Max     =        3.000, Total count    =            3]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Malloc / free Δ:
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+       0.000 0.000000000000          3           1.00
+       0.000 1.000000000000          3
+#[Mean    =        0.000, StdDeviation   =        0.000]
+#[Max     =        0.000, Total count    =            3]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+Malloc (total):
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+    1000.000 0.000000000000          3           1.00
+    1000.000 1.000000000000          3
+#[Mean    =     1000.000, StdDeviation   =        0.000]
+#[Max     =     1000.000, Total count    =            3]
+#[Buckets =           20, SubBuckets     =         2048]
+
+
+

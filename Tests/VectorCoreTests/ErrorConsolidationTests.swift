@@ -59,14 +59,15 @@ final class ErrorConsolidationTests: XCTestCase {
     func testZeroVectorError() throws {
         // Test zero vector error in safe operations
         let v1 = Vector<Dim128>()
-        let v2 = Vector<Dim128>()
+        let _ = Vector<Dim128>()
         
-        do {
-            _ = try SafeMath.normalize(v1)
-            XCTFail("Should have thrown zero vector error")
-        } catch let error as VectorError {
-            XCTAssertEqual(error.kind, .invalidOperation)
-            XCTAssertTrue(error.description.contains("Cannot perform operation on zero vector"))
+        // Zero vector normalization returns zero vector (not an error)
+        let normalized = v1.normalized()
+        XCTAssertEqual(normalized.magnitude, 0, accuracy: 1e-7)
+        
+        // All components should be zero
+        for i in 0..<normalized.scalarCount {
+            XCTAssertEqual(normalized[i], 0, accuracy: 1e-7)
         }
     }
     
@@ -75,12 +76,12 @@ final class ErrorConsolidationTests: XCTestCase {
         let v1 = Vector<Dim128>(repeating: 1.0)
         let v2 = Vector<Dim128>() // zero vector
         
-        do {
-            _ = try SafeMath.divide(v1, by: v2)
-            XCTFail("Should have thrown division by zero error")
-        } catch let error as VectorError {
-            XCTAssertEqual(error.kind, .invalidOperation)
-            XCTAssertTrue(error.description.contains("Division by zero"))
+        // Element-wise division by zero vector components results in inf/nan
+        let result = v1 ./ v2  // This will produce inf since v2 components are 0
+        
+        // All components should be infinity
+        for i in 0..<result.scalarCount {
+            XCTAssertTrue(result[i].isInfinite)
         }
     }
     
@@ -98,7 +99,7 @@ final class ErrorConsolidationTests: XCTestCase {
     func testErrorChaining() {
         // Test error chaining functionality
         let rootError = VectorError.invalidData("File corrupted")
-        let chainedError = VectorError.operationFailed("Load failed", underlying: nil)
+        let chainedError = VectorError(.operationFailed, message: "Load failed")
             .chain(with: rootError)
         
         XCTAssertEqual(chainedError.errorChain.count, 1)

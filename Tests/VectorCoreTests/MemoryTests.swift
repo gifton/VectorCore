@@ -72,8 +72,8 @@ final class MemoryLeakTests: XCTestCase {
     
     func testStorageCopyOnWriteMemory() {
         autoreleasepool {
-            let original = MediumVectorStorage(count: 512)
-            var copies: [MediumVectorStorage] = []
+            let original = Storage512()
+            var copies: [Storage512] = []
             
             // Create multiple copies
             for _ in 0..<10 {

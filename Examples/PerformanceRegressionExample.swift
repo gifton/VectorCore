@@ -85,7 +85,7 @@ if let firstTest = modifiedResults.first {
     )
 }
 
-let modifiedBaseline = PerformanceBaseline(
+let modifiedBaseline = RegressionTestBaseline(
     version: baseline.version,
     platform: baseline.platform,
     date: Date(),

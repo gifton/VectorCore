@@ -1,276 +1,326 @@
-name: CI
+name: VectorCore CI/CD
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
   workflow_dispatch:
 
 env:
-  SWIFT_VERSION: 6.0
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  SWIFT_VERSION: '5.9'
+  VECTORCORE_TEST_EXTENDED: 1
 
 jobs:
-  test:
-    name: Test Swift ${{ matrix.swift }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
-    
+  # Job 1: Code Quality Checks
+  quality-checks:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Swift Format Check
+        run: |
+          if which swift-format >/dev/null; then
+            swift-format lint --recursive Sources/ Tests/
+          else
+            echo "swift-format not found, skipping format check"
+          fi
+      
+      - name: Validate Package.swift
+        run: swift package dump-package
+      
+      - name: Check for problematic optimization flags
+        run: |
+          if grep -q "disable-arc-opts\|disable-ossa-opts" Package.swift; then
+            echo "❌ Found optimization-disabling flags in Package.swift!"
+            exit 1
+          fi
+          echo "✅ No problematic optimization flags found"
+
+  # Job 2: Build Matrix
+  build:
+    name: Build (${{ matrix.os }}, Swift ${{ matrix.swift }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-13, macos-14]
+        swift: ['5.9', '5.10']
         include:
-          # macOS 14 (Sonoma) - Apple Silicon
-          - os: macOS-14
-            runner: macos-14
-            swift: "6.0"
-            xcode: "16.0"
-          
-          # macOS 13 (Ventura) - Intel
-          - os: macOS-13
-            runner: macos-13
-            swift: "6.0"
-            xcode: "15.4"
-          
-          # Future Swift versions can be added here
-          # - os: macOS-14
-          #   runner: macos-14
-          #   swift: "6.1"
-          #   xcode: "16.1"
+          - os: ubuntu-latest
+            swift: '5.9'
+            platform: 'linux'
+          - os: macos-13
+            swift: '5.9'
+            platform: 'macos-intel'
+          - os: macos-14
+            swift: '5.9'
+            platform: 'macos-arm64'
     
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
       
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
         with:
-          xcode-version: ${{ matrix.xcode }}
+          swift-version: ${{ matrix.swift }}
       
-      - name: Swift Version
-        run: swift --version
-      
-      - name: Cache Swift Package Manager
-        uses: actions/cache@v4
+      - name: Cache Swift packages
+        uses: actions/cache@v3
         with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ matrix.swift }}-${{ hashFiles('**/Package.resolved') }}
+          path: .build
+          key: ${{ runner.os }}-swift-${{ matrix.swift }}-${{ hashFiles('Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-spm-${{ matrix.swift }}-
-            ${{ runner.os }}-spm-
+            ${{ runner.os }}-swift-${{ matrix.swift }}-
+            ${{ runner.os }}-swift-
       
-      - name: Build
-        run: |
-          swift build -c debug
-          swift build -c release
+      - name: Build Debug
+        run: swift build
       
-      - name: Run Tests
+      - name: Build Release
+        run: ./Scripts/build_optimized.sh
+      
+      - name: Validate Optimizations
         run: |
-          swift test --parallel --enable-code-coverage
+          export VECTORCORE_VALIDATE_BUILD=1
+          swift Scripts/validate_optimizations.swift
+
+  # Job 3: Test Suite with Coverage
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13, macos-14]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+      
+      - name: Run Tests with Coverage
+        run: |
+          swift test --enable-code-coverage --parallel
       
       - name: Generate Coverage Report
-        if: matrix.os == 'macOS-14' && matrix.swift == '6.0'
         run: |
-          xcrun llvm-cov export \
-            .build/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests \
-            -instr-profile .build/debug/codecov/default.profdata \
-            -format="lcov" > coverage.lcov
-      
-      - name: Upload Coverage
-        if: matrix.os == 'macOS-14' && matrix.swift == '6.0'
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage.lcov
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  test-sanitizers:
-    name: Test with ${{ matrix.sanitizer }} Sanitizer
-    runs-on: macos-14
-    timeout-minutes: 45
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        sanitizer: [thread, address]
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: "16.0"
-      
-      - name: Cache Swift Package Manager
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-sanitizer-${{ matrix.sanitizer }}-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-sanitizer-${{ matrix.sanitizer }}-
-            ${{ runner.os }}-spm-
-      
-      - name: Build with Sanitizer
-        run: |
-          swift build -c debug --sanitize=${{ matrix.sanitizer }}
-      
-      - name: Test with Sanitizer
-        run: |
-          swift test -c debug --sanitize=${{ matrix.sanitizer }}
-        env:
-          TSAN_OPTIONS: "halt_on_error=1"
-          ASAN_OPTIONS: "halt_on_error=1:detect_leaks=1"
-
-  verify-examples:
-    name: Verify Examples
-    runs-on: macos-14
-    timeout-minutes: 20
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: "16.0"
-      
-      - name: Cache Swift Package Manager
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-examples-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-examples-
-            ${{ runner.os }}-spm-
-      
-      - name: Build Examples
-        run: |
-          swift build --target VectorCoreAPIExample
-          swift build --target ErrorHandlingExample
-          swift build --target SyncBatchOperationsExample
-          swift build --target NaNInfinityHandlingExample
-          swift build --target PerformanceRegressionExample
-      
-      - name: Run Verification
-        run: |
-          swift run VectorCoreVerify
-
-  benchmark:
-    name: Performance Benchmarks
-    runs-on: macos-14
-    timeout-minutes: 30
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: "16.0"
-      
-      - name: Cache Swift Package Manager
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-bench-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-bench-
-            ${{ runner.os }}-spm-
-      
-      - name: Build Benchmarks (Release)
-        run: |
-          swift build -c release --target VectorCoreBenchmarks
-      
-      - name: Run Benchmarks
-        run: |
-          .build/release/VectorCoreBenchmarks > benchmark_results.json
-      
-      - name: Upload Benchmark Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-results
-          path: benchmark_results.json
-          retention-days: 30
-      
-      - name: Check Performance Regression
-        run: |
-          swift run PerformanceRegressionRunner
-      
-      # For PRs, download base branch results and compare
-      - name: Download Base Benchmarks
-        if: github.event_name == 'pull_request'
-        uses: actions/download-artifact@v4
-        with:
-          name: benchmark-results-${{ github.event.pull_request.base.sha }}
-          path: base-benchmarks
+          ./Scripts/run_tests_with_coverage.sh --verbose
         continue-on-error: true
       
-      - name: Compare Benchmarks
-        if: github.event_name == 'pull_request' && success()
-        run: |
-          if [ -f base-benchmarks/benchmark_results.json ]; then
-            echo "## Performance Comparison" >> $GITHUB_STEP_SUMMARY
-            echo "Comparing current branch with base branch..." >> $GITHUB_STEP_SUMMARY
-            # Add comparison logic here
-          fi
-
-  lint:
-    name: SwiftLint
-    runs-on: macos-14
-    timeout-minutes: 10
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Install SwiftLint
-        run: brew install swiftlint
-      
-      - name: Run SwiftLint
-        run: |
-          if [ -f .swiftlint.yml ]; then
-            swiftlint --reporter github-actions-logging
-          else
-            echo "No .swiftlint.yml found, skipping linting"
-          fi
-
-  documentation:
-    name: Build Documentation
-    runs-on: macos-14
-    timeout-minutes: 15
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v3
         with:
-          xcode-version: "16.0"
+          name: coverage-${{ matrix.os }}
+          path: coverage/
+          retention-days: 7
+      
+      - name: Coverage Report
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          if command -v llvm-cov >/dev/null 2>&1; then
+            llvm-cov report \
+              .build/debug/*.xctest \
+              -instr-profile .build/debug/codecov/default.profdata \
+              -ignore-filename-regex="Tests|Benchmarks"
+          fi
+
+  # Job 4: Performance Regression Detection
+  performance-regression:
+    name: Performance Regression Check
+    runs-on: macos-14  # Use Apple Silicon for consistent performance
+    needs: build
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for baseline comparison
+      
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+      
+      - name: Cache Baseline
+        uses: actions/cache@v3
+        with:
+          path: baseline_metrics.json
+          key: performance-baseline-${{ runner.os }}-${{ github.base_ref || 'main' }}
+      
+      - name: Download Baseline
+        if: github.event_name == 'pull_request'
+        run: |
+          # Try to get baseline from main branch
+          git fetch origin main
+          git checkout origin/main -- baseline_metrics.json || echo "No baseline found"
+      
+      - name: Build Optimized
+        run: ./Scripts/build_optimized.sh
+      
+      - name: Capture Current Performance
+        run: |
+          swift Scripts/capture_baseline.swift current_metrics.json
+      
+      - name: Compare Performance
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -f baseline_metrics.json ]; then
+            export COMPARISON_OUTPUT=comparison_output.txt
+            swift Scripts/compare_baseline.swift baseline_metrics.json current_metrics.json --threshold 0.05
+          else
+            echo "⚠️ No baseline found for comparison" > comparison_output.txt
+            echo "Current metrics will become the new baseline" >> comparison_output.txt
+            cp current_metrics.json baseline_metrics.json
+          fi
+      
+      - name: Upload Performance Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-metrics
+          path: |
+            baseline_metrics.json
+            current_metrics.json
+          retention-days: 30
+      
+      - name: Comment PR with Performance
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let comment = '## 📊 Performance Report\n\n';
+            
+            try {
+              // Read comparison results if available
+              const output = fs.readFileSync('comparison_output.txt', 'utf8');
+              comment += '```\n' + output + '\n```\n';
+            } catch (e) {
+              comment += '⚠️ No performance comparison available\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Job 5: Extended Tests (Nightly)
+  extended-tests:
+    name: Extended Test Suite
+    runs-on: macos-14
+    if: github.event.schedule || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+      
+      - name: Run Extended Tests
+        run: |
+          export VECTORCORE_TEST_EXTENDED=1
+          export VECTORCORE_PROPERTY_ITERATIONS=1000
+          export VECTORCORE_PERF_ITERATIONS=1000
+          ./Scripts/run_tests_with_coverage.sh --extended --property-iterations 1000
+      
+      - name: Run Memory Tests
+        run: |
+          swift test --enable-test-discovery --filter MemoryTests
+      
+      - name: Run Stress Tests
+        run: |
+          # Add stress testing here
+          echo "TODO: Add stress tests"
+
+  # Job 6: Security Scan
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Security Scan
+        run: |
+          # Check for unsafe operations
+          echo "Scanning for unsafe operations..."
+          grep -r "unsafeBitCast\|unsafeDowncast\|assumingMemoryBound" Sources/ || true
+          
+          # Check for force unwraps
+          echo "Scanning for force unwraps..."
+          grep -r "!" Sources/ | grep -v "!=" | grep -v "// SAFETY:" || true
+      
+      - name: Dependency Scan
+        run: |
+          # Check dependencies for known vulnerabilities
+          swift package show-dependencies
+
+  # Job 7: Documentation Build
+  documentation:
+    name: Documentation
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
       
       - name: Build Documentation
         run: |
           swift package generate-documentation
-        continue-on-error: true
+      
+      - name: Validate Documentation
+        run: |
+          # Check that all public APIs are documented
+          echo "Checking documentation coverage..."
+
+  # Job 8: Release Build
+  release-artifacts:
+    name: Build Release Artifacts
+    runs-on: ${{ matrix.os }}
+    needs: [quality-checks, test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+      
+      - name: Build Release Artifacts
+        run: |
+          ./Scripts/build_optimized.sh --clean
+          
+          # Create artifact directory
+          mkdir -p artifacts
+          
+          # Copy build products
+          cp -r .build/release/* artifacts/ || true
+      
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-${{ matrix.os }}
+          path: artifacts/
+          retention-days: 90

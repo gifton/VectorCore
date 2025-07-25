@@ -331,7 +331,7 @@ final class CoreProtocolsTests: XCTestCase {
             }
         ) { error in
             if let vectorError = error as? VectorError,
-               case .dimensionMismatch = vectorError {
+               vectorError.kind == .dimensionMismatch {
                 // Success - got expected error
             } else {
                 XCTFail("Expected VectorError.dimensionMismatch, got: \(error)")

@@ -244,6 +244,20 @@ Batch operations scale linearly with core count:
 - 100K vector normalization: ~50ms with 8 cores
 - 1M vector filtering: ~200ms parallelized
 
+### Performance Monitoring
+
+VectorCore includes a comprehensive performance baseline system to prevent regressions:
+
+```swift
+// Run benchmarks and capture baseline
+swift run VectorCoreBenchmarks --format json > baseline.json
+
+// Compare against baseline
+swift run PerformanceRegressionRunner --baseline baseline.json --threshold 0.05
+```
+
+See the [Performance Baseline Guide](Documentation/baseline_metrics.md) for details.
+
 ## 📱 Requirements
 
 - **Swift:** 6.0+

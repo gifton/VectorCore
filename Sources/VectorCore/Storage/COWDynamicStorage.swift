@@ -8,7 +8,6 @@
 //
 
 import Foundation
-import Accelerate
 
 /// Copy-on-Write wrapper for DynamicArrayStorage providing value semantics.
 ///

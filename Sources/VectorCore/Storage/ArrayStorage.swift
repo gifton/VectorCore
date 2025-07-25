@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Accelerate
 
 /// Generic array-based storage for arbitrary dimensions
 public struct ArrayStorage<D: Dimension>: VectorStorage, VectorStorageOperations {
@@ -66,16 +65,10 @@ public struct ArrayStorage<D: Dimension>: VectorStorage, VectorStorageOperations
     public func dotProduct(_ other: Self) -> Float {
         precondition(count == other.count, "Dimensions must match")
         
-        var result: Float = 0
-        
-        // Use vDSP for optimal performance
-        self.withUnsafeBufferPointer { a in
-            other.withUnsafeBufferPointer { b in
-                vDSP_dotpr(a.baseAddress!, 1, b.baseAddress!, 1, &result, vDSP_Length(count))
-            }
-        }
-        
-        return result
+        // Convert to arrays and use SIMD provider
+        let a = Array(self.data)
+        let b = Array(other.data)
+        return Operations.simdProvider.dot(a, b)
     }
 }
 
@@ -128,14 +121,9 @@ public final class DynamicArrayStorage: @unchecked Sendable, VectorStorage, Vect
     public func dotProduct(_ other: DynamicArrayStorage) -> Float {
         precondition(count == other.count, "Dimensions must match")
         
-        var result: Float = 0
-        
-        self.withUnsafeBufferPointer { a in
-            other.withUnsafeBufferPointer { b in
-                vDSP_dotpr(a.baseAddress!, 1, b.baseAddress!, 1, &result, vDSP_Length(count))
-            }
-        }
-        
-        return result
+        // Convert to arrays and use SIMD provider
+        let a = Array(self.data)
+        let b = Array(other.data)
+        return Operations.simdProvider.dot(a, b)
     }
 }

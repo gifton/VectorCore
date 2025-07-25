@@ -1,12 +1,15 @@
 import XCTest
 @testable import VectorCore
 
+// Import Dimension explicitly to disambiguate from Foundation.Dimension (NSDimension)
+import protocol VectorCore.Dimension
+
 /// Simple property-based testing framework for VectorCore
 public struct PropertyTest {
     
     // MARK: - Configuration
     
-    public struct Config {
+    public struct Config: Sendable {
         public let iterations: Int
         public let seed: UInt64?
         public let verbose: Bool
@@ -59,11 +62,11 @@ public struct PropertyTest {
         }
         
         /// Generate a fixed-size vector
-        public static func vector<D: Dimension>(
+        public static func vector<D>(
             type: Vector<D>.Type,
             constraint: VectorConstraint = .normal(-100...100),
             using generator: inout SeededRandomGenerator
-        ) -> Vector<D> {
+        ) -> Vector<D> where D: Dimension {
             let values = (0..<D.value).map { _ in
                 floatForVectorConstraint(constraint, using: &generator)
             }
@@ -83,11 +86,11 @@ public struct PropertyTest {
         }
         
         /// Generate a pair of vectors with same dimension
-        public static func vectorPair<D: Dimension>(
+        public static func vectorPair<D>(
             type: Vector<D>.Type,
             constraint: VectorConstraint = .normal(-100...100),
             using generator: inout SeededRandomGenerator
-        ) -> (Vector<D>, Vector<D>) {
+        ) -> (Vector<D>, Vector<D>) where D: Dimension {
             return (
                 vector(type: type, constraint: constraint, using: &generator),
                 vector(type: type, constraint: constraint, using: &generator)
@@ -95,11 +98,11 @@ public struct PropertyTest {
         }
         
         /// Generate a triple of vectors with same dimension
-        public static func vectorTriple<D: Dimension>(
+        public static func vectorTriple<D>(
             type: Vector<D>.Type,
             constraint: VectorConstraint = .normal(-100...100),
             using generator: inout SeededRandomGenerator
-        ) -> (Vector<D>, Vector<D>, Vector<D>) {
+        ) -> (Vector<D>, Vector<D>, Vector<D>) where D: Dimension {
             return (
                 vector(type: type, constraint: constraint, using: &generator),
                 vector(type: type, constraint: constraint, using: &generator),
@@ -123,6 +126,12 @@ public struct PropertyTest {
             case .orthogonalBasis(let index, let total):
                 // Standard basis vector
                 return 0 // Will be set to 1 at the specific index
+            case .normalized:
+                // For normalized vectors, generate components that will be normalized
+                return float(in: -1...1, using: &generator)
+            case .nonNegative:
+                // Non-negative values only
+                return float(in: 0...100, using: &generator)
             }
         }
     }
@@ -261,7 +270,7 @@ public struct PropertyTest {
 
 // MARK: - Constraint Types
 
-public enum FloatConstraint {
+public enum FloatConstraint: Sendable {
     case normal(ClosedRange<Float>)
     case nonZero(ClosedRange<Float>)
     case positive
@@ -271,11 +280,13 @@ public enum FloatConstraint {
     case normalized
 }
 
-public enum VectorConstraint {
+public enum VectorConstraint: Sendable {
     case normal(ClosedRange<Float>)
     case unit
     case nonZero(ClosedRange<Float>)
     case orthogonalBasis(index: Int, total: Int)
+    case normalized
+    case nonNegative
 }
 
 // MARK: - Approximate Equality
@@ -284,11 +295,11 @@ public func approximately<T: BinaryFloatingPoint>(_ a: T, _ b: T, tolerance: T =
     abs(a - b) <= tolerance
 }
 
-public func vectorsApproximatelyEqual<D: Dimension>(
+public func vectorsApproximatelyEqual<D>(
     _ a: Vector<D>, 
     _ b: Vector<D>, 
     tolerance: Float = 1e-6
-) -> Bool {
+) -> Bool where D: Dimension {
     guard a.scalarCount == b.scalarCount else { return false }
     for i in 0..<a.scalarCount {
         if !approximately(a[i], b[i], tolerance: tolerance) {

@@ -1,6 +1,9 @@
 import XCTest
 @testable import VectorCore
 
+// Import Dimension explicitly to disambiguate from Foundation.Dimension (NSDimension)
+import protocol VectorCore.Dimension
+
 /// Tests for invariants that should always hold throughout vector operations
 final class InvariantTests: XCTestCase {
     
@@ -156,7 +159,7 @@ final class InvariantTests: XCTestCase {
         }
     }
     
-    private func verifyStorageTransparency<D: Dimension>(_ vector: Vector<D>, expectedValues: [Float]) {
+    private func verifyStorageTransparency<D>(_ vector: Vector<D>, expectedValues: [Float]) where D: Dimension {
         // Verify all values are accessible correctly
         for i in 0..<vector.scalarCount {
             XCTAssertEqual(vector[i], expectedValues[i], accuracy: 1e-7,
@@ -338,15 +341,15 @@ final class InvariantTests: XCTestCase {
     
     // MARK: - Helper Methods
     
-    private func assertNoNaN<D: Dimension>(_ vector: Vector<D>, _ message: String, 
-                                           file: StaticString = #file, line: UInt = #line) {
+    private func assertNoNaN<D>(_ vector: Vector<D>, _ message: String, 
+                                           file: StaticString = #file, line: UInt = #line) where D: Dimension {
         for i in 0..<vector.scalarCount {
             XCTAssertFalse(vector[i].isNaN, "\(message) at index \(i)", file: file, line: line)
         }
     }
     
-    private func assertNoInfinity<D: Dimension>(_ vector: Vector<D>, _ message: String,
-                                               file: StaticString = #file, line: UInt = #line) {
+    private func assertNoInfinity<D>(_ vector: Vector<D>, _ message: String,
+                                               file: StaticString = #file, line: UInt = #line) where D: Dimension {
         for i in 0..<vector.scalarCount {
             XCTAssertFalse(vector[i].isInfinite, "\(message) at index \(i)", file: file, line: line)
         }

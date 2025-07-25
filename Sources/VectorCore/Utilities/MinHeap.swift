@@ -26,6 +26,8 @@ import Foundation
 ///     }
 /// }
 /// ```
+
+@_spi(Internal)
 public struct MinHeap<T: Comparable> {
     /// Internal storage
     @usableFromInline
@@ -156,6 +158,8 @@ extension MinHeap {
 // MARK: - Max Heap Variant
 
 /// Max heap implementation (reverses comparison)
+
+@_spi(Internal)
 public struct MaxHeap<T: Comparable> {
     private var minHeap: MinHeap<ReverseComparable<T>>
     
@@ -184,7 +188,8 @@ public struct MaxHeap<T: Comparable> {
 /// Wrapper to reverse comparison for max heap
 @usableFromInline
 internal struct ReverseComparable<T: Comparable>: Comparable {
-    let value: T
+    @usableFromInline
+    internal let value: T
     
     @inlinable
     static func < (lhs: ReverseComparable<T>, rhs: ReverseComparable<T>) -> Bool {

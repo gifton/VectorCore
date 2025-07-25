@@ -1,0 +1,238 @@
+// VectorCore: ExecutionContext Tests
+//
+// Tests for the ExecutionContext system
+//
+
+import XCTest
+@testable import VectorCore
+
+final class ExecutionContextTests: XCTestCase {
+    
+    // MARK: - ComputeDevice Tests
+    
+    func testComputeDeviceProperties() {
+        // CPU device
+        let cpu = ComputeDevice.cpu
+        XCTAssertFalse(cpu.isAccelerated)
+        XCTAssertTrue(cpu.isAvailable)
+        XCTAssertEqual(cpu.description, "CPU")
+        
+        // GPU device
+        let gpu = ComputeDevice.gpu(index: 0)
+        XCTAssertTrue(gpu.isAccelerated)
+        XCTAssertEqual(gpu.description, "GPU")
+        
+        let gpu1 = ComputeDevice.gpu(index: 1)
+        XCTAssertEqual(gpu1.description, "GPU[1]")
+        
+        // Neural device
+        let neural = ComputeDevice.neural
+        XCTAssertTrue(neural.isAccelerated)
+        XCTAssertEqual(neural.description, "Neural Engine")
+    }
+    
+    func testDeviceAlignment() {
+        let cpu = ComputeDevice.cpu
+        #if arch(arm64)
+        XCTAssertEqual(cpu.requiredAlignment, 16)
+        #else
+        XCTAssertEqual(cpu.requiredAlignment, 32)
+        #endif
+        
+        let gpu = ComputeDevice.gpu()
+        XCTAssertEqual(gpu.requiredAlignment, 256)
+        
+        let neural = ComputeDevice.neural
+        XCTAssertEqual(neural.requiredAlignment, 64)
+    }
+    
+    func testDeviceCapabilities() {
+        let cpu = ComputeDevice.cpu
+        let capabilities = cpu.queryCapabilities()
+        
+        XCTAssertNotNil(capabilities)
+        XCTAssertGreaterThan(capabilities!.maxParallelism, 0)
+        XCTAssertTrue(capabilities!.supportedPrecisions.contains(.float32))
+        XCTAssertTrue(capabilities!.hasUnifiedMemory)
+    }
+    
+    // MARK: - CPUContext Tests
+    
+    func testCPUContextPresets() {
+        // Sequential context
+        let sequential = CPUContext.sequential
+        XCTAssertEqual(sequential.maxThreadCount, 1)
+        XCTAssertEqual(sequential.device, .cpu)
+        
+        // Automatic context
+        let automatic = CPUContext.automatic
+        XCTAssertEqual(automatic.maxThreadCount, ProcessInfo.processInfo.activeProcessorCount)
+        
+        // Performance context
+        let performance = CPUContext.performance
+        XCTAssertEqual(performance.maxThreadCount, ProcessInfo.processInfo.processorCount)
+        
+        // Efficiency context
+        let efficiency = CPUContext.efficiency
+        XCTAssertLessThanOrEqual(efficiency.maxThreadCount, automatic.maxThreadCount)
+    }
+    
+    func testCPUContextExecution() async throws {
+        let context = CPUContext.automatic
+        
+        // Simple execution
+        let result = try await context.execute {
+            return 42
+        }
+        XCTAssertEqual(result, 42)
+        
+        // Execution with error
+        do {
+            _ = try await context.execute {
+                throw VectorError.dimensionMismatch(expected: 10, actual: 20)
+            }
+            XCTFail("Should have thrown")
+        } catch {
+            XCTAssertTrue(error is VectorError)
+        }
+    }
+    
+    func testParallelizationDecision() {
+        let context = CPUContext.automatic
+        
+        // Small data - no parallelization
+        XCTAssertFalse(context.shouldParallelize(elementCount: 100))
+        XCTAssertFalse(context.shouldParallelize(elementCount: 999))
+        
+        // Large data - parallelize
+        XCTAssertTrue(context.shouldParallelize(elementCount: 1000))
+        XCTAssertTrue(context.shouldParallelize(elementCount: 10000))
+        
+        // Sequential context never parallelizes
+        let sequential = CPUContext.sequential
+        XCTAssertFalse(sequential.shouldParallelize(elementCount: 10000))
+    }
+    
+    func testOptimalChunkCount() {
+        let context = CPUContext.automatic
+        
+        // Small data - single chunk
+        XCTAssertEqual(context.optimalChunkCount(for: 100), 1)
+        
+        // Large data - multiple chunks
+        let chunks = context.optimalChunkCount(for: 100000)
+        XCTAssertGreaterThan(chunks, 1)
+        XCTAssertLessThanOrEqual(chunks, context.maxThreadCount * 4)
+    }
+    
+    func testChunkedExecution() async throws {
+        let context = CPUContext.automatic
+        let itemCount = 10000
+        
+        // Use actor for thread-safe collection
+        actor RangeCollector {
+            var ranges: [(Int, Int)] = []
+            
+            func add(_ range: (Int, Int)) {
+                ranges.append(range)
+            }
+            
+            func getAll() -> [(Int, Int)] {
+                ranges
+            }
+        }
+        
+        let collector = RangeCollector()
+        
+        try await context.executeChunked(count: itemCount) { start, end in
+            await collector.add((start, end))
+        }
+        
+        // Verify all items were processed
+        let processedRanges = await collector.getAll()
+        let totalProcessed = processedRanges.reduce(0) { $0 + ($1.1 - $1.0) }
+        XCTAssertEqual(totalProcessed, itemCount)
+        
+        // Verify no overlaps
+        let sortedRanges = processedRanges.sorted { $0.0 < $1.0 }
+        for i in 1..<sortedRanges.count {
+            XCTAssertEqual(sortedRanges[i-1].1, sortedRanges[i].0)
+        }
+    }
+    
+    func testMapConcurrent() async throws {
+        let context = CPUContext.automatic
+        let items = Array(0..<1000)
+        
+        let results = try await context.mapConcurrent(items) { item in
+            // Simulate some work
+            try await Task.sleep(nanoseconds: 1000)
+            return item * 2
+        }
+        
+        // Verify results
+        XCTAssertEqual(results.count, items.count)
+        for (index, result) in results.enumerated() {
+            XCTAssertEqual(result, items[index] * 2)
+        }
+    }
+    
+    func testDefaultContext() {
+        let defaultContext = CPUContext.automatic as any ExecutionContext
+        XCTAssertEqual(defaultContext.device, .cpu)
+        
+        // Should be automatic parallelization
+        let cpuContext = defaultContext as? CPUContext
+        XCTAssertNotNil(cpuContext)
+        XCTAssertEqual(cpuContext?.maxThreadCount, ProcessInfo.processInfo.activeProcessorCount)
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testParallelVsSequentialPerformance() async throws {
+        let itemCount = 100000
+        let items = Array(0..<itemCount)
+        
+        // Sequential execution
+        let sequentialStart = Date()
+        let sequentialContext = CPUContext.sequential
+        let sequentialResults = try await sequentialContext.mapConcurrent(items) { item in
+            // Simulate computation
+            var result = 0.0
+            for i in 0..<100 {
+                result += sqrt(Double(item + i))
+            }
+            return result
+        }
+        let sequentialTime = Date().timeIntervalSince(sequentialStart)
+        
+        // Parallel execution
+        let parallelStart = Date()
+        let parallelContext = CPUContext.automatic
+        let parallelResults = try await parallelContext.mapConcurrent(items) { item in
+            // Same computation
+            var result = 0.0
+            for i in 0..<100 {
+                result += sqrt(Double(item + i))
+            }
+            return result
+        }
+        let parallelTime = Date().timeIntervalSince(parallelStart)
+        
+        // Verify results match
+        XCTAssertEqual(sequentialResults.count, parallelResults.count)
+        for i in 0..<min(100, sequentialResults.count) {
+            XCTAssertEqual(sequentialResults[i], parallelResults[i], accuracy: 0.0001)
+        }
+        
+        // Parallel should be faster for this workload
+        print("Sequential time: \(sequentialTime)s")
+        print("Parallel time: \(parallelTime)s")
+        print("Speedup: \(sequentialTime / parallelTime)x")
+        
+        // Only check speedup on multi-core systems
+        if ProcessInfo.processInfo.activeProcessorCount > 1 {
+            XCTAssertLessThan(parallelTime, sequentialTime)
+        }
+    }
+}

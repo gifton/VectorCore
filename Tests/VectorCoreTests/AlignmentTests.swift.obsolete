@@ -10,8 +10,8 @@ final class AlignmentTests: XCTestCase {
     
     // MARK: - Storage Alignment Tests
     
-    func testSmallVectorStorageAlignment() {
-        let storage = SmallVectorStorage(repeating: 1.0)
+    func testStorage32Alignment() {
+        let storage = Storage32(repeating: 1.0)
         
         storage.withUnsafeBufferPointer { buffer in
             guard let baseAddress = buffer.baseAddress else {
@@ -20,7 +20,21 @@ final class AlignmentTests: XCTestCase {
             }
             
             let alignment = Int(bitPattern: baseAddress) % AlignedMemory.minimumAlignment
-            XCTAssertEqual(alignment, 0, "SmallVectorStorage is not properly aligned")
+            XCTAssertEqual(alignment, 0, "Storage32 is not properly aligned")
+        }
+    }
+    
+    func testStorage64Alignment() {
+        let storage = Storage64(repeating: 1.0)
+        
+        storage.withUnsafeBufferPointer { buffer in
+            guard let baseAddress = buffer.baseAddress else {
+                XCTFail("Buffer has no base address")
+                return
+            }
+            
+            let alignment = Int(bitPattern: baseAddress) % AlignedMemory.minimumAlignment
+            XCTAssertEqual(alignment, 0, "Storage64 is not properly aligned")
         }
     }
     

@@ -13,46 +13,48 @@ final class ErrorTests: XCTestCase {
     func testDimensionMismatchError() {
         let error = VectorError.dimensionMismatch(expected: 512, actual: 256)
         
-        XCTAssertEqual(error.code, "DIMENSION_MISMATCH")
-        XCTAssertEqual(error.errorDescription, "Vector dimension mismatch: expected 512, got 256")
-        XCTAssertEqual(error.recoverySuggestion, "Ensure all vectors have the same number of dimensions")
+        XCTAssertEqual(error.kind, .dimensionMismatch)
+        XCTAssertTrue(error.description.contains("Expected dimension 512, but got 256"))
+        XCTAssertEqual(error.context.additionalInfo["expected_dimension"], "512")
+        XCTAssertEqual(error.context.additionalInfo["actual_dimension"], "256")
     }
     
     func testInvalidDimensionError() {
         let error = VectorError.invalidDimension(100, reason: "must be power of 2")
         
-        XCTAssertEqual(error.code, "INVALID_DIMENSION")
-        XCTAssertEqual(error.errorDescription, "Invalid dimension 100: must be power of 2")
+        XCTAssertEqual(error.kind, .invalidDimension)
+        XCTAssertTrue(error.description.contains("Invalid dimension 100: must be power of 2"))
     }
     
     func testIndexOutOfBoundsError() {
         let error = VectorError.indexOutOfBounds(index: 300, dimension: 256)
         
-        XCTAssertEqual(error.code, "INDEX_OUT_OF_BOUNDS")
-        XCTAssertEqual(error.errorDescription, "Index 300 out of bounds for vector of dimension 256")
-        XCTAssertEqual(error.recoverySuggestion, "Use an index between 0 and dimension-1")
+        XCTAssertEqual(error.kind, .indexOutOfBounds)
+        XCTAssertTrue(error.description.contains("Index 300 is out of bounds for dimension 256"))
+        XCTAssertEqual(error.context.additionalInfo["index"], "300")
+        XCTAssertEqual(error.context.additionalInfo["max_index"], "255")
     }
     
     func testInvalidValuesError() {
         let error = VectorError.invalidValues(indices: [5, 10, 15], reason: "NaN values detected")
         
-        XCTAssertEqual(error.code, "INVALID_VALUES")
-        XCTAssertEqual(error.errorDescription, "Invalid values at indices [5, 10, 15]: NaN values detected")
-        XCTAssertEqual(error.recoverySuggestion, "Check for division by zero or invalid mathematical operations")
+        XCTAssertEqual(error.kind, .invalidData)
+        XCTAssertTrue(error.description.contains("Invalid values at indices [5, 10, 15]: NaN values detected"))
+        XCTAssertEqual(error.context.additionalInfo["indices"], "5,10,15")
+        XCTAssertEqual(error.context.additionalInfo["reason"], "NaN values detected")
     }
     
-    func testNumericalInstabilityError() {
-        let error = VectorError.numericalInstability(operation: "SVD decomposition")
+    func testInvalidOperationError() {
+        let error = VectorError.invalidOperation("SVD decomposition", reason: "Numerical instability")
         
-        XCTAssertEqual(error.code, "NUMERICAL_INSTABILITY")
-        XCTAssertEqual(error.errorDescription, "Numerical instability in SVD decomposition")
-        XCTAssertEqual(error.recoverySuggestion, "Consider normalizing inputs or using a more numerically stable algorithm")
+        XCTAssertEqual(error.kind, .invalidOperation)
+        XCTAssertTrue(error.description.contains("SVD decomposition failed: Numerical instability"))
     }
     
     func testDivisionByZeroError() {
         let error = VectorError.divisionByZero(operation: "normalization")
         
-        XCTAssertEqual(error.code, "DIVISION_BY_ZERO")
+        XCTAssertEqual(error.kind, .invalidOperation)
         XCTAssertEqual(error.errorDescription, "Division by zero in normalization")
         XCTAssertEqual(error.recoverySuggestion, "Check that divisor is not zero before performing division")
     }
@@ -60,55 +62,52 @@ final class ErrorTests: XCTestCase {
     func testZeroVectorError() {
         let error = VectorError.zeroVectorError(operation: "angle calculation")
         
-        XCTAssertEqual(error.code, "ZERO_VECTOR_ERROR")
-        XCTAssertEqual(error.errorDescription, "Cannot perform angle calculation on zero vector")
-        XCTAssertEqual(error.recoverySuggestion, "Ensure vector has non-zero magnitude before this operation")
+        XCTAssertEqual(error.kind, .invalidOperation)
+        XCTAssertTrue(error.errorDescription?.contains("angle calculation") ?? false)
+        XCTAssertTrue(error.errorDescription?.contains("zero vector") ?? false)
     }
     
     func testValidationFailedError() {
-        let error = VectorError.validationFailed(reason: "vector contains invalid values")
+        let error = VectorError.invalidData("vector contains invalid values")
         
-        XCTAssertEqual(error.code, "VALIDATION_FAILED")
-        XCTAssertEqual(error.errorDescription, "Validation failed: vector contains invalid values")
+        XCTAssertEqual(error.kind, .invalidData)
+        XCTAssertTrue(error.errorDescription?.contains("vector contains invalid values") ?? false)
     }
     
     func testNotNormalizedError() {
-        let error = VectorError.notNormalized(magnitude: 2.5)
+        let error = VectorError(.invalidOperation, message: "Vector is not normalized (magnitude: 2.5)")
         
-        XCTAssertEqual(error.code, "NOT_NORMALIZED")
-        XCTAssertEqual(error.errorDescription, "Vector is not normalized (magnitude: 2.5)")
-        XCTAssertEqual(error.recoverySuggestion, "Normalize the vector before this operation")
+        XCTAssertEqual(error.kind, .invalidOperation)
+        XCTAssertTrue(error.description.contains("Vector is not normalized (magnitude: 2.5)"))
     }
     
     func testOutOfRangeError() {
-        let error = VectorError.outOfRange(indices: [0, 5], range: -1.0...1.0)
+        let error = VectorError.invalidValues(indices: [0, 5], reason: "Values outside range -1.0...1.0")
         
-        XCTAssertEqual(error.code, "OUT_OF_RANGE")
-        XCTAssertEqual(error.errorDescription, "Values at indices [0, 5] are outside range -1.0...1.0")
-        XCTAssertEqual(error.recoverySuggestion, "Clamp or scale values to the expected range")
+        XCTAssertEqual(error.kind, .invalidData)
+        XCTAssertTrue(error.description.contains("Invalid values at indices [0, 5]"))
+        XCTAssertTrue(error.description.contains("Values outside range -1.0...1.0"))
     }
     
     func testSerializationFailedError() {
-        let error = VectorError.serializationFailed(reason: "invalid JSON format")
+        let error = VectorError(.operationFailed, message: "Serialization failed: invalid JSON format")
         
-        XCTAssertEqual(error.code, "SERIALIZATION_FAILED")
-        XCTAssertEqual(error.errorDescription, "Serialization failed: invalid JSON format")
+        XCTAssertEqual(error.kind, .operationFailed)
+        XCTAssertTrue(error.description.contains("Serialization failed: invalid JSON format"))
     }
     
     func testInvalidDataFormatError() {
         let error = VectorError.invalidDataFormat(expected: "Base64", actual: "Hex")
         
-        XCTAssertEqual(error.code, "INVALID_DATA_FORMAT")
-        XCTAssertEqual(error.errorDescription, "Invalid data format: expected Base64, got Hex")
-        XCTAssertEqual(error.recoverySuggestion, "Convert the data to the expected format before deserializing")
+        XCTAssertEqual(error.kind, .invalidData)
+        XCTAssertTrue(error.description.contains("Invalid data format: expected Base64, got Hex"))
     }
     
     func testInsufficientDataError() {
         let error = VectorError.insufficientData(expected: 1024, actual: 512)
         
-        XCTAssertEqual(error.code, "INSUFFICIENT_DATA")
-        XCTAssertEqual(error.errorDescription, "Insufficient data: expected 1024 bytes, got 512")
-        XCTAssertEqual(error.recoverySuggestion, "Provide complete data for deserialization")
+        XCTAssertEqual(error.kind, .insufficientData)
+        XCTAssertTrue(error.description.contains("Insufficient data: expected 1024 bytes, got 512"))
     }
     
     // Operation failed is not a current error case
@@ -143,12 +142,12 @@ final class ErrorTests: XCTestCase {
         let error4 = VectorError.invalidDimension(128, reason: "test")
         
         // Test same errors have same properties
-        XCTAssertEqual(error1.code, error2.code)
+        XCTAssertEqual(error1.kind, error2.kind)
         XCTAssertEqual(error1.errorDescription, error2.errorDescription)
         
         // Test different errors have different properties
         XCTAssertNotEqual(error1.errorDescription, error3.errorDescription)
-        XCTAssertNotEqual(error1.code, error4.code)
+        XCTAssertNotEqual(error1.kind, error4.kind)
     }
     
     // MARK: - Hashable Tests
@@ -159,7 +158,7 @@ final class ErrorTests: XCTestCase {
     
     func testThrowingVectorError() {
         func problematicFunction() throws {
-            throw VectorError.validationFailed(reason: "intentional failure")
+            throw VectorError.invalidData("intentional failure")
         }
         
         XCTAssertThrowsError(try problematicFunction()) { error in
@@ -168,7 +167,7 @@ final class ErrorTests: XCTestCase {
                 return
             }
             
-            XCTAssertEqual(coreError.code, "VALIDATION_FAILED")
+            XCTAssertEqual(coreError.kind, .invalidData)
             XCTAssertTrue(coreError.errorDescription?.contains("intentional failure") ?? false)
         }
     }
@@ -184,9 +183,7 @@ final class ErrorTests: XCTestCase {
             do {
                 return try innerFunction()
             } catch {
-                throw VectorError.validationFailed(
-                    reason: "inner function failed"
-                )
+                throw VectorError(.operationFailed, message: "inner function failed")
             }
         }
         
@@ -194,7 +191,7 @@ final class ErrorTests: XCTestCase {
             _ = try outerFunction()
             XCTFail("Expected error to be thrown")
         } catch let error as VectorError {
-            XCTAssertEqual(error.code, "OPERATION_FAILED")
+            XCTAssertEqual(error.kind, .operationFailed)
             XCTAssertTrue(error.errorDescription?.contains("inner function failed") ?? false)
         } catch {
             XCTFail("Unexpected error type: \(error)")
@@ -212,6 +209,6 @@ final class ErrorTests: XCTestCase {
         }
         
         let receivedError = await task.value
-        XCTAssertEqual(receivedError.code, "DIMENSION_MISMATCH")
+        XCTAssertEqual(receivedError.kind, .dimensionMismatch)
     }
 }

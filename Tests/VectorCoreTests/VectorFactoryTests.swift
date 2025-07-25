@@ -37,11 +37,7 @@ final class VectorFactoryTests: XCTestCase {
                 XCTFail("Expected VectorError")
                 return
             }
-            if case .dimensionMismatch = vectorError {
-                // Expected error
-            } else {
-                XCTFail("Expected dimensionMismatch error")
-            }
+            XCTAssertEqual(vectorError.kind, .dimensionMismatch)
         }
         
         // Test empty array
@@ -50,11 +46,7 @@ final class VectorFactoryTests: XCTestCase {
                 XCTFail("Expected VectorError")
                 return
             }
-            if case .dimensionMismatch = vectorError {
-                // Expected error
-            } else {
-                XCTFail("Expected dimensionMismatch error")
-            }
+            XCTAssertEqual(vectorError.kind, .dimensionMismatch)
         }
     }
     
@@ -229,11 +221,7 @@ final class VectorFactoryTests: XCTestCase {
                 XCTFail("Expected VectorError")
                 return
             }
-            if case .invalidValues = vectorError {
-                // Expected error  
-            } else {
-                XCTFail("Expected invalidValues error")
-            }
+            XCTAssertEqual(vectorError.kind, .invalidData)
         }
         
         // Test empty data
@@ -323,11 +311,7 @@ final class VectorFactoryTests: XCTestCase {
                 XCTFail("Expected VectorError")
                 return
             }
-            if case .indexOutOfBounds = vectorError {
-                // Expected error
-            } else {
-                XCTFail("Expected indexOutOfBounds error")
-            }
+            XCTAssertEqual(vectorError.kind, .indexOutOfBounds)
         }
         
         // Test index >= dimension
@@ -336,11 +320,7 @@ final class VectorFactoryTests: XCTestCase {
                 XCTFail("Expected VectorError")
                 return
             }
-            if case .indexOutOfBounds = vectorError {
-                // Expected error
-            } else {
-                XCTFail("Expected indexOutOfBounds error")
-            }
+            XCTAssertEqual(vectorError.kind, .indexOutOfBounds)
         }
         
         XCTAssertThrowsError(try VectorFactory.basis(dimension: 128, index: 200)) { error in
@@ -348,11 +328,7 @@ final class VectorFactoryTests: XCTestCase {
                 XCTFail("Expected VectorError")
                 return
             }
-            if case .indexOutOfBounds = vectorError {
-                // Expected error
-            } else {
-                XCTFail("Expected indexOutOfBounds error")
-            }
+            XCTAssertEqual(vectorError.kind, .indexOutOfBounds)
         }
     }
     

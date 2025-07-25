@@ -265,7 +265,7 @@ final class ProtocolTests: XCTestCase {
         
         func accelerate<T>(_ operation: AcceleratedOperation, input: T) async throws -> T {
             guard isSupported(for: operation) else {
-                throw VectorError.validationFailed(reason: "Operation \(operation.rawValue) not supported")
+                throw VectorError(.invalidOperation, message: "Operation \(operation.rawValue) not supported")
             }
             // Mock implementation just returns input
             return input

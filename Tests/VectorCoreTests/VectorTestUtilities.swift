@@ -141,14 +141,14 @@ enum TestError: Error {
     case unexpectedNil
 }
 
-struct SeededRandomGenerator: RandomNumberGenerator {
+public struct SeededRandomGenerator: RandomNumberGenerator {
     private var state: UInt64
     
-    init(seed: UInt64) {
+    public init(seed: UInt64) {
         self.state = seed
     }
     
-    mutating func next() -> UInt64 {
+    public mutating func next() -> UInt64 {
         state = state &* 6364136223846793005 &+ 1442695040888963407
         return state
     }

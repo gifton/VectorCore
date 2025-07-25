@@ -5,7 +5,6 @@
 
 import Foundation
 import simd
-import Accelerate
 
 /// Generic vector type supporting arbitrary dimensions
 public struct Vector<D: Dimension>: Sendable {
@@ -269,16 +268,10 @@ extension Vector {
     /// Subtract two vectors
     @inlinable
     public static func - (lhs: Vector<D>, rhs: Vector<D>) -> Vector<D> {
-        var result = Vector<D>()
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            lhs.storage.withUnsafeBufferPointer { src1 in
-                rhs.storage.withUnsafeBufferPointer { src2 in
-                    vDSP_vsub(src2.baseAddress!, 1, src1.baseAddress!, 1,
-                             dest.baseAddress!, 1, vDSP_Length(D.value))
-                }
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.subtract(lhsArray, rhsArray)
+        return Vector<D>(result)
     }
     
     /// Multiply vector by scalar
@@ -297,15 +290,9 @@ extension Vector {
             return -lhs
         default:
             // General case
-            var result = Vector<D>()
-            var scalar = rhs
-            result.storage.withUnsafeMutableBufferPointer { dest in
-                lhs.storage.withUnsafeBufferPointer { src in
-                    vDSP_vsmul(src.baseAddress!, 1, &scalar,
-                              dest.baseAddress!, 1, vDSP_Length(D.value))
-                }
-            }
-            return result
+            let lhsArray = lhs.toArray()
+            let result = Operations.simdProvider.multiply(lhsArray, by: rhs)
+            return Vector<D>(result)
         }
     }
     
@@ -324,37 +311,27 @@ extension Vector {
         }
         
         // General case
-        var result = Vector<D>()
-        var scalar = rhs
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            lhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vsdiv(src.baseAddress!, 1, &scalar,
-                          dest.baseAddress!, 1, vDSP_Length(D.value))
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let result = Operations.simdProvider.divide(lhsArray, by: rhs)
+        return Vector<D>(result)
     }
     
     /// Add and assign
     @inlinable
     public static func += (lhs: inout Vector<D>, rhs: Vector<D>) {
-        lhs.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vadd(dest.baseAddress!, 1, src.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(D.value))
-            }
-        }
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.add(lhsArray, rhsArray)
+        lhs = Vector<D>(result)
     }
     
     /// Subtract and assign
     @inlinable
     public static func -= (lhs: inout Vector<D>, rhs: Vector<D>) {
-        lhs.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vsub(src.baseAddress!, 1, dest.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(D.value))
-            }
-        }
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.subtract(lhsArray, rhsArray)
+        lhs = Vector<D>(result)
     }
     
     /// Multiply and assign
@@ -370,17 +347,14 @@ extension Vector {
             return
         case -1:
             // Multiplication by -1 - negate in place
-            lhs.storage.withUnsafeMutableBufferPointer { buffer in
-                vDSP_vneg(buffer.baseAddress!, 1,
-                         buffer.baseAddress!, 1, vDSP_Length(D.value))
-            }
+            let array = lhs.toArray()
+            let result = Operations.simdProvider.negate(array)
+            lhs = Vector<D>(result)
         default:
             // General case
-            var scalar = rhs
-            lhs.storage.withUnsafeMutableBufferPointer { buffer in
-                vDSP_vsmul(buffer.baseAddress!, 1, &scalar,
-                          buffer.baseAddress!, 1, vDSP_Length(D.value))
-            }
+            let array = lhs.toArray()
+            let result = Operations.simdProvider.multiply(array, by: rhs)
+            lhs = Vector<D>(result)
         }
     }
     
@@ -393,24 +367,17 @@ extension Vector {
         }
         
         // General case
-        var scalar = rhs
-        lhs.storage.withUnsafeMutableBufferPointer { buffer in
-            vDSP_vsdiv(buffer.baseAddress!, 1, &scalar,
-                      buffer.baseAddress!, 1, vDSP_Length(D.value))
-        }
+        let array = lhs.toArray()
+        let result = Operations.simdProvider.divide(array, by: rhs)
+        lhs = Vector<D>(result)
     }
     
     /// Negate vector
     @inlinable
     public static prefix func - (vector: Vector<D>) -> Vector<D> {
-        var result = Vector<D>()
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            vector.storage.withUnsafeBufferPointer { src in
-                vDSP_vneg(src.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(D.value))
-            }
-        }
-        return result
+        let array = vector.toArray()
+        let result = Operations.simdProvider.negate(array)
+        return Vector<D>(result)
     }
 }
 

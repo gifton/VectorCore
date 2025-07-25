@@ -5,6 +5,21 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Performance baseline system with automated regression detection
+- `BenchmarkAdapter` for bridging swift-benchmark package with baseline system
+- `PerformanceRegressionSuite` for comprehensive performance testing
+- CI/CD integration for automatic performance monitoring on PRs
+- Dimension extraction from benchmark names for better metric categorization
+
+### Fixed
+- Compilation errors in test suite
+- VectorError pattern matching updated to use `.kind` property
+- PropertyTest API usage updated for compatibility
+- Method naming consistency (euclideanDistance → distance, dot → dotProduct)
+
 ## [0.1.0] - 2025-01-15
 
 ### Added

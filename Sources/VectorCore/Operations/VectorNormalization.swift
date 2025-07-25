@@ -4,7 +4,9 @@
 //
 
 import Foundation
+#if canImport(Accelerate)
 import Accelerate
+#endif
 
 extension Vector where D.Storage: VectorStorageOperations {
     /// Normalize using reciprocal multiplication (faster than division)

@@ -1,6 +1,10 @@
 import XCTest
 @testable import VectorCore
 
+// Import Dimension explicitly to disambiguate from Foundation.Dimension (NSDimension)
+import enum VectorCore.VectorCore
+import protocol VectorCore.Dimension
+
 /// Tests for boundary conditions and edge cases
 final class EdgeCaseTests: XCTestCase {
     
@@ -54,7 +58,7 @@ final class EdgeCaseTests: XCTestCase {
         let dimensions = [32, 128, 512]
         
         for dim in dimensions {
-            let zero = DynamicVector(repeating: 0, dimension: dim)
+            let zero = DynamicVector(dimension: dim, repeating: 0)
             let nonZero = DynamicVector.random(dimension: dim, in: -10...10)
             
             XCTAssertEqual(zero.magnitude, 0, accuracy: accuracy, 
@@ -99,7 +103,7 @@ final class EdgeCaseTests: XCTestCase {
         }
     }
     
-    private func verifyUnitVectorProperties<D: Dimension>(_ unit: Vector<D>, axis: Int) {
+    private func verifyUnitVectorProperties<D>(_ unit: Vector<D>, axis: Int) where D: Dimension, D.Storage: VectorStorageOperations {
         // Magnitude is 1
         XCTAssertEqual(unit.magnitude, 1.0, accuracy: accuracy, "Unit vector magnitude != 1")
         
@@ -149,7 +153,7 @@ final class EdgeCaseTests: XCTestCase {
                       "Large vector normalization failed")
         
         // All normalized components should be equal
-        let expectedComponent = 1.0 / sqrt(128)
+        let expectedComponent = Float(1.0 / sqrt(128))
         for i in 0..<normalized.scalarCount {
             XCTAssertEqual(normalized[i], expectedComponent, accuracy: accuracy,
                           "Normalized component incorrect")
@@ -265,7 +269,7 @@ final class EdgeCaseTests: XCTestCase {
             }
             
             // Test reduction operations
-            let sum = v.sum
+            let sum = (0..<v.dimension).reduce(Float(0)) { $0 + v[$1] }
             var expectedSum: Float = 0
             for i in 0..<dim {
                 expectedSum += v[i]
@@ -341,7 +345,45 @@ final class EdgeCaseTests: XCTestCase {
         // While our vectors have minimum dimensions, test smallest supported sizes
         struct Dim1: Dimension {
             static let value = 1
-            typealias Storage = SmallVectorStorage<Dim1>
+            typealias Storage = TestStorage1
+        }
+        
+        struct TestStorage1: VectorStorage, VectorStorageOperations {
+            private var value: Float = 0
+            
+            var count: Int { 1 }
+            
+            init() { self.value = 0 }
+            
+            init(repeating value: Float) { self.value = value }
+            
+            init(from values: [Float]) {
+                precondition(values.count == 1)
+                self.value = values[0]
+            }
+            
+            subscript(index: Int) -> Float {
+                get { 
+                    precondition(index == 0)
+                    return value 
+                }
+                set { 
+                    precondition(index == 0)
+                    value = newValue 
+                }
+            }
+            
+            func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
+                try withUnsafePointer(to: value) { ptr in
+                    try body(UnsafeBufferPointer(start: ptr, count: 1))
+                }
+            }
+            
+            mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+                try withUnsafeMutablePointer(to: &value) { ptr in
+                    try body(UnsafeMutableBufferPointer(start: ptr, count: 1))
+                }
+            }
         }
         
         let single = Vector<Dim1>([5.0])
@@ -375,17 +417,17 @@ final class EdgeCaseTests: XCTestCase {
         
         // Distance follows Pythagorean theorem
         let distance = v1.distance(to: v2)
-        let expectedDistance = sqrt(2.0) // √(1² + 1²)
+        let expectedDistance = sqrt(Float(2.0)) // √(1² + 1²)
         XCTAssertEqual(distance, expectedDistance, accuracy: accuracy,
                       "Orthogonal vector distance incorrect")
     }
     
     // MARK: - Helper Methods
     
-    private func assertVectorsEqual<D: Dimension>(_ a: Vector<D>, _ b: Vector<D>, 
+    private func assertVectorsEqual<D>(_ a: Vector<D>, _ b: Vector<D>, 
                                                   _ message: String,
                                                   file: StaticString = #file, 
-                                                  line: UInt = #line) {
+                                                  line: UInt = #line) where D: Dimension {
         XCTAssertEqual(a.scalarCount, b.scalarCount, message, file: file, line: line)
         for i in 0..<a.scalarCount {
             XCTAssertEqual(a[i], b[i], accuracy: accuracy, 

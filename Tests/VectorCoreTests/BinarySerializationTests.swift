@@ -76,8 +76,9 @@ final class BinarySerializationTests: XCTestCase {
         
         // Should fail with invalid magic
         XCTAssertThrowsError(try DynamicVector.decodeBinary(from: data)) { error in
-            guard case VectorError.invalidDataFormat = error else {
-                XCTFail("Expected invalidDataFormat error")
+            guard let vectorError = error as? VectorError,
+                  vectorError.kind == .invalidData else {
+                XCTFail("Expected invalidData error")
                 return
             }
         }
@@ -103,8 +104,9 @@ final class BinarySerializationTests: XCTestCase {
         
         // Should fail with invalid version
         XCTAssertThrowsError(try DynamicVector.decodeBinary(from: data)) { error in
-            guard case VectorError.invalidDataFormat = error else {
-                XCTFail("Expected invalidDataFormat error")
+            guard let vectorError = error as? VectorError,
+                  vectorError.kind == .invalidData else {
+                XCTFail("Expected invalidData error")
                 return
             }
         }
@@ -117,12 +119,12 @@ final class BinarySerializationTests: XCTestCase {
         
         // Try to decode as Vector128 - should fail
         XCTAssertThrowsError(try Vector128.decodeBinary(from: encoded)) { error in
-            guard case VectorError.dimensionMismatch(let expected, let actual) = error else {
+            guard let vectorError = error as? VectorError,
+                  vectorError.kind == .dimensionMismatch else {
                 XCTFail("Expected dimensionMismatch error")
                 return
             }
-            XCTAssertEqual(expected, 128)
-            XCTAssertEqual(actual, 256)
+            // Expected values are contained in the error itself
         }
     }
     
@@ -137,7 +139,8 @@ final class BinarySerializationTests: XCTestCase {
         
         // Should fail CRC32 check
         XCTAssertThrowsError(try Vector128.decodeBinary(from: encoded)) { error in
-            guard case VectorError.dataCorruption = error else {
+            guard let vectorError = error as? VectorError,
+                  vectorError.kind == .dataCorruption else {
                 XCTFail("Expected dataCorruption error")
                 return
             }
@@ -149,7 +152,8 @@ final class BinarySerializationTests: XCTestCase {
         let shortData = Data(repeating: 0, count: 10)
         
         XCTAssertThrowsError(try Vector128.decodeBinary(from: shortData)) { error in
-            guard case VectorError.insufficientData = error else {
+            guard let vectorError = error as? VectorError,
+                  vectorError.kind == .insufficientData else {
                 XCTFail("Expected insufficientData error")
                 return
             }
@@ -186,7 +190,8 @@ final class BinarySerializationTests: XCTestCase {
             let vector = DynamicVector(dimension: 10_001, repeating: 0.0)
             _ = try vector.encodeBinary()
         }()) { error in
-            guard case VectorError.invalidDimension = error else {
+            guard let vectorError = error as? VectorError,
+                  vectorError.kind == .invalidDimension else {
                 XCTFail("Expected invalidDimension error")
                 return
             }

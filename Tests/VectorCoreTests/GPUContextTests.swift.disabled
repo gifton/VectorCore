@@ -1,0 +1,168 @@
+// VectorCore: GPU Context Tests
+//
+// Tests for the Metal GPU execution context placeholder
+//
+
+import XCTest
+@testable import VectorCore
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
+final class GPUContextTests: XCTestCase {
+    
+    // MARK: - Device Availability
+    
+    func testGPUDeviceAvailability() {
+        let gpuDevice = ComputeDevice.gpu()
+        
+        #if canImport(Metal) && !targetEnvironment(simulator)
+        // Should be available on real devices with Metal
+        if MTLCreateSystemDefaultDevice() != nil {
+            XCTAssertTrue(gpuDevice.isAvailable)
+        } else {
+            XCTAssertFalse(gpuDevice.isAvailable)
+        }
+        #else
+        // Not available in simulator or without Metal
+        XCTAssertFalse(gpuDevice.isAvailable)
+        #endif
+    }
+    
+    func testMetalContextCreation() {
+        // Try to create Metal context
+        let context = MetalContext.createIfAvailable()
+        
+        #if canImport(Metal) && !targetEnvironment(simulator)
+        if MTLCreateSystemDefaultDevice() != nil {
+            XCTAssertNotNil(context)
+            XCTAssertEqual(context?.device, .gpu(index: 0))
+        } else {
+            XCTAssertNil(context)
+        }
+        #else
+        XCTAssertNil(context)
+        #endif
+    }
+    
+    // MARK: - Context Properties
+    
+    func testMetalContextProperties() throws {
+        guard let context = MetalContext.createIfAvailable() else {
+            throw XCTSkip("Metal not available on this device")
+        }
+        
+        // Verify properties
+        XCTAssertEqual(context.device, .gpu(index: 0))
+        XCTAssertGreaterThan(context.maxThreadCount, 0)
+        XCTAssertEqual(context.preferredChunkSize, 65536)
+        
+        // Check Metal device
+        XCTAssertNotNil(context.metalDevice)
+        XCTAssertNotNil(context.commandQueue)
+    }
+    
+    func testGPUMemoryInfo() throws {
+        guard let context = MetalContext.createIfAvailable() else {
+            throw XCTSkip("Metal not available on this device")
+        }
+        
+        let memoryInfo = context.memoryInfo
+        
+        // Basic sanity checks
+        XCTAssertGreaterThan(memoryInfo.total, 0)
+        XCTAssertLessThanOrEqual(memoryInfo.used, memoryInfo.total)
+        XCTAssertGreaterThanOrEqual(memoryInfo.usagePercentage, 0.0)
+        XCTAssertLessThanOrEqual(memoryInfo.usagePercentage, 100.0)
+    }
+    
+    // MARK: - Execution Tests
+    
+    func testMetalContextExecution() async throws {
+        guard let context = MetalContext.createIfAvailable() else {
+            throw XCTSkip("Metal not available on this device")
+        }
+        
+        // Test basic execution (currently falls back to CPU)
+        let result = try await context.execute {
+            return 42
+        }
+        
+        XCTAssertEqual(result, 42)
+    }
+    
+    func testMetalContextAsyncExecution() async throws {
+        guard let context = MetalContext.createIfAvailable() else {
+            throw XCTSkip("Metal not available on this device")
+        }
+        
+        // Test async execution
+        let result = try await context.execute {
+            // Simulate some work
+            var sum = 0
+            for i in 1...100 {
+                sum += i
+            }
+            return sum
+        }
+        
+        XCTAssertEqual(result, 5050)
+    }
+    
+    // MARK: - Acceleration Status
+    
+    func testGPUAccelerationStatus() throws {
+        guard let context = MetalContext.createIfAvailable() else {
+            throw XCTSkip("Metal not available on this device")
+        }
+        
+        // Currently no operations are GPU-accelerated
+        XCTAssertFalse(context.isGPUAccelerated(operation: .distanceComputation))
+        XCTAssertFalse(context.isGPUAccelerated(operation: .matrixMultiplication))
+        XCTAssertFalse(context.isGPUAccelerated(operation: .vectorNormalization))
+        XCTAssertFalse(context.isGPUAccelerated(operation: .batchedOperations))
+    }
+    
+    // MARK: - Device Integration
+    
+    func testDeviceCreateContext() {
+        let gpuDevice = ComputeDevice.gpu()
+        
+        if gpuDevice.isAvailable {
+            let context = gpuDevice.createContext()
+            
+            #if canImport(Metal)
+            if MTLCreateSystemDefaultDevice() != nil {
+                XCTAssertNotNil(context)
+                XCTAssertEqual(context?.device, .gpu(index: 0))
+            } else {
+                XCTAssertNil(context)
+            }
+            #else
+            XCTAssertNil(context)
+            #endif
+        }
+    }
+    
+    func testMultiGPUDevice() {
+        // Test multi-GPU device representation
+        let gpu0 = ComputeDevice.gpu(index: 0)
+        let gpu1 = ComputeDevice.gpu(index: 1)
+        
+        XCTAssertNotEqual(gpu0, gpu1)
+        XCTAssertEqual(gpu0.description, "GPU")
+        XCTAssertEqual(gpu1.description, "GPU[1]")
+    }
+    
+    // MARK: - Shared Instance
+    
+    func testSharedMetalContext() {
+        let shared1 = MetalContext.shared
+        let shared2 = MetalContext.shared
+        
+        // Should be the same instance (or both nil)
+        if shared1 != nil {
+            XCTAssertNotNil(shared2)
+        } else {
+            XCTAssertNil(shared2)
+        }
+    }
+}

@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Accelerate
 
 /// Dynamic array storage with guaranteed memory alignment for SIMD operations
 public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorage, VectorStorageOperations {
@@ -96,9 +95,10 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     public func dotProduct(_ other: AlignedDynamicArrayStorage) -> Float {
         precondition(_count == other._count, "Dimensions must match")
         
-        var result: Float = 0
-        vDSP_dotpr(ptr, 1, other.ptr, 1, &result, vDSP_Length(_count))
-        return result
+        // Convert to arrays and use SIMD provider
+        let a = self.toArray()
+        let b = other.toArray()
+        return Operations.simdProvider.dot(a, b)
     }
     
     /// Convert to array for COW operations
@@ -113,11 +113,10 @@ extension AlignedDynamicArrayStorage {
     /// Bridge method for compatibility with existing DynamicArrayStorage usage
     @inlinable
     func dotProductWithDynamicStorage(_ other: DynamicArrayStorage) -> Float {
-        var result: Float = 0
-        other.withUnsafeBufferPointer { otherBuffer in
-            vDSP_dotpr(ptr, 1, otherBuffer.baseAddress!, 1, &result, vDSP_Length(_count))
-        }
-        return result
+        // Convert to arrays and use SIMD provider
+        let a = self.toArray()
+        let b = other.withUnsafeBufferPointer { Array($0) }
+        return Operations.simdProvider.dot(a, b)
     }
 }
 

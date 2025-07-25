@@ -317,7 +317,7 @@ final class IntegrationTests: XCTestCase {
             _ = try VectorFactory.vector(of: 128, from: values)
             XCTFail("Should have thrown dimension mismatch error")
         } catch let error as VectorError {
-            XCTAssertEqual(error.code, "DIMENSION_MISMATCH")
+            XCTAssertEqual(error.kind, .dimensionMismatch)
         } catch {
             XCTFail("Wrong error type: \(error)")
         }

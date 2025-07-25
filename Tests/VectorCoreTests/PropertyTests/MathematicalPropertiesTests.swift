@@ -1,6 +1,9 @@
 import XCTest
 @testable import VectorCore
 
+// Import Dimension explicitly to disambiguate from Foundation.Dimension (NSDimension)
+import protocol VectorCore.Dimension
+
 /// Tests for fundamental mathematical laws and properties that should hold for all vector operations
 final class MathematicalPropertiesTests: XCTestCase {
     
@@ -150,8 +153,8 @@ final class MathematicalPropertiesTests: XCTestCase {
                 let dim = 256
                 return DynamicVector.random(dimension: dim, in: -100...100)
             },
-            property: { v in
-                let zeros = DynamicVector(repeating: 0, dimension: v.dimension)
+            property: { (v: DynamicVector) in
+                let zeros = DynamicVector(dimension: v.dimension, repeating: 0)
                 let result = v + zeros
                 return dynamicVectorsEqual(v, result, accuracy: accuracy)
             },
@@ -446,7 +449,7 @@ final class MathematicalPropertiesTests: XCTestCase {
     
     // MARK: - Helper Methods
     
-    private func vectorsEqual<D: Dimension>(_ a: Vector<D>, _ b: Vector<D>, accuracy: Float) -> Bool {
+    private func vectorsEqual<D>(_ a: Vector<D>, _ b: Vector<D>, accuracy: Float) -> Bool where D: Dimension {
         guard a.scalarCount == b.scalarCount else { return false }
         for i in 0..<a.scalarCount {
             if abs(a[i] - b[i]) > accuracy {

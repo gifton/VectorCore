@@ -4,7 +4,9 @@
 //
 
 import Foundation
+#if canImport(Accelerate)
 import Accelerate
+#endif
 
 /// Performance regression test configuration
 public struct RegressionTestConfig {
@@ -108,8 +110,8 @@ public struct RegressionResult: Sendable {
     }
 }
 
-/// Performance baseline storage
-public struct PerformanceBaseline: Codable {
+/// Performance baseline storage for regression testing
+public struct RegressionTestBaseline: Codable {
     public let version: String
     public let platform: String
     public let date: Date
@@ -127,11 +129,11 @@ public struct PerformanceBaseline: Codable {
         self.results = results
     }
     
-    public static func load(from url: URL) throws -> PerformanceBaseline {
+    public static func load(from url: URL) throws -> RegressionTestBaseline {
         let data = try Data(contentsOf: url)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
-        return try decoder.decode(PerformanceBaseline.self, from: data)
+        return try decoder.decode(RegressionTestBaseline.self, from: data)
     }
     
     public func save(to url: URL) throws {
@@ -428,7 +430,7 @@ public final class PerformanceRegressionSuite {
     
     /// Compare current results against baseline
     public func compareAgainstBaseline(
-        _ baseline: PerformanceBaseline
+        _ baseline: RegressionTestBaseline
     ) -> [RegressionResult] {
         var regressionResults: [RegressionResult] = []
         
@@ -573,7 +575,7 @@ public extension PerformanceRegressionSuite {
         
         var regressions: [RegressionResult]? = nil
         if let baselineURL = baselineURL,
-           let baseline = try? PerformanceBaseline.load(from: baselineURL) {
+           let baseline = try? RegressionTestBaseline.load(from: baselineURL) {
             regressions = compareAgainstBaseline(baseline)
             
             if config.failOnRegression {
@@ -588,8 +590,8 @@ public extension PerformanceRegressionSuite {
     }
     
     /// Create baseline from current results
-    func createBaseline() -> PerformanceBaseline {
-        PerformanceBaseline(
+    func createBaseline() -> RegressionTestBaseline {
+        RegressionTestBaseline(
             version: "1.0.0", // You might want to get this from your package
             platform: "\(ProcessInfo.processInfo.operatingSystemVersionString)",
             date: Date(),

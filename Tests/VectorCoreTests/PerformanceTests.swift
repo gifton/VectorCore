@@ -263,9 +263,11 @@ final class PerformanceTests: XCTestCase {
     func testAlignedMemoryAllocationPerformance() {
         measure {
             for _ in 0..<iterations {
-                let memory = Memory.AlignedBuffer<Float>(capacity: 512, alignment: 64)
-                // Force deallocation
-                _ = memory
+                // Use AlignedMemory from Storage/AlignedMemory.swift
+                let pointer = AlignedMemory.allocateAligned(count: 512, alignment: 64)
+                defer { pointer.deallocate() }
+                // Force use
+                pointer[0] = 1.0
             }
         }
     }
@@ -273,14 +275,15 @@ final class PerformanceTests: XCTestCase {
     // Removed: testVectorArrayLayoutPerformance - optimization code was removed
     
     func testMemoryPoolPerformance() {
-        let pool = Memory.Pool<Float>(capacity: 512)
+        let pool = MemoryPool()
         
         measure {
             for _ in 0..<iterations {
-                let buffer = pool.acquire()
-                // Simulate some work
-                buffer.baseAddress?[0] = 1.0
-                pool.release(buffer)
+                if let handle = pool.acquire(type: Float.self, count: 512) {
+                    // Simulate some work
+                    handle.pointer[0] = 1.0
+                    // BufferHandle automatically releases on deinit
+                }
             }
         }
     }

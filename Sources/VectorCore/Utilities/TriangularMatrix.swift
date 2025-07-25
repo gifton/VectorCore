@@ -27,7 +27,7 @@ import Foundation
 public struct TriangularMatrix<T> {
     /// Internal storage for upper triangle elements
     @usableFromInline
-    internal var storage: [T]
+    internal var storage: TieredStorage<T>
     
     /// Matrix dimension (n×n matrix)
     public let size: Int
@@ -46,7 +46,10 @@ public struct TriangularMatrix<T> {
         precondition(size >= 0, "Size must be non-negative")
         self.size = size
         let count = size * (size - 1) / 2
-        self.storage = Array(repeating: defaultValue, count: count)
+        
+        // Use TieredStorage for automatic optimization
+        let elements = Array(repeating: defaultValue, count: count)
+        self.storage = TieredStorage(elements)
     }
     
     /// Initialize with zero (for numeric types)
@@ -238,7 +241,7 @@ extension TriangularMatrix where T: Sendable {
     @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
     public static func buildParallel(
         size: Int,
-        compute: @Sendable (Int, Int) async -> T
+        compute: @Sendable @escaping (Int, Int) async -> T
     ) async -> TriangularMatrix<T> where T: Numeric {
         var result = TriangularMatrix<T>(size: size)
         

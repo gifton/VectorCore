@@ -225,10 +225,9 @@ final class VectorMetricsTests: XCTestCase {
     func testBase64InvalidString() {
         XCTAssertThrowsError(try Vector256.base64Decoded(from: "invalid base64!@#$")) { error in
             if let vectorError = error as? VectorError {
-                switch vectorError {
-                case .invalidDataFormat:
-                    break // Expected
-                default:
+                if vectorError.kind == .invalidData {
+                    // Expected error
+                } else {
                     XCTFail("Unexpected error type: \(vectorError)")
                 }
             } else {

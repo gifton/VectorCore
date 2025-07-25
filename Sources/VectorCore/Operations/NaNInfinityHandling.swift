@@ -4,7 +4,9 @@
 //
 
 import Foundation
+#if canImport(Accelerate)
 import Accelerate
+#endif
 
 /// Options for handling NaN and Infinity values
 public struct NonFiniteHandling: OptionSet, Sendable {

@@ -1,0 +1,267 @@
+// VectorCore: BufferPool Tests
+//
+// Tests for the buffer pooling system
+//
+
+import XCTest
+@testable import VectorCore
+
+final class BufferPoolTests: XCTestCase {
+    
+    // MARK: - Basic Functionality
+    
+    func testAcquireAndRelease() async {
+        let pool = BufferPool()
+        
+        // Acquire buffer
+        let handle = await pool.acquire(count: 100)
+        
+        // Use buffer
+        handle.withUnsafeBufferPointer { buffer in
+            XCTAssertEqual(buffer.count, 100)
+            XCTAssertNotNil(buffer.baseAddress)
+            
+            // Write to buffer
+            for i in 0..<100 {
+                buffer[i] = Float(i)
+            }
+        }
+        
+        // Release buffer
+        await pool.release(handle)
+        
+        // Check statistics
+        let stats = await pool.getStatistics()
+        XCTAssertEqual(stats.acquisitions, 1)
+        XCTAssertEqual(stats.releases, 1)
+        XCTAssertEqual(stats.misses, 1) // First acquisition is always a miss
+    }
+    
+    func testBufferReuse() async {
+        let pool = BufferPool()
+        
+        // First acquisition - should be a miss
+        let handle1 = await pool.acquire(count: 100)
+        await pool.release(handle1)
+        
+        // Second acquisition - should be a hit
+        let handle2 = await pool.acquire(count: 100)
+        await pool.release(handle2)
+        
+        // Check reuse
+        let stats = await pool.getStatistics()
+        XCTAssertEqual(stats.acquisitions, 2)
+        XCTAssertEqual(stats.releases, 2)
+        XCTAssertEqual(stats.hits, 1)
+        XCTAssertEqual(stats.misses, 1)
+        XCTAssertGreaterThan(stats.hitRate, 0.0)
+    }
+    
+    func testPowerOfTwoRounding() async {
+        let pool = BufferPool()
+        
+        // Request 100, should get rounded to 128
+        let handle1 = await pool.acquire(count: 100)
+        handle1.withUnsafeBufferPointer { buffer in
+            XCTAssertEqual(buffer.count, 100)
+        }
+        await pool.release(handle1)
+        
+        // Request 120, should reuse the 128 buffer
+        let handle2 = await pool.acquire(count: 120)
+        handle2.withUnsafeBufferPointer { buffer in
+            XCTAssertEqual(buffer.count, 120)
+        }
+        await pool.release(handle2)
+        
+        // Should have a hit due to size rounding
+        let stats = await pool.getStatistics()
+        XCTAssertEqual(stats.hits, 1)
+    }
+    
+    func testMultipleSizes() async {
+        let pool = BufferPool()
+        
+        // Acquire buffers of different sizes
+        let sizes = [64, 128, 256, 512, 1024]
+        var handles: [BufferHandle] = []
+        
+        for size in sizes {
+            handles.append(await pool.acquire(count: size))
+        }
+        
+        // Release all
+        for handle in handles {
+            await pool.release(handle)
+        }
+        
+        // Reacquire - should all be hits
+        handles.removeAll()
+        for size in sizes {
+            handles.append(await pool.acquire(count: size))
+        }
+        
+        let stats = await pool.getStatistics()
+        XCTAssertEqual(stats.hits, sizes.count)
+        
+        // Cleanup
+        for handle in handles {
+            await pool.release(handle)
+        }
+    }
+    
+    func testClear() async {
+        let pool = BufferPool()
+        
+        // Populate pool
+        for _ in 0..<10 {
+            let handle = await pool.acquire(count: 100)
+            await pool.release(handle)
+        }
+        
+        // Clear pool
+        await pool.clear()
+        
+        // Next acquisition should be a miss
+        let handle = await pool.acquire(count: 100)
+        await pool.release(handle)
+        
+        let stats = await pool.getStatistics()
+        XCTAssertEqual(stats.clears, 1)
+        // After clear, we expect only 1 miss for the new acquisition
+        // The misses counter would have accumulated from before the clear
+        XCTAssertEqual(stats.misses, 2) // 1 initial miss + 1 after clear
+    }
+    
+    // MARK: - Concurrent Access
+    
+    func testConcurrentAcquisitions() async {
+        let pool = BufferPool()
+        let iterations = 100
+        
+        // Concurrent acquisitions and releases
+        await withTaskGroup(of: Void.self) { group in
+            for i in 0..<iterations {
+                group.addTask {
+                    let size = 100 + (i % 10) * 100 // Vary sizes
+                    let handle = await pool.acquire(count: size)
+                    
+                    // Do some work
+                    handle.withUnsafeBufferPointer { buffer in
+                        for j in 0..<buffer.count {
+                            buffer[j] = Float(j)
+                        }
+                    }
+                    
+                    await pool.release(handle)
+                }
+            }
+        }
+        
+        let stats = await pool.getStatistics()
+        XCTAssertEqual(stats.acquisitions, iterations)
+        XCTAssertEqual(stats.releases, iterations)
+    }
+    
+    func testWithTemporaryBuffer() async throws {
+        let pool = BufferPool()
+        
+        let result = try await pool.withTemporaryBuffer(count: 100) { buffer in
+            // Use buffer
+            for i in 0..<buffer.count {
+                buffer[i] = Float(i * 2)
+            }
+            
+            // Return sum
+            return buffer.reduce(0, +)
+        }
+        
+        // Verify result
+        let expected = (0..<100).reduce(0) { $0 + Float($1 * 2) }
+        XCTAssertEqual(result, expected)
+        
+        // Buffer should be automatically released
+        let stats = await pool.getStatistics()
+        XCTAssertEqual(stats.acquisitions, 1)
+        XCTAssertEqual(stats.releases, 1)
+    }
+    
+    // MARK: - Pool Limits
+    
+    func testMaxBuffersPerSize() async {
+        let maxPerSize = 5
+        let pool = BufferPool(maxBuffersPerSize: maxPerSize)
+        
+        // Acquire and release more than the limit
+        for _ in 0..<10 {
+            let handle = await pool.acquire(count: 100)
+            await pool.release(handle)
+        }
+        
+        // Only maxPerSize buffers should be pooled, rest should be deallocated
+        let stats = await pool.getStatistics()
+        // We acquired 10 buffers but only 5 can be pooled
+        // So at least 5 should have been deallocated when released
+        // But the deallocation tracking might not be perfect, so let's check hits
+        
+        // Acquire again to check how many were pooled
+        for _ in 0..<maxPerSize {
+            let handle = await pool.acquire(count: 100)
+            await pool.release(handle)
+        }
+        
+        let finalStats = await pool.getStatistics()
+        // Should have hits for the pooled buffers
+        XCTAssertGreaterThanOrEqual(finalStats.hits, maxPerSize)
+    }
+    
+    func testGlobalPool() async {
+        // Verify global pool is accessible
+        let handle = await globalBufferPool.acquire(count: 100)
+        handle.withUnsafeBufferPointer { buffer in
+            XCTAssertNotNil(buffer.baseAddress)
+        }
+        await globalBufferPool.release(handle)
+    }
+    
+    // MARK: - Performance
+    
+    func testPoolPerformance() async {
+        let pool = BufferPool()
+        let iterations = 1000
+        let bufferSize = 1024
+        
+        // Measure with pooling
+        let poolStart = Date()
+        for _ in 0..<iterations {
+            let handle = await pool.acquire(count: bufferSize)
+            // Simulate some work
+            handle.withUnsafeBufferPointer { buffer in
+                buffer[0] = 1.0
+            }
+            await pool.release(handle)
+        }
+        let poolTime = Date().timeIntervalSince(poolStart)
+        
+        // Measure without pooling (direct allocation)
+        let directStart = Date()
+        for _ in 0..<iterations {
+            let pointer = UnsafeMutablePointer<Float>.allocate(capacity: bufferSize)
+            let buffer = UnsafeMutableBufferPointer(start: pointer, count: bufferSize)
+            // Simulate some work
+            buffer[0] = 1.0
+            pointer.deallocate()
+        }
+        let directTime = Date().timeIntervalSince(directStart)
+        
+        print("Pool time: \(poolTime)s")
+        print("Direct time: \(directTime)s")
+        print("Speedup: \(directTime / poolTime)x")
+        
+        let stats = await pool.getStatistics()
+        print("Pool efficiency: \(stats.efficiency)")
+        
+        // Pool should be faster after warmup
+        XCTAssertGreaterThan(stats.hitRate, 0.9) // Should have >90% hit rate
+    }
+}

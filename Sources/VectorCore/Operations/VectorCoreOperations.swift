@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Accelerate
 
 // MARK: - Element-wise Min/Max Operations
 
@@ -16,18 +15,10 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func min(_ other: Vector<D>) -> Vector<D> {
-        var result = Vector<D>()
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            self.storage.withUnsafeBufferPointer { src1 in
-                other.storage.withUnsafeBufferPointer { src2 in
-                    vDSP_vmin(src1.baseAddress!, 1,
-                             src2.baseAddress!, 1,
-                             dest.baseAddress!, 1,
-                             vDSP_Length(D.value))
-                }
-            }
-        }
-        return result
+        let a = self.toArray()
+        let b = other.toArray()
+        let result = Operations.simdProvider.elementWiseMin(a, b)
+        return Vector<D>(result)
     }
     
     /// Compute element-wise maximum between two vectors
@@ -36,18 +27,10 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func max(_ other: Vector<D>) -> Vector<D> {
-        var result = Vector<D>()
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            self.storage.withUnsafeBufferPointer { src1 in
-                other.storage.withUnsafeBufferPointer { src2 in
-                    vDSP_vmax(src1.baseAddress!, 1,
-                             src2.baseAddress!, 1,
-                             dest.baseAddress!, 1,
-                             vDSP_Length(D.value))
-                }
-            }
-        }
-        return result
+        let a = self.toArray()
+        let b = other.toArray()
+        let result = Operations.simdProvider.elementWiseMax(a, b)
+        return Vector<D>(result)
     }
     
     /// Find the minimum element in the vector
@@ -55,16 +38,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func minElement() -> (value: Float, index: Int) {
-        var minValue: Float = 0
-        var minIndex: vDSP_Length = 0
-        
-        storage.withUnsafeBufferPointer { buffer in
-            vDSP_minvi(buffer.baseAddress!, 1,
-                      &minValue, &minIndex,
-                      vDSP_Length(D.value))
-        }
-        
-        return (minValue, Int(minIndex))
+        let array = self.toArray()
+        let index = Operations.simdProvider.minIndex(array)
+        return (array[index], index)
     }
     
     /// Find the maximum element in the vector
@@ -72,16 +48,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func maxElement() -> (value: Float, index: Int) {
-        var maxValue: Float = 0
-        var maxIndex: vDSP_Length = 0
-        
-        storage.withUnsafeBufferPointer { buffer in
-            vDSP_maxvi(buffer.baseAddress!, 1,
-                      &maxValue, &maxIndex,
-                      vDSP_Length(D.value))
-        }
-        
-        return (maxValue, Int(maxIndex))
+        let array = self.toArray()
+        let index = Operations.simdProvider.maxIndex(array)
+        return (array[index], index)
     }
 }
 
@@ -95,20 +64,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func clamped(to range: ClosedRange<Float>) -> Vector<D> {
-        var result = Vector<D>()
-        var low = range.lowerBound
-        var high = range.upperBound
-        
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            self.storage.withUnsafeBufferPointer { src in
-                vDSP_vclip(src.baseAddress!, 1,
-                          &low, &high,
-                          dest.baseAddress!, 1,
-                          vDSP_Length(D.value))
-            }
-        }
-        
-        return result
+        let array = self.toArray()
+        let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
+        return Vector<D>(clamped)
     }
     
     /// Clamp all elements to a given range in place
@@ -116,15 +74,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     mutating func clamp(to range: ClosedRange<Float>) {
-        var low = range.lowerBound
-        var high = range.upperBound
-        
-        storage.withUnsafeMutableBufferPointer { buffer in
-            vDSP_vclip(buffer.baseAddress!, 1,
-                      &low, &high,
-                      buffer.baseAddress!, 1,
-                      vDSP_Length(D.value))
-        }
+        let array = self.toArray()
+        let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
+        self = Vector<D>(clamped)
     }
 }
 
@@ -199,15 +151,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func absoluteValue() -> Vector<D> {
-        var result = Vector<D>()
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            self.storage.withUnsafeBufferPointer { src in
-                vDSP_vabs(src.baseAddress!, 1,
-                         dest.baseAddress!, 1,
-                         vDSP_Length(D.value))
-            }
-        }
-        return result
+        let array = self.toArray()
+        let absArray = Operations.simdProvider.abs(array)
+        return Vector<D>(absArray)
     }
     
     /// Element-wise square root
@@ -216,14 +162,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Note: Negative values will produce NaN
     @inlinable
     func squareRoot() -> Vector<D> {
-        var result = Vector<D>()
-        var count = Int32(D.value)
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            self.storage.withUnsafeBufferPointer { src in
-                vvsqrtf(dest.baseAddress!, src.baseAddress!, &count)
-            }
-        }
-        return result
+        let array = self.toArray()
+        let sqrtArray = Operations.simdProvider.sqrt(array)
+        return Vector<D>(sqrtArray)
     }
 }
 
@@ -262,16 +203,7 @@ public extension DynamicVector {
         let arr2 = other.toArray()
         var result = [Float](repeating: 0, count: dimension)
         
-        arr1.withUnsafeBufferPointer { src1 in
-            arr2.withUnsafeBufferPointer { src2 in
-                result.withUnsafeMutableBufferPointer { dest in
-                    vDSP_vmin(src1.baseAddress!, 1,
-                             src2.baseAddress!, 1,
-                             dest.baseAddress!, 1,
-                             vDSP_Length(dimension))
-                }
-            }
-        }
+        result = Operations.simdProvider.elementWiseMin(arr1, arr2)
         
         return DynamicVector(dimension: dimension, values: result)
     }
@@ -290,16 +222,7 @@ public extension DynamicVector {
         let arr2 = other.toArray()
         var result = [Float](repeating: 0, count: dimension)
         
-        arr1.withUnsafeBufferPointer { src1 in
-            arr2.withUnsafeBufferPointer { src2 in
-                result.withUnsafeMutableBufferPointer { dest in
-                    vDSP_vmax(src1.baseAddress!, 1,
-                             src2.baseAddress!, 1,
-                             dest.baseAddress!, 1,
-                             vDSP_Length(dimension))
-                }
-            }
-        }
+        result = Operations.simdProvider.elementWiseMax(arr1, arr2)
         
         return DynamicVector(dimension: dimension, values: result)
     }
@@ -311,17 +234,10 @@ public extension DynamicVector {
         // Create array, perform operation, then create result
         let arr = self.toArray()
         var result = [Float](repeating: 0, count: dimension)
-        var low = range.lowerBound
-        var high = range.upperBound
+        let low = range.lowerBound
+        let high = range.upperBound
         
-        arr.withUnsafeBufferPointer { src in
-            result.withUnsafeMutableBufferPointer { dest in
-                vDSP_vclip(src.baseAddress!, 1,
-                          &low, &high,
-                          dest.baseAddress!, 1,
-                          vDSP_Length(dimension))
-            }
-        }
+        result = Operations.simdProvider.clip(arr, min: low, max: high)
         
         return DynamicVector(dimension: dimension, values: result)
     }

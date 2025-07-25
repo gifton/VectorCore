@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Accelerate
 
 /// Vector type with runtime-determined dimensions
 public struct DynamicVector: Sendable {
@@ -121,12 +120,9 @@ extension DynamicVector {
         let mag = magnitude
         guard mag > 0 else { return }
         
-        let dim = dimension  // Capture dimension before mutable access
-        storage.withUnsafeMutableBufferPointer { buffer in
-            var scalar = mag
-            vDSP_vsdiv(buffer.baseAddress!, 1, &scalar,
-                      buffer.baseAddress!, 1, vDSP_Length(dim))
-        }
+        let array = toArray()
+        let normalized = Operations.simdProvider.divide(array, by: mag)
+        self = DynamicVector(normalized)
     }
     
     /// Return a normalized copy of the vector
@@ -159,39 +155,27 @@ extension DynamicVector {
     public static func + (lhs: DynamicVector, rhs: DynamicVector) -> DynamicVector {
         precondition(lhs.dimension == rhs.dimension, "Dimensions must match")
         
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vadd(dest.baseAddress!, 1, src.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(lhs.dimension))
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.add(lhsArray, rhsArray)
+        return DynamicVector(result)
     }
     
     /// Subtract two vectors
     public static func - (lhs: DynamicVector, rhs: DynamicVector) -> DynamicVector {
         precondition(lhs.dimension == rhs.dimension, "Dimensions must match")
         
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vsub(src.baseAddress!, 1, dest.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(lhs.dimension))
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.subtract(lhsArray, rhsArray)
+        return DynamicVector(result)
     }
     
     /// Multiply vector by scalar
     public static func * (lhs: DynamicVector, rhs: Float) -> DynamicVector {
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { buffer in
-            var scalar = rhs
-            vDSP_vsmul(buffer.baseAddress!, 1, &scalar,
-                      buffer.baseAddress!, 1, vDSP_Length(lhs.dimension))
-        }
-        return result
+        let array = lhs.toArray()
+        let result = Operations.simdProvider.multiply(array, by: rhs)
+        return DynamicVector(result)
     }
     
     /// Multiply scalar by vector
@@ -201,23 +185,16 @@ extension DynamicVector {
     
     /// Divide vector by scalar
     public static func / (lhs: DynamicVector, rhs: Float) -> DynamicVector {
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { buffer in
-            var scalar = rhs
-            vDSP_vsdiv(buffer.baseAddress!, 1, &scalar,
-                      buffer.baseAddress!, 1, vDSP_Length(lhs.dimension))
-        }
-        return result
+        let array = lhs.toArray()
+        let result = Operations.simdProvider.divide(array, by: rhs)
+        return DynamicVector(result)
     }
     
     /// Negate vector
     public static prefix func - (vector: DynamicVector) -> DynamicVector {
-        var result = vector
-        result.storage.withUnsafeMutableBufferPointer { buffer in
-            vDSP_vneg(buffer.baseAddress!, 1,
-                     buffer.baseAddress!, 1, vDSP_Length(vector.dimension))
-        }
-        return result
+        let array = vector.toArray()
+        let result = Operations.simdProvider.negate(array)
+        return DynamicVector(result)
     }
 }
 
@@ -384,42 +361,27 @@ extension DynamicVector {
     public static func .* (lhs: DynamicVector, rhs: DynamicVector) -> DynamicVector {
         precondition(lhs.dimension == rhs.dimension, "Dimensions must match")
         
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vmul(dest.baseAddress!, 1, src.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(lhs.dimension))
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.elementWiseMultiply(lhsArray, rhsArray)
+        return DynamicVector(result)
     }
     
     /// Element-wise division
     public static func ./ (lhs: DynamicVector, rhs: DynamicVector) -> DynamicVector {
         precondition(lhs.dimension == rhs.dimension, "Dimensions must match")
         
-        var result = lhs
-        result.storage.withUnsafeMutableBufferPointer { dest in
-            rhs.storage.withUnsafeBufferPointer { src in
-                vDSP_vdiv(src.baseAddress!, 1, dest.baseAddress!, 1,
-                         dest.baseAddress!, 1, vDSP_Length(lhs.dimension))
-            }
-        }
-        return result
+        let lhsArray = lhs.toArray()
+        let rhsArray = rhs.toArray()
+        let result = Operations.simdProvider.elementWiseDivide(lhsArray, rhsArray)
+        return DynamicVector(result)
     }
     
     /// L1 norm (Manhattan norm)
     public var l1Norm: Float {
-        var result: Float = 0
-        storage.withUnsafeBufferPointer { buffer in
-            var temp = [Float](repeating: 0, count: dimension)
-            temp.withUnsafeMutableBufferPointer { tempBuffer in
-                vDSP_vabs(buffer.baseAddress!, 1,
-                         tempBuffer.baseAddress!, 1, vDSP_Length(dimension))
-                vDSP_sve(tempBuffer.baseAddress!, 1, &result, vDSP_Length(dimension))
-            }
-        }
-        return result
+        let array = toArray()
+        let absArray = Operations.simdProvider.abs(array)
+        return absArray.reduce(0, +)
     }
     
     /// L2 norm (Euclidean norm) - alias for magnitude
@@ -429,11 +391,9 @@ extension DynamicVector {
     
     /// L∞ norm (Maximum norm)
     public var lInfinityNorm: Float {
-        var result: Float = 0
-        storage.withUnsafeBufferPointer { buffer in
-            vDSP_maxmgv(buffer.baseAddress!, 1, &result, vDSP_Length(dimension))
-        }
-        return result
+        let array = toArray()
+        let absArray = Operations.simdProvider.abs(array)
+        return absArray.max() ?? 0
     }
     
     /// Create a random dynamic vector

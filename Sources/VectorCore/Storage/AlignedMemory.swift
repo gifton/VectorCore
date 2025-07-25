@@ -43,20 +43,30 @@ public enum AlignedMemory {
         count: Int,
         alignment: Int = optimalAlignment
     ) -> UnsafeMutablePointer<Float> {
+        allocateAligned(type: Float.self, count: count, alignment: alignment)
+    }
+    
+    /// Allocate aligned memory for any type
+    @inlinable
+    public static func allocateAligned<T>(
+        type: T.Type,
+        count: Int,
+        alignment: Int = optimalAlignment
+    ) -> UnsafeMutablePointer<T> {
         precondition(alignment > 0 && (alignment & (alignment - 1)) == 0,
                     "Alignment must be a power of 2")
         precondition(alignment >= minimumAlignment,
                     "Alignment must be at least \(minimumAlignment) bytes")
         
         var rawPtr: UnsafeMutableRawPointer?
-        let byteCount = count * MemoryLayout<Float>.stride
+        let byteCount = count * MemoryLayout<T>.stride
         let result = posix_memalign(&rawPtr, alignment, byteCount)
         
         guard result == 0, let ptr = rawPtr else {
             fatalError("Failed to allocate aligned memory: error \(result)")
         }
         
-        return ptr.assumingMemoryBound(to: Float.self)
+        return ptr.assumingMemoryBound(to: T.self)
     }
 }
 
@@ -81,17 +91,6 @@ extension AlignedValueStorage: AlignedStorage {
     }
 }
 
-// Extension to make SmallVectorStorage report its alignment
-extension SmallVectorStorage: AlignedStorage {
-    public var guaranteedAlignment: Int {
-        // SIMD64 is naturally aligned to at least 16 bytes
-        AlignedMemory.minimumAlignment
-    }
-    
-    public func verifyAlignment() -> Bool {
-        withUnsafeBufferPointer { buffer in
-            guard let baseAddress = buffer.baseAddress else { return false }
-            return AlignedMemory.isAligned(baseAddress, to: guaranteedAlignment)
-        }
-    }
-}
+// Note: The SmallVectorStorage extension has been removed as that type
+// no longer exists. The dimension-specific storage types now use
+// AlignedValueStorage which already handles alignment properly.

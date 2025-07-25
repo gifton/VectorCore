@@ -9,7 +9,6 @@
 //
 
 import Foundation
-import Accelerate
 
 /// Value-type storage with guaranteed memory alignment and COW semantics.
 ///
@@ -321,7 +320,7 @@ public struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
     
     /// Compute dot product with another storage of the same size.
     /// 
-    /// Uses Accelerate framework's vDSP_dotpr for optimal performance.
+    /// Uses SwiftSIMDProvider for cross-platform performance.
     /// Both storages must have the same count.
     /// 
     /// - Parameter other: Another storage to compute dot product with
@@ -334,9 +333,10 @@ public struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
     public func dotProduct(_ other: Self) -> Float {
         precondition(count == other.count, "Dimensions must match")
         
-        var result: Float = 0
-        vDSP_dotpr(storage.ptr, 1, other.storage.ptr, 1, &result, vDSP_Length(count))
-        return result
+        // Convert to arrays and use SIMD provider
+        let a = self.withUnsafeBufferPointer { Array($0) }
+        let b = other.withUnsafeBufferPointer { Array($0) }
+        return Operations.simdProvider.dot(a, b)
     }
 }
 

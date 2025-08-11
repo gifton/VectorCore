@@ -70,7 +70,7 @@ jobs:
           swift-version: ${{ matrix.swift }}
       
       - name: Cache Swift packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .build
           key: ${{ runner.os }}-swift-${{ matrix.swift }}-${{ hashFiles('Package.resolved') }}
@@ -151,7 +151,7 @@ jobs:
           swift-version: ${{ env.SWIFT_VERSION }}
       
       - name: Cache Baseline
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: baseline_metrics.json
           key: performance-baseline-${{ runner.os }}-${{ github.base_ref || 'main' }}

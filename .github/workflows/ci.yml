@@ -20,7 +20,7 @@ jobs:
     name: Code Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Swift Format Check
         run: |
@@ -62,7 +62,7 @@ jobs:
             platform: 'macos-arm64'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Swift
         uses: swift-actions/setup-swift@v1
@@ -100,7 +100,7 @@ jobs:
         os: [ubuntu-latest, macos-13, macos-14]
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Swift
         uses: swift-actions/setup-swift@v1
@@ -141,7 +141,7 @@ jobs:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Need full history for baseline comparison
       
@@ -222,7 +222,7 @@ jobs:
     if: github.event.schedule || github.event_name == 'workflow_dispatch'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Swift
         uses: swift-actions/setup-swift@v1
@@ -251,7 +251,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Run Security Scan
         run: |
@@ -274,7 +274,7 @@ jobs:
     runs-on: macos-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Swift
         uses: swift-actions/setup-swift@v1
@@ -301,7 +301,7 @@ jobs:
         os: [ubuntu-latest, macos-14]
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Swift
         uses: swift-actions/setup-swift@v1

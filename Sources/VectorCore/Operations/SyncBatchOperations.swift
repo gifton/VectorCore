@@ -4,9 +4,6 @@
 //
 
 import Foundation
-#if canImport(Accelerate)
-import Accelerate
-#endif
 
 /// Synchronous batch processing utilities for vector operations
 ///
@@ -53,12 +50,12 @@ public enum SyncBatchOperations {
     ///   - k: Number of nearest neighbors to find
     ///   - metric: Distance metric to use (default: Euclidean)
     /// - Returns: Array of (index, distance) tuples sorted by distance
-    public static func findNearest<V: ExtendedVectorProtocol>(
+    public static func findNearest<V: VectorProtocol, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
-        metric: any DistanceMetric = EuclideanDistance()
-    ) -> [(index: Int, distance: Float)] {
+        metric: M = EuclideanDistance()
+    ) -> [(index: Int, distance: Float)] where M.Scalar == Float, V.Scalar == Float {
         guard k > 0 else { return [] }
         guard !vectors.isEmpty else { return [] }
         
@@ -83,12 +80,12 @@ public enum SyncBatchOperations {
     ///   - radius: Maximum distance threshold
     ///   - metric: Distance metric to use
     /// - Returns: Array of (index, distance) tuples within radius
-    public static func findWithinRadius<V: ExtendedVectorProtocol>(
+    public static func findWithinRadius<V: VectorProtocol, M: DistanceMetric>(
         of query: V,
         in vectors: [V],
         radius: Float,
-        metric: any DistanceMetric = EuclideanDistance()
-    ) -> [(index: Int, distance: Float)] {
+        metric: M = EuclideanDistance()
+    ) -> [(index: Int, distance: Float)] where M.Scalar == Float, V.Scalar == Float {
         vectors.enumerated().compactMap { index, vector in
             let distance = metric.distance(query, vector)
             return distance <= radius ? (index: index, distance: distance) : nil
@@ -103,7 +100,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - transform: Transformation function
     /// - Returns: Transformed vectors
-    public static func map<V: BaseVectorProtocol, U: BaseVectorProtocol>(
+    public static func map<V: VectorProtocol, U: VectorProtocol>(
         _ vectors: [V],
         transform: (V) throws -> U
     ) rethrows -> [U] {
@@ -115,7 +112,7 @@ public enum SyncBatchOperations {
     /// - Parameters:
     ///   - vectors: Vectors to transform (modified in-place)
     ///   - transform: In-place transformation function
-    public static func mapInPlace<V: BaseVectorProtocol>(
+    public static func mapInPlace<V: VectorProtocol>(
         _ vectors: inout [V],
         transform: (inout V) throws -> Void
     ) rethrows {
@@ -130,7 +127,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - predicate: Filter predicate
     /// - Returns: Filtered vectors
-    public static func filter<V: BaseVectorProtocol>(
+    public static func filter<V: VectorProtocol>(
         _ vectors: [V],
         predicate: (V) throws -> Bool
     ) rethrows -> [V] {
@@ -143,7 +140,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - predicate: Partitioning predicate
     /// - Returns: Tuple of (matching, non-matching) vectors
-    public static func partition<V: BaseVectorProtocol>(
+    public static func partition<V: VectorProtocol>(
         _ vectors: [V],
         by predicate: (V) throws -> Bool
     ) rethrows -> (matching: [V], nonMatching: [V]) {
@@ -170,9 +167,9 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Centroid vector, or nil if input is empty
-    public static func centroid<D: Dimension>(
+    public static func centroid<D: StaticDimension>(
         of vectors: [Vector<D>]
-    ) -> Vector<D>? where D.Storage: VectorStorageOperations {
+    ) -> Vector<D>? {
         guard !vectors.isEmpty else { return nil }
         
         // For single vector, return copy
@@ -253,9 +250,9 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Statistics including count, mean magnitude, and std deviation
-    public static func statistics<V: ExtendedVectorProtocol>(
+    public static func statistics<V: VectorProtocol>(
         for vectors: [V]
-    ) -> BatchStatistics {
+    ) -> BatchStatistics where V.Scalar == Float {
         guard !vectors.isEmpty else {
             return BatchStatistics(count: 0, meanMagnitude: 0, stdMagnitude: 0)
         }
@@ -285,10 +282,10 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - zscore: Z-score threshold for outlier detection (default: 3)
     /// - Returns: Indices of outlier vectors
-    public static func findOutliers<V: ExtendedVectorProtocol>(
+    public static func findOutliers<V: VectorProtocol>(
         in vectors: [V],
         zscoreThreshold: Float = 3
-    ) -> [Int] {
+    ) -> [Int] where V.Scalar == Float {
         let stats = statistics(for: vectors)
         guard stats.stdMagnitude > 0 else { return [] }
         
@@ -306,10 +303,10 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - metric: Distance metric to use
     /// - Returns: Symmetric distance matrix
-    public static func pairwiseDistances<V: ExtendedVectorProtocol>(
+    public static func pairwiseDistances<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
-        metric: any DistanceMetric = EuclideanDistance()
-    ) -> [[Float]] {
+        metric: M = EuclideanDistance()
+    ) -> [[Float]] where M.Scalar == Float, V.Scalar == Float {
         let n = vectors.count
         var distances = Array(repeating: Array(repeating: Float(0), count: n), count: n)
         
@@ -332,11 +329,11 @@ public enum SyncBatchOperations {
     ///   - candidates: Candidate vectors
     ///   - metric: Distance metric to use
     /// - Returns: Distance matrix [queries x candidates]
-    public static func batchDistances<V: ExtendedVectorProtocol>(
+    public static func batchDistances<V: VectorProtocol, M: DistanceMetric>(
         from queries: [V],
         to candidates: [V],
-        metric: any DistanceMetric = EuclideanDistance()
-    ) -> [[Float]] {
+        metric: M = EuclideanDistance()
+    ) -> [[Float]] where V.Scalar == Float, M.Scalar == Float {
         queries.map { query in
             candidates.map { candidate in
                 metric.distance(query, candidate)
@@ -353,11 +350,11 @@ public enum SyncBatchOperations {
     ///   - centroids: Cluster centroids
     ///   - metric: Distance metric to use
     /// - Returns: Array of centroid indices for each vector
-    public static func assignToCentroids<V: ExtendedVectorProtocol>(
+    public static func assignToCentroids<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
         centroids: [V],
-        metric: any DistanceMetric = EuclideanDistance()
-    ) -> [Int] {
+        metric: M = EuclideanDistance()
+    ) -> [Int] where V.Scalar == Float, M.Scalar == Float {
         vectors.map { vector in
             var minDistance = Float.infinity
             var minIndex = 0
@@ -443,7 +440,7 @@ public enum SyncBatchOperations {
     ///   - k: Total number of samples
     ///   - strata: Number of magnitude-based strata
     /// - Returns: Stratified sample
-    public static func stratifiedSample<V: ExtendedVectorProtocol>(
+    public static func stratifiedSample<V: VectorProtocol>(
         from vectors: [V],
         k: Int,
         strata: Int = 5
@@ -479,12 +476,12 @@ public enum SyncBatchOperations {
     
     // MARK: - Private Helpers
     
-    private static func heapSelect<V: ExtendedVectorProtocol>(
+    private static func heapSelect<V: VectorProtocol, M: DistanceMetric>(
         query: V,
         vectors: [V],
         k: Int,
-        metric: any DistanceMetric
-    ) -> [(index: Int, distance: Float)] {
+        metric: M
+    ) -> [(index: Int, distance: Float)] where M.Scalar == Float, V.Scalar == Float {
         var heap = [(index: Int, distance: Float)]()
         heap.reserveCapacity(k)
         
@@ -520,25 +517,25 @@ public enum SyncBatchOperations {
 
 // MARK: - Batch Processing Extensions
 
-public extension Array where Element: ExtendedVectorProtocol {
+public extension Array where Element: VectorProtocol {
     /// Find k nearest neighbors to a query
-    func findNearest(
+    func findNearest<M: DistanceMetric>(
         to query: Element,
         k: Int,
-        metric: any DistanceMetric = EuclideanDistance()
-    ) -> [(index: Int, distance: Float)] {
+        metric: M = EuclideanDistance()
+    ) -> [(index: Int, distance: Float)] where M.Scalar == Float, Element.Scalar == Float {
         SyncBatchOperations.findNearest(to: query, in: self, k: k, metric: metric)
     }
     
     /// Compute pairwise distances
-    func pairwiseDistances(
-        metric: any DistanceMetric = EuclideanDistance()
-    ) -> [[Float]] {
+    func pairwiseDistances<M: DistanceMetric>(
+        metric: M = EuclideanDistance()
+    ) -> [[Float]] where M.Scalar == Float, Element.Scalar == Float {
         SyncBatchOperations.pairwiseDistances(self, metric: metric)
     }
     
     /// Get batch statistics
-    var batchStatistics: BatchStatistics {
+    func batchStatistics() -> BatchStatistics where Element.Scalar == Float {
         SyncBatchOperations.statistics(for: self)
     }
 }

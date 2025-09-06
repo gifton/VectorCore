@@ -6,7 +6,7 @@
 import Foundation
 
 /// Protocol for compile-time dimension specification
-public protocol Dimension {
+public protocol StaticDimension {
     /// The number of elements in vectors of this dimension
     static var value: Int { get }
     
@@ -15,6 +15,81 @@ public protocol Dimension {
 }
 
 // MARK: - Standard Dimensions
+
+/// A 2-dimensional vector type for 2D coordinates and pairs.
+///
+/// `Dim2` provides compile-time dimension safety for 2-element vectors,
+/// commonly used for 2D points, complex numbers, and coordinate pairs.
+///
+/// ## Example Usage
+/// ```swift
+/// let point = Vector<Dim2>(x: 1.0, y: 2.0)
+/// let direction = Vector<Dim2>.normalized()
+/// ```
+public struct Dim2: StaticDimension {
+    public static let value = 2
+    public typealias Storage = DimensionStorage<Dim2, Float>
+}
+
+/// A 3-dimensional vector type for 3D coordinates and RGB values.
+///
+/// `Dim3` provides compile-time dimension safety for 3-element vectors,
+/// commonly used for 3D points, colors, and spatial coordinates.
+///
+/// ## Example Usage
+/// ```swift
+/// let position = Vector<Dim3>(x: 1.0, y: 2.0, z: 3.0)
+/// let color = Vector<Dim3>(x: 0.5, y: 0.8, z: 1.0)
+/// ```
+public struct Dim3: StaticDimension {
+    public static let value = 3
+    public typealias Storage = DimensionStorage<Dim3, Float>
+}
+
+/// A 4-dimensional vector type for homogeneous coordinates and RGBA.
+///
+/// `Dim4` provides compile-time dimension safety for 4-element vectors,
+/// commonly used for homogeneous 3D coordinates, quaternions, and RGBA colors.
+///
+/// ## Example Usage
+/// ```swift
+/// let quaternion = Vector<Dim4>(x: 0, y: 0, z: 0, w: 1)
+/// let rgba = Vector<Dim4>(x: 1, y: 0, z: 0, w: 0.5)
+/// ```
+public struct Dim4: StaticDimension {
+    public static let value = 4
+    public typealias Storage = DimensionStorage<Dim4, Float>
+}
+
+/// A 8-dimensional vector type for small feature vectors.
+///
+/// `Dim8` provides compile-time dimension safety for 8-element vectors,
+/// commonly used for small neural network layers and feature descriptors.
+///
+/// ## Example Usage
+/// ```swift
+/// let features = Vector<Dim8>.random(in: -1...1)
+/// let weights = Vector<Dim8>.ones()
+/// ```
+public struct Dim8: StaticDimension {
+    public static let value = 8
+    public typealias Storage = DimensionStorage<Dim8, Float>
+}
+
+/// A 16-dimensional vector type for compact features.
+///
+/// `Dim16` provides compile-time dimension safety for 16-element vectors,
+/// suitable for compact feature representations and small embeddings.
+///
+/// ## Example Usage
+/// ```swift
+/// let embedding = Vector<Dim16>.zeros()
+/// let features = Vector<Dim16>.random(in: 0...1)
+/// ```
+public struct Dim16: StaticDimension {
+    public static let value = 16
+    public typealias Storage = DimensionStorage<Dim16, Float>
+}
 
 /// A 32-dimensional vector type optimized for small embeddings.
 ///
@@ -27,9 +102,9 @@ public protocol Dimension {
 /// let embedding = Vector<Dim32>.random(in: -1...1)
 /// let features = Vector<Dim32>.zeros()
 /// ```
-public struct Dim32: Dimension {
+public struct Dim32: StaticDimension {
     public static let value = 32
-    public typealias Storage = Storage32
+    public typealias Storage = DimensionStorage<Dim32, Float>
 }
 
 /// A 64-dimensional vector type for compact embeddings.
@@ -43,9 +118,9 @@ public struct Dim32: Dimension {
 /// let wordVector = Vector<Dim64>.ones()
 /// let compressed = Vector<Dim64>.random(in: 0...1)
 /// ```
-public struct Dim64: Dimension {
+public struct Dim64: StaticDimension {
     public static let value = 64
-    public typealias Storage = Storage64
+    public typealias Storage = DimensionStorage<Dim64, Float>
 }
 
 /// A 128-dimensional vector type for medium-sized embeddings.
@@ -59,9 +134,9 @@ public struct Dim64: Dimension {
 /// let faceEmbedding = Vector<Dim128>.normalized()
 /// let audioFeatures = Vector<Dim128>.random(in: -1...1)
 /// ```
-public struct Dim128: Dimension {
+public struct Dim128: StaticDimension {
     public static let value = 128
-    public typealias Storage = Storage128
+    public typealias Storage = DimensionStorage<Dim128, Float>
 }
 
 /// A 256-dimensional vector type for standard embeddings.
@@ -75,9 +150,9 @@ public struct Dim128: Dimension {
 /// let imageFeatures = Vector<Dim256>.zeros()
 /// let textEmbedding = Vector<Dim256>.random(in: -1...1)
 /// ```
-public struct Dim256: Dimension {
+public struct Dim256: StaticDimension {
     public static let value = 256
-    public typealias Storage = Storage256
+    public typealias Storage = DimensionStorage<Dim256, Float>
 }
 
 /// A 512-dimensional vector type for rich embeddings.
@@ -91,9 +166,9 @@ public struct Dim256: Dimension {
 /// let sentenceEmbedding = Vector<Dim512>.ones()
 /// let bertOutput = Vector<Dim512>.normalized()
 /// ```
-public struct Dim512: Dimension {
+public struct Dim512: StaticDimension {
     public static let value = 512
-    public typealias Storage = Storage512
+    public typealias Storage = DimensionStorage<Dim512, Float>
 }
 
 /// A 768-dimensional vector type for transformer embeddings.
@@ -107,9 +182,24 @@ public struct Dim512: Dimension {
 /// let bertEmbedding = Vector<Dim768>.zeros()
 /// let transformerOutput = Vector<Dim768>.random(in: -1...1)
 /// ```
-public struct Dim768: Dimension {
+public struct Dim768: StaticDimension {
     public static let value = 768
-    public typealias Storage = Storage768
+    public typealias Storage = DimensionStorage<Dim768, Float>
+}
+
+/// A 1024-dimensional vector type.
+///
+/// `Dim1024` provides compile-time dimension safety for 1024-element vectors,
+/// suitable for medium-to-large ML models and neural network outputs.
+///
+/// ## Example Usage
+/// ```swift
+/// let features = Vector<Dim1024>.zeros()
+/// let embeddings = Vector<Dim1024>.random(in: -1...1)
+/// ```
+public struct Dim1024: StaticDimension {
+    public static let value = 1024
+    public typealias Storage = DimensionStorage<Dim1024, Float>
 }
 
 /// A 1536-dimensional vector type for large embeddings.
@@ -123,9 +213,24 @@ public struct Dim768: Dimension {
 /// let gptEmbedding = Vector<Dim1536>.normalized()
 /// let largeFeatures = Vector<Dim1536>.zeros()
 /// ```
-public struct Dim1536: Dimension {
+public struct Dim1536: StaticDimension {
     public static let value = 1536
-    public typealias Storage = Storage1536
+    public typealias Storage = DimensionStorage<Dim1536, Float>
+}
+
+/// A 2048-dimensional vector type.
+///
+/// `Dim2048` provides compile-time dimension safety for 2048-element vectors,
+/// suitable for large model embeddings and high-dimensional feature vectors.
+///
+/// ## Example Usage
+/// ```swift
+/// let largeEmbedding = Vector<Dim2048>.zeros()
+/// let features = Vector<Dim2048>.random(in: -1...1)
+/// ```
+public struct Dim2048: StaticDimension {
+    public static let value = 2048
+    public typealias Storage = DimensionStorage<Dim2048, Float>
 }
 
 /// A 3072-dimensional vector type for very large embeddings.
@@ -139,9 +244,9 @@ public struct Dim1536: Dimension {
 /// let gptLargeEmbedding = Vector<Dim3072>.ones()
 /// let concatenatedFeatures = Vector<Dim3072>.random(in: -1...1)
 /// ```
-public struct Dim3072: Dimension {
+public struct Dim3072: StaticDimension {
     public static let value = 3072
-    public typealias Storage = Storage3072
+    public typealias Storage = DimensionStorage<Dim3072, Float>
 }
 
 // MARK: - Dynamic Dimension Support
@@ -166,7 +271,7 @@ public struct Dim3072: Dimension {
 ///
 /// - Note: For best performance, use fixed-dimension types (e.g., `Dim256`)
 ///   when the dimension is known at compile time.
-public struct DynamicDimension: Dimension {
+public struct DynamicDimension {
     /// The runtime-determined size of vectors with this dimension.
     public let size: Int
     

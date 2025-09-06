@@ -333,10 +333,17 @@ public struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
     public func dotProduct(_ other: Self) -> Float {
         precondition(count == other.count, "Dimensions must match")
         
-        // Convert to arrays and use SIMD provider
-        let a = self.withUnsafeBufferPointer { Array($0) }
-        let b = other.withUnsafeBufferPointer { Array($0) }
-        return Operations.simdProvider.dot(a, b)
+        var result: Float = 0
+        self.withUnsafeBufferPointer { aBuffer in
+            other.withUnsafeBufferPointer { bBuffer in
+                result = SIMDOperations.FloatProvider.dot(
+                    aBuffer.baseAddress!,
+                    bBuffer.baseAddress!,
+                    count: count
+                )
+            }
+        }
+        return result
     }
 }
 

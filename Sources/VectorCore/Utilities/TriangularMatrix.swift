@@ -238,7 +238,6 @@ extension TriangularMatrix where T: Sendable {
     /// Fill matrix using parallel computation
     ///
     /// - Parameter compute: Function to compute element at (i,j)
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
     public static func buildParallel(
         size: Int,
         compute: @Sendable @escaping (Int, Int) async -> T

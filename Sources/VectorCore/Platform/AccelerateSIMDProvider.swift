@@ -1,15 +1,19 @@
 //
-//  SIMDOperations.swift
+//  AccelerateSIMDProvider.swift
 //  VectorCore
 //
-//  Convenience layer for SIMD operations
-//  Provides unified access to platform-specific SIMD implementations
+//  Accelerate framework implementation of SIMDProvider
+//  Provides hardware-accelerated operations on Apple platforms
 //
 
+#if canImport(Accelerate)
 import Foundation
+import Accelerate
 
-/// Global namespace for SIMD operations on Float vectors
-public enum FloatSIMD {
+/// Accelerate framework implementation for Float operations
+public struct AccelerateFloatProvider: SIMDProvider {
+    public typealias Scalar = Float
+    
     // MARK: - Arithmetic Operations
     
     @inlinable
@@ -19,7 +23,7 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.add(a, b, result: result, count: count)
+        vDSP_vadd(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -29,7 +33,7 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.subtract(a, b, result: result, count: count)
+        vDSP_vsub(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -39,7 +43,7 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.multiply(a, b, result: result, count: count)
+        vDSP_vmul(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -49,7 +53,7 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.divide(a, b, result: result, count: count)
+        vDSP_vdiv(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -58,7 +62,7 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.negate(a, result: result, count: count)
+        vDSP_vneg(a, 1, result, 1, vDSP_Length(count))
     }
     
     // MARK: - Scalar Operations
@@ -70,7 +74,8 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.addScalar(a, scalar: scalar, result: result, count: count)
+        var s = scalar
+        vDSP_vsadd(a, 1, &s, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -80,7 +85,8 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.multiplyScalar(a, scalar: scalar, result: result, count: count)
+        var s = scalar
+        vDSP_vsmul(a, 1, &s, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -90,7 +96,8 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.divideByScalar(a, scalar: scalar, result: result, count: count)
+        var s = scalar
+        vDSP_vsdiv(a, 1, &s, result, 1, vDSP_Length(count))
     }
     
     // MARK: - Reduction Operations
@@ -101,7 +108,9 @@ public enum FloatSIMD {
         _ b: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.dot(a, b, count: count)
+        var result: Float = 0
+        vDSP_dotpr(a, 1, b, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -109,7 +118,9 @@ public enum FloatSIMD {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.sum(a, count: count)
+        var result: Float = 0
+        vDSP_sve(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -117,7 +128,9 @@ public enum FloatSIMD {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.sumOfMagnitudes(a, count: count)
+        var result: Float = 0
+        vDSP_svemg(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -125,7 +138,9 @@ public enum FloatSIMD {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.sumOfSquares(a, count: count)
+        var result: Float = 0
+        vDSP_svesq(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     // MARK: - Statistical Operations
@@ -135,7 +150,9 @@ public enum FloatSIMD {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.maximum(a, count: count)
+        var result: Float = 0
+        vDSP_maxv(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -143,7 +160,9 @@ public enum FloatSIMD {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.minimum(a, count: count)
+        var result: Float = 0
+        vDSP_minv(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -151,7 +170,9 @@ public enum FloatSIMD {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.maximumMagnitude(a, count: count)
+        var result: Float = 0
+        vDSP_maxmgv(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     // MARK: - Distance Operations
@@ -162,7 +183,9 @@ public enum FloatSIMD {
         _ b: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        SIMDOperations.FloatProvider.distanceSquared(a, b, count: count)
+        var result: Float = 0
+        vDSP_distancesq(a, 1, b, 1, &result, vDSP_Length(count))
+        return result
     }
     
     // MARK: - Utility Operations
@@ -173,7 +196,8 @@ public enum FloatSIMD {
         destination: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.copy(source: source, destination: destination, count: count)
+        // Use memcpy for efficient copying
+        destination.initialize(from: source, count: count)
     }
     
     @inlinable
@@ -182,7 +206,8 @@ public enum FloatSIMD {
         destination: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.fill(value: value, destination: destination, count: count)
+        var v = value
+        vDSP_vfill(&v, destination, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -193,12 +218,16 @@ public enum FloatSIMD {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        SIMDOperations.FloatProvider.clip(a, low: low, high: high, result: result, count: count)
+        var lo = low
+        var hi = high
+        vDSP_vclip(a, 1, &lo, &hi, result, 1, vDSP_Length(count))
     }
 }
 
-/// Global namespace for SIMD operations on Double vectors
-public enum DoubleSIMD {
+/// Accelerate framework implementation for Double operations
+public struct AccelerateDoubleProvider: SIMDProvider {
+    public typealias Scalar = Double
+    
     // MARK: - Arithmetic Operations
     
     @inlinable
@@ -208,7 +237,7 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.add(a, b, result: result, count: count)
+        vDSP_vaddD(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -218,7 +247,7 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.subtract(a, b, result: result, count: count)
+        vDSP_vsubD(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -228,7 +257,7 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.multiply(a, b, result: result, count: count)
+        vDSP_vmulD(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -238,7 +267,7 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.divide(a, b, result: result, count: count)
+        vDSP_vdivD(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -247,7 +276,7 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.negate(a, result: result, count: count)
+        vDSP_vnegD(a, 1, result, 1, vDSP_Length(count))
     }
     
     // MARK: - Scalar Operations
@@ -259,7 +288,8 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.addScalar(a, scalar: scalar, result: result, count: count)
+        var s = scalar
+        vDSP_vsaddD(a, 1, &s, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -269,7 +299,8 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.multiplyScalar(a, scalar: scalar, result: result, count: count)
+        var s = scalar
+        vDSP_vsmulD(a, 1, &s, result, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -279,7 +310,8 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.divideByScalar(a, scalar: scalar, result: result, count: count)
+        var s = scalar
+        vDSP_vsdivD(a, 1, &s, result, 1, vDSP_Length(count))
     }
     
     // MARK: - Reduction Operations
@@ -290,7 +322,9 @@ public enum DoubleSIMD {
         _ b: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.dot(a, b, count: count)
+        var result: Double = 0
+        vDSP_dotprD(a, 1, b, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -298,7 +332,9 @@ public enum DoubleSIMD {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.sum(a, count: count)
+        var result: Double = 0
+        vDSP_sveD(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -306,7 +342,9 @@ public enum DoubleSIMD {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.sumOfMagnitudes(a, count: count)
+        var result: Double = 0
+        vDSP_svemgD(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -314,7 +352,9 @@ public enum DoubleSIMD {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.sumOfSquares(a, count: count)
+        var result: Double = 0
+        vDSP_svesqD(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     // MARK: - Statistical Operations
@@ -324,7 +364,9 @@ public enum DoubleSIMD {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.maximum(a, count: count)
+        var result: Double = 0
+        vDSP_maxvD(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -332,7 +374,9 @@ public enum DoubleSIMD {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.minimum(a, count: count)
+        var result: Double = 0
+        vDSP_minvD(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     @inlinable
@@ -340,7 +384,9 @@ public enum DoubleSIMD {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.maximumMagnitude(a, count: count)
+        var result: Double = 0
+        vDSP_maxmgvD(a, 1, &result, vDSP_Length(count))
+        return result
     }
     
     // MARK: - Distance Operations
@@ -351,7 +397,9 @@ public enum DoubleSIMD {
         _ b: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        SIMDOperations.DoubleProvider.distanceSquared(a, b, count: count)
+        var result: Double = 0
+        vDSP_distancesqD(a, 1, b, 1, &result, vDSP_Length(count))
+        return result
     }
     
     // MARK: - Utility Operations
@@ -362,7 +410,8 @@ public enum DoubleSIMD {
         destination: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.copy(source: source, destination: destination, count: count)
+        // Use memcpy for efficient copying
+        destination.initialize(from: source, count: count)
     }
     
     @inlinable
@@ -371,7 +420,8 @@ public enum DoubleSIMD {
         destination: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.fill(value: value, destination: destination, count: count)
+        var v = value
+        vDSP_vfillD(&v, destination, 1, vDSP_Length(count))
     }
     
     @inlinable
@@ -382,9 +432,10 @@ public enum DoubleSIMD {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        SIMDOperations.DoubleProvider.clip(a, low: low, high: high, result: result, count: count)
+        var lo = low
+        var hi = high
+        vDSP_vclipD(a, 1, &lo, &hi, result, 1, vDSP_Length(count))
     }
 }
 
-// MARK: - Provider Type Namespace
-// Note: SIMDOperations namespace is defined in SIMDProvider.swift
+#endif // canImport(Accelerate)

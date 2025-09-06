@@ -70,28 +70,23 @@ public enum BatchOperations {
     
     /// Thread-safe global configuration
     /// 
-    /// Access configuration via:
-    /// - Modern: `await BatchOperations.configuration()`
-    /// - Legacy: `BatchOperations.currentConfiguration`
-    private static let _configuration = LegacyThreadSafeConfiguration(Configuration())
+    /// Thread-safe configuration using actor
+    private static let _configuration = ThreadSafeConfiguration(Configuration())
     
-    /// Get current configuration (legacy synchronous API)
-    public static var currentConfiguration: Configuration {
-        _configuration.get()
-    }
+    /// Default configuration for immediate use (non-customized)
+    private static let defaultConfig = Configuration()
     
-    /// Get configuration (modern async API)
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    /// Get configuration
     public static func configuration() async -> Configuration {
-        _configuration.get()
+        await _configuration.get()
     }
     
     /// Update configuration safely
     /// - Parameter update: Closure to update configuration properties
-    public static func updateConfiguration(_ update: (inout Configuration) -> Void) {
-        var config = _configuration.get()
+    public static func updateConfiguration(_ update: (inout Configuration) -> Void) async {
+        var config = await _configuration.get()
         update(&config)
-        _configuration.update(config)
+        await _configuration.update(config)
     }
     
     // MARK: - Core Operations
@@ -109,18 +104,17 @@ public enum BatchOperations {
     ///   - metric: Distance metric to use (default: Euclidean)
     /// - Returns: Array of (index, distance) tuples sorted by distance
     /// - Complexity: O(n log k) with heap selection
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public static func findNearest<V: ExtendedVectorProtocol & Sendable>(
+    public static func findNearest<V: VectorProtocol & VectorProtocol & Sendable, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
-        metric: any DistanceMetric = EuclideanDistance()
-    ) async -> [(index: Int, distance: Float)] {
+        metric: M = EuclideanDistance()
+    ) async -> [(index: Int, distance: Float)] where V.Scalar == M.Scalar, M.Scalar == Float {
         guard k > 0 else { return [] }
         guard !vectors.isEmpty else { return [] }
         
         // Smart parallelization based on dataset size
-        if vectors.count < currentConfiguration.parallelThreshold {
+        if vectors.count < defaultConfig.parallelThreshold {
             return findNearestSerial(to: query, in: vectors, k: k, metric: metric)
         }
         
@@ -138,16 +132,15 @@ public enum BatchOperations {
     ///   - batchSize: Size of each batch (default: from configuration)
     ///   - transform: Transformation to apply to each batch
     /// - Returns: Concatenated results maintaining original order
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public static func process<V: BaseVectorProtocol & Sendable, R: Sendable>(
+    public static func process<V: VectorProtocol & Sendable, R: Sendable>(
         _ vectors: [V],
         batchSize: Int? = nil,
         transform: @Sendable @escaping ([V]) throws -> [R]
     ) async throws -> [R] {
-        let effectiveBatchSize = batchSize ?? currentConfiguration.defaultBatchSize
+        let effectiveBatchSize = batchSize ?? defaultConfig.defaultBatchSize
         
         // Serial for small datasets
-        if vectors.count < currentConfiguration.parallelThreshold {
+        if vectors.count < defaultConfig.parallelThreshold {
             return try processSerial(vectors, batchSize: effectiveBatchSize, transform: transform)
         }
         
@@ -191,11 +184,10 @@ public enum BatchOperations {
     ///   - vectors: Vectors to compute distances for
     ///   - metric: Distance metric to use
     /// - Returns: Symmetric distance matrix
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public static func pairwiseDistances<V: ExtendedVectorProtocol & Sendable>(
+    public static func pairwiseDistances<V: VectorProtocol & VectorProtocol & Sendable, M: DistanceMetric>(
         _ vectors: [V],
-        metric: any DistanceMetric = EuclideanDistance()
-    ) async -> [[Float]] {
+        metric: M = EuclideanDistance()
+    ) async -> [[Float]] where V.Scalar == M.Scalar, M.Scalar == Float {
         let n = vectors.count
         
         // Serial for small matrices
@@ -210,12 +202,11 @@ public enum BatchOperations {
     // MARK: - Convenience Operations
     
     /// Transform vectors with automatic parallelization
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public static func map<V: BaseVectorProtocol & Sendable, U: BaseVectorProtocol & Sendable>(
+    public static func map<V: VectorProtocol & Sendable, U: VectorProtocol & Sendable>(
         _ vectors: [V],
         transform: @Sendable @escaping (V) throws -> U
     ) async throws -> [U] {
-        if vectors.count < currentConfiguration.parallelThreshold {
+        if vectors.count < defaultConfig.parallelThreshold {
             return try vectors.map(transform)
         }
         
@@ -241,12 +232,11 @@ public enum BatchOperations {
     }
     
     /// Filter vectors with parallel processing
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public static func filter<V: BaseVectorProtocol & Sendable>(
+    public static func filter<V: VectorProtocol & Sendable>(
         _ vectors: [V],
         predicate: @Sendable @escaping (V) throws -> Bool
     ) async throws -> [V] {
-        if vectors.count < currentConfiguration.parallelThreshold {
+        if vectors.count < defaultConfig.parallelThreshold {
             return try vectors.filter(predicate)
         }
         
@@ -272,15 +262,14 @@ public enum BatchOperations {
     }
     
     /// Compute statistics with parallel reduction
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public static func statistics<V: ExtendedVectorProtocol & Sendable>(
+    public static func statistics<V: VectorProtocol & Sendable>(
         for vectors: [V]
-    ) async -> BatchStatistics {
+    ) async -> BatchStatistics where V.Scalar == Float {
         guard !vectors.isEmpty else {
             return BatchStatistics(count: 0, meanMagnitude: 0, stdMagnitude: 0)
         }
         
-        if vectors.count < currentConfiguration.parallelThreshold {
+        if vectors.count < defaultConfig.parallelThreshold {
             return statisticsSerial(for: vectors)
         }
         
@@ -339,12 +328,12 @@ public enum BatchOperations {
     
     // MARK: - Private Helpers
     
-    private static func findNearestSerial<V: ExtendedVectorProtocol>(
+    private static func findNearestSerial<V: VectorProtocol, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
-        metric: any DistanceMetric
-    ) -> [(index: Int, distance: Float)] {
+        metric: M
+    ) -> [(index: Int, distance: Float)] where V.Scalar == M.Scalar, M.Scalar == Float {
         let distances = vectors.enumerated().map { index, vector in
             (index: index, distance: metric.distance(query, vector))
         }
@@ -353,13 +342,12 @@ public enum BatchOperations {
         return heapSelect(distances, k: k)
     }
     
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    private static func findNearestParallel<V: ExtendedVectorProtocol & Sendable>(
+    private static func findNearestParallel<V: VectorProtocol & Sendable, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
-        metric: any DistanceMetric
-    ) async -> [(index: Int, distance: Float)] {
+        metric: M
+    ) async -> [(index: Int, distance: Float)] where V.Scalar == M.Scalar, M.Scalar == Float {
         let chunkSize = optimalChunkSize(for: vectors.count)
         
         let distances = await withTaskGroup(of: [(index: Int, distance: Float)].self) { group in
@@ -386,7 +374,7 @@ public enum BatchOperations {
         return heapSelect(distances, k: k)
     }
     
-    private static func processSerial<V: BaseVectorProtocol, R>(
+    private static func processSerial<V: VectorProtocol, R>(
         _ vectors: [V],
         batchSize: Int,
         transform: ([V]) throws -> [R]
@@ -404,10 +392,10 @@ public enum BatchOperations {
         return results
     }
     
-    private static func computePairwiseSerial<V: ExtendedVectorProtocol>(
+    private static func computePairwiseSerial<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
-        metric: any DistanceMetric
-    ) -> [[Float]] {
+        metric: M
+    ) -> [[Float]] where V.Scalar == M.Scalar, M.Scalar == Float {
         let n = vectors.count
         var distances = Array(repeating: Array(repeating: Float(0), count: n), count: n)
         
@@ -422,11 +410,10 @@ public enum BatchOperations {
         return distances
     }
     
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    private static func computePairwiseParallel<V: ExtendedVectorProtocol & Sendable>(
+    private static func computePairwiseParallel<V: VectorProtocol & Sendable, M: DistanceMetric>(
         _ vectors: [V],
-        metric: any DistanceMetric
-    ) async -> [[Float]] {
+        metric: M
+    ) async -> [[Float]] where V.Scalar == M.Scalar, M.Scalar == Float {
         let n = vectors.count
         
         // Process rows in parallel, each task owns its row data
@@ -464,9 +451,9 @@ public enum BatchOperations {
         return rows
     }
     
-    private static func statisticsSerial<V: ExtendedVectorProtocol>(
+    private static func statisticsSerial<V: VectorProtocol>(
         for vectors: [V]
-    ) -> BatchStatistics {
+    ) -> BatchStatistics where V.Scalar == Float {
         let magnitudes = vectors.map { $0.magnitude }
         let meanMag = magnitudes.reduce(0, +) / Float(vectors.count)
         let variance = magnitudes.map { pow($0 - meanMag, 2) }.reduce(0, +) / Float(vectors.count)
@@ -480,7 +467,7 @@ public enum BatchOperations {
     
     private static func optimalChunkSize(for totalCount: Int) -> Int {
         let coreCount = ProcessInfo.processInfo.activeProcessorCount
-        let config = currentConfiguration
+        let config = defaultConfig
         let targetChunks = Int(Double(coreCount) * config.oversubscription)
         let idealChunkSize = max(totalCount / targetChunks, config.minimumChunkSize)
         
@@ -491,7 +478,7 @@ public enum BatchOperations {
         
         // Choose the nearest power of 2, but ensure it's at least minimumChunkSize
         let nearestPowerOf2 = (idealChunkSize - lowerPowerOf2 < upperPowerOf2 - idealChunkSize) ? lowerPowerOf2 : upperPowerOf2
-        return max(nearestPowerOf2, currentConfiguration.minimumChunkSize)
+        return max(nearestPowerOf2, defaultConfig.minimumChunkSize)
     }
     
     private static func heapSelect(

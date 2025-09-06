@@ -32,41 +32,7 @@ import Foundation
 /// // Batch computation for efficiency
 /// let distances = metric.batchDistance(query: query, candidates: vectors)
 /// ```
-public protocol DistanceMetric: Sendable {
-    /// Unique identifier for this metric.
-    ///
-    /// Used for serialization, logging, and metric selection.
-    /// Examples: "euclidean", "cosine", "manhattan"
-    var identifier: String { get }
-    
-    /// Compute distance between two vectors.
-    ///
-    /// - Parameters:
-    ///   - a: First vector
-    ///   - b: Second vector
-    /// - Returns: Distance score (typically non-negative)
-    /// - Complexity: Usually O(n) where n is vector dimension
-    func distance<Vector: ExtendedVectorProtocol>(_ a: Vector, _ b: Vector) -> DistanceScore
-    
-    /// Efficiently compute distances from query to multiple candidates.
-    ///
-    /// Default implementation calls distance() for each candidate.
-    /// Override for optimized batch processing.
-    ///
-    /// - Parameters:
-    ///   - query: Query vector to compare against
-    ///   - candidates: Array of vectors to compute distances to
-    /// - Returns: Array of distances corresponding to each candidate
-    /// - Complexity: O(n×m) where n is dimension, m is candidate count
-    func batchDistance<Vector: ExtendedVectorProtocol>(query: Vector, candidates: [Vector]) -> [DistanceScore]
-}
-
-extension DistanceMetric {
-    /// Default batch distance implementation
-    public func batchDistance<Vector: ExtendedVectorProtocol>(query: Vector, candidates: [Vector]) -> [DistanceScore] {
-        candidates.map { distance(query, $0) }
-    }
-}
+// DistanceMetric is now defined in VectorProtocolComposition.swift as a generic protocol
 
 // MARK: - Acceleration Provider Protocol
 

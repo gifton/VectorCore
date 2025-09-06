@@ -6,7 +6,7 @@
 import Foundation
 
 /// Protocol for vectors supporting core operations
-public protocol VectorCoreOperations: ExtendedVectorProtocol {
+public protocol VectorCoreOperations: VectorProtocol {
     /// Element-wise minimum
     func min(_ other: Self) -> Self
     

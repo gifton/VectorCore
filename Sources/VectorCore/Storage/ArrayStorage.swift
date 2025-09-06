@@ -6,32 +6,42 @@
 import Foundation
 
 /// Generic array-based storage for arbitrary dimensions
-public struct ArrayStorage<D: Dimension>: VectorStorage, VectorStorageOperations {
+public struct ArrayStorage<D>: VectorStorage, VectorStorageOperations {
     @usableFromInline
     internal var data: ContiguousArray<Float>
     
     public var count: Int { data.count }
     
     public init() {
-        if D.self is DynamicDimension.Type {
+        if D.self == DynamicDimension.self {
             fatalError("DynamicDimension requires explicit size")
         }
-        self.data = ContiguousArray(repeating: 0, count: D.value)
+        if let dimensionType = D.self as? any StaticDimension.Type {
+            self.data = ContiguousArray(repeating: 0, count: dimensionType.value)
+        } else {
+            fatalError("Unknown dimension type")
+        }
     }
     
     public init(repeating value: Float) {
-        if D.self is DynamicDimension.Type {
+        if D.self == DynamicDimension.self {
             fatalError("DynamicDimension requires explicit size")
         }
-        self.data = ContiguousArray(repeating: value, count: D.value)
+        if let dimensionType = D.self as? any StaticDimension.Type {
+            self.data = ContiguousArray(repeating: value, count: dimensionType.value)
+        } else {
+            fatalError("Unknown dimension type")
+        }
     }
     
     public init(from values: [Float]) {
-        if D.self is DynamicDimension.Type {
+        if D.self == DynamicDimension.self {
+            self.data = ContiguousArray(values)
+        } else if let dimensionType = D.self as? any StaticDimension.Type {
+            precondition(values.count == dimensionType.value, "Value count must match dimension")
             self.data = ContiguousArray(values)
         } else {
-            precondition(values.count == D.value, "Value count must match dimension")
-            self.data = ContiguousArray(values)
+            fatalError("Unknown dimension type")
         }
     }
     
@@ -65,10 +75,17 @@ public struct ArrayStorage<D: Dimension>: VectorStorage, VectorStorageOperations
     public func dotProduct(_ other: Self) -> Float {
         precondition(count == other.count, "Dimensions must match")
         
-        // Convert to arrays and use SIMD provider
-        let a = Array(self.data)
-        let b = Array(other.data)
-        return Operations.simdProvider.dot(a, b)
+        var result: Float = 0
+        self.withUnsafeBufferPointer { aBuffer in
+            other.withUnsafeBufferPointer { bBuffer in
+                result = SIMDOperations.FloatProvider.dot(
+                    aBuffer.baseAddress!,
+                    bBuffer.baseAddress!,
+                    count: count
+                )
+            }
+        }
+        return result
     }
 }
 
@@ -121,9 +138,16 @@ public final class DynamicArrayStorage: @unchecked Sendable, VectorStorage, Vect
     public func dotProduct(_ other: DynamicArrayStorage) -> Float {
         precondition(count == other.count, "Dimensions must match")
         
-        // Convert to arrays and use SIMD provider
-        let a = Array(self.data)
-        let b = Array(other.data)
-        return Operations.simdProvider.dot(a, b)
+        var result: Float = 0
+        self.withUnsafeBufferPointer { aBuffer in
+            other.withUnsafeBufferPointer { bBuffer in
+                result = SIMDOperations.FloatProvider.dot(
+                    aBuffer.baseAddress!,
+                    bBuffer.baseAddress!,
+                    count: count
+                )
+            }
+        }
+        return result
     }
 }

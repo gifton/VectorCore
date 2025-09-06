@@ -28,7 +28,7 @@ extension Vector {
         let lhsArray = lhs.toArray()
         let rhsArray = rhs.toArray()
         let result = Operations.simdProvider.elementWiseMultiply(lhsArray, rhsArray)
-        return Vector<D>(result)
+        return try! Vector<D>(result)
     }
     
     /// Element-wise division
@@ -48,7 +48,7 @@ extension Vector {
         let lhsArray = lhs.toArray()
         let rhsArray = rhs.toArray()
         let result = Operations.simdProvider.elementWiseDivide(lhsArray, rhsArray)
-        return Vector<D>(result)
+        return try! Vector<D>(result)
     }
     
     /// Safe element-wise division with zero checking
@@ -142,7 +142,7 @@ extension Vector where D.Storage: VectorStorageOperations {
             // Small vector optimization
             if D.value <= 32 {
                 for i in 0..<D.value {
-                    result += abs(buffer[i])
+                    result += Swift.abs(buffer[i])
                 }
             } else {
                 // Large vector: use SIMD provider
@@ -229,7 +229,7 @@ extension Vector {
     /// Standard deviation
     @inlinable
     public var standardDeviation: Float {
-        sqrt(variance)
+        Foundation.sqrt(variance)
     }
 }
 
@@ -248,7 +248,7 @@ extension Vector where D.Storage: VectorStorageOperations {
                 // Small vector optimization: avoid allocation
                 if D.value <= 32 {
                     for i in 0..<D.value {
-                        result += abs(buffer1[i] - buffer2[i])
+                        result += Swift.abs(buffer1[i] - buffer2[i])
                     }
                 } else {
                     // Large vector: use SIMD provider
@@ -314,7 +314,7 @@ extension Vector {
         
         // Normalize
         let normalized = Operations.simdProvider.divide(expValues, by: sum)
-        result = Vector<D>(normalized)
+        result = try! Vector<D>(normalized)
         
         return result
     }
@@ -339,7 +339,7 @@ extension Vector {
         
         let array = result.toArray()
         let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
-        result = Vector<D>(clamped)
+        result = try! Vector<D>(clamped)
         
         return result
     }
@@ -438,31 +438,8 @@ public enum VectorMath {
 // MARK: - Vector Creation Helpers
 
 extension Vector {
-    /// Create a vector with random values in range
-    public static func random(in range: ClosedRange<Float>) -> Vector<D> {
-        let values = (0..<D.value).map { _ in
-            Float.random(in: range)
-        }
-        return Vector(values)
-    }
-    
-    /// Create a vector filled with zeros
-    public static var zero: Vector<D> {
-        Vector()
-    }
-    
     /// Create a vector filled with ones
     public static var one: Vector<D> {
-        Vector(repeating: 1)
-    }
-    
-    /// Create a vector filled with zeros (method for compatibility)
-    public static func zeros() -> Vector<D> {
-        Vector()
-    }
-    
-    /// Create a vector filled with ones (method for compatibility)
-    public static func ones() -> Vector<D> {
         Vector(repeating: 1)
     }
 }
@@ -485,7 +462,7 @@ extension Vector where D.Storage: VectorStorageOperations {
         for i in 0..<D.value {
             let value = self[i]
             // Non-finite values (NaN, Infinity) are not considered sparse
-            if value.isFinite && abs(value) <= threshold {
+            if value.isFinite && Swift.abs(value) <= threshold {
                 sparseCount += 1
             }
         }
@@ -514,18 +491,19 @@ extension Vector where D.Storage: VectorStorageOperations {
         return entropyFast
     }
     
-    /// Comprehensive quality assessment
-    ///
-    /// Returns a VectorQuality struct containing multiple metrics for
-    /// assessing vector characteristics and quality.
-    public var quality: VectorQuality {
-        VectorQuality(
-            magnitude: magnitude,
-            variance: variance,
-            sparsity: sparsity(),
-            entropy: entropy
-        )
-    }
+    // TODO: Implement VectorQuality type
+    // /// Comprehensive quality assessment
+    // ///
+    // /// Returns a VectorQuality struct containing multiple metrics for
+    // /// assessing vector characteristics and quality.
+    // public var quality: VectorQuality {
+    //     VectorQuality(
+    //         magnitude: magnitude,
+    //         variance: variance,
+    //         sparsity: sparsity(),
+    //         entropy: entropy
+    //     )
+    // }
 }
 
 // MARK: - Serialization
@@ -539,9 +517,7 @@ extension Vector where D.Storage: VectorStorageOperations {
     /// - Storing vectors in JSON/XML
     /// - Embedding vectors in URLs
     public var base64Encoded: String {
-        guard let data = try? encodeBinary() else {
-            return ""  // Should not happen for valid vectors
-        }
+        let data = encodeBinary()
         return data.base64EncodedString()
     }
     

@@ -43,7 +43,7 @@ public struct VectorCoreVersion {
     /// Patch version number.
     ///
     /// Incremented when making backwards-compatible bug fixes.
-    public static let patch = 0
+    public static let patch = 1
     
     /// Pre-release version identifier.
     ///

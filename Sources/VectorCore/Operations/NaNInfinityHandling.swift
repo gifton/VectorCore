@@ -4,9 +4,6 @@
 //
 
 import Foundation
-#if canImport(Accelerate)
-import Accelerate
-#endif
 
 /// Options for handling NaN and Infinity values
 public struct NonFiniteHandling: OptionSet, Sendable {
@@ -344,7 +341,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
             }
             
             // Replace with zero by default
-            return Vector<D>.zeros()
+            return Vector<D>.zero
         }
         
         let result = self / divisor
@@ -398,7 +395,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
                     result[i] = -Float.greatestFiniteMagnitude
                 }
             } else {
-                result[i] = log(value)
+                result[i] = Foundation.log(value)
             }
         }
         
@@ -414,7 +411,7 @@ public extension SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Only vectors with all finite values
-    static func filterFinite<V: ExtendedVectorProtocol>(_ vectors: [V]) -> [V] {
+    static func filterFinite<V: VectorProtocol>(_ vectors: [V]) -> [V] {
         vectors.filter { vector in
             for i in 0..<vector.scalarCount {
                 if !vector[i].isFinite {
@@ -429,7 +426,7 @@ public extension SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Indices of vectors containing non-finite values
-    static func findNonFinite<V: ExtendedVectorProtocol>(_ vectors: [V]) -> [Int] {
+    static func findNonFinite<V: VectorProtocol>(_ vectors: [V]) -> [Int] {
         vectors.enumerated().compactMap { index, vector in
             for i in 0..<vector.scalarCount {
                 if !vector[i].isFinite {
@@ -444,7 +441,7 @@ public extension SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Statistics computed only from finite values
-    static func finiteStatistics<V: ExtendedVectorProtocol>(for vectors: [V]) -> BatchStatistics {
+    static func finiteStatistics<V: VectorProtocol>(for vectors: [V]) -> BatchStatistics where V.Scalar == Float {
         let finiteVectors = filterFinite(vectors)
         
         guard !finiteVectors.isEmpty else {

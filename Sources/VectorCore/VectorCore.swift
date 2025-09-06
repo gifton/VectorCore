@@ -31,9 +31,9 @@ public enum VectorCore {
     /// - Returns: Optimized vector for the specified dimension
     public static func createVector(dimension: Int, data: [Float]? = nil) -> any VectorType {
         if let data = data {
-            return try! VectorFactory.vector(of: dimension, from: data)
+            return try! VectorTypeFactory.vector(of: dimension, from: data)
         } else {
-            return VectorFactory.zeros(dimension: dimension)
+            return VectorTypeFactory.zeros(dimension: dimension)
         }
     }
     
@@ -46,7 +46,7 @@ public enum VectorCore {
     /// - Throws: VectorCoreError if any vector has incorrect dimension
     public static func createBatch(dimension: Int, from data: [[Float]]) throws -> [any VectorType] {
         try data.map { values in
-            try VectorFactory.vector(of: dimension, from: values)
+            try VectorTypeFactory.vector(of: dimension, from: values)
         }
     }
     
@@ -71,12 +71,12 @@ public enum VectorCore {
     
     /// Check if a dimension has optimized SIMD support
     public static func hasOptimizedSupport(for dimension: Int) -> Bool {
-        VectorFactory.isSupported(dimension: dimension)
+        VectorTypeFactory.isSupported(dimension: dimension)
     }
     
     /// Get the nearest optimized dimension
     public static func optimalDimension(for size: Int) -> Int {
-        VectorFactory.optimalDimension(for: size)
+        VectorTypeFactory.optimalDimension(for: size)
     }
 }
 
@@ -91,20 +91,18 @@ public extension Array where Element == Float {
 
 public extension Array where Element: VectorType {
     /// Compute pairwise distances between all vectors
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    func pairwiseDistances(
-        metric: any DistanceMetric = EuclideanDistance()
-    ) async -> [[Float]] where Element: ExtendedVectorProtocol & Sendable {
+    func pairwiseDistances<M: DistanceMetric>(
+        metric: M = EuclideanDistance()
+    ) async -> [[Float]] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
         await BatchOperations.pairwiseDistances(self, metric: metric)
     }
     
     /// Find k nearest neighbors to a query vector
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    func findNearest(
+    func findNearest<M: DistanceMetric>(
         to query: Element,
         k: Int,
-        metric: any DistanceMetric = EuclideanDistance()
-    ) async -> [(index: Int, distance: Float)] where Element: ExtendedVectorProtocol & Sendable {
+        metric: M = EuclideanDistance()
+    ) async -> [(index: Int, distance: Float)] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
         await BatchOperations.findNearest(to: query, in: self, k: k, metric: metric)
     }
 }

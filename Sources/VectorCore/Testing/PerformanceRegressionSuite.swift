@@ -4,9 +4,6 @@
 //
 
 import Foundation
-#if canImport(Accelerate)
-import Accelerate
-#endif
 
 /// Performance regression test configuration
 public struct RegressionTestConfig {
@@ -375,7 +372,7 @@ public final class PerformanceRegressionSuite {
             for i in stride(from: 0, to: 768, by: 50) {
                 values[i] = .nan
             }
-            let v = Vector<Dim768>(values)
+            let v = try! Vector<Dim768>(values)
             return { _ = try? v.handleNonFinite(options: .replaceAll) }
         }
     }

@@ -9,6 +9,221 @@
 
 import Foundation
 
+// MARK: - Storage for Dim2
+
+/// Storage specifically for 2-dimensional vectors
+public struct Storage2: VectorStorage, VectorStorageOperations {
+    @usableFromInline
+    internal var storage: AlignedValueStorage
+    
+    public typealias Scalar = Float
+    public var count: Int { 2 }
+    
+    @inlinable
+    public init() {
+        self.storage = AlignedValueStorage(count: 2)
+    }
+    
+    @inlinable
+    public init(repeating value: Float) {
+        self.storage = AlignedValueStorage(count: 2, repeating: value)
+    }
+    
+    @inlinable
+    public init(from values: [Float]) {
+        precondition(values.count == 2, "Storage2 requires exactly 2 values")
+        self.storage = AlignedValueStorage(from: values)
+    }
+    
+    @inlinable
+    public subscript(index: Int) -> Float {
+        get { storage[index] }
+        set { storage[index] = newValue }
+    }
+    
+    @inlinable
+    public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeBufferPointer(body)
+    }
+    
+    @inlinable
+    public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeMutableBufferPointer(body)
+    }
+}
+
+// MARK: - Storage for Dim3
+
+/// Storage specifically for 3-dimensional vectors
+public struct Storage3: VectorStorage, VectorStorageOperations {
+    @usableFromInline
+    internal var storage: AlignedValueStorage
+    
+    public typealias Scalar = Float
+    public var count: Int { 3 }
+    
+    @inlinable
+    public init() {
+        self.storage = AlignedValueStorage(count: 3)
+    }
+    
+    @inlinable
+    public init(repeating value: Float) {
+        self.storage = AlignedValueStorage(count: 3, repeating: value)
+    }
+    
+    @inlinable
+    public init(from values: [Float]) {
+        precondition(values.count == 3, "Storage3 requires exactly 3 values")
+        self.storage = AlignedValueStorage(from: values)
+    }
+    
+    @inlinable
+    public subscript(index: Int) -> Float {
+        get { storage[index] }
+        set { storage[index] = newValue }
+    }
+    
+    @inlinable
+    public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeBufferPointer(body)
+    }
+    
+    @inlinable
+    public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeMutableBufferPointer(body)
+    }
+}
+
+// MARK: - Storage for Dim4
+
+/// Storage specifically for 4-dimensional vectors
+public struct Storage4: VectorStorage, VectorStorageOperations {
+    @usableFromInline
+    internal var storage: AlignedValueStorage
+    
+    public typealias Scalar = Float
+    public var count: Int { 4 }
+    
+    @inlinable
+    public init() {
+        self.storage = AlignedValueStorage(count: 4)
+    }
+    
+    @inlinable
+    public init(repeating value: Float) {
+        self.storage = AlignedValueStorage(count: 4, repeating: value)
+    }
+    
+    @inlinable
+    public init(from values: [Float]) {
+        precondition(values.count == 4, "Storage4 requires exactly 4 values")
+        self.storage = AlignedValueStorage(from: values)
+    }
+    
+    @inlinable
+    public subscript(index: Int) -> Float {
+        get { storage[index] }
+        set { storage[index] = newValue }
+    }
+    
+    @inlinable
+    public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeBufferPointer(body)
+    }
+    
+    @inlinable
+    public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeMutableBufferPointer(body)
+    }
+}
+
+// MARK: - Storage for Dim8
+
+/// Storage specifically for 8-dimensional vectors
+public struct Storage8: VectorStorage, VectorStorageOperations {
+    @usableFromInline
+    internal var storage: AlignedValueStorage
+    
+    public typealias Scalar = Float
+    public var count: Int { 8 }
+    
+    @inlinable
+    public init() {
+        self.storage = AlignedValueStorage(count: 8)
+    }
+    
+    @inlinable
+    public init(repeating value: Float) {
+        self.storage = AlignedValueStorage(count: 8, repeating: value)
+    }
+    
+    @inlinable
+    public init(from values: [Float]) {
+        precondition(values.count == 8, "Storage8 requires exactly 8 values")
+        self.storage = AlignedValueStorage(from: values)
+    }
+    
+    @inlinable
+    public subscript(index: Int) -> Float {
+        get { storage[index] }
+        set { storage[index] = newValue }
+    }
+    
+    @inlinable
+    public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeBufferPointer(body)
+    }
+    
+    @inlinable
+    public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeMutableBufferPointer(body)
+    }
+}
+
+// MARK: - Storage for Dim16
+
+/// Storage specifically for 16-dimensional vectors
+public struct Storage16: VectorStorage, VectorStorageOperations {
+    @usableFromInline
+    internal var storage: AlignedValueStorage
+    
+    public typealias Scalar = Float
+    public var count: Int { 16 }
+    
+    @inlinable
+    public init() {
+        self.storage = AlignedValueStorage(count: 16)
+    }
+    
+    @inlinable
+    public init(repeating value: Float) {
+        self.storage = AlignedValueStorage(count: 16, repeating: value)
+    }
+    
+    @inlinable
+    public init(from values: [Float]) {
+        precondition(values.count == 16, "Storage16 requires exactly 16 values")
+        self.storage = AlignedValueStorage(from: values)
+    }
+    
+    @inlinable
+    public subscript(index: Int) -> Float {
+        get { storage[index] }
+        set { storage[index] = newValue }
+    }
+    
+    @inlinable
+    public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeBufferPointer(body)
+    }
+    
+    @inlinable
+    public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+        try storage.withUnsafeMutableBufferPointer(body)
+    }
+}
+
 // MARK: - Storage for Dim32
 
 /// Storage specifically for 32-dimensional vectors
@@ -16,6 +231,7 @@ public struct Storage32: VectorStorage, VectorStorageOperations {
     @usableFromInline
     internal var storage: AlignedValueStorage
     
+    public typealias Scalar = Float
     public var count: Int { 32 }
     
     @inlinable

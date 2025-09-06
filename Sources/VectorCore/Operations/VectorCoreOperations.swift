@@ -15,10 +15,10 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func min(_ other: Vector<D>) -> Vector<D> {
-        let a = self.toArray()
-        let b = other.toArray()
+        let a = Array(self)
+        let b = Array(other)
         let result = Operations.simdProvider.elementWiseMin(a, b)
-        return Vector<D>(result)
+        return try! Vector<D>(result)
     }
     
     /// Compute element-wise maximum between two vectors
@@ -27,10 +27,10 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func max(_ other: Vector<D>) -> Vector<D> {
-        let a = self.toArray()
-        let b = other.toArray()
+        let a = Array(self)
+        let b = Array(other)
         let result = Operations.simdProvider.elementWiseMax(a, b)
-        return Vector<D>(result)
+        return try! Vector<D>(result)
     }
     
     /// Find the minimum element in the vector
@@ -38,7 +38,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func minElement() -> (value: Float, index: Int) {
-        let array = self.toArray()
+        let array = Array(self)
         let index = Operations.simdProvider.minIndex(array)
         return (array[index], index)
     }
@@ -48,7 +48,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func maxElement() -> (value: Float, index: Int) {
-        let array = self.toArray()
+        let array = Array(self)
         let index = Operations.simdProvider.maxIndex(array)
         return (array[index], index)
     }
@@ -64,9 +64,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func clamped(to range: ClosedRange<Float>) -> Vector<D> {
-        let array = self.toArray()
+        let array = Array(self)
         let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
-        return Vector<D>(clamped)
+        return try! Vector<D>(clamped)
     }
     
     /// Clamp all elements to a given range in place
@@ -74,9 +74,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     mutating func clamp(to range: ClosedRange<Float>) {
-        let array = self.toArray()
+        let array = Array(self)
         let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
-        self = Vector<D>(clamped)
+        self = try! Vector<D>(clamped)
     }
 }
 
@@ -151,9 +151,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func absoluteValue() -> Vector<D> {
-        let array = self.toArray()
+        let array = Array(self)
         let absArray = Operations.simdProvider.abs(array)
-        return Vector<D>(absArray)
+        return try! Vector<D>(absArray)
     }
     
     /// Element-wise square root
@@ -162,9 +162,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Note: Negative values will produce NaN
     @inlinable
     func squareRoot() -> Vector<D> {
-        let array = self.toArray()
+        let array = Array(self)
         let sqrtArray = Operations.simdProvider.sqrt(array)
-        return Vector<D>(sqrtArray)
+        return try! Vector<D>(sqrtArray)
     }
 }
 
@@ -199,13 +199,13 @@ public extension DynamicVector {
         }
         
         // Create arrays, perform operation, then create result
-        let arr1 = self.toArray()
-        let arr2 = other.toArray()
+        let arr1 = Array(self)
+        let arr2 = Array(other)
         var result = [Float](repeating: 0, count: dimension)
         
         result = Operations.simdProvider.elementWiseMin(arr1, arr2)
         
-        return DynamicVector(dimension: dimension, values: result)
+        return DynamicVector(result)
     }
     
     /// Compute element-wise maximum between two vectors
@@ -218,13 +218,13 @@ public extension DynamicVector {
         }
         
         // Create arrays, perform operation, then create result
-        let arr1 = self.toArray()
-        let arr2 = other.toArray()
+        let arr1 = Array(self)
+        let arr2 = Array(other)
         var result = [Float](repeating: 0, count: dimension)
         
         result = Operations.simdProvider.elementWiseMax(arr1, arr2)
         
-        return DynamicVector(dimension: dimension, values: result)
+        return DynamicVector(result)
     }
     
     /// Clamp all elements to a given range
@@ -232,14 +232,14 @@ public extension DynamicVector {
     /// - Returns: A new vector with clamped values
     func clamped(to range: ClosedRange<Float>) -> DynamicVector {
         // Create array, perform operation, then create result
-        let arr = self.toArray()
+        let arr = Array(self)
         var result = [Float](repeating: 0, count: dimension)
         let low = range.lowerBound
         let high = range.upperBound
         
         result = Operations.simdProvider.clip(arr, min: low, max: high)
         
-        return DynamicVector(dimension: dimension, values: result)
+        return DynamicVector(result)
     }
     
     /// Linearly interpolate between two vectors

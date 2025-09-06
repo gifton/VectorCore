@@ -179,9 +179,7 @@ public struct VectorQualityMetrics: Codable, Sendable {
 
 // MARK: - Common Vector Type Aliases
 
-/// Standard SIMD vector types
-public typealias Vector32 = SIMD32<Float>
-public typealias Vector64 = SIMD64<Float>
+// Vector32 and Vector64 are defined in Vector.swift as Vector<Dim32> and Vector<Dim64>
 
 // Note: Swift's SIMD types only go up to SIMD64
 // Custom implementations are provided in Math/VectorTypes.swift

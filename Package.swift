@@ -35,5 +35,12 @@ let package = Package(
             swiftSettings: [ .enableExperimentalFeature("StrictConcurrency") ]
         ),
         
+        // New comprehensive test suite (skeleton only)
+        .testTarget(
+            name: "ComprehensiveTests",
+            dependencies: ["VectorCore"],
+            swiftSettings: [ .enableExperimentalFeature("StrictConcurrency") ]
+        ),
+        
     ]
 )

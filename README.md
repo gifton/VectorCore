@@ -4,6 +4,7 @@
 [![Platforms](https://img.shields.io/badge/Platforms-macOS%2014%2B%20|%20iOS%2017%2B%20|%20tvOS%2017%2B%20|%20watchOS%2010%2B%20|%20visionOS%201%2B-blue.svg?style=flat)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/)
+[![CI](https://github.com/gifton/VectorCore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/VectorCore/actions/workflows/ci.yml)
 
 High-performance, type-safe vector operations for Swift with zero third‑party dependencies. VectorCore provides fast vector math optimized for machine learning, scientific computing, and real-time applications.
 
@@ -22,13 +23,17 @@ Indicative performance (Apple Silicon M‑series): optimized 512/768/1536‑dime
 
 Whether you're building ML pipelines, processing embeddings, or need fast numerical computing, VectorCore delivers the performance you need with an API you'll love.
 
+## ⚡️ GPU Acceleration
+
+VectorCore is CPU-only and contains no GPU/Metal code. If you need GPU acceleration, use the separate VectorAccelerate package, which implements GPU-backed compute while integrating seamlessly with VectorCore types and protocols.
+
 ## 📦 Installation
 
 Add VectorCore to your Swift Package Manager dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<owner>/VectorCore.git", from: "0.1.0")
+    .package(url: "https://github.com/gifton/VectorCore.git", from: "0.1.0")
 ]
 ```
 

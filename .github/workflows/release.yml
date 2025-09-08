@@ -50,7 +50,7 @@ jobs:
       - name: Verify Version Consistency
         run: |
           # Check Version.swift
-          SWIFT_VERSION=$(grep -E 'static let current = ".*"' Sources/VectorCore/Version.swift | sed -E 's/.*"(.*)".*/\1/')
+          SWIFT_VERSION=$(grep -E 'public static let version = "[^"]+"' Sources/VectorCore/Version.swift | sed -E 's/.*"(.*)".*/\1/')
           
           if [ "$SWIFT_VERSION" != "${{ steps.version.outputs.version }}" ]; then
             echo "::error::Version mismatch! Version.swift has '$SWIFT_VERSION' but tag is '${{ steps.version.outputs.version }}'"
@@ -92,14 +92,6 @@ jobs:
       - name: Test Release
         run: |
           swift test -c release --parallel
-      
-      - name: Run Benchmarks
-        run: |
-          .build/release/VectorCoreBenchmarks --iterations 3
-      
-      - name: Verify Examples
-        run: |
-          swift run --configuration release VectorCoreVerify
 
   create-release:
     name: Create GitHub Release

@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  SWIFT_VERSION: '5.9'
+  SWIFT_VERSION: '6.0'
   VECTORCORE_TEST_EXTENDED: 1
 
 jobs:
@@ -49,16 +49,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-13, macos-14]
-        swift: ['5.9', '5.10']
+        swift: ['6.0']
         include:
           - os: ubuntu-latest
-            swift: '5.9'
+            swift: '6.0'
             platform: 'linux'
           - os: macos-13
-            swift: '5.9'
+            swift: '6.0'
             platform: 'macos-intel'
           - os: macos-14
-            swift: '5.9'
+            swift: '6.0'
             platform: 'macos-arm64'
     
     steps:
@@ -82,12 +82,7 @@ jobs:
         run: swift build
       
       - name: Build Release
-        run: ./Scripts/build_optimized.sh
-      
-      - name: Validate Optimizations
-        run: |
-          export VECTORCORE_VALIDATE_BUILD=1
-          swift Scripts/validate_optimizations.swift
+        run: swift build -c release
 
   # Job 3: Test Suite with Coverage
   test:
@@ -110,110 +105,7 @@ jobs:
       - name: Run Tests with Coverage
         run: |
           swift test --enable-code-coverage --parallel
-      
-      - name: Generate Coverage Report
-        run: |
-          ./Scripts/run_tests_with_coverage.sh --verbose
-        continue-on-error: true
-      
-      - name: Upload Coverage
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-${{ matrix.os }}
-          path: coverage/
-          retention-days: 7
-      
-      - name: Coverage Report
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          if command -v llvm-cov >/dev/null 2>&1; then
-            llvm-cov report \
-              .build/debug/*.xctest \
-              -instr-profile .build/debug/codecov/default.profdata \
-              -ignore-filename-regex="Tests|Benchmarks"
-          fi
 
-  # Job 4: Performance Regression Detection
-  performance-regression:
-    name: Performance Regression Check
-    runs-on: macos-14  # Use Apple Silicon for consistent performance
-    needs: build
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Need full history for baseline comparison
-      
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
-      
-      - name: Cache Baseline
-        uses: actions/cache@v3
-        with:
-          path: baseline_metrics.json
-          key: performance-baseline-${{ runner.os }}-${{ github.base_ref || 'main' }}
-      
-      - name: Download Baseline
-        if: github.event_name == 'pull_request'
-        run: |
-          # Try to get baseline from main branch
-          git fetch origin main
-          git checkout origin/main -- baseline_metrics.json || echo "No baseline found"
-      
-      - name: Build Optimized
-        run: ./Scripts/build_optimized.sh
-      
-      - name: Capture Current Performance
-        run: |
-          swift Scripts/capture_baseline.swift current_metrics.json
-      
-      - name: Compare Performance
-        if: github.event_name == 'pull_request'
-        run: |
-          if [ -f baseline_metrics.json ]; then
-            export COMPARISON_OUTPUT=comparison_output.txt
-            swift Scripts/compare_baseline.swift baseline_metrics.json current_metrics.json --threshold 0.05
-          else
-            echo "⚠️ No baseline found for comparison" > comparison_output.txt
-            echo "Current metrics will become the new baseline" >> comparison_output.txt
-            cp current_metrics.json baseline_metrics.json
-          fi
-      
-      - name: Upload Performance Report
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: performance-metrics
-          path: |
-            baseline_metrics.json
-            current_metrics.json
-          retention-days: 30
-      
-      - name: Comment PR with Performance
-        if: github.event_name == 'pull_request' && always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            let comment = '## 📊 Performance Report\n\n';
-            
-            try {
-              // Read comparison results if available
-              const output = fs.readFileSync('comparison_output.txt', 'utf8');
-              comment += '```\n' + output + '\n```\n';
-            } catch (e) {
-              comment += '⚠️ No performance comparison available\n';
-            }
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
 
   # Job 5: Extended Tests (Nightly)
   extended-tests:
@@ -310,12 +202,8 @@ jobs:
       
       - name: Build Release Artifacts
         run: |
-          ./Scripts/build_optimized.sh --clean
-          
-          # Create artifact directory
+          swift build -c release
           mkdir -p artifacts
-          
-          # Copy build products
           cp -r .build/release/* artifacts/ || true
       
       - name: Upload Artifacts

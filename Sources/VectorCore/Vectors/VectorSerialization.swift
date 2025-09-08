@@ -54,40 +54,24 @@ extension DynamicVector: Codable {
     }
 }
 
-// MARK: - Binary Serialization
+// MARK: - Binary Serialization (see BinaryFormat + CRC32 in Utilities)
 
-/// Binary format header for vectors
-struct VectorBinaryHeader {
-    let magic: UInt32 = 0x56454354  // "VECT" in hex
-    let version: UInt16 = 1
-    let dimension: UInt32
-    let flags: UInt16 = 0
-    let checksum: UInt32
-}
-
-extension VectorProtocol {
-    /// Encode vector to binary format
+extension VectorProtocol where Scalar == Float {
+    /// Encode vector to binary format using BinaryFormat utilities and CRC32 checksum
     public func encodeBinary() -> Data {
         var data = Data()
-        data.reserveCapacity(12 + scalarCount * MemoryLayout<Scalar>.size + 4)
-        
-        // Write header (without checksum)
-        withUnsafeBytes(of: UInt32(0x56454354).littleEndian) { data.append(contentsOf: $0) }  // Magic
-        withUnsafeBytes(of: UInt16(1).littleEndian) { data.append(contentsOf: $0) }           // Version
-        withUnsafeBytes(of: UInt32(scalarCount).littleEndian) { data.append(contentsOf: $0) } // Dimension
-        withUnsafeBytes(of: UInt16(0).littleEndian) { data.append(contentsOf: $0) }           // Flags
-        
-        // Write vector data
-        withUnsafeBufferPointer { buffer in
-            for element in buffer {
-                withUnsafeBytes(of: element) { data.append(contentsOf: $0) }
-            }
-        }
-        
-        // Calculate and append checksum
-        let checksum = data.reduce(UInt32(0)) { $0 &+ UInt32($1) }
-        withUnsafeBytes(of: checksum.littleEndian) { data.append(contentsOf: $0) }
-        
+        data.reserveCapacity(BinaryFormat.expectedDataSize(for: scalarCount))
+        // Header
+        let header = BinaryHeader(dimension: scalarCount)
+        BinaryFormat.writeUInt32(header.magic, to: &data)
+        BinaryFormat.writeUInt16(header.version, to: &data)
+        BinaryFormat.writeUInt32(header.dimension, to: &data)
+        BinaryFormat.writeUInt16(header.flags, to: &data)
+        // Payload
+        BinaryFormat.writeFloatArray(self.toArray(), to: &data)
+        // CRC32
+        let checksum = data.crc32()
+        BinaryFormat.writeUInt32(checksum, to: &data)
         return data
     }
 }
@@ -95,105 +79,28 @@ extension VectorProtocol {
 extension Vector {
     /// Decode vector from binary format
     public static func decodeBinary(from data: Data) throws -> Vector {
-        guard data.count >= 16 else {
-            throw VectorError.invalidDimension(0, reason: "Data too small for header")
+        // Validate header and checksum using BinaryFormat
+        let header = try BinaryFormat.validateHeader(in: data)
+        try BinaryFormat.validateChecksum(in: data)
+        // Ensure dimension matches D.value
+        let dim = Int(header.dimension)
+        guard dim == D.value else {
+            throw VectorError.dimensionMismatch(expected: D.value, actual: dim)
         }
-        
-        // Read header
-        let magic = data.withUnsafeBytes { $0.load(fromByteOffset: 0, as: UInt32.self).littleEndian }
-        let version = data.withUnsafeBytes { $0.load(fromByteOffset: 4, as: UInt16.self).littleEndian }
-        let dimension = data.withUnsafeBytes { $0.load(fromByteOffset: 6, as: UInt32.self).littleEndian }
-        
-        // Validate header
-        guard magic == 0x56454354 else {
-            throw VectorError.invalidDimension(0, reason: "Invalid magic number")
-        }
-        guard version == 1 else {
-            throw VectorError.invalidDimension(0, reason: "Unsupported version")
-        }
-        guard dimension == D.value else {
-            throw VectorError.dimensionMismatch(expected: D.value, actual: Int(dimension))
-        }
-        
-        // Validate data size
-        let expectedSize = 16 + Int(dimension) * MemoryLayout<Scalar>.size
-        guard data.count == expectedSize else {
-            throw VectorError.invalidDimension(data.count, reason: "Invalid data size")
-        }
-        
-        // Read vector elements
-        var elements = [Scalar]()
-        elements.reserveCapacity(Int(dimension))
-        
-        let elementData = data.subdata(in: 12..<(data.count - 4))
-        elementData.withUnsafeBytes { bytes in
-            let buffer = bytes.bindMemory(to: Scalar.self)
-            elements.append(contentsOf: buffer)
-        }
-        
-        // Verify checksum
-        let checksumData = data.subdata(in: 0..<(data.count - 4))
-        let calculatedChecksum = checksumData.reduce(UInt32(0)) { $0 &+ UInt32($1) }
-        let storedChecksum = data.withUnsafeBytes { 
-            $0.load(fromByteOffset: data.count - 4, as: UInt32.self).littleEndian 
-        }
-        
-        guard calculatedChecksum == storedChecksum else {
-            throw VectorError.invalidDimension(0, reason: "Checksum mismatch")
-        }
-        
-        return try Vector(elements)
+        // Read payload
+        let values = try BinaryFormat.readFloatArray(from: data, at: BinaryHeader.headerSize, count: dim)
+        return try Vector(values)
     }
 }
 
 extension DynamicVector {
     /// Decode dynamic vector from binary format
     public static func decodeBinary(from data: Data) throws -> DynamicVector {
-        guard data.count >= 16 else {
-            throw VectorError.invalidDimension(0, reason: "Data too small for header")
-        }
-        
-        // Read header
-        let magic = data.withUnsafeBytes { $0.load(fromByteOffset: 0, as: UInt32.self).littleEndian }
-        let version = data.withUnsafeBytes { $0.load(fromByteOffset: 4, as: UInt16.self).littleEndian }
-        let dimension = data.withUnsafeBytes { $0.load(fromByteOffset: 6, as: UInt32.self).littleEndian }
-        
-        // Validate header
-        guard magic == 0x56454354 else {
-            throw VectorError.invalidDimension(0, reason: "Invalid magic number")
-        }
-        guard version == 1 else {
-            throw VectorError.invalidDimension(0, reason: "Unsupported version")
-        }
-        
-        // Validate data size
-        let expectedSize = 16 + Int(dimension) * MemoryLayout<Scalar>.size
-        guard data.count == expectedSize else {
-            throw VectorError.invalidDimension(data.count, reason: "Invalid data size")
-        }
-        
-        // Read vector elements
-        var elements = [Scalar]()
-        elements.reserveCapacity(Int(dimension))
-        
-        let elementData = data.subdata(in: 12..<(data.count - 4))
-        elementData.withUnsafeBytes { bytes in
-            let buffer = bytes.bindMemory(to: Scalar.self)
-            elements.append(contentsOf: buffer)
-        }
-        
-        // Verify checksum
-        let checksumData = data.subdata(in: 0..<(data.count - 4))
-        let calculatedChecksum = checksumData.reduce(UInt32(0)) { $0 &+ UInt32($1) }
-        let storedChecksum = data.withUnsafeBytes { 
-            $0.load(fromByteOffset: data.count - 4, as: UInt32.self).littleEndian 
-        }
-        
-        guard calculatedChecksum == storedChecksum else {
-            throw VectorError.invalidDimension(0, reason: "Checksum mismatch")
-        }
-        
-        return DynamicVector(elements)
+        let header = try BinaryFormat.validateHeader(in: data)
+        try BinaryFormat.validateChecksum(in: data)
+        let dim = Int(header.dimension)
+        let values = try BinaryFormat.readFloatArray(from: data, at: BinaryHeader.headerSize, count: dim)
+        return DynamicVector(values)
     }
 }
 

@@ -79,7 +79,13 @@ extension Vector where D.Storage: VectorStorageOperations {
             
             // Step 3: Sum absolute values
             let absSum = provider.sum(absValues)
-            
+
+            // If the sum is non-finite (e.g., any element was NaN/Inf), return NaN for consistency
+            guard absSum.isFinite else {
+                result = .nan
+                return
+            }
+
             guard absSum > Float.ulpOfOne else {
                 result = 0.0
                 return

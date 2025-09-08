@@ -45,7 +45,7 @@ public enum VectorTypeFactory {
     ///   - values: Array of Float values to initialize the vector
     /// - Returns: A strongly-typed Vector<D> instance
     /// - Throws: `VectorError.dimensionMismatch` if values.count != D.value
-    public static func create<D: Dimension>(_ type: D.Type, from values: [Float]) throws -> Vector<D> {
+    public static func create<D: StaticDimension>(_ type: D.Type, from values: [Float]) throws -> Vector<D> {
         guard values.count == D.value else {
             throw VectorError.dimensionMismatch(expected: D.value, actual: values.count)
         }

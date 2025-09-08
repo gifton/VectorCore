@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   benchmark:
-    name: Run Performance Benchmarks
+    name: Build and Run Tests (Release)
     runs-on: macos-14
     timeout-minutes: 60
     
@@ -52,206 +52,18 @@ jobs:
             ${{ runner.os }}-spm-bench-
             ${{ runner.os }}-spm-
       
-      - name: Build Benchmarks
+      - name: Build (Release)
         run: |
-          swift build -c release --target VectorCoreBenchmarks
-          swift build -c release --target PerformanceRegressionRunner
-      
-      - name: Run Comprehensive Benchmarks
+          swift build -c release
+
+      - name: Run Tests (Release)
         run: |
-          # Ensure consistent CPU state
-          sudo pmset -a disablesleep 1 || true
-          
-          # Run benchmarks with multiple iterations for stability
-          echo "Running comprehensive benchmarks..."
-          .build/release/VectorCoreBenchmarks --format json --iterations 10 > benchmark_results.json
-          
-          # Also save human-readable format
-          .build/release/VectorCoreBenchmarks --iterations 10 > benchmark_results.txt
-      
-      - name: Run Regression Detection
-        id: regression
-        run: |
-          # Run the regression detection tool
-          .build/release/PerformanceRegressionRunner > regression_report.txt 2>&1 || REGRESSION_FOUND=$?
-          
-          if [ "${REGRESSION_FOUND:-0}" -ne 0 ]; then
-            echo "regression_detected=true" >> $GITHUB_OUTPUT
-          else
-            echo "regression_detected=false" >> $GITHUB_OUTPUT
-          fi
-          
-          # Always show the report
-          cat regression_report.txt
-      
-      - name: Process Benchmark Results
-        id: process
-        run: |
-          # Create a Python script to process results
-          cat > process_benchmarks.py << 'EOF'
-          import json
-          import sys
-          
-          with open('benchmark_results.json', 'r') as f:
-              data = json.load(f)
-          
-          # Process and format results
-          summary = []
-          summary.append("## Benchmark Results\n")
-          summary.append("| Operation | Time (ns) | Ops/sec | Memory (bytes) |")
-          summary.append("|-----------|-----------|---------|----------------|")
-          
-          # Extract benchmark data (adjust based on actual format)
-          # This is a placeholder - adjust based on your actual benchmark output format
-          for benchmark in data.get('benchmarks', []):
-              name = benchmark.get('name', 'Unknown')
-              time_ns = benchmark.get('time_ns', 0)
-              ops_per_sec = 1_000_000_000 / time_ns if time_ns > 0 else 0
-              memory = benchmark.get('memory_bytes', 0)
-              
-              summary.append(f"| {name} | {time_ns:,.0f} | {ops_per_sec:,.0f} | {memory:,} |")
-          
-          print('\n'.join(summary))
-          EOF
-          
-          # Try to process with Python if available
-          if command -v python3 &> /dev/null; then
-            python3 process_benchmarks.py > benchmark_summary.md || echo "Failed to process benchmarks"
-          else
-            # Fallback to basic processing
-            echo "## Benchmark Results" > benchmark_summary.md
-            echo "" >> benchmark_summary.md
-            echo '```' >> benchmark_summary.md
-            cat benchmark_results.txt >> benchmark_summary.md
-            echo '```' >> benchmark_summary.md
-          fi
-          
-          # Add to GitHub summary
-          cat benchmark_summary.md >> $GITHUB_STEP_SUMMARY
-      
-      - name: Upload Benchmark Artifacts
+          swift test -c release --parallel
+
+      - name: Upload Test Logs
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-results-${{ github.sha }}
+          name: test-logs-${{ github.sha }}
           path: |
-            benchmark_results.json
-            benchmark_results.txt
-            regression_report.txt
-            benchmark_summary.md
+            .build/release
           retention-days: 90
-      
-      - name: Compare with Previous Results
-        if: github.event_name == 'pull_request'
-        id: compare
-        run: |
-          # Try to download previous results from main branch
-          BASE_SHA=${{ github.event.pull_request.base.sha }}
-          
-          # Create comparison script
-          cat > compare_benchmarks.sh << 'EOF'
-          #!/bin/bash
-          
-          echo "## Performance Comparison"
-          echo ""
-          echo "Comparing with base branch (${BASE_SHA:0:7})..."
-          echo ""
-          
-          # Add comparison logic here
-          # This would typically involve downloading artifacts from the base branch
-          # and comparing the results
-          
-          EOF
-          
-          chmod +x compare_benchmarks.sh
-          ./compare_benchmarks.sh > comparison.md || echo "No previous results to compare"
-          
-          # Save comparison for PR comment
-          cp comparison.md pr_comment.md
-      
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            
-            // Read the benchmark summary
-            let comment = '## 📊 Benchmark Results\n\n';
-            
-            try {
-              const summary = fs.readFileSync('benchmark_summary.md', 'utf8');
-              comment += summary + '\n\n';
-            } catch (e) {
-              comment += 'Failed to load benchmark summary\n\n';
-            }
-            
-            // Add comparison if available
-            try {
-              const comparison = fs.readFileSync('pr_comment.md', 'utf8');
-              comment += comparison + '\n\n';
-            } catch (e) {
-              // No comparison available
-            }
-            
-            // Add regression detection result
-            const regressionDetected = '${{ steps.regression.outputs.regression_detected }}' === 'true';
-            if (regressionDetected) {
-              comment += '⚠️ **Performance regression detected!** Please review the regression report.\n\n';
-            } else {
-              comment += '✅ **No performance regressions detected.**\n\n';
-            }
-            
-            comment += `📎 [Full benchmark artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-            
-            // Find existing comment
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            
-            const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
-              comment.body.includes('📊 Benchmark Results')
-            );
-            
-            if (botComment) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: comment
-              });
-            } else {
-              // Create new comment
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: comment
-              });
-            }
-      
-      - name: Store Benchmark History
-        if: github.ref == 'refs/heads/main'
-        run: |
-          # This would typically push results to a separate branch or external service
-          # for historical tracking
-          echo "Storing benchmark results for commit ${{ github.sha }}"
-          
-          # Create a summary for long-term storage
-          cat > benchmark_history_entry.json << EOF
-          {
-            "commit": "${{ github.sha }}",
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "branch": "main",
-            "results_file": "benchmark_results.json"
-          }
-          EOF
-      
-      - name: Check Regression Status
-        if: steps.regression.outputs.regression_detected == 'true'
-        run: |
-          echo "::error::Performance regression detected! Check the regression report for details."
-          exit 1

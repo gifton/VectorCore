@@ -144,8 +144,8 @@ public extension VectorProtocol {
     
     static func + (lhs: Self, rhs: Self) -> Self {
         precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        
-        var result = Self()
+        // Allocate result with correct length
+        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
         result.withUnsafeMutableBufferPointer { resultPtr in
             lhs.withUnsafeBufferPointer { lhsPtr in
                 rhs.withUnsafeBufferPointer { rhsPtr in
@@ -160,8 +160,8 @@ public extension VectorProtocol {
     
     static func - (lhs: Self, rhs: Self) -> Self {
         precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        
-        var result = Self()
+        // Allocate result with correct length
+        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
         result.withUnsafeMutableBufferPointer { resultPtr in
             lhs.withUnsafeBufferPointer { lhsPtr in
                 rhs.withUnsafeBufferPointer { rhsPtr in
@@ -249,7 +249,8 @@ public extension VectorProtocol {
     // MARK: Vector-Scalar Operations
     
     static func * (lhs: Self, rhs: Scalar) -> Self {
-        var result = Self()
+        // Allocate result with correct length
+        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
         result.withUnsafeMutableBufferPointer { resultPtr in
             lhs.withUnsafeBufferPointer { lhsPtr in
                 for i in 0..<lhs.scalarCount {
@@ -288,8 +289,8 @@ public extension VectorProtocol {
     /// Hadamard (element-wise) product
     static func .* (lhs: Self, rhs: Self) -> Self {
         precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        
-        var result = Self()
+        // Allocate result with correct length
+        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
         result.withUnsafeMutableBufferPointer { resultPtr in
             lhs.withUnsafeBufferPointer { lhsPtr in
                 rhs.withUnsafeBufferPointer { rhsPtr in
@@ -305,8 +306,8 @@ public extension VectorProtocol {
     /// Element-wise division
     static func ./ (lhs: Self, rhs: Self) -> Self {
         precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        
-        var result = Self()
+        // Allocate result with correct length
+        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
         result.withUnsafeMutableBufferPointer { resultPtr in
             lhs.withUnsafeBufferPointer { lhsPtr in
                 rhs.withUnsafeBufferPointer { rhsPtr in

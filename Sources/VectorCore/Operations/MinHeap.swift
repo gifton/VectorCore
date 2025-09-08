@@ -73,22 +73,22 @@ public struct MinHeap<Element> {
     @discardableResult
     @inlinable
     public mutating func insert(_ element: Element) -> Bool {
-        // For k-nearest: if at capacity, only insert if better than max
+        // If a capacity is set (k-nearest use-case), maintain exactly the best `capacity` items
         if let capacity = capacity, count >= capacity {
-            guard let currentMin = min else { return false }
-            
-            // If new element is not better than current min, skip
-            if !compare(element, currentMin) {
+            guard let root = min else { return false }
+            // Root is the current extremum according to `compare` and sits at index 0.
+            // Keep `element` only if it should come before the current root in the heap ordering.
+            // This condition correctly handles both min-heap and max-heap configurations.
+            if !compare(root, element) {
                 return false
             }
-            
-            // Replace min with new element and re-heapify
+            // Replace root and restore heap property
             elements[0] = element
             siftDown(from: 0)
             return true
         }
         
-        // Normal insertion
+        // Normal insertion when under capacity or no capacity enforced
         elements.append(element)
         siftUp(from: count - 1)
         return true

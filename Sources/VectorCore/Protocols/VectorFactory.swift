@@ -45,6 +45,42 @@ extension Vector: VectorFactory {
 // MARK: - Factory Utilities
 
 public extension VectorFactory {
+    // MARK: Operator Implementations using Factory (handles dynamic dimensions safely)
+
+    static func + (lhs: Self, rhs: Self) -> Self {
+        try! createByCombining(lhs, rhs, +)
+    }
+
+    static func - (lhs: Self, rhs: Self) -> Self {
+        try! createByCombining(lhs, rhs, -)
+    }
+
+    static func .* (lhs: Self, rhs: Self) -> Self {
+        try! createByCombining(lhs, rhs, *)
+    }
+
+    static func ./ (lhs: Self, rhs: Self) -> Self {
+        try! createByCombining(lhs, rhs) { a, b in
+            precondition(b != 0, "Division by zero in element-wise division")
+            return a / b
+        }
+    }
+
+    static func * (lhs: Self, rhs: Scalar) -> Self {
+        try! createByTransforming(lhs) { $0 * rhs }
+    }
+
+    static func / (lhs: Self, rhs: Scalar) -> Self {
+        precondition(rhs != 0, "Division by zero")
+        return lhs * (1 / rhs)
+    }
+
+    static func * (lhs: Scalar, rhs: Self) -> Self { rhs * lhs }
+
+    static func += (lhs: inout Self, rhs: Self) { lhs = lhs + rhs }
+    static func -= (lhs: inout Self, rhs: Self) { lhs = lhs - rhs }
+    static func *= (lhs: inout Self, rhs: Scalar) { lhs = lhs * rhs }
+    static func /= (lhs: inout Self, rhs: Scalar) { lhs = lhs / rhs }
     /// Create a vector by transforming another vector's elements
     /// - Parameters:
     ///   - vector: Source vector to transform

@@ -119,17 +119,21 @@ public enum Operations {
         if vectors.count > 1000 {
             return try await computeProvider.parallelExecute(items: 0..<vectors.count) { i in
                 let v = vectors[i]
-                var result = Array(repeating: Float(0), count: v.scalarCount)
-                v.withUnsafeBufferPointer { buf in
-                    for j in 0..<buf.count { result[j] = transform(buf[j]) }
+                let result: [Float] = .init(unsafeUninitializedCapacity: v.scalarCount) { buffer, initializedCount in
+                    v.withUnsafeBufferPointer { src in
+                        for j in 0..<src.count { buffer[j] = transform(src[j]) }
+                    }
+                    initializedCount = v.scalarCount
                 }
                 return try! V.create(from: result)
             }
         } else {
             return vectors.map { v in
-                var result = Array(repeating: Float(0), count: v.scalarCount)
-                v.withUnsafeBufferPointer { buf in
-                    for j in 0..<buf.count { result[j] = transform(buf[j]) }
+                let result: [Float] = .init(unsafeUninitializedCapacity: v.scalarCount) { buffer, initializedCount in
+                    v.withUnsafeBufferPointer { src in
+                        for j in 0..<src.count { buffer[j] = transform(src[j]) }
+                    }
+                    initializedCount = v.scalarCount
                 }
                 return try! V.create(from: result)
             }
@@ -163,7 +167,14 @@ public enum Operations {
                 let mag = v.magnitude
                 if mag > Float.ulpOfOne {
                     let inv = 1 / mag
-                    return try! V.createByTransforming(v) { $0 * inv }
+                    // Fast scalar multiply with unsafe-uninitialized array
+                    let result: [Float] = .init(unsafeUninitializedCapacity: v.scalarCount) { buffer, initializedCount in
+                        v.withUnsafeBufferPointer { src in
+                            for j in 0..<src.count { buffer[j] = src[j] * inv }
+                        }
+                        initializedCount = v.scalarCount
+                    }
+                    return try! V.create(from: result)
                 } else {
                     return try! V.create(from: Array(repeating: 0, count: v.scalarCount))
                 }
@@ -173,7 +184,13 @@ public enum Operations {
                 let mag = v.magnitude
                 if mag > Float.ulpOfOne {
                     let inv = 1 / mag
-                    return try! V.createByTransforming(v) { $0 * inv }
+                    let result: [Float] = .init(unsafeUninitializedCapacity: v.scalarCount) { buffer, initializedCount in
+                        v.withUnsafeBufferPointer { src in
+                            for j in 0..<src.count { buffer[j] = src[j] * inv }
+                        }
+                        initializedCount = v.scalarCount
+                    }
+                    return try! V.create(from: result)
                 } else {
                     return try! V.create(from: Array(repeating: 0, count: v.scalarCount))
                 }

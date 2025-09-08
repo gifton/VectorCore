@@ -23,7 +23,7 @@ import os.log
 /// logger.log("Vector operation completed", level: .info)
 /// logger.log("Memory allocation failed", level: .critical)
 /// ```
-public enum LogLevel: Int, Comparable, Sendable {
+enum LogLevel: Int, Comparable, Sendable {
     /// Detailed information for debugging purposes.
     case debug = 0
     
@@ -74,7 +74,7 @@ public enum LogLevel: Int, Comparable, Sendable {
 /// LogConfiguration.shared.minimumLevel = .warning
 /// LogConfiguration.shared.enableOSLog = true
 /// ```
-public final class LogConfiguration: @unchecked Sendable {
+final class LogConfiguration: @unchecked Sendable {
     private var _minimumLevel: LogLevel
     private let lock = NSLock()
     
@@ -82,7 +82,7 @@ public final class LogConfiguration: @unchecked Sendable {
     ///
     /// Messages below this level are ignored.
     /// Thread-safe property with internal locking.
-    public var minimumLevel: LogLevel {
+    var minimumLevel: LogLevel {
         get {
             lock.lock()
             defer { lock.unlock() }
@@ -105,23 +105,23 @@ public final class LogConfiguration: @unchecked Sendable {
 }
 
 /// Simple logger for VectorCore
-public struct Logger: Sendable {
+struct Logger: Sendable {
     private let subsystem: String
     private let category: String
     private let osLog: OSLog
     
     /// Shared logging configuration
-    public static let configuration = LogConfiguration()
+    static let configuration = LogConfiguration()
     
     /// Create a logger for a specific subsystem
-    public init(subsystem: String = "com.vectorcore", category: String) {
+    init(subsystem: String = "com.vectorcore", category: String) {
         self.subsystem = subsystem
         self.category = category
         self.osLog = OSLog(subsystem: subsystem, category: category)
     }
     
     /// Log a debug message
-    public func debug(_ message: @autoclosure () -> String, 
+    func debug(_ message: @autoclosure () -> String, 
                      file: String = #fileID,
                      function: String = #function,
                      line: Int = #line) {
@@ -129,7 +129,7 @@ public struct Logger: Sendable {
     }
     
     /// Log an info message
-    public func info(_ message: @autoclosure () -> String,
+    func info(_ message: @autoclosure () -> String,
                     file: String = #fileID,
                     function: String = #function,
                     line: Int = #line) {
@@ -137,7 +137,7 @@ public struct Logger: Sendable {
     }
     
     /// Log a warning message
-    public func warning(_ message: @autoclosure () -> String,
+    func warning(_ message: @autoclosure () -> String,
                        file: String = #fileID,
                        function: String = #function,
                        line: Int = #line) {
@@ -145,7 +145,7 @@ public struct Logger: Sendable {
     }
     
     /// Log an error message
-    public func error(_ message: @autoclosure () -> String,
+    func error(_ message: @autoclosure () -> String,
                      file: String = #fileID,
                      function: String = #function,
                      line: Int = #line) {
@@ -153,7 +153,7 @@ public struct Logger: Sendable {
     }
     
     /// Log a critical message
-    public func critical(_ message: @autoclosure () -> String,
+    func critical(_ message: @autoclosure () -> String,
                         file: String = #fileID,
                         function: String = #function,
                         line: Int = #line) {
@@ -161,7 +161,7 @@ public struct Logger: Sendable {
     }
     
     /// Log an error with VectorError
-    public func error(_ error: VectorError,
+    func error(_ error: VectorError,
                      message: String? = nil,
                      file: String = #fileID,
                      function: String = #function,
@@ -211,45 +211,45 @@ public struct Logger: Sendable {
 /// Logger for core vector operations.
 ///
 /// Use for logging vector creation, manipulation, and basic operations.
-public let coreLogger = Logger(category: "Core")
+let coreLogger = Logger(category: "Core")
 
 /// Logger for storage and memory operations.
 ///
 /// Use for logging memory allocation, deallocation, and storage management.
-public let storageLogger = Logger(category: "Storage")
+let storageLogger = Logger(category: "Storage")
 
 /// Logger for batch operations.
 ///
 /// Use for logging batch processing, parallel operations, and bulk computations.
-public let batchLogger = Logger(category: "Batch")
+let batchLogger = Logger(category: "Batch")
 
 /// Logger for distance metric calculations.
 ///
 /// Use for logging distance computations, similarity measurements, and metric selection.
-public let metricsLogger = Logger(category: "Metrics")
+let metricsLogger = Logger(category: "Metrics")
 
 /// Logger for performance monitoring.
 ///
 /// Use for logging timing information, benchmarks, and performance analysis.
-public let performanceLogger = Logger(category: "Performance")
+let performanceLogger = Logger(category: "Performance")
 
 // MARK: - Performance Logging
 
 /// Simple performance timer for logging
-public struct PerformanceTimer {
+struct PerformanceTimer {
     private let start: CFAbsoluteTime
     private let operation: String
     private let logger: Logger
     
     /// Start timing an operation
-    public init(operation: String, logger: Logger = performanceLogger) {
+    init(operation: String, logger: Logger = performanceLogger) {
         self.start = CFAbsoluteTimeGetCurrent()
         self.operation = operation
         self.logger = logger
     }
     
     /// Log the elapsed time
-    public func log(threshold: TimeInterval = 0.001) {
+    func log(threshold: TimeInterval = 0.001) {
         let elapsed = CFAbsoluteTimeGetCurrent() - start
         if elapsed >= threshold {
             logger.debug("\(operation) took \(String(format: "%.3f", elapsed * 1000))ms")
@@ -261,7 +261,7 @@ public struct PerformanceTimer {
 
 extension VectorError {
     /// Log this error with context
-    public func log(to logger: Logger = coreLogger, 
+    func log(to logger: Logger = coreLogger, 
                    message: String? = nil,
                    file: String = #fileID,
                    function: String = #function,

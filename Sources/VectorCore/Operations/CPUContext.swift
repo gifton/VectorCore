@@ -10,7 +10,7 @@ import Dispatch
 // MARK: - CPU Context
 
 /// CPU-based execution context with configurable parallelism
-public struct CPUContext: ExecutionContext {
+struct CPUContext: ExecutionContext {
     public let device = ComputeDevice.cpu
     public let maxThreadCount: Int
     public let preferredChunkSize: Int
@@ -21,21 +21,21 @@ public struct CPUContext: ExecutionContext {
     // MARK: - Preset Configurations
     
     /// Sequential execution on a single thread
-    public static let sequential = CPUContext(threadCount: 1)
+    static let sequential = CPUContext(threadCount: 1)
     
     /// Automatic parallelization using all available cores
-    public static let automatic = CPUContext(
+    static let automatic = CPUContext(
         threadCount: ProcessInfo.processInfo.activeProcessorCount
     )
     
     /// High-performance configuration with user-interactive priority
-    public static let highPerformance = CPUContext(
+    static let highPerformance = CPUContext(
         threadCount: ProcessInfo.processInfo.activeProcessorCount,
         qos: .userInteractive
     )
     
     /// Background processing configuration
-    public static let background = CPUContext(
+    static let background = CPUContext(
         threadCount: max(1, ProcessInfo.processInfo.activeProcessorCount / 2),
         qos: .background
     )
@@ -47,7 +47,7 @@ public struct CPUContext: ExecutionContext {
     ///   - threadCount: Number of threads to use (nil for automatic)
     ///   - queue: Custom dispatch queue (nil to create one)
     ///   - qos: Quality of service class
-    public init(
+    init(
         threadCount: Int? = nil,
         queue: DispatchQueue? = nil,
         qos: DispatchQoS.QoSClass = .default
@@ -86,7 +86,7 @@ public struct CPUContext: ExecutionContext {
     // MARK: - Execution
     
     /// Execute work within the CPU context
-    public func execute<T>(_ work: @Sendable @escaping () throws -> T) async throws -> T where T: Sendable {
+    func execute<T>(_ work: @Sendable @escaping () throws -> T) async throws -> T where T: Sendable {
         if let queue = queue {
             return try await withCheckedThrowingContinuation { continuation in
                 queue.async {
@@ -105,7 +105,7 @@ public struct CPUContext: ExecutionContext {
     }
     
     /// Execute work with specific priority
-    public func execute<T>(
+    func execute<T>(
         priority: TaskPriority?,
         _ work: @Sendable @escaping () throws -> T
     ) async throws -> T where T: Sendable {
@@ -123,7 +123,7 @@ public struct CPUContext: ExecutionContext {
 
 extension CPUContext {
     /// Calculate optimal chunk size for a given workload
-    public func optimalChunkSize(for itemCount: Int) -> Int {
+    func optimalChunkSize(for itemCount: Int) -> Int {
         guard itemCount > 0 else { return 1 }
         
         // For small workloads, use a single chunk
@@ -145,7 +145,7 @@ extension CPUContext {
     }
     
     /// Create task groups for parallel execution
-    public func withParallelExecution<T>(
+    func withParallelExecution<T>(
         of items: Range<Int>,
         _ operation: @Sendable @escaping (Int) async throws -> T
     ) async throws -> [T] where T: Sendable {
@@ -179,7 +179,7 @@ extension CPUContext {
 
 extension CPUContext {
     /// Provides hints about expected performance characteristics
-    public struct PerformanceHints {
+    struct PerformanceHints {
         /// Whether operations will be parallelized
         public let isParallel: Bool
         
@@ -191,7 +191,7 @@ extension CPUContext {
     }
     
     /// Get performance hints for this context
-    public var performanceHints: PerformanceHints {
+    var performanceHints: PerformanceHints {
         PerformanceHints(
             isParallel: maxThreadCount > 1,
             expectedSpeedup: Double(maxThreadCount) * 0.8, // Account for overhead

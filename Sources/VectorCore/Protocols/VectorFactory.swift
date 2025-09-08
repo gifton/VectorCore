@@ -81,6 +81,11 @@ public extension VectorFactory {
     static func -= (lhs: inout Self, rhs: Self) { lhs = lhs - rhs }
     static func *= (lhs: inout Self, rhs: Scalar) { lhs = lhs * rhs }
     static func /= (lhs: inout Self, rhs: Scalar) { lhs = lhs / rhs }
+
+    /// Unary negation
+    static prefix func - (vector: Self) -> Self {
+        try! createByTransforming(vector) { -$0 }
+    }
     /// Create a vector by transforming another vector's elements
     /// - Parameters:
     ///   - vector: Source vector to transform

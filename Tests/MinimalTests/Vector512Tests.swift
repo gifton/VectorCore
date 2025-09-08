@@ -102,7 +102,7 @@ final class Vector512Tests: XCTestCase {
     
     func testNormalization() throws {
         let vector = Vector512Optimized(repeating: 2.0)
-        let normalized = try vector.normalized().get()
+        let normalized = try vector.normalizedThrowing()
         
         let magnitude = normalized.magnitude
         XCTAssertEqual(magnitude, 1.0, accuracy: 0.0001)
@@ -145,7 +145,7 @@ final class Vector512Tests: XCTestCase {
         
         measure {
             for _ in 0..<10000 {
-                _ = try? vector.normalized().get()
+                _ = try? vector.normalizedThrowing()
             }
         }
     }

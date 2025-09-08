@@ -49,10 +49,10 @@ import Foundation
 ///     config.minimumChunkSize = 128   // Smaller chunks
 /// }
 /// ```
-public enum BatchOperations {
+enum BatchOperations {
     
     /// Configuration for batch processing behavior
-    public struct Configuration: Sendable {
+    struct Configuration: Sendable {
         /// Minimum vector count for automatic parallelization
         public var parallelThreshold: Int = 1000
         
@@ -77,13 +77,13 @@ public enum BatchOperations {
     private static let defaultConfig = Configuration()
     
     /// Get configuration
-    public static func configuration() async -> Configuration {
+    static func configuration() async -> Configuration {
         await _configuration.get()
     }
     
     /// Update configuration safely
     /// - Parameter update: Closure to update configuration properties
-    public static func updateConfiguration(_ update: (inout Configuration) -> Void) async {
+    static func updateConfiguration(_ update: (inout Configuration) -> Void) async {
         var config = await _configuration.get()
         update(&config)
         await _configuration.update(config)
@@ -104,7 +104,7 @@ public enum BatchOperations {
     ///   - metric: Distance metric to use (default: Euclidean)
     /// - Returns: Array of (index, distance) tuples sorted by distance
     /// - Complexity: O(n log k) with heap selection
-    public static func findNearest<V: VectorProtocol & VectorProtocol & Sendable, M: DistanceMetric>(
+    static func findNearest<V: VectorProtocol & VectorProtocol & Sendable, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
@@ -132,7 +132,7 @@ public enum BatchOperations {
     ///   - batchSize: Size of each batch (default: from configuration)
     ///   - transform: Transformation to apply to each batch
     /// - Returns: Concatenated results maintaining original order
-    public static func process<V: VectorProtocol & Sendable, R: Sendable>(
+    static func process<V: VectorProtocol & Sendable, R: Sendable>(
         _ vectors: [V],
         batchSize: Int? = nil,
         transform: @Sendable @escaping ([V]) throws -> [R]
@@ -184,7 +184,7 @@ public enum BatchOperations {
     ///   - vectors: Vectors to compute distances for
     ///   - metric: Distance metric to use
     /// - Returns: Symmetric distance matrix
-    public static func pairwiseDistances<V: VectorProtocol & VectorProtocol & Sendable, M: DistanceMetric>(
+    static func pairwiseDistances<V: VectorProtocol & VectorProtocol & Sendable, M: DistanceMetric>(
         _ vectors: [V],
         metric: M = EuclideanDistance()
     ) async -> [[Float]] where V.Scalar == M.Scalar, M.Scalar == Float {
@@ -202,7 +202,7 @@ public enum BatchOperations {
     // MARK: - Convenience Operations
     
     /// Transform vectors with automatic parallelization
-    public static func map<V: VectorProtocol & Sendable, U: VectorProtocol & Sendable>(
+    static func map<V: VectorProtocol & Sendable, U: VectorProtocol & Sendable>(
         _ vectors: [V],
         transform: @Sendable @escaping (V) throws -> U
     ) async throws -> [U] {
@@ -232,7 +232,7 @@ public enum BatchOperations {
     }
     
     /// Filter vectors with parallel processing
-    public static func filter<V: VectorProtocol & Sendable>(
+    static func filter<V: VectorProtocol & Sendable>(
         _ vectors: [V],
         predicate: @Sendable @escaping (V) throws -> Bool
     ) async throws -> [V] {
@@ -262,7 +262,7 @@ public enum BatchOperations {
     }
     
     /// Compute statistics with parallel reduction
-    public static func statistics<V: VectorProtocol & Sendable>(
+    static func statistics<V: VectorProtocol & Sendable>(
         for vectors: [V]
     ) async -> BatchStatistics where V.Scalar == Float {
         guard !vectors.isEmpty else {
@@ -315,7 +315,7 @@ public enum BatchOperations {
     }
     
     /// Random sampling (always serial - no benefit from parallelization)
-    public static func sample<V>(_ vectors: [V], k: Int) -> [V] {
+    static func sample<V>(_ vectors: [V], k: Int) -> [V] {
         guard k > 0 && k <= vectors.count else {
             return k <= 0 ? [] : vectors
         }
@@ -513,7 +513,7 @@ public enum BatchOperations {
 }
 
 /// Statistics for a batch of vectors
-public struct BatchStatistics {
+struct BatchStatistics {
     public let count: Int
     public let meanMagnitude: Float
     public let stdMagnitude: Float

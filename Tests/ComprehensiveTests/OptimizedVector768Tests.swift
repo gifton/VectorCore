@@ -147,19 +147,22 @@ struct OptimizedVector768Suite {
     // Normalization & Cosine
     @Test func testNormalized_SuccessMagnitudeOne() {
         let a = try! Vector768Optimized((0..<768).map { _ in Float.random(in: 0.1...1) })
-        switch a.normalized() {
-        case .success(let u):
+        do {
+            let u = try a.normalizedThrowing()
             #expect(approxEqual(u.magnitude, 1, tol: 1e-5))
-        case .failure(let e): Issue.record("Unexpected failure: \(e)")
+        } catch {
+            Issue.record("Unexpected failure: \(error)")
         }
     }
 
     @Test func testNormalized_ZeroVectorFails() {
         let z = Vector768Optimized()
-        switch z.normalized() {
-        case .success: Issue.record("Expected failure for zero normalization")
-        case .failure(let e): #expect(e.kind == .invalidOperation)
-        }
+        do {
+            _ = try z.normalizedThrowing()
+            Issue.record("Expected failure for zero normalization")
+        } catch let e as VectorError {
+            #expect(e.kind == .invalidOperation)
+        } catch { Issue.record("Unexpected error: \(error)") }
     }
 
     @Test func testCosineSimilarity_BoundsAndSpecialCases() {

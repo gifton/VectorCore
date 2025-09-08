@@ -49,24 +49,25 @@ public enum SyncBatchOperations {
     ///   - vectors: Array of vectors to search
     ///   - k: Number of nearest neighbors to find
     ///   - metric: Distance metric to use (default: Euclidean)
-    /// - Returns: Array of (index, distance) tuples sorted by distance
+    /// - Returns: Array of nearest neighbors sorted by distance
     public static func findNearest<V: VectorProtocol, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
         metric: M = EuclideanDistance()
-    ) -> [(index: Int, distance: Float)] where M.Scalar == Float, V.Scalar == Float {
+    ) -> [NearestNeighborResult] where M.Scalar == Float, V.Scalar == Float {
         guard k > 0 else { return [] }
         guard !vectors.isEmpty else { return [] }
         
         // For small k, use heap selection
         if k < vectors.count / 10 {
             return heapSelect(query: query, vectors: vectors, k: k, metric: metric)
+                .map { NearestNeighborResult(index: $0.index, distance: $0.distance) }
         }
         
         // For larger k, compute all distances and partial sort
         let distances = vectors.enumerated().map { index, vector in
-            (index: index, distance: metric.distance(query, vector))
+            NearestNeighborResult(index: index, distance: metric.distance(query, vector))
         }
         
         return Array(distances.sorted { $0.distance < $1.distance }.prefix(k))
@@ -79,16 +80,16 @@ public enum SyncBatchOperations {
     ///   - vectors: Array of vectors to search
     ///   - radius: Maximum distance threshold
     ///   - metric: Distance metric to use
-    /// - Returns: Array of (index, distance) tuples within radius
+    /// - Returns: Array of neighbors within radius
     public static func findWithinRadius<V: VectorProtocol, M: DistanceMetric>(
         of query: V,
         in vectors: [V],
         radius: Float,
         metric: M = EuclideanDistance()
-    ) -> [(index: Int, distance: Float)] where M.Scalar == Float, V.Scalar == Float {
+    ) -> [NearestNeighborResult] where M.Scalar == Float, V.Scalar == Float {
         vectors.enumerated().compactMap { index, vector in
             let distance = metric.distance(query, vector)
-            return distance <= radius ? (index: index, distance: distance) : nil
+            return distance <= radius ? NearestNeighborResult(index: index, distance: distance) : nil
         }
     }
     
@@ -250,7 +251,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Statistics including count, mean magnitude, and std deviation
-    public static func statistics<V: VectorProtocol>(
+    static func statistics<V: VectorProtocol>(
         for vectors: [V]
     ) -> BatchStatistics where V.Scalar == Float {
         guard !vectors.isEmpty else {
@@ -523,7 +524,7 @@ public extension Array where Element: VectorProtocol {
         to query: Element,
         k: Int,
         metric: M = EuclideanDistance()
-    ) -> [(index: Int, distance: Float)] where M.Scalar == Float, Element.Scalar == Float {
+    ) -> [NearestNeighborResult] where M.Scalar == Float, Element.Scalar == Float {
         SyncBatchOperations.findNearest(to: query, in: self, k: k, metric: metric)
     }
     
@@ -535,7 +536,7 @@ public extension Array where Element: VectorProtocol {
     }
     
     /// Get batch statistics
-    func batchStatistics() -> BatchStatistics where Element.Scalar == Float {
+    internal func batchStatistics() -> BatchStatistics where Element.Scalar == Float {
         SyncBatchOperations.statistics(for: self)
     }
 }

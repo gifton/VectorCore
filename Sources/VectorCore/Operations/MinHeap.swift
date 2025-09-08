@@ -9,7 +9,7 @@ import Foundation
 // MARK: - Min Heap
 
 /// A min-heap data structure optimized for k-nearest neighbor operations
-public struct MinHeap<Element> {
+struct MinHeap<Element> {
     @usableFromInline
     internal var elements: [Element]
     
@@ -72,7 +72,7 @@ public struct MinHeap<Element> {
     /// Insert an element into the heap
     @discardableResult
     @inlinable
-    public mutating func insert(_ element: Element) -> Bool {
+    mutating func insert(_ element: Element) -> Bool {
         // If a capacity is set (k-nearest use-case), maintain exactly the best `capacity` items
         if let capacity = capacity, count >= capacity {
             guard let root = min else { return false }
@@ -96,7 +96,7 @@ public struct MinHeap<Element> {
     
     /// Remove and return the minimum element
     @discardableResult
-    public mutating func removeMin() -> Element? {
+    mutating func removeMin() -> Element? {
         guard !isEmpty else { return nil }
         
         if count == 1 {
@@ -118,7 +118,7 @@ public struct MinHeap<Element> {
     }
     
     /// Get sorted array of all elements
-    public func sorted() -> [Element] {
+    func sorted() -> [Element] {
         var heap = self
         var result: [Element] = []
         result.reserveCapacity(count)
@@ -197,7 +197,7 @@ public struct MinHeap<Element> {
 // MARK: - K-Nearest Specific Heap
 
 /// Specialized heap for k-nearest neighbor operations
-public struct KNearestHeap {
+struct KNearestHeap {
     /// Internal storage using max-heap (inverted comparison)
     @usableFromInline
     internal var heap: MinHeap<(index: Int, distance: Float)>
@@ -218,12 +218,12 @@ public struct KNearestHeap {
     /// Try to insert a new neighbor
     @discardableResult
     @inlinable
-    public mutating func insert(index: Int, distance: Float) -> Bool {
+    mutating func insert(index: Int, distance: Float) -> Bool {
         heap.insert((index, distance))
     }
     
     /// Get sorted results (nearest first)
-    public func getSorted() -> [(index: Int, distance: Float)] {
+    func getSorted() -> [(index: Int, distance: Float)] {
         // Max-heap returns largest to smallest, so we need to reverse for nearest first
         Array(heap.sorted().reversed())
     }
@@ -232,7 +232,7 @@ public struct KNearestHeap {
 // MARK: - Equatable Conformance
 
 extension MinHeap: Equatable where Element: Equatable {
-    public static func == (lhs: MinHeap<Element>, rhs: MinHeap<Element>) -> Bool {
+    static func == (lhs: MinHeap<Element>, rhs: MinHeap<Element>) -> Bool {
         lhs.elements == rhs.elements
     }
 }
@@ -240,13 +240,13 @@ extension MinHeap: Equatable where Element: Equatable {
 // MARK: - Collection Helpers
 
 extension MinHeap: Sequence {
-    public func makeIterator() -> Array<Element>.Iterator {
+    func makeIterator() -> Array<Element>.Iterator {
         elements.makeIterator()
     }
 }
 
 extension MinHeap: CustomStringConvertible {
-    public var description: String {
+    var description: String {
         "MinHeap(\(elements))"
     }
 }

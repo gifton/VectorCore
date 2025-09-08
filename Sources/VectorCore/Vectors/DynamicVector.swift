@@ -201,7 +201,7 @@ extension DynamicVector {
     @inlinable
     public static func randomUnit(dimension: Int) -> DynamicVector {
         let v = DynamicVector.random(dimension: dimension, in: -1...1)
-        return (try? v.normalized().get()) ?? DynamicVector.zero(dimension: dimension)
+        return (try? v.normalizedThrowing()) ?? DynamicVector.zero(dimension: dimension)
     }
 }
 

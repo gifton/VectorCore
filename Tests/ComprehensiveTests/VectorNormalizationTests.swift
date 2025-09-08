@@ -9,30 +9,22 @@ struct VectorNormalizationSuite {
     @Test
     func testNormalizedResult_SuccessForNonZero() {
         let v = try! Vector<Dim4>([3,4,0,0])
-        let r: Result<Vector<Dim4>, VectorError> = v.normalized()
-        switch r {
-        case .success(let u):
+        do {
+            let u = try v.normalizedThrowing()
             #expect(approxEqual(u.magnitude, 1, tol: 1e-6))
-            // Direction preserved: components proportional
             #expect(approxEqual(u[0], v[0] / v.magnitude, tol: 1e-6))
             #expect(approxEqual(u[1], v[1] / v.magnitude, tol: 1e-6))
-        case .failure(let e):
-            Issue.record("Unexpected failure: \(e)")
-        }
+        } catch { Issue.record("Unexpected failure: \(error)") }
     }
 
     @Test
     func testNormalizedResult_FailureForZeroVector() {
         let v = Vector<Dim4>.zero
-        let r: Result<Vector<Dim4>, VectorError> = v.normalized()
-        switch r {
-        case .success:
+        do {
+            _ = try v.normalizedThrowing()
             Issue.record("Expected failure for zero vector normalization")
-        case .failure(let e as VectorError):
-            #expect(e.kind == .invalidOperation)
-        default:
-            Issue.record("Unexpected error type")
-        }
+        } catch let e as VectorError { #expect(e.kind == .invalidOperation) }
+        catch { Issue.record("Unexpected error type: \(error)") }
     }
 
     @Test
@@ -74,7 +66,7 @@ struct VectorNormalizationSuite {
     @Test
     func testNormalizedWithTolerance_WithinToleranceReturnsSelf() {
         let base = try! Vector<Dim4>([1,1,0,0])
-        let unit = try! base.normalized().get()
+        let unit = try! base.normalizedThrowing()
         let s: Float = 1 + 5e-7
         let near = unit * s
         let out = near.normalized(tolerance: 1e-6)
@@ -85,7 +77,7 @@ struct VectorNormalizationSuite {
     @Test
     func testNormalizedWithTolerance_BeyondToleranceNormalizes() {
         let base = try! Vector<Dim4>([1,2,0,0])
-        let unit = try! base.normalized().get()
+        let unit = try! base.normalizedThrowing()
         let s: Float = 1 + 1e-4
         let far = unit * s
         let out = far.normalized(tolerance: 1e-6)
@@ -98,13 +90,10 @@ struct VectorNormalizationSuite {
     func testNormalizedConsistencyWithProtocolNormalized() {
         let v = try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
         let f = v.normalizedFast()
-        let res: Result<Vector<Dim8>, VectorError> = v.normalized()
-        switch res {
-        case .success(let u):
+        do {
+            let u = try v.normalizedThrowing()
             for i in 0..<8 { #expect(approxEqual(f[i], u[i], tol: 1e-5)) }
-        case .failure(let e):
-            Issue.record("Unexpected failure: \(e)")
-        }
+        } catch { Issue.record("Unexpected failure: \(error)") }
     }
 
     @Test

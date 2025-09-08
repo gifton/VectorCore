@@ -152,7 +152,7 @@ extension Vector {
     @inlinable
     public static func randomUnit() -> Self where Scalar.RawSignificand: FixedWidthInteger {
         let v = Self.random(in: -1...1)
-        return (try? v.normalized().get()) ?? Self.zero
+        return (try? v.normalizedThrowing()) ?? Self.zero
     }
 }
 

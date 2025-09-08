@@ -52,9 +52,6 @@ public enum VectorCore {
     
     /// Global configuration for VectorCore behavior
     public struct Configuration: Sendable {
-        /// Batch processing configuration
-        public var batchOperations = BatchOperations.Configuration()
-        
         /// Memory alignment for optimal SIMD performance
         public var memoryAlignment: Int = 64
         
@@ -93,8 +90,8 @@ public extension Array where Element: VectorType {
     /// Compute pairwise distances between all vectors
     func pairwiseDistances<M: DistanceMetric>(
         metric: M = EuclideanDistance()
-    ) async -> [[Float]] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
-        await BatchOperations.pairwiseDistances(self, metric: metric)
+    ) async throws -> [[Float]] where Element: VectorProtocol & Sendable, Element.Scalar == Float, M.Scalar == Float {
+        try await Operations.distanceMatrix(between: self, and: self, metric: metric)
     }
     
     /// Find k nearest neighbors to a query vector
@@ -102,7 +99,7 @@ public extension Array where Element: VectorType {
         to query: Element,
         k: Int,
         metric: M = EuclideanDistance()
-    ) async -> [(index: Int, distance: Float)] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
-        await BatchOperations.findNearest(to: query, in: self, k: k, metric: metric)
+    ) async throws -> [NearestNeighborResult] where Element: VectorProtocol & Sendable, Element.Scalar == Float, M.Scalar == Float {
+        try await Operations.findNearest(to: query, in: self, k: k, metric: metric)
     }
 }

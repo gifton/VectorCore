@@ -147,7 +147,7 @@ public final class VectorCoreBenchmarkRunner: BenchmarkRunnerProtocol {
         results.append(try await measureBenchmark(name: "Vector Normalization - 768D") {
             let a = Vector<Dim768>.random(in: -1...1)
             return {
-                _ = a.normalized()
+                _ = try? a.normalizedThrowing()
             }
         })
         

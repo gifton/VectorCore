@@ -388,9 +388,9 @@ public enum VectorMath {
         in vectors: [Vector<D>],
         k: Int,
         using metric: (Vector<D>, Vector<D>) -> Float
-    ) -> [(index: Int, distance: Float)] where D.Storage: VectorStorageOperations {
+    ) -> [NearestNeighborResult] where D.Storage: VectorStorageOperations {
         let distances = vectors.enumerated().map { index, vector in
-            (index: index, distance: metric(query, vector))
+            NearestNeighborResult(index: index, distance: metric(query, vector))
         }
         
         return Array(distances.sorted { $0.distance < $1.distance }.prefix(k))

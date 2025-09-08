@@ -1,16 +1,8 @@
 import Testing
 @testable import VectorCore
 
-@Suite("Execution Operations Tests")
-struct ExecutionOperationsTests {
-    // A minimal GPU-like context for testing the GPU branch selection
-    private struct FakeGPUContext: ExecutionContext {
-        let device: ComputeDevice = .gpu()
-        let maxThreadCount: Int = 8
-        let preferredChunkSize: Int = 1024
-        func execute<T>(_ work: @Sendable @escaping () throws -> T) async throws -> T where T : Sendable { try work() }
-        func execute<T>(priority: TaskPriority?, _ work: @Sendable @escaping () throws -> T) async throws -> T where T : Sendable { try work() }
-    }
+@Suite("Operations Tests")
+struct OperationsTests {
 
     @Test
     func testFindNearestBasic_TopKCorrectOrder() async throws {
@@ -20,7 +12,7 @@ struct ExecutionOperationsTests {
         let c = Vector<Dim2>(x: 1, y: 1) // dist sqrt(2)
         let query = Vector<Dim2>(x: 0, y: 0)
         let vectors = [a, b, c]
-        let result = try await ExecutionOperations.findNearest(to: query, in: vectors, k: 2)
+        let result = try await Operations.findNearest(to: query, in: vectors, k: 2)
         #expect(result.count == 2)
         // nearest should be a (0.0) then c (~1.414)
         #expect(result[0].index == 0)
@@ -31,18 +23,22 @@ struct ExecutionOperationsTests {
     func testFindNearest_KGreaterThanCountClamps() async throws {
         let vectors = [Vector<Dim2>(x: 0, y: 0), Vector<Dim2>(x: 1, y: 1)]
         let query = Vector<Dim2>(x: 0, y: 0)
-        let result = try await ExecutionOperations.findNearest(to: query, in: vectors, k: 10)
+        let result = try await Operations.findNearest(to: query, in: vectors, k: 10)
         #expect(result.count == vectors.count)
     }
 
     @Test
-    func testFindNearest_ZeroOrEmptyInputsReturnEmpty() async throws {
+    func testFindNearest_InvalidInputsThrow() async {
         let vectors = [Vector<Dim2>(x: 0, y: 0), Vector<Dim2>(x: 1, y: 1)]
         let query = Vector<Dim2>(x: 0, y: 0)
-        let r0 = try await ExecutionOperations.findNearest(to: query, in: vectors, k: 0)
-        #expect(r0.isEmpty)
-        let r1 = try await ExecutionOperations.findNearest(to: query, in: [Vector<Dim2>](), k: 1)
-        #expect(r1.isEmpty)
+        do {
+            _ = try await Operations.findNearest(to: query, in: vectors, k: 0)
+            Issue.record("Expected invalidDimension for k=0")
+        } catch let e as VectorError { #expect(e.kind == .invalidDimension) } catch { Issue.record("Unexpected error: \(error)") }
+        do {
+            _ = try await Operations.findNearest(to: query, in: [Vector<Dim2>](), k: 1)
+            Issue.record("Expected invalidDimension for empty vectors")
+        } catch let e as VectorError { #expect(e.kind == .invalidDimension) } catch { Issue.record("Unexpected error: \(error)") }
     }
 
     @Test
@@ -50,7 +46,7 @@ struct ExecutionOperationsTests {
         let query = DynamicVector([0, 0, 0, 0])
         let vectors = [DynamicVector([1, 2, 3])] // dim mismatch
         do {
-            _ = try await ExecutionOperations.findNearest(to: query, in: vectors, k: 1)
+            _ = try await Operations.findNearest(to: query, in: vectors, k: 1)
             Issue.record("Expected dimensionMismatch not thrown")
         } catch let e as VectorError {
             #expect(e.kind == .dimensionMismatch)
@@ -64,7 +60,7 @@ struct ExecutionOperationsTests {
         let query = Vector<Dim3>(x: 0, y: 0, z: 0)
         let v1 = Vector<Dim3>(x: 1, y: 0, z: 0) // L1=1
         let v2 = Vector<Dim3>(x: 0, y: 2, z: 0) // L1=2
-        let res = try await ExecutionOperations.findNearest(to: query, in: [v2, v1], k: 1, metric: ManhattanDistance())
+        let res = try await Operations.findNearest(to: query, in: [v2, v1], k: 1, metric: ManhattanDistance())
         #expect(res.first?.index == 1)
         #expect(approxEqual(res.first?.distance ?? -1, 1))
     }
@@ -74,7 +70,7 @@ struct ExecutionOperationsTests {
         let query = Vector<Dim2>(x: 0, y: 0)
         let a = Vector<Dim2>(x: 1, y: 0)
         let b = Vector<Dim2>(x: -1, y: 0)
-        let res = try await ExecutionOperations.findNearest(to: query, in: [a, b], k: 2)
+        let res = try await Operations.findNearest(to: query, in: [a, b], k: 2)
         #expect(res.count == 2)
         #expect(approxEqual(res[0].distance, res[1].distance))
         let idxs = Set(res.map { $0.index })
@@ -91,7 +87,7 @@ struct ExecutionOperationsTests {
             try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
         }
         let k = 5
-        let result = try await ExecutionOperations.findNearest(to: query, in: vectors, k: k, context: CPUContext.automatic)
+        let result = try await Operations.findNearest(to: query, in: vectors, k: k)
         // Baseline sequential using SyncBatchOperations
         let baseline = SyncBatchOperations.findNearest(to: query, in: vectors, k: k)
         #expect(result.count == k && baseline.count == k)
@@ -99,40 +95,13 @@ struct ExecutionOperationsTests {
         #expect(Set(result.map { $0.index }) == Set(baseline.map { $0.index }))
     }
 
-    @Test
-    func testFindNearest_ParallelRespectsContextCPU() async throws {
-        let count = 1100
-        let query = try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
-        let vectors: [Vector<Dim8>] = (0..<count).map { _ in
-            try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
-        }
-        let _ = try await ExecutionOperations.findNearest(to: query, in: vectors, k: 3, context: CPUContext.highPerformance)
-    }
-
-    @Test
-    func testFindNearest_GPUPathThrowsUnsupported() async {
-        // Force GPU path by using large dataset and a fake GPU context
-        let count = 1100
-        let query = try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
-        let vectors: [Vector<Dim8>] = (0..<count).map { _ in
-            try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
-        }
-        do {
-            _ = try await ExecutionOperations.findNearest(to: query, in: vectors, k: 3, context: FakeGPUContext())
-            Issue.record("Expected unsupported device path not thrown")
-        } catch let e as VectorError {
-            #expect(e.kind == .invalidDimension)
-        } catch {
-            Issue.record("Unexpected error type: \(error)")
-        }
-    }
-
-    @Test
+    // Context selection is internal and not part of public API
+    // GPU path is not exposed; skip
     func testFindNearestBatch_BasicTwoQueries() async throws {
         let vectors = [Vector<Dim2>(x: 0, y: 0), Vector<Dim2>(x: 3, y: 4), Vector<Dim2>(x: 1, y: 1)]
         let q1 = Vector<Dim2>(x: 0, y: 0)
         let q2 = Vector<Dim2>(x: 2, y: 2)
-        let results = try await ExecutionOperations.findNearestBatch(queries: [q1, q2], in: vectors, k: 1)
+        let results = try await Operations.findNearestBatch(queries: [q1, q2], in: vectors, k: 1)
         #expect(results.count == 2)
         #expect(results[0].first?.index == 0) // nearest to (0,0) is index 0
     }
@@ -140,7 +109,7 @@ struct ExecutionOperationsTests {
     @Test
     func testFindNearestBatch_ValidatesNonEmptyQueries() async {
         do {
-            _ = try await ExecutionOperations.findNearestBatch(queries: [Vector<Dim2>](), in: [Vector<Dim2>(x: 0, y: 0)])
+            _ = try await Operations.findNearestBatch(queries: [Vector<Dim2>](), in: [Vector<Dim2>(x: 0, y: 0)])
             Issue.record("Expected invalidDimension for empty queries not thrown")
         } catch let e as VectorError {
             #expect(e.kind == .invalidDimension)
@@ -150,7 +119,7 @@ struct ExecutionOperationsTests {
     @Test
     func testFindNearestBatch_ValidatesNonEmptyVectors() async {
         do {
-            _ = try await ExecutionOperations.findNearestBatch(queries: [Vector<Dim2>(x: 0, y: 0)], in: [Vector<Dim2>]())
+            _ = try await Operations.findNearestBatch(queries: [Vector<Dim2>(x: 0, y: 0)], in: [Vector<Dim2>]())
             Issue.record("Expected invalidDimension for empty vectors not thrown")
         } catch let e as VectorError {
             #expect(e.kind == .invalidDimension)
@@ -164,7 +133,7 @@ struct ExecutionOperationsTests {
         queries.append(DynamicVector([0,0])) // mismatched dimension at index 100
         let vectors = [DynamicVector([1,2,3])]
         do {
-            _ = try await ExecutionOperations.findNearestBatch(queries: queries, in: vectors, k: 1)
+            _ = try await Operations.findNearestBatch(queries: queries, in: vectors, k: 1)
             Issue.record("Expected dimensionMismatch not thrown for inconsistent queries")
         } catch let e as VectorError {
             #expect(e.kind == .dimensionMismatch)
@@ -176,7 +145,7 @@ struct ExecutionOperationsTests {
         let queries = [DynamicVector([0,0,0])]
         let vectors = [DynamicVector([0,0])]
         do {
-            _ = try await ExecutionOperations.findNearestBatch(queries: queries, in: vectors, k: 1)
+            _ = try await Operations.findNearestBatch(queries: queries, in: vectors, k: 1)
             Issue.record("Expected dimensionMismatch not thrown for query-vectors mismatch")
         } catch let e as VectorError {
             #expect(e.kind == .dimensionMismatch)
@@ -186,7 +155,7 @@ struct ExecutionOperationsTests {
     @Test
     func testMapTransformSequential() async throws {
         let vectors: [Vector<Dim4>] = (0..<5).map { i in try! Vector<Dim4>([Float(i),1,2,3]) }
-        let mapped = try await ExecutionOperations.map(vectors, transform: { $0 * 2 }, context: CPUContext.sequential)
+        let mapped = try await Operations.map(vectors, transform: { $0 * 2 })
         for (i, v) in mapped.enumerated() {
             #expect(approxEqual(v[0], Float(i) * 2))
             #expect(approxEqual(v[1], 2))
@@ -197,31 +166,18 @@ struct ExecutionOperationsTests {
     func testMapTransformParallel() async throws {
         let count = 1500
         let vectors: [Vector<Dim4>] = (0..<count).map { _ in try! Vector<Dim4>([1,2,3,4]) }
-        let mapped = try await ExecutionOperations.map(vectors, transform: { $0 + 1 }, context: CPUContext.automatic)
+        let mapped = try await Operations.map(vectors, transform: { $0 + 1 })
         #expect(mapped.count == count)
         for v in mapped { #expect(approxEqual(v[0], 2)) }
     }
 
     @Test
-    func testCentroidBasic() async throws {
+    func testCentroidBasic() throws {
         let v1 = Vector<Dim2>(x: 0, y: 0)
         let v2 = Vector<Dim2>(x: 2, y: 2)
-        let centroid = try await ExecutionOperations.centroid(of: [v1, v2])
+        let centroid = Operations.centroid(of: [v1, v2])
         #expect(approxEqual(centroid[0], 1))
         #expect(approxEqual(centroid[1], 1))
-    }
-
-    @Test
-    func testReduceSequentialAndParallelEquivalence() async throws {
-        let count = 1200
-        let vectors: [Vector<Dim2>] = (0..<count).map { i in Vector<Dim2>(x: Float(i%3), y: 1) }
-        let zero = Vector<Dim2>.zero
-        // Sequential
-        let seq = try await ExecutionOperations.reduce(vectors, zero, +, context: CPUContext.sequential)
-        // Parallel
-        let par = try await ExecutionOperations.reduce(vectors, zero, +, context: CPUContext.automatic)
-        #expect(approxEqual(seq[0], par[0], tol: 1e-5))
-        #expect(approxEqual(seq[1], par[1], tol: 1e-5))
     }
 
 }

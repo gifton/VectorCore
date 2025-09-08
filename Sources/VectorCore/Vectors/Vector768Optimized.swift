@@ -304,10 +304,10 @@ extension Vector768Optimized {
     
     /// Normalized vector
     @inlinable
-    public func normalized() -> Result<Vector768Optimized, VectorError> {
+    public func normalizedThrowing() throws -> Vector768Optimized {
         let mag = magnitude
         guard mag > 0 else {
-            return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector"))
+            throw VectorError.invalidOperation("normalize", reason: "Cannot normalize zero vector")
         }
         
         let scale = 1.0 / mag
@@ -317,7 +317,7 @@ extension Vector768Optimized {
             result.storage[i] = storage[i] * scale
         }
         
-        return .success(result)
+        return result
     }
     
     /// Cosine similarity
@@ -431,13 +431,13 @@ extension Vector768Optimized: Hashable {
 // MARK: - Codable
 
 extension Vector768Optimized: Codable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let array = try container.decode([Float].self)
         try self.init(array)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(toArray())
     }

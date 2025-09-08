@@ -54,37 +54,37 @@ Documentation:
 ## Implementation Checklist
 
 1) Public Facade Consolidation
-- [ ] Move all public operation entry points to `Operations`.
-- [ ] Remove `ExecutionOperations` and `BatchOperations` from public (delete or make `internal`).
+- [x] Move all public operation entry points to `Operations`.
+- [x] Remove `ExecutionOperations` and `BatchOperations` from public (delete or make `internal`).
 - [ ] Ensure `SyncBatchOperations` surface is minimal and documents intended use.
 
 2) Return Type Unification
-- [ ] Change any public nearest‑neighbor API to return `[NearestNeighborResult]`.
-- [ ] Update internal call sites accordingly.
-- [ ] Keep `NearestNeighborResult` as the single result struct (index, distance).
+- [x] Change any public nearest‑neighbor API to return `[NearestNeighborResult]`.
+- [x] Update internal call sites accordingly.
+- [x] Keep `NearestNeighborResult` as the single result struct (index, distance).
 
 3) Error Semantics
-- [ ] Ensure `Operations` validates input and throws `VectorError` (no `precondition` for public entry points).
-- [ ] Add `normalizedThrowing()` to `VectorProtocol`; remove `Result`‑based normalized from public.
-- [ ] Keep operators using `precondition` for hot path consistency.
+- [x] Ensure `Operations` validates input and throws `VectorError` (no `precondition` for public entry points).
+- [x] Add `normalizedThrowing()` to `VectorProtocol`; remove `Result`‑based normalized from public.
+- [x] Keep operators using `precondition` for hot path consistency.
 
 4) Operators & Allocation
-- [ ] Remove/privatize `VectorProtocol` operator implementations; rely on `VectorFactory` generic operators.
-- [ ] Confirm all operations allocate result with correct length for dynamic vectors.
-- [ ] Keep element‑wise `.*` and `./` (document in README).
+- [x] Remove/privatize `VectorProtocol` operator implementations; rely on `VectorFactory` generic operators.
+- [x] Confirm all operations allocate result with correct length for dynamic vectors.
+- [x] Keep element‑wise `.*` and `./` (document in README).
 
 5) Factories & Utilities
-- [ ] Remove `VectorProtocol.random(in:)` (dimension ambiguity). Keep `Vector.random(in:)` and `DynamicVector.random(dimension:in:)`.
-- [ ] Update `Operations.centroid` to use `VectorFactory.create(from:)` instead of `ExpressibleByArrayLiteral`.
+- [x] Remove `VectorProtocol.random(in:)` (dimension ambiguity). Keep `Vector.random(in:)` and `DynamicVector.random(dimension:in:)`.
+- [x] Update `Operations.centroid` to use `VectorFactory.create(from:)` instead of `ExpressibleByArrayLiteral`.
 - [ ] Decide on renaming `VectorTypeFactory` → `VectorBuilder` (perform rename and adjust imports/docs if chosen).
 
 6) Providers & Contexts
-- [ ] Keep provider pattern (`ComputeProvider`, `ArraySIMDProvider`) public; make execution contexts (CPU/GPU) internal implementation details.
-- [ ] Ensure GPU placeholders are not public.
+- [x] Keep provider pattern (`ComputeProvider`, `ArraySIMDProvider`) public; make execution contexts (CPU/GPU) internal implementation details.
+- [x] Ensure GPU placeholders are not public.
 
 7) Cleanup & Internals
-- [ ] Mark helper types (`KNearestHeap`, validation helpers) internal.
-- [ ] Ensure logging is internal unless required as a public API.
+- [x] Mark helper types (`KNearestHeap`, validation helpers) internal.
+- [x] Ensure logging is internal unless required as a public API.
 
 8) Tests
 - [ ] Update tests to use `Operations` facade exclusively.
@@ -126,4 +126,3 @@ Documentation:
 ---
 
 This plan is intentionally aggressive with no deprecation or compatibility shims, suitable for an unreleased 0.1.0.
-

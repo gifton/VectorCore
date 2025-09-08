@@ -426,7 +426,7 @@ public extension SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Indices of vectors containing non-finite values
-    static func findNonFinite<V: VectorProtocol>(_ vectors: [V]) -> [Int] {
+    internal static func findNonFinite<V: VectorProtocol>(_ vectors: [V]) -> [Int] {
         vectors.enumerated().compactMap { index, vector in
             for i in 0..<vector.scalarCount {
                 if !vector[i].isFinite {
@@ -441,7 +441,7 @@ public extension SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Statistics computed only from finite values
-    static func finiteStatistics<V: VectorProtocol>(for vectors: [V]) -> BatchStatistics where V.Scalar == Float {
+    internal static func finiteStatistics<V: VectorProtocol>(for vectors: [V]) -> BatchStatistics where V.Scalar == Float {
         let finiteVectors = filterFinite(vectors)
         
         guard !finiteVectors.isEmpty else {

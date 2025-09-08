@@ -226,7 +226,7 @@ final class ComprehensiveBenchmarks: XCTestCase {
         
         measure {
             for _ in 0..<iterations {
-                _ = try? vector.normalized().get()
+                _ = try? vector.normalizedThrowing()
             }
         }
     }
@@ -236,7 +236,7 @@ final class ComprehensiveBenchmarks: XCTestCase {
         
         measure {
             for _ in 0..<iterations {
-                _ = try? vector.normalized().get()
+                _ = try? vector.normalizedThrowing()
             }
         }
     }
@@ -246,7 +246,7 @@ final class ComprehensiveBenchmarks: XCTestCase {
         
         measure {
             for _ in 0..<smallIterations {
-                _ = try? vector.normalized().get()
+                _ = try? vector.normalizedThrowing()
             }
         }
     }

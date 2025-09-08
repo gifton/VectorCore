@@ -127,200 +127,9 @@ public extension VectorProtocol {
         Self(repeating: 1)
     }
     
-    /// Create a random vector
-    static func random(in range: ClosedRange<Scalar> = 0...1) -> Self where Scalar.RawSignificand: FixedWidthInteger {
-        let array = (0..<Self().scalarCount).map { _ in
-            Scalar.random(in: range)
-        }
-        return try! Self(array)
-    }
 }
 
-// MARK: - Arithmetic Operations
-
-public extension VectorProtocol {
-    
-    // MARK: Vector-Vector Operations
-    
-    static func + (lhs: Self, rhs: Self) -> Self {
-        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        // Allocate result with correct length
-        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
-        result.withUnsafeMutableBufferPointer { resultPtr in
-            lhs.withUnsafeBufferPointer { lhsPtr in
-                rhs.withUnsafeBufferPointer { rhsPtr in
-                    for i in 0..<lhs.scalarCount {
-                        resultPtr[i] = lhsPtr[i] + rhsPtr[i]
-                    }
-                }
-            }
-        }
-        return result
-    }
-    
-    static func - (lhs: Self, rhs: Self) -> Self {
-        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        // Allocate result with correct length
-        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
-        result.withUnsafeMutableBufferPointer { resultPtr in
-            lhs.withUnsafeBufferPointer { lhsPtr in
-                rhs.withUnsafeBufferPointer { rhsPtr in
-                    for i in 0..<lhs.scalarCount {
-                        resultPtr[i] = lhsPtr[i] - rhsPtr[i]
-                    }
-                }
-            }
-        }
-        return result
-    }
-    
-    // MARK: - In-Place Operations
-    
-    /// Perform in-place addition with another vector
-    @inlinable
-    mutating func inPlaceAdd(_ other: Self) {
-        let count = scalarCount
-        withUnsafeMutableBufferPointer { dst in
-            other.withUnsafeBufferPointer { src in
-                for i in 0..<count {
-                    dst[i] += src[i]
-                }
-            }
-        }
-    }
-    
-    /// Perform in-place subtraction with another vector
-    @inlinable
-    mutating func inPlaceSubtract(_ other: Self) {
-        let count = scalarCount
-        withUnsafeMutableBufferPointer { dst in
-            other.withUnsafeBufferPointer { src in
-                for i in 0..<count {
-                    dst[i] -= src[i]
-                }
-            }
-        }
-    }
-    
-    /// Perform in-place scalar multiplication
-    @inlinable
-    mutating func inPlaceMultiply(_ scalar: Scalar) {
-        let count = scalarCount
-        withUnsafeMutableBufferPointer { dst in
-            for i in 0..<count {
-                dst[i] *= scalar
-            }
-        }
-    }
-    
-    /// Perform in-place scalar division
-    @inlinable
-    mutating func inPlaceDivide(_ scalar: Scalar) {
-        precondition(scalar != 0, "Division by zero")
-        let count = scalarCount
-        withUnsafeMutableBufferPointer { dst in
-            for i in 0..<count {
-                dst[i] /= scalar
-            }
-        }
-    }
-    
-    /// Perform in-place element-wise multiplication (Hadamard product)
-    @inlinable
-    mutating func inPlaceElementwiseMultiply(_ other: Self) {
-        let count = scalarCount
-        withUnsafeMutableBufferPointer { dst in
-            other.withUnsafeBufferPointer { src in
-                for i in 0..<count {
-                    dst[i] *= src[i]
-                }
-            }
-        }
-    }
-    
-    static func += (lhs: inout Self, rhs: Self) {
-        lhs.inPlaceAdd(rhs)
-    }
-    
-    static func -= (lhs: inout Self, rhs: Self) {
-        lhs.inPlaceSubtract(rhs)
-    }
-    
-    // MARK: Vector-Scalar Operations
-    
-    static func * (lhs: Self, rhs: Scalar) -> Self {
-        // Allocate result with correct length
-        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
-        result.withUnsafeMutableBufferPointer { resultPtr in
-            lhs.withUnsafeBufferPointer { lhsPtr in
-                for i in 0..<lhs.scalarCount {
-                    resultPtr[i] = lhsPtr[i] * rhs
-                }
-            }
-        }
-        return result
-    }
-    
-    static func / (lhs: Self, rhs: Scalar) -> Self {
-        precondition(rhs != 0, "Division by zero")
-        return lhs * (1 / rhs)
-    }
-    
-    static func * (lhs: Scalar, rhs: Self) -> Self {
-        rhs * lhs
-    }
-    
-    static func *= (lhs: inout Self, rhs: Scalar) {
-        lhs.inPlaceMultiply(rhs)
-    }
-    
-    static func /= (lhs: inout Self, rhs: Scalar) {
-        lhs.inPlaceDivide(rhs)
-    }
-    
-    // MARK: Unary Operations
-    
-    prefix static func - (vector: Self) -> Self {
-        vector * (-1)
-    }
-    
-    // MARK: Element-wise Operations
-    
-    /// Hadamard (element-wise) product
-    static func .* (lhs: Self, rhs: Self) -> Self {
-        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        // Allocate result with correct length
-        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
-        result.withUnsafeMutableBufferPointer { resultPtr in
-            lhs.withUnsafeBufferPointer { lhsPtr in
-                rhs.withUnsafeBufferPointer { rhsPtr in
-                    for i in 0..<lhs.scalarCount {
-                        resultPtr[i] = lhsPtr[i] * rhsPtr[i]
-                    }
-                }
-            }
-        }
-        return result
-    }
-    
-    /// Element-wise division
-    static func ./ (lhs: Self, rhs: Self) -> Self {
-        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch")
-        // Allocate result with correct length
-        var result = try! Self(Array(repeating: 0, count: lhs.scalarCount))
-        result.withUnsafeMutableBufferPointer { resultPtr in
-            lhs.withUnsafeBufferPointer { lhsPtr in
-                rhs.withUnsafeBufferPointer { rhsPtr in
-                    for i in 0..<lhs.scalarCount {
-                        precondition(rhsPtr[i] != 0, "Division by zero at index \(i)")
-                        resultPtr[i] = lhsPtr[i] / rhsPtr[i]
-                    }
-                }
-            }
-        }
-        return result
-    }
-}
+// Intentionally no generic operator overloads here; operators are provided by VectorFactory and specialized vector types.
 
 // MARK: - Vector Mathematics
 
@@ -352,12 +161,20 @@ public extension VectorProtocol {
     }
     
     /// Normalized (unit) vector
-    func normalized() -> Result<Self, VectorError> {
+    /// - Throws: `VectorError.invalidOperation` if the vector has zero magnitude
+    func normalizedThrowing() throws -> Self {
         let mag = magnitude
         guard mag > 0 else {
-            return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector"))
+            throw VectorError.invalidOperation("normalize", reason: "Cannot normalize zero vector")
         }
-        return .success(self / mag)
+        let inv = 1 / mag
+        // Allocate and scale elements to avoid relying on generic operators
+        let scaled = withUnsafeBufferPointer { buffer -> [Scalar] in
+            var out = Array(repeating: Scalar(0), count: buffer.count)
+            for i in 0..<buffer.count { out[i] = buffer[i] * inv }
+            return out
+        }
+        return try! Self(scaled)
     }
     
     /// L1 norm (Manhattan norm)
@@ -389,22 +206,61 @@ public extension VectorProtocol {
     
     /// Euclidean distance to another vector
     func euclideanDistance(to other: Self) -> Scalar {
-        (self - other).magnitude
+        precondition(scalarCount == other.scalarCount, "Dimension mismatch")
+        var sum: Scalar = 0
+        withUnsafeBufferPointer { a in
+            other.withUnsafeBufferPointer { b in
+                for i in 0..<scalarCount {
+                    let d = a[i] - b[i]
+                    sum += d * d
+                }
+            }
+        }
+        return Foundation.sqrt(sum)
     }
     
     /// Squared Euclidean distance (more efficient when square root not needed)
     func euclideanDistanceSquared(to other: Self) -> Scalar {
-        (self - other).magnitudeSquared
+        precondition(scalarCount == other.scalarCount, "Dimension mismatch")
+        var sum: Scalar = 0
+        withUnsafeBufferPointer { a in
+            other.withUnsafeBufferPointer { b in
+                for i in 0..<scalarCount {
+                    let d = a[i] - b[i]
+                    sum += d * d
+                }
+            }
+        }
+        return sum
     }
     
     /// Manhattan distance to another vector
     func manhattanDistance(to other: Self) -> Scalar {
-        (self - other).l1Norm
+        precondition(scalarCount == other.scalarCount, "Dimension mismatch")
+        var sum: Scalar = 0
+        withUnsafeBufferPointer { a in
+            other.withUnsafeBufferPointer { b in
+                for i in 0..<scalarCount {
+                    sum += Swift.abs(a[i] - b[i])
+                }
+            }
+        }
+        return sum
     }
     
     /// Chebyshev distance to another vector
     func chebyshevDistance(to other: Self) -> Scalar {
-        (self - other).lInfinityNorm
+        precondition(scalarCount == other.scalarCount, "Dimension mismatch")
+        var maxVal: Scalar = 0
+        withUnsafeBufferPointer { a in
+            other.withUnsafeBufferPointer { b in
+                for i in 0..<scalarCount {
+                    let d = Swift.abs(a[i] - b[i])
+                    if d > maxVal { maxVal = d }
+                }
+            }
+        }
+        return maxVal
     }
     
     /// Cosine similarity with another vector

@@ -188,27 +188,24 @@ struct OptimizedVector512Suite {
     @Test
     func testNormalized_SuccessMagnitudeOne() {
         let a = try! Vector512Optimized((0..<512).map { _ in Float.random(in: 0.1...1) })
-        switch a.normalized() {
-        case .success(let u):
+        do {
+            let u = try a.normalizedThrowing()
             #expect(approxEqual(u.magnitude, 1, tol: 1e-5))
-            // Direction check: u should be proportional to a (compare a[i]/u[i] approximately constant for non-zero)
             var ratios: [Float] = []
             for i in stride(from: 0, to: 512, by: 64) { if u[i] != 0 { ratios.append(a[i] / u[i]) } }
             if let r0 = ratios.first { for r in ratios { #expect(approxEqual(r, r0, tol: 1e-3)) } }
-        case .failure(let e):
-            Issue.record("Unexpected failure: \(e)")
-        }
+        } catch { Issue.record("Unexpected failure: \(error)") }
     }
 
     @Test
     func testNormalized_ZeroVectorFails() {
         let z = Vector512Optimized()
-        switch z.normalized() {
-        case .success:
+        do {
+            _ = try z.normalizedThrowing()
             Issue.record("Expected failure for zero normalization")
-        case .failure(let e):
+        } catch let e as VectorError {
             #expect(e.kind == .invalidOperation)
-        }
+        } catch { Issue.record("Unexpected error: \(error)") }
     }
 
     @Test

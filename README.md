@@ -58,7 +58,7 @@ let v2 = Vector512Optimized(repeating: 2.0)
 // Fast operations with SIMD
 let dotProduct = v1.dotProduct(v2)
 let distance = v1.euclideanDistance(to: v2)
-let normalized = try v1.normalized().get()
+let normalized = try v1.normalizedThrowing()
 
 // Or use generic vectors with compile-time safety
 let bert = Vector<Dim768>(repeating: 0.5)
@@ -99,7 +99,7 @@ Optimized for Apple Silicon and Intel processors:
 ```swift
 // SIMD-optimized operations
 let magnitude = vector.magnitude
-let normalized = vector.normalized()
+let normalized = try vector.normalizedThrowing()
 let distance = v1.euclideanDistance(to: v2)
 ```
 
@@ -107,20 +107,18 @@ let distance = v1.euclideanDistance(to: v2)
 Large batch operations scale across cores:
 
 ```swift
-// Automatically parallelizes for datasets >= 1000 vectors (configurable)
-let neighbors = await BatchOperations.findNearest(
+// Automatically parallelizes for large datasets via providers
+let neighbors = try await Operations.findNearest(
     to: query,
     in: vectors,
     k: 10
 )
 
-// Batch processing with transformation
-let normalized: [Vector<Dim512>] = try await BatchOperations.process(vectors) { batch in
-    try batch.map { try $0.normalized().get() }
-}
+// Transform a collection (element-wise)
+let scaled: [Vector<Dim512>] = try await Operations.map(vectors) { $0 * 2 }
 
 // Pairwise distances (parallelized for large inputs)
-let distances = await BatchOperations.pairwiseDistances(vectors)
+let distances = try await Operations.distanceMatrix(vectors)
 ```
 
 ### 5. **Flexible Distance Metrics**
@@ -156,7 +154,7 @@ let result = v1 ./ v2                    // Fast division (no zero check)
 ### Safe Path (Opt-in)
 ```swift
 // Safe variants available when you need graceful error handling
-let normalized = try v.normalized().get()       // Returns Result; throws on zero magnitude when unwrapped
+let normalized = try v.normalizedThrowing()     // Throws on zero magnitude
 let result = try Vector.safeDivide(v1, by: v2)  // Throws on division by zero
 ```
 
@@ -200,7 +198,7 @@ let divided = v1 / 2.0
 
 // Vector operations
 let magnitude = vector.magnitude
-let normalized = vector.normalized()
+let normalized = try vector.normalizedThrowing()
 let dotProduct = v1.dotProduct(v2)
 
 // Distance metrics
@@ -211,9 +209,9 @@ let cosine = v1.cosineSimilarity(to: v2)
 ### Batch Operations
 
 ```swift
-// Async batch operations
-let nearest = await BatchOperations.findNearest(to: query, in: vectors, k: 10)
-let distances = await BatchOperations.pairwiseDistances(vectors)
+// Async operations (provider-based)
+let nearest = try await Operations.findNearest(to: query, in: vectors, k: 10)
+let distances = try await Operations.distanceMatrix(vectors)
 
 // Synchronous utilities
 let centroid = SyncBatchOperations.centroid(of: vectors)
@@ -225,7 +223,7 @@ let sum = SyncBatchOperations.sum(vectors)
 ```swift
 // Safe operations with error handling
 do {
-    let normalized = try vector.normalized().get()
+    let normalized = try vector.normalizedThrowing()
 } catch let error as VectorError {
     print("Error: \(error.localizedDescription)")
 }

@@ -219,12 +219,12 @@ public final class PerformanceRegressionSuite {
         // Normalization
         measurePerformance(name: "Normalization (Dim128)", dimension: 128) {
             let v = Vector<Dim128>.random(in: -10...10)
-            return { _ = v.normalized() }
+            return { _ = try? v.normalizedThrowing() }
         }
         
         measurePerformance(name: "Normalization (Dim1536)", dimension: 1536) {
             let v = Vector<Dim1536>.random(in: -10...10)
-            return { _ = v.normalized() }
+            return { _ = try? v.normalizedThrowing() }
         }
     }
     
@@ -306,7 +306,7 @@ public final class PerformanceRegressionSuite {
         measurePerformance(name: "Batch Normalization (100 vectors)", dimension: 256) {
             let vectors = (0..<100).map { _ in Vector<Dim256>.random(in: -10...10) }
             return {
-                _ = vectors.map { $0.normalized() }
+                vectors.forEach { _ = try? $0.normalizedThrowing() }
             }
         }
         

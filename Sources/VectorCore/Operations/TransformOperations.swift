@@ -10,122 +10,7 @@ import Accelerate
 
 // MARK: - Transform Operations
 
-extension ExecutionOperations {
-    
-    /// Element-wise addition with automatic type preservation
-    @inlinable
-    public static func add<V: VectorProtocol & VectorFactory>(
-        _ vectors: [V],
-        _ scalar: V.Scalar,
-        context: any ExecutionContext = CPUContext.automatic
-    ) async throws -> [V] where V.Scalar == Float {
-        try await map(vectors, transform: { $0 + scalar }, context: context)
-    }
-    
-    /// Element-wise multiplication with automatic type preservation
-    @inlinable
-    public static func multiply<V: VectorProtocol & VectorFactory>(
-        _ vectors: [V],
-        by scalar: V.Scalar,
-        context: any ExecutionContext = CPUContext.automatic
-    ) async throws -> [V] where V.Scalar == Float {
-        try await map(vectors, transform: { $0 * scalar }, context: context)
-    }
-    
-    /// Normalize vectors to unit length
-    public static func normalize<V: VectorProtocol & VectorFactory>(
-        _ vectors: [V],
-        context: any ExecutionContext = CPUContext.automatic
-    ) async throws -> [V] where V.Scalar == Float {
-        
-        if vectors.count < parallelThreshold {
-            // Sequential normalization
-            return try await context.execute {
-                try vectors.map { vector in
-                    let magnitude = vector.magnitude
-                    guard magnitude > Float.ulpOfOne else {
-                        // Return zero vector for zero magnitude
-                        return try V.create(from: Array(repeating: 0, count: vector.scalarCount))
-                    }
-                    return try V.createByTransforming(vector) { $0 / magnitude }
-                }
-            }
-        }
-        
-        // Parallel normalization
-        return try await withThrowingTaskGroup(of: (Int, V).self) { group in
-            for (index, vector) in vectors.enumerated() {
-                group.addTask {
-                    let magnitude = vector.magnitude
-                    let normalized: V
-                    if magnitude > Float.ulpOfOne {
-                        normalized = try V.createByTransforming(vector) { $0 / magnitude }
-                    } else {
-                        normalized = try V.create(from: Array(repeating: 0, count: vector.scalarCount))
-                    }
-                    return (index, normalized)
-                }
-            }
-            
-            var results = Array<V?>(repeating: nil, count: vectors.count)
-            for try await (index, result) in group {
-                results[index] = result
-            }
-            return results.compactMap { $0 }
-        }
-    }
-    
-    /// Apply element-wise function to vector pairs
-    public static func combine<V: VectorProtocol & VectorFactory>(
-        _ vectors1: [V],
-        _ vectors2: [V],
-        _ operation: @Sendable @escaping (Float, Float) -> Float,
-        context: any ExecutionContext = CPUContext.automatic
-    ) async throws -> [V] where V.Scalar == Float {
-        
-        guard vectors1.count == vectors2.count else {
-            throw VectorError.invalidDimension(
-                vectors2.count,
-                reason: "Vector arrays must have same count: \(vectors1.count) != \(vectors2.count)"
-            )
-        }
-        
-        // Validate dimensions match
-        if let first1 = vectors1.first, let first2 = vectors2.first {
-            guard first1.scalarCount == first2.scalarCount else {
-                throw VectorError.dimensionMismatch(
-                    expected: first1.scalarCount,
-                    actual: first2.scalarCount
-                )
-            }
-        }
-        
-        if vectors1.count < parallelThreshold {
-            // Sequential combination
-            return try await context.execute {
-                try zip(vectors1, vectors2).map { v1, v2 in
-                    try V.createByCombining(v1, v2, operation)
-                }
-            }
-        }
-        
-        // Parallel combination
-        return try await withThrowingTaskGroup(of: (Int, V).self) { group in
-            for (index, (v1, v2)) in zip(vectors1, vectors2).enumerated() {
-                group.addTask {
-                    let result = try V.createByCombining(v1, v2, operation)
-                    return (index, result)
-                }
-            }
-            
-            var results = Array<V?>(repeating: nil, count: vectors1.count)
-            for try await (index, result) in group {
-                results[index] = result
-            }
-            return results.compactMap { $0 }
-        }
-    }
-}
+// Intentionally omit re-declaring Operations.* here to avoid duplication.
 
 // MARK: - Convenience Extensions
 
@@ -133,22 +18,22 @@ public extension Array where Element: VectorProtocol & VectorFactory, Element.Sc
     
     /// Transform all vectors in the array
     func mapElements(_ transform: @Sendable @escaping (Float) -> Float) async throws -> [Element] {
-        try await ExecutionOperations.map(self, transform: transform)
+        try await Operations.map(self, transform: transform)
     }
     
     /// Normalize all vectors to unit length
     func normalized() async throws -> [Element] {
-        try await ExecutionOperations.normalize(self)
+        try await Operations.normalize(self)
     }
     
     /// Add scalar to all elements
     func adding(_ scalar: Float) async throws -> [Element] {
-        try await ExecutionOperations.add(self, scalar)
+        try await Operations.add(self, scalar)
     }
     
     /// Multiply all elements by scalar
     func multiplying(by scalar: Float) async throws -> [Element] {
-        try await ExecutionOperations.multiply(self, by: scalar)
+        try await Operations.multiply(self, by: scalar)
     }
 }
 
@@ -160,7 +45,7 @@ public extension Array where Element == Vector<Dim768> {
     /// Compute cosine similarity matrix
     func cosineSimilarityMatrix() async throws -> [[Float]] {
         let normalized = try await self.normalized()
-        return try await ExecutionOperations.distanceMatrix(
+        return try await Operations.distanceMatrix(
             normalized,
             metric: DotProductDistance() // Negative dot product on normalized vectors = cosine distance
         )

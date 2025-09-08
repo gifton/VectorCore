@@ -13,7 +13,7 @@ import Foundation
 // MARK: - Execution Context Protocol
 
 /// Protocol for execution contexts that manage how vector operations are performed
-public protocol ExecutionContext: Sendable {
+protocol ExecutionContext: Sendable {
     /// The compute device used by this context
     var device: ComputeDevice { get }
     
@@ -49,7 +49,7 @@ extension ExecutionContext {
 
 extension ExecutionContext where Self == CPUContext {
     /// Default execution context - automatically uses available CPU cores
-    public static var `default`: any ExecutionContext { 
+    static var `default`: any ExecutionContext { 
         CPUContext.automatic 
     }
 }

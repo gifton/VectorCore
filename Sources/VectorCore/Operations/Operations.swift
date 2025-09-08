@@ -49,8 +49,12 @@ public enum Operations {
         k: Int = 1,
         metric: M = EuclideanDistance()
     ) async throws -> [NearestNeighborResult] where V.Scalar == Float, M.Scalar == Float {
-        precondition(k > 0, "k must be positive")
-        precondition(!vectors.isEmpty, "Vector collection cannot be empty")
+        guard k > 0 else { throw VectorError.invalidDimension(k, reason: "k must be positive") }
+        guard !vectors.isEmpty else { throw VectorError.invalidDimension(0, reason: "Vector collection cannot be empty") }
+        // Validate dimensions match between query and candidates
+        if let first = vectors.first, first.scalarCount != query.scalarCount {
+            throw VectorError.dimensionMismatch(expected: query.scalarCount, actual: first.scalarCount)
+        }
         
         let distances = try await computeDistances(
             from: query,
@@ -82,13 +86,122 @@ public enum Operations {
         k: Int = 1,
         metric: M = EuclideanDistance()
     ) async throws -> [[NearestNeighborResult]] where V.Scalar == Float, M.Scalar == Float {
-        try await computeProvider.parallelExecute(items: 0..<queries.count) { i in
+        guard !queries.isEmpty else { throw VectorError.invalidDimension(0, reason: "queries cannot be empty") }
+        guard !vectors.isEmpty else { throw VectorError.invalidDimension(0, reason: "vectors cannot be empty") }
+        // Validate consistent query dimensions and match with vectors
+        let expectedDim = queries.first!.scalarCount
+        for q in queries {
+            if q.scalarCount != expectedDim {
+                throw VectorError.dimensionMismatch(expected: expectedDim, actual: q.scalarCount)
+            }
+        }
+        if let firstVec = vectors.first, firstVec.scalarCount != expectedDim {
+            throw VectorError.dimensionMismatch(expected: expectedDim, actual: firstVec.scalarCount)
+        }
+        return try await computeProvider.parallelExecute(items: 0..<queries.count) { i in
             try await findNearest(
                 to: queries[i],
                 in: vectors,
                 k: k,
                 metric: metric
             )
+        }
+    }
+
+    // MARK: - Transformations
+
+    /// Map operation over elements of vectors with automatic parallelization
+    public static func map<V: VectorProtocol & VectorFactory>(
+        _ vectors: [V],
+        transform: @Sendable @escaping (Float) -> Float
+    ) async throws -> [V] where V.Scalar == Float {
+        guard !vectors.isEmpty else { return [] }
+        if vectors.count > 1000 {
+            return try await computeProvider.parallelExecute(items: 0..<vectors.count) { i in
+                let v = vectors[i]
+                var result = Array(repeating: Float(0), count: v.scalarCount)
+                v.withUnsafeBufferPointer { buf in
+                    for j in 0..<buf.count { result[j] = transform(buf[j]) }
+                }
+                return try! V.create(from: result)
+            }
+        } else {
+            return vectors.map { v in
+                var result = Array(repeating: Float(0), count: v.scalarCount)
+                v.withUnsafeBufferPointer { buf in
+                    for j in 0..<buf.count { result[j] = transform(buf[j]) }
+                }
+                return try! V.create(from: result)
+            }
+        }
+    }
+
+    /// Add scalar to all elements of each vector
+    public static func add<V: VectorProtocol & VectorFactory>(
+        _ vectors: [V],
+        _ scalar: V.Scalar
+    ) async throws -> [V] where V.Scalar == Float {
+        try await map(vectors, transform: { $0 + scalar })
+    }
+
+    /// Multiply all elements of each vector by a scalar
+    public static func multiply<V: VectorProtocol & VectorFactory>(
+        _ vectors: [V],
+        by scalar: V.Scalar
+    ) async throws -> [V] where V.Scalar == Float {
+        try await map(vectors, transform: { $0 * scalar })
+    }
+
+    /// Normalize vectors to unit length (zero vector stays zero)
+    public static func normalize<V: VectorProtocol & VectorFactory>(
+        _ vectors: [V]
+    ) async throws -> [V] where V.Scalar == Float {
+        guard !vectors.isEmpty else { return [] }
+        if vectors.count > 1000 {
+            return try await computeProvider.parallelExecute(items: 0..<vectors.count) { i in
+                let v = vectors[i]
+                let mag = v.magnitude
+                if mag > Float.ulpOfOne {
+                    let inv = 1 / mag
+                    return try! V.createByTransforming(v) { $0 * inv }
+                } else {
+                    return try! V.create(from: Array(repeating: 0, count: v.scalarCount))
+                }
+            }
+        } else {
+            return vectors.map { v in
+                let mag = v.magnitude
+                if mag > Float.ulpOfOne {
+                    let inv = 1 / mag
+                    return try! V.createByTransforming(v) { $0 * inv }
+                } else {
+                    return try! V.create(from: Array(repeating: 0, count: v.scalarCount))
+                }
+            }
+        }
+    }
+
+    /// Combine two vector arrays element-wise
+    public static func combine<V: VectorProtocol & VectorFactory>(
+        _ vectors1: [V],
+        _ vectors2: [V],
+        _ operation: @Sendable @escaping (Float, Float) -> Float
+    ) async throws -> [V] where V.Scalar == Float {
+        guard vectors1.count == vectors2.count else {
+            throw VectorError.invalidDimension(vectors2.count, reason: "Vector arrays must have same count: \(vectors1.count) != \(vectors2.count)")
+        }
+        if let first1 = vectors1.first, let first2 = vectors2.first, first1.scalarCount != first2.scalarCount {
+            throw VectorError.dimensionMismatch(expected: first1.scalarCount, actual: first2.scalarCount)
+        }
+        guard !vectors1.isEmpty else { return [] }
+        if vectors1.count > 1000 {
+            return try await computeProvider.parallelExecute(items: 0..<vectors1.count) { i in
+                try! V.createByCombining(vectors1[i], vectors2[i], operation)
+            }
+        } else {
+            return zip(vectors1, vectors2).map { v1, v2 in
+                try! V.createByCombining(v1, v2, operation)
+            }
         }
     }
     
@@ -127,6 +240,14 @@ public enum Operations {
             setB.map { metric.distance(setA[i], $0) }
         }
     }
+
+    /// Compute pairwise distance matrix for a single set
+    public static func distanceMatrix<V: VectorProtocol, M: DistanceMetric>(
+        _ vectors: [V],
+        metric: M = EuclideanDistance()
+    ) async throws -> [[Float]] where V.Scalar == Float, M.Scalar == Float {
+        try await distanceMatrix(between: vectors, and: vectors, metric: metric)
+    }
     
     // MARK: - Vector Operations
     
@@ -134,12 +255,12 @@ public enum Operations {
     ///
     /// - Parameter vectors: Collection of vectors
     /// - Returns: Centroid vector
-    public static func centroid<V: VectorProtocol>(
+    public static func centroid<V: VectorProtocol & VectorFactory>(
         of vectors: [V]
-    ) -> V where V.Scalar == Float, V: ExpressibleByArrayLiteral, V.ArrayLiteralElement == Float {
+    ) -> V where V.Scalar == Float {
         guard !vectors.isEmpty else {
             let dimension = vectors.first?.scalarCount ?? 0
-            return try! V( [Float](repeating: 0, count: dimension))
+            return try! V.create(from: [Float](repeating: 0, count: dimension))
         }
         
         let dimension = vectors.first!.scalarCount
@@ -155,7 +276,7 @@ public enum Operations {
         let scale = 1.0 / Float(vectors.count)
         let result = simdProvider.multiply(sum, by: scale)
         
-        return try! V( result)
+        return try! V.create(from: result)
     }
     
     /// Normalize vectors to unit length

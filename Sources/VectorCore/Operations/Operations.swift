@@ -32,6 +32,9 @@ public enum Operations {
     
     /// The buffer provider for memory management
     @TaskLocal public static var bufferProvider: any BufferProvider = SwiftBufferPool.shared
+
+    /// Threshold (in bytes) above which distance matrix row allocations use the buffer pool
+    @usableFromInline internal static let largeRowThresholdBytes: Int = 64 * 1024
     
     // MARK: - Nearest Neighbor Search
     
@@ -125,17 +128,17 @@ public enum Operations {
                     }
                     initializedCount = v.scalarCount
                 }
-                return try! V.create(from: result)
+                return try V.create(from: result)
             }
         } else {
-            return vectors.map { v in
+            return try vectors.map { v in
                 let result: [Float] = .init(unsafeUninitializedCapacity: v.scalarCount) { buffer, initializedCount in
                     v.withUnsafeBufferPointer { src in
                         for j in 0..<src.count { buffer[j] = transform(src[j]) }
                     }
                     initializedCount = v.scalarCount
                 }
-                return try! V.create(from: result)
+                return try V.create(from: result)
             }
         }
     }
@@ -174,13 +177,13 @@ public enum Operations {
                         }
                         initializedCount = v.scalarCount
                     }
-                    return try! V.create(from: result)
+                    return try V.create(from: result)
                 } else {
-                    return try! V.create(from: Array(repeating: 0, count: v.scalarCount))
+                    return try V.create(from: Array(repeating: 0, count: v.scalarCount))
                 }
             }
         } else {
-            return vectors.map { v in
+            return try vectors.map { v in
                 let mag = v.magnitude
                 if mag > Float.ulpOfOne {
                     let inv = 1 / mag
@@ -190,9 +193,9 @@ public enum Operations {
                         }
                         initializedCount = v.scalarCount
                     }
-                    return try! V.create(from: result)
+                    return try V.create(from: result)
                 } else {
-                    return try! V.create(from: Array(repeating: 0, count: v.scalarCount))
+                    return try V.create(from: Array(repeating: 0, count: v.scalarCount))
                 }
             }
         }
@@ -213,11 +216,11 @@ public enum Operations {
         guard !vectors1.isEmpty else { return [] }
         if vectors1.count > 1000 {
             return try await computeProvider.parallelExecute(items: 0..<vectors1.count) { i in
-                try! V.createByCombining(vectors1[i], vectors2[i], operation)
+                try V.createByCombining(vectors1[i], vectors2[i], operation)
             }
         } else {
-            return zip(vectors1, vectors2).map { v1, v2 in
-                try! V.createByCombining(v1, v2, operation)
+            return try zip(vectors1, vectors2).map { v1, v2 in
+                try V.createByCombining(v1, v2, operation)
             }
         }
     }
@@ -254,7 +257,27 @@ public enum Operations {
         metric: M = EuclideanDistance()
     ) async throws -> [[Float]] where V.Scalar == Float, M.Scalar == Float {
         try await computeProvider.parallelExecute(items: 0..<setA.count) { i in
-            setB.map { metric.distance(setA[i], $0) }
+            let m = setB.count
+            let rowBytes = m * MemoryLayout<Float>.stride
+            // Use buffer pool for large rows to reduce allocator pressure; otherwise use uninitialized array
+            if rowBytes >= largeRowThresholdBytes {
+                let handle = try await bufferProvider.acquire(size: rowBytes)
+                // Ensure release after array construction
+                defer { Task { await bufferProvider.release(handle) } }
+                let fptr = handle.pointer.bindMemory(to: Float.self, capacity: m)
+                for j in 0..<m {
+                    fptr[j] = metric.distance(setA[i], setB[j])
+                }
+                let row = Array(UnsafeBufferPointer(start: fptr, count: m))
+                return row
+            } else {
+                return [Float](unsafeUninitializedCapacity: m) { buffer, initializedCount in
+                    for j in 0..<m {
+                        buffer[j] = metric.distance(setA[i], setB[j])
+                    }
+                    initializedCount = m
+                }
+            }
         }
     }
 
@@ -296,19 +319,6 @@ public enum Operations {
         return try! V.create(from: result)
     }
     
-    /// Normalize vectors to unit length
-    ///
-    /// - Parameter vectors: Vectors to normalize
-    /// - Returns: Normalized vectors
-    public static func normalize<V: VectorProtocol>(
-        _ vectors: [V]
-    ) async throws -> [V] where V.Scalar == Float {
-        try await computeProvider.parallelExecute(items: 0..<vectors.count) { i in
-            let values = vectors[i].toArray()
-            let normalized = simdProvider.normalize(values)
-            return try! V( normalized)
-        }
-    }
     
     // MARK: - Statistics
     

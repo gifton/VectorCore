@@ -31,10 +31,17 @@ public enum VectorCore {
     /// - Returns: Optimized vector for the specified dimension
     public static func createVector(dimension: Int, data: [Float]? = nil) -> any VectorType {
         if let data = data {
+            precondition(data.count == dimension, "Data count (\(data.count)) must equal dimension (\(dimension))")
+            // Safe by precondition
             return try! VectorTypeFactory.vector(of: dimension, from: data)
         } else {
             return VectorTypeFactory.zeros(dimension: dimension)
         }
+    }
+
+    /// Create a vector of appropriate type from exact-sized data (throwing)
+    public static func createVector(dimension: Int, exactData data: [Float]) throws -> any VectorType {
+        try VectorTypeFactory.vector(of: dimension, from: data)
     }
     
     /// Create a batch of vectors from a 2D array

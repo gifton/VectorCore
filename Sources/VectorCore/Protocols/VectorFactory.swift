@@ -48,26 +48,30 @@ public extension VectorFactory {
     // MARK: Operator Implementations using Factory (handles dynamic dimensions safely)
 
     static func + (lhs: Self, rhs: Self) -> Self {
-        try! createByCombining(lhs, rhs, +)
+        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch: \(lhs.scalarCount) vs \(rhs.scalarCount)")
+        return try! createByCombining(lhs, rhs, +)
     }
 
     static func - (lhs: Self, rhs: Self) -> Self {
-        try! createByCombining(lhs, rhs, -)
+        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch: \(lhs.scalarCount) vs \(rhs.scalarCount)")
+        return try! createByCombining(lhs, rhs, -)
     }
 
     static func .* (lhs: Self, rhs: Self) -> Self {
-        try! createByCombining(lhs, rhs, *)
+        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch: \(lhs.scalarCount) vs \(rhs.scalarCount)")
+        return try! createByCombining(lhs, rhs, *)
     }
 
     static func ./ (lhs: Self, rhs: Self) -> Self {
-        try! createByCombining(lhs, rhs) { a, b in
+        precondition(lhs.scalarCount == rhs.scalarCount, "Dimension mismatch: \(lhs.scalarCount) vs \(rhs.scalarCount)")
+        return try! createByCombining(lhs, rhs) { a, b in
             precondition(b != 0, "Division by zero in element-wise division")
             return a / b
         }
     }
 
     static func * (lhs: Self, rhs: Scalar) -> Self {
-        try! createByTransforming(lhs) { $0 * rhs }
+        return try! createByTransforming(lhs) { $0 * rhs }
     }
 
     static func / (lhs: Self, rhs: Scalar) -> Self {
@@ -84,7 +88,7 @@ public extension VectorFactory {
 
     /// Unary negation
     static prefix func - (vector: Self) -> Self {
-        try! createByTransforming(vector) { -$0 }
+        return try! createByTransforming(vector) { -$0 }
     }
     /// Create a vector by transforming another vector's elements
     /// - Parameters:

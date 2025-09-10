@@ -33,7 +33,7 @@ jobs:
     name: PR Size Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Check PR Size
         uses: actions/github-script@v7
@@ -79,7 +79,7 @@ jobs:
     name: Performance Impact Analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       
@@ -120,7 +120,7 @@ jobs:
     name: Documentation Requirements
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       
@@ -155,7 +155,7 @@ jobs:
     name: Coverage Delta Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Swift
         uses: swift-actions/setup-swift@v1
@@ -186,7 +186,7 @@ jobs:
     name: Security Review Required
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       
@@ -218,7 +218,7 @@ jobs:
     name: Breaking Change Detection
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       
@@ -258,7 +258,7 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.files.*.filename, 'Package.swift') || contains(github.event.pull_request.files.*.filename, 'Package.resolved')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Dependency Review
         uses: actions/dependency-review-action@v3

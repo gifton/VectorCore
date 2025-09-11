@@ -280,7 +280,3 @@ Contributions are welcome! Please open an issue or pull request with a clear des
 ## 📄 License
 
 VectorCore is released under the MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-Built with ❤️ for the Swift community by the VectorCore Contributors

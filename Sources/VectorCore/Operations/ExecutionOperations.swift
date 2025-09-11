@@ -197,7 +197,7 @@ extension ExecutionOperations {
             guard firstQuery.scalarCount == firstVector.scalarCount else {
                 throw VectorError.dimensionMismatch(
                     expected: firstVector.scalarCount,
-                    actual: firstQuery.scalarCount,
+                    actual: firstQuery.scalarCount
                 )
             }
         }
@@ -526,7 +526,7 @@ extension ExecutionOperations {
         guard first.scalarCount == expectedDim else {
             throw VectorError.dimensionMismatch(
                 expected: expectedDim,
-                actual: first.scalarCount,
+                actual: first.scalarCount
             )
         }
         
@@ -536,7 +536,7 @@ extension ExecutionOperations {
             guard vector.scalarCount == expectedDim else {
                 throw VectorError.dimensionMismatch(
                     expected: expectedDim,
-                    actual: vector.scalarCount,
+                    actual: vector.scalarCount
                 )
             }
         }
@@ -556,17 +556,17 @@ extension ExecutionOperations {
             guard vector.scalarCount == expectedDim else {
                 throw VectorError.dimensionMismatch(
                     expected: expectedDim,
-                    actual: vector.scalarCount,
+                    actual: vector.scalarCount
                 )
             }
         }
         #else
         // Check all vectors in debug mode
-        for (index, vector) in vectors.enumerated().dropFirst() {
+        for (_, vector) in vectors.enumerated().dropFirst() {
             guard vector.scalarCount == expectedDim else {
                 throw VectorError.dimensionMismatch(
                     expected: expectedDim,
-                    actual: vector.scalarCount,
+                    actual: vector.scalarCount
                 )
             }
         }

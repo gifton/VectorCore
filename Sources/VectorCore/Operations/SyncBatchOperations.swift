@@ -195,7 +195,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - weights: Weights for each vector
     /// - Returns: Weighted centroid, or nil if input is empty
-    public static func weightedCentroid<D: Dimension>(
+    public static func weightedCentroid<D: StaticDimension>(
         of vectors: [Vector<D>],
         weights: [Float]
     ) throws -> Vector<D>? where D.Storage: VectorStorageOperations {
@@ -221,7 +221,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Sum vector, or nil if input is empty
-    public static func sum<D: Dimension>(
+    public static func sum<D: StaticDimension>(
         _ vectors: [Vector<D>]
     ) -> Vector<D>? where D.Storage: VectorStorageOperations {
         guard !vectors.isEmpty else { return nil }
@@ -238,7 +238,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Mean vector, or nil if input is empty
-    public static func mean<D: Dimension>(
+    public static func mean<D: StaticDimension>(
         _ vectors: [Vector<D>]
     ) -> Vector<D>? where D.Storage: VectorStorageOperations {
         centroid(of: vectors)
@@ -378,7 +378,7 @@ public enum SyncBatchOperations {
     ///   - assignments: Cluster assignment for each vector
     ///   - k: Number of clusters
     /// - Returns: Updated centroids
-    public static func updateCentroids<D: Dimension>(
+    public static func updateCentroids<D: StaticDimension>(
         vectors: [Vector<D>],
         assignments: [Int],
         k: Int
@@ -543,7 +543,7 @@ public extension Array where Element: VectorProtocol {
 // Extension specifically for Vector<D> types to support centroid
 public extension Array {
     /// Compute centroid of vectors
-    func centroid<D: Dimension>() -> Vector<D>? where Element == Vector<D>, D.Storage: VectorStorageOperations {
+    func centroid<D: StaticDimension>() -> Vector<D>? where Element == Vector<D>, D.Storage: VectorStorageOperations {
         SyncBatchOperations.centroid(of: self)
     }
 }

@@ -64,8 +64,9 @@ struct OperationsValidationTests {
 
     @Test
     func testDistanceMatrix_mismatchedSetDims_throws() async {
-        let setA = [Vector<Dim2>(x: 0, y: 0)]
-        let setB = [Vector<Dim3>(x: 0, y: 0, z: 0)]
+        // Use DynamicVector so the generic type matches while dimensions differ at runtime
+        let setA = [DynamicVector([0, 0])]
+        let setB = [DynamicVector([0, 0, 0])]
         do {
             _ = try await Operations.distanceMatrix(between: setA, and: setB)
             Issue.record("Expected dimensionMismatch not thrown for mismatched sets")
@@ -97,4 +98,3 @@ struct OperationsValidationTests {
         } catch { Issue.record("Unexpected error: \(error)") }
     }
 }
-

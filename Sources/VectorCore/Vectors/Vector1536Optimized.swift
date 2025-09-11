@@ -431,13 +431,13 @@ extension Vector1536Optimized: Hashable {
 // MARK: - Codable
 
 extension Vector1536Optimized: Codable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let array = try container.decode([Float].self)
         try self.init(array)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(toArray())
     }

@@ -119,7 +119,7 @@ public enum Operations {
         guard qDim == vDim else {
             throw VectorError.dimensionMismatch(expected: vDim, actual: qDim)
         }
-        try await computeProvider.parallelExecute(items: 0..<queries.count) { i in
+        return try await computeProvider.parallelExecute(items: 0..<queries.count) { i in
             try await findNearest(
                 to: queries[i],
                 in: vectors,
@@ -175,7 +175,7 @@ public enum Operations {
         guard aDim == bDim else {
             throw VectorError.dimensionMismatch(expected: bDim, actual: aDim)
         }
-        try await computeProvider.parallelExecute(items: 0..<setA.count) { i in
+        return try await computeProvider.parallelExecute(items: 0..<setA.count) { i in
             setB.map { metric.distance(setA[i], $0) }
         }
     }
@@ -186,12 +186,12 @@ public enum Operations {
     ///
     /// - Parameter vectors: Collection of vectors
     /// - Returns: Centroid vector
-    public static func centroid<V: VectorProtocol>(
+    public static func centroid<V: VectorProtocol & VectorFactory>(
         of vectors: [V]
-    ) -> V where V.Scalar == Float, V: ExpressibleByArrayLiteral, V.ArrayLiteralElement == Float {
+    ) -> V where V.Scalar == Float {
         guard !vectors.isEmpty else {
             let dimension = vectors.first?.scalarCount ?? 0
-            return try! V( [Float](repeating: 0, count: dimension))
+            return try! V.create(from: [Float](repeating: 0, count: dimension))
         }
         
         let dimension = vectors.first!.scalarCount
@@ -207,20 +207,20 @@ public enum Operations {
         let scale = 1.0 / Float(vectors.count)
         let result = simdProvider.multiply(sum, by: scale)
         
-        return try! V( result)
+        return try! V.create(from: result)
     }
     
     /// Normalize vectors to unit length
     ///
     /// - Parameter vectors: Vectors to normalize
     /// - Returns: Normalized vectors
-    public static func normalize<V: VectorProtocol>(
+    public static func normalize<V: VectorProtocol & VectorFactory>(
         _ vectors: [V]
     ) async throws -> [V] where V.Scalar == Float {
         try await computeProvider.parallelExecute(items: 0..<vectors.count) { i in
             let values = vectors[i].toArray()
             let normalized = simdProvider.normalize(values)
-            return try! V( normalized)
+            return try! V.create(from: normalized)
         }
     }
     

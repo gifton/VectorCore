@@ -1,0 +1,60 @@
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - .swiftpm
+  - Carthage
+  - Pods
+  - DerivedData
+  - vendor
+  - .github
+
+reporter: xcode
+
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+
+disabled_rules:
+  # This codebase intentionally uses force-unwrap/try in hot paths
+  - force_try
+  - force_unwrapping
+  # Allow TODOs without failing CI
+  - todo
+
+line_length:
+  ignores_comments: true
+  ignores_urls: true
+  warning: 140
+  error: 200
+
+file_length:
+  ignore_comment_only_lines: true
+  warning: 1400
+  error: 3000
+
+type_body_length:
+  warning: 400
+  error: 900
+
+function_body_length:
+  warning: 120
+  error: 240
+
+cyclomatic_complexity:
+  warning: 18
+  error: 30
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - i
+    - j
+    - k
+    - x
+    - y
+    - z
+    - id
+

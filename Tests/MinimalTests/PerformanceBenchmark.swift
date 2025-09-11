@@ -16,7 +16,6 @@ final class PerformanceBenchmark: XCTestCase {
     }
     
     func testBaselinePerformance() throws {
-        print("\n=== BASELINE PERFORMANCE (Before Protocol Simplification) ===\n")
         
         // Vector Creation
         let creationTime = try measureTimeNanoseconds {

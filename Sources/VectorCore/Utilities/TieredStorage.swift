@@ -513,16 +513,16 @@ internal final class AlignedBuffer<Element> {
         self.capacity = capacity
         self.count = 0
         
-        // Allocate aligned memory
-        var rawPtr: UnsafeMutableRawPointer?
-        let byteCount = capacity * MemoryLayout<Element>.stride
-        let result = posix_memalign(&rawPtr, alignment, byteCount)
-        
-        guard result == 0, let rawPtr = rawPtr else {
-            fatalError("Failed to allocate aligned memory")
+        // Allocate aligned memory (fallback to natural alignment on failure)
+        do {
+            let typed = try AlignedMemory.allocateAligned(type: Element.self, count: capacity, alignment: alignment)
+            self.ptr = typed
+        } catch {
+            // Fallback: allocate with natural alignment to avoid hard crash
+            let raw = UnsafeMutableRawPointer.allocate(byteCount: capacity * MemoryLayout<Element>.stride,
+                                                       alignment: MemoryLayout<Element>.alignment)
+            self.ptr = raw.bindMemory(to: Element.self, capacity: capacity)
         }
-        
-        self.ptr = rawPtr.bindMemory(to: Element.self, capacity: capacity)
     }
     
     /// Initialize from array
@@ -531,16 +531,15 @@ internal final class AlignedBuffer<Element> {
         self.capacity = elements.count
         self.count = elements.count
         
-        // Allocate aligned memory
-        var rawPtr: UnsafeMutableRawPointer?
-        let byteCount = capacity * MemoryLayout<Element>.stride
-        let result = posix_memalign(&rawPtr, alignment, byteCount)
-        
-        guard result == 0, let rawPtr = rawPtr else {
-            fatalError("Failed to allocate aligned memory")
+        // Allocate aligned memory (fallback to natural alignment on failure)
+        do {
+            let typed = try AlignedMemory.allocateAligned(type: Element.self, count: capacity, alignment: alignment)
+            self.ptr = typed
+        } catch {
+            let raw = UnsafeMutableRawPointer.allocate(byteCount: capacity * MemoryLayout<Element>.stride,
+                                                       alignment: MemoryLayout<Element>.alignment)
+            self.ptr = raw.bindMemory(to: Element.self, capacity: capacity)
         }
-        
-        self.ptr = rawPtr.bindMemory(to: Element.self, capacity: capacity)
         ptr.initialize(from: elements, count: count)
     }
     

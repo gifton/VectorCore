@@ -25,7 +25,14 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     public init(dimension: Int, alignment: Int = AlignedMemory.optimalAlignment) {
         self._count = dimension
         self.alignment = alignment
-        self.ptr = AlignedMemory.allocateAligned(count: dimension, alignment: alignment)
+        if let p = try? AlignedMemory.allocateAligned(count: dimension, alignment: alignment) {
+            self.ptr = p
+        } else {
+            // Fallback: allocate with natural alignment to avoid hard crash
+            let raw = UnsafeMutableRawPointer.allocate(byteCount: dimension * MemoryLayout<Float>.stride,
+                                                       alignment: MemoryLayout<Float>.alignment)
+            self.ptr = raw.assumingMemoryBound(to: Float.self)
+        }
         
         // Zero-initialize for safety
         ptr.initialize(repeating: 0, count: dimension)
@@ -35,7 +42,13 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     public init(dimension: Int, repeating value: Float, alignment: Int = AlignedMemory.optimalAlignment) {
         self._count = dimension
         self.alignment = alignment
-        self.ptr = AlignedMemory.allocateAligned(count: dimension, alignment: alignment)
+        if let p = try? AlignedMemory.allocateAligned(count: dimension, alignment: alignment) {
+            self.ptr = p
+        } else {
+            let raw = UnsafeMutableRawPointer.allocate(byteCount: dimension * MemoryLayout<Float>.stride,
+                                                       alignment: MemoryLayout<Float>.alignment)
+            self.ptr = raw.assumingMemoryBound(to: Float.self)
+        }
         
         ptr.initialize(repeating: value, count: dimension)
     }
@@ -44,7 +57,13 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     public init(from values: [Float]) {
         self._count = values.count
         self.alignment = AlignedMemory.optimalAlignment
-        self.ptr = AlignedMemory.allocateAligned(count: values.count, alignment: alignment)
+        if let p = try? AlignedMemory.allocateAligned(count: values.count, alignment: alignment) {
+            self.ptr = p
+        } else {
+            let raw = UnsafeMutableRawPointer.allocate(byteCount: values.count * MemoryLayout<Float>.stride,
+                                                       alignment: MemoryLayout<Float>.alignment)
+            self.ptr = raw.assumingMemoryBound(to: Float.self)
+        }
         
         ptr.initialize(from: values, count: values.count)
     }
@@ -53,7 +72,13 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     public init(from values: [Float], alignment: Int) {
         self._count = values.count
         self.alignment = alignment
-        self.ptr = AlignedMemory.allocateAligned(count: values.count, alignment: alignment)
+        if let p = try? AlignedMemory.allocateAligned(count: values.count, alignment: alignment) {
+            self.ptr = p
+        } else {
+            let raw = UnsafeMutableRawPointer.allocate(byteCount: values.count * MemoryLayout<Float>.stride,
+                                                       alignment: MemoryLayout<Float>.alignment)
+            self.ptr = raw.assumingMemoryBound(to: Float.self)
+        }
         
         ptr.initialize(from: values, count: values.count)
     }

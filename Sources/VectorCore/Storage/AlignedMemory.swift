@@ -38,21 +38,23 @@ public enum AlignedMemory {
     }
     
     /// Allocate aligned memory for Float arrays
+    /// - Throws: VectorError.allocationFailed if allocation fails
     @inlinable
     public static func allocateAligned(
         count: Int,
         alignment: Int = optimalAlignment
-    ) -> UnsafeMutablePointer<Float> {
-        allocateAligned(type: Float.self, count: count, alignment: alignment)
+    ) throws -> UnsafeMutablePointer<Float> {
+        try allocateAligned(type: Float.self, count: count, alignment: alignment)
     }
     
     /// Allocate aligned memory for any type
+    /// - Throws: VectorError.allocationFailed if allocation fails
     @inlinable
     public static func allocateAligned<T>(
         type: T.Type,
         count: Int,
         alignment: Int = optimalAlignment
-    ) -> UnsafeMutablePointer<T> {
+    ) throws -> UnsafeMutablePointer<T> {
         precondition(alignment > 0 && (alignment & (alignment - 1)) == 0,
                     "Alignment must be a power of 2")
         precondition(alignment >= minimumAlignment,
@@ -63,7 +65,7 @@ public enum AlignedMemory {
         let result = posix_memalign(&rawPtr, alignment, byteCount)
         
         guard result == 0, let ptr = rawPtr else {
-            fatalError("Failed to allocate aligned memory: error \(result)")
+            throw VectorError.allocationFailed(size: byteCount, reason: "posix_memalign error \(result)")
         }
         
         return ptr.assumingMemoryBound(to: T.self)

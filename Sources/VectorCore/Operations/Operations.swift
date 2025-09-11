@@ -49,8 +49,21 @@ public enum Operations {
         k: Int = 1,
         metric: M = EuclideanDistance()
     ) async throws -> [NearestNeighborResult] where V.Scalar == Float, M.Scalar == Float {
-        precondition(k > 0, "k must be positive")
-        precondition(!vectors.isEmpty, "Vector collection cannot be empty")
+        // Validate inputs
+        guard k > 0 else {
+            throw VectorError.invalidDimension(k, reason: "k must be positive")
+        }
+        guard !vectors.isEmpty else {
+            throw VectorError.invalidDimension(0, reason: "Vector collection cannot be empty")
+        }
+        let expectedDim = vectors[0].scalarCount
+        guard query.scalarCount == expectedDim else {
+            throw VectorError.dimensionMismatch(expected: expectedDim, actual: query.scalarCount)
+        }
+        // Ensure all candidate vectors have consistent dimension
+        for v in vectors where v.scalarCount != expectedDim {
+            throw VectorError.dimensionMismatch(expected: expectedDim, actual: v.scalarCount)
+        }
         
         let distances = try await computeDistances(
             from: query,
@@ -82,6 +95,30 @@ public enum Operations {
         k: Int = 1,
         metric: M = EuclideanDistance()
     ) async throws -> [[NearestNeighborResult]] where V.Scalar == Float, M.Scalar == Float {
+        // Validate inputs
+        guard k > 0 else {
+            throw VectorError.invalidDimension(k, reason: "k must be positive")
+        }
+        guard !queries.isEmpty else {
+            throw VectorError.invalidDimension(0, reason: "queries cannot be empty")
+        }
+        guard !vectors.isEmpty else {
+            throw VectorError.invalidDimension(0, reason: "vectors cannot be empty")
+        }
+        let qDim = queries[0].scalarCount
+        let vDim = vectors[0].scalarCount
+        // All queries same dim
+        for q in queries where q.scalarCount != qDim {
+            throw VectorError.dimensionMismatch(expected: qDim, actual: q.scalarCount)
+        }
+        // All vectors same dim
+        for v in vectors where v.scalarCount != vDim {
+            throw VectorError.dimensionMismatch(expected: vDim, actual: v.scalarCount)
+        }
+        // Queries dim must match vectors dim
+        guard qDim == vDim else {
+            throw VectorError.dimensionMismatch(expected: vDim, actual: qDim)
+        }
         try await computeProvider.parallelExecute(items: 0..<queries.count) { i in
             try await findNearest(
                 to: queries[i],
@@ -123,6 +160,21 @@ public enum Operations {
         and setB: [V],
         metric: M = EuclideanDistance()
     ) async throws -> [[Float]] where V.Scalar == Float, M.Scalar == Float {
+        // If either set is empty, return an empty matrix with appropriate shape
+        if setA.isEmpty || setB.isEmpty { return Array(repeating: [], count: setA.count) }
+        let aDim = setA[0].scalarCount
+        let bDim = setB[0].scalarCount
+        // Validate dimensions within each set
+        for v in setA where v.scalarCount != aDim {
+            throw VectorError.dimensionMismatch(expected: aDim, actual: v.scalarCount)
+        }
+        for v in setB where v.scalarCount != bDim {
+            throw VectorError.dimensionMismatch(expected: bDim, actual: v.scalarCount)
+        }
+        // Cross-set dimension match
+        guard aDim == bDim else {
+            throw VectorError.dimensionMismatch(expected: bDim, actual: aDim)
+        }
         try await computeProvider.parallelExecute(items: 0..<setA.count) { i in
             setB.map { metric.distance(setA[i], $0) }
         }

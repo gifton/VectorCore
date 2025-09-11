@@ -155,12 +155,15 @@ public final class MemoryPool: @unchecked Sendable {
         // Allocate new if not found
         if buffer == nil {
             let capacity = sizeKey
-            let pointer = AlignedMemory.allocateAligned(type: T.self, count: capacity, alignment: alignment)
-            buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
-            
-            queue.async(flags: .barrier) {
-                self.stats.totalAllocated += capacity * MemoryLayout<T>.stride
-                self.stats.totalInUse += 1
+            // Try aligned allocation; if it fails, return nil (caller will handle)
+            if let pointer = try? AlignedMemory.allocateAligned(type: T.self, count: capacity, alignment: alignment) {
+                buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
+                queue.async(flags: .barrier) {
+                    self.stats.totalAllocated += capacity * MemoryLayout<T>.stride
+                    self.stats.totalInUse += 1
+                }
+            } else {
+                return nil
             }
         }
         
@@ -180,13 +183,20 @@ public final class MemoryPool: @unchecked Sendable {
         _ body: (UnsafeMutableBufferPointer<T>) throws -> R
     ) rethrows -> R {
         guard let handle = acquire(type: type, count: count, alignment: alignment) else {
-            // Fallback to direct allocation
-            let pointer = AlignedMemory.allocateAligned(type: T.self, count: count, alignment: alignment)
-            defer {
-                pointer.deallocate()
+            // Fallback to direct aligned allocation; if that fails, rethrow allocation error up as VectorError via body
+            if let pointer = try? AlignedMemory.allocateAligned(type: T.self, count: count, alignment: alignment) {
+                defer { pointer.deallocate() }
+                let buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
+                return try body(buffer)
+            } else {
+                // As last resort, allocate with natural alignment to avoid immediate crash
+                let raw = UnsafeMutableRawPointer.allocate(byteCount: count * MemoryLayout<T>.stride,
+                                                           alignment: MemoryLayout<T>.alignment)
+                let pointer = raw.assumingMemoryBound(to: T.self)
+                defer { raw.deallocate() }
+                let buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
+                return try body(buffer)
             }
-            let buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
-            return try body(buffer)
         }
         
         return try body(handle.buffer)

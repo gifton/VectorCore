@@ -198,10 +198,10 @@ public enum SyncBatchOperations {
     public static func weightedCentroid<D: Dimension>(
         of vectors: [Vector<D>],
         weights: [Float]
-    ) -> Vector<D>? where D.Storage: VectorStorageOperations {
+    ) throws -> Vector<D>? where D.Storage: VectorStorageOperations {
         guard !vectors.isEmpty else { return nil }
         guard vectors.count == weights.count else {
-            fatalError("Vectors and weights must have the same count")
+            throw VectorError.dimensionMismatch(expected: vectors.count, actual: weights.count)
         }
         
         var totalWeight: Float = 0

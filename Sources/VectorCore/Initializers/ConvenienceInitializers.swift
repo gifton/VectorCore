@@ -22,6 +22,16 @@ public extension Vector where D.Storage: VectorStorageOperations {
         return result
     }
     
+    /// Throwing variant of basis(axis:)
+    /// - Throws: VectorError.indexOutOfBounds if axis is invalid
+    @inlinable
+    static func basisThrowing(axis: Int) throws -> Vector<D> {
+        try Validation.requireValidIndex(axis, dimension: D.value)
+        var result = Vector()
+        result[axis] = 1.0
+        return result
+    }
+    
     /// Safely create a basis vector (unit vector along a specific axis)
     /// - Parameter axis: The axis index (0-based)
     /// - Returns: A vector with 1.0 at the specified axis and 0.0 elsewhere, or nil if axis is out of bounds
@@ -39,6 +49,13 @@ public extension Vector where D.Storage: VectorStorageOperations {
     @inlinable
     static func e(_ i: Int) -> Vector<D> {
         basis(axis: i)
+    }
+    
+    /// Throwing variant of e(_:)
+    /// - Throws: VectorError.indexOutOfBounds if i is invalid
+    @inlinable
+    static func eThrowing(_ i: Int) throws -> Vector<D> {
+        try basisThrowing(axis: i)
     }
     
     // MARK: Sequential Initializers
@@ -158,6 +175,13 @@ public extension Vector where D.Storage: VectorStorageOperations {
         basis(axis: index)
     }
     
+    /// Throwing variant of oneHot(at:)
+    /// - Throws: VectorError.indexOutOfBounds if index is invalid
+    @inlinable
+    static func oneHotThrowing(at index: Int) throws -> Vector<D> {
+        try basisThrowing(axis: index)
+    }
+    
     /// Create a vector with a repeating pattern
     /// - Parameter pattern: Array defining the pattern to repeat
     /// - Returns: Vector with repeated pattern
@@ -165,6 +189,16 @@ public extension Vector where D.Storage: VectorStorageOperations {
     static func repeatingPattern(_ pattern: [Float]) -> Vector<D> {
         precondition(!pattern.isEmpty, "Pattern cannot be empty")
         
+        return Vector { i in
+            pattern[i % pattern.count]
+        }
+    }
+    
+    /// Throwing variant of repeatingPattern(_:)
+    /// - Throws: VectorError.invalidData if pattern is empty
+    @inlinable
+    static func repeatingPatternThrowing(_ pattern: [Float]) throws -> Vector<D> {
+        guard !pattern.isEmpty else { throw VectorError.invalidData("Pattern cannot be empty") }
         return Vector { i in
             pattern[i % pattern.count]
         }
@@ -210,6 +244,17 @@ public extension DynamicVector {
     /// - Returns: A vector with 1.0 at the specified axis and 0.0 elsewhere
     static func basis(dimension: Int, axis: Int) -> DynamicVector {
         precondition(axis >= 0 && axis < dimension, "Axis index out of bounds")
+        var result = DynamicVector(dimension: dimension)
+        result[axis] = 1.0
+        return result
+    }
+    
+    /// Throwing variant of basis(dimension:axis:)
+    /// - Throws: VectorError.invalidDimension if dimension <= 0
+    ///           VectorError.indexOutOfBounds if axis is invalid
+    static func basisThrowing(dimension: Int, axis: Int) throws -> DynamicVector {
+        try Validation.requireValidDimension(dimension)
+        try Validation.requireValidIndex(axis, dimension: dimension)
         var result = DynamicVector(dimension: dimension)
         result[axis] = 1.0
         return result

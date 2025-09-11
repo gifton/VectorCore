@@ -278,9 +278,8 @@ public struct DynamicDimension {
     /// Not available for dynamic dimensions.
     /// - Warning: This property will trigger a fatal error if accessed.
     ///   Use `instance.size` instead.
-    public static var value: Int {
-        fatalError("DynamicDimension value must be accessed via instance.size")
-    }
+    @available(*, unavailable, message: "DynamicDimension has no static size; use instance.size instead")
+    public static var value: Int { 0 }
     
     /// The storage type for dynamic vectors, using flexible array storage.
     public typealias Storage = ArrayStorage<DynamicDimension>
@@ -293,5 +292,22 @@ public struct DynamicDimension {
     public init(_ size: Int) {
         precondition(size > 0, "Dimension must be positive")
         self.size = size
+    }
+
+    /// Throwing initializer that validates size and returns a DynamicDimension.
+    /// - Parameter size: The desired dimension size. Must be > 0.
+    /// - Throws: `VectorError.invalidDimension` if size <= 0.
+    public init(validating size: Int) throws {
+        guard size > 0 else {
+            throw VectorError.invalidDimension(size, reason: "Dimension must be positive")
+        }
+        self.size = size
+    }
+
+    /// Factory method to create a validated dynamic dimension.
+    /// - Parameter size: The desired dimension size. Must be > 0.
+    /// - Throws: `VectorError.invalidDimension` if size <= 0.
+    public static func make(_ size: Int) throws -> DynamicDimension {
+        try DynamicDimension(validating: size)
     }
 }

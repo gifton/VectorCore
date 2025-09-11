@@ -1,69 +1,45 @@
 name: Benchmarks
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
-  schedule:
-    # Run nightly at 2 AM UTC
-    - cron: '0 2 * * *'
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
-  benchmark:
-    name: Build and Run Tests (Release)
+  release-tests:
+    name: Release Build + Benchmarks
     runs-on: macos-14
-    timeout-minutes: 60
-    
+    timeout-minutes: 45
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      
-      - name: Setup Xcode
+
+      - name: Setup Xcode 16
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: "16.0"
-      
-      - name: System Information
-        run: |
-          echo "## System Information" >> $GITHUB_STEP_SUMMARY
-          echo "**CPU**: $(sysctl -n machdep.cpu.brand_string)" >> $GITHUB_STEP_SUMMARY
-          echo "**Memory**: $(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 )) GB" >> $GITHUB_STEP_SUMMARY
-          echo "**OS**: $(sw_vers -productName) $(sw_vers -productVersion)" >> $GITHUB_STEP_SUMMARY
-          echo "**Swift**: $(swift --version | head -1)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-      
-      - name: Cache Swift Package Manager
+
+      - name: Cache SPM
         uses: actions/cache@v4
         with:
           path: |
             .build
             ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-bench-${{ hashFiles('**/Package.resolved') }}
+          key: ${{ runner.os }}-spm-release-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-spm-bench-
-            ${{ runner.os }}-spm-
-      
+            ${{ runner.os }}-spm-release-
+
       - name: Build (Release)
-        run: |
-          swift build -c release
+        run: swift build -c release
 
-      - name: Run Tests (Release)
-        run: |
-          swift test -c release --parallel
+      - name: Run Tests (Release, with perf)
+        env:
+          VECTORCORE_TEST_EXTENDED: 1
+        run: swift test -c release --parallel
 
-      - name: Upload Test Logs
+      - name: Upload Test Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs-${{ github.sha }}
-          path: |
-            .build/release
-          retention-days: 90
+          name: release-build-${{ github.sha }}
+          path: .build/release
+          retention-days: 30

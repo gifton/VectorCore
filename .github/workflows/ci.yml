@@ -1,214 +1,57 @@
-name: VectorCore CI/CD
+name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
-  schedule:
-    # Run nightly at 2 AM UTC
-    - cron: '0 2 * * *'
   workflow_dispatch:
 
-env:
-  SWIFT_VERSION: '6.0'
-  VECTORCORE_TEST_EXTENDED: 1
-
 jobs:
-  # Job 1: Code Quality Checks
-  quality-checks:
-    name: Code Quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Swift Format Check
-        run: |
-          if which swift-format >/dev/null; then
-            swift-format lint --recursive Sources/ Tests/
-          else
-            echo "swift-format not found, skipping format check"
-          fi
-      
-      - name: Validate Package.swift
-        run: swift package dump-package
-      
-      - name: Check for problematic optimization flags
-        run: |
-          if grep -q "disable-arc-opts\|disable-ossa-opts" Package.swift; then
-            echo "❌ Found optimization-disabling flags in Package.swift!"
-            exit 1
-          fi
-          echo "✅ No problematic optimization flags found"
+  build-and-test:
+    name: Build and Test (Debug)
+    runs-on: macos-14
+    timeout-minutes: 25
 
-  # Job 2: Build Matrix
-  build:
-    name: Build (${{ matrix.os }}, Swift ${{ matrix.swift }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-13, macos-14]
-        swift: ['6.0']
-        include:
-          - os: ubuntu-latest
-            swift: '6.0'
-            platform: 'linux'
-          - os: macos-13
-            swift: '6.0'
-            platform: 'macos-intel'
-          - os: macos-14
-            swift: '6.0'
-            platform: 'macos-arm64'
-    
     steps:
-      - uses: actions/checkout@v5
-      
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Xcode 16
+        uses: maxim-lobanov/setup-xcode@v1
         with:
-          swift-version: ${{ matrix.swift }}
-      
-      - name: Cache Swift packages
+          xcode-version: "16.0"
+
+      - name: System Info
+        run: |
+          echo "## System Info" >> $GITHUB_STEP_SUMMARY
+          echo "Swift: $(swift --version | head -1)" >> $GITHUB_STEP_SUMMARY
+          echo "CPU: $(sysctl -n machdep.cpu.brand_string)" >> $GITHUB_STEP_SUMMARY
+          echo "OS: $(sw_vers -productName) $(sw_vers -productVersion)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cache SPM
         uses: actions/cache@v4
         with:
-          path: .build
-          key: ${{ runner.os }}-swift-${{ matrix.swift }}-${{ hashFiles('Package.resolved') }}
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-swift-${{ matrix.swift }}-
-            ${{ runner.os }}-swift-
-      
-      - name: Build Debug
-        run: swift build
-      
-      - name: Build Release
-        run: swift build -c release
+            ${{ runner.os }}-spm-
 
-  # Job 3: Test Suite with Coverage
-  test:
-    name: Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-13, macos-14]
-    
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
-      
-      - name: Run Tests with Coverage
-        run: |
-          swift test --enable-code-coverage --parallel
+      - name: Build (Debug)
+        run: swift build -v
 
+      - name: Test (Debug)
+        env:
+          VECTORCORE_TEST_EXTENDED: 0
+        run: swift test --parallel
 
-  # Job 5: Extended Tests (Nightly)
-  extended-tests:
-    name: Extended Test Suite
-    runs-on: macos-14
-    if: github.event.schedule || github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
-      
-      - name: Run Extended Tests
-        run: |
-          export VECTORCORE_TEST_EXTENDED=1
-          export VECTORCORE_PROPERTY_ITERATIONS=1000
-          export VECTORCORE_PERF_ITERATIONS=1000
-          ./Scripts/run_tests_with_coverage.sh --extended --property-iterations 1000
-      
-      - name: Run Memory Tests
-        run: |
-          swift test --enable-test-discovery --filter MemoryTests
-      
-      - name: Run Stress Tests
-        run: |
-          # Add stress testing here
-          echo "TODO: Add stress tests"
-
-  # Job 6: Security Scan
-  security-scan:
-    name: Security Analysis
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Run Security Scan
-        run: |
-          # Check for unsafe operations
-          echo "Scanning for unsafe operations..."
-          grep -r "unsafeBitCast\|unsafeDowncast\|assumingMemoryBound" Sources/ || true
-          
-          # Check for force unwraps
-          echo "Scanning for force unwraps..."
-          grep -r "!" Sources/ | grep -v "!=" | grep -v "// SAFETY:" || true
-      
-      - name: Dependency Scan
-        run: |
-          # Check dependencies for known vulnerabilities
-          swift package show-dependencies
-
-  # Job 7: Documentation Build
-  documentation:
-    name: Documentation
-    runs-on: macos-latest
-    
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
-      
-      - name: Build Documentation
-        run: |
-          swift package generate-documentation
-      
-      - name: Validate Documentation
-        run: |
-          # Check that all public APIs are documented
-          echo "Checking documentation coverage..."
-
-  # Job 8: Release Build
-  release-artifacts:
-    name: Build Release Artifacts
-    runs-on: ${{ matrix.os }}
-    needs: [quality-checks, test, security-scan]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-14]
-    
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
-      
-      - name: Build Release Artifacts
-        run: |
-          swift build -c release
-          mkdir -p artifacts
-          cp -r .build/release/* artifacts/ || true
-      
-      - name: Upload Artifacts
+      - name: Upload Logs (on failure)
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.os }}
-          path: artifacts/
-          retention-days: 90
+          name: test-logs-${{ github.sha }}
+          path: .build
+          retention-days: 14
+

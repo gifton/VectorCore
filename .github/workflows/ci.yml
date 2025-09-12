@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
-    name: Build and Test (Debug)
+  build:
+    name: Build (Debug)
     runs-on: macos-14
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -29,14 +29,15 @@ jobs:
           echo "CPU: $(sysctl -n machdep.cpu.brand_string)" >> $GITHUB_STEP_SUMMARY
           echo "OS: $(sw_vers -productName) $(sw_vers -productVersion)" >> $GITHUB_STEP_SUMMARY
 
-      - name: Cache SPM
+      - name: Cache SPM (commit-specific)
         uses: actions/cache@v4
         with:
           path: |
             .build
             ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          key: ${{ runner.os }}-spm-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
             ${{ runner.os }}-spm-
 
       - name: Build (Debug)
@@ -52,15 +53,62 @@ jobs:
             echo "Install via Homebrew: brew install swiftlint" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Test (Debug)
+  test-minimal:
+    name: Test Minimal
+    runs-on: macos-14
+    needs: build
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Restore SPM cache (from build)
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+            ${{ runner.os }}-spm-
+
+      - name: Run MinimalTests
         env:
           VECTORCORE_TEST_EXTENDED: 0
-        run: swift test --parallel
+        run: swift test --parallel --test-product MinimalTests
 
-      - name: Upload Logs (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
+  test-comprehensive:
+    name: Test Comprehensive
+    runs-on: macos-14
+    needs: build
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
         with:
-          name: test-logs-${{ github.sha }}
-          path: .build
-          retention-days: 14
+          xcode-version: latest-stable
+
+      - name: Restore SPM cache (from build)
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+            ${{ runner.os }}-spm-
+
+      - name: Run ComprehensiveTests
+        env:
+          VECTORCORE_TEST_EXTENDED: 0
+        run: swift test --parallel --test-product ComprehensiveTests

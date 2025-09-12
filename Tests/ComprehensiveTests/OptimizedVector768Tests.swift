@@ -106,7 +106,7 @@ struct OptimizedVector768Suite {
 
     @Test func testEquatableAndHashable_Behavior() {
         let a = try! Vector768Optimized((0..<768).map { Float($0 % 11) })
-        var b = a
+        let b = a
         var c = a; c[10] = -9
         #expect(a == b)
         #expect(a != c)

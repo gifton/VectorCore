@@ -70,7 +70,7 @@ struct OptimizedVector512Suite {
 
     @Test
     func testGeneratorInit_FillsExpectedValues() {
-        let v = try! Vector512Optimized(generator: { Float($0 * 2) })
+        let v = Vector512Optimized(generator: { Float($0 * 2) })
         #expect(approxEqual(v[0], 0) && approxEqual(v[1], 2) && approxEqual(v[2], 4))
         #expect(approxEqual(v[511], Float(511 * 2)))
     }
@@ -135,7 +135,7 @@ struct OptimizedVector512Suite {
     @Test
     func testEquatableAndHashable_Behavior() {
         let a = try! Vector512Optimized((0..<512).map { Float($0) })
-        var b = a
+        let b = a
         var c = a
         c[100] = -1
         #expect(a == b)

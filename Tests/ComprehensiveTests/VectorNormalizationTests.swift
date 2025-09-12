@@ -28,10 +28,8 @@ struct VectorNormalizationSuite {
         switch r {
         case .success:
             Issue.record("Expected failure for zero vector normalization")
-        case .failure(let e as VectorError):
+        case .failure(let e):
             #expect(e.kind == .invalidOperation)
-        default:
-            Issue.record("Unexpected error type")
         }
     }
 

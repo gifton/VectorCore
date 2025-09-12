@@ -4,6 +4,12 @@ import Foundation
 
 /// Performance benchmark to measure protocol overhead and operation speed
 final class PerformanceBenchmark: XCTestCase {
+    override func setUpWithError() throws {
+        let enabled = ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"
+        if !enabled {
+            throw XCTSkip("Performance benchmarks disabled (set VECTORCORE_TEST_EXTENDED=1 to enable)")
+        }
+    }
     
     let iterations = 10_000
     let vectorSize = 32
@@ -16,7 +22,6 @@ final class PerformanceBenchmark: XCTestCase {
     }
     
     func testBaselinePerformance() throws {
-        print("\n=== BASELINE PERFORMANCE (Before Protocol Simplification) ===\n")
         
         // Vector Creation
         let creationTime = try measureTimeNanoseconds {

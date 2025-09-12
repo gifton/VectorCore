@@ -24,7 +24,7 @@ final class PerformanceBenchmark: XCTestCase {
     func testBaselinePerformance() throws {
         
         // Vector Creation
-        let creationTime = try measureTimeNanoseconds {
+        let creationTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = Vector<Dim32>(repeating: 1.0)
             }
@@ -34,7 +34,7 @@ final class PerformanceBenchmark: XCTestCase {
         // Vector Addition
         let v1 = Vector<Dim32>(repeating: 1.0)
         let v2 = Vector<Dim32>(repeating: 2.0)
-        let additionTime = try measureTimeNanoseconds {
+        let additionTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = v1 + v2
             }
@@ -42,7 +42,7 @@ final class PerformanceBenchmark: XCTestCase {
         print("Vector Addition: \(String(format: "%.2f", additionTime)) ns/op")
         
         // Vector Subtraction
-        let subtractionTime = try measureTimeNanoseconds {
+        let subtractionTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = v1 - v2
             }
@@ -50,7 +50,7 @@ final class PerformanceBenchmark: XCTestCase {
         print("Vector Subtraction: \(String(format: "%.2f", subtractionTime)) ns/op")
         
         // Scalar Multiplication
-        let multiplicationTime = try measureTimeNanoseconds {
+        let multiplicationTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = v1 * 2.5
             }
@@ -58,7 +58,7 @@ final class PerformanceBenchmark: XCTestCase {
         print("Scalar Multiplication: \(String(format: "%.2f", multiplicationTime)) ns/op")
         
         // Dot Product
-        let dotProductTime = try measureTimeNanoseconds {
+        let dotProductTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = v1.dotProduct(v2)
             }
@@ -66,7 +66,7 @@ final class PerformanceBenchmark: XCTestCase {
         print("Dot Product: \(String(format: "%.2f", dotProductTime)) ns/op")
         
         // Magnitude
-        let magnitudeTime = try measureTimeNanoseconds {
+        let magnitudeTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = v1.magnitude
             }
@@ -74,7 +74,7 @@ final class PerformanceBenchmark: XCTestCase {
         print("Magnitude: \(String(format: "%.2f", magnitudeTime)) ns/op")
         
         // Element Access
-        let accessTime = try measureTimeNanoseconds {
+        let accessTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = v1[15]
             }
@@ -82,7 +82,7 @@ final class PerformanceBenchmark: XCTestCase {
         print("Element Access: \(String(format: "%.2f", accessTime)) ns/op")
         
         // Collection Iteration
-        let iterationTime = try measureTimeNanoseconds {
+        let iterationTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 var sum: Float = 0
                 for element in v1 {
@@ -98,7 +98,7 @@ final class PerformanceBenchmark: XCTestCase {
             return vector[0] + vector[1]
         }
         
-        let protocolTime = try measureTimeNanoseconds {
+        let protocolTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = genericOperation(v1)
             }

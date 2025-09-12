@@ -105,7 +105,7 @@ struct DynamicVectorTests {
     @Test
     func testWithUnsafeMutableBufferPointerMutation() {
         var v = DynamicVector([0,0,0].map(Float.init))
-        _ = v.withUnsafeMutableBufferPointer { buf in
+        v.withUnsafeMutableBufferPointer { buf in
             for i in 0..<buf.count { buf[i] = Float(i + 1) }
         }
         #expect(v.toArray() == [1,2,3])

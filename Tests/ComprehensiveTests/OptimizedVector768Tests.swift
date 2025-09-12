@@ -54,7 +54,7 @@ struct OptimizedVector768Suite {
     }
 
     @Test func testGeneratorInit_FillsExpectedValues() {
-        let v = try! Vector768Optimized(generator: { i in Float(i % 9) })
+        let v = Vector768Optimized(generator: { i in Float(i % 9) })
         #expect(approxEqual(v[0], 0) && approxEqual(v[1], 1) && approxEqual(v[8], 8))
         #expect(approxEqual(v[9], 0))
     }

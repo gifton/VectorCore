@@ -25,7 +25,7 @@ public struct DynamicVector: Sendable {
     
     /// Initialize with dimension and storage
     @inlinable
-    public init(dimension: Int, storage: consuming Storage) throws {
+    public init(dimension: Int, storage: Storage) throws {
         guard storage.count == dimension else {
             throw VectorError.dimensionMismatch(expected: dimension, actual: storage.count)
         }
@@ -91,7 +91,7 @@ extension DynamicVector: VectorProtocol {
     }
     /// Initialize from storage (protocol requirement)
     @inlinable
-    public init(storage: consuming Storage) throws {
+    public init(storage: Storage) throws {
         self.dimension = storage.count
         self.storage = storage
     }

@@ -22,7 +22,7 @@ public struct Vector<D: StaticDimension>: Sendable {
     
     /// Initialize with storage
     @inlinable
-    public init(storage: consuming Storage) throws {
+    public init(storage: Storage) throws {
         self.storage = storage
     }
     

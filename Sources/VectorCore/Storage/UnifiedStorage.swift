@@ -6,8 +6,8 @@
 
 import Foundation
 
-// MARK: - Move-Only Storage
-
+// MARK: - Move-Only Storage (gated off)
+#if MOVE_ONLY_EXPERIMENTAL
 /// Move-only storage for zero-copy semantics
 /// This is the core storage type that provides manual memory management
 public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copyable {
@@ -15,7 +15,6 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
     public let capacity: Int
     public let alignment: Int
     
-    /// Initialize with specified capacity and alignment
     public init(capacity: Int, alignment: Int = 64) {
         let byteCount = capacity * MemoryLayout<Element>.stride
         self.pointer = UnsafeMutableRawPointer.allocate(
@@ -24,26 +23,20 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         )
         self.capacity = capacity
         self.alignment = alignment
-        
-        // Initialize to zero
         pointer.initializeMemory(as: UInt8.self, repeating: 0, count: byteCount)
     }
     
-    /// Initialize from existing pointer (takes ownership)
     public init(pointer: UnsafeMutableRawPointer, capacity: Int, alignment: Int) {
         self.pointer = pointer
         self.capacity = capacity
         self.alignment = alignment
     }
     
-    /// Consume the storage and return the underlying buffer
-    /// After calling this, the storage is no longer valid
     public consuming func into() -> UnsafeMutableBufferPointer<Element> {
         let typed = pointer.bindMemory(to: Element.self, capacity: capacity)
         return UnsafeMutableBufferPointer(start: typed, count: capacity)
     }
     
-    /// Explicit copy when needed
     public borrowing func copy() -> MoveOnlyStorage {
         let byteCount = capacity * MemoryLayout<Element>.stride
         let newPointer = UnsafeMutableRawPointer.allocate(
@@ -54,7 +47,6 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         return MoveOnlyStorage(pointer: newPointer, capacity: capacity, alignment: alignment)
     }
     
-    /// Borrow for read-only access
     public borrowing func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -63,7 +55,6 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         return try body(buffer)
     }
     
-    /// Borrow for mutable access
     public borrowing func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -72,11 +63,11 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         return try body(buffer)
     }
     
-    /// Clean up the allocated memory
     deinit {
         pointer.deallocate()
     }
 }
+#endif
 
 // MARK: - Managed Storage with Reference Counting
 

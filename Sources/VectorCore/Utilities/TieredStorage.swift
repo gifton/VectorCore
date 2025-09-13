@@ -11,7 +11,7 @@ import Foundation
 /// based on element count and access patterns, enabling efficient memory usage for different vector sizes.
 public struct TieredStorage<Element> {
     // MARK: - Storage Tiers
-    
+
     /// Storage tier variants optimized for different size ranges
     @usableFromInline
     internal enum Tier {
@@ -24,9 +24,9 @@ public struct TieredStorage<Element> {
         /// SIMD-aligned memory for large vectors (> 2048 elements)
         case aligned(AlignedBuffer<Element>)
     }
-    
+
     // MARK: - Performance Hints
-    
+
     /// Hints to optimize storage selection and access patterns
     public enum PerformanceHint {
         /// Optimize for sequential access patterns
@@ -38,30 +38,30 @@ public struct TieredStorage<Element> {
         /// Short-lived storage, prefer stack allocation
         case temporary
     }
-    
+
     // MARK: - Tier Thresholds
-    
+
     /// Maximum elements for inline storage
     @usableFromInline
     internal static var inlineThreshold: Int { 4 }
-    
+
     /// Maximum elements for compact storage
     @usableFromInline
     internal static var compactThreshold: Int { 512 }
-    
+
     /// Maximum elements for standard storage
     @usableFromInline
     internal static var standardThreshold: Int { 2048 }
-    
+
     // MARK: - Properties
-    
+
     /// Current storage tier
     @usableFromInline
     internal private(set) var tier: Tier
-    
+
     /// Performance hint for optimization
     public var performanceHint: PerformanceHint = .sequential
-    
+
     /// Number of elements in storage
     public var count: Int {
         switch tier {
@@ -75,7 +75,7 @@ public struct TieredStorage<Element> {
             return buffer.count
         }
     }
-    
+
     /// Capacity of current storage
     public var capacity: Int {
         switch tier {
@@ -89,13 +89,13 @@ public struct TieredStorage<Element> {
             return buffer.capacity
         }
     }
-    
+
     // MARK: - Initialization
-    
+
     /// Initialize with capacity and optional performance hint
     public init(capacity: Int, hint: PerformanceHint = .sequential) {
         self.performanceHint = hint
-        
+
         // Create empty tier with specified capacity
         if hint == .simd && capacity > Self.inlineThreshold {
             self.tier = .aligned(AlignedBuffer(capacity: capacity))
@@ -111,12 +111,12 @@ public struct TieredStorage<Element> {
             self.tier = .aligned(AlignedBuffer(capacity: capacity))
         }
     }
-    
+
     /// Initialize from a sequence of elements
     public init<S: Sequence>(_ elements: S) where S.Element == Element {
         let array = Array(elements)
         self.performanceHint = .sequential
-        
+
         if array.count <= Self.inlineThreshold {
             self.tier = .inline(InlineBuffer(array))
         } else if array.count <= Self.compactThreshold {
@@ -127,9 +127,9 @@ public struct TieredStorage<Element> {
             self.tier = .aligned(AlignedBuffer(array))
         }
     }
-    
+
     // MARK: - Element Access
-    
+
     /// Access elements by index
     public subscript(index: Int) -> Element {
         get {
@@ -148,7 +148,7 @@ public struct TieredStorage<Element> {
         set {
             precondition(index >= 0 && index < count, "Index out of bounds")
             ensureUniqueTier()
-            
+
             switch tier {
             case .inline(var buffer):
                 buffer[index] = newValue
@@ -163,9 +163,9 @@ public struct TieredStorage<Element> {
             }
         }
     }
-    
+
     // MARK: - Copy-on-Write Support
-    
+
     /// Ensure tier is uniquely owned (for COW semantics)
     @usableFromInline
     internal mutating func ensureUniqueTier() {
@@ -183,9 +183,9 @@ public struct TieredStorage<Element> {
             break
         }
     }
-    
+
     // MARK: - Bulk Operations
-    
+
     /// Access storage as unsafe buffer pointer
     public func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R
@@ -201,13 +201,13 @@ public struct TieredStorage<Element> {
             return try buffer.withUnsafeBufferPointer(body)
         }
     }
-    
+
     /// Mutate storage through unsafe buffer pointer
     public mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
         ensureUniqueTier()
-        
+
         switch tier {
         case .inline(var buffer):
             let result = try buffer.withUnsafeMutableBufferPointer(body)
@@ -223,13 +223,13 @@ public struct TieredStorage<Element> {
             return try buffer.withUnsafeMutableBufferPointer(body)
         }
     }
-    
+
     // MARK: - Optimization
-    
+
     /// Optimize storage for a specific performance hint
     public mutating func optimizeFor(_ hint: PerformanceHint) {
         performanceHint = hint
-        
+
         // Transition to aligned tier if SIMD requested and not already aligned
         if hint == .simd && count > Self.inlineThreshold {
             switch tier {
@@ -241,17 +241,17 @@ public struct TieredStorage<Element> {
             }
         }
     }
-    
+
     /// Reserve minimum capacity
     public mutating func reserveCapacity(_ minimumCapacity: Int) {
         guard minimumCapacity > capacity else { return }
-        
+
         // Currently not implementing tier transitions for simplicity
         // In a full implementation, would transition to appropriate tier
     }
-    
+
     // MARK: - Platform Specific
-    
+
     #if canImport(Accelerate)
     /// Check if storage is properly aligned for SIMD operations
     public var isAlignedForSIMD: Bool {
@@ -273,28 +273,28 @@ internal struct InlineBuffer<Element> {
     /// Fixed-size tuple storage for up to 4 elements
     @usableFromInline
     internal var storage: (Element?, Element?, Element?, Element?)
-    
+
     /// Actual number of stored elements
     @usableFromInline
     internal private(set) var count: Int
-    
+
     /// Maximum capacity (always 4)
     @usableFromInline
     internal var capacity: Int { 4 }
-    
+
     /// Initialize empty buffer
     @usableFromInline
     internal init() {
         self.storage = (nil, nil, nil, nil)
         self.count = 0
     }
-    
+
     /// Initialize from array
     @usableFromInline
     internal init(_ elements: [Element]) {
         precondition(elements.count <= 4, "Too many elements for inline storage")
         self.count = elements.count
-        
+
         switch elements.count {
         case 0:
             self.storage = (nil, nil, nil, nil)
@@ -308,7 +308,7 @@ internal struct InlineBuffer<Element> {
             self.storage = (elements[0], elements[1], elements[2], elements[3])
         }
     }
-    
+
     /// Element access
     @usableFromInline
     internal subscript(index: Int) -> Element {
@@ -331,7 +331,7 @@ internal struct InlineBuffer<Element> {
             }
         }
     }
-    
+
     /// Buffer pointer access
     @usableFromInline
     internal func withUnsafeBufferPointer<R>(
@@ -344,7 +344,7 @@ internal struct InlineBuffer<Element> {
         }
         return try array.withUnsafeBufferPointer(body)
     }
-    
+
     /// Mutable buffer pointer access
     @usableFromInline
     internal mutating func withUnsafeMutableBufferPointer<R>(
@@ -355,16 +355,16 @@ internal struct InlineBuffer<Element> {
         for i in 0..<count {
             array.append(self[i])
         }
-        
+
         let result = try array.withUnsafeMutableBufferPointer { ptr in
             try body(ptr)
         }
-        
+
         // Copy back
         for i in 0..<count {
             self[i] = array[i]
         }
-        
+
         return result
     }
 }
@@ -375,42 +375,42 @@ internal final class CompactBuffer<Element> {
     /// Underlying storage using ManagedBuffer
     @usableFromInline
     internal var buffer: ManagedBuffer<CompactBufferHeader, Element>
-    
+
     /// Number of elements
     @usableFromInline
     internal var count: Int { buffer.header.count }
-    
+
     /// Capacity
     @usableFromInline
     internal var capacity: Int { buffer.header.capacity }
-    
+
     /// Initialize with capacity
     @usableFromInline
     internal init(capacity: Int) {
         let actualCapacity = CompactBuffer.alignedCapacity(for: capacity)
         self.buffer = ManagedBuffer<CompactBufferHeader, Element>.create(
             minimumCapacity: actualCapacity
-        ) { buffer in
+        ) { _ in
             CompactBufferHeader(count: 0, capacity: actualCapacity)
         }
     }
-    
+
     /// Initialize from array
     @usableFromInline
     internal init(_ elements: [Element]) {
         let actualCapacity = CompactBuffer.alignedCapacity(for: elements.count)
         self.buffer = ManagedBuffer<CompactBufferHeader, Element>.create(
             minimumCapacity: actualCapacity
-        ) { buffer in
+        ) { _ in
             CompactBufferHeader(count: elements.count, capacity: actualCapacity)
         }
-        
+
         // Copy elements
         buffer.withUnsafeMutablePointerToElements { ptr in
             ptr.initialize(from: elements, count: elements.count)
         }
     }
-    
+
     /// Calculate cache-line aligned capacity
     @usableFromInline
     internal static func alignedCapacity(for requested: Int) -> Int {
@@ -418,12 +418,12 @@ internal final class CompactBuffer<Element> {
         let cacheLineSize = 64
         let elementSize = MemoryLayout<Element>.stride
         let elementsPerCacheLine = cacheLineSize / elementSize
-        
+
         guard elementsPerCacheLine > 0 else { return requested }
-        
+
         return ((requested + elementsPerCacheLine - 1) / elementsPerCacheLine) * elementsPerCacheLine
     }
-    
+
     /// Element access
     @usableFromInline
     internal subscript(index: Int) -> Element {
@@ -438,28 +438,28 @@ internal final class CompactBuffer<Element> {
             }
         }
     }
-    
+
     /// Check if uniquely referenced (for COW)
     @usableFromInline
     internal func isUniquelyReferenced() -> Bool {
         isKnownUniquelyReferenced(&buffer)
     }
-    
+
     /// Create a copy
     @usableFromInline
     internal func copy() -> CompactBuffer {
         let newBuffer = CompactBuffer(capacity: capacity)
         newBuffer.buffer.header.count = count
-        
+
         buffer.withUnsafeMutablePointerToElements { src in
             newBuffer.buffer.withUnsafeMutablePointerToElements { dst in
                 dst.initialize(from: src, count: count)
             }
         }
-        
+
         return newBuffer
     }
-    
+
     /// Buffer pointer access
     @usableFromInline
     internal func withUnsafeBufferPointer<R>(
@@ -469,7 +469,7 @@ internal final class CompactBuffer<Element> {
             try body(UnsafeBufferPointer(start: ptr, count: count))
         }
     }
-    
+
     /// Mutable buffer pointer access
     @usableFromInline
     internal func withUnsafeMutableBufferPointer<R>(
@@ -494,25 +494,25 @@ internal final class AlignedBuffer<Element> {
     /// Aligned pointer to data
     @usableFromInline
     internal let ptr: UnsafeMutablePointer<Element>
-    
+
     /// Number of elements
     @usableFromInline
     internal private(set) var count: Int
-    
+
     /// Capacity
     @usableFromInline
     internal let capacity: Int
-    
+
     /// Alignment used
     @usableFromInline
     internal let alignment: Int = 64  // Cache line size
-    
+
     /// Initialize with capacity
     @usableFromInline
     internal init(capacity: Int) {
         self.capacity = capacity
         self.count = 0
-        
+
         // Allocate aligned memory (fallback to natural alignment on failure)
         do {
             let typed = try AlignedMemory.allocateAligned(type: Element.self, count: capacity, alignment: alignment)
@@ -524,13 +524,13 @@ internal final class AlignedBuffer<Element> {
             self.ptr = raw.bindMemory(to: Element.self, capacity: capacity)
         }
     }
-    
+
     /// Initialize from array
     @usableFromInline
     internal init(_ elements: [Element]) {
         self.capacity = elements.count
         self.count = elements.count
-        
+
         // Allocate aligned memory (fallback to natural alignment on failure)
         do {
             let typed = try AlignedMemory.allocateAligned(type: Element.self, count: capacity, alignment: alignment)
@@ -542,25 +542,25 @@ internal final class AlignedBuffer<Element> {
         }
         ptr.initialize(from: elements, count: count)
     }
-    
+
     deinit {
         ptr.deinitialize(count: count)
         ptr.deallocate()
     }
-    
+
     /// Element access
     @usableFromInline
     internal subscript(index: Int) -> Element {
         get { ptr[index] }
         set { ptr[index] = newValue }
     }
-    
+
     /// Check if aligned
     @usableFromInline
     internal var isAligned: Bool {
         Int(bitPattern: ptr) % alignment == 0
     }
-    
+
     /// Check if uniquely referenced (for COW)
     @usableFromInline
     internal func isUniquelyReferenced() -> Bool {
@@ -568,7 +568,7 @@ internal final class AlignedBuffer<Element> {
         var mutableSelf = self
         return isKnownUniquelyReferenced(&mutableSelf)
     }
-    
+
     /// Create a copy
     @usableFromInline
     internal func copy() -> AlignedBuffer {
@@ -577,7 +577,7 @@ internal final class AlignedBuffer<Element> {
         newBuffer.ptr.initialize(from: ptr, count: count)
         return newBuffer
     }
-    
+
     /// Buffer pointer access
     @usableFromInline
     internal func withUnsafeBufferPointer<R>(
@@ -585,7 +585,7 @@ internal final class AlignedBuffer<Element> {
     ) rethrows -> R {
         try body(UnsafeBufferPointer(start: ptr, count: count))
     }
-    
+
     /// Mutable buffer pointer access
     @usableFromInline
     internal func withUnsafeMutableBufferPointer<R>(
@@ -606,7 +606,7 @@ extension TieredStorage: Sequence {
 extension TieredStorage: Collection {
     public var startIndex: Int { 0 }
     public var endIndex: Int { count }
-    
+
     public func index(after i: Int) -> Int {
         i + 1
     }

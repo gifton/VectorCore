@@ -13,31 +13,31 @@ import Accelerate
 public struct Vector<D: StaticDimension>: Sendable {
     public typealias Scalar = Float
     public typealias Storage = DimensionStorage<D, Float>
-    
+
     public var storage: Storage
-    
+
     /// The number of elements in the vector
     @inlinable
     public var scalarCount: Int { D.value }
-    
+
     /// Initialize with storage
     @inlinable
     public init(storage: Storage) throws {
         self.storage = storage
     }
-    
+
     /// Initialize with default zero values
     @inlinable
     public init() {
         self.storage = Storage()
     }
-    
+
     /// Initialize with repeating value
     @inlinable
     public init(repeating value: Scalar = 0) {
         self.storage = Storage(repeating: value)
     }
-    
+
     /// Initialize from array
     @inlinable
     public init(_ elements: [Scalar]) throws {
@@ -46,20 +46,20 @@ public struct Vector<D: StaticDimension>: Sendable {
         }
         self.storage = Storage(from: elements)
     }
-    
+
     /// Initialize from sequence
     @inlinable
     public init<S: Sequence>(_ scalars: S) throws where S.Element == Scalar {
         let array = Array(scalars)
         try self.init(array)
     }
-    
+
     /// Initialize with generator function
     @inlinable
     public init(generator: (Int) throws -> Scalar) rethrows {
         self.storage = try Storage(generator: generator)
     }
-    
+
     /// Create a zero vector
     @inlinable
     public static func zeros() -> Vector {
@@ -79,7 +79,7 @@ extension Vector: VectorProtocol {
 // MARK: - Additional VectorProtocol Requirements
 
 extension Vector {
-    
+
     /// Element access
     @inlinable
     public subscript(index: Int) -> Scalar {
@@ -92,7 +92,7 @@ extension Vector {
             storage[index] = newValue
         }
     }
-    
+
     /// Check if all values are finite
     @inlinable
     public var isFinite: Bool {
@@ -117,7 +117,7 @@ extension Vector {
     ) rethrows -> R {
         try storage.withUnsafeBufferPointer(body)
     }
-    
+
     /// Access storage for writing (COW semantics)
     @inlinable
     public mutating func withUnsafeMutableBufferPointer<R>(
@@ -135,19 +135,19 @@ extension Vector {
     public static var zero: Self {
         Self(repeating: 0)
     }
-    
+
     /// Static factory for ones vector
     @inlinable
     public static var ones: Self {
         Self(repeating: 1)
     }
-    
+
     /// Generate random vector
     @inlinable
     public static func random(in range: ClosedRange<Scalar> = 0...1) -> Self where Scalar.RawSignificand: FixedWidthInteger {
         Self { _ in Scalar.random(in: range) }
     }
-    
+
     /// Generate random unit vector
     @inlinable
     public static func randomUnit() -> Self where Scalar.RawSignificand: FixedWidthInteger {
@@ -165,14 +165,14 @@ extension Vector where D == Dim2 {
         get { self[0] }
         set { self[0] = newValue }
     }
-    
+
     /// Y component
     @inlinable
     public var y: Scalar {
         get { self[1] }
         set { self[1] = newValue }
     }
-    
+
     /// Initialize from x, y components
     @inlinable
     public init(x: Scalar, y: Scalar) {
@@ -187,33 +187,33 @@ extension Vector where D == Dim3 {
         get { self[0] }
         set { self[0] = newValue }
     }
-    
+
     /// Y component
     @inlinable
     public var y: Scalar {
         get { self[1] }
         set { self[1] = newValue }
     }
-    
+
     /// Z component
     @inlinable
     public var z: Scalar {
         get { self[2] }
         set { self[2] = newValue }
     }
-    
+
     /// Initialize from x, y, z components
     @inlinable
     public init(x: Scalar, y: Scalar, z: Scalar) {
         try! self.init(storage: Storage(from: [x, y, z]))
     }
-    
+
     /// Cross product (3D only)
     @inlinable
     public func cross(_ other: Vector<D>) -> Vector<D> {
         let ax = self.x, ay = self.y, az = self.z
         let bx = other.x, by = other.y, bz = other.z
-        
+
         return Vector(
             x: ay * bz - az * by,
             y: az * bx - ax * bz,
@@ -229,28 +229,28 @@ extension Vector where D == Dim4 {
         get { self[0] }
         set { self[0] = newValue }
     }
-    
+
     /// Y component
     @inlinable
     public var y: Scalar {
         get { self[1] }
         set { self[1] = newValue }
     }
-    
+
     /// Z component
     @inlinable
     public var z: Scalar {
         get { self[2] }
         set { self[2] = newValue }
     }
-    
+
     /// W component
     @inlinable
     public var w: Scalar {
         get { self[3] }
         set { self[3] = newValue }
     }
-    
+
     /// Initialize from x, y, z, w components
     @inlinable
     public init(x: Scalar, y: Scalar, z: Scalar, w: Scalar) {
@@ -263,13 +263,13 @@ extension Vector where D == Dim4 {
 extension Vector: Collection {
     public typealias Index = Int
     public typealias Element = Scalar
-    
+
     @inlinable
     public var startIndex: Int { 0 }
-    
+
     @inlinable
     public var endIndex: Int { D.value }
-    
+
     @inlinable
     public func index(after i: Int) -> Int {
         i + 1

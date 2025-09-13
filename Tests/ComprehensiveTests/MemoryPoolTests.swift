@@ -121,55 +121,55 @@ struct MemoryPoolTests {
     @Test
     func testReturn_RespectsMaxBuffersPerSizeLimit() async {
         await withTimeout(45) {
-        var config = MemoryPool.Configuration()
-        config.maxBuffersPerSize = 1
-        config.maxTotalMemory = 1_000_000
-        let pool = MemoryPool(configuration: config)
-        // Acquire and return multiple same-bucket buffers
-        for _ in 0..<3 {
-            let h = pool.acquire(type: Float.self, count: 40, alignment: 16)!
-            _ = h
-        }
-        await sleepMs(80)
-        let stats = pool.statistics
-        // Only one buffer should be retained for this size
-        let totalCount = stats.bufferCountByType.values.reduce(0, +)
-        #expect(totalCount <= config.maxBuffersPerSize)
+            var config = MemoryPool.Configuration()
+            config.maxBuffersPerSize = 1
+            config.maxTotalMemory = 1_000_000
+            let pool = MemoryPool(configuration: config)
+            // Acquire and return multiple same-bucket buffers
+            for _ in 0..<3 {
+                let h = pool.acquire(type: Float.self, count: 40, alignment: 16)!
+                _ = h
+            }
+            await sleepMs(80)
+            let stats = pool.statistics
+            // Only one buffer should be retained for this size
+            let totalCount = stats.bufferCountByType.values.reduce(0, +)
+            #expect(totalCount <= config.maxBuffersPerSize)
         }
     }
 
     @Test
     func testReturn_RespectsMaxTotalMemoryLimit() async {
         await withTimeout(45) {
-        var config = MemoryPool.Configuration()
-        config.maxBuffersPerSize = 100
-        // Limit to roughly one 1024-float buffer
-        config.maxTotalMemory = 1024 * MemoryLayout<Float>.stride
-        let pool = MemoryPool(configuration: config)
-        // First buffer occupy near the cap
-        do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
-        // Second buffer exceeds cap and should be deallocated on return
-        do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
-        await sleepMs(120)
-        let stats = pool.statistics
-        #expect(stats.totalAllocated <= config.maxTotalMemory)
+            var config = MemoryPool.Configuration()
+            config.maxBuffersPerSize = 100
+            // Limit to roughly one 1024-float buffer
+            config.maxTotalMemory = 1024 * MemoryLayout<Float>.stride
+            let pool = MemoryPool(configuration: config)
+            // First buffer occupy near the cap
+            do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
+            // Second buffer exceeds cap and should be deallocated on return
+            do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
+            await sleepMs(120)
+            let stats = pool.statistics
+            #expect(stats.totalAllocated <= config.maxTotalMemory)
         }
     }
 
     @Test
     func testCleanup_RemovesStaleEntries_UpdatesStats() async {
         await withTimeout(45) {
-        var config = MemoryPool.Configuration()
-        config.cleanupInterval = 0.05
-        let pool = MemoryPool(configuration: config)
-        // Add a pooled buffer
-        do { let h = pool.acquire(type: UInt16.self, count: 20, alignment: 16)!; _ = h }
-        await sleepMs(60) // exceed cleanup interval
-        let before = pool.statistics.totalAllocated
-        pool.cleanup()
-        await sleepMs(60)
-        let after = pool.statistics.totalAllocated
-        #expect(after <= before)
+            var config = MemoryPool.Configuration()
+            config.cleanupInterval = 0.05
+            let pool = MemoryPool(configuration: config)
+            // Add a pooled buffer
+            do { let h = pool.acquire(type: UInt16.self, count: 20, alignment: 16)!; _ = h }
+            await sleepMs(60) // exceed cleanup interval
+            let before = pool.statistics.totalAllocated
+            pool.cleanup()
+            await sleepMs(60)
+            let after = pool.statistics.totalAllocated
+            #expect(after <= before)
         }
     }
 

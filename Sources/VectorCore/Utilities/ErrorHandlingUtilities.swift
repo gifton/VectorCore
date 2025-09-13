@@ -9,7 +9,7 @@ import Foundation
 
 /// Namespace for validation utilities
 public enum Validation {
-    
+
     /// Validates that two dimensions match
     /// - Parameters:
     ///   - expected: The expected dimension
@@ -21,7 +21,7 @@ public enum Validation {
             throw VectorError.dimensionMismatch(expected: expected, actual: actual)
         }
     }
-    
+
     /// Validates that a dimension is valid (positive)
     /// - Parameters:
     ///   - dimension: The dimension to validate
@@ -32,7 +32,7 @@ public enum Validation {
             throw VectorError.invalidDimension(dimension, reason: "Dimension must be positive")
         }
     }
-    
+
     /// Validates that an index is within bounds
     /// - Parameters:
     ///   - index: The index to validate
@@ -44,7 +44,7 @@ public enum Validation {
             throw VectorError.indexOutOfBounds(index: index, dimension: dimension)
         }
     }
-    
+
     /// Validates that a vector is not zero
     /// - Parameters:
     ///   - magnitude: The magnitude of the vector
@@ -56,7 +56,7 @@ public enum Validation {
             throw VectorError.zeroVectorError(operation: operation)
         }
     }
-    
+
     /// Validates that values are within a range
     /// - Parameters:
     ///   - values: The values to check
@@ -69,7 +69,7 @@ public enum Validation {
                 invalidIndices.append(index)
             }
         }
-        
+
         if !invalidIndices.isEmpty {
             throw VectorError.invalidValues(indices: invalidIndices, reason: "Values outside range \(range.lowerBound)...\(range.upperBound)")
         }
@@ -80,7 +80,7 @@ public enum Validation {
 
 /// Debug-only validation utilities (compiled out in release builds)
 public enum DebugValidation {
-    
+
     /// Validates dimension match in debug builds only
     /// - Parameters:
     ///   - expected: The expected dimension
@@ -92,7 +92,7 @@ public enum DebugValidation {
         assert(expected == actual, message ?? "Dimension mismatch: expected \(expected), got \(actual)")
         #endif
     }
-    
+
     /// Validates index bounds in debug builds only
     /// - Parameters:
     ///   - index: The index to validate
@@ -101,7 +101,7 @@ public enum DebugValidation {
     @inlinable
     public static func assertValidIndex(_ index: Int, dimension: Int, message: String? = nil) {
         #if DEBUG
-        assert(index >= 0 && index < dimension, 
+        assert(index >= 0 && index < dimension,
                message ?? "Index \(index) out of bounds for dimension \(dimension)")
         #endif
     }
@@ -110,7 +110,7 @@ public enum DebugValidation {
 // MARK: - Result Extensions
 
 public extension Result where Failure == VectorError {
-    
+
     /// Creates a Result from a throwing closure
     /// - Parameter body: The throwing closure to execute
     /// - Returns: Success with the result or Failure with VectorError
@@ -125,7 +125,7 @@ public extension Result where Failure == VectorError {
             return .failure(.invalidData("Unknown error: \(error)"))
         }
     }
-    
+
     /// Converts a Result to an optional value (nil on failure)
     @inlinable
     var optional: Success? {
@@ -142,7 +142,7 @@ public extension Result where Failure == VectorError {
 
 /// Utilities for performance-critical error handling
 public enum PerformanceValidation {
-    
+
     /// Performs validation only in debug builds, using precondition in release
     /// - Parameters:
     ///   - condition: The condition to validate
@@ -158,7 +158,7 @@ public enum PerformanceValidation {
         precondition(condition, message())
         #endif
     }
-    
+
     /// Validates dimension match with performance optimization
     /// - Parameters:
     ///   - lhs: First dimension

@@ -141,7 +141,23 @@ jobs:
             ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
             ${{ runner.os }}-spm-
 
+      - name: List available tests (for diagnostics)
+        run: |
+          swift test --list-tests | tee tests.list
+          echo "### Discovered tests (first 200 lines)" >> $GITHUB_STEP_SUMMARY
+          sed -n '1,200p' tests.list >> $GITHUB_STEP_SUMMARY
+
       - name: Run MemoryPoolTests
         env:
           VECTORCORE_TEST_EXTENDED: 0
-        run: swift test --parallel --filter '^ComprehensiveTests\.MemoryPoolTests'
+        run: |
+          set -euo pipefail
+          # Prefer Swift Testing identifiers (Suite/Test) with '/' separator, fallback to substring match.
+          COUNT=$(swift test --list-tests --filter 'ComprehensiveTests/MemoryPoolTests' | wc -l | tr -d ' ')
+          if [ "$COUNT" -gt 0 ]; then
+            echo "Running filter: ComprehensiveTests/MemoryPoolTests"
+            swift test --parallel --filter 'ComprehensiveTests/MemoryPoolTests'
+          else
+            echo "Primary filter matched 0 tests; falling back to substring pattern"
+            swift test --parallel --filter 'MemoryPoolTests|Memory Pool Tests'
+          fi

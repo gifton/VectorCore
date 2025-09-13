@@ -26,16 +26,16 @@ import Foundation
 public struct ErrorContext: Sendable {
     /// Source file where the error occurred (debug builds only).
     public let file: StaticString
-    
+
     /// Line number where the error occurred (debug builds only).
     public let line: UInt
-    
+
     /// Function name where the error occurred (debug builds only).
     public let function: StaticString
-    
+
     /// Timestamp when the error was created.
     public let timestamp: Date
-    
+
     /// Additional contextual information as key-value pairs.
     ///
     /// Common keys include:
@@ -43,7 +43,7 @@ public struct ErrorContext: Sendable {
     /// - "dimension": Vector dimension involved
     /// - "index": Array index that caused the error
     public let additionalInfo: [String: String]
-    
+
     #if DEBUG
     public init(
         file: StaticString = #fileID,
@@ -105,16 +105,16 @@ public struct ErrorContext: Sendable {
 public struct VectorError: Error, Sendable {
     /// The specific type of error that occurred.
     public let kind: ErrorKind
-    
+
     /// Contextual information about where and when the error occurred.
     public let context: ErrorContext
-    
+
     /// Optional underlying system or library error.
     public let underlyingError: (any Error)?
-    
+
     /// Chain of errors leading to this error (for root cause analysis).
     public var errorChain: [VectorError]
-    
+
     /// Error categories for telemetry and systematic handling.
     ///
     /// Each error kind has associated severity and category metadata
@@ -124,35 +124,35 @@ public struct VectorError: Error, Sendable {
         case dimensionMismatch
         case invalidDimension
         case unsupportedDimension
-        
+
         // Index errors
         case indexOutOfBounds
         case invalidRange
-        
+
         // Data errors
         case invalidData
         case dataCorruption
         case insufficientData
-        
+
         // Operation errors
         case invalidOperation
         case unsupportedOperation
         case operationFailed
-        
+
         // Resource errors
         case allocationFailed
         case resourceExhausted
         case resourceUnavailable
-        
+
         // Configuration errors
         case invalidConfiguration
         case missingConfiguration
-        
+
         // System errors
         case systemError
         case unknown
     }
-    
+
     /// Create error with automatic context capture
     @inlinable
     public init(
@@ -166,12 +166,12 @@ public struct VectorError: Error, Sendable {
         self.kind = kind
         self.underlyingError = underlying
         self.errorChain = []
-        
+
         var info = [String: String]()
         if let message = message {
             info["message"] = message
         }
-        
+
         self.context = ErrorContext(
             file: file,
             line: line,
@@ -179,7 +179,7 @@ public struct VectorError: Error, Sendable {
             additionalInfo: info
         )
     }
-    
+
     /// Chain errors for root cause analysis
     public func chain(with error: VectorError) -> VectorError {
         var newError = self
@@ -220,7 +220,7 @@ public struct ErrorBuilder {
     private var underlying: (any Error)?
     private var chain: [VectorError] = []
     private var info: [String: String] = [:]
-    
+
     public init(
         _ kind: VectorError.ErrorKind,
         file: StaticString = #fileID,
@@ -234,14 +234,14 @@ public struct ErrorBuilder {
             function: function
         )
     }
-    
+
     @discardableResult
     public func message(_ message: String) -> ErrorBuilder {
         var builder = self
         builder.info["message"] = message
         return builder
     }
-    
+
     @discardableResult
     public func dimension(expected: Int, actual: Int) -> ErrorBuilder {
         var builder = self
@@ -249,7 +249,7 @@ public struct ErrorBuilder {
         builder.info["actual_dimension"] = String(actual)
         return builder
     }
-    
+
     @discardableResult
     public func index(_ index: Int, max: Int) -> ErrorBuilder {
         var builder = self
@@ -257,28 +257,28 @@ public struct ErrorBuilder {
         builder.info["max_index"] = String(max)
         return builder
     }
-    
+
     @discardableResult
     public func parameter(_ name: String, value: String) -> ErrorBuilder {
         var builder = self
         builder.info[name] = value
         return builder
     }
-    
+
     @discardableResult
     public func underlying(_ error: any Error) -> ErrorBuilder {
         var builder = self
         builder.underlying = error
         return builder
     }
-    
+
     @discardableResult
     public func chain(_ errors: VectorError...) -> ErrorBuilder {
         var builder = self
         builder.chain.append(contentsOf: errors)
         return builder
     }
-    
+
     public func build() -> VectorError {
         var error = VectorError(
             kind,
@@ -309,7 +309,7 @@ public extension VectorError {
             .dimension(expected: expected, actual: actual)
             .build()
     }
-    
+
     /// Index out of bounds error
     static func indexOutOfBounds(
         index: Int,
@@ -323,7 +323,7 @@ public extension VectorError {
             .index(index, max: dimension - 1)
             .build()
     }
-    
+
     /// Invalid operation error
     static func invalidOperation(
         _ operation: String,
@@ -336,7 +336,7 @@ public extension VectorError {
             .message("\(operation) failed: \(reason)")
             .build()
     }
-    
+
     /// Invalid data error
     static func invalidData(
         _ description: String,
@@ -348,7 +348,7 @@ public extension VectorError {
             .message(description)
             .build()
     }
-    
+
     /// Allocation failed error
     static func allocationFailed(
         size: Int,
@@ -363,7 +363,7 @@ public extension VectorError {
             .parameter("requested_size", value: String(size))
             .build()
     }
-    
+
     /// Invalid dimension error
     static func invalidDimension(
         _ dimension: Int,
@@ -378,7 +378,7 @@ public extension VectorError {
             .parameter("reason", value: reason)
             .build()
     }
-    
+
     /// Invalid values error
     static func invalidValues(
         indices: [Int],
@@ -393,7 +393,7 @@ public extension VectorError {
             .parameter("reason", value: reason)
             .build()
     }
-    
+
     /// Division by zero error
     static func divisionByZero(
         operation: String,
@@ -403,7 +403,7 @@ public extension VectorError {
     ) -> VectorError {
         .invalidOperation(operation, reason: "Division by zero", file: file, line: line, function: function)
     }
-    
+
     /// Zero vector error
     static func zeroVectorError(
         operation: String,
@@ -413,7 +413,7 @@ public extension VectorError {
     ) -> VectorError {
         .invalidOperation(operation, reason: "Cannot perform operation on zero vector", file: file, line: line, function: function)
     }
-    
+
     /// Insufficient data error
     static func insufficientData(
         expected: Int,
@@ -428,7 +428,7 @@ public extension VectorError {
             .parameter("actual_bytes", value: String(actual))
             .build()
     }
-    
+
     /// Invalid data format error
     static func invalidDataFormat(
         expected: String,
@@ -443,7 +443,7 @@ public extension VectorError {
             .parameter("actual_format", value: actual)
             .build()
     }
-    
+
     /// Data corruption error
     static func dataCorruption(
         reason: String,
@@ -463,15 +463,15 @@ public extension VectorError {
 extension VectorError: CustomStringConvertible, LocalizedError {
     public var description: String {
         var result = "VectorError.\(kind.rawValue)"
-        
+
         if let message = context.additionalInfo["message"] {
             result += ": \(message)"
         }
-        
+
         #if DEBUG
         result += " [at \(context.file):\(context.line) in \(context.function)]"
         #endif
-        
+
         if !errorChain.isEmpty {
             result += "\nError chain:"
             for (index, error) in errorChain.enumerated() {
@@ -481,28 +481,28 @@ extension VectorError: CustomStringConvertible, LocalizedError {
                 }
             }
         }
-        
+
         if let underlying = underlyingError {
             result += "\nUnderlying: \(underlying)"
         }
-        
+
         return result
     }
-    
+
     public var errorDescription: String? { description }
-    
+
     public var debugDescription: String {
         var result = description
-        
+
         result += "\nContext:"
         result += "\n  Timestamp: \(context.timestamp)"
-        
+
         for (key, value) in context.additionalInfo.sorted(by: { $0.key < $1.key }) {
             if key != "message" {
                 result += "\n  \(key): \(value)"
             }
         }
-        
+
         return result
     }
 }
@@ -525,7 +525,7 @@ public extension VectorError.ErrorKind {
             return .info
         }
     }
-    
+
     /// Category for grouping
     var category: ErrorCategory {
         switch self {
@@ -574,7 +574,7 @@ public extension Result where Failure == VectorError {
     ) -> Result<Success, VectorError> {
         mapError(transform)
     }
-    
+
     /// Chain error if failure
     func chainError(
         _ error: VectorError

@@ -10,17 +10,17 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     /// Aligned pointer to the data
     @usableFromInline
     internal let ptr: UnsafeMutablePointer<Float>
-    
+
     /// Number of elements
     @usableFromInline
     internal let _count: Int
-    
+
     /// Alignment used for this storage
     @usableFromInline
     internal let alignment: Int
-    
+
     public var count: Int { _count }
-    
+
     /// Initialize with specified dimension and alignment
     public init(dimension: Int, alignment: Int = AlignedMemory.optimalAlignment) {
         self._count = dimension
@@ -33,11 +33,11 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
         }
-        
+
         // Zero-initialize for safety
         ptr.initialize(repeating: 0, count: dimension)
     }
-    
+
     /// Initialize with repeating value
     public init(dimension: Int, repeating value: Float, alignment: Int = AlignedMemory.optimalAlignment) {
         self._count = dimension
@@ -49,10 +49,10 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
         }
-        
+
         ptr.initialize(repeating: value, count: dimension)
     }
-    
+
     /// Initialize from array
     public init(from values: [Float]) {
         self._count = values.count
@@ -64,10 +64,10 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
         }
-        
+
         ptr.initialize(from: values, count: values.count)
     }
-    
+
     /// Initialize from array with custom alignment
     public init(from values: [Float], alignment: Int) {
         self._count = values.count
@@ -79,23 +79,23 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
         }
-        
+
         ptr.initialize(from: values, count: values.count)
     }
-    
+
     public required init() {
         fatalError("Dynamic storage requires explicit dimension")
     }
-    
+
     public init(repeating value: Float) {
         fatalError("Dynamic storage requires explicit dimension")
     }
-    
+
     deinit {
         ptr.deinitialize(count: _count)
         ptr.deallocate()
     }
-    
+
     @inlinable
     public subscript(index: Int) -> Float {
         get {
@@ -107,19 +107,19 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
             ptr[index] = newValue
         }
     }
-    
+
     public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
         try body(UnsafeBufferPointer(start: ptr, count: _count))
     }
-    
+
     public func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
         try body(UnsafeMutableBufferPointer(start: ptr, count: _count))
     }
-    
+
     @inlinable
     public func dotProduct(_ other: AlignedDynamicArrayStorage) -> Float {
         precondition(_count == other._count, "Dimensions must match")
-        
+
         var result: Float = 0
         self.withUnsafeBufferPointer { aBuffer in
             other.withUnsafeBufferPointer { bBuffer in
@@ -132,7 +132,7 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
         }
         return result
     }
-    
+
     /// Convert to array for COW operations
     @usableFromInline
     func toArray() -> [Float] {
@@ -162,7 +162,7 @@ extension AlignedDynamicArrayStorage {
 // MARK: - AlignedStorage conformance
 extension AlignedDynamicArrayStorage: AlignedStorage {
     public var guaranteedAlignment: Int { alignment }
-    
+
     public func verifyAlignment() -> Bool {
         AlignedMemory.isAligned(ptr, to: alignment)
     }

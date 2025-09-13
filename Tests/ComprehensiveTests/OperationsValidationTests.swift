@@ -29,8 +29,8 @@ struct OperationsValidationTests {
 
     @Test
     func testFindNearest_dimensionMismatch_throws() async {
-        let q = DynamicVector([0,0,0])
-        let db = [DynamicVector([1,2])] // mismatched dims
+        let q = DynamicVector([0, 0, 0])
+        let db = [DynamicVector([1, 2])] // mismatched dims
         do {
             _ = try await Operations.findNearest(to: q, in: db, k: 1)
             Issue.record("Expected dimensionMismatch not thrown")
@@ -52,8 +52,8 @@ struct OperationsValidationTests {
 
     @Test
     func testFindNearestBatch_inconsistentQueryDims_throws() async {
-        let queries: [DynamicVector] = [DynamicVector([0,0,0]), DynamicVector([0,0])] // inconsistent
-        let db = [DynamicVector([1,2,3])]
+        let queries: [DynamicVector] = [DynamicVector([0, 0, 0]), DynamicVector([0, 0])] // inconsistent
+        let db = [DynamicVector([1, 2, 3])]
         do {
             _ = try await Operations.findNearestBatch(queries: queries, in: db, k: 1)
             Issue.record("Expected dimensionMismatch for inconsistent queries")

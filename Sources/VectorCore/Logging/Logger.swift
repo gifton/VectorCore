@@ -26,23 +26,23 @@ import os.log
 public enum LogLevel: Int, Comparable, Sendable {
     /// Detailed information for debugging purposes.
     case debug = 0
-    
+
     /// General informational messages.
     case info = 1
-    
+
     /// Warning messages for potentially harmful situations.
     case warning = 2
-    
+
     /// Error events that might still allow continued operation.
     case error = 3
-    
+
     /// Critical errors that likely cause termination.
     case critical = 4
-    
+
     public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
-    
+
     var symbol: String {
         switch self {
         case .debug: return "🔍"
@@ -52,7 +52,7 @@ public enum LogLevel: Int, Comparable, Sendable {
         case .critical: return "🚨"
         }
     }
-    
+
     var name: String {
         switch self {
         case .debug: return "DEBUG"
@@ -77,7 +77,7 @@ public enum LogLevel: Int, Comparable, Sendable {
 public final class LogConfiguration: @unchecked Sendable {
     private var _minimumLevel: LogLevel
     private let lock = NSLock()
-    
+
     /// Minimum log level to output.
     ///
     /// Messages below this level are ignored.
@@ -94,7 +94,7 @@ public final class LogConfiguration: @unchecked Sendable {
             _minimumLevel = newValue
         }
     }
-    
+
     init() {
         #if DEBUG
         self._minimumLevel = .debug
@@ -109,78 +109,78 @@ public struct Logger: Sendable {
     private let subsystem: String
     private let category: String
     private let osLog: OSLog
-    
+
     /// Shared logging configuration
     public static let configuration = LogConfiguration()
-    
+
     /// Create a logger for a specific subsystem
     public init(subsystem: String = "com.vectorcore", category: String) {
         self.subsystem = subsystem
         self.category = category
         self.osLog = OSLog(subsystem: subsystem, category: category)
     }
-    
+
     /// Log a debug message
-    public func debug(_ message: @autoclosure () -> String, 
-                     file: String = #fileID,
-                     function: String = #function,
-                     line: Int = #line) {
+    public func debug(_ message: @autoclosure () -> String,
+                      file: String = #fileID,
+                      function: String = #function,
+                      line: Int = #line) {
         log(level: .debug, message(), file: file, function: function, line: line)
     }
-    
+
     /// Log an info message
     public func info(_ message: @autoclosure () -> String,
-                    file: String = #fileID,
-                    function: String = #function,
-                    line: Int = #line) {
-        log(level: .info, message(), file: file, function: function, line: line)
-    }
-    
-    /// Log a warning message
-    public func warning(_ message: @autoclosure () -> String,
-                       file: String = #fileID,
-                       function: String = #function,
-                       line: Int = #line) {
-        log(level: .warning, message(), file: file, function: function, line: line)
-    }
-    
-    /// Log an error message
-    public func error(_ message: @autoclosure () -> String,
                      file: String = #fileID,
                      function: String = #function,
                      line: Int = #line) {
-        log(level: .error, message(), file: file, function: function, line: line)
+        log(level: .info, message(), file: file, function: function, line: line)
     }
-    
-    /// Log a critical message
-    public func critical(_ message: @autoclosure () -> String,
+
+    /// Log a warning message
+    public func warning(_ message: @autoclosure () -> String,
                         file: String = #fileID,
                         function: String = #function,
                         line: Int = #line) {
+        log(level: .warning, message(), file: file, function: function, line: line)
+    }
+
+    /// Log an error message
+    public func error(_ message: @autoclosure () -> String,
+                      file: String = #fileID,
+                      function: String = #function,
+                      line: Int = #line) {
+        log(level: .error, message(), file: file, function: function, line: line)
+    }
+
+    /// Log a critical message
+    public func critical(_ message: @autoclosure () -> String,
+                         file: String = #fileID,
+                         function: String = #function,
+                         line: Int = #line) {
         log(level: .critical, message(), file: file, function: function, line: line)
     }
-    
+
     /// Log an error with VectorError
     public func error(_ error: VectorError,
-                     message: String? = nil,
-                     file: String = #fileID,
-                     function: String = #function,
-                     line: Int = #line) {
+                      message: String? = nil,
+                      file: String = #fileID,
+                      function: String = #function,
+                      line: Int = #line) {
         let errorMessage = message ?? error.description
         log(level: .error, "\(errorMessage)", file: file, function: function, line: line)
     }
-    
+
     /// Log with specific level
-    private func log(level: LogLevel, 
-                    _ message: String,
-                    file: String,
-                    function: String,
-                    line: Int) {
+    private func log(level: LogLevel,
+                     _ message: String,
+                     file: String,
+                     function: String,
+                     line: Int) {
         guard level >= Self.configuration.minimumLevel else { return }
-        
+
         let fileName = URL(fileURLWithPath: file).lastPathComponent
         let location = "\(fileName):\(line)"
-        
+
         // Use os_log for system integration
         let osLogType: OSLogType = {
             switch level {
@@ -190,7 +190,7 @@ public struct Logger: Sendable {
             case .critical: return .fault
             }
         }()
-        
+
         os_log("%{public}@ [%{public}@] %{public}@ - %{public}@",
                log: osLog,
                type: osLogType,
@@ -198,7 +198,7 @@ public struct Logger: Sendable {
                location,
                function,
                message)
-        
+
         // Also print to console in debug builds
         #if DEBUG
         print("\(level.symbol) [\(category)] \(message) (\(location))")
@@ -240,14 +240,14 @@ public struct PerformanceTimer {
     private let start: CFAbsoluteTime
     private let operation: String
     private let logger: Logger
-    
+
     /// Start timing an operation
     public init(operation: String, logger: Logger = performanceLogger) {
         self.start = CFAbsoluteTimeGetCurrent()
         self.operation = operation
         self.logger = logger
     }
-    
+
     /// Log the elapsed time
     public func log(threshold: TimeInterval = 0.001) {
         let elapsed = CFAbsoluteTimeGetCurrent() - start
@@ -261,11 +261,11 @@ public struct PerformanceTimer {
 
 extension VectorError {
     /// Log this error with context
-    public func log(to logger: Logger = coreLogger, 
-                   message: String? = nil,
-                   file: String = #fileID,
-                   function: String = #function,
-                   line: Int = #line) {
+    public func log(to logger: Logger = coreLogger,
+                    message: String? = nil,
+                    file: String = #fileID,
+                    function: String = #function,
+                    line: Int = #line) {
         logger.error(self, message: message, file: file, function: function, line: line)
     }
 }

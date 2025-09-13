@@ -16,16 +16,16 @@ import Foundation
 public protocol ExecutionContext: Sendable {
     /// The compute device used by this context
     var device: ComputeDevice { get }
-    
+
     /// Maximum number of concurrent threads/operations
     var maxThreadCount: Int { get }
-    
+
     /// Preferred chunk size for parallel operations
     var preferredChunkSize: Int { get }
-    
+
     /// Execute work within this context
     func execute<T>(_ work: @Sendable @escaping () throws -> T) async throws -> T where T: Sendable
-    
+
     /// Execute work with a specific priority
     func execute<T>(
         priority: TaskPriority?,
@@ -49,8 +49,8 @@ extension ExecutionContext {
 
 extension ExecutionContext where Self == CPUContext {
     /// Default execution context - automatically uses available CPU cores
-    public static var `default`: any ExecutionContext { 
-        CPUContext.automatic 
+    public static var `default`: any ExecutionContext {
+        CPUContext.automatic
     }
 }
 

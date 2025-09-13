@@ -8,26 +8,26 @@ import Foundation
 /// Options for handling NaN and Infinity values
 public struct NonFiniteHandling: OptionSet, Sendable {
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    
+
     /// Replace NaN values with zero
     public static let replaceNaNWithZero = NonFiniteHandling(rawValue: 1 << 0)
-    
+
     /// Replace Infinity values with maximum finite value
     public static let replaceInfinityWithMax = NonFiniteHandling(rawValue: 1 << 1)
-    
+
     /// Replace -Infinity values with minimum finite value
     public static let replaceNegInfinityWithMin = NonFiniteHandling(rawValue: 1 << 2)
-    
+
     /// Propagate NaN (any NaN in input produces NaN in output)
     public static let propagateNaN = NonFiniteHandling(rawValue: 1 << 3)
-    
+
     /// Throw error on non-finite values
     public static let throwOnNonFinite = NonFiniteHandling(rawValue: 1 << 4)
-    
+
     /// Common presets
     public static let replaceAll: NonFiniteHandling = [.replaceNaNWithZero, .replaceInfinityWithMax, .replaceNegInfinityWithMin]
     public static let strict: NonFiniteHandling = [.throwOnNonFinite]
@@ -40,7 +40,7 @@ public enum NonFiniteError: Error, LocalizedError {
     case infinityDetected(indices: [Int])
     case negativeInfinityDetected(indices: [Int])
     case mixedNonFiniteValues(nanIndices: [Int], infIndices: [Int], negInfIndices: [Int])
-    
+
     public var errorDescription: String? {
         switch self {
         case .nanDetected(let indices):
@@ -63,11 +63,11 @@ public struct NonFiniteCheckResult {
     public let nanIndices: [Int]
     public let infinityIndices: [Int]
     public let negativeInfinityIndices: [Int]
-    
+
     public var hasNonFinite: Bool {
         hasNaN || hasInfinity || hasNegativeInfinity
     }
-    
+
     public var totalNonFiniteCount: Int {
         nanIndices.count + infinityIndices.count + negativeInfinityIndices.count
     }
@@ -76,7 +76,7 @@ public struct NonFiniteCheckResult {
 // MARK: - Vector Extensions for NaN/Infinity Handling
 
 public extension Vector where D.Storage: VectorStorageOperations {
-    
+
     /// Check for non-finite values in the vector
     ///
     /// - Returns: Detailed information about non-finite values
@@ -85,7 +85,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
         var nanIndices: [Int] = []
         var infinityIndices: [Int] = []
         var negativeInfinityIndices: [Int] = []
-        
+
         for i in 0..<D.value {
             let value = self[i]
             if value.isNaN {
@@ -96,7 +96,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
                 negativeInfinityIndices.append(i)
             }
         }
-        
+
         return NonFiniteCheckResult(
             hasNaN: !nanIndices.isEmpty,
             hasInfinity: !infinityIndices.isEmpty,
@@ -106,7 +106,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
             negativeInfinityIndices: negativeInfinityIndices
         )
     }
-    
+
     /// Check if all values are finite
     ///
     /// - Returns: true if all values are finite
@@ -120,7 +120,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
         }
         return true
     }
-    
+
     /// Check if vector contains any NaN values
     ///
     /// - Returns: true if any element is NaN
@@ -134,7 +134,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
         }
         return false
     }
-    
+
     /// Check if vector contains any infinity values
     ///
     /// - Returns: true if any element is ±infinity
@@ -149,7 +149,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
         }
         return false
     }
-    
+
     /// Handle non-finite values according to specified options
     ///
     /// - Parameter options: How to handle non-finite values
@@ -160,9 +160,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
         if isFinite {
             return self
         }
-        
+
         let checkResult = checkNonFinite()
-        
+
         // Throw if requested
         if options.contains(.throwOnNonFinite) && checkResult.hasNonFinite {
             if checkResult.hasNaN && !checkResult.hasInfinity && !checkResult.hasNegativeInfinity {
@@ -179,18 +179,18 @@ public extension Vector where D.Storage: VectorStorageOperations {
                 )
             }
         }
-        
+
         // Propagate NaN if requested
         if options.contains(.propagateNaN) && checkResult.hasNaN {
             return Vector<D>(repeating: .nan)
         }
-        
+
         // Replace values as needed
         var result = self
-        
+
         for i in 0..<D.value {
             let value = result[i]
-            
+
             if value.isNaN && options.contains(.replaceNaNWithZero) {
                 result[i] = 0
             } else if value == .infinity && options.contains(.replaceInfinityWithMax) {
@@ -199,33 +199,33 @@ public extension Vector where D.Storage: VectorStorageOperations {
                 result[i] = -Float.greatestFiniteMagnitude
             }
         }
-        
+
         return result
     }
-    
+
     /// Replace non-finite values with specified value
     ///
     /// - Parameter replacement: Value to use for non-finite elements
     /// - Returns: New vector with non-finite values replaced
     func replacingNonFinite(with replacement: Float) -> Vector<D> {
         var result = self
-        
+
         for i in 0..<D.value {
             if !result[i].isFinite {
                 result[i] = replacement
             }
         }
-        
+
         return result
     }
-    
+
     /// Filter out non-finite values and return indices of finite values
     ///
     /// - Returns: Tuple of (finite values array, original indices)
     func finiteValues() -> (values: [Float], indices: [Int]) {
         var values: [Float] = []
         var indices: [Int] = []
-        
+
         for i in 0..<D.value {
             let value = self[i]
             if value.isFinite {
@@ -233,7 +233,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
                 indices.append(i)
             }
         }
-        
+
         return (values, indices)
     }
 }
@@ -241,13 +241,13 @@ public extension Vector where D.Storage: VectorStorageOperations {
 // MARK: - DynamicVector Extensions
 
 public extension DynamicVector {
-    
+
     /// Check for non-finite values in the vector
     func checkNonFinite() -> NonFiniteCheckResult {
         var nanIndices: [Int] = []
         var infinityIndices: [Int] = []
         var negativeInfinityIndices: [Int] = []
-        
+
         for i in 0..<dimension {
             let value = self[i]
             if value.isNaN {
@@ -258,7 +258,7 @@ public extension DynamicVector {
                 negativeInfinityIndices.append(i)
             }
         }
-        
+
         return NonFiniteCheckResult(
             hasNaN: !nanIndices.isEmpty,
             hasInfinity: !infinityIndices.isEmpty,
@@ -268,7 +268,7 @@ public extension DynamicVector {
             negativeInfinityIndices: negativeInfinityIndices
         )
     }
-    
+
     /// Check if all values are finite
     @inlinable
     var isFinite: Bool {
@@ -279,15 +279,15 @@ public extension DynamicVector {
         }
         return true
     }
-    
+
     /// Handle non-finite values
     func handleNonFinite(options: NonFiniteHandling) throws -> DynamicVector {
         if isFinite {
             return self
         }
-        
+
         let checkResult = checkNonFinite()
-        
+
         // Throw if requested
         if options.contains(.throwOnNonFinite) && checkResult.hasNonFinite {
             throw NonFiniteError.mixedNonFiniteValues(
@@ -296,17 +296,17 @@ public extension DynamicVector {
                 negInfIndices: checkResult.negativeInfinityIndices
             )
         }
-        
+
         // Propagate NaN if requested
         if options.contains(.propagateNaN) && checkResult.hasNaN {
             return DynamicVector(dimension: dimension, repeating: .nan)
         }
-        
+
         // Replace values
         var result = self
         for i in 0..<dimension {
             let value = result[i]
-            
+
             if value.isNaN && options.contains(.replaceNaNWithZero) {
                 result[i] = 0
             } else if value == .infinity && options.contains(.replaceInfinityWithMax) {
@@ -315,7 +315,7 @@ public extension DynamicVector {
                 result[i] = -Float.greatestFiniteMagnitude
             }
         }
-        
+
         return result
     }
 }
@@ -323,7 +323,7 @@ public extension DynamicVector {
 // MARK: - Safe Mathematical Operations
 
 public extension Vector where D.Storage: VectorStorageOperations {
-    
+
     /// Safe division that handles division by zero
     ///
     /// - Parameters:
@@ -335,60 +335,60 @@ public extension Vector where D.Storage: VectorStorageOperations {
             if options.contains(.throwOnNonFinite) {
                 throw VectorError.divisionByZero(operation: "safeDivide")
             }
-            
+
             if options.contains(.propagateNaN) {
                 return Vector<D>(repeating: .nan)
             }
-            
+
             // Replace with zero by default
             return Vector<D>.zero
         }
-        
+
         let result = self / divisor
         return try result.handleNonFinite(options: options)
     }
-    
+
     /// Safe normalization that handles zero vectors
     ///
     /// - Parameter options: How to handle zero magnitude
     /// - Returns: Normalized vector or handled according to options
     func safeNormalized(options: NonFiniteHandling = .replaceAll) throws -> Vector<D> {
         let mag = magnitude
-        
+
         if mag == 0 {
             if options.contains(.throwOnNonFinite) {
                 throw VectorError.zeroVectorError(operation: "normalization")
             }
-            
+
             if options.contains(.propagateNaN) {
                 return Vector<D>(repeating: .nan)
             }
-            
+
             // Return zero vector by default
             return self
         }
-        
+
         return try safeDivide(by: mag, options: options)
     }
-    
+
     /// Safe logarithm that handles non-positive values
     ///
     /// - Parameter options: How to handle non-positive values
     /// - Returns: Vector with log of each element
     func safeLog(options: NonFiniteHandling = .replaceNaNWithZero) throws -> Vector<D> {
         var result = Vector<D>()
-        
+
         for i in 0..<D.value {
             let value = self[i]
             if value <= 0 {
                 if options.contains(.throwOnNonFinite) {
                     throw VectorError.invalidValues(indices: [i], reason: "Logarithm of non-positive value")
                 }
-                
+
                 if options.contains(.propagateNaN) {
                     return Vector<D>(repeating: .nan)
                 }
-                
+
                 if options.contains(.replaceNaNWithZero) {
                     result[i] = 0
                 } else {
@@ -398,7 +398,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
                 result[i] = Foundation.log(value)
             }
         }
-        
+
         return result
     }
 }
@@ -406,7 +406,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
 // MARK: - Batch Operations with NaN/Infinity Handling
 
 public extension SyncBatchOperations {
-    
+
     /// Filter out vectors containing non-finite values
     ///
     /// - Parameter vectors: Input vectors
@@ -421,7 +421,7 @@ public extension SyncBatchOperations {
             return true
         }
     }
-    
+
     /// Find vectors containing non-finite values
     ///
     /// - Parameter vectors: Input vectors
@@ -436,18 +436,18 @@ public extension SyncBatchOperations {
             return nil
         }
     }
-    
+
     /// Compute statistics excluding non-finite values
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Statistics computed only from finite values
     static func finiteStatistics<V: VectorProtocol>(for vectors: [V]) -> BatchStatistics where V.Scalar == Float {
         let finiteVectors = filterFinite(vectors)
-        
+
         guard !finiteVectors.isEmpty else {
             return BatchStatistics(count: 0, meanMagnitude: 0, stdMagnitude: 0)
         }
-        
+
         return statistics(for: finiteVectors)
     }
 }
@@ -476,7 +476,7 @@ public func validateFinite(_ values: [Float]) throws {
     var nanIndices: [Int] = []
     var infIndices: [Int] = []
     var negInfIndices: [Int] = []
-    
+
     for (i, value) in values.enumerated() {
         if value.isNaN {
             nanIndices.append(i)
@@ -486,7 +486,7 @@ public func validateFinite(_ values: [Float]) throws {
             negInfIndices.append(i)
         }
     }
-    
+
     if !nanIndices.isEmpty || !infIndices.isEmpty || !negInfIndices.isEmpty {
         throw NonFiniteError.mixedNonFiniteValues(
             nanIndices: nanIndices,

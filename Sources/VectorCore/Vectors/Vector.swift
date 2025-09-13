@@ -97,7 +97,11 @@ extension Vector {
     @inlinable
     public var isFinite: Bool {
         withUnsafeBufferPointer { buffer in
-            for element in buffer where !element.isFinite { return false }
+            for element in buffer {
+                if !element.isFinite {
+                    return false
+                }
+            }
             return true
         }
     }

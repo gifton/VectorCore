@@ -237,8 +237,10 @@ extension DynamicVector: Equatable {
         guard lhs.dimension == rhs.dimension else { return false }
         return lhs.withUnsafeBufferPointer { lhsBuffer in
             rhs.withUnsafeBufferPointer { rhsBuffer in
-                for i in 0..<lhs.dimension where lhsBuffer[i] != rhsBuffer[i] {
-                    return false
+                for i in 0..<lhs.dimension {
+                    if lhsBuffer[i] != rhsBuffer[i] {
+                        return false
+                    }
                 }
                 return true
             }

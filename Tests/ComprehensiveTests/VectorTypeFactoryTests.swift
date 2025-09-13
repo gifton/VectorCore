@@ -105,7 +105,7 @@ struct VectorTypeFactorySuite {
     @Test
     func testWithPattern_GeneratesExpectedValues() {
         let anyVec = VectorTypeFactory.withPattern(dimension: 6) { Float($0) }
-        #expect(anyVec.toArray() == [0, 1, 2, 3, 4, 5])
+        #expect(anyVec.toArray() == [0,1,2,3,4,5])
     }
 
     // optimalDimension / isSupported
@@ -120,8 +120,8 @@ struct VectorTypeFactorySuite {
 
     @Test
     func testIsSupported_ForSupportedAndUnsupportedDims() {
-        for d in [128, 256, 512, 768, 1536, 3072] { #expect(VectorTypeFactory.isSupported(dimension: d)) }
-        for d in [2, 64, 1024, 2000, 4096] { #expect(!VectorTypeFactory.isSupported(dimension: d)) }
+        for d in [128,256,512,768,1536,3072] { #expect(VectorTypeFactory.isSupported(dimension: d)) }
+        for d in [2,64,1024,2000,4096] { #expect(!VectorTypeFactory.isSupported(dimension: d)) }
     }
 
     // basis vectors
@@ -168,20 +168,20 @@ struct VectorTypeFactorySuite {
     @Test
     func testBatch_CreatesCorrectCountAndValues() {
         let d = 4
-        let values: [Float] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        let values: [Float] = [0,1,2,3,  4,5,6,7,  8,9,10,11]
         do {
             let batch = try VectorTypeFactory.batch(dimension: d, from: values)
             #expect(batch.count == 3)
-            #expect(batch[0].toArray() == [0, 1, 2, 3])
-            #expect(batch[1].toArray() == [4, 5, 6, 7])
-            #expect(batch[2].toArray() == [8, 9, 10, 11])
+            #expect(batch[0].toArray() == [0,1,2,3])
+            #expect(batch[1].toArray() == [4,5,6,7])
+            #expect(batch[2].toArray() == [8,9,10,11])
         } catch { Issue.record("Unexpected error: \(error)") }
     }
 
     @Test
     func testBatch_NonMultipleCountThrows() {
         let d = 4
-        let bad: [Float] = [0, 1, 2, 3, 4]
+        let bad: [Float] = [0,1,2,3,4]
         do {
             _ = try VectorTypeFactory.batch(dimension: d, from: bad)
             Issue.record("Expected invalidData not thrown")

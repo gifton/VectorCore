@@ -26,8 +26,8 @@ struct VectorDistanceMetricsSuite {
 
     @Test
     func testEuclideanVsSquaredConsistency() {
-        let a = try! Vector<Dim8>([1, 2, 3, 4, 5, 6, 7, 8].map(Float.init))
-        let b = try! Vector<Dim8>([2, 4, 6, 8, 10, 12, 14, 16].map(Float.init))
+        let a = try! Vector<Dim8>([1,2,3,4,5,6,7,8].map(Float.init))
+        let b = try! Vector<Dim8>([2,4,6,8,10,12,14,16].map(Float.init))
         let d = a.euclideanDistance(to: b)
         let s = a.euclideanDistanceSquared(to: b)
         #expect(approxEqual(d * d, s, tol: 1e-4))

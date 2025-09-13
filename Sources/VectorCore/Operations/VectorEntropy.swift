@@ -101,8 +101,10 @@ extension Vector where D.Storage: VectorStorageOperations {
 
             // Handle near-zero probabilities (set to 0)
             var cleanedTerms = entropyTerms
-            for i in 0..<cleanedTerms.count where probabilities[i] <= Float.ulpOfOne {
-                cleanedTerms[i] = 0
+            for i in 0..<cleanedTerms.count {
+                if probabilities[i] <= Float.ulpOfOne {
+                    cleanedTerms[i] = 0
+                }
             }
 
             // Sum all terms

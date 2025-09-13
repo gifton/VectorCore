@@ -193,7 +193,7 @@ struct OptimizedVector512Suite {
             #expect(approxEqual(u.magnitude, 1, tol: 1e-5))
             // Direction check: u should be proportional to a (compare a[i]/u[i] approximately constant for non-zero)
             var ratios: [Float] = []
-            for i in stride(from: 0, to: 512, by: 64) where u[i] != 0 { ratios.append(a[i] / u[i]) }
+            for i in stride(from: 0, to: 512, by: 64) { if u[i] != 0 { ratios.append(a[i] / u[i]) } }
             if let r0 = ratios.first { for r in ratios { #expect(approxEqual(r, r0, tol: 1e-3)) } }
         case .failure(let e):
             Issue.record("Unexpected failure: \(e)")

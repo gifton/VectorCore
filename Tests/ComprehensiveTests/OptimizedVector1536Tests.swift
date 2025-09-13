@@ -49,11 +49,9 @@ struct OptimizedVector1536Suite {
         let v = try! Vector1536Optimized(arr)
         #expect(approxEqual(v[0], 0) && approxEqual(v[1535], 1535))
         let bad = (0..<10).map { Float($0) }
-        do { _ = try Vector1536Optimized(bad); Issue.record("Expected dimensionMismatch not thrown") } catch let e as VectorError {
-            #expect(e.kind == .dimensionMismatch)
-        } catch {
-            Issue.record("Unexpected error: \(error)")
-        }
+        do { _ = try Vector1536Optimized(bad); Issue.record("Expected dimensionMismatch not thrown") }
+        catch let e as VectorError { #expect(e.kind == .dimensionMismatch) }
+        catch { Issue.record("Unexpected error: \(error)") }
     }
 
     @Test func testGeneratorInit_FillsExpectedValues() {
@@ -211,21 +209,15 @@ struct OptimizedVector1536Suite {
 
     @Test func testBatchDistance_ParityForEuclidean() {
         let q = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
-        let candidates: [Vector1536Optimized] = (0..<4).map { _ in
-            try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
-        }
+        let candidates: [Vector1536Optimized] = (0..<4).map { _ in try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) }) }
         let m = EuclideanDistance()
         let batch = m.batchDistance(query: q, candidates: candidates)
-        for i in 0..<candidates.count {
-            #expect(approxEqual(batch[i], m.distance(q, candidates[i]), tol: 1e-5))
-        }
+        for i in 0..<candidates.count { #expect(approxEqual(batch[i], m.distance(q, candidates[i]), tol: 1e-5)) }
     }
 
     @Test func testBatchDistance_ParityForCosineAndManhattan() {
         let q = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
-        let candidates: [Vector1536Optimized] = (0..<4).map { _ in
-            try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
-        }
+        let candidates: [Vector1536Optimized] = (0..<4).map { _ in try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) }) }
         let cm = CosineDistance(); let mm = ManhattanDistance()
         let bc = cm.batchDistance(query: q, candidates: candidates)
         let bm = mm.batchDistance(query: q, candidates: candidates)

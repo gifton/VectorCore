@@ -48,11 +48,9 @@ struct OptimizedVector768Suite {
         let v = try! Vector768Optimized(arr)
         #expect(approxEqual(v[0], 0) && approxEqual(v[767], 767))
         let bad = (0..<100).map { Float($0) }
-        do { _ = try Vector768Optimized(bad); Issue.record("Expected dimensionMismatch not thrown") } catch let e as VectorError {
-            #expect(e.kind == .dimensionMismatch)
-        } catch {
-            Issue.record("Unexpected error: \(error)")
-        }
+        do { _ = try Vector768Optimized(bad); Issue.record("Expected dimensionMismatch not thrown") }
+        catch let e as VectorError { #expect(e.kind == .dimensionMismatch) }
+        catch { Issue.record("Unexpected error: \(error)") }
     }
 
     @Test func testGeneratorInit_FillsExpectedValues() {

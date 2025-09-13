@@ -235,8 +235,10 @@ extension ManagedStorage: Equatable where Element: Equatable {
         guard lhs.capacity == rhs.capacity else { return false }
         return lhs.withUnsafeBufferPointer { lhsBuffer in
             rhs.withUnsafeBufferPointer { rhsBuffer in
-                for i in 0..<lhs.capacity where lhsBuffer[i] != rhsBuffer[i] {
-                    return false
+                for i in 0..<lhs.capacity {
+                    if lhsBuffer[i] != rhsBuffer[i] {
+                        return false
+                    }
                 }
                 return true
             }

@@ -2,12 +2,12 @@ import Foundation
 import Testing
 @testable import VectorCore
 
-// @Suite("Dynamic Vector Tests")
+//@Suite("Dynamic Vector Tests")
 struct DynamicVectorTests {
 
     @Test
     func testResizedIncreasingKeepsPrefixAndFills() {
-        let v = DynamicVector([1, 2, 3].map(Float.init))
+        let v = DynamicVector([1,2,3].map(Float.init))
         let r = v.resized(to: 6, fill: 9)
         #expect(r.scalarCount == 6)
         #expect(r[0] == 1 && r[1] == 2 && r[2] == 3)
@@ -16,41 +16,41 @@ struct DynamicVectorTests {
 
     @Test
     func testResizedDecreasingDropsTail() {
-        let v = DynamicVector([1, 2, 3, 4, 5].map(Float.init))
+        let v = DynamicVector([1,2,3,4,5].map(Float.init))
         let r = v.resized(to: 3)
         #expect(r.scalarCount == 3)
-        #expect(r.toArray() == [1, 2, 3])
+        #expect(r.toArray() == [1,2,3])
     }
 
     @Test
     func testAppendingAddsElementAndIncrementsDim() {
-        let v = DynamicVector([0, 1].map(Float.init))
+        let v = DynamicVector([0,1].map(Float.init))
         let r = v.appending(5)
         #expect(r.scalarCount == 3)
-        #expect(r.toArray() == [0, 1, 5])
+        #expect(r.toArray() == [0,1,5])
     }
 
     @Test
     func testDropLastRemovesAndDecrementsDim() {
-        let v = DynamicVector([0, 1, 2].map(Float.init))
+        let v = DynamicVector([0,1,2].map(Float.init))
         let r = v.dropLast()
         #expect(r.scalarCount == 2)
-        #expect(r.toArray() == [0, 1])
+        #expect(r.toArray() == [0,1])
     }
 
     @Test
     func testSliceValidBoundsProducesCorrectSubvector() {
-        let v = DynamicVector([0, 1, 2, 3, 4].map(Float.init))
+        let v = DynamicVector([0,1,2,3,4].map(Float.init))
         let s = v.slice(from: 1, to: 4)
         #expect(s.scalarCount == 3)
-        #expect(s.toArray() == [1, 2, 3])
+        #expect(s.toArray() == [1,2,3])
     }
 
     @Test
     func testEqualityAndHashableConsistency() {
-        let a = DynamicVector([1, 2, 3].map(Float.init))
-        let b = DynamicVector([1, 2, 3].map(Float.init))
-        let c = DynamicVector([1, 2, 4].map(Float.init))
+        let a = DynamicVector([1,2,3].map(Float.init))
+        let b = DynamicVector([1,2,3].map(Float.init))
+        let c = DynamicVector([1,2,4].map(Float.init))
         #expect(a == b)
         #expect(a != c)
         var set: Set<DynamicVector> = []
@@ -84,7 +84,7 @@ struct DynamicVectorTests {
 
     @Test
     func testCollectionIndicesAndIteration() {
-        let v = DynamicVector([1, 2, 3, 4].map(Float.init))
+        let v = DynamicVector([1,2,3,4].map(Float.init))
         #expect(v.startIndex == 0)
         #expect(v.endIndex == 4)
         var sum: Float = 0
@@ -94,7 +94,7 @@ struct DynamicVectorTests {
 
     @Test
     func testWithUnsafeBufferPointerMatchesArray() {
-        let arr: [Float] = [0, 1, 2, 3, 4]
+        let arr: [Float] = [0,1,2,3,4]
         let v = DynamicVector(arr)
         v.withUnsafeBufferPointer { buf in
             #expect(buf.count == arr.count)
@@ -104,11 +104,11 @@ struct DynamicVectorTests {
 
     @Test
     func testWithUnsafeMutableBufferPointerMutation() {
-        var v = DynamicVector([0, 0, 0].map(Float.init))
+        var v = DynamicVector([0,0,0].map(Float.init))
         v.withUnsafeMutableBufferPointer { buf in
             for i in 0..<buf.count { buf[i] = Float(i + 1) }
         }
-        #expect(v.toArray() == [1, 2, 3])
+        #expect(v.toArray() == [1,2,3])
     }
 
     @Test

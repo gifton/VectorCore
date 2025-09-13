@@ -130,17 +130,17 @@ struct VectorConstructionSuite {
     @Test
     func testVectorTypeFactoryBatchSuccessAndError() {
         let d = 4
-        let values: [Float] = [0, 1, 2, 3, 4, 5, 6, 7] // 2 vectors
+        let values: [Float] = [0,1,2,3,  4,5,6,7] // 2 vectors
         do {
             let batch = try VectorTypeFactory.batch(dimension: d, from: values)
             #expect(batch.count == 2)
-            #expect(batch[0].toArray() == [0, 1, 2, 3])
-            #expect(batch[1].toArray() == [4, 5, 6, 7])
+            #expect(batch[0].toArray() == [0,1,2,3])
+            #expect(batch[1].toArray() == [4,5,6,7])
         } catch {
             Issue.record("Unexpected error: \(error)")
         }
 
-        let bad: [Float] = [0, 1, 2, 3, 4] // not multiple of 4
+        let bad: [Float] = [0,1,2,3,4] // not multiple of 4
         do {
             _ = try VectorTypeFactory.batch(dimension: d, from: bad)
             Issue.record("Expected error for non-multiple count not thrown")
@@ -227,7 +227,7 @@ struct VectorConstructionSuite {
     func testVectorTypeFactoryWithPattern() {
         let anyVec = VectorTypeFactory.withPattern(dimension: 6) { Float($0) }
         let arr = anyVec.toArray()
-        #expect(arr == [0, 1, 2, 3, 4, 5])
+        #expect(arr == [0,1,2,3,4,5])
     }
 
     @Test

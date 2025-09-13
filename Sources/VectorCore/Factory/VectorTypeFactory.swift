@@ -6,20 +6,20 @@
 import Foundation
 
 /// Protocol for types that can be created by VectorFactory
-///
+/// 
 /// VectorType provides a unified interface for all vector implementations
 /// in VectorCore, allowing the factory to work with both fixed-size and
 /// dynamic vectors uniformly.
 public protocol VectorType: VectorProtocol where Scalar == Float {
     // VectorProtocol already provides:
     // - scalarCount
-    // - toArray()
+    // - toArray() 
     // - dotProduct(_:)
     // - magnitude
     // - normalized()
     // - distance(to:)
     // - cosineSimilarity(to:)
-
+    
     // Additional factory requirements
     init()
     init(repeating value: Float)
@@ -27,7 +27,7 @@ public protocol VectorType: VectorProtocol where Scalar == Float {
 
 /// Factory for creating vectors with optimal type selection
 public enum VectorTypeFactory {
-
+    
     /// Creates a strongly-typed vector with compile-time dimension checking.
     ///
     /// This method provides type-safe vector creation when the dimension is known
@@ -51,7 +51,7 @@ public enum VectorTypeFactory {
         }
         return try Vector<D>(values)
     }
-
+    
     /// Create a vector of the specified dimension with given values
     ///
     /// - Parameters:
@@ -63,7 +63,7 @@ public enum VectorTypeFactory {
         guard values.count == dimension else {
             throw VectorError.dimensionMismatch(expected: dimension, actual: values.count)
         }
-
+        
         switch dimension {
         case 128:
             return try Vector<Dim128>(values)
@@ -82,7 +82,7 @@ public enum VectorTypeFactory {
             return DynamicVector(values)
         }
     }
-
+    
     /// Create a random vector with values in the specified range
     ///
     /// - Parameters:
@@ -96,7 +96,7 @@ public enum VectorTypeFactory {
         let values = (0..<dimension).map { _ in Float.random(in: range) }
         return try! vector(of: dimension, from: values)
     }
-
+    
     /// Create a zero vector of the specified dimension
     ///
     /// - Parameter dimension: The desired vector dimension
@@ -119,7 +119,7 @@ public enum VectorTypeFactory {
             return DynamicVector(dimension: dimension)
         }
     }
-
+    
     /// Create a vector of ones of the specified dimension
     ///
     /// - Parameter dimension: The desired vector dimension
@@ -142,7 +142,7 @@ public enum VectorTypeFactory {
             return DynamicVector(dimension: dimension, repeating: 1)
         }
     }
-
+    
     /// Create a vector with a repeating pattern
     ///
     /// - Parameters:
@@ -156,7 +156,7 @@ public enum VectorTypeFactory {
         let values = (0..<dimension).map(pattern)
         return try! vector(of: dimension, from: values)
     }
-
+    
     // TODO: Fix normalized() on existential type
     // /// Create a normalized random vector (unit vector with random direction)
     // ///
@@ -170,18 +170,18 @@ public enum VectorTypeFactory {
     //     }
     //     return random
     // }
-
+    
     /// Get the optimal dimension for a given approximate size
     ///
     /// - Parameter approximateSize: Desired approximate dimension
     /// - Returns: Nearest supported dimension
     public static func optimalDimension(for approximateSize: Int) -> Int {
         let supportedDimensions = [128, 256, 512, 768, 1536, 3072]
-
+        
         // Find the closest supported dimension
         return supportedDimensions.min { abs($0 - approximateSize) < abs($1 - approximateSize) } ?? 512
     }
-
+    
     /// Check if a dimension is natively supported with optimized storage
     ///
     /// - Parameter dimension: Dimension to check
@@ -194,7 +194,7 @@ public enum VectorTypeFactory {
             return false
         }
     }
-
+    
     /// Create a standard basis vector (one-hot encoded)
     ///
     /// - Parameters:
@@ -206,7 +206,7 @@ public enum VectorTypeFactory {
         guard index >= 0 && index < dimension else {
             throw VectorError.indexOutOfBounds(index: index, dimension: dimension)
         }
-
+        
         switch dimension {
         case 128:
             return Vector<Dim128>.basis(axis: index)
@@ -226,7 +226,7 @@ public enum VectorTypeFactory {
             return DynamicVector(values)
         }
     }
-
+    
     /// Create a batch of vectors from a flat array
     ///
     /// - Parameters:
@@ -241,18 +241,18 @@ public enum VectorTypeFactory {
                 reason: "Values count (\(values.count)) must be multiple of dimension \(dimension)"
             )
         }
-
+        
         let vectorCount = values.count / dimension
         var result: [any VectorType] = []
         result.reserveCapacity(vectorCount)
-
+        
         for i in 0..<vectorCount {
             let start = i * dimension
             let end = start + dimension
             let vectorValues = Array(values[start..<end])
             result.append(try vector(of: dimension, from: vectorValues))
         }
-
+        
         return result
     }
 }

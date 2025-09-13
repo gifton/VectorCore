@@ -15,26 +15,26 @@ import Foundation
 /// ```swift
 /// // Default: Pure Swift implementation
 /// let results = try await Operations.findNearest(to: query, in: database, k: 10)
-///
+/// 
 /// // With custom providers (e.g., from VectorAccelerate)
 /// Operations.computeProvider = MetalComputeProvider()
 /// Operations.simdProvider = AccelerateSIMDProvider()
 /// ```
 public enum Operations {
-
+    
     // MARK: - Provider Configuration
-
+    
     /// The compute provider for execution strategy
     @TaskLocal public static var computeProvider: any ComputeProvider = CPUComputeProvider.automatic
-
+    
     /// The SIMD provider for vectorized operations
     @TaskLocal public static var simdProvider: any ArraySIMDProvider = SwiftSIMDProvider()
-
+    
     /// The buffer provider for memory management
     @TaskLocal public static var bufferProvider: any BufferProvider = SwiftBufferPool.shared
-
+    
     // MARK: - Nearest Neighbor Search
-
+    
     /// Find k nearest neighbors to a query vector
     ///
     /// - Parameters:
@@ -64,23 +64,23 @@ public enum Operations {
         for v in vectors where v.scalarCount != expectedDim {
             throw VectorError.dimensionMismatch(expected: expectedDim, actual: v.scalarCount)
         }
-
+        
         let distances = try await computeDistances(
             from: query,
             to: vectors,
             metric: metric
         )
-
+        
         // Find k smallest distances
         let results = distances
             .enumerated()
             .map { NearestNeighborResult(index: $0.offset, distance: $0.element) }
             .sorted { $0.distance < $1.distance }
             .prefix(min(k, vectors.count))
-
+        
         return Array(results)
     }
-
+    
     /// Find k nearest neighbors for multiple queries
     ///
     /// - Parameters:
@@ -128,9 +128,9 @@ public enum Operations {
             )
         }
     }
-
+    
     // MARK: - Distance Computation
-
+    
     /// Compute distances from query to all vectors
     private static func computeDistances<V: VectorProtocol, M: DistanceMetric>(
         from query: V,
@@ -147,7 +147,7 @@ public enum Operations {
             return vectors.map { metric.distance(query, $0) }
         }
     }
-
+    
     /// Compute pairwise distance matrix
     ///
     /// - Parameters:
@@ -179,9 +179,9 @@ public enum Operations {
             setB.map { metric.distance(setA[i], $0) }
         }
     }
-
+    
     // MARK: - Vector Operations
-
+    
     /// Compute centroid of vectors
     ///
     /// - Parameter vectors: Collection of vectors
@@ -193,23 +193,23 @@ public enum Operations {
             let dimension = vectors.first?.scalarCount ?? 0
             return try! V.create(from: [Float](repeating: 0, count: dimension))
         }
-
+        
         let dimension = vectors.first!.scalarCount
         var sum = [Float](repeating: 0, count: dimension)
-
+        
         // Sum all vectors
         for vector in vectors {
             let values = vector.toArray()
             sum = simdProvider.add(sum, values)
         }
-
+        
         // Divide by count
         let scale = 1.0 / Float(vectors.count)
         let result = simdProvider.multiply(sum, by: scale)
-
+        
         return try! V.create(from: result)
     }
-
+    
     /// Normalize vectors to unit length
     ///
     /// - Parameter vectors: Vectors to normalize
@@ -223,9 +223,9 @@ public enum Operations {
             return try! V.create(from: normalized)
         }
     }
-
+    
     // MARK: - Statistics
-
+    
     /// Compute statistics for vector collection
     ///
     /// - Parameter vectors: Vector collection
@@ -243,34 +243,34 @@ public enum Operations {
                 magnitudes: VectorStatistics.MagnitudeStats(min: 0, max: 0, mean: 0)
             )
         }
-
+        
         let dimension = vectors.first!.scalarCount
         var mins = [Float](repeating: .infinity, count: dimension)
         var maxs = [Float](repeating: -.infinity, count: dimension)
         var sums = [Float](repeating: 0, count: dimension)
         var magnitudes: [Float] = []
-
+        
         for vector in vectors {
             let values = vector.toArray()
-
+            
             // Update component-wise stats
             for i in 0..<dimension {
                 mins[i] = min(mins[i], values[i])
                 maxs[i] = max(maxs[i], values[i])
                 sums[i] += values[i]
             }
-
+            
             // Track magnitude
             magnitudes.append(simdProvider.magnitude(values))
         }
-
+        
         let count = Float(vectors.count)
         let mean = sums.map { $0 / count }
-
+        
         let magMin = magnitudes.min() ?? 0
         let magMax = magnitudes.max() ?? 0
         let magMean = magnitudes.reduce(0, +) / count
-
+        
         return VectorStatistics(
             count: vectors.count,
             dimensions: dimension,
@@ -288,7 +288,7 @@ public enum Operations {
 public struct NearestNeighborResult: Sendable, Equatable {
     public let index: Int
     public let distance: Float
-
+    
     public init(index: Int, distance: Float) {
         self.index = index
         self.distance = distance
@@ -303,7 +303,7 @@ public struct VectorStatistics: Sendable {
     public let min: [Float]
     public let max: [Float]
     public let magnitudes: MagnitudeStats
-
+    
     public struct MagnitudeStats: Sendable {
         public let min: Float
         public let max: Float

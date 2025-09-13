@@ -4,7 +4,7 @@ import Testing
 
 @Suite("Storage Alignment")
 struct StorageAlignmentSuite {
-
+    
     @Test
     func testOptimalAlignmentIsPowerOfTwoAndAtLeastMinimum() {
         let a = AlignedMemory.optimalAlignment
@@ -12,7 +12,7 @@ struct StorageAlignmentSuite {
         #expect(a >= m)
         #expect((a & (a - 1)) == 0) // power of two
     }
-
+    
     @Test
     func testAllocateAlignedReturnsProperlyAlignedPointer_Default() throws {
         let ptr = try AlignedMemory.allocateAligned(count: 257) // non-power size
@@ -20,7 +20,7 @@ struct StorageAlignmentSuite {
         #expect(AlignedMemory.isAligned(ptr, to: AlignedMemory.optimalAlignment))
         #expect(AlignedMemory.isAligned(ptr, to: AlignedMemory.minimumAlignment))
     }
-
+    
     @Test
     func testAllocateAlignedReturnsProperlyAlignedPointer_Custom() throws {
         let custom = max(AlignedMemory.minimumAlignment * 2, 32)
@@ -28,7 +28,7 @@ struct StorageAlignmentSuite {
         defer { free(UnsafeMutableRawPointer(ptr)) }
         #expect(AlignedMemory.isAligned(ptr, to: custom))
     }
-
+    
     @Test
     func testAlignedMemoryIsAlignedHelpersWorkForPointers() throws {
         let alignment = max(AlignedMemory.minimumAlignment * 2, 32)
@@ -39,13 +39,13 @@ struct StorageAlignmentSuite {
         let off = base.advanced(by: 1)
         #expect(!AlignedMemory.isAligned(off, to: alignment))
     }
-
+    
     @Test
     func testAlignedValueStorageVerifyAlignmentReturnsTrue() {
         let storage = AlignedValueStorage(count: 128, alignment: 64)
         #expect(storage.verifyAlignment())
     }
-
+    
     @Test
     func testVectorFixedDimBufferIsAligned() {
         let v = Vector<Dim512>(repeating: 1)
@@ -57,7 +57,7 @@ struct StorageAlignmentSuite {
             }
         }
     }
-
+    
     @Test
     func testDynamicVectorBufferIsAlignedForLargeDimension() {
         let dv = DynamicVector(dimension: 4096, repeating: 0)
@@ -69,7 +69,7 @@ struct StorageAlignmentSuite {
             }
         }
     }
-
+    
     @Test
     func testMinimumAlignmentSatisfiesAllAllocations() throws {
         let m = AlignedMemory.minimumAlignment
@@ -79,7 +79,7 @@ struct StorageAlignmentSuite {
             free(UnsafeMutableRawPointer(ptr))
         }
     }
-
+    
     @Test
     func testAlignmentConstantsAreReasonableForPlatform() {
         let a = AlignedMemory.optimalAlignment
@@ -88,5 +88,5 @@ struct StorageAlignmentSuite {
         #expect(a >= m)
         #expect(a <= 256)
     }
-
+    
 }

@@ -9,7 +9,7 @@ import Foundation
 public protocol StaticDimension {
     /// The number of elements in vectors of this dimension
     static var value: Int { get }
-
+    
     /// The storage type optimized for this dimension
     associatedtype Storage: VectorStorage
 }
@@ -274,16 +274,16 @@ public struct Dim3072: StaticDimension {
 public struct DynamicDimension {
     /// The runtime-determined size of vectors with this dimension.
     public let size: Int
-
+    
     /// Not available for dynamic dimensions.
     /// - Warning: This property will trigger a fatal error if accessed.
     ///   Use `instance.size` instead.
     @available(*, unavailable, message: "DynamicDimension has no static size; use instance.size instead")
     public static var value: Int { 0 }
-
+    
     /// The storage type for dynamic vectors, using flexible array storage.
     public typealias Storage = ArrayStorage<DynamicDimension>
-
+    
     /// Creates a new dynamic dimension with the specified size.
     ///
     /// - Parameter size: The number of elements in vectors of this dimension.

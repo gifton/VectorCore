@@ -12,7 +12,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(c[i], a[i] + b[i]))
         }
     }
-
+    
     @Test
     func testVectorSubtractionBasic() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0) })
@@ -22,7 +22,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(c[i], a[i] - b[i]))
         }
     }
-
+    
     @Test
     func testInPlaceAdditionAndSubtractionMutateOriginal() {
         var a = Vector<Dim8>.ones
@@ -32,7 +32,7 @@ struct VectorArithmeticSuite {
         a -= b
         for i in 0..<8 { #expect(approxEqual(a[i], 1)) }
     }
-
+    
     @Test
     func testScalarMultiplicationRightAndLeft() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0) })
@@ -45,7 +45,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(r1[i], r2[i]))
         }
     }
-
+    
     @Test
     func testScalarDivision() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0 + 1) }) // avoid zeros
@@ -56,7 +56,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(r[i], a[i] * (1 / s)))
         }
     }
-
+    
     @Test
     func testUnaryNegation() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0 - 4) })
@@ -66,7 +66,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(n[i], a[i] * -1))
         }
     }
-
+    
     @Test
     func testHadamardProductMatchesManualComputation() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0 + 1) })
@@ -76,7 +76,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(h[i], a[i] * b[i]))
         }
     }
-
+    
     @Test
     func testElementwiseDivisionMatchesManualComputation() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float(($0 + 1) * 6) })
@@ -86,7 +86,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(d[i], a[i] / b[i]))
         }
     }
-
+    
     @Test
     func testAdditionCommutative() {
         let a = try! Vector<Dim8>(Array(0..<8).map { _ in Float.random(in: -1...1) })
@@ -97,7 +97,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(r1[i], r2[i], tol: 1e-6))
         }
     }
-
+    
     @Test
     func testAdditionAssociativeWithinTolerance() {
         let a = try! Vector<Dim8>(Array(0..<8).map { _ in Float.random(in: -1...1) })
@@ -109,7 +109,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(r1[i], r2[i], tol: 1e-5))
         }
     }
-
+    
     @Test
     func testScalarDistributivityOverAdditionWithinTolerance() {
         let a = try! Vector<Dim8>(Array(0..<8).map { _ in Float.random(in: -1...1) })
@@ -121,7 +121,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(left[i], right[i], tol: 1e-5))
         }
     }
-
+    
     @Test
     func testElementwiseMinMax() {
         let a = try! Vector<Dim8>([3, -2, 5, 0, 7, -1, 4, 2].map(Float.init))
@@ -133,7 +133,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(ma[i], Swift.max(a[i], b[i])))
         }
     }
-
+    
     @Test
     func testMinElementAndMaxElementIndices() {
         let vals: [Float] = [3, -5, 2, 10, 0, 4, -1, 7]
@@ -145,7 +145,7 @@ struct VectorArithmeticSuite {
         #expect(maxRes.value == 10)
         #expect(maxRes.index == 3)
     }
-
+    
     @Test
     func testClampToRange() {
         let vals: [Float] = [-2, -0.5, 0, 0.5, 2, -3, 3, 1]
@@ -159,7 +159,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(v[i], expected))
         }
     }
-
+    
     @Test
     func testAbsoluteValue() {
         let vals: [Float] = [-3, -2, -1, 0, 1, 2, 3, -4]
@@ -169,7 +169,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(ab[i], Swift.abs(vals[i])))
         }
     }
-
+    
     @Test
     func testSquareRootPositiveValues() {
         let squares: [Float] = [0, 1, 4, 9, 16, 25, 36, 49]
@@ -180,7 +180,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(r[i], expected[i]))
         }
     }
-
+    
     @Test
     func testSquareRootNegativeProducesNaN() {
         let vals: [Float] = [-1, -4, -9, -16, 0, 1, 4, 9]
@@ -190,7 +190,7 @@ struct VectorArithmeticSuite {
         let expected: [Float] = [0, 1, 2, 3]
         for i in 4..<8 { #expect(approxEqual(r[i], expected[i - 4])) }
     }
-
+    
     @Test
     func testLerpClamped_t0ReturnsSelf() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0) })
@@ -198,7 +198,7 @@ struct VectorArithmeticSuite {
         let r = a.lerp(to: b, t: 0)
         for i in 0..<8 { #expect(approxEqual(r[i], a[i])) }
     }
-
+    
     @Test
     func testLerpClamped_t1ReturnsOther() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0) })
@@ -206,7 +206,7 @@ struct VectorArithmeticSuite {
         let r = a.lerp(to: b, t: 1)
         for i in 0..<8 { #expect(approxEqual(r[i], b[i])) }
     }
-
+    
     @Test
     func testLerpClamped_OutOfBoundsTIsClamped() {
         let a = try! Vector<Dim8>(Array(0..<8).map { Float($0) })
@@ -218,7 +218,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(rBig[i], b[i]))
         }
     }
-
+    
     @Test
     func testLerpUnclamped_AllowsExtrapolation() {
         let a = Vector<Dim8>.zero
@@ -230,7 +230,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(rn1[i], -10))
         }
     }
-
+    
     @Test
     func testSmoothstepEndpointsAndMonotonic() {
         let a = Vector<Dim8>.zero
@@ -253,7 +253,7 @@ struct VectorArithmeticSuite {
             prev = r
         }
     }
-
+    
     @Test
     func testDynamicVectorMinMaxSuccess() {
         let a = DynamicVector([3, -2, 5, 0, 7, -1, 4, 2].map(Float.init))
@@ -265,7 +265,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(ma[i], Swift.max(a[i], b[i])))
         }
     }
-
+    
     @Test
     func testDynamicVectorMinMaxDimensionMismatchThrows() {
         let a = DynamicVector([1,2,3].map(Float.init))
@@ -279,7 +279,7 @@ struct VectorArithmeticSuite {
             Issue.record("Unexpected error type: \(error)")
         }
     }
-
+    
     @Test
     func testDynamicVectorClamped() {
         let vals: [Float] = [-2, -0.5, 0, 0.5, 2]
@@ -290,7 +290,7 @@ struct VectorArithmeticSuite {
             #expect(approxEqual(r[i], expected))
         }
     }
-
+    
     @Test
     func testDynamicVectorLerpClampedAndMismatchThrows() {
         let a = DynamicVector([0, 0, 0, 0].map(Float.init))

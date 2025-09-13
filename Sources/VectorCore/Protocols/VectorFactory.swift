@@ -99,7 +99,7 @@ public extension VectorFactory {
         }
         return try create(from: result)
     }
-
+    
     /// Create a vector by combining two vectors element-wise
     /// - Parameters:
     ///   - v1: First vector
@@ -118,7 +118,7 @@ public extension VectorFactory {
                 actual: v2.scalarCount
             )
         }
-
+        
         var result = Array(repeating: Scalar(0), count: v1.scalarCount)
         v1.withUnsafeBufferPointer { buffer1 in
             v2.withUnsafeBufferPointer { buffer2 in

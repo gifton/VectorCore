@@ -9,25 +9,25 @@ import Foundation
 /// Namespace for memory management types and utilities
 public enum Memory {
     // MARK: - Pressure Monitor
-
+    
     /// Monitor system memory pressure
     public final class PressureMonitor {
         private var source: (any DispatchSourceMemoryPressure)?
-
+        
         public enum Level {
             case normal
             case warning
             case critical
         }
-
+        
         public init() {}
-
+        
         public func startMonitoring(handler: @escaping (Level) -> Void) {
             let source = DispatchSource.makeMemoryPressureSource(eventMask: .all)
-
+            
             source.setEventHandler {
                 let event = source.data
-
+                
                 if event.contains(.critical) {
                     handler(.critical)
                 } else if event.contains(.warning) {
@@ -36,16 +36,16 @@ public enum Memory {
                     handler(.normal)
                 }
             }
-
+            
             self.source = source
             source.resume()
         }
-
+        
         public func stopMonitoring() {
             source?.cancel()
             source = nil
         }
-
+        
         deinit {
             stopMonitoring()
         }
@@ -178,10 +178,10 @@ public func withTemporaryBuffer<T, Result>(
         alignment: alignment
     )
     defer { rawPointer.deallocate() }
-
+    
     let pointer = rawPointer.bindMemory(to: T.self, capacity: capacity)
     let buffer = UnsafeMutableBufferPointer(start: pointer, count: capacity)
-
+    
     return try body(buffer)
 }
 
@@ -209,8 +209,10 @@ public func withTemporaryBuffer<T, Result>(
 /// ```
 public func secureZero<T>(_ buffer: UnsafeMutableBufferPointer<T>) {
     guard let baseAddress = buffer.baseAddress else { return }
-
+    
     // Use memset_s for secure zeroing when available
     let byteCount = buffer.count * MemoryLayout<T>.stride
     _ = memset_s(baseAddress, byteCount, 0, byteCount)
 }
+
+

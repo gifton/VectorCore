@@ -404,11 +404,7 @@ extension Vector1536Optimized: Collection {
 extension Vector1536Optimized: Equatable {
     @inlinable
     public static func == (lhs: Vector1536Optimized, rhs: Vector1536Optimized) -> Bool {
-        for i in 0..<384 {
-            if lhs.storage[i] != rhs.storage[i] {
-                return false
-            }
-        }
+        for i in 0..<384 where lhs.storage[i] != rhs.storage[i] { return false }
         return true
     }
 }

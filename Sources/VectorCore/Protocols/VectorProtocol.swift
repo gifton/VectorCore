@@ -99,18 +99,14 @@ public extension VectorProtocol {
 
     var isFinite: Bool {
         withUnsafeBufferPointer { buffer in
-            for element in buffer {
-                if !element.isFinite { return false }
-            }
+            for element in buffer where !element.isFinite { return false }
             return true
         }
     }
 
     var isZero: Bool {
         withUnsafeBufferPointer { buffer in
-            for element in buffer {
-                if element != 0 { return false }
-            }
+            for element in buffer where element != 0 { return false }
             return true
         }
     }
@@ -482,10 +478,8 @@ public extension VectorProtocol {
 
         return withUnsafeBufferPointer { selfPtr in
             other.withUnsafeBufferPointer { otherPtr in
-                for i in 0..<scalarCount {
-                    if Swift.abs(selfPtr[i] - otherPtr[i]) > tolerance {
-                        return false
-                    }
+                for i in 0..<scalarCount where Swift.abs(selfPtr[i] - otherPtr[i]) > tolerance {
+                    return false
                 }
                 return true
             }

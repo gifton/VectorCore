@@ -244,7 +244,7 @@ struct VectorArithmeticSuite {
         }
         // Monotonicity for ascending t samples
         let ts: [Float] = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]
-        var prev: Vector<Dim8>? = nil
+        var prev: Vector<Dim8>?
         for t in ts {
             let r = a.smoothstep(to: b, t: t)
             if let p = prev {
@@ -268,8 +268,8 @@ struct VectorArithmeticSuite {
 
     @Test
     func testDynamicVectorMinMaxDimensionMismatchThrows() {
-        let a = DynamicVector([1,2,3].map(Float.init))
-        let b = DynamicVector([4,5].map(Float.init))
+        let a = DynamicVector([1, 2, 3].map(Float.init))
+        let b = DynamicVector([4, 5].map(Float.init))
         do {
             _ = try a.min(b)
             Issue.record("Expected dimensionMismatch not thrown")
@@ -300,7 +300,7 @@ struct VectorArithmeticSuite {
         let r1 = try! a.lerp(to: b, t: 1)
         for i in 0..<4 { #expect(approxEqual(r0[i], 0)); #expect(approxEqual(r1[i], 10)) }
         // Mismatch throws
-        let c = DynamicVector([1,2,3].map(Float.init))
+        let c = DynamicVector([1, 2, 3].map(Float.init))
         do {
             _ = try a.lerp(to: c, t: 0.5)
             Issue.record("Expected dimensionMismatch not thrown")

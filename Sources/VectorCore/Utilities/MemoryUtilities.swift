@@ -10,19 +10,20 @@ import Foundation
 public enum Memory {
     // MARK: - Pressure Monitor
 
+    /// Memory pressure levels
+    public enum PressureLevel {
+        case normal
+        case warning
+        case critical
+    }
+
     /// Monitor system memory pressure
     public final class PressureMonitor {
         private var source: (any DispatchSourceMemoryPressure)?
 
-        public enum Level {
-            case normal
-            case warning
-            case critical
-        }
-
         public init() {}
 
-        public func startMonitoring(handler: @escaping (Level) -> Void) {
+        public func startMonitoring(handler: @escaping (PressureLevel) -> Void) {
             let source = DispatchSource.makeMemoryPressureSource(eventMask: .all)
 
             source.setEventHandler {

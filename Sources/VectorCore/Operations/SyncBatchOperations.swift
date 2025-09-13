@@ -181,9 +181,7 @@ public enum SyncBatchOperations {
         var sum = vectors[0]
 
         // Add remaining vectors
-        for i in 1..<vectors.count {
-            sum = sum + vectors[i]
-        }
+        for i in 1..<vectors.count { sum += vectors[i] }
 
         // Divide by count
         return sum / Float(vectors.count)
@@ -208,7 +206,7 @@ public enum SyncBatchOperations {
         var sum = Vector<D>.zeros()
 
         for i in 0..<vectors.count {
-            sum = sum + (vectors[i] * weights[i])
+            sum += (vectors[i] * weights[i])
             totalWeight += weights[i]
         }
 
@@ -227,9 +225,7 @@ public enum SyncBatchOperations {
         guard !vectors.isEmpty else { return nil }
 
         var result = vectors[0]
-        for i in 1..<vectors.count {
-            result = result + vectors[i]
-        }
+        for i in 1..<vectors.count { result += vectors[i] }
 
         return result
     }
@@ -450,7 +446,7 @@ public enum SyncBatchOperations {
         }
 
         // Sort by magnitude
-        let sorted = vectors.enumerated().sorted { $0.element.magnitude < $1.element.magnitude }
+        let sorted = vectors.sorted { $0.magnitude < $1.magnitude }
 
         // Sample from each stratum
         let samplesPerStratum = k / strata
@@ -466,8 +462,8 @@ public enum SyncBatchOperations {
             let actualSamples = min(samplesToTake, stratumSize)
 
             if actualSamples > 0 {
-                let stratumVectors = sorted[stratumStart..<stratumEnd].map { $0.element }
-                sample.append(contentsOf: randomSample(from: Array(stratumVectors), k: actualSamples))
+                let stratumVectors = Array(sorted[stratumStart..<stratumEnd])
+                sample.append(contentsOf: randomSample(from: stratumVectors, k: actualSamples))
             }
         }
 

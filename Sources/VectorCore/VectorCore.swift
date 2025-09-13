@@ -93,7 +93,10 @@ public extension Array where Element: VectorType {
     /// Compute pairwise distances between all vectors
     func pairwiseDistances<M: DistanceMetric>(
         metric: M = EuclideanDistance()
-    ) async -> [[Float]] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
+    ) async -> [[Float]]
+    where Element: VectorProtocol & Sendable,
+          Element.Scalar == Float,
+          M.Scalar == Float {
         await BatchOperations.pairwiseDistances(self, metric: metric)
     }
 
@@ -102,7 +105,10 @@ public extension Array where Element: VectorType {
         to query: Element,
         k: Int,
         metric: M = EuclideanDistance()
-    ) async -> [(index: Int, distance: Float)] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
+    ) async -> [(index: Int, distance: Float)]
+    where Element: VectorProtocol & Sendable,
+          Element.Scalar == Float,
+          M.Scalar == Float {
         await BatchOperations.findNearest(to: query, in: self, k: k, metric: metric)
     }
 }

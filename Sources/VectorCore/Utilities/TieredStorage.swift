@@ -270,9 +270,9 @@ public struct TieredStorage<Element> {
 /// Stack-allocated storage for tiny vectors
 @usableFromInline
 internal struct InlineBuffer<Element> {
-    /// Fixed-size tuple storage for up to 4 elements
+    /// Fixed-size storage for up to 4 elements
     @usableFromInline
-    internal var storage: (Element?, Element?, Element?, Element?)
+    internal var storage: [Element?]
 
     /// Actual number of stored elements
     @usableFromInline
@@ -285,7 +285,7 @@ internal struct InlineBuffer<Element> {
     /// Initialize empty buffer
     @usableFromInline
     internal init() {
-        self.storage = (nil, nil, nil, nil)
+        self.storage = [nil, nil, nil, nil]
         self.count = 0
     }
 
@@ -295,18 +295,8 @@ internal struct InlineBuffer<Element> {
         precondition(elements.count <= 4, "Too many elements for inline storage")
         self.count = elements.count
 
-        switch elements.count {
-        case 0:
-            self.storage = (nil, nil, nil, nil)
-        case 1:
-            self.storage = (elements[0], nil, nil, nil)
-        case 2:
-            self.storage = (elements[0], elements[1], nil, nil)
-        case 3:
-            self.storage = (elements[0], elements[1], elements[2], nil)
-        default:
-            self.storage = (elements[0], elements[1], elements[2], elements[3])
-        }
+        self.storage = [nil, nil, nil, nil]
+        for i in 0..<elements.count { self.storage[i] = elements[i] }
     }
 
     /// Element access
@@ -314,21 +304,11 @@ internal struct InlineBuffer<Element> {
     internal subscript(index: Int) -> Element {
         get {
             precondition(index >= 0 && index < count, "Index out of bounds")
-            switch index {
-            case 0: return storage.0!
-            case 1: return storage.1!
-            case 2: return storage.2!
-            default: return storage.3!
-            }
+            return storage[index]!
         }
         set {
             precondition(index >= 0 && index < count, "Index out of bounds")
-            switch index {
-            case 0: storage.0 = newValue
-            case 1: storage.1 = newValue
-            case 2: storage.2 = newValue
-            default: storage.3 = newValue
-            }
+            storage[index] = newValue
         }
     }
 
@@ -390,7 +370,7 @@ internal final class CompactBuffer<Element> {
         let actualCapacity = CompactBuffer.alignedCapacity(for: capacity)
         self.buffer = ManagedBuffer<CompactBufferHeader, Element>.create(
             minimumCapacity: actualCapacity
-        ) { buffer in
+        ) { _ in
             CompactBufferHeader(count: 0, capacity: actualCapacity)
         }
     }
@@ -401,7 +381,7 @@ internal final class CompactBuffer<Element> {
         let actualCapacity = CompactBuffer.alignedCapacity(for: elements.count)
         self.buffer = ManagedBuffer<CompactBufferHeader, Element>.create(
             minimumCapacity: actualCapacity
-        ) { buffer in
+        ) { _ in
             CompactBufferHeader(count: elements.count, capacity: actualCapacity)
         }
 

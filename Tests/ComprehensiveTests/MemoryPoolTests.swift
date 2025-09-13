@@ -263,11 +263,23 @@ struct MemoryPoolTests {
         await withTimeout(45) {
             let pool = MemoryPool(configuration: .init())
             var floatAddr: Int = 0
-            do { let h = pool.acquire(type: Float.self, count: 32)!; floatAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); _ = h }
+            do {
+                let h = pool.acquire(type: Float.self, count: 32)!
+                floatAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
+                _ = h
+            }
             await sleepMs(50)
-            do { let h = pool.acquire(type: Double.self, count: 32)!; _ = h }
+            do {
+                let h = pool.acquire(type: Double.self, count: 32)!
+                _ = h
+            }
             await sleepMs(50)
-            do { let h = pool.acquire(type: Float.self, count: 31)!; let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); #expect(addr2 == floatAddr); _ = h }
+            do {
+                let h = pool.acquire(type: Float.self, count: 31)!
+                let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
+                #expect(addr2 == floatAddr)
+                _ = h
+            }
         }
     }
 

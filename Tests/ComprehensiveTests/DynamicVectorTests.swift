@@ -4,7 +4,7 @@ import Testing
 
 //@Suite("Dynamic Vector Tests")
 struct DynamicVectorTests {
-    
+
     @Test
     func testResizedIncreasingKeepsPrefixAndFills() {
         let v = DynamicVector([1,2,3].map(Float.init))

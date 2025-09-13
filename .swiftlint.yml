@@ -49,6 +49,7 @@ cyclomatic_complexity:
 
 identifier_name:
   min_length: 2
+  allowed_symbols: [ _ ]
   excluded:
     - i
     - j
@@ -57,4 +58,23 @@ identifier_name:
     - y
     - z
     - id
-
+    # Common math/vector locals used pervasively in this codebase
+    - a
+    - b
+    - c
+    - d
+    - e
+    - f
+    - g
+    - h
+    - m
+    - n
+    - o
+    - p
+    - q
+    - r
+    - s
+    - t
+    - u
+    - v
+    - w

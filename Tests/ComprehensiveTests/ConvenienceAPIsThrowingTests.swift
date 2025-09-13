@@ -50,4 +50,3 @@ struct ConvenienceAPIsThrowingTests {
         } catch { Issue.record("Unexpected error: \(error)") }
     }
 }
-

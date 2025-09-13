@@ -10,19 +10,19 @@ final class PerformanceBenchmark: XCTestCase {
             throw XCTSkip("Performance benchmarks disabled (set VECTORCORE_TEST_EXTENDED=1 to enable)")
         }
     }
-    
+
     let iterations = 10_000
     let vectorSize = 32
-    
+
     func measureTimeNanoseconds(_ block: () throws -> Void) rethrows -> Double {
         let start = CFAbsoluteTimeGetCurrent()
         try block()
         let end = CFAbsoluteTimeGetCurrent()
         return (end - start) * 1_000_000_000 / Double(iterations) // Convert to nanoseconds per operation
     }
-    
+
     func testBaselinePerformance() throws {
-        
+
         // Vector Creation
         let creationTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
@@ -30,7 +30,7 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Vector Creation: \(String(format: "%.2f", creationTime)) ns/op")
-        
+
         // Vector Addition
         let v1 = Vector<Dim32>(repeating: 1.0)
         let v2 = Vector<Dim32>(repeating: 2.0)
@@ -40,7 +40,7 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Vector Addition: \(String(format: "%.2f", additionTime)) ns/op")
-        
+
         // Vector Subtraction
         let subtractionTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
@@ -48,7 +48,7 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Vector Subtraction: \(String(format: "%.2f", subtractionTime)) ns/op")
-        
+
         // Scalar Multiplication
         let multiplicationTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
@@ -56,7 +56,7 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Scalar Multiplication: \(String(format: "%.2f", multiplicationTime)) ns/op")
-        
+
         // Dot Product
         let dotProductTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
@@ -64,7 +64,7 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Dot Product: \(String(format: "%.2f", dotProductTime)) ns/op")
-        
+
         // Magnitude
         let magnitudeTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
@@ -72,7 +72,7 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Magnitude: \(String(format: "%.2f", magnitudeTime)) ns/op")
-        
+
         // Element Access
         let accessTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
@@ -80,7 +80,7 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Element Access: \(String(format: "%.2f", accessTime)) ns/op")
-        
+
         // Collection Iteration
         let iterationTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
@@ -92,19 +92,19 @@ final class PerformanceBenchmark: XCTestCase {
             }
         }
         print("Collection Iteration: \(String(format: "%.2f", iterationTime)) ns/op")
-        
+
         // Protocol Dispatch Test (checking protocol overhead)
         func genericOperation<V: VectorProtocol>(_ vector: V) -> Float where V.Scalar == Float {
             return vector[0] + vector[1]
         }
-        
+
         let protocolTime = measureTimeNanoseconds {
             for _ in 0..<iterations {
                 _ = genericOperation(v1)
             }
         }
         print("Protocol Dispatch: \(String(format: "%.2f", protocolTime)) ns/op")
-        
+
         print("\n=== END BASELINE ===\n")
     }
 }

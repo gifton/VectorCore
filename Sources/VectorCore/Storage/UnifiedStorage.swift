@@ -6,16 +6,15 @@
 
 import Foundation
 
-// MARK: - Move-Only Storage
-
+// MARK: - Move-Only Storage (gated off)
+#if MOVE_ONLY_EXPERIMENTAL
 /// Move-only storage for zero-copy semantics
 /// This is the core storage type that provides manual memory management
 public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copyable {
     private let pointer: UnsafeMutableRawPointer
     public let capacity: Int
     public let alignment: Int
-    
-    /// Initialize with specified capacity and alignment
+
     public init(capacity: Int, alignment: Int = 64) {
         let byteCount = capacity * MemoryLayout<Element>.stride
         self.pointer = UnsafeMutableRawPointer.allocate(
@@ -24,26 +23,20 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         )
         self.capacity = capacity
         self.alignment = alignment
-        
-        // Initialize to zero
         pointer.initializeMemory(as: UInt8.self, repeating: 0, count: byteCount)
     }
-    
-    /// Initialize from existing pointer (takes ownership)
+
     public init(pointer: UnsafeMutableRawPointer, capacity: Int, alignment: Int) {
         self.pointer = pointer
         self.capacity = capacity
         self.alignment = alignment
     }
-    
-    /// Consume the storage and return the underlying buffer
-    /// After calling this, the storage is no longer valid
+
     public consuming func into() -> UnsafeMutableBufferPointer<Element> {
         let typed = pointer.bindMemory(to: Element.self, capacity: capacity)
         return UnsafeMutableBufferPointer(start: typed, count: capacity)
     }
-    
-    /// Explicit copy when needed
+
     public borrowing func copy() -> MoveOnlyStorage {
         let byteCount = capacity * MemoryLayout<Element>.stride
         let newPointer = UnsafeMutableRawPointer.allocate(
@@ -53,8 +46,7 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         newPointer.copyMemory(from: pointer, byteCount: byteCount)
         return MoveOnlyStorage(pointer: newPointer, capacity: capacity, alignment: alignment)
     }
-    
-    /// Borrow for read-only access
+
     public borrowing func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -62,8 +54,7 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         let buffer = UnsafeBufferPointer(start: typed, count: capacity)
         return try body(buffer)
     }
-    
-    /// Borrow for mutable access
+
     public borrowing func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -71,12 +62,12 @@ public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copya
         let buffer = UnsafeMutableBufferPointer(start: typed, count: capacity)
         return try body(buffer)
     }
-    
-    /// Clean up the allocated memory
+
     deinit {
         pointer.deallocate()
     }
 }
+#endif
 
 // MARK: - Managed Storage with Reference Counting
 
@@ -85,7 +76,7 @@ final class StorageBuffer<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked
     let pointer: UnsafeMutableRawPointer
     let capacity: Int
     let alignment: Int
-    
+
     init(capacity: Int, alignment: Int = 64) {
         let byteCount = capacity * MemoryLayout<Element>.stride
         self.pointer = UnsafeMutableRawPointer.allocate(
@@ -94,11 +85,11 @@ final class StorageBuffer<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked
         )
         self.capacity = capacity
         self.alignment = alignment
-        
+
         // Initialize to zero
         pointer.initializeMemory(as: UInt8.self, repeating: 0, count: byteCount)
     }
-    
+
     init(copyFrom other: StorageBuffer<Element>) {
         let byteCount = other.capacity * MemoryLayout<Element>.stride
         self.pointer = UnsafeMutableRawPointer.allocate(
@@ -107,10 +98,10 @@ final class StorageBuffer<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked
         )
         self.capacity = other.capacity
         self.alignment = other.alignment
-        
+
         pointer.copyMemory(from: other.pointer, byteCount: byteCount)
     }
-    
+
     deinit {
         pointer.deallocate()
     }
@@ -121,15 +112,15 @@ final class StorageBuffer<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked
 /// Managed storage with copy-on-write semantics
 public struct ManagedStorage<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked Sendable {
     private var buffer: StorageBuffer<Element>
-    
+
     public var capacity: Int { buffer.capacity }
     public var alignment: Int { buffer.alignment }
-    
+
     /// Initialize with specified capacity
     public init(capacity: Int, alignment: Int = 64) {
         self.buffer = StorageBuffer(capacity: capacity, alignment: alignment)
     }
-    
+
     /// Initialize from array
     public init(from array: [Element], alignment: Int = 64) {
         self.buffer = StorageBuffer(capacity: array.count, alignment: alignment)
@@ -137,14 +128,14 @@ public struct ManagedStorage<Element: BinaryFloatingPoint & SIMDScalar>: @unchec
             _ = dest.initialize(from: array)
         }
     }
-    
+
     /// Ensure unique ownership before mutation
     private mutating func ensureUniquelyReferenced() {
         if !isKnownUniquelyReferenced(&buffer) {
             buffer = StorageBuffer(copyFrom: buffer)
         }
     }
-    
+
     /// Borrow for read-only access
     public func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R
@@ -153,7 +144,7 @@ public struct ManagedStorage<Element: BinaryFloatingPoint & SIMDScalar>: @unchec
         let bufferPointer = UnsafeBufferPointer(start: typed, count: capacity)
         return try body(bufferPointer)
     }
-    
+
     /// Borrow for mutable access (triggers COW if needed)
     public mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
@@ -163,7 +154,7 @@ public struct ManagedStorage<Element: BinaryFloatingPoint & SIMDScalar>: @unchec
         let bufferPointer = UnsafeMutableBufferPointer(start: typed, count: capacity)
         return try body(bufferPointer)
     }
-    
+
     /// Element access
     public subscript(index: Int) -> Element {
         get {
@@ -183,19 +174,19 @@ public struct ManagedStorage<Element: BinaryFloatingPoint & SIMDScalar>: @unchec
 
 extension ManagedStorage: VectorStorage {
     public typealias Scalar = Element
-    
+
     public var count: Int { capacity }
-    
+
     // Protocol requirement: init with zeros
     public init() {
         self.init(capacity: 0)
     }
-    
+
     // Protocol requirement: init with repeating value
     public init(repeating value: Element) {
         fatalError("ManagedStorage requires explicit capacity - use init(capacity:) then fill(with:)")
     }
-    
+
     // Protocol requirement: init from array
     public init(from values: [Element]) {
         self.init(capacity: values.count)
@@ -218,7 +209,7 @@ extension ManagedStorage {
             }
         }
     }
-    
+
     /// Copy from another storage
     public mutating func copyFrom(_ other: ManagedStorage<Element>) {
         precondition(capacity == other.capacity, "Capacity mismatch")
@@ -228,7 +219,7 @@ extension ManagedStorage {
             }
         }
     }
-    
+
     /// Check if storage is uniquely referenced
     public var isUniquelyReferenced: Bool {
         mutating get {
@@ -261,18 +252,18 @@ extension ManagedStorage: Equatable where Element: Equatable {
 public struct StorageSlice<Element: BinaryFloatingPoint & SIMDScalar> {
     private let base: UnsafePointer<Element>
     public let count: Int
-    
+
     init(base: UnsafePointer<Element>, count: Int) {
         self.base = base
         self.count = count
     }
-    
+
     /// Access elements by index
     public subscript(index: Int) -> Element {
         precondition(index >= 0 && index < count, "Index out of bounds")
         return base[index]
     }
-    
+
     /// Iterate over elements
     public func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R

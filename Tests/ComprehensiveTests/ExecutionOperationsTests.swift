@@ -44,7 +44,7 @@ struct OperationsTests {
         #expect(res.count == 2)
         #expect(approxEqual(res[0].distance, res[1].distance))
         let idxs = Set(res.map { $0.index })
-        #expect(idxs == Set([0,1]))
+        #expect(idxs == Set([0, 1]))
     }
 
     @Test
@@ -77,7 +77,7 @@ struct OperationsTests {
         let a = Vector<Dim2>(x: 0, y: 0)
         let b = Vector<Dim2>(x: 3, y: 4)
         let c = Vector<Dim2>(x: 1, y: 1)
-        let m = try await Operations.distanceMatrix(between: [a,b,c], and: [a,b,c])
+        let m = try await Operations.distanceMatrix(between: [a, b, c], and: [a, b, c])
         #expect(m.count == 3 && m[0].count == 3)
         for i in 0..<3 { #expect(approxEqual(m[i][i], 0)) }
         #expect(approxEqual(m[0][1], 5) && approxEqual(m[1][0], 5))

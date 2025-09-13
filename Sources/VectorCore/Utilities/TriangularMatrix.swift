@@ -28,15 +28,15 @@ public struct TriangularMatrix<T> {
     /// Internal storage for upper triangle elements
     @usableFromInline
     internal var storage: TieredStorage<T>
-    
+
     /// Matrix dimension (n×n matrix)
     public let size: Int
-    
+
     /// Number of elements actually stored
     public var elementCount: Int {
         size * (size - 1) / 2
     }
-    
+
     /// Initialize with default value
     ///
     /// - Parameters:
@@ -46,17 +46,17 @@ public struct TriangularMatrix<T> {
         precondition(size >= 0, "Size must be non-negative")
         self.size = size
         let count = size * (size - 1) / 2
-        
+
         // Use TieredStorage for automatic optimization
         let elements = Array(repeating: defaultValue, count: count)
         self.storage = TieredStorage(elements)
     }
-    
+
     /// Initialize with zero (for numeric types)
     public init(size: Int) where T: Numeric {
         self.init(size: size, defaultValue: .zero)
     }
-    
+
     /// Convert indices to storage position
     @inlinable
     internal func storageIndex(row: Int, col: Int) -> Int {
@@ -79,10 +79,10 @@ extension TriangularMatrix {
         get {
             precondition(row >= 0 && row < size, "Row index out of bounds")
             precondition(col >= 0 && col < size, "Column index out of bounds")
-            
+
             // Diagonal is always zero for distance matrices
             guard row != col else { return .zero }
-            
+
             let index = storageIndex(row: row, col: col)
             return storage[index]
         }
@@ -90,29 +90,29 @@ extension TriangularMatrix {
             precondition(row >= 0 && row < size, "Row index out of bounds")
             precondition(col >= 0 && col < size, "Column index out of bounds")
             precondition(row != col, "Cannot set diagonal elements")
-            
+
             let index = storageIndex(row: row, col: col)
             storage[index] = newValue
         }
     }
-    
+
     /// Access matrix elements (non-numeric version)
     @inlinable
     public subscript(row: Int, col: Int) -> T? {
         get {
             precondition(row >= 0 && row < size, "Row index out of bounds")
             precondition(col >= 0 && col < size, "Column index out of bounds")
-            
+
             // Diagonal returns nil for non-numeric types
             guard row != col else { return nil }
-            
+
             let index = storageIndex(row: row, col: col)
             return storage[index]
         }
         set {
             precondition(row >= 0 && row < size, "Row index out of bounds")
             precondition(col >= 0 && col < size, "Column index out of bounds")
-            
+
             if row != col, let value = newValue {
                 let index = storageIndex(row: row, col: col)
                 storage[index] = value
@@ -135,11 +135,11 @@ extension TriangularMatrix {
         guard row >= 0 && row < size else { return nil }
         guard col >= 0 && col < size else { return nil }
         guard row != col else { return .zero }
-        
+
         let index = storageIndex(row: row, col: col)
         return storage[index]
     }
-    
+
     /// Safely set element
     ///
     /// - Parameters:
@@ -152,7 +152,7 @@ extension TriangularMatrix {
         guard row >= 0 && row < size else { return false }
         guard col >= 0 && col < size else { return false }
         guard row != col else { return false }
-        
+
         let index = storageIndex(row: row, col: col)
         storage[index] = value
         return true
@@ -167,28 +167,28 @@ extension TriangularMatrix: Sequence {
         private let matrix: TriangularMatrix<T>
         private var row = 0
         private var col = 1
-        
+
         init(_ matrix: TriangularMatrix<T>) {
             self.matrix = matrix
         }
-        
+
         public mutating func next() -> (row: Int, col: Int, value: T)? {
             guard row < matrix.size - 1 else { return nil }
-            
+
             let value = matrix.storage[matrix.storageIndex(row: row, col: col)]
             let result = (row, col, value)
-            
+
             // Move to next position
             col += 1
             if col >= matrix.size {
                 row += 1
                 col = row + 1
             }
-            
+
             return result
         }
     }
-    
+
     public func makeIterator() -> Iterator {
         Iterator(self)
     }
@@ -202,15 +202,15 @@ extension TriangularMatrix {
     /// - Returns: Full n×n matrix with symmetric values
     public func toFullMatrix() -> [[T]] where T: Numeric {
         var result = Array(repeating: Array(repeating: T.zero, count: size), count: size)
-        
+
         for (i, j, value) in self {
             result[i][j] = value
             result[j][i] = value  // Symmetry
         }
-        
+
         return result
     }
-    
+
     /// Create from full matrix (takes upper triangle)
     ///
     /// - Parameter matrix: Full matrix (must be square)
@@ -219,15 +219,15 @@ extension TriangularMatrix {
         guard !matrix.isEmpty else { return nil }
         let size = matrix.count
         guard matrix.allSatisfy({ $0.count == size }) else { return nil }
-        
+
         var result = TriangularMatrix(size: size, defaultValue: matrix[0][1])
-        
+
         for i in 0..<size {
             for j in (i+1)..<size {
                 result[i, j] = matrix[i][j]
             }
         }
-        
+
         return result
     }
 }
@@ -243,7 +243,7 @@ extension TriangularMatrix where T: Sendable {
         compute: @Sendable @escaping (Int, Int) async -> T
     ) async -> TriangularMatrix<T> where T: Numeric {
         var result = TriangularMatrix<T>(size: size)
-        
+
         await withTaskGroup(of: (Int, Int, T).self) { group in
             // Add tasks for each element
             for i in 0..<size {
@@ -254,13 +254,13 @@ extension TriangularMatrix where T: Sendable {
                     }
                 }
             }
-            
+
             // Collect results
             for await (i, j, value) in group {
                 result[i, j] = value
             }
         }
-        
+
         return result
     }
 }

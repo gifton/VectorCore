@@ -13,9 +13,9 @@ import Accelerate
 /// Accelerate framework implementation for Float operations
 public struct AccelerateFloatProvider: SIMDProvider {
     public typealias Scalar = Float
-    
+
     // MARK: - Arithmetic Operations
-    
+
     @inlinable
     public static func add(
         _ a: UnsafePointer<Float>,
@@ -25,7 +25,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
     ) {
         vDSP_vadd(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func subtract(
         _ a: UnsafePointer<Float>,
@@ -35,7 +35,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
     ) {
         vDSP_vsub(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func multiply(
         _ a: UnsafePointer<Float>,
@@ -45,7 +45,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
     ) {
         vDSP_vmul(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func divide(
         _ a: UnsafePointer<Float>,
@@ -55,7 +55,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
     ) {
         vDSP_vdiv(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func negate(
         _ a: UnsafePointer<Float>,
@@ -64,9 +64,9 @@ public struct AccelerateFloatProvider: SIMDProvider {
     ) {
         vDSP_vneg(a, 1, result, 1, vDSP_Length(count))
     }
-    
+
     // MARK: - Scalar Operations
-    
+
     @inlinable
     public static func addScalar(
         _ a: UnsafePointer<Float>,
@@ -77,7 +77,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         var s = scalar
         vDSP_vsadd(a, 1, &s, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func multiplyScalar(
         _ a: UnsafePointer<Float>,
@@ -88,7 +88,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         var s = scalar
         vDSP_vsmul(a, 1, &s, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func divideByScalar(
         _ a: UnsafePointer<Float>,
@@ -99,9 +99,9 @@ public struct AccelerateFloatProvider: SIMDProvider {
         var s = scalar
         vDSP_vsdiv(a, 1, &s, result, 1, vDSP_Length(count))
     }
-    
+
     // MARK: - Reduction Operations
-    
+
     @inlinable
     public static func dot(
         _ a: UnsafePointer<Float>,
@@ -112,7 +112,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_dotpr(a, 1, b, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func sum(
         _ a: UnsafePointer<Float>,
@@ -122,7 +122,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_sve(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func sumOfMagnitudes(
         _ a: UnsafePointer<Float>,
@@ -132,7 +132,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_svemg(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func sumOfSquares(
         _ a: UnsafePointer<Float>,
@@ -142,9 +142,9 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_svesq(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     // MARK: - Statistical Operations
-    
+
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Float>,
@@ -154,7 +154,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_maxv(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Float>,
@@ -164,7 +164,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_minv(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Float>,
@@ -174,9 +174,9 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_maxmgv(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     // MARK: - Distance Operations
-    
+
     @inlinable
     public static func distanceSquared(
         _ a: UnsafePointer<Float>,
@@ -187,9 +187,9 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_distancesq(a, 1, b, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     // MARK: - Utility Operations
-    
+
     @inlinable
     public static func copy(
         source: UnsafePointer<Float>,
@@ -199,7 +199,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         // Use memcpy for efficient copying
         destination.initialize(from: source, count: count)
     }
-    
+
     @inlinable
     public static func fill(
         value: Float,
@@ -209,7 +209,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         var v = value
         vDSP_vfill(&v, destination, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Float>,
@@ -227,9 +227,9 @@ public struct AccelerateFloatProvider: SIMDProvider {
 /// Accelerate framework implementation for Double operations
 public struct AccelerateDoubleProvider: SIMDProvider {
     public typealias Scalar = Double
-    
+
     // MARK: - Arithmetic Operations
-    
+
     @inlinable
     public static func add(
         _ a: UnsafePointer<Double>,
@@ -239,7 +239,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
     ) {
         vDSP_vaddD(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func subtract(
         _ a: UnsafePointer<Double>,
@@ -249,7 +249,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
     ) {
         vDSP_vsubD(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func multiply(
         _ a: UnsafePointer<Double>,
@@ -259,7 +259,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
     ) {
         vDSP_vmulD(a, 1, b, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func divide(
         _ a: UnsafePointer<Double>,
@@ -269,7 +269,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
     ) {
         vDSP_vdivD(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func negate(
         _ a: UnsafePointer<Double>,
@@ -278,9 +278,9 @@ public struct AccelerateDoubleProvider: SIMDProvider {
     ) {
         vDSP_vnegD(a, 1, result, 1, vDSP_Length(count))
     }
-    
+
     // MARK: - Scalar Operations
-    
+
     @inlinable
     public static func addScalar(
         _ a: UnsafePointer<Double>,
@@ -291,7 +291,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         var s = scalar
         vDSP_vsaddD(a, 1, &s, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func multiplyScalar(
         _ a: UnsafePointer<Double>,
@@ -302,7 +302,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         var s = scalar
         vDSP_vsmulD(a, 1, &s, result, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func divideByScalar(
         _ a: UnsafePointer<Double>,
@@ -313,9 +313,9 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         var s = scalar
         vDSP_vsdivD(a, 1, &s, result, 1, vDSP_Length(count))
     }
-    
+
     // MARK: - Reduction Operations
-    
+
     @inlinable
     public static func dot(
         _ a: UnsafePointer<Double>,
@@ -326,7 +326,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_dotprD(a, 1, b, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func sum(
         _ a: UnsafePointer<Double>,
@@ -336,7 +336,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_sveD(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func sumOfMagnitudes(
         _ a: UnsafePointer<Double>,
@@ -346,7 +346,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_svemgD(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func sumOfSquares(
         _ a: UnsafePointer<Double>,
@@ -356,9 +356,9 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_svesqD(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     // MARK: - Statistical Operations
-    
+
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Double>,
@@ -368,7 +368,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_maxvD(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Double>,
@@ -378,7 +378,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_minvD(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Double>,
@@ -388,9 +388,9 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_maxmgvD(a, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     // MARK: - Distance Operations
-    
+
     @inlinable
     public static func distanceSquared(
         _ a: UnsafePointer<Double>,
@@ -401,9 +401,9 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_distancesqD(a, 1, b, 1, &result, vDSP_Length(count))
         return result
     }
-    
+
     // MARK: - Utility Operations
-    
+
     @inlinable
     public static func copy(
         source: UnsafePointer<Double>,
@@ -413,7 +413,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         // Use memcpy for efficient copying
         destination.initialize(from: source, count: count)
     }
-    
+
     @inlinable
     public static func fill(
         value: Double,
@@ -423,7 +423,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         var v = value
         vDSP_vfillD(&v, destination, 1, vDSP_Length(count))
     }
-    
+
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Double>,

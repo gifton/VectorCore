@@ -50,33 +50,33 @@ public typealias BinaryCodable = BinaryEncodable & BinaryDecodable
 public struct BinaryHeader {
     /// Magic number identifying VectorCore binary format ("VECT" in ASCII).
     public static let magic: UInt32 = 0x56454354
-    
+
     /// Current binary format version.
     public static let version: UInt16 = 1
-    
+
     /// Magic number for format validation.
     public let magic: UInt32
-    
+
     /// Binary format version for compatibility checking.
     public let version: UInt16
-    
+
     /// Number of elements in the encoded vector.
     public let dimension: UInt32
-    
+
     /// Reserved flags for future format extensions.
     public let flags: UInt16
-    
+
     public init(dimension: Int) {
         self.magic = Self.magic
         self.version = Self.version
         self.dimension = UInt32(dimension)
         self.flags = 0
     }
-    
+
     public static var headerSize: Int {
         return MemoryLayout<UInt32>.size +  // magic
-               MemoryLayout<UInt16>.size +  // version
-               MemoryLayout<UInt32>.size +  // dimension
-               MemoryLayout<UInt16>.size    // flags
+            MemoryLayout<UInt16>.size +  // version
+            MemoryLayout<UInt32>.size +  // dimension
+            MemoryLayout<UInt16>.size    // flags
     }
 }

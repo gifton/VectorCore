@@ -86,7 +86,7 @@ public func unrolledLoop<T>(
     _ body: (Int) throws -> T
 ) rethrows {
     var i = 0
-    
+
     // Process in groups of stride
     while i + stride <= count {
         _ = try body(i)
@@ -95,7 +95,7 @@ public func unrolledLoop<T>(
         if stride > 3 { _ = try body(i + 3) }
         i += stride
     }
-    
+
     // Process remaining elements
     while i < count {
         _ = try body(i)
@@ -111,13 +111,13 @@ public func vectorizedLoop(
     _ body: (Range<Int>) throws -> Void
 ) rethrows {
     var i = 0
-    
+
     // Process vector-width elements at a time
     while i + vectorWidth <= count {
         try body(i..<(i + vectorWidth))
         i += vectorWidth
     }
-    
+
     // Process remaining elements
     if i < count {
         try body(i..<count)
@@ -162,7 +162,7 @@ public func assumeAligned<T>(
     _ pointer: UnsafePointer<T>,
     to alignment: Int = MemoryLayout<T>.alignment
 ) -> UnsafePointer<T> {
-    assert(Int(bitPattern: pointer) % alignment == 0, 
+    assert(Int(bitPattern: pointer) % alignment == 0,
            "Pointer is not aligned to \(alignment) bytes")
     return pointer
 }

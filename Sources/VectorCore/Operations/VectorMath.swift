@@ -30,7 +30,7 @@ extension Vector {
         let result = Operations.simdProvider.elementWiseMultiply(lhsArray, rhsArray)
         return try! Vector<D>(result)
     }
-    
+
     /// Element-wise division
     ///
     /// Computes: cᵢ = aᵢ / bᵢ for all i
@@ -50,7 +50,7 @@ extension Vector {
         let result = Operations.simdProvider.elementWiseDivide(lhsArray, rhsArray)
         return try! Vector<D>(result)
     }
-    
+
     /// Safe element-wise division with zero checking
     ///
     /// Computes: cᵢ = aᵢ / bᵢ for all i, with zero protection
@@ -66,7 +66,7 @@ extension Vector {
         // Check for zeros in divisor
         var hasZero = false
         var zeroIndices: [Int] = []
-        
+
         rhs.storage.withUnsafeBufferPointer { buffer in
             for i in 0..<D.value {
                 if buffer[i] == 0 {
@@ -75,15 +75,15 @@ extension Vector {
                 }
             }
         }
-        
+
         if hasZero {
             throw VectorError.divisionByZero(operation: "safeDivide")
         }
-        
+
         // Perform division
         return lhs ./ rhs
     }
-    
+
     /// Safe element-wise division with default value for division by zero
     ///
     /// Computes: cᵢ = (bᵢ ≠ 0) ? aᵢ / bᵢ : defaultValue
@@ -104,7 +104,7 @@ extension Vector {
         default defaultValue: Float = 0
     ) -> Vector<D> {
         var result = Vector<D>()
-        
+
         result.storage.withUnsafeMutableBufferPointer { dest in
             lhs.storage.withUnsafeBufferPointer { src1 in
                 rhs.storage.withUnsafeBufferPointer { src2 in
@@ -114,7 +114,7 @@ extension Vector {
                 }
             }
         }
-        
+
         return result
     }
 }
@@ -153,13 +153,13 @@ extension Vector where D.Storage: VectorStorageOperations {
         }
         return result
     }
-    
+
     /// L2 norm (Euclidean norm) - alias for magnitude
     @inlinable
     public var l2Norm: Float {
         magnitude
     }
-    
+
     /// L∞ norm (Maximum norm)
     ///
     /// Computes: max(|xᵢ|)
@@ -190,14 +190,14 @@ extension Vector {
         let array = self.toArray()
         return Operations.simdProvider.mean(array)
     }
-    
+
     /// Sum of all elements
     @inlinable
     public var sum: Float {
         let array = self.toArray()
         return Operations.simdProvider.sum(array)
     }
-    
+
     /// Variance of all elements
     ///
     /// Computes: σ² = (1/n)Σ(xᵢ - μ)²
@@ -216,16 +216,16 @@ extension Vector {
     public var variance: Float {
         let m = mean
         var result: Float = 0
-        
+
         // Compute sum of squared differences from mean
         let array = self.toArray()
         let diffs = array.map { $0 - m }
         let squaredDiffs = diffs.map { $0 * $0 }
         result = squaredDiffs.reduce(0, +)
-        
+
         return result / Float(D.value)
     }
-    
+
     /// Standard deviation
     @inlinable
     public var standardDeviation: Float {
@@ -242,7 +242,7 @@ extension Vector where D.Storage: VectorStorageOperations {
     @inlinable
     public func manhattanDistance(to other: Vector<D>) -> Float {
         var result: Float = 0
-        
+
         storage.withUnsafeBufferPointer { buffer1 in
             other.storage.withUnsafeBufferPointer { buffer2 in
                 // Small vector optimization: avoid allocation
@@ -260,10 +260,10 @@ extension Vector where D.Storage: VectorStorageOperations {
                 }
             }
         }
-        
+
         return result
     }
-    
+
     /// Chebyshev distance (L∞ distance)
     @inlinable
     public func chebyshevDistance(to other: Vector<D>) -> Float {
@@ -300,25 +300,25 @@ extension Vector {
     @inlinable
     public func softmax() -> Vector<D> {
         var result = self
-        
+
         // Find max for numerical stability
         let array = self.toArray()
         let maxVal = Operations.simdProvider.max(array)
-        
+
         // Subtract max and exp
         let shifted = array.map { $0 - maxVal }
         let expValues = shifted.map { Foundation.exp($0) }
-        
+
         // Sum for normalization
         let sum = expValues.reduce(0, +)
-        
+
         // Normalize
         let normalized = Operations.simdProvider.divide(expValues, by: sum)
         result = try! Vector<D>(normalized)
-        
+
         return result
     }
-    
+
     /// Clamp values to a range
     ///
     /// Computes: clamp(xᵢ, min, max) = max(min, min(max, xᵢ))
@@ -336,11 +336,11 @@ extension Vector {
     @inlinable
     public func clamped(to range: ClosedRange<Float>) -> Vector<D> {
         var result = self
-        
+
         let array = result.toArray()
         let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
         result = try! Vector<D>(clamped)
-        
+
         return result
     }
 }
@@ -392,10 +392,10 @@ public enum VectorMath {
         let distances = vectors.enumerated().map { index, vector in
             (index: index, distance: metric(query, vector))
         }
-        
+
         return Array(distances.sorted { $0.distance < $1.distance }.prefix(k))
     }
-    
+
     /// Compute pairwise distances between all vectors
     ///
     /// Computes: D[i,j] = metric(vectors[i], vectors[j])
@@ -422,7 +422,7 @@ public enum VectorMath {
     ) -> [[Float]] where D.Storage: VectorStorageOperations {
         let n = vectors.count
         var distances = Array(repeating: Array(repeating: Float(0), count: n), count: n)
-        
+
         for i in 0..<n {
             for j in i+1..<n {
                 let dist = metric(vectors[i], vectors[j])
@@ -430,7 +430,7 @@ public enum VectorMath {
                 distances[j][i] = dist
             }
         }
-        
+
         return distances
     }
 }
@@ -468,7 +468,7 @@ extension Vector where D.Storage: VectorStorageOperations {
         }
         return Float(sparseCount) / Float(D.value)
     }
-    
+
     /// Calculate Shannon entropy
     ///
     /// Treats the vector as a probability distribution after normalization.
@@ -490,7 +490,7 @@ extension Vector where D.Storage: VectorStorageOperations {
         // Use optimized implementation for better performance
         return entropyFast
     }
-    
+
     // TODO: Implement VectorQuality type
     // /// Comprehensive quality assessment
     // ///
@@ -520,7 +520,7 @@ extension Vector where D.Storage: VectorStorageOperations {
         let data = encodeBinary()
         return data.base64EncodedString()
     }
-    
+
     /// Decode vector from base64 string
     ///
     /// - Parameter base64String: Base64-encoded vector data

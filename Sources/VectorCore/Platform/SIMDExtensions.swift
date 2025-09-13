@@ -20,7 +20,7 @@ extension SIMD where Scalar == Float {
 // MARK: - Double SIMD Extensions
 
 extension SIMD where Scalar == Double {
-    /// Sum all elements in the SIMD vector  
+    /// Sum all elements in the SIMD vector
     @inlinable
     func sum() -> Scalar {
         return self.indices.reduce(Scalar.zero) { $0 + self[$1] }
@@ -40,7 +40,7 @@ extension SIMD where Scalar: FloatingPoint {
         }
         return result
     }
-    
+
     /// Store data to unsafe pointer with bounds checking
     @inlinable
     func storeSafe(to pointer: UnsafeMutablePointer<Scalar>, count: Int, offset: Int) {

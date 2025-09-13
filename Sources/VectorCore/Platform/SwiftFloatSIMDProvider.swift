@@ -11,9 +11,9 @@ import Foundation
 /// Optimized Pure Swift implementation for Float operations
 public struct SwiftFloatSIMDProvider: SIMDProvider {
     public typealias Scalar = Float
-    
+
     // MARK: - Arithmetic Operations
-    
+
     @inlinable
     public static func add(
         _ a: UnsafePointer<Float>,
@@ -22,7 +22,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         count: Int
     ) {
         var i = 0
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -45,7 +45,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -57,14 +57,14 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = vr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = a[i] + b[i]
             i += 1
         }
     }
-    
+
     @inlinable
     public static func subtract(
         _ a: UnsafePointer<Float>,
@@ -73,7 +73,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         count: Int
     ) {
         var i = 0
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -96,7 +96,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -108,14 +108,14 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = vr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = a[i] - b[i]
             i += 1
         }
     }
-    
+
     @inlinable
     public static func multiply(
         _ a: UnsafePointer<Float>,
@@ -124,7 +124,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         count: Int
     ) {
         var i = 0
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -147,7 +147,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -159,14 +159,14 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = vr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = a[i] * b[i]
             i += 1
         }
     }
-    
+
     @inlinable
     public static func divide(
         _ a: UnsafePointer<Float>,
@@ -175,7 +175,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         count: Int
     ) {
         var i = 0
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -198,7 +198,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -210,14 +210,14 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = vr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = a[i] / b[i]
             i += 1
         }
     }
-    
+
     @inlinable
     public static func negate(
         _ a: UnsafePointer<Float>,
@@ -225,7 +225,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         count: Int
     ) {
         var i = 0
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -244,7 +244,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -255,16 +255,16 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = vr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = -a[i]
             i += 1
         }
     }
-    
+
     // MARK: - Scalar Operations
-    
+
     @inlinable
     public static func addScalar(
         _ a: UnsafePointer<Float>,
@@ -275,7 +275,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
         let scalarVec8 = SIMD8<Float>(repeating: scalar)
         let scalarVec4 = SIMD4<Float>(repeating: scalar)
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -294,7 +294,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -305,14 +305,14 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = vr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = a[i] + scalar
             i += 1
         }
     }
-    
+
     @inlinable
     public static func multiplyScalar(
         _ a: UnsafePointer<Float>,
@@ -323,7 +323,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
         let scalarVec8 = SIMD8<Float>(repeating: scalar)
         let scalarVec4 = SIMD4<Float>(repeating: scalar)
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -342,7 +342,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -353,14 +353,14 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = vr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = a[i] * scalar
             i += 1
         }
     }
-    
+
     @inlinable
     public static func divideByScalar(
         _ a: UnsafePointer<Float>,
@@ -371,9 +371,9 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         let invScalar = 1.0 / scalar
         multiplyScalar(a, scalar: invScalar, result: result, count: count)
     }
-    
+
     // MARK: - Reduction Operations
-    
+
     @inlinable
     public static func dot(
         _ a: UnsafePointer<Float>,
@@ -382,7 +382,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
     ) -> Float {
         var sum = SIMD8<Float>.zero
         var i = 0
-        
+
         // Process in SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -397,10 +397,10 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             sum += va * vb
             i += 8
         }
-        
+
         // Sum the SIMD8 vector
         var result = sum[0] + sum[1] + sum[2] + sum[3] + sum[4] + sum[5] + sum[6] + sum[7]
-        
+
         // Process SIMD4
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -409,16 +409,16 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result += prod[0] + prod[1] + prod[2] + prod[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result += a[i] * b[i]
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func sum(
         _ a: UnsafePointer<Float>,
@@ -426,7 +426,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
     ) -> Float {
         var sum = SIMD8<Float>.zero
         var i = 0
-        
+
         // Process in SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -437,26 +437,26 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             sum += va
             i += 8
         }
-        
+
         // Sum the SIMD8 vector
         var result = sum[0] + sum[1] + sum[2] + sum[3] + sum[4] + sum[5] + sum[6] + sum[7]
-        
+
         // Process SIMD4
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
             result += va[0] + va[1] + va[2] + va[3]
             i += 4
         }
-        
+
         // Handle remaining
         while i < count {
             result += a[i]
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func sumOfMagnitudes(
         _ a: UnsafePointer<Float>,
@@ -464,7 +464,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
     ) -> Float {
         var sum = SIMD8<Float>.zero
         var i = 0
-        
+
         // Process in SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -475,10 +475,10 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             sum += va.replacing(with: -va, where: va .< 0)
             i += 8
         }
-        
+
         // Sum the SIMD8 vector
         var result = sum[0] + sum[1] + sum[2] + sum[3] + sum[4] + sum[5] + sum[6] + sum[7]
-        
+
         // Process SIMD4
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -486,16 +486,16 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result += absVa[0] + absVa[1] + absVa[2] + absVa[3]
             i += 4
         }
-        
+
         // Handle remaining
         while i < count {
             result += abs(a[i])
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func sumOfSquares(
         _ a: UnsafePointer<Float>,
@@ -503,7 +503,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
     ) -> Float {
         var sum = SIMD8<Float>.zero
         var i = 0
-        
+
         // Process in SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -514,10 +514,10 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             sum += va * va
             i += 8
         }
-        
+
         // Sum the SIMD8 vector
         var result = sum[0] + sum[1] + sum[2] + sum[3] + sum[4] + sum[5] + sum[6] + sum[7]
-        
+
         // Process SIMD4
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -525,28 +525,28 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result += sqr[0] + sqr[1] + sqr[2] + sqr[3]
             i += 4
         }
-        
+
         // Handle remaining
         while i < count {
             result += a[i] * a[i]
             i += 1
         }
-        
+
         return result
     }
-    
+
     // MARK: - Statistical Operations
-    
+
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
         guard count > 0 else { return 0 }
-        
+
         var result = a[0]
         var i = 1
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -557,33 +557,33 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result = max(result, va.max())
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
             result = max(result, va.max())
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result = max(result, a[i])
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
         guard count > 0 else { return 0 }
-        
+
         var result = a[0]
         var i = 1
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -594,33 +594,33 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result = min(result, va.min())
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
             result = min(result, va.min())
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result = min(result, a[i])
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
         guard count > 0 else { return 0 }
-        
+
         var result = abs(a[0])
         var i = 1
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -632,7 +632,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result = Swift.max(result, absVa.max())
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -640,18 +640,18 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result = Swift.max(result, absVa.max())
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result = Swift.max(result, Swift.abs(a[i]))
             i += 1
         }
-        
+
         return result
     }
-    
+
     // MARK: - Distance Operations
-    
+
     @inlinable
     public static func distanceSquared(
         _ a: UnsafePointer<Float>,
@@ -660,7 +660,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
     ) -> Float {
         var sum = SIMD8<Float>.zero
         var i = 0
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -676,10 +676,10 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             sum += diff * diff
             i += 8
         }
-        
+
         // Sum the SIMD8 vector
         var result = sum[0] + sum[1] + sum[2] + sum[3] + sum[4] + sum[5] + sum[6] + sum[7]
-        
+
         // Process SIMD4
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -689,19 +689,19 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result += sqr[0] + sqr[1] + sqr[2] + sqr[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             let diff = a[i] - b[i]
             result += diff * diff
             i += 1
         }
-        
+
         return result
     }
-    
+
     // MARK: - Utility Operations
-    
+
     @inlinable
     public static func copy(
         source: UnsafePointer<Float>,
@@ -710,7 +710,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
     ) {
         destination.initialize(from: source, count: count)
     }
-    
+
     @inlinable
     public static func fill(
         value: Float,
@@ -720,7 +720,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
         let valueVec8 = SIMD8<Float>(repeating: value)
         let valueVec4 = SIMD4<Float>(repeating: value)
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -734,7 +734,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             destination[i+7] = valueVec8[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             destination[i] = valueVec4[0]
@@ -743,14 +743,14 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             destination[i+3] = valueVec4[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             destination[i] = value
             i += 1
         }
     }
-    
+
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Float>,
@@ -764,7 +764,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         let highVec8 = SIMD8<Float>(repeating: high)
         let lowVec4 = SIMD4<Float>(repeating: low)
         let highVec4 = SIMD4<Float>(repeating: high)
-        
+
         // Process SIMD8 chunks
         let simd8Count = count & ~7
         while i < simd8Count {
@@ -783,7 +783,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+7] = clipped[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         if i + 4 <= count {
             let va = SIMD4<Float>(a[i], a[i+1], a[i+2], a[i+3])
@@ -794,7 +794,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
             result[i+3] = clipped[3]
             i += 4
         }
-        
+
         // Handle remaining elements
         while i < count {
             result[i] = min(max(a[i], low), high)

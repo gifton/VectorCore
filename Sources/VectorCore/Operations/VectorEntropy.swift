@@ -19,13 +19,13 @@ extension Vector where D.Storage: VectorStorageOperations {
             return entropyLarge()
         }
     }
-    
+
     /// Direct calculation for small vectors
     @usableFromInline
     internal func entropySmall() -> Float {
         var absSum: Float = 0
         var hasNonFinite = false
-        
+
         // First pass: check for non-finite and sum absolute values
         storage.withUnsafeBufferPointer { buffer in
             for i in 0..<D.value {
@@ -37,10 +37,10 @@ extension Vector where D.Storage: VectorStorageOperations {
                 absSum += Swift.abs(value)
             }
         }
-        
+
         guard !hasNonFinite else { return .nan }
         guard absSum > Float.ulpOfOne else { return 0.0 }
-        
+
         // Second pass: calculate entropy
         var entropy: Float = 0
         storage.withUnsafeBufferPointer { buffer in
@@ -51,32 +51,32 @@ extension Vector where D.Storage: VectorStorageOperations {
                 }
             }
         }
-        
+
         return entropy
     }
-    
+
     /// Vectorized calculation for large vectors
     @usableFromInline
     internal func entropyLarge() -> Float {
         let provider = SwiftSIMDProvider()
         var result: Float = 0
-        
+
         storage.withUnsafeBufferPointer { buffer in
             // Convert to array for provider
             let values = Array(buffer)
-            
+
             // Step 1: Compute absolute values
             let absValues = provider.abs(values)
-            
+
             // Step 2: Check for non-finite values using min/max
             let minVal = provider.min(values)
             let maxVal = provider.max(values)
-            
+
             guard minVal.isFinite && maxVal.isFinite else {
                 result = .nan
                 return
             }
-            
+
             // Step 3: Sum absolute values
             let absSum = provider.sum(absValues)
 
@@ -90,15 +90,15 @@ extension Vector where D.Storage: VectorStorageOperations {
                 result = 0.0
                 return
             }
-            
+
             // Step 4: Normalize to probabilities
             let probabilities = provider.divide(absValues, by: absSum)
-            
+
             // Step 5: Compute entropy using log
             // We need to compute -p * log(p) for each element
             let logProbs = provider.log(probabilities)
             let entropyTerms = provider.elementWiseMultiply(probabilities, logProbs)
-            
+
             // Handle near-zero probabilities (set to 0)
             var cleanedTerms = entropyTerms
             for i in 0..<cleanedTerms.count {
@@ -106,11 +106,11 @@ extension Vector where D.Storage: VectorStorageOperations {
                     cleanedTerms[i] = 0
                 }
             }
-            
+
             // Sum all terms
             result = -provider.sum(cleanedTerms)
         }
-        
+
         return result
     }
 }

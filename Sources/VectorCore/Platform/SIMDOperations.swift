@@ -11,7 +11,7 @@ import Foundation
 /// Global namespace for SIMD operations on Float vectors
 public enum FloatSIMD {
     // MARK: - Arithmetic Operations
-    
+
     @inlinable
     public static func add(
         _ a: UnsafePointer<Float>,
@@ -21,7 +21,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.add(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func subtract(
         _ a: UnsafePointer<Float>,
@@ -31,7 +31,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.subtract(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func multiply(
         _ a: UnsafePointer<Float>,
@@ -41,7 +41,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.multiply(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func divide(
         _ a: UnsafePointer<Float>,
@@ -51,7 +51,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.divide(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func negate(
         _ a: UnsafePointer<Float>,
@@ -60,9 +60,9 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.negate(a, result: result, count: count)
     }
-    
+
     // MARK: - Scalar Operations
-    
+
     @inlinable
     public static func addScalar(
         _ a: UnsafePointer<Float>,
@@ -72,7 +72,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.addScalar(a, scalar: scalar, result: result, count: count)
     }
-    
+
     @inlinable
     public static func multiplyScalar(
         _ a: UnsafePointer<Float>,
@@ -82,7 +82,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.multiplyScalar(a, scalar: scalar, result: result, count: count)
     }
-    
+
     @inlinable
     public static func divideByScalar(
         _ a: UnsafePointer<Float>,
@@ -92,9 +92,9 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.divideByScalar(a, scalar: scalar, result: result, count: count)
     }
-    
+
     // MARK: - Reduction Operations
-    
+
     @inlinable
     public static func dot(
         _ a: UnsafePointer<Float>,
@@ -103,7 +103,7 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.dot(a, b, count: count)
     }
-    
+
     @inlinable
     public static func sum(
         _ a: UnsafePointer<Float>,
@@ -111,7 +111,7 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.sum(a, count: count)
     }
-    
+
     @inlinable
     public static func sumOfMagnitudes(
         _ a: UnsafePointer<Float>,
@@ -119,7 +119,7 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.sumOfMagnitudes(a, count: count)
     }
-    
+
     @inlinable
     public static func sumOfSquares(
         _ a: UnsafePointer<Float>,
@@ -127,9 +127,9 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.sumOfSquares(a, count: count)
     }
-    
+
     // MARK: - Statistical Operations
-    
+
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Float>,
@@ -137,7 +137,7 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.maximum(a, count: count)
     }
-    
+
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Float>,
@@ -145,7 +145,7 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.minimum(a, count: count)
     }
-    
+
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Float>,
@@ -153,9 +153,9 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.maximumMagnitude(a, count: count)
     }
-    
+
     // MARK: - Distance Operations
-    
+
     @inlinable
     public static func distanceSquared(
         _ a: UnsafePointer<Float>,
@@ -164,9 +164,9 @@ public enum FloatSIMD {
     ) -> Float {
         SIMDOperations.FloatProvider.distanceSquared(a, b, count: count)
     }
-    
+
     // MARK: - Utility Operations
-    
+
     @inlinable
     public static func copy(
         source: UnsafePointer<Float>,
@@ -175,7 +175,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.copy(source: source, destination: destination, count: count)
     }
-    
+
     @inlinable
     public static func fill(
         value: Float,
@@ -184,7 +184,7 @@ public enum FloatSIMD {
     ) {
         SIMDOperations.FloatProvider.fill(value: value, destination: destination, count: count)
     }
-    
+
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Float>,
@@ -200,7 +200,7 @@ public enum FloatSIMD {
 /// Global namespace for SIMD operations on Double vectors
 public enum DoubleSIMD {
     // MARK: - Arithmetic Operations
-    
+
     @inlinable
     public static func add(
         _ a: UnsafePointer<Double>,
@@ -210,7 +210,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.add(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func subtract(
         _ a: UnsafePointer<Double>,
@@ -220,7 +220,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.subtract(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func multiply(
         _ a: UnsafePointer<Double>,
@@ -230,7 +230,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.multiply(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func divide(
         _ a: UnsafePointer<Double>,
@@ -240,7 +240,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.divide(a, b, result: result, count: count)
     }
-    
+
     @inlinable
     public static func negate(
         _ a: UnsafePointer<Double>,
@@ -249,9 +249,9 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.negate(a, result: result, count: count)
     }
-    
+
     // MARK: - Scalar Operations
-    
+
     @inlinable
     public static func addScalar(
         _ a: UnsafePointer<Double>,
@@ -261,7 +261,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.addScalar(a, scalar: scalar, result: result, count: count)
     }
-    
+
     @inlinable
     public static func multiplyScalar(
         _ a: UnsafePointer<Double>,
@@ -271,7 +271,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.multiplyScalar(a, scalar: scalar, result: result, count: count)
     }
-    
+
     @inlinable
     public static func divideByScalar(
         _ a: UnsafePointer<Double>,
@@ -281,9 +281,9 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.divideByScalar(a, scalar: scalar, result: result, count: count)
     }
-    
+
     // MARK: - Reduction Operations
-    
+
     @inlinable
     public static func dot(
         _ a: UnsafePointer<Double>,
@@ -292,7 +292,7 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.dot(a, b, count: count)
     }
-    
+
     @inlinable
     public static func sum(
         _ a: UnsafePointer<Double>,
@@ -300,7 +300,7 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.sum(a, count: count)
     }
-    
+
     @inlinable
     public static func sumOfMagnitudes(
         _ a: UnsafePointer<Double>,
@@ -308,7 +308,7 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.sumOfMagnitudes(a, count: count)
     }
-    
+
     @inlinable
     public static func sumOfSquares(
         _ a: UnsafePointer<Double>,
@@ -316,9 +316,9 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.sumOfSquares(a, count: count)
     }
-    
+
     // MARK: - Statistical Operations
-    
+
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Double>,
@@ -326,7 +326,7 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.maximum(a, count: count)
     }
-    
+
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Double>,
@@ -334,7 +334,7 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.minimum(a, count: count)
     }
-    
+
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Double>,
@@ -342,9 +342,9 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.maximumMagnitude(a, count: count)
     }
-    
+
     // MARK: - Distance Operations
-    
+
     @inlinable
     public static func distanceSquared(
         _ a: UnsafePointer<Double>,
@@ -353,9 +353,9 @@ public enum DoubleSIMD {
     ) -> Double {
         SIMDOperations.DoubleProvider.distanceSquared(a, b, count: count)
     }
-    
+
     // MARK: - Utility Operations
-    
+
     @inlinable
     public static func copy(
         source: UnsafePointer<Double>,
@@ -364,7 +364,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.copy(source: source, destination: destination, count: count)
     }
-    
+
     @inlinable
     public static func fill(
         value: Double,
@@ -373,7 +373,7 @@ public enum DoubleSIMD {
     ) {
         SIMDOperations.DoubleProvider.fill(value: value, destination: destination, count: count)
     }
-    
+
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Double>,

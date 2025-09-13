@@ -19,7 +19,7 @@
 /// ## Example Usage
 /// ```swift
 /// print("VectorCore v\(VectorCoreVersion.versionString)")
-/// 
+///
 /// if VectorCoreVersion.major >= 1 {
 ///     // Use stable API features
 /// }
@@ -29,34 +29,34 @@ public struct VectorCoreVersion {
     ///
     /// This matches the version in Package.swift.
     public static let version = "0.1.0"
-    
+
     /// Major version number.
     ///
     /// Incremented when making incompatible API changes.
     public static let major = 0
-    
+
     /// Minor version number.
     ///
     /// Incremented when adding functionality in a backwards-compatible manner.
     public static let minor = 1
-    
+
     /// Patch version number.
     ///
     /// Incremented when making backwards-compatible bug fixes.
     public static let patch = 0
-    
+
     /// Pre-release version identifier.
     ///
     /// Examples: "alpha", "beta.1", "rc.2"
     /// nil for stable releases.
     public static let prerelease: String? = nil
-    
+
     /// Build metadata.
     ///
     /// Examples: "exp.sha.5114f85", "2024.01.15"
     /// Does not affect version precedence.
     public static let buildMetadata: String? = nil
-    
+
     /// Full semantic version string.
     ///
     /// Combines all version components according to semver spec:

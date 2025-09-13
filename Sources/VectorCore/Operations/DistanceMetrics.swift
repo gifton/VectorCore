@@ -21,12 +21,12 @@ public typealias DistanceScore = Float
 /// Euclidean (L2) distance metric with SIMD acceleration
 public struct EuclideanDistance: DistanceMetric {
     public typealias Scalar = Float
-    
+
     public var name: String { "euclidean" }
     public var identifier: String { "euclidean" }
-    
+
     public init() {}
-    
+
     /// Compute Euclidean distance between two vectors
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -34,10 +34,10 @@ public struct EuclideanDistance: DistanceMetric {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
-        
+
         let aArray = a.toArray()
         let bArray = b.toArray()
-        
+
         return aArray.withUnsafeBufferPointer { aBuffer in
             bArray.withUnsafeBufferPointer { bBuffer in
                 let result = SIMDOperations.FloatProvider.distanceSquared(
@@ -49,7 +49,7 @@ public struct EuclideanDistance: DistanceMetric {
             }
         }
     }
-    
+
     /// Optimized batch distance computation
     /// - Precondition: Query and all candidates must have the same dimension
     public func batchDistance<Vector: VectorProtocol>(
@@ -62,9 +62,9 @@ public struct EuclideanDistance: DistanceMetric {
                    "Dimension mismatch in batch: query has \(query.scalarCount), candidate has \(candidate.scalarCount)")
         }
         #endif
-        
+
         var results = [DistanceScore](repeating: 0, count: candidates.count)
-        
+
         query.withUnsafeBufferPointer { queryBuffer in
             for (index, candidate) in candidates.enumerated() {
                 candidate.withUnsafeBufferPointer { candidateBuffer in
@@ -77,7 +77,7 @@ public struct EuclideanDistance: DistanceMetric {
                 }
             }
         }
-        
+
         return results
     }
 }
@@ -88,9 +88,9 @@ public struct EuclideanDistance: DistanceMetric {
 public struct CosineDistance: DistanceMetric {
     public var name: String { "cosine" }
     public let identifier = "cosine"
-    
+
     public init() {}
-    
+
     /// Compute cosine distance between two vectors
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -98,14 +98,14 @@ public struct CosineDistance: DistanceMetric {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
-        
+
         let aArray = a.toArray()
         let bArray = b.toArray()
-        
+
         var dotProduct: Float = 0
         var aMagnitudeSq: Float = 0
         var bMagnitudeSq: Float = 0
-        
+
         aArray.withUnsafeBufferPointer { aBuffer in
             bArray.withUnsafeBufferPointer { bBuffer in
                 // Dot product
@@ -114,13 +114,13 @@ public struct CosineDistance: DistanceMetric {
                     bBuffer.baseAddress!,
                     count: aBuffer.count
                 )
-                
+
                 // Magnitude squared of a
                 aMagnitudeSq = SIMDOperations.FloatProvider.sumOfSquares(
                     aBuffer.baseAddress!,
                     count: aBuffer.count
                 )
-                
+
                 // Magnitude squared of b
                 bMagnitudeSq = SIMDOperations.FloatProvider.sumOfSquares(
                     bBuffer.baseAddress!,
@@ -128,16 +128,16 @@ public struct CosineDistance: DistanceMetric {
                 )
             }
         }
-        
+
         // Handle zero vectors
         let magnitudeProduct = sqrt(aMagnitudeSq * bMagnitudeSq)
         guard magnitudeProduct > Float.ulpOfOne else {
             return 1.0 // Maximum distance for zero vectors
         }
-        
+
         // Cosine similarity, clamped to [-1, 1] to handle numerical errors
         let cosineSimilarity = max(-1, min(1, dotProduct / magnitudeProduct))
-        
+
         // Convert to distance (1 - similarity)
         return 1.0 - cosineSimilarity
     }
@@ -149,9 +149,9 @@ public struct CosineDistance: DistanceMetric {
 public struct ManhattanDistance: DistanceMetric {
     public var name: String { "manhattan" }
     public let identifier = "manhattan"
-    
+
     public init() {}
-    
+
     /// Compute Manhattan distance between two vectors
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -159,11 +159,11 @@ public struct ManhattanDistance: DistanceMetric {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
-        
+
         let aArray = a.toArray()
         let bArray = b.toArray()
         var result: Float = 0
-        
+
         aArray.withUnsafeBufferPointer { aBuffer in
             bArray.withUnsafeBufferPointer { bBuffer in
                 // Compute difference
@@ -175,7 +175,7 @@ public struct ManhattanDistance: DistanceMetric {
                         result: diffBuffer.baseAddress!,
                         count: aBuffer.count
                     )
-                    
+
                     // Sum of absolute values
                     result = SIMDOperations.FloatProvider.sumOfMagnitudes(
                         diffBuffer.baseAddress!,
@@ -184,7 +184,7 @@ public struct ManhattanDistance: DistanceMetric {
                 }
             }
         }
-        
+
         return result
     }
 }
@@ -195,9 +195,9 @@ public struct ManhattanDistance: DistanceMetric {
 public struct DotProductDistance: DistanceMetric {
     public var name: String { "dotproduct" }
     public let identifier = "dotproduct"
-    
+
     public init() {}
-    
+
     /// Compute negative dot product as distance
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -205,11 +205,11 @@ public struct DotProductDistance: DistanceMetric {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
-        
+
         let aArray = a.toArray()
         let bArray = b.toArray()
         var result: Float = 0
-        
+
         aArray.withUnsafeBufferPointer { aBuffer in
             bArray.withUnsafeBufferPointer { bBuffer in
                 result = SIMDOperations.FloatProvider.dot(
@@ -219,7 +219,7 @@ public struct DotProductDistance: DistanceMetric {
                 )
             }
         }
-        
+
         // Return negative for distance (higher dot product = smaller distance)
         return -result
     }
@@ -231,9 +231,9 @@ public struct DotProductDistance: DistanceMetric {
 public struct ChebyshevDistance: DistanceMetric {
     public var name: String { "chebyshev" }
     public let identifier = "chebyshev"
-    
+
     public init() {}
-    
+
     /// Compute Chebyshev distance (maximum absolute difference)
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -241,11 +241,11 @@ public struct ChebyshevDistance: DistanceMetric {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
-        
+
         let aArray = a.toArray()
         let bArray = b.toArray()
         var result: Float = 0
-        
+
         aArray.withUnsafeBufferPointer { aBuffer in
             bArray.withUnsafeBufferPointer { bBuffer in
                 // Compute difference
@@ -257,7 +257,7 @@ public struct ChebyshevDistance: DistanceMetric {
                         result: diffBuffer.baseAddress!,
                         count: aBuffer.count
                     )
-                    
+
                     // Maximum absolute value
                     result = SIMDOperations.FloatProvider.maximumMagnitude(
                         diffBuffer.baseAddress!,
@@ -266,7 +266,7 @@ public struct ChebyshevDistance: DistanceMetric {
                 }
             }
         }
-        
+
         return result
     }
 }
@@ -277,14 +277,14 @@ public struct ChebyshevDistance: DistanceMetric {
 public struct HammingDistance: DistanceMetric {
     public var name: String { "hamming" }
     public let identifier = "hamming"
-    
+
     /// Threshold for considering a value as 1 (vs 0)
     public let threshold: Float
-    
+
     public init(threshold: Float = 0.5) {
         self.threshold = threshold
     }
-    
+
     /// Compute Hamming distance (number of differing positions)
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -292,11 +292,11 @@ public struct HammingDistance: DistanceMetric {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
-        
+
         let aArray = a.toArray()
         let bArray = b.toArray()
         var count: Float = 0
-        
+
         aArray.withUnsafeBufferPointer { aBuffer in
             bArray.withUnsafeBufferPointer { bBuffer in
                 for i in 0..<aBuffer.count {
@@ -308,7 +308,7 @@ public struct HammingDistance: DistanceMetric {
                 }
             }
         }
-        
+
         return count
     }
 }
@@ -320,12 +320,12 @@ public struct MinkowskiDistance: DistanceMetric {
     public let identifier: String
     public let p: Float
     public var name: String { identifier }
-    
+
     public init(p: Float = 2.0) {
         self.p = p
         self.identifier = "minkowski_\(p)"
     }
-    
+
     /// Compute Minkowski distance
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -333,7 +333,7 @@ public struct MinkowskiDistance: DistanceMetric {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
-        
+
         // Special cases
         if p == 1 {
             return ManhattanDistance().distance(a, b)
@@ -342,11 +342,11 @@ public struct MinkowskiDistance: DistanceMetric {
         } else if p == .infinity {
             return ChebyshevDistance().distance(a, b)
         }
-        
+
         let aArray = a.toArray()
         let bArray = b.toArray()
         var sum: Float = 0
-        
+
         aArray.withUnsafeBufferPointer { aBuffer in
             bArray.withUnsafeBufferPointer { bBuffer in
                 for i in 0..<aBuffer.count {
@@ -355,7 +355,7 @@ public struct MinkowskiDistance: DistanceMetric {
                 }
             }
         }
-        
+
         return pow(sum, 1.0 / p)
     }
 }

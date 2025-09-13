@@ -28,9 +28,9 @@ import Foundation
 public protocol SIMDProvider {
     /// The floating-point type this provider operates on
     associatedtype Scalar: BinaryFloatingPoint & SIMDScalar
-    
+
     // MARK: - Arithmetic Operations
-    
+
     /// Adds two vectors element-wise: result[i] = a[i] + b[i]
     @inlinable
     static func add(
@@ -39,7 +39,7 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Subtracts two vectors element-wise: result[i] = a[i] - b[i]
     @inlinable
     static func subtract(
@@ -48,7 +48,7 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Multiplies two vectors element-wise: result[i] = a[i] * b[i]
     @inlinable
     static func multiply(
@@ -57,7 +57,7 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Divides two vectors element-wise: result[i] = a[i] / b[i]
     @inlinable
     static func divide(
@@ -66,7 +66,7 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Negates a vector: result[i] = -a[i]
     @inlinable
     static func negate(
@@ -74,9 +74,9 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     // MARK: - Scalar-Vector Operations
-    
+
     /// Adds a scalar to each element: result[i] = a[i] + scalar
     @inlinable
     static func addScalar(
@@ -85,7 +85,7 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Multiplies each element by a scalar: result[i] = a[i] * scalar
     @inlinable
     static func multiplyScalar(
@@ -94,7 +94,7 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Divides each element by a scalar: result[i] = a[i] / scalar
     @inlinable
     static func divideByScalar(
@@ -103,9 +103,9 @@ public protocol SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     // MARK: - Reduction Operations
-    
+
     /// Computes dot product of two vectors: sum(a[i] * b[i])
     @inlinable
     static func dot(
@@ -113,53 +113,53 @@ public protocol SIMDProvider {
         _ b: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     /// Sums all elements in the vector
     @inlinable
     static func sum(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     /// Sums the magnitudes (absolute values) of all elements
     @inlinable
     static func sumOfMagnitudes(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     /// Sums the squares of all elements
     @inlinable
     static func sumOfSquares(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     // MARK: - Statistical Operations
-    
+
     /// Finds the maximum value in the vector
     @inlinable
     static func maximum(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     /// Finds the minimum value in the vector
     @inlinable
     static func minimum(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     /// Finds the maximum magnitude (absolute value) in the vector
     @inlinable
     static func maximumMagnitude(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     // MARK: - Distance Operations
-    
+
     /// Computes squared Euclidean distance between two vectors
     @inlinable
     static func distanceSquared(
@@ -167,9 +167,9 @@ public protocol SIMDProvider {
         _ b: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
-    
+
     // MARK: - Utility Operations
-    
+
     /// Copies vector data from source to destination
     @inlinable
     static func copy(
@@ -177,7 +177,7 @@ public protocol SIMDProvider {
         destination: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Fills a vector with a constant value
     @inlinable
     static func fill(
@@ -185,7 +185,7 @@ public protocol SIMDProvider {
         destination: UnsafeMutablePointer<Scalar>,
         count: Int
     )
-    
+
     /// Clips vector elements to a range: result[i] = min(max(a[i], low), high)
     @inlinable
     static func clip(
@@ -224,7 +224,7 @@ public extension SIMDProvider {
 public enum SIMDOperations {
     /// The active SIMD provider for Float operations
     public typealias FloatProvider = CurrentFloatProvider
-    
+
     /// The active SIMD provider for Double operations
     public typealias DoubleProvider = CurrentDoubleProvider
 }

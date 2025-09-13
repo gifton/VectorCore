@@ -12,22 +12,22 @@ import Foundation
 public enum AlignmentStrategy: Sendable {
     /// Fixed 64-byte alignment (cache line)
     case cacheLine
-    
+
     /// Platform-specific optimal alignment
     case platform
-    
+
     /// Custom alignment value
     case custom(Int)
-    
+
     /// Default alignment for the element type
     case elementDefault
-    
+
     /// Get the alignment value in bytes
     public var value: Int {
         switch self {
         case .cacheLine:
             return 64
-            
+
         case .platform:
             #if arch(arm64)
             return 16  // ARM NEON requires 16-byte alignment
@@ -36,12 +36,12 @@ public enum AlignmentStrategy: Sendable {
             #else
             return 16  // Conservative default
             #endif
-            
+
         case .custom(let alignment):
             precondition(alignment > 0 && alignment.nonzeroBitCount == 1,
-                        "Alignment must be a positive power of 2")
+                         "Alignment must be a positive power of 2")
             return alignment
-            
+
         case .elementDefault:
             return 16  // Will be specialized per type
         }
@@ -56,19 +56,19 @@ public enum AlignmentUtility {
     public static func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
         Int(bitPattern: pointer) & (alignment - 1) == 0
     }
-    
+
     /// Check if a mutable pointer is aligned to the specified boundary
     @inlinable
     public static func isAligned<T>(_ pointer: UnsafeMutablePointer<T>, to alignment: Int) -> Bool {
         Int(bitPattern: pointer) & (alignment - 1) == 0
     }
-    
+
     /// Round up size to the nearest alignment boundary
     @inlinable
     public static func alignedSize(_ size: Int, alignment: Int) -> Int {
         (size + alignment - 1) & ~(alignment - 1)
     }
-    
+
     /// Get recommended alignment for a type
     @inlinable
     public static func recommendedAlignment<T>(for type: T.Type) -> Int {
@@ -78,7 +78,7 @@ public enum AlignmentUtility {
         }
         return max(MemoryLayout<T>.alignment, 16)
     }
-    
+
     /// Validate alignment is a power of 2
     @inlinable
     public static func isValidAlignment(_ alignment: Int) -> Bool {
@@ -98,14 +98,14 @@ public struct AlignedAllocator {
     ) -> UnsafeMutableRawPointer {
         let alignmentValue = alignment.value
         precondition(AlignmentUtility.isValidAlignment(alignmentValue),
-                    "Invalid alignment: \(alignmentValue)")
-        
+                     "Invalid alignment: \(alignmentValue)")
+
         return UnsafeMutableRawPointer.allocate(
             byteCount: byteCount,
             alignment: alignmentValue
         )
     }
-    
+
     /// Allocate aligned memory for a specific type
     @inlinable
     public static func allocate<T>(
@@ -115,9 +115,9 @@ public struct AlignedAllocator {
     ) -> UnsafeMutablePointer<T> {
         let alignmentValue = max(alignment.value, MemoryLayout<T>.alignment)
         let byteCount = capacity * MemoryLayout<T>.stride
-        
+
         let rawPointer = allocate(byteCount: byteCount,
-                                 alignment: .custom(alignmentValue))
+                                  alignment: .custom(alignmentValue))
         return rawPointer.bindMemory(to: T.self, capacity: capacity)
     }
 }
@@ -128,10 +128,10 @@ extension ManagedStorage {
     /// Create storage with specific alignment strategy
     public init(capacity: Int, alignment: AlignmentStrategy) {
         let alignmentValue = max(alignment.value,
-                                AlignmentUtility.recommendedAlignment(for: Element.self))
+                                 AlignmentUtility.recommendedAlignment(for: Element.self))
         self.init(capacity: capacity, alignment: alignmentValue)
     }
-    
+
     /// Check if storage is properly aligned for SIMD operations
     public var isSimdAligned: Bool {
         withUnsafeBufferPointer { buffer in
@@ -162,7 +162,7 @@ extension AlignmentStrategy {
 extension AlignmentStrategy {
     /// Optimal alignment for AVX operations
     public static let simd = AlignmentStrategy.custom(32)
-    
+
     /// Optimal alignment for AVX-512 operations
     public static let simd512 = AlignmentStrategy.custom(64)
 }

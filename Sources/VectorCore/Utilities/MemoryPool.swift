@@ -224,6 +224,13 @@ public final class MemoryPool: @unchecked Sendable {
         }
     }
 
+    /// Synchronize with the internal queue to ensure all pending
+    /// pool operations (returns, stats updates, cleanups) have completed.
+    /// Useful for tests to avoid arbitrary sleeps.
+    public func quiesce() {
+        queue.sync(flags: .barrier) { }
+    }
+
     /// Manually trigger cleanup
     public func cleanup() {
         let cutoffDate = Date().addingTimeInterval(-configuration.cleanupInterval)

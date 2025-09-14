@@ -5,7 +5,7 @@ import Testing
 // MARK: - Timeout Helpers (file-scoped to avoid capturing self)
 private enum TestTimeoutError: Error { case timeout }
 
-private func withTimeout(_ seconds: Double = 45, _ body: @escaping @Sendable () async throws -> Void) async {
+private func withTimeout(_ seconds: Double = 10, _ body: @escaping @Sendable () async throws -> Void) async {
     do {
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask { try await body() }
@@ -26,7 +26,7 @@ private func sleepMs(_ ms: UInt64) async {
     try? await Task.sleep(nanoseconds: ms * 1_000_000)
 }
 
-@Suite("Memory Pool Tests", .serialized)
+@Suite("Memory Pool Tests")
 struct MemoryPoolTests {
 
     // Acquire basic behavior
@@ -46,8 +46,8 @@ struct MemoryPoolTests {
                 handle.pointer.initialize(to: 0)
                 _ = handle // returned on scope exit
             }
-            // Give the pool a brief moment to process async return bookkeeping without blocking.
-            await sleepMs(5)
+            // Ensure asynchronous return bookkeeping has completed.
+            pool.quiesce()
         }
     }
 
@@ -61,7 +61,7 @@ struct MemoryPoolTests {
                 firstPtrAddr = Int(bitPattern: UnsafeMutableRawPointer(h1.pointer))
                 _ = h1
             }
-            await sleepMs(50)
+            pool.quiesce()
             let hitsBefore = pool.statistics.hitRate
             do {
                 let h2 = pool.acquire(type: Float.self, count: 31, alignment: 32)!
@@ -69,7 +69,7 @@ struct MemoryPoolTests {
                 #expect(addr2 == firstPtrAddr)
                 _ = h2
             }
-            await sleepMs(50)
+            pool.quiesce()
             let hitsAfter = pool.statistics.hitRate
             #expect(hitsAfter >= hitsBefore)
         }
@@ -85,7 +85,7 @@ struct MemoryPoolTests {
                 addr1 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
                 _ = h
             }
-            await sleepMs(50)
+            pool.quiesce()
             do {
                 let h = pool.acquire(type: Double.self, count: 31, alignment: 16)!
                 let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
@@ -130,7 +130,7 @@ struct MemoryPoolTests {
                 let h = pool.acquire(type: Float.self, count: 40, alignment: 16)!
                 _ = h
             }
-            await sleepMs(80)
+            pool.quiesce()
             let stats = pool.statistics
             // Only one buffer should be retained for this size
             let totalCount = stats.bufferCountByType.values.reduce(0, +)
@@ -150,7 +150,7 @@ struct MemoryPoolTests {
             do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
             // Second buffer exceeds cap and should be deallocated on return
             do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
-            await sleepMs(120)
+            pool.quiesce()
             let stats = pool.statistics
             #expect(stats.totalAllocated <= config.maxTotalMemory)
         }
@@ -167,7 +167,7 @@ struct MemoryPoolTests {
             await sleepMs(60) // exceed cleanup interval
             let before = pool.statistics.totalAllocated
             pool.cleanup()
-            await sleepMs(60)
+            pool.quiesce()
             let after = pool.statistics.totalAllocated
             #expect(after <= before)
         }
@@ -208,11 +208,11 @@ struct MemoryPoolTests {
             let pool = MemoryPool(configuration: .init())
             let h1 = pool.acquire(type: Float.self, count: 10)!
             let h2 = pool.acquire(type: Float.self, count: 10)!
-            await sleepMs(30)
+            pool.quiesce()
             var inUse = pool.statistics.totalInUse
             #expect(inUse >= 2)
             _ = h1
-            await sleepMs(60)
+            pool.quiesce()
             inUse = pool.statistics.totalInUse
             #expect(inUse >= 1)
             _ = h2
@@ -225,7 +225,7 @@ struct MemoryPoolTests {
             let pool = MemoryPool(configuration: .init())
             do { let h = pool.acquire(type: Float.self, count: 20)!; _ = h }
             do { let h = pool.acquire(type: Double.self, count: 20)!; _ = h }
-            await sleepMs(80)
+            pool.quiesce()
             let total = pool.statistics.bufferCountByType.values.reduce(0, +)
             #expect(total >= 2)
         }
@@ -264,9 +264,9 @@ struct MemoryPoolTests {
             let pool = MemoryPool(configuration: .init())
             var floatAddr: Int = 0
             do { let h = pool.acquire(type: Float.self, count: 32)!; floatAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); _ = h }
-            await sleepMs(50)
+            pool.quiesce()
             do { let h = pool.acquire(type: Double.self, count: 32)!; _ = h }
-            await sleepMs(50)
+            pool.quiesce()
             do { let h = pool.acquire(type: Float.self, count: 31)!; let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); #expect(addr2 == floatAddr); _ = h }
         }
     }

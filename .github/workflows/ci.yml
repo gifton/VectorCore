@@ -113,5 +113,5 @@ jobs:
           VECTORCORE_TEST_EXTENDED: 0
         run: |
           echo "Running all ComprehensiveTests (MemoryPool will run sequentially due to .serialized)..."
-          swift test --enable-swift-testing --filter '^ComprehensiveTests\.'
+          swift test --filter '^ComprehensiveTests\.'
 

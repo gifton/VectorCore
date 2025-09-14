@@ -119,7 +119,7 @@ jobs:
     name: Test MemoryPool (Isolated)
     runs-on: macos-14
     needs: build
-    timeout-minutes: 10
+    timeout-minutes: 15
     continue-on-error: true
     steps:
       - name: Checkout

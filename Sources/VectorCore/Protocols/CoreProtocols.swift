@@ -7,31 +7,6 @@ import Foundation
 
 // MARK: - Distance Metric Protocol
 
-/// Protocol for distance and similarity metrics between vectors.
-///
-/// `DistanceMetric` defines the interface for computing distances or
-/// similarities between vectors. Implementations can provide various
-/// metrics such as Euclidean, Cosine, Manhattan, etc.
-///
-/// ## Conforming Types
-/// - `EuclideanDistance`: L2 norm distance
-/// - `CosineDistance`: Angular distance (1 - cosine similarity)
-/// - `ManhattanDistance`: L1 norm distance
-/// - `DotProductDistance`: Negative dot product
-///
-/// ## Implementation Notes
-/// - Distances should be non-negative (except DotProductDistance)
-/// - Smaller values indicate more similar vectors
-/// - Implementations should be optimized for performance
-///
-/// ## Example Usage
-/// ```swift
-/// let metric = EuclideanDistance()
-/// let distance = metric.distance(vector1, vector2)
-///
-/// // Batch computation for efficiency
-/// let distances = metric.batchDistance(query: query, candidates: vectors)
-/// ```
 // DistanceMetric is now defined in VectorProtocolComposition.swift as a generic protocol
 
 // MARK: - Acceleration Provider Protocol

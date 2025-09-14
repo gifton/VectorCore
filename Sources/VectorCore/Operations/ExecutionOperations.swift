@@ -532,7 +532,7 @@ extension ExecutionOperations {
 
         // Check all vectors if in debug mode
         #if DEBUG
-        for (_, vector) in vectors.enumerated() {
+        for vector in vectors {
             guard vector.scalarCount == expectedDim else {
                 throw VectorError.dimensionMismatch(
                     expected: expectedDim,

@@ -497,10 +497,8 @@ extension VectorError: CustomStringConvertible, LocalizedError {
         result += "\nContext:"
         result += "\n  Timestamp: \(context.timestamp)"
 
-        for (key, value) in context.additionalInfo.sorted(by: { $0.key < $1.key }) {
-            if key != "message" {
-                result += "\n  \(key): \(value)"
-            }
+        for (key, value) in context.additionalInfo.sorted(by: { $0.key < $1.key }) where key != "message" {
+            result += "\n  \(key): \(value)"
         }
 
         return result

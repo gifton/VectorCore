@@ -380,6 +380,7 @@ extension DimensionStorage: VectorStorageOperations {
                         bBuffer.baseAddress!.withMemoryRebound(to: Float.self, capacity: bBuffer.count) { $0 },
                         count: aBuffer.count
                     )
+                    // swiftlint:disable:next force_cast
                     result = floatResult as! Element
                 }
             }
@@ -391,6 +392,7 @@ extension DimensionStorage: VectorStorageOperations {
                         bBuffer.baseAddress!.withMemoryRebound(to: Double.self, capacity: bBuffer.count) { $0 },
                         count: aBuffer.count
                     )
+                    // swiftlint:disable:next force_cast
                     result = doubleResult as! Element
                 }
             }
@@ -414,6 +416,7 @@ extension DimensionStorage: VectorStorageOperations {
 extension DimensionStorage: CustomDebugStringConvertible {
     public var debugDescription: String {
         withUnsafeBufferPointer { buffer in
+            // swiftlint:disable:next force_cast
             let elements = buffer.prefix(10).map { String(format: "%.4f", $0 as! any CVarArg) }
             if D.value > 10 {
                 return "DimensionStorage<\(D.self)>[\(elements.joined(separator: ", ")), ... (\(D.value) total)]"

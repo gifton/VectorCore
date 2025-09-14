@@ -25,7 +25,6 @@ private func testConfig() -> MemoryPool.Configuration {
     return config
 }
 
-
 @Suite("Memory Pool Tests", .serialized)
 struct MemoryPoolTests {
 
@@ -263,11 +262,23 @@ struct MemoryPoolTests {
         await withTimeout(5) {
             let pool = MemoryPool(configuration: testConfig())
             var floatAddr: Int = 0
-            do { let h = pool.acquire(type: Float.self, count: 32)!; floatAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); _ = h }
+            do {
+                let h = pool.acquire(type: Float.self, count: 32)!
+                floatAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
+                _ = h
+            }
             pool.quiesce()
-            do { let h = pool.acquire(type: Double.self, count: 32)!; _ = h }
+            do {
+                let h = pool.acquire(type: Double.self, count: 32)!
+                _ = h
+            }
             pool.quiesce()
-            do { let h = pool.acquire(type: Float.self, count: 31)!; let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); #expect(addr2 == floatAddr); _ = h }
+            do {
+                let h = pool.acquire(type: Float.self, count: 31)!
+                let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
+                #expect(addr2 == floatAddr)
+                _ = h
+            }
         }
     }
 

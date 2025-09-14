@@ -43,14 +43,26 @@ jobs:
       - name: Build (Debug)
         run: swift build -v
 
-      - name: SwiftLint (if available)
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
         run: |
-          if command -v swiftlint >/dev/null 2>&1; then
-            echo "Running SwiftLint $(swiftlint --version)"
-            swiftlint lint --quiet --reporter github-actions-logging || swiftlint lint --quiet --reporter xcode
-          else
-            echo "SwiftLint not installed; skipping lint."
-            echo "Install via Homebrew: brew install swiftlint" >> $GITHUB_STEP_SUMMARY
+          echo "Running SwiftLint $(swiftlint --version)"
+          swiftlint lint --reporter github-actions-logging
+
+          # Generate summary
+          WARNINGS=$(swiftlint --quiet 2>/dev/null | grep -c "warning:" || true)
+          ERRORS=$(swiftlint --quiet 2>/dev/null | grep -c "error:" || true)
+
+          echo "## SwiftLint Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Warnings: $WARNINGS" >> $GITHUB_STEP_SUMMARY
+          echo "- Errors: $ERRORS" >> $GITHUB_STEP_SUMMARY
+
+          # Fail if there are errors
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "❌ SwiftLint found $ERRORS error(s)" >> $GITHUB_STEP_SUMMARY
+            exit 1
           fi
 
   test-minimal:

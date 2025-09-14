@@ -64,14 +64,15 @@ public enum Validation {
     /// - Throws: VectorError.outOfRange if any values are outside the range
     public static func requireInRange(_ values: [Float], range: ClosedRange<Float>) throws {
         var invalidIndices: [Int] = []
-        for (index, value) in values.enumerated() {
-            if !range.contains(value) {
-                invalidIndices.append(index)
-            }
+        for (index, value) in values.enumerated() where !range.contains(value) {
+            invalidIndices.append(index)
         }
 
         if !invalidIndices.isEmpty {
-            throw VectorError.invalidValues(indices: invalidIndices, reason: "Values outside range \(range.lowerBound)...\(range.upperBound)")
+            throw VectorError.invalidValues(
+                indices: invalidIndices,
+                reason: "Values outside range \(range.lowerBound)...\(range.upperBound)"
+            )
         }
     }
 }

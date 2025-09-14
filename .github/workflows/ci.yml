@@ -112,6 +112,7 @@ jobs:
         env:
           VECTORCORE_TEST_EXTENDED: 0
         run: |
-          echo "Running all ComprehensiveTests (MemoryPool will run sequentially due to .serialized)..."
-          swift test --filter '^ComprehensiveTests\.'
+          echo "Running all ComprehensiveTests..."
+          swift test --disable-xctest --filter '^ComprehensiveTests\.'
+          echo "Tests completed."
 

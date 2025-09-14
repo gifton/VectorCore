@@ -161,8 +161,8 @@ jobs:
             # Strip trailing parentheses e.g. testMethod() -> testMethod
             SPEC_CLEAN=$(echo "$SPEC" | sed -E 's/\(\)$//')
             echo "Using specifier: $SPEC_CLEAN" | tee -a $GITHUB_STEP_SUMMARY
-            swift test --enable-swift-testing --parallel --specifier "$SPEC_CLEAN"
+            swift test --enable-swift-testing --specifier "$SPEC_CLEAN"
           else
             echo "No exact specifier found; running with regex filter" | tee -a $GITHUB_STEP_SUMMARY
-            swift test --enable-swift-testing --parallel --filter '^ComprehensiveTests\.MemoryPoolTests'
+            swift test --enable-swift-testing --filter '^ComprehensiveTests\.MemoryPoolTests'
           fi

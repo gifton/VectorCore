@@ -156,10 +156,12 @@ jobs:
           swift test list --enable-swift-testing | tee tests.list
           echo "### MemoryPool filter diagnostics" >> $GITHUB_STEP_SUMMARY
           # Try to find a canonical specifier for the MemoryPool suite
-          SPEC=$(grep -E '^ComprehensiveTests[\./]MemoryPoolTests(\b|/)' tests.list | head -n1 | tr -d '\r') || true
+          SPEC=$(grep -E '^ComprehensiveTests[\./]MemoryPoolTests/' tests.list | head -n1 | tr -d '\r') || true
           if [ -n "$SPEC" ]; then
-            echo "Using specifier: $SPEC" | tee -a $GITHUB_STEP_SUMMARY
-            swift test --enable-swift-testing --parallel --specifier "$SPEC"
+            # Strip trailing parentheses e.g. testMethod() -> testMethod
+            SPEC_CLEAN=$(echo "$SPEC" | sed -E 's/\(\)$//')
+            echo "Using specifier: $SPEC_CLEAN" | tee -a $GITHUB_STEP_SUMMARY
+            swift test --enable-swift-testing --parallel --specifier "$SPEC_CLEAN"
           else
             echo "No exact specifier found; running with regex filter" | tee -a $GITHUB_STEP_SUMMARY
             swift test --enable-swift-testing --parallel --filter '^ComprehensiveTests\.MemoryPoolTests'

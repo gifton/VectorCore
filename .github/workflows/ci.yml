@@ -143,7 +143,7 @@ jobs:
 
       - name: List available tests (for diagnostics)
         run: |
-          swift test --list-tests | tee tests.list
+          swift test list --enable-swift-testing | tee tests.list || true
           echo "### Discovered tests (first 200 lines)" >> $GITHUB_STEP_SUMMARY
           sed -n '1,200p' tests.list >> $GITHUB_STEP_SUMMARY
 
@@ -152,12 +152,15 @@ jobs:
           VECTORCORE_TEST_EXTENDED: 0
         run: |
           set -euo pipefail
-          # Prefer Swift Testing identifiers (Suite/Test) with '/' separator, fallback to substring match.
-          COUNT=$(swift test --list-tests --filter 'ComprehensiveTests/MemoryPoolTests' | wc -l | tr -d ' ')
-          if [ "$COUNT" -gt 0 ]; then
-            echo "Running filter: ComprehensiveTests/MemoryPoolTests"
-            swift test --parallel --filter 'ComprehensiveTests/MemoryPoolTests'
+          # Ensure Swift Testing is enabled and list tests
+          swift test list --enable-swift-testing | tee tests.list
+          echo "### MemoryPool filter diagnostics" >> $GITHUB_STEP_SUMMARY
+          # Try to find a canonical specifier for the MemoryPool suite
+          SPEC=$(grep -E '^ComprehensiveTests[\./]MemoryPoolTests(\b|/)' tests.list | head -n1 | tr -d '\r') || true
+          if [ -n "$SPEC" ]; then
+            echo "Using specifier: $SPEC" | tee -a $GITHUB_STEP_SUMMARY
+            swift test --enable-swift-testing --parallel --specifier "$SPEC"
           else
-            echo "Primary filter matched 0 tests; falling back to substring pattern"
-            swift test --parallel --filter 'MemoryPoolTests|Memory Pool Tests'
+            echo "No exact specifier found; running with regex filter" | tee -a $GITHUB_STEP_SUMMARY
+            swift test --enable-swift-testing --parallel --filter '^ComprehensiveTests\.MemoryPoolTests'
           fi

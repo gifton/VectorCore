@@ -114,5 +114,5 @@ jobs:
         run: |
           echo "Running all ComprehensiveTests..."
           swift test --disable-xctest --filter '^ComprehensiveTests\.'
-          echo "Tests completed."
+          echo "Tests completed successfully."
 

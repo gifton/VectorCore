@@ -337,6 +337,11 @@ public final class MemoryPool: @unchecked Sendable {
 
     /// Setup cleanup timer
     private func setupCleanupTimer() {
+        // Only create timer if cleanup interval is finite
+        guard configuration.cleanupInterval.isFinite && configuration.cleanupInterval > 0 else {
+            return
+        }
+
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(
             deadline: .now() + configuration.cleanupInterval,

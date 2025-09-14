@@ -108,13 +108,10 @@ jobs:
             ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
             ${{ runner.os }}-spm-
 
-      - name: Run Comprehensive Core Suites
+      - name: Run Comprehensive Tests
         env:
           VECTORCORE_TEST_EXTENDED: 0
-        run: swift test --parallel --filter '^(ComprehensiveTests\.(OptimizedVector512Suite|OptimizedVector768Suite|OptimizedVector1536Suite|VectorEntropySuite|VectorDistanceMetricsSuite|VectorConstructionSuite|VectorArithmeticSuite|StorageAlignment|VectorNormalizationSuite|ExecutionOperationsTests|DynamicVectorTests|VectorTypeFactorySuite|OperationsBatchTests|VectorSerializationSuite))'
-
-      - name: Run MemoryPool Tests (Sequential)
-        env:
-          VECTORCORE_TEST_EXTENDED: 0
-        run: swift test --enable-swift-testing --filter '^ComprehensiveTests\.MemoryPoolTests'
+        run: |
+          echo "Running all ComprehensiveTests (MemoryPool will run sequentially due to .serialized)..."
+          swift test --enable-swift-testing --filter '^ComprehensiveTests\.'
 

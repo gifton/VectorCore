@@ -115,42 +115,8 @@ jobs:
           swift test --parallel --filter
           '^(ComprehensiveTests\.(OptimizedVector512Suite|OptimizedVector768Suite|OptimizedVector1536Suite|VectorEntropySuite|VectorDistanceMetricsSuite|VectorConstructionSuite|VectorArithmeticSuite|StorageAlignment|VectorNormalizationSuite|ExecutionOperationsTests|DynamicVectorTests|VectorTypeFactorySuite|OperationsBatchTests|VectorSerializationSuite))'
 
-  test-comprehensive-pool:
-    name: Test MemoryPool (Isolated)
-    runs-on: macos-14
-    needs: build
-    timeout-minutes: 15
-    continue-on-error: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      - name: Restore SPM cache (from build)
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-            ${{ runner.os }}-spm-
-
-      - name: List available tests (for diagnostics)
-        run: |
-          swift test list --enable-swift-testing | tee tests.list || true
-          echo "### Discovered tests (first 200 lines)" >> $GITHUB_STEP_SUMMARY
-          sed -n '1,200p' tests.list >> $GITHUB_STEP_SUMMARY
-
-      - name: Run MemoryPoolTests
+      - name: Run MemoryPool Tests (Sequential)
         env:
           VECTORCORE_TEST_EXTENDED: 0
-        run: |
-          set -euo pipefail
-          echo "Running MemoryPool tests..." | tee -a $GITHUB_STEP_SUMMARY
-          swift test --enable-swift-testing --filter '^ComprehensiveTests\.MemoryPoolTests'
+        run: swift test --enable-swift-testing --filter '^ComprehensiveTests\.MemoryPoolTests'
+

@@ -111,9 +111,7 @@ jobs:
       - name: Run Comprehensive Core Suites
         env:
           VECTORCORE_TEST_EXTENDED: 0
-        run: >
-          swift test --parallel --filter
-          '^(ComprehensiveTests\.(OptimizedVector512Suite|OptimizedVector768Suite|OptimizedVector1536Suite|VectorEntropySuite|VectorDistanceMetricsSuite|VectorConstructionSuite|VectorArithmeticSuite|StorageAlignment|VectorNormalizationSuite|ExecutionOperationsTests|DynamicVectorTests|VectorTypeFactorySuite|OperationsBatchTests|VectorSerializationSuite))'
+        run: swift test --parallel --filter '^(ComprehensiveTests\.(OptimizedVector512Suite|OptimizedVector768Suite|OptimizedVector1536Suite|VectorEntropySuite|VectorDistanceMetricsSuite|VectorConstructionSuite|VectorArithmeticSuite|StorageAlignment|VectorNormalizationSuite|ExecutionOperationsTests|DynamicVectorTests|VectorTypeFactorySuite|OperationsBatchTests|VectorSerializationSuite))'
 
       - name: Run MemoryPool Tests (Sequential)
         env:

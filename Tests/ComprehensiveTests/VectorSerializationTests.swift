@@ -184,9 +184,9 @@ struct SerializationSuite {
     func testDynamicJSONDecode_MismatchedElementsThrows() {
         // dimension says 4, but provide 3 elements
         let badJSON = "{" +
-                      "\"dimension\":4," +
-                      "\"elements\":[1,2,3]" +
-                      "}"
+            "\"dimension\":4," +
+            "\"elements\":[1,2,3]" +
+            "}"
         do {
             _ = try DynamicVector.decodeJSON(from: badJSON)
             Issue.record("Expected dataCorrupted decoding error not thrown")

@@ -8,9 +8,9 @@ import Foundation
 /// Helper for zero-copy access to tuple-based SIMD storage
 @usableFromInline
 internal enum SIMDMemoryUtilities {
-    
+
     /// Access contiguous memory of a 2-tuple of SIMD64 as Float buffer
-    /// 
+    ///
     /// Leverages Swift's guaranteed tuple memory layout:
     /// - Tuples of homogeneous types are laid out contiguously
     /// - No padding between elements for aligned types
@@ -32,7 +32,7 @@ internal enum SIMDMemoryUtilities {
             return try body(buffer)
         }
     }
-    
+
     /// Mutable access to contiguous memory of a 2-tuple of SIMD64
     @inlinable
     @_alwaysEmitIntoClient
@@ -48,7 +48,7 @@ internal enum SIMDMemoryUtilities {
             return try body(buffer)
         }
     }
-    
+
     /// Access contiguous memory of a 4-tuple of SIMD64 as Float buffer
     @inlinable
     @_alwaysEmitIntoClient
@@ -64,7 +64,7 @@ internal enum SIMDMemoryUtilities {
             return try body(buffer)
         }
     }
-    
+
     /// Mutable access to contiguous memory of a 4-tuple of SIMD64
     @inlinable
     @_alwaysEmitIntoClient

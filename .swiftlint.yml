@@ -1,0 +1,102 @@
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - .swiftpm
+  - Carthage
+  - Pods
+  - DerivedData
+  - vendor
+  - .github
+
+reporter: xcode
+
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+
+disabled_rules:
+  # This codebase intentionally uses force-unwrap/try in hot paths
+  - force_try
+  - force_unwrapping
+  # Allow TODOs without failing CI
+  - todo
+  # Mathematical code often needs larger tuples for coordinates/matrices
+  - large_tuple
+  # Trailing closures can be less readable for mathematical operations
+  - trailing_closure
+
+line_length:
+  ignores_comments: true
+  ignores_urls: true
+  warning: 140
+  error: 200
+
+file_length:
+  ignore_comment_only_lines: true
+  warning: 1400
+  error: 3000
+
+type_body_length:
+  warning: 400
+  error: 900
+
+function_body_length:
+  warning: 120
+  error: 240
+
+cyclomatic_complexity:
+  warning: 18
+  error: 30
+
+identifier_name:
+  min_length: 2
+  excluded:
+    # Common loop indices
+    - i
+    - j
+    - k
+    # Coordinates
+    - x
+    - y
+    - z
+    - w
+    # Mathematical variables
+    - a  # First operand
+    - b  # Second operand
+    - c  # Third operand/result
+    - d  # Distance/dimension
+    - e  # Element/error
+    - h  # Height/handle
+    - m  # Magnitude/matrix
+    - n  # Count/number
+    - p  # Point/probability
+    - q  # Query/quaternion
+    - r  # Result/radius
+    - s  # Sum/scale
+    - t  # Time/parameter
+    - u  # Unit vector
+    - v  # Vector
+    - o  # Output/offset
+    - f  # Float/function
+    # Other
+    - id
+    - op  # Operation
+    - lhs # Left-hand side
+    - rhs # Right-hand side
+    - _count  # Swift convention for internal storage
+
+# Allow if statements in for loops for complex conditions
+for_where:
+  allow_for_as_filter: true
+
+# Allow operator overloading with proper spacing
+operator_usage_whitespace:
+  lines_look_around: 2
+  skip_aligned_constants: true
+  allowed_no_space_operators:
+    - "..."
+    - "..<"
+

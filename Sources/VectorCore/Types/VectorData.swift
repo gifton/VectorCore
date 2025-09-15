@@ -1,6 +1,6 @@
 // VectorCore: Core Vector Data Types
 //
-// Fundamental types for vector operations, designed to be 
+// Fundamental types for vector operations, designed to be
 // dependency-free and usable across all platforms
 
 import Foundation
@@ -35,36 +35,36 @@ import simd
 ///
 /// - Note: Storage-related metadata is handled separately by storage implementations
 ///   (e.g., `VectorDB.StoredVector`), keeping this type focused on core vector data.
-public struct VectorData<Vector: SIMD & Sendable, Metadata: Codable & Sendable>: Codable, Sendable 
+public struct VectorData<Vector: SIMD & Sendable, Metadata: Codable & Sendable>: Codable, Sendable
 where Vector.Scalar: BinaryFloatingPoint {
-    
+
     // MARK: - Core Properties
-    
+
     /// Unique identifier for this vector.
     ///
     /// Used to reference and retrieve specific vectors from storage.
     public let id: VectorID
-    
+
     /// The vector data with SIMD optimization.
     ///
     /// Contains the actual numerical data optimized for high-performance
     /// mathematical operations using SIMD instructions.
     public let vector: Vector
-    
+
     /// Associated metadata with type safety.
     ///
     /// Can contain any application-specific information related to the vector,
     /// such as source data, labels, or processing parameters.
     public let metadata: Metadata
-    
+
     /// Creation timestamp in nanoseconds since epoch.
     ///
     /// Automatically set to the current time if not specified during initialization.
     /// Useful for temporal queries and data versioning.
     public let timestamp: Timestamp
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new vector data instance with the specified components.
     ///
     /// - Parameters:
@@ -124,7 +124,7 @@ public struct VectorQualityMetrics: Codable, Sendable {
     /// - Normalization requirements
     /// - Scale consistency checks
     public let magnitude: Float
-    
+
     /// Sparsity ratio indicating the proportion of zero elements.
     ///
     /// - Range: [0.0, 1.0]
@@ -137,7 +137,7 @@ public struct VectorQualityMetrics: Codable, Sendable {
     /// - Potential for compression
     /// - Initialization issues
     public let sparsity: Float
-    
+
     /// Shannon entropy measure for information content.
     ///
     /// Higher values indicate more randomness/information:
@@ -149,7 +149,7 @@ public struct VectorQualityMetrics: Codable, Sendable {
     /// - Over-regularization effects
     /// - Information loss
     public let entropy: Float
-    
+
     /// Statistical variance of vector components.
     ///
     /// Measures the spread of values:
@@ -161,7 +161,7 @@ public struct VectorQualityMetrics: Codable, Sendable {
     /// - Assessing feature diversity
     /// - Identifying outlier components
     public let variance: Float
-    
+
     /// Creates a new set of vector quality metrics.
     ///
     /// - Parameters:

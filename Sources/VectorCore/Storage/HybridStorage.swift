@@ -12,21 +12,21 @@ import Foundation
 public struct HybridStorage<Element: BinaryFloatingPoint & SIMDScalar> {
     /// Storage backing - either inline or heap
     private var backing: Backing
-    
+
     /// The number of elements
     public let count: Int
-    
+
     /// Maximum elements that fit in inline storage (64 bytes)
     private static var inlineCapacity: Int {
         64 / MemoryLayout<Element>.stride
     }
-    
+
     /// Storage backing options
     private enum Backing {
         case inline(InlineBuffer)
         case heap(ManagedStorage<Element>)
     }
-    
+
     /// Initialize with specified capacity
     public init(capacity: Int) {
         self.count = capacity
@@ -36,7 +36,7 @@ public struct HybridStorage<Element: BinaryFloatingPoint & SIMDScalar> {
             self.backing = .heap(ManagedStorage(capacity: capacity))
         }
     }
-    
+
     /// Initialize from array
     public init(from array: [Element]) {
         self.count = array.count
@@ -48,7 +48,7 @@ public struct HybridStorage<Element: BinaryFloatingPoint & SIMDScalar> {
             self.backing = .heap(ManagedStorage(from: array))
         }
     }
-    
+
     /// Initialize with repeating value
     public init(capacity: Int, repeating value: Element) {
         self.init(capacity: capacity)
@@ -68,7 +68,7 @@ extension HybridStorage {
             UInt64, UInt64, UInt64, UInt64,
             UInt64, UInt64, UInt64, UInt64
         ) = (0, 0, 0, 0, 0, 0, 0, 0)
-        
+
         /// Initialize from array
         mutating func initialize(from array: [Element]) {
             precondition(array.count <= HybridStorage.inlineCapacity)
@@ -77,7 +77,7 @@ extension HybridStorage {
                 _ = typed.initialize(from: array)
             }
         }
-        
+
         /// Access as buffer pointer
         func withUnsafeBufferPointer<R>(
             count: Int,
@@ -89,7 +89,7 @@ extension HybridStorage {
                 return try body(bufferPointer)
             }
         }
-        
+
         /// Mutable access as buffer pointer
         mutating func withUnsafeMutableBufferPointer<R>(
             count: Int,
@@ -101,14 +101,14 @@ extension HybridStorage {
                 return try body(bufferPointer)
             }
         }
-        
+
         /// Get element at index
         func get(at index: Int) -> Element {
             withUnsafeBufferPointer(count: HybridStorage.inlineCapacity) { buffer in
                 buffer[index]
             }
         }
-        
+
         /// Set element at index
         mutating func set(_ value: Element, at index: Int) {
             withUnsafeMutableBufferPointer(count: HybridStorage.inlineCapacity) { buffer in
@@ -136,7 +136,7 @@ extension HybridStorage {
             }
         }
     }
-    
+
     /// Check if storage is uniquely referenced
     public var isUniquelyReferenced: Bool {
         mutating get {
@@ -154,19 +154,19 @@ extension HybridStorage {
 
 extension HybridStorage: VectorStorage {
     public typealias Scalar = Element
-    
+
     // Protocol requirement: init with zeros
     public init() {
         self.init(capacity: 0)
     }
-    
+
     // Protocol requirement: init with repeating value
     public init(repeating value: Element) {
         fatalError("HybridStorage requires explicit capacity - use init(capacity:repeating:)")
     }
-    
+
     // Protocol requirement: init from array - already defined above
-    
+
     public subscript(index: Int) -> Element {
         get {
             precondition(index >= 0 && index < count, "Index out of bounds")
@@ -190,7 +190,7 @@ extension HybridStorage: VectorStorage {
             }
         }
     }
-    
+
     public func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -201,7 +201,7 @@ extension HybridStorage: VectorStorage {
             return try heapStorage.withUnsafeBufferPointer(body)
         }
     }
-    
+
     public mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -227,7 +227,7 @@ extension HybridStorage {
             self[i] = value
         }
     }
-    
+
     /// Copy from another storage
     public mutating func copyFrom(_ other: HybridStorage) {
         precondition(count == other.count, "Size mismatch")
@@ -237,7 +237,7 @@ extension HybridStorage {
             }
         }
     }
-    
+
     /// Check if using inline storage
     public var isInline: Bool {
         switch backing {

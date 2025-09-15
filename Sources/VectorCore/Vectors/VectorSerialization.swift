@@ -12,13 +12,13 @@ extension Vector: Codable {
     private enum CodingKeys: String, CodingKey {
         case elements
     }
-    
+
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let elements = try container.decode([Scalar].self, forKey: .elements)
         try self.init(elements)
     }
-    
+
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(toArray(), forKey: .elements)
@@ -30,12 +30,12 @@ extension DynamicVector: Codable {
         case dimension
         case elements
     }
-    
+
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let dimension = try container.decode(Int.self, forKey: .dimension)
         let elements = try container.decode([Scalar].self, forKey: .elements)
-        
+
         guard elements.count == dimension else {
             throw DecodingError.dataCorruptedError(
                 forKey: .elements,
@@ -43,10 +43,10 @@ extension DynamicVector: Codable {
                 debugDescription: "Element count \(elements.count) doesn't match dimension \(dimension)"
             )
         }
-        
+
         self.init(elements)
     }
-    
+
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(dimension, forKey: .dimension)
@@ -111,7 +111,7 @@ extension VectorProtocol where Self: Encodable {
     public func encodeJSON(encoder: JSONEncoder = JSONEncoder()) throws -> Data {
         try encoder.encode(self)
     }
-    
+
     /// Encode to JSON string
     public func encodeJSONString(encoder: JSONEncoder = JSONEncoder()) throws -> String? {
         let data = try encodeJSON(encoder: encoder)
@@ -124,7 +124,7 @@ extension Vector {
     public static func decodeJSON(from data: Data, decoder: JSONDecoder = JSONDecoder()) throws -> Vector {
         try decoder.decode(Vector.self, from: data)
     }
-    
+
     /// Decode from JSON string
     public static func decodeJSON(from string: String, decoder: JSONDecoder = JSONDecoder()) throws -> Vector {
         guard let data = string.data(using: .utf8) else {
@@ -139,7 +139,7 @@ extension DynamicVector {
     public static func decodeJSON(from data: Data, decoder: JSONDecoder = JSONDecoder()) throws -> DynamicVector {
         try decoder.decode(DynamicVector.self, from: data)
     }
-    
+
     /// Decode from JSON string
     public static func decodeJSON(from string: String, decoder: JSONDecoder = JSONDecoder()) throws -> DynamicVector {
         guard let data = string.data(using: .utf8) else {

@@ -19,9 +19,9 @@ public typealias Timestamp = UInt64
 
 /// Main entry point for VectorCore functionality
 public enum VectorCore {
-    
+
     /// Create a vector of appropriate type based on dimension
-    /// 
+    ///
     /// Automatically selects the optimal storage type for the given dimension.
     /// Common dimensions (128, 256, 512, 768, 1536, 3072) use optimized SIMD storage.
     ///
@@ -36,9 +36,9 @@ public enum VectorCore {
             return VectorTypeFactory.zeros(dimension: dimension)
         }
     }
-    
+
     /// Create a batch of vectors from a 2D array
-    /// 
+    ///
     /// - Parameters:
     ///   - dimension: Dimension of each vector
     ///   - data: 2D array where each inner array represents a vector
@@ -49,31 +49,31 @@ public enum VectorCore {
             try VectorTypeFactory.vector(of: dimension, from: values)
         }
     }
-    
+
     /// Global configuration for VectorCore behavior
     public struct Configuration: Sendable {
         /// Batch processing configuration
         public var batchOperations = BatchOperations.Configuration()
-        
+
         /// Memory alignment for optimal SIMD performance
         public var memoryAlignment: Int = 64
-        
+
         public init() {}
     }
-    
+
     /// Global configuration instance
     public static let configuration = Configuration()
-    
+
     /// Get version information
     public static var version: String {
         VectorCoreVersion.versionString
     }
-    
+
     /// Check if a dimension has optimized SIMD support
     public static func hasOptimizedSupport(for dimension: Int) -> Bool {
         VectorTypeFactory.isSupported(dimension: dimension)
     }
-    
+
     /// Get the nearest optimized dimension
     public static func optimalDimension(for size: Int) -> Int {
         VectorTypeFactory.optimalDimension(for: size)
@@ -96,13 +96,14 @@ public extension Array where Element: VectorType {
     ) async -> [[Float]] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
         await BatchOperations.pairwiseDistances(self, metric: metric)
     }
-    
+
     /// Find k nearest neighbors to a query vector
     func findNearest<M: DistanceMetric>(
         to query: Element,
         k: Int,
         metric: M = EuclideanDistance()
-    ) async -> [(index: Int, distance: Float)] where Element: VectorProtocol & Sendable & VectorProtocol, Element.Scalar == Float, M.Scalar == Float {
+    ) async -> [(index: Int, distance: Float)]
+    where Element: VectorProtocol & Sendable, Element.Scalar == Float, M.Scalar == Float {
         await BatchOperations.findNearest(to: query, in: self, k: k, metric: metric)
     }
 }

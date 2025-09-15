@@ -8,7 +8,7 @@ struct VectorNormalizationSuite {
 
     @Test
     func testNormalizedResult_SuccessForNonZero() {
-        let v = try! Vector<Dim4>([3,4,0,0])
+        let v = try! Vector<Dim4>([3, 4, 0, 0])
         let r: Result<Vector<Dim4>, VectorError> = v.normalized()
         switch r {
         case .success(let u):
@@ -28,10 +28,8 @@ struct VectorNormalizationSuite {
         switch r {
         case .success:
             Issue.record("Expected failure for zero vector normalization")
-        case .failure(let e as VectorError):
+        case .failure(let e):
             #expect(e.kind == .invalidOperation)
-        default:
-            Issue.record("Unexpected error type")
         }
     }
 
@@ -51,7 +49,7 @@ struct VectorNormalizationSuite {
 
     @Test
     func testNormalizeFast_MutatingCorrectness() {
-        var v = try! Vector<Dim4>([3,4,0,0])
+        var v = try! Vector<Dim4>([3, 4, 0, 0])
         v.normalizeFast()
         #expect(approxEqual(v.magnitude, 1, tol: 1e-6))
     }
@@ -73,7 +71,7 @@ struct VectorNormalizationSuite {
 
     @Test
     func testNormalizedWithTolerance_WithinToleranceReturnsSelf() {
-        let base = try! Vector<Dim4>([1,1,0,0])
+        let base = try! Vector<Dim4>([1, 1, 0, 0])
         let unit = try! base.normalized().get()
         let s: Float = 1 + 5e-7
         let near = unit * s
@@ -84,7 +82,7 @@ struct VectorNormalizationSuite {
 
     @Test
     func testNormalizedWithTolerance_BeyondToleranceNormalizes() {
-        let base = try! Vector<Dim4>([1,2,0,0])
+        let base = try! Vector<Dim4>([1, 2, 0, 0])
         let unit = try! base.normalized().get()
         let s: Float = 1 + 1e-4
         let far = unit * s

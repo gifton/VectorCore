@@ -8,4 +8,3 @@ import Testing
 func approxEqual(_ a: Float, _ b: Float, tol: Float = 1e-5) -> Bool {
     return abs(a - b) <= tol
 }
-

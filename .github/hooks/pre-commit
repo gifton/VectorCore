@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+# Pre-commit hook for SwiftLint
+# To install: cp .github/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+# Check if SwiftLint is installed
+if ! command -v swiftlint &> /dev/null; then
+    echo "⚠️  SwiftLint is not installed."
+    echo "   Install with: brew install swiftlint"
+    echo "   Continuing without linting..."
+    exit 0
+fi
+
+# Run SwiftLint on changed Swift files
+echo "Running SwiftLint on staged files..."
+
+# Get list of staged Swift files
+SWIFT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.swift$")
+
+if [ -z "$SWIFT_FILES" ]; then
+    echo "✅ No Swift files to lint"
+    exit 0
+fi
+
+# Create temporary file list
+TEMP_FILE=$(mktemp)
+echo "$SWIFT_FILES" > "$TEMP_FILE"
+
+# Run SwiftLint
+RESULT=$(swiftlint lint --quiet --use-script-input-files --script-input-file-count 1 < "$TEMP_FILE" 2>&1)
+EXIT_CODE=$?
+
+# Clean up
+rm "$TEMP_FILE"
+
+# Check for errors
+ERRORS=$(echo "$RESULT" | grep -c "error:" || true)
+WARNINGS=$(echo "$RESULT" | grep -c "warning:" || true)
+
+if [ "$ERRORS" -gt 0 ]; then
+    echo "❌ SwiftLint found $ERRORS error(s):"
+    echo "$RESULT" | grep "error:" | head -10
+    echo ""
+    echo "Please fix errors before committing."
+    exit 1
+fi
+
+if [ "$WARNINGS" -gt 0 ]; then
+    echo "⚠️  SwiftLint found $WARNINGS warning(s)"
+    echo "   Consider fixing these warnings:"
+    echo "$RESULT" | grep "warning:" | head -5
+    echo ""
+    echo "   Committing anyway..."
+fi
+
+echo "✅ SwiftLint passed"
+exit 0

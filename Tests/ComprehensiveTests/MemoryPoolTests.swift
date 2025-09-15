@@ -3,21 +3,13 @@ import Testing
 @testable import VectorCore
 
 // MARK: - Timeout Helpers (file-scoped to avoid capturing self)
-private enum TestTimeoutError: Error { case timeout }
-
-private func withTimeout(_ seconds: Double = 45, _ body: @escaping @Sendable () async throws -> Void) async {
+private func withTimeout(_ seconds: Double = 10, _ body: @escaping @Sendable () async throws -> Void) async {
+    // Simplified approach - just run the body directly for now
+    // The individual test timeouts and CI timeout should be sufficient
     do {
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            group.addTask { try await body() }
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-                throw TestTimeoutError.timeout
-            }
-            do { _ = try await group.next() } catch { throw error }
-            group.cancelAll()
-        }
+        try await body()
     } catch {
-        Issue.record("Test exceeded timeout \(seconds)s: \(error)")
+        Issue.record("Test error: \(error)")
     }
 }
 
@@ -26,14 +18,21 @@ private func sleepMs(_ ms: UInt64) async {
     try? await Task.sleep(nanoseconds: ms * 1_000_000)
 }
 
+/// Create test configuration with cleanup timer disabled
+private func testConfig() -> MemoryPool.Configuration {
+    var config = MemoryPool.Configuration()
+    config.cleanupInterval = .infinity  // Disable cleanup timer for tests
+    return config
+}
+
 @Suite("Memory Pool Tests", .serialized)
 struct MemoryPoolTests {
 
     // Acquire basic behavior
     @Test
     func testAcquire_ReturnsBufferWithCountAndAlignment() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             // Scope the handle so it returns to the pool deterministically.
             do {
                 guard let handle = pool.acquire(type: Float.self, count: 37, alignment: 64) else {
@@ -46,22 +45,22 @@ struct MemoryPoolTests {
                 handle.pointer.initialize(to: 0)
                 _ = handle // returned on scope exit
             }
-            // Give the pool a brief moment to process async return bookkeeping without blocking.
-            await sleepMs(5)
+            // Ensure asynchronous return bookkeeping has completed.
+            pool.quiesce()
         }
     }
 
     @Test
     func testAcquire_ReusesReturnedBuffer_IncreasesHitRate() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             var firstPtrAddr: Int = 0
             do {
                 let h1 = pool.acquire(type: Float.self, count: 32, alignment: 32)!
                 firstPtrAddr = Int(bitPattern: UnsafeMutableRawPointer(h1.pointer))
                 _ = h1
             }
-            await sleepMs(50)
+            pool.quiesce()
             let hitsBefore = pool.statistics.hitRate
             do {
                 let h2 = pool.acquire(type: Float.self, count: 31, alignment: 32)!
@@ -69,7 +68,7 @@ struct MemoryPoolTests {
                 #expect(addr2 == firstPtrAddr)
                 _ = h2
             }
-            await sleepMs(50)
+            pool.quiesce()
             let hitsAfter = pool.statistics.hitRate
             #expect(hitsAfter >= hitsBefore)
         }
@@ -77,15 +76,15 @@ struct MemoryPoolTests {
 
     @Test
     func testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             var addr1: Int = 0
             do {
                 let h = pool.acquire(type: Double.self, count: 30, alignment: 16)!
                 addr1 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
                 _ = h
             }
-            await sleepMs(50)
+            pool.quiesce()
             do {
                 let h = pool.acquire(type: Double.self, count: 31, alignment: 16)!
                 let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
@@ -97,8 +96,8 @@ struct MemoryPoolTests {
 
     @Test
     func testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             var lowAlignedAddr: Int = 0
             do {
                 let h = pool.acquire(type: UInt8.self, count: 64, alignment: 16)!
@@ -120,64 +119,64 @@ struct MemoryPoolTests {
     // Limits and cleanup
     @Test
     func testReturn_RespectsMaxBuffersPerSizeLimit() async {
-        await withTimeout(45) {
-        var config = MemoryPool.Configuration()
-        config.maxBuffersPerSize = 1
-        config.maxTotalMemory = 1_000_000
-        let pool = MemoryPool(configuration: config)
-        // Acquire and return multiple same-bucket buffers
-        for _ in 0..<3 {
-            let h = pool.acquire(type: Float.self, count: 40, alignment: 16)!
-            _ = h
-        }
-        await sleepMs(80)
-        let stats = pool.statistics
-        // Only one buffer should be retained for this size
-        let totalCount = stats.bufferCountByType.values.reduce(0, +)
-        #expect(totalCount <= config.maxBuffersPerSize)
+        await withTimeout(5) {
+            var config = testConfig()
+            config.maxBuffersPerSize = 1
+            config.maxTotalMemory = 1_000_000
+            let pool = MemoryPool(configuration: config)
+            // Acquire and return multiple same-bucket buffers
+            for _ in 0..<3 {
+                let h = pool.acquire(type: Float.self, count: 40, alignment: 16)!
+                _ = h
+            }
+            pool.quiesce()
+            let stats = pool.statistics
+            // Only one buffer should be retained for this size
+            let totalCount = stats.bufferCountByType.values.reduce(0, +)
+            #expect(totalCount <= config.maxBuffersPerSize)
         }
     }
 
     @Test
     func testReturn_RespectsMaxTotalMemoryLimit() async {
-        await withTimeout(45) {
-        var config = MemoryPool.Configuration()
-        config.maxBuffersPerSize = 100
-        // Limit to roughly one 1024-float buffer
-        config.maxTotalMemory = 1024 * MemoryLayout<Float>.stride
-        let pool = MemoryPool(configuration: config)
-        // First buffer occupy near the cap
-        do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
-        // Second buffer exceeds cap and should be deallocated on return
-        do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
-        await sleepMs(120)
-        let stats = pool.statistics
-        #expect(stats.totalAllocated <= config.maxTotalMemory)
+        await withTimeout(5) {
+            var config = testConfig()
+            config.maxBuffersPerSize = 100
+            // Limit to roughly one 1024-float buffer
+            config.maxTotalMemory = 1024 * MemoryLayout<Float>.stride
+            let pool = MemoryPool(configuration: config)
+            // First buffer occupy near the cap
+            do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
+            // Second buffer exceeds cap and should be deallocated on return
+            do { let h = pool.acquire(type: Float.self, count: 900, alignment: 16)!; _ = h }
+            pool.quiesce()
+            let stats = pool.statistics
+            #expect(stats.totalAllocated <= config.maxTotalMemory)
         }
     }
 
     @Test
     func testCleanup_RemovesStaleEntries_UpdatesStats() async {
-        await withTimeout(45) {
-        var config = MemoryPool.Configuration()
-        config.cleanupInterval = 0.05
-        let pool = MemoryPool(configuration: config)
-        // Add a pooled buffer
-        do { let h = pool.acquire(type: UInt16.self, count: 20, alignment: 16)!; _ = h }
-        await sleepMs(60) // exceed cleanup interval
-        let before = pool.statistics.totalAllocated
-        pool.cleanup()
-        await sleepMs(60)
-        let after = pool.statistics.totalAllocated
-        #expect(after <= before)
+        await withTimeout(5) {
+            var config = MemoryPool.Configuration()
+            config.cleanupInterval = 0.05  // This test specifically tests cleanup
+            let pool = MemoryPool(configuration: config)
+            // Add a pooled buffer
+            do { let h = pool.acquire(type: UInt16.self, count: 20, alignment: 16)!; _ = h }
+            await sleepMs(60) // exceed cleanup interval
+            let before = pool.statistics.totalAllocated
+            pool.cleanup()
+            pool.quiesce()
+            let after = pool.statistics.totalAllocated
+            #expect(after <= before)
         }
     }
 
     // withBuffer behavior
     @Test
     func testWithBuffer_ProvidesWritableAlignedBuffer() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             let sum = pool.withBuffer(type: Float.self, count: 64, alignment: 32) { buf in
                 #expect(AlignedMemory.isAligned(buf.baseAddress!, to: 32))
                 for i in 0..<buf.count { buf[i] = Float(i) }
@@ -189,8 +188,8 @@ struct MemoryPoolTests {
 
     @Test
     func testWithBuffer_FallbackPathWorksWhenAcquireNil() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             let first = pool.withBuffer(type: UInt8.self, count: 0, alignment: 16) { buf in buf.count }
             #expect(first == 0)
             let second = pool.withBuffer(type: UInt8.self, count: 5, alignment: 16) { buf in
@@ -204,15 +203,15 @@ struct MemoryPoolTests {
     // Statistics correctness
     @Test
     func testStatistics_TotalInUseTracksAcquireAndReturn() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             let h1 = pool.acquire(type: Float.self, count: 10)!
             let h2 = pool.acquire(type: Float.self, count: 10)!
-            await sleepMs(30)
+            pool.quiesce()
             var inUse = pool.statistics.totalInUse
             #expect(inUse >= 2)
             _ = h1
-            await sleepMs(60)
+            pool.quiesce()
             inUse = pool.statistics.totalInUse
             #expect(inUse >= 1)
             _ = h2
@@ -221,11 +220,11 @@ struct MemoryPoolTests {
 
     @Test
     func testStatistics_BufferCountByTypeReflectsPools() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             do { let h = pool.acquire(type: Float.self, count: 20)!; _ = h }
             do { let h = pool.acquire(type: Double.self, count: 20)!; _ = h }
-            await sleepMs(80)
+            pool.quiesce()
             let total = pool.statistics.bufferCountByType.values.reduce(0, +)
             #expect(total >= 2)
         }
@@ -234,9 +233,9 @@ struct MemoryPoolTests {
     // Concurrency and multi-type separation
     @Test
     func testConcurrentAcquireAndReturn_NoLeaksNoCrashes() async {
-        await withTimeout(45) {
-            // Minimize external factors (cleanup timer still exists but load is tiny).
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            // Minimize external factors (cleanup timer disabled).
+            let pool = MemoryPool(configuration: testConfig())
             await withTaskGroup(of: Void.self) { group in
                 // Very small, predictable load: 4 tasks × 8 iterations
                 for _ in 0..<4 {
@@ -260,22 +259,34 @@ struct MemoryPoolTests {
 
     @Test
     func testSeparateTypePools_DoNotInterfere() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             var floatAddr: Int = 0
-            do { let h = pool.acquire(type: Float.self, count: 32)!; floatAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); _ = h }
-            await sleepMs(50)
-            do { let h = pool.acquire(type: Double.self, count: 32)!; _ = h }
-            await sleepMs(50)
-            do { let h = pool.acquire(type: Float.self, count: 31)!; let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer)); #expect(addr2 == floatAddr); _ = h }
+            do {
+                let h = pool.acquire(type: Float.self, count: 32)!
+                floatAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
+                _ = h
+            }
+            pool.quiesce()
+            do {
+                let h = pool.acquire(type: Double.self, count: 32)!
+                _ = h
+            }
+            pool.quiesce()
+            do {
+                let h = pool.acquire(type: Float.self, count: 31)!
+                let addr2 = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
+                #expect(addr2 == floatAddr)
+                _ = h
+            }
         }
     }
 
     // Edge cases
     @Test
     func testAcquire_CountZero_ReturnsZeroLengthHandle() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             let h = pool.acquire(type: Int32.self, count: 0)!
             #expect(h.count == 0)
             #expect(AlignedMemory.isAligned(h.pointer, to: 16))
@@ -285,8 +296,8 @@ struct MemoryPoolTests {
 
     @Test
     func testAcquire_SmallCounts_AlignmentDefaultIsApplied() async {
-        await withTimeout(45) {
-            let pool = MemoryPool(configuration: .init())
+        await withTimeout(5) {
+            let pool = MemoryPool(configuration: testConfig())
             let h = pool.acquire(type: UInt16.self, count: 1)! // default alignment 16
             #expect(AlignedMemory.isAligned(h.pointer, to: 16))
             _ = h

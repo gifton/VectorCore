@@ -132,11 +132,16 @@ let euclidean = v1.euclideanDistance(to: v2)
 let cosine = v1.cosineSimilarity(to: v2)
 let dot = v1.dotProduct(v2)
 
-// Custom metrics
-struct ManhattanDistance: DistanceMetric {
+// Use built-in metrics
+let manhattan = ManhattanDistance()
+let dist = manhattan.distance(v1, v2)
+
+// Or create custom metrics
+struct CustomMetric: DistanceMetric {
+    typealias Scalar = Float
     func distance<V: VectorProtocol>(_ a: V, _ b: V) -> Float where V.Scalar == Float {
         // Your implementation
-        (a - b).l1Norm
+        return customCalculation(a, b)
     }
 }
 ```
@@ -150,7 +155,8 @@ VectorCore follows Swift conventions: **fast by default, safe by opt-in**.
 // Standard operations use preconditions for maximum performance
 let value = vector[10]                    // Fast subscript access
 let v = try Vector<Dim128>(array)        // Fast, throwing initialization on mismatch
-let result = v1 ./ v2                    // Fast division (no zero check)
+let result = v1 / scalar                  // Fast scalar division
+let elementwise = v1 ./ v2               // Fast element-wise division (no zero check)
 ```
 
 ### Safe Path (Opt-in)
@@ -193,10 +199,14 @@ DynamicVector([1.0, 2.0, 3.0, 4.0])
 
 ```swift
 // Arithmetic
-let sum = v1 + v2
-let diff = v1 - v2
-let scaled = v1 * 2.5
-let divided = v1 / 2.0
+let sum = v1 + v2                        // Vector addition
+let diff = v1 - v2                       // Vector subtraction
+let scaled = v1 * 2.5                    // Scalar multiplication
+let divided = v1 / 2.0                   // Scalar division
+
+// Element-wise operations
+let product = v1 .* v2                   // Element-wise multiplication
+let quotient = v1 ./ v2                  // Element-wise division
 
 // Vector operations
 let magnitude = vector.magnitude
@@ -235,33 +245,22 @@ do {
 
 VectorCore's optimized implementations deliver exceptional performance:
 
-### Optimized Vector Performance (Apple Silicon M-series)
+### Performance Optimization
 
-| Operation | Vector512Optimized | Vector768Optimized | Vector1536Optimized |
-|-----------|-------------------|-------------------|---------------------|
-| Dot Product | ~12ns | ~18ns | ~36ns |
-| Euclidean Distance | ~16ns | ~24ns | ~48ns |
-| Normalization | ~45ns | ~67ns | ~135ns |
-| Addition | ~8ns | ~12ns | ~24ns |
-| Cosine Similarity | ~25ns | ~37ns | ~75ns |
-
-### Generic Vector Performance
-
-| Operation | 512-dim | 768-dim | 1536-dim |
-|-----------|---------|---------|----------|
-| Dot Product | ~100ns | ~150ns | ~300ns |
-| Euclidean Distance | ~120ns | ~180ns | ~360ns |
-| Normalization | ~150ns | ~225ns | ~450ns |
-
-The optimized vectors are **8-10x faster** than generic implementations thanks to:
-- SIMD4<Float> storage layout
-- 4x loop unrolling with multiple accumulators
-- Cache-line optimized memory access
-- Inline assembly hints for critical paths
+The optimized vector types (`Vector512Optimized`, `Vector768Optimized`, `Vector1536Optimized`) provide significant performance improvements over generic vectors thanks to:
+- SIMD4<Float> storage layout for optimal vectorization
+- 4x loop unrolling with multiple accumulators to maximize instruction-level parallelism
+- Cache-line optimized memory access patterns
+- Specialized implementations for common dimensions (512, 768, 1536)
+- Zero-copy operations where possible
+- Accelerate framework integration for large operations
 
 ### Performance Notes
 
-The repository includes performance-oriented implementations and test suites. Formal benchmark runners and baseline comparison tools are not included as CLI targets in this package.
+- Optimized vectors can be **5-10x faster** than generic implementations for core operations
+- Performance varies based on hardware (Apple Silicon vs Intel) and dimension size
+- The repository includes comprehensive test suites that validate performance characteristics
+- For detailed benchmarks, profile your specific use case with Instruments
 
 ## 📱 Requirements
 

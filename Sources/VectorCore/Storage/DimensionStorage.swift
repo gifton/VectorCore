@@ -20,22 +20,22 @@ public enum StorageMode {
 public struct DimensionStorage<D: StaticDimension, Element: BinaryFloatingPoint & SIMDScalar> {
     /// Internal storage - either hybrid or managed
     private var storage: Storage
-    
+
     /// Storage implementation
     private enum Storage {
         case hybrid(HybridStorage<Element>)
         case managed(ManagedStorage<Element>)
     }
-    
+
     /// The dimension type
     public typealias Dimension = D
-    
+
     /// Default storage mode based on dimension
     private static var defaultMode: StorageMode {
         // Use hybrid for small dimensions, heap for large
         D.value <= 16 ? .hybrid : .heap
     }
-    
+
     /// Initialize with zeros
     public init(mode: StorageMode? = nil) {
         let actualMode = mode ?? Self.defaultMode
@@ -46,7 +46,7 @@ public struct DimensionStorage<D: StaticDimension, Element: BinaryFloatingPoint 
             self.storage = .managed(ManagedStorage(capacity: D.value))
         }
     }
-    
+
     /// Initialize with a fill value
     public init(repeating value: Element, mode: StorageMode? = nil) {
         self.init(mode: mode)
@@ -57,13 +57,13 @@ public struct DimensionStorage<D: StaticDimension, Element: BinaryFloatingPoint 
             }
         }
     }
-    
+
     /// Initialize from an array
     public init(from array: [Element], mode: StorageMode? = nil) throws {
         guard array.count == D.value else {
             throw VectorError.dimensionMismatch(expected: D.value, actual: array.count)
         }
-        
+
         let actualMode = mode ?? Self.defaultMode
         switch actualMode {
         case .hybrid:
@@ -72,13 +72,13 @@ public struct DimensionStorage<D: StaticDimension, Element: BinaryFloatingPoint 
             self.storage = .managed(ManagedStorage(from: array))
         }
     }
-    
+
     /// Initialize from a sequence
     public init<S: Sequence>(_ sequence: S, mode: StorageMode? = nil) throws where S.Element == Element {
         let array = Array(sequence)
         try self.init(from: array, mode: mode)
     }
-    
+
     /// Check if using hybrid storage
     public var isUsingHybridStorage: Bool {
         switch storage {
@@ -92,24 +92,24 @@ public struct DimensionStorage<D: StaticDimension, Element: BinaryFloatingPoint 
 
 extension DimensionStorage: VectorStorage {
     public typealias Scalar = Element
-    
+
     public var count: Int { D.value }
-    
+
     // Protocol requirement: init with zeros
     public init() {
         self.init(mode: nil)
     }
-    
+
     // Protocol requirement: init with repeating value
     public init(repeating value: Element) {
         self.init(repeating: value, mode: nil)
     }
-    
+
     // Protocol requirement: init from array
     public init(from values: [Element]) {
         try! self.init(from: values, mode: nil)
     }
-    
+
     public subscript(index: Int) -> Element {
         get {
             switch storage {
@@ -130,7 +130,7 @@ extension DimensionStorage: VectorStorage {
             }
         }
     }
-    
+
     public func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -141,7 +141,7 @@ extension DimensionStorage: VectorStorage {
             return try managed.withUnsafeBufferPointer(body)
         }
     }
-    
+
     public mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
@@ -169,7 +169,7 @@ extension DimensionStorage where Element == Float {
             )
         }
     }
-    
+
     /// Add a scalar to all elements
     public mutating func add(scalar: Float) {
         withUnsafeMutableBufferPointer { buffer in
@@ -181,7 +181,7 @@ extension DimensionStorage where Element == Float {
             )
         }
     }
-    
+
     /// Multiply all elements by a scalar
     public mutating func multiply(by scalar: Float) {
         withUnsafeMutableBufferPointer { buffer in
@@ -193,7 +193,7 @@ extension DimensionStorage where Element == Float {
             )
         }
     }
-    
+
     /// Copy from another storage using SIMD
     public mutating func copyFrom(_ other: DimensionStorage<D, Float>) {
         withUnsafeMutableBufferPointer { dest in
@@ -219,7 +219,7 @@ extension DimensionStorage where Element == Double {
             )
         }
     }
-    
+
     /// Add a scalar to all elements
     public mutating func add(scalar: Double) {
         withUnsafeMutableBufferPointer { buffer in
@@ -231,7 +231,7 @@ extension DimensionStorage where Element == Double {
             )
         }
     }
-    
+
     /// Multiply all elements by a scalar
     public mutating func multiply(by scalar: Double) {
         withUnsafeMutableBufferPointer { buffer in
@@ -243,7 +243,7 @@ extension DimensionStorage where Element == Double {
             )
         }
     }
-    
+
     /// Copy from another storage using SIMD
     public mutating func copyFrom(_ other: DimensionStorage<D, Double>) {
         withUnsafeMutableBufferPointer { dest in
@@ -272,7 +272,7 @@ extension DimensionStorage {
             }
         }
     }
-    
+
     /// Force a copy of the storage
     public mutating func makeUnique() {
         if !isUniquelyReferenced {
@@ -304,7 +304,7 @@ extension DimensionStorage {
             }
         }
     }
-    
+
     /// Create a slice with a range
     public func slice(_ range: Range<Int>) -> StorageSlice<Element> {
         slice(from: range.lowerBound, to: range.upperBound)
@@ -323,12 +323,12 @@ extension DimensionStorage {
         }
         self.storage = .managed(ManagedStorage(from: array))
     }
-    
+
     /// Initialize with random values
     public static func random(in range: ClosedRange<Element> = 0...1) -> DimensionStorage where Element == Float {
         DimensionStorage { _ in Float.random(in: range) }
     }
-    
+
     public static func random(in range: ClosedRange<Element> = 0...1) -> DimensionStorage where Element == Double {
         DimensionStorage { _ in Double.random(in: range) }
     }
@@ -371,7 +371,7 @@ extension DimensionStorage: @unchecked Sendable {}
 extension DimensionStorage: VectorStorageOperations {
     public func dotProduct(_ other: DimensionStorage<D, Element>) -> Element {
         var result: Element = 0
-        
+
         if Element.self == Float.self {
             self.withUnsafeBufferPointer { aBuffer in
                 other.withUnsafeBufferPointer { bBuffer in
@@ -380,6 +380,7 @@ extension DimensionStorage: VectorStorageOperations {
                         bBuffer.baseAddress!.withMemoryRebound(to: Float.self, capacity: bBuffer.count) { $0 },
                         count: aBuffer.count
                     )
+                    // swiftlint:disable:next force_cast
                     result = floatResult as! Element
                 }
             }
@@ -391,6 +392,7 @@ extension DimensionStorage: VectorStorageOperations {
                         bBuffer.baseAddress!.withMemoryRebound(to: Double.self, capacity: bBuffer.count) { $0 },
                         count: aBuffer.count
                     )
+                    // swiftlint:disable:next force_cast
                     result = doubleResult as! Element
                 }
             }
@@ -404,7 +406,7 @@ extension DimensionStorage: VectorStorageOperations {
                 }
             }
         }
-        
+
         return result
     }
 }
@@ -414,6 +416,7 @@ extension DimensionStorage: VectorStorageOperations {
 extension DimensionStorage: CustomDebugStringConvertible {
     public var debugDescription: String {
         withUnsafeBufferPointer { buffer in
+            // swiftlint:disable:next force_cast
             let elements = buffer.prefix(10).map { String(format: "%.4f", $0 as! any CVarArg) }
             if D.value > 10 {
                 return "DimensionStorage<\(D.self)>[\(elements.joined(separator: ", ")), ... (\(D.value) total)]"

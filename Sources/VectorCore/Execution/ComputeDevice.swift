@@ -17,21 +17,21 @@ public enum ComputeDevice: Sendable, Hashable, CustomStringConvertible {
     /// - Optimized for general-purpose computation
     /// - Best for small to medium datasets or complex branching logic
     case cpu
-    
+
     /// GPU execution using Metal (when available)
     ///
     /// - Parameter index: GPU index for multi-GPU systems (default: 0)
     /// - Optimized for highly parallel, regular computations
     /// - Best for large datasets with simple per-element operations
     case gpu(index: Int = 0)
-    
+
     /// Neural Engine execution (Apple Silicon)
     ///
     /// - Optimized for machine learning inference
     /// - Best for neural network operations
     /// - Currently experimental/future support
     case neural
-    
+
     /// Whether this device provides hardware acceleration
     public var isAccelerated: Bool {
         switch self {
@@ -41,7 +41,7 @@ public enum ComputeDevice: Sendable, Hashable, CustomStringConvertible {
             return true
         }
     }
-    
+
     /// Human-readable description of the device
     public var description: String {
         switch self {
@@ -53,14 +53,14 @@ public enum ComputeDevice: Sendable, Hashable, CustomStringConvertible {
             return "Neural Engine"
         }
     }
-    
+
     /// Check if this device type is available on the current system
     public var isAvailable: Bool {
         switch self {
         case .cpu:
             // CPU is always available
             return true
-            
+
         case .gpu:
             // Check for Metal support
             #if canImport(Metal) && !targetEnvironment(simulator)
@@ -68,7 +68,7 @@ public enum ComputeDevice: Sendable, Hashable, CustomStringConvertible {
             #else
             return false
             #endif
-            
+
         case .neural:
             // Neural Engine requires Apple Silicon
             #if os(macOS) || os(iOS)
@@ -80,7 +80,7 @@ public enum ComputeDevice: Sendable, Hashable, CustomStringConvertible {
             return false
         }
     }
-    
+
     /// Memory alignment requirements for this device (in bytes)
     public var requiredAlignment: Int {
         switch self {
@@ -91,17 +91,17 @@ public enum ComputeDevice: Sendable, Hashable, CustomStringConvertible {
             #else
             return 32  // AVX alignment
             #endif
-            
+
         case .gpu:
             // Metal buffer alignment
             return 256
-            
+
         case .neural:
             // Neural Engine alignment (conservative)
             return 64
         }
     }
-    
+
     /// Recommended minimum data size for efficient execution
     ///
     /// Operations smaller than this may have overhead that exceeds benefits
@@ -123,16 +123,16 @@ public enum ComputeDevice: Sendable, Hashable, CustomStringConvertible {
 public struct DeviceCapabilities: Sendable {
     /// Maximum number of parallel execution units
     public let maxParallelism: Int
-    
+
     /// Available memory in bytes (nil if unlimited/unknown)
     public let availableMemory: Int?
-    
+
     /// Supported precision modes
     public let supportedPrecisions: Set<Precision>
-    
+
     /// Whether the device supports unified memory
     public let hasUnifiedMemory: Bool
-    
+
     /// Precision modes for computation
     public enum Precision: String, Sendable {
         case float16 = "f16"
@@ -152,7 +152,7 @@ public extension ComputeDevice {
     /// - Returns: Device capabilities if available, nil if device not present
     func queryCapabilities() -> DeviceCapabilities? {
         guard isAvailable else { return nil }
-        
+
         switch self {
         case .cpu:
             return DeviceCapabilities(
@@ -161,7 +161,7 @@ public extension ComputeDevice {
                 supportedPrecisions: [.float32, .float64, .int32],
                 hasUnifiedMemory: true
             )
-            
+
         case .gpu:
             // Placeholder for Metal device query
             return DeviceCapabilities(
@@ -170,7 +170,7 @@ public extension ComputeDevice {
                 supportedPrecisions: [.float16, .float32],
                 hasUnifiedMemory: true  // True on Apple Silicon
             )
-            
+
         case .neural:
             // Placeholder for Neural Engine
             return DeviceCapabilities(
@@ -181,22 +181,22 @@ public extension ComputeDevice {
             )
         }
     }
-    
+
     /// Get all available devices on this system
     static var availableDevices: [ComputeDevice] {
         var devices: [ComputeDevice] = [.cpu]
-        
+
         if ComputeDevice.gpu().isAvailable {
             devices.append(.gpu())
         }
-        
+
         if ComputeDevice.neural.isAvailable {
             devices.append(.neural)
         }
-        
+
         return devices
     }
-    
+
     /// Create appropriate compute provider for this device
     ///
     /// - Returns: ComputeProvider for the device, or nil if unavailable
@@ -204,23 +204,23 @@ public extension ComputeDevice {
         switch self {
         case .cpu:
             return CPUComputeProvider.automatic
-            
+
         case .gpu:
             // GPU providers now live in VectorAccelerate package
             return nil
-            
+
         case .neural:
             // Neural providers now live in VectorAI package
             return nil
         }
     }
-    
+
     /// Get the most capable available device
     ///
     /// Priority order: Neural Engine > GPU > CPU
     static var mostCapable: ComputeDevice {
         let available = availableDevices
-        
+
         if available.contains(.neural) {
             return .neural
         } else if available.contains(where: { if case .gpu = $0 { return true } else { return false } }) {

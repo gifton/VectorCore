@@ -7,31 +7,6 @@ import Foundation
 
 // MARK: - Distance Metric Protocol
 
-/// Protocol for distance and similarity metrics between vectors.
-///
-/// `DistanceMetric` defines the interface for computing distances or
-/// similarities between vectors. Implementations can provide various
-/// metrics such as Euclidean, Cosine, Manhattan, etc.
-///
-/// ## Conforming Types
-/// - `EuclideanDistance`: L2 norm distance
-/// - `CosineDistance`: Angular distance (1 - cosine similarity)
-/// - `ManhattanDistance`: L1 norm distance
-/// - `DotProductDistance`: Negative dot product
-///
-/// ## Implementation Notes
-/// - Distances should be non-negative (except DotProductDistance)
-/// - Smaller values indicate more similar vectors
-/// - Implementations should be optimized for performance
-///
-/// ## Example Usage
-/// ```swift
-/// let metric = EuclideanDistance()
-/// let distance = metric.distance(vector1, vector2)
-/// 
-/// // Batch computation for efficiency
-/// let distances = metric.batchDistance(query: query, candidates: vectors)
-/// ```
 // DistanceMetric is now defined in VectorProtocolComposition.swift as a generic protocol
 
 // MARK: - Acceleration Provider Protocol
@@ -61,13 +36,13 @@ public protocol AccelerationProvider: Sendable {
     /// Defines provider-specific settings such as device selection,
     /// memory limits, or optimization preferences.
     associatedtype Config
-    
+
     /// Initialize acceleration provider with configuration.
     ///
     /// - Parameter configuration: Provider-specific configuration
     /// - Throws: If initialization fails (e.g., hardware unavailable)
     init(configuration: Config) async throws
-    
+
     /// Check if a specific operation can be accelerated.
     ///
     /// - Parameter operation: The operation to check support for
@@ -82,7 +57,7 @@ public protocol AccelerationProvider: Sendable {
     /// }
     /// ```
     func isSupported(for operation: AcceleratedOperation) -> Bool
-    
+
     /// Perform hardware-accelerated computation.
     ///
     /// - Parameters:
@@ -112,13 +87,13 @@ public protocol AccelerationProvider: Sendable {
 public enum AcceleratedOperation: String, Sendable {
     /// High-performance distance calculations between vectors.
     case distanceComputation
-    
+
     /// Accelerated matrix-vector and matrix-matrix multiplications.
     case matrixMultiplication
-    
+
     /// Fast vector normalization using SIMD square root operations.
     case vectorNormalization
-    
+
     /// Batch processing of multiple vectors in parallel.
     case batchedOperations
 }
@@ -140,11 +115,11 @@ public enum AcceleratedOperation: String, Sendable {
 /// ```swift
 /// extension Vector: VectorSerializable {
 ///     typealias SerializedForm = Data
-///     
+///
 ///     func serialize() throws -> Data {
 ///         return try encodeBinary()
 ///     }
-///     
+///
 ///     static func deserialize(from data: Data) throws -> Self {
 ///         return try decodeBinary(from: data)
 ///     }
@@ -155,7 +130,7 @@ public protocol VectorSerializable {
     ///
     /// Common choices include Data (binary), String (text), or custom types.
     associatedtype SerializedForm
-    
+
     /// Serialize the vector to its serialized form.
     ///
     /// - Returns: Serialized representation of the vector
@@ -167,7 +142,7 @@ public protocol VectorSerializable {
     /// saveToFile(data)
     /// ```
     func serialize() throws -> SerializedForm
-    
+
     /// Deserialize a vector from its serialized form.
     ///
     /// - Parameter from: Serialized representation to decode
@@ -194,29 +169,29 @@ extension VectorType where Self: BinaryEncodable {
                 reason: "Must be between 1 and \(BinaryFormat.maxDimension)"
             )
         }
-        
+
         // Pre-allocate exact size needed
         let totalSize = BinaryFormat.expectedDataSize(for: self.scalarCount)
         var data = Data()
         data.reserveCapacity(totalSize)
-        
+
         // Create header
         let header = BinaryHeader(dimension: self.scalarCount)
-        
+
         // Write header in little-endian format
         BinaryFormat.writeUInt32(header.magic, to: &data)
         BinaryFormat.writeUInt16(header.version, to: &data)
         BinaryFormat.writeUInt32(header.dimension, to: &data)
         BinaryFormat.writeUInt16(header.flags, to: &data)
-        
+
         // Write vector data in little-endian format
         let values = self.toArray()
         BinaryFormat.writeFloatArray(values, to: &data)
-        
+
         // Calculate and append checksum
         let checksum = data.crc32()
         BinaryFormat.writeUInt32(checksum, to: &data)
-        
+
         return data
     }
 }

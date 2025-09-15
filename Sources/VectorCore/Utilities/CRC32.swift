@@ -15,7 +15,7 @@ public struct CRC32 {
             }
         }
     }()
-    
+
     /// Calculate CRC32 checksum for data
     public static func checksum(_ data: Data) -> UInt32 {
         data.reduce(~UInt32(0)) { crc, byte in
@@ -23,7 +23,7 @@ public struct CRC32 {
             return (crc >> 8) ^ table[index]
         } ^ ~UInt32(0)
     }
-    
+
     /// Calculate CRC32 checksum for byte array
     public static func checksum(_ bytes: [UInt8]) -> UInt32 {
         checksum(Data(bytes))

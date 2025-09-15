@@ -11,9 +11,9 @@ import Foundation
 /// Pure Swift implementation for Double operations
 public struct SwiftDoubleSIMDProvider: SIMDProvider {
     public typealias Scalar = Double
-    
+
     // MARK: - Arithmetic Operations
-    
+
     @inlinable
     public static func add(
         _ a: UnsafePointer<Double>,
@@ -23,7 +23,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         processBinaryOperation(a, b, result: result, count: count) { $0 + $1 }
     }
-    
+
     @inlinable
     public static func subtract(
         _ a: UnsafePointer<Double>,
@@ -33,7 +33,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         processBinaryOperation(a, b, result: result, count: count) { $0 - $1 }
     }
-    
+
     @inlinable
     public static func multiply(
         _ a: UnsafePointer<Double>,
@@ -43,7 +43,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         processBinaryOperation(a, b, result: result, count: count) { $0 * $1 }
     }
-    
+
     @inlinable
     public static func divide(
         _ a: UnsafePointer<Double>,
@@ -53,7 +53,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         processBinaryOperation(a, b, result: result, count: count) { $0 / $1 }
     }
-    
+
     @inlinable
     public static func multiplyScalar(
         _ a: UnsafePointer<Double>,
@@ -63,7 +63,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         processUnaryOperation(a, result: result, count: count) { $0 * scalar }
     }
-    
+
     @inlinable
     public static func negate(
         _ a: UnsafePointer<Double>,
@@ -72,7 +72,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         processUnaryOperation(a, result: result, count: count) { -$0 }
     }
-    
+
     @inlinable
     public static func addScalar(
         _ a: UnsafePointer<Double>,
@@ -82,9 +82,9 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         processUnaryOperation(a, result: result, count: count) { $0 + scalar }
     }
-    
+
     // MARK: - Reduction Operations
-    
+
     @inlinable
     public static func sum(
         _ a: UnsafePointer<Double>,
@@ -92,7 +92,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) -> Double {
         var result: Double = 0
         var i = 0
-        
+
         // Process SIMD8 chunks (Double uses smaller SIMD sizes)
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -102,23 +102,23 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result += va.sum()
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
             result += va.sum()
             i += 4
         }
-        
+
         // Process remaining scalars
         while i < count {
             result += a[i]
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func dot(
         _ a: UnsafePointer<Double>,
@@ -127,7 +127,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) -> Double {
         var result: Double = 0
         var i = 0
-        
+
         // Process SIMD8 chunks (Double uses smaller SIMD sizes)
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -141,7 +141,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result += (va * vb).sum()
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
@@ -149,16 +149,16 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result += (va * vb).sum()
             i += 4
         }
-        
+
         // Process remaining scalars
         while i < count {
             result += a[i] * b[i]
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func sumOfSquares(
         _ a: UnsafePointer<Double>,
@@ -168,7 +168,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             sum + (vec * vec).sum()
         }
     }
-    
+
     @inlinable
     public static func sumOfMagnitudes(
         _ a: UnsafePointer<Double>,
@@ -178,7 +178,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             sum + vec.replacing(with: 0, where: vec .< 0).sum() - vec.replacing(with: 0, where: vec .>= 0).sum()
         }
     }
-    
+
     @inlinable
     public static func distanceSquared(
         _ a: UnsafePointer<Double>,
@@ -187,7 +187,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) -> Double {
         var result: Double = 0
         var i = 0
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -202,7 +202,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result += (diff * diff).sum()
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
@@ -211,29 +211,29 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result += (diff * diff).sum()
             i += 4
         }
-        
+
         // Process remaining scalars
         while i < count {
             let diff = a[i] - b[i]
             result += diff * diff
             i += 1
         }
-        
+
         return result
     }
-    
+
     // MARK: - Statistical Operations
-    
+
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
         guard count > 0 else { return 0 }
-        
+
         var result = a[0]
         var i = 1
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -243,26 +243,26 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result = Swift.max(result, va.max())
             i += 8
         }
-        
+
         // Process remaining scalars
         while i < count {
             result = Swift.max(result, a[i])
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
         guard count > 0 else { return 0 }
-        
+
         var result = a[0]
         var i = 1
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -272,26 +272,26 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result = Swift.min(result, va.min())
             i += 8
         }
-        
+
         // Process remaining scalars
         while i < count {
             result = Swift.min(result, a[i])
             i += 1
         }
-        
+
         return result
     }
-    
+
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
         guard count > 0 else { return 0 }
-        
+
         var result = abs(a[0])
         var i = 1
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -302,18 +302,18 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result = Swift.max(result, absVa.max())
             i += 8
         }
-        
+
         // Process remaining scalars
         while i < count {
             result = Swift.max(result, abs(a[i]))
             i += 1
         }
-        
+
         return result
     }
-    
+
     // MARK: - Utility Operations
-    
+
     @inlinable
     public static func fill(
         value: Double,
@@ -324,7 +324,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         let valueVec8 = SIMD8<Double>(repeating: value)
         let valueVec4 = SIMD4<Double>(repeating: value)
         let valueVec2 = SIMD2<Double>(repeating: value)
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             destination[i] = valueVec8[0]
@@ -337,7 +337,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             destination[i+7] = valueVec8[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             destination[i] = valueVec4[0]
@@ -346,21 +346,21 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             destination[i+3] = valueVec4[3]
             i += 4
         }
-        
+
         // Process SIMD2 chunks
         while i + 2 <= count {
             destination[i] = valueVec2[0]
             destination[i+1] = valueVec2[1]
             i += 2
         }
-        
+
         // Process remaining scalars
         while i < count {
             destination[i] = value
             i += 1
         }
     }
-    
+
     @inlinable
     public static func copy(
         source: UnsafePointer<Double>,
@@ -369,9 +369,9 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) {
         destination.initialize(from: source, count: count)
     }
-    
+
     // MARK: - Extended Operations
-    
+
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Double>,
@@ -385,7 +385,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         let highVec8 = SIMD8<Double>(repeating: high)
         let lowVec4 = SIMD4<Double>(repeating: low)
         let highVec4 = SIMD4<Double>(repeating: high)
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -403,7 +403,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result[i+7] = clipped[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
@@ -414,16 +414,16 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result[i+3] = clipped[3]
             i += 4
         }
-        
+
         // Process remaining scalars
         while i < count {
             result[i] = Swift.max(low, Swift.min(high, a[i]))
             i += 1
         }
     }
-    
+
     // MARK: - Private Helpers
-    
+
     @inline(__always)
     @usableFromInline
     internal static func processBinaryOperation(
@@ -434,7 +434,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         operation: (SIMD8<Double>, SIMD8<Double>) -> SIMD8<Double>
     ) {
         var i = 0
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -456,7 +456,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
@@ -472,7 +472,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result[i+3] = lowHalf[3]
             i += 4
         }
-        
+
         // Process SIMD2 chunks
         while i + 2 <= count {
             let va = SIMD2<Double>(a[i], a[i+1])
@@ -486,7 +486,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result[i+1] = firstQuarter[1]
             i += 2
         }
-        
+
         // Process remaining scalars
         while i < count {
             let scalarA = a[i]
@@ -499,7 +499,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             i += 1
         }
     }
-    
+
     @inline(__always)
     @usableFromInline
     internal static func processUnaryOperation(
@@ -509,7 +509,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         operation: (SIMD8<Double>) -> SIMD8<Double>
     ) {
         var i = 0
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -527,7 +527,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result[i+7] = vr[7]
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
@@ -541,7 +541,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result[i+3] = lowHalf[3]
             i += 4
         }
-        
+
         // Process remaining scalars
         while i < count {
             let scalarA = a[i]
@@ -551,7 +551,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             i += 1
         }
     }
-    
+
     @inline(__always)
     @usableFromInline
     internal static func processReduction<T>(
@@ -562,7 +562,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
     ) -> T {
         var result = initial
         var i = 0
-        
+
         // Process SIMD8 chunks
         while i + 8 <= count {
             let va = SIMD8<Double>(
@@ -572,7 +572,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result = operation(result, va)
             i += 8
         }
-        
+
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
@@ -580,14 +580,14 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
             result = operation(result, va8)
             i += 4
         }
-        
+
         // Process remaining scalars
         while i < count {
             let va8 = SIMD8<Double>(a[i], 0, 0, 0, 0, 0, 0, 0)
             result = operation(result, va8)
             i += 1
         }
-        
+
         return result
     }
 }

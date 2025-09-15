@@ -22,7 +22,7 @@ import Foundation
 /// struct CPUComputeProvider: ComputeProvider {
 ///     let device = ComputeDevice.cpu
 ///     var maxConcurrency: Int { ProcessInfo.processInfo.activeProcessorCount }
-///     
+///
 ///     func execute<T>(_ work: () async throws -> T) async throws -> T {
 ///         try await work()
 ///     }
@@ -31,10 +31,10 @@ import Foundation
 public protocol ComputeProvider: Sendable {
     /// The compute device type this provider uses
     var device: ComputeDevice { get }
-    
+
     /// Maximum concurrency level supported
     var maxConcurrency: Int { get }
-    
+
     /// Execute work on the compute device
     ///
     /// - Parameter work: The work to execute
@@ -43,7 +43,7 @@ public protocol ComputeProvider: Sendable {
     func execute<T: Sendable>(
         _ work: @Sendable @escaping () async throws -> T
     ) async throws -> T
-    
+
     /// Execute work in parallel across items
     ///
     /// - Parameters:
@@ -55,7 +55,7 @@ public protocol ComputeProvider: Sendable {
         items: Range<Int>,
         _ work: @Sendable @escaping (Int) async throws -> T
     ) async throws -> [T]
-    
+
     /// Information about the compute device
     var deviceInfo: ComputeDeviceInfo { get }
 }
@@ -64,16 +64,16 @@ public protocol ComputeProvider: Sendable {
 public struct ComputeDeviceInfo: Sendable {
     /// Human-readable device name
     public let name: String
-    
+
     /// Available memory in bytes (if known)
     public let availableMemory: Int?
-    
+
     /// Maximum threads/cores available
     public let maxThreads: Int
-    
+
     /// Preferred chunk size for operations
     public let preferredChunkSize: Int
-    
+
     public init(
         name: String,
         availableMemory: Int? = nil,
@@ -101,12 +101,12 @@ public extension ComputeProvider {
                     (i, try await work(i))
                 }
             }
-            
+
             var results = [(Int, T)]()
             for try await result in group {
                 results.append(result)
             }
-            
+
             // Sort by index to maintain order
             results.sort { $0.0 < $1.0 }
             return results.map { $0.1 }

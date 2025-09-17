@@ -31,7 +31,7 @@ public struct CPUComputeProvider: ComputeProvider {
     /// Threshold for automatic parallelization
     private let parallelizationThreshold: Int
 
-    public init(mode: Mode = .automatic, parallelizationThreshold: Int = 1000) {
+    public init(mode: Mode = .automatic, parallelizationThreshold: Int = 50_000) {
         self.device = .cpu
         self.mode = mode
         self.processorCount = ProcessInfo.processInfo.activeProcessorCount
@@ -93,23 +93,35 @@ public struct CPUComputeProvider: ComputeProvider {
         }()
 
         if shouldParallelize {
-            // Parallel execution using TaskGroup
-            return try await withThrowingTaskGroup(of: (Int, T).self) { group in
-                // Create tasks for each item
-                for i in items {
+            // Parallel execution using chunked TaskGroup to reduce scheduling overhead
+            return try await withThrowingTaskGroup(of: [(Int, T)].self) { group in
+                let total = count
+                let cores = max(1, processorCount)
+                let targetTasks = max(1, min(total, cores))
+                let chunk = max(256, (total + targetTasks - 1) / targetTasks) // coarser chunks
+
+                var start = items.lowerBound
+                while start < items.upperBound {
+                    let end = min(start + chunk, items.upperBound)
+                    let range = start..<end
                     group.addTask {
-                        let result = try await work(i)
-                        return (i, result)
+                        var local: [(Int, T)] = []
+                        local.reserveCapacity(range.count)
+                        for i in range {
+                            let result = try await work(i)
+                            local.append((i, result))
+                        }
+                        return local
                     }
+                    start = end
                 }
 
-                // Collect results
                 var allResults: [(Int, T)] = []
-                for try await result in group {
-                    allResults.append(result)
+                allResults.reserveCapacity(total)
+                for try await partial in group {
+                    allResults.append(contentsOf: partial)
                 }
 
-                // Sort by index to maintain order
                 allResults.sort { $0.0 < $1.0 }
                 return allResults.map { $0.1 }
             }
@@ -124,6 +136,160 @@ public struct CPUComputeProvider: ComputeProvider {
             }
 
             return results
+        }
+    }
+}
+
+// MARK: - Chunked helpers (override protocol defaults)
+
+public extension CPUComputeProvider {
+    func parallelForEach(
+        items: Range<Int>,
+        _ body: @Sendable @escaping (Int) async throws -> Void
+    ) async throws {
+        let count = items.count
+        let shouldParallelize: Bool = {
+            switch mode {
+            case .sequential: return false
+            case .parallel: return true
+            case .automatic: return count >= parallelizationThreshold
+            }
+        }()
+
+        if shouldParallelize {
+            let total = count
+            let cores = max(1, processorCount)
+            let targetTasks = max(1, min(total, cores))
+            let chunk = max(256, (total + targetTasks - 1) / targetTasks)
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                var start = items.lowerBound
+                while start < items.upperBound {
+                    let end = min(start + chunk, items.upperBound)
+                    let range = start..<end
+                    group.addTask {
+                        for i in range { try await body(i) }
+                    }
+                    start = end
+                }
+                for try await _ in group { _ = () }
+            }
+        } else {
+            for i in items { try await body(i) }
+        }
+    }
+
+    func parallelReduce<R: Sendable>(
+        items: Range<Int>,
+        initial: R,
+        _ rangeWork: @Sendable @escaping (Range<Int>) async throws -> R,
+        _ combine: @Sendable @escaping (R, R) -> R
+    ) async throws -> R {
+        let count = items.count
+        if count == 0 { return initial }
+        let shouldParallelize: Bool = {
+            switch mode {
+            case .sequential: return false
+            case .parallel: return true
+            case .automatic: return count >= parallelizationThreshold
+            }
+        }()
+
+        if shouldParallelize {
+            let total = count
+            let cores = max(1, processorCount)
+            let targetTasks = max(1, min(total, cores))
+            let chunk = max(256, (total + targetTasks - 1) / targetTasks)
+            return try await withThrowingTaskGroup(of: R.self) { group in
+                var start = items.lowerBound
+                while start < items.upperBound {
+                    let end = min(start + chunk, items.upperBound)
+                    let range = start..<end
+                    group.addTask { try await rangeWork(range) }
+                    start = end
+                }
+                var acc = initial
+                for try await part in group { acc = combine(acc, part) }
+                return acc
+            }
+        } else {
+            // Sequential accumulation by invoking rangeWork on whole range
+            return try await rangeWork(items)
+        }
+    }
+
+    // Min-chunk hint variants
+    func parallelForEach(
+        items: Range<Int>,
+        minChunk: Int,
+        _ body: @Sendable @escaping (Int) async throws -> Void
+    ) async throws {
+        let count = items.count
+        let shouldParallelize: Bool = {
+            switch mode {
+            case .sequential: return false
+            case .parallel: return true
+            case .automatic: return count >= parallelizationThreshold
+            }
+        }()
+
+        if shouldParallelize {
+            let total = count
+            let cores = max(1, processorCount)
+            let targetTasks = max(1, min(total, cores))
+            let base = max(256, (total + targetTasks - 1) / targetTasks)
+            let chunk = max(minChunk, base)
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                var start = items.lowerBound
+                while start < items.upperBound {
+                    let end = min(start + chunk, items.upperBound)
+                    let range = start..<end
+                    group.addTask { for i in range { try await body(i) } }
+                    start = end
+                }
+                for try await _ in group { _ = () }
+            }
+        } else {
+            for i in items { try await body(i) }
+        }
+    }
+
+    func parallelReduce<R: Sendable>(
+        items: Range<Int>,
+        initial: R,
+        minChunk: Int,
+        _ rangeWork: @Sendable @escaping (Range<Int>) async throws -> R,
+        _ combine: @Sendable @escaping (R, R) -> R
+    ) async throws -> R {
+        let count = items.count
+        if count == 0 { return initial }
+        let shouldParallelize: Bool = {
+            switch mode {
+            case .sequential: return false
+            case .parallel: return true
+            case .automatic: return count >= parallelizationThreshold
+            }
+        }()
+
+        if shouldParallelize {
+            let total = count
+            let cores = max(1, processorCount)
+            let targetTasks = max(1, min(total, cores))
+            let base = max(256, (total + targetTasks - 1) / targetTasks)
+            let chunk = max(minChunk, base)
+            return try await withThrowingTaskGroup(of: R.self) { group in
+                var start = items.lowerBound
+                while start < items.upperBound {
+                    let end = min(start + chunk, items.upperBound)
+                    let range = start..<end
+                    group.addTask { try await rangeWork(range) }
+                    start = end
+                }
+                var acc = initial
+                for try await part in group { acc = combine(acc, part) }
+                return acc
+            }
+        } else {
+            return try await rangeWork(items)
         }
     }
 }

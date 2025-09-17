@@ -113,13 +113,29 @@ public enum BatchOperations {
         guard k > 0 else { return [] }
         guard !vectors.isEmpty else { return [] }
 
-        // Smart parallelization based on dataset size
-        if vectors.count < defaultConfig.parallelThreshold {
+        // Smart parallelization based on a dynamic heuristic
+        let dim = query.scalarCount
+        let items = vectors.count
+        let variant: ParallelHeuristic.Variant = {
+            if query is Vector512Optimized || query is Vector768Optimized || query is Vector1536Optimized { return .optimized }
+            return .generic
+        }()
+        let metricClass: ParallelHeuristic.MetricClass = {
+            switch metric {
+            case is EuclideanDistance: return .euclideanLike
+            case is DotProductDistance: return .dot
+            case is CosineDistance: return .cosine
+            case is ManhattanDistance: return .manhattan
+            default: return .euclideanLike
+            }
+        }()
+        let parallel = ParallelHeuristic.shouldParallelize(dim: dim, items: items, variant: variant, metric: metricClass)
+
+        if parallel {
+            return await findNearestParallel(to: query, in: vectors, k: k, metric: metric)
+        } else {
             return findNearestSerial(to: query, in: vectors, k: k, metric: metric)
         }
-
-        // Parallel processing for larger datasets
-        return await findNearestParallel(to: query, in: vectors, k: k, metric: metric)
     }
 
     /// Process vectors in intelligent batches

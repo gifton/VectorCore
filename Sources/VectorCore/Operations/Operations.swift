@@ -137,13 +137,35 @@ public enum Operations {
         to vectors: [V],
         metric: M
     ) async throws -> [Float] where V.Scalar == Float, M.Scalar == Float {
-        // For large datasets, parallelize
-        if vectors.count > 1000 {
+        let dim = query.scalarCount
+        let items = vectors.count
+
+        // Infer variant (optimized vs generic) based on runtime type
+        let variant: ParallelHeuristic.Variant = {
+            if query is Vector512Optimized || query is Vector768Optimized || query is Vector1536Optimized {
+                return .optimized
+            }
+            return .generic
+        }()
+
+        // Map metric type to metric class
+        let metricClass: ParallelHeuristic.MetricClass = {
+            switch metric {
+            case is EuclideanDistance: return .euclideanLike
+            case is DotProductDistance: return .dot
+            case is CosineDistance: return .cosine
+            case is ManhattanDistance: return .manhattan
+            default: return .euclideanLike
+            }
+        }()
+
+        let parallel = ParallelHeuristic.shouldParallelize(dim: dim, items: items, variant: variant, metric: metricClass)
+
+        if parallel {
             return try await computeProvider.parallelExecute(items: 0..<vectors.count) { i in
                 metric.distance(query, vectors[i])
             }
         } else {
-            // Sequential for small datasets
             return vectors.map { metric.distance(query, $0) }
         }
     }

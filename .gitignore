@@ -51,6 +51,7 @@ fastlane/test_output
 *.profraw
 *.profdata
 .coverage/
+.bench/
 
 # Temporary files
 *.tmp

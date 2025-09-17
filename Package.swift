@@ -15,6 +15,11 @@ let package = Package(
             name: "VectorCore",
             targets: ["VectorCore"]
         ),
+        // Benchmark executable (lives under Benchmarks/VectorCoreBench)
+        .executable(
+            name: "vectorcore-bench",
+            targets: ["VectorCoreBench"]
+        ),
     ],
     dependencies: [],
     targets: [
@@ -41,6 +46,11 @@ let package = Package(
             dependencies: ["VectorCore"],
             swiftSettings: [ .enableExperimentalFeature("StrictConcurrency") ]
         ),
-        
+        // Benchmark executable target (Phase 1 scaffold)
+        .executableTarget(
+            name: "VectorCoreBench",
+            dependencies: ["VectorCore"],
+            path: "Benchmarks/VectorCoreBench"
+        )
     ]
 )

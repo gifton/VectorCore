@@ -1,0 +1,1093 @@
+{
+  "metadata" : {
+    "arch" : "arm64",
+    "buildConfiguration" : "release",
+    "cpuCores" : 8,
+    "date" : "2025-09-17T03:15:24Z",
+    "deviceModel" : "arm64",
+    "dims" : [
+      512,
+      768,
+      1536
+    ],
+    "gitSHA" : "23dd62732665155683f32282cdaf431e81b339d8",
+    "os" : "Version 15.4.1 (Build 24E263)",
+    "package" : "VectorCore",
+    "packageVersion" : "0.1.0-alpha",
+    "suites" : [
+      "dot",
+      "batch"
+    ],
+    "swiftVersion" : "swift-driver version: 1.120.5 Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)\nTarget: arm64-apple-macosx15.0"
+  },
+  "results" : [
+    {
+      "gflops" : 0.06214637933402305,
+      "iterations" : 303179,
+      "name" : "dot.512.generic",
+      "nsPerOp" : 16477.22700780727,
+      "nsPerUnit" : 16477.22700780727,
+      "params" : {
+        "dim" : 512,
+        "kind" : "dot",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 60689.82356838188,
+      "totalNS" : 4995549207,
+      "unitCount" : 1
+    },
+    {
+      "gflops" : 12.424241069072847,
+      "iterations" : 60547226,
+      "name" : "dot.512.optimized",
+      "nsPerOp" : 82.41952118500028,
+      "nsPerUnit" : 82.41952118500028,
+      "params" : {
+        "dim" : 512,
+        "kind" : "dot",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 12133047.91901645,
+      "totalNS" : 4990273376,
+      "unitCount" : 1
+    },
+    {
+      "gflops" : 0.06319974110097207,
+      "iterations" : 205612,
+      "name" : "dot.768.generic",
+      "nsPerOp" : 24303.897029356263,
+      "nsPerUnit" : 24303.897029356263,
+      "params" : {
+        "dim" : 768,
+        "kind" : "dot",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 41145.6647792787,
+      "totalNS" : 4997172876,
+      "unitCount" : 1
+    },
+    {
+      "gflops" : 7.582429359778338,
+      "iterations" : 27828704,
+      "name" : "dot.768.optimized",
+      "nsPerOp" : 202.57359839682078,
+      "nsPerUnit" : 202.57359839682078,
+      "params" : {
+        "dim" : 768,
+        "kind" : "dot",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 4936477.447772356,
+      "totalNS" : 5637360708,
+      "unitCount" : 1
+    },
+    {
+      "gflops" : 0.06143672211867231,
+      "iterations" : 99774,
+      "name" : "dot.1536.generic",
+      "nsPerOp" : 50002.66768897709,
+      "nsPerUnit" : 50002.66768897709,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "dot",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 19998.932981338643,
+      "totalNS" : 4988966166,
+      "unitCount" : 1
+    },
+    {
+      "gflops" : 17.12933360943712,
+      "iterations" : 27874788,
+      "name" : "dot.1536.optimized",
+      "nsPerOp" : 179.34147761052031,
+      "nsPerUnit" : 179.34147761052031,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "dot",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 5575954.950988645,
+      "totalNS" : 4999105668,
+      "unitCount" : 1
+    },
+    {
+      "iterations" : 2131,
+      "name" : "batch.euclidean.512.N100.generic.sequential",
+      "nsPerOp" : 2353633.171750352,
+      "nsPerUnit" : 23536.33171750352,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 42487.50451015776,
+      "totalNS" : 5015592289,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 294250,
+      "name" : "batch.euclidean.512.N100.optimized.sequential",
+      "nsPerOp" : 16979.752615123194,
+      "nsPerUnit" : 169.79752615123195,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 5889367.310978015,
+      "totalNS" : 4996292207,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 351,
+      "name" : "batch.euclidean.512.N100.generic.parallel",
+      "nsPerOp" : 14067053.532763533,
+      "nsPerUnit" : 140670.53532763533,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 7108.809230525091,
+      "totalNS" : 4937535790,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 55453,
+      "name" : "batch.euclidean.512.N100.optimized.parallel",
+      "nsPerOp" : 90501.95136421834,
+      "nsPerUnit" : 905.0195136421835,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1104948.5507506626,
+      "totalNS" : 5018604709,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 2156,
+      "name" : "batch.euclidean.512.N100.generic.automatic",
+      "nsPerOp" : 2315734.1136363638,
+      "nsPerUnit" : 23157.341136363637,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 43182.85048837988,
+      "totalNS" : 4992722749,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 293584,
+      "name" : "batch.euclidean.512.N100.optimized.automatic",
+      "nsPerOp" : 17016.292328601015,
+      "nsPerUnit" : 170.16292328601014,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 5876720.854866829,
+      "totalNS" : 4995711167,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 213,
+      "name" : "batch.euclidean.512.N1000.generic.sequential",
+      "nsPerOp" : 23294526.01877934,
+      "nsPerUnit" : 23294.526018779343,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 42928.54034436375,
+      "totalNS" : 4961734042,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 29709,
+      "name" : "batch.euclidean.512.N1000.optimized.sequential",
+      "nsPerOp" : 168338.50156518226,
+      "nsPerUnit" : 168.33850156518227,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 5940411.67470408,
+      "totalNS" : 5001168543,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 57,
+      "name" : "batch.euclidean.512.N1000.generic.parallel",
+      "nsPerOp" : 99170614.03508772,
+      "nsPerUnit" : 99170.61403508772,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 10083.632230472913,
+      "totalNS" : 5652725000,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 12075,
+      "name" : "batch.euclidean.512.N1000.optimized.parallel",
+      "nsPerOp" : 418965.6797515528,
+      "nsPerUnit" : 418.96567975155284,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2386830.3499059905,
+      "totalNS" : 5059010583,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 69,
+      "name" : "batch.euclidean.512.N1000.generic.automatic",
+      "nsPerOp" : 86365952.89855072,
+      "nsPerUnit" : 86365.95289855072,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 11578.63679423122,
+      "totalNS" : 5959250750,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 12203,
+      "name" : "batch.euclidean.512.N1000.optimized.automatic",
+      "nsPerOp" : 408973.8831434893,
+      "nsPerUnit" : 408.97388314348933,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2445143.9106911086,
+      "totalNS" : 4990708296,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 20,
+      "name" : "batch.euclidean.512.N10000.generic.sequential",
+      "nsPerOp" : 232932247.9,
+      "nsPerUnit" : 23293.22479,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 42930.93846023885,
+      "totalNS" : 4658644958,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 3031,
+      "name" : "batch.euclidean.512.N10000.optimized.sequential",
+      "nsPerOp" : 1648024.5658198614,
+      "nsPerUnit" : 164.80245658198615,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 6067870.7146729855,
+      "totalNS" : 4995162459,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 5,
+      "name" : "batch.euclidean.512.N10000.generic.parallel",
+      "nsPerOp" : 1398897950.2,
+      "nsPerUnit" : 139889.79502,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 7148.48427547578,
+      "totalNS" : 6994489751,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 1425,
+      "name" : "batch.euclidean.512.N10000.optimized.parallel",
+      "nsPerOp" : 3503120.4975438598,
+      "nsPerUnit" : 350.31204975438595,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2854597.781324192,
+      "totalNS" : 4991946709,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 7,
+      "name" : "batch.euclidean.512.N10000.generic.automatic",
+      "nsPerOp" : 801598136.7142857,
+      "nsPerUnit" : 80159.81367142858,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 12475.07889799937,
+      "totalNS" : 5611186957,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 1083,
+      "name" : "batch.euclidean.512.N10000.optimized.automatic",
+      "nsPerOp" : 4879072.406278855,
+      "nsPerUnit" : 487.9072406278855,
+      "params" : {
+        "dim" : 512,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2049569.9115124932,
+      "totalNS" : 5284035416,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 14837,
+      "name" : "batch.euclidean.768.N100.generic.sequential",
+      "nsPerOp" : 338513.20455617714,
+      "nsPerUnit" : 3385.1320455617715,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 295409.45125348796,
+      "totalNS" : 5022520416,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 235056,
+      "name" : "batch.euclidean.768.N100.optimized.sequential",
+      "nsPerOp" : 22188.28066928732,
+      "nsPerUnit" : 221.8828066928732,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 4506883.678392372,
+      "totalNS" : 5215488501,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 29595,
+      "name" : "batch.euclidean.768.N100.generic.parallel",
+      "nsPerOp" : 171716.12606859265,
+      "nsPerUnit" : 1717.1612606859264,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 582356.4873578304,
+      "totalNS" : 5081938751,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 59440,
+      "name" : "batch.euclidean.768.N100.optimized.parallel",
+      "nsPerOp" : 84224.57589165545,
+      "nsPerUnit" : 842.2457589165545,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1187301.9120765617,
+      "totalNS" : 5006308791,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 17590,
+      "name" : "batch.euclidean.768.N100.generic.automatic",
+      "nsPerOp" : 283828.7806139852,
+      "nsPerUnit" : 2838.287806139852,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 352325.08762387524,
+      "totalNS" : 4992548251,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 251978,
+      "name" : "batch.euclidean.768.N100.optimized.automatic",
+      "nsPerOp" : 19853.300843724453,
+      "nsPerUnit" : 198.53300843724455,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 5036945.784842101,
+      "totalNS" : 5002595040,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 1766,
+      "name" : "batch.euclidean.768.N1000.generic.sequential",
+      "nsPerOp" : 2827749.575311438,
+      "nsPerUnit" : 2827.749575311438,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 353638.1045658414,
+      "totalNS" : 4993805750,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 25630,
+      "name" : "batch.euclidean.768.N1000.optimized.sequential",
+      "nsPerOp" : 194950.9916113929,
+      "nsPerUnit" : 194.9509916113929,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 5129494.29871769,
+      "totalNS" : 4996593915,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 5318,
+      "name" : "batch.euclidean.768.N1000.generic.parallel",
+      "nsPerOp" : 940803.928356525,
+      "nsPerUnit" : 940.803928356525,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1062920.7317903994,
+      "totalNS" : 5003195291,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 12275,
+      "name" : "batch.euclidean.768.N1000.optimized.parallel",
+      "nsPerOp" : 404250.41075356415,
+      "nsPerUnit" : 404.25041075356415,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2473714.245919745,
+      "totalNS" : 4962173792,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 5105,
+      "name" : "batch.euclidean.768.N1000.generic.automatic",
+      "nsPerOp" : 978536.6716944173,
+      "nsPerUnit" : 978.5366716944172,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1021934.1072505921,
+      "totalNS" : 4995429709,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 12558,
+      "name" : "batch.euclidean.768.N1000.optimized.automatic",
+      "nsPerOp" : 397631.7154005415,
+      "nsPerUnit" : 397.6317154005415,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2514889.937772399,
+      "totalNS" : 4993459082,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 168,
+      "name" : "batch.euclidean.768.N10000.generic.sequential",
+      "nsPerOp" : 29423803.57738095,
+      "nsPerUnit" : 2942.380357738095,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 339860.8875871959,
+      "totalNS" : 4943199001,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 1962,
+      "name" : "batch.euclidean.768.N10000.optimized.sequential",
+      "nsPerOp" : 2557773.5509683997,
+      "nsPerUnit" : 255.77735509683998,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 3909650.248832191,
+      "totalNS" : 5018351707,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 318,
+      "name" : "batch.euclidean.768.N10000.generic.parallel",
+      "nsPerOp" : 15553064.339622641,
+      "nsPerUnit" : 1555.306433962264,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 642960.1126592284,
+      "totalNS" : 4945874460,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 1247,
+      "name" : "batch.euclidean.768.N10000.optimized.parallel",
+      "nsPerOp" : 4020439.255012029,
+      "nsPerUnit" : 402.04392550120286,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2487290.409259045,
+      "totalNS" : 5013487751,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 419,
+      "name" : "batch.euclidean.768.N10000.generic.automatic",
+      "nsPerOp" : 11983175.116945107,
+      "nsPerUnit" : 1198.3175116945106,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 834503.3684652785,
+      "totalNS" : 5020950374,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 1381,
+      "name" : "batch.euclidean.768.N10000.optimized.automatic",
+      "nsPerOp" : 3602734.2816799423,
+      "nsPerUnit" : 360.2734281679942,
+      "params" : {
+        "dim" : 768,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2775669.5937445145,
+      "totalNS" : 4975376043,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 723,
+      "name" : "batch.euclidean.1536.N100.generic.sequential",
+      "nsPerOp" : 6889126.325034578,
+      "nsPerUnit" : 68891.26325034579,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 14515.628728799376,
+      "totalNS" : 4980838333,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 172947,
+      "name" : "batch.euclidean.1536.N100.optimized.sequential",
+      "nsPerOp" : 28911.651887572494,
+      "nsPerUnit" : 289.1165188757249,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 3458813.0899218675,
+      "totalNS" : 5000183459,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 146,
+      "name" : "batch.euclidean.1536.N100.generic.parallel",
+      "nsPerOp" : 35820820.20547945,
+      "nsPerUnit" : 358208.2020547945,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2791.672536429056,
+      "totalNS" : 5229839750,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 62055,
+      "name" : "batch.euclidean.1536.N100.optimized.parallel",
+      "nsPerOp" : 80817.97932479253,
+      "nsPerUnit" : 808.1797932479253,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1237348.4320626045,
+      "totalNS" : 5015159707,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 722,
+      "name" : "batch.euclidean.1536.N100.generic.automatic",
+      "nsPerOp" : 6889299.8628808865,
+      "nsPerUnit" : 68892.99862880887,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 14515.263087733154,
+      "totalNS" : 4974074501,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 171123,
+      "name" : "batch.euclidean.1536.N100.optimized.automatic",
+      "nsPerOp" : 29145.795217475148,
+      "nsPerUnit" : 291.4579521747515,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 100,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 3431026.6456563273,
+      "totalNS" : 4987515915,
+      "unitCount" : 100
+    },
+    {
+      "iterations" : 70,
+      "name" : "batch.euclidean.1536.N1000.generic.sequential",
+      "nsPerOp" : 69053649.38571429,
+      "nsPerUnit" : 69053.64938571429,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 14481.493865940105,
+      "totalNS" : 4833755457,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 17490,
+      "name" : "batch.euclidean.1536.N1000.optimized.sequential",
+      "nsPerOp" : 285717.1645511721,
+      "nsPerUnit" : 285.7171645511721,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 3499964.7346034735,
+      "totalNS" : 4997193208,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 13,
+      "name" : "batch.euclidean.1536.N1000.generic.parallel",
+      "nsPerOp" : 312343817.3076923,
+      "nsPerUnit" : 312343.8173076923,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 3201.600110479832,
+      "totalNS" : 4060469625,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 9373,
+      "name" : "batch.euclidean.1536.N1000.optimized.parallel",
+      "nsPerOp" : 555693.6056758775,
+      "nsPerUnit" : 555.6936056758775,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1799552.8287278432,
+      "totalNS" : 5208516166,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 13,
+      "name" : "batch.euclidean.1536.N1000.generic.automatic",
+      "nsPerOp" : 313854339.7692308,
+      "nsPerUnit" : 313854.3397692308,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 3186.1914056542123,
+      "totalNS" : 4080106417,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 8428,
+      "name" : "batch.euclidean.1536.N1000.optimized.automatic",
+      "nsPerOp" : 584617.8959420978,
+      "nsPerUnit" : 584.6178959420978,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 1000,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1710518.967929512,
+      "totalNS" : 4927159627,
+      "unitCount" : 1000
+    },
+    {
+      "iterations" : 5,
+      "name" : "batch.euclidean.1536.N10000.generic.sequential",
+      "nsPerOp" : 700000849.8,
+      "nsPerUnit" : 70000.08498,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "sequential",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 14285.696942878198,
+      "totalNS" : 3500004249,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 1322,
+      "name" : "batch.euclidean.1536.N10000.optimized.sequential",
+      "nsPerOp" : 3922836.4531013616,
+      "nsPerUnit" : 392.28364531013614,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "sequential",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 2549175.862810718,
+      "totalNS" : 5185989791,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 5,
+      "name" : "batch.euclidean.1536.N10000.generic.parallel",
+      "nsPerOp" : 2738645700,
+      "nsPerUnit" : 273864.57,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "parallel",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 3651.4398339295954,
+      "totalNS" : 13693228500,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 432,
+      "name" : "batch.euclidean.1536.N10000.optimized.parallel",
+      "nsPerOp" : 12064104.074074075,
+      "nsPerUnit" : 1206.4104074074075,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "parallel",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 828905.3160184632,
+      "totalNS" : 5211692960,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 5,
+      "name" : "batch.euclidean.1536.N10000.generic.automatic",
+      "nsPerOp" : 1372087300.2,
+      "nsPerUnit" : 137208.73002000002,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "automatic",
+        "variant" : "generic"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 7288.165992457161,
+      "totalNS" : 6860436501,
+      "unitCount" : 10000
+    },
+    {
+      "iterations" : 720,
+      "name" : "batch.euclidean.1536.N10000.optimized.automatic",
+      "nsPerOp" : 6850610.356944445,
+      "nsPerUnit" : 685.0610356944445,
+      "params" : {
+        "dim" : 1536,
+        "kind" : "batch",
+        "metric" : "euclidean",
+        "n" : 10000,
+        "provider" : "automatic",
+        "variant" : "optimized"
+      },
+      "suspicious" : false,
+      "throughputPerSec" : 1459723.9485184015,
+      "totalNS" : 4932439457,
+      "unitCount" : 10000
+    }
+  ]
+}

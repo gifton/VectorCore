@@ -11,6 +11,12 @@ public struct BenchCase: Codable {
     public let throughputPerSec: Double
     public let gflops: Double?
     public let suspicious: Bool
+    public let samples: Int?
+    public let meanNsPerOp: Double?
+    public let medianNsPerOp: Double?
+    public let p90NsPerOp: Double?
+    public let stddevNsPerOp: Double?
+    public let rsdPercent: Double?
 }
 
 public struct BenchRun: Codable {
@@ -45,7 +51,13 @@ enum JSONWriter {
                 nsPerUnit: nsPerUnit,
                 throughputPerSec: throughput,
                 gflops: gflops,
-                suspicious: nsPerOp < 5.0
+                suspicious: nsPerOp < 5.0,
+                samples: r.samples > 1 ? r.samples : nil,
+                meanNsPerOp: r.meanNsPerOp,
+                medianNsPerOp: r.medianNsPerOp,
+                p90NsPerOp: r.p90NsPerOp,
+                stddevNsPerOp: r.stddevNsPerOp,
+                rsdPercent: r.rsdPercent
             )
         }
     }

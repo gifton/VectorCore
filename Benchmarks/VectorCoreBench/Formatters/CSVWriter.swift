@@ -20,7 +20,7 @@ enum CSVWriter {
         // Data header
         rows.append([
             "name","kind","metric","dim","variant","provider","N",
-            "iterations","total_ns","ns_per_op","unit_count","ns_per_unit","throughput_per_s","gflops","suspicious"
+            "iterations","total_ns","ns_per_op","unit_count","ns_per_unit","throughput_per_s","gflops","samples","mean_ns_per_op","median_ns_per_op","p90_ns_per_op","stddev_ns_per_op","rsd_percent","suspicious"
         ].joined(separator: ","))
 
         let q: (String?) -> String = { s in
@@ -42,6 +42,12 @@ enum CSVWriter {
                 String(c.unitCount), String(format: "%.4f", c.nsPerUnit),
                 String(format: "%.2f", c.throughputPerSec),
                 c.gflops.map { String(format: "%.2f", $0) } ?? "",
+                c.samples.map(String.init) ?? "",
+                c.meanNsPerOp.map { String(format: "%.4f", $0) } ?? "",
+                c.medianNsPerOp.map { String(format: "%.4f", $0) } ?? "",
+                c.p90NsPerOp.map { String(format: "%.4f", $0) } ?? "",
+                c.stddevNsPerOp.map { String(format: "%.4f", $0) } ?? "",
+                c.rsdPercent.map { String(format: "%.2f", $0) } ?? "",
                 c.suspicious ? "true" : "false"
             ]
             rows.append(fields.joined(separator: ","))

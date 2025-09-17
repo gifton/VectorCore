@@ -28,28 +28,28 @@ struct NormalizationBench: BenchmarkSuite {
 
         // Success (generic)
         Harness.warmup { blackHole(try? g.normalized().get()) }
-        let r1 = Harness.measure(name: "normalize.success.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r1 = Harness.measure(name: "normalize.success.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(g) {
                 if let u = try? g.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         // Success (optimized)
         Harness.warmup { blackHole(try? o.normalized().get()) }
-        let r2 = Harness.measure(name: "normalize.success.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r2 = Harness.measure(name: "normalize.success.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(o) {
                 if let u = try? o.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         // Failure (generic)
         Harness.warmup { blackHole(try? gz.normalized().get()) }
-        let r3 = Harness.measure(name: "normalize.zeroFail.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r3 = Harness.measure(name: "normalize.zeroFail.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(gz) {
                 if let u = try? gz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         // Failure (optimized)
         Harness.warmup { blackHole(try? oz.normalized().get()) }
-        let r4 = Harness.measure(name: "normalize.zeroFail.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r4 = Harness.measure(name: "normalize.zeroFail.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(oz) {
                 if let u = try? oz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
@@ -64,25 +64,25 @@ struct NormalizationBench: BenchmarkSuite {
         let oz = Vector768Optimized()
 
         Harness.warmup { blackHole(try? g.normalized().get()) }
-        let r1 = Harness.measure(name: "normalize.success.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r1 = Harness.measure(name: "normalize.success.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(g) {
                 if let u = try? g.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         Harness.warmup { blackHole(try? o.normalized().get()) }
-        let r2 = Harness.measure(name: "normalize.success.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r2 = Harness.measure(name: "normalize.success.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(o) {
                 if let u = try? o.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         Harness.warmup { blackHole(try? gz.normalized().get()) }
-        let r3 = Harness.measure(name: "normalize.zeroFail.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r3 = Harness.measure(name: "normalize.zeroFail.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(gz) {
                 if let u = try? gz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         Harness.warmup { blackHole(try? oz.normalized().get()) }
-        let r4 = Harness.measure(name: "normalize.zeroFail.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r4 = Harness.measure(name: "normalize.zeroFail.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(oz) {
                 if let u = try? oz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
@@ -97,25 +97,25 @@ struct NormalizationBench: BenchmarkSuite {
         let oz = Vector1536Optimized()
 
         Harness.warmup { blackHole(try? g.normalized().get()) }
-        let r1 = Harness.measure(name: "normalize.success.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r1 = Harness.measure(name: "normalize.success.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(g) {
                 if let u = try? g.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         Harness.warmup { blackHole(try? o.normalized().get()) }
-        let r2 = Harness.measure(name: "normalize.success.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r2 = Harness.measure(name: "normalize.success.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(o) {
                 if let u = try? o.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         Harness.warmup { blackHole(try? gz.normalized().get()) }
-        let r3 = Harness.measure(name: "normalize.zeroFail.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r3 = Harness.measure(name: "normalize.zeroFail.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(gz) {
                 if let u = try? gz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }
         }
         Harness.warmup { blackHole(try? oz.normalized().get()) }
-        let r4 = Harness.measure(name: "normalize.zeroFail.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let r4 = Harness.measure(name: "normalize.zeroFail.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime(oz) {
                 if let u = try? oz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) }
             }

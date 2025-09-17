@@ -12,7 +12,7 @@ struct NoopBench: BenchmarkSuite {
             blackHole(acc)
         }
 
-        let res = Harness.measure(name: label, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let res = Harness.measure(name: label, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             var acc: Float = 0
             for i in 0..<256 { acc += Float(i) * 0.5 }
             blackHole(acc)

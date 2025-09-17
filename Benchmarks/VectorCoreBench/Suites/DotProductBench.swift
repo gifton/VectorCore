@@ -40,7 +40,7 @@ struct DotProductBench: BenchmarkSuite {
                 blackHole(v)
             }
         }
-        let rg = Harness.measure(name: "dot.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let rg = Harness.measure(name: "dot.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime((g1,g2)) {
                 let v = g1.dotProduct(g2)
                 blackHole(v)
@@ -57,7 +57,7 @@ struct DotProductBench: BenchmarkSuite {
                 blackHole(v)
             }
         }
-        let ro = Harness.measure(name: "dot.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let ro = Harness.measure(name: "dot.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime((o1,o2)) {
                 let v = o1.dotProduct(o2)
                 blackHole(v)
@@ -76,14 +76,14 @@ struct DotProductBench: BenchmarkSuite {
         Harness.warmup {
             withExtendedLifetime((g1,g2)) { let v = g1.dotProduct(g2); blackHole(v) }
         }
-        let rg = Harness.measure(name: "dot.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let rg = Harness.measure(name: "dot.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime((g1,g2)) { let v = g1.dotProduct(g2); blackHole(v) }
         }
 
         let o1 = try! Vector768Optimized(a)
         let o2 = try! Vector768Optimized(b)
         Harness.warmup { withExtendedLifetime((o1,o2)) { let v = o1.dotProduct(o2); blackHole(v) } }
-        let ro = Harness.measure(name: "dot.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let ro = Harness.measure(name: "dot.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime((o1,o2)) { let v = o1.dotProduct(o2); blackHole(v) }
         }
 
@@ -97,14 +97,14 @@ struct DotProductBench: BenchmarkSuite {
         let g1 = try! Vector<Dim1536>(a)
         let g2 = try! Vector<Dim1536>(b)
         Harness.warmup { withExtendedLifetime((g1,g2)) { let v = g1.dotProduct(g2); blackHole(v) } }
-        let rg = Harness.measure(name: "dot.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let rg = Harness.measure(name: "dot.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime((g1,g2)) { let v = g1.dotProduct(g2); blackHole(v) }
         }
 
         let o1 = try! Vector1536Optimized(a)
         let o2 = try! Vector1536Optimized(b)
         Harness.warmup { withExtendedLifetime((o1,o2)) { let v = o1.dotProduct(o2); blackHole(v) } }
-        let ro = Harness.measure(name: "dot.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats) {
+        let ro = Harness.measure(name: "dot.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
             withExtendedLifetime((o1,o2)) { let v = o1.dotProduct(o2); blackHole(v) }
         }
 

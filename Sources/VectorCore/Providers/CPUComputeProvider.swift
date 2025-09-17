@@ -93,23 +93,35 @@ public struct CPUComputeProvider: ComputeProvider {
         }()
 
         if shouldParallelize {
-            // Parallel execution using TaskGroup
-            return try await withThrowingTaskGroup(of: (Int, T).self) { group in
-                // Create tasks for each item
-                for i in items {
+            // Parallel execution using chunked TaskGroup to reduce scheduling overhead
+            return try await withThrowingTaskGroup(of: [(Int, T)].self) { group in
+                let total = count
+                let cores = max(1, processorCount)
+                let targetTasks = max(1, min(total, cores * 2))
+                let chunk = max(1, (total + targetTasks - 1) / targetTasks)
+
+                var start = items.lowerBound
+                while start < items.upperBound {
+                    let end = min(start + chunk, items.upperBound)
+                    let range = start..<end
                     group.addTask {
-                        let result = try await work(i)
-                        return (i, result)
+                        var local: [(Int, T)] = []
+                        local.reserveCapacity(range.count)
+                        for i in range {
+                            let result = try await work(i)
+                            local.append((i, result))
+                        }
+                        return local
                     }
+                    start = end
                 }
 
-                // Collect results
                 var allResults: [(Int, T)] = []
-                for try await result in group {
-                    allResults.append(result)
+                allResults.reserveCapacity(total)
+                for try await partial in group {
+                    allResults.append(contentsOf: partial)
                 }
 
-                // Sort by index to maintain order
                 allResults.sort { $0.0 < $1.0 }
                 return allResults.map { $0.1 }
             }

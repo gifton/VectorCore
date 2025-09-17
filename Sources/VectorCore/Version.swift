@@ -49,7 +49,7 @@ public struct VectorCoreVersion {
     ///
     /// Examples: "alpha", "beta.1", "rc.2"
     /// nil for stable releases.
-    public static let prerelease: String? = nil
+    public static let prerelease: String? = "alpha"
 
     /// Build metadata.
     ///

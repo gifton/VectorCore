@@ -350,11 +350,48 @@ public enum BatchOperations {
         k: Int,
         metric: M
     ) -> [(index: Int, distance: Float)] where V.Scalar == M.Scalar, M.Scalar == Float {
+        // Optimized fast path for Vector*Optimized with Euclidean/Cosine using BatchKernels
+        if let e = metric as? EuclideanDistance {
+            _ = e // silence unused
+            if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 512)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 768)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 1536)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+        } else if let cMetric = metric as? CosineDistance {
+            _ = cMetric
+            if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 512)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 768)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 1536)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+        }
+
+        // Generic path
         let distances = vectors.enumerated().map { index, vector in
             (index: index, distance: metric.distance(query, vector))
         }
 
-        // Use heap selection for better performance
         return heapSelect(distances, k: k)
     }
 
@@ -364,29 +401,57 @@ public enum BatchOperations {
         k: Int,
         metric: M
     ) async -> [(index: Int, distance: Float)] where V.Scalar == M.Scalar, M.Scalar == Float {
-        let chunkSize = optimalChunkSize(for: vectors.count)
+        // Optimized fast path: compute distances via BatchKernels in parallel chunks
+        if let _ = metric as? EuclideanDistance {
+            if let q = query as? Vector512Optimized, let all = vectors as? [Vector512Optimized] {
+                let dists = await computeDistances_euclid_optimized_parallel(query: q, candidates: all, dim: 512)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector768Optimized, let all = vectors as? [Vector768Optimized] {
+                let dists = await computeDistances_euclid_optimized_parallel(query: q, candidates: all, dim: 768)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let all = vectors as? [Vector1536Optimized] {
+                let dists = await computeDistances_euclid_optimized_parallel(query: q, candidates: all, dim: 1536)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+        } else if let _ = metric as? CosineDistance {
+            if let q = query as? Vector512Optimized, let all = vectors as? [Vector512Optimized] {
+                let dists = await computeDistances_cosine_fused_parallel(query: q, candidates: all, dim: 512)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector768Optimized, let all = vectors as? [Vector768Optimized] {
+                let dists = await computeDistances_cosine_fused_parallel(query: q, candidates: all, dim: 768)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let all = vectors as? [Vector1536Optimized] {
+                let dists = await computeDistances_cosine_fused_parallel(query: q, candidates: all, dim: 1536)
+                let pairs = dists.enumerated().map { (index: $0.offset, distance: $0.element) }
+                return heapSelect(pairs, k: k)
+            }
+        }
 
+        // Generic parallel path
+        let chunkSize = optimalChunkSize(for: vectors.count)
         let distances = await withTaskGroup(of: [(index: Int, distance: Float)].self) { group in
             for (chunkIndex, chunk) in vectors.chunked(by: chunkSize).enumerated() {
                 let startIndex = chunkIndex * chunkSize
-
                 group.addTask {
                     chunk.enumerated().map { offset, vector in
                         (index: startIndex + offset, distance: metric.distance(query, vector))
                     }
                 }
             }
-
             var allDistances = [(index: Int, distance: Float)]()
             allDistances.reserveCapacity(vectors.count)
-
-            for await chunkDistances in group {
-                allDistances.append(contentsOf: chunkDistances)
-            }
-
+            for await chunkDistances in group { allDistances.append(contentsOf: chunkDistances) }
             return allDistances
         }
-
         return heapSelect(distances, k: k)
     }
 
@@ -495,6 +560,311 @@ public enum BatchOperations {
         // Choose the nearest power of 2, but ensure it's at least minimumChunkSize
         let nearestPowerOf2 = (idealChunkSize - lowerPowerOf2 < upperPowerOf2 - idealChunkSize) ? lowerPowerOf2 : upperPowerOf2
         return max(nearestPowerOf2, defaultConfig.minimumChunkSize)
+    }
+
+    // MARK: - Optimized distance computation helpers (BatchKernels)
+
+    @inline(__always)
+    private static func minChunk(forDim dim: Int) -> Int {
+        switch dim { case 1536: return 512; case 768: return 256; default: return 256 }
+    }
+
+    // Serial Euclidean
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    // Serial Cosine fused
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    // Parallel Euclidean
+    private static func computeDistances_euclid_optimized_parallel(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) async -> [Float] {
+        let n = candidates.count
+        if n == 0 { return [] }
+        let chunkSize = optimalChunkSize(for: n)
+        let chunks = await withTaskGroup(of: (Int, [Float]).self) { group in
+            for (idx, chunk) in candidates.chunked(by: chunkSize).enumerated() {
+                let start = idx * chunkSize
+                group.addTask {
+                    var tmp = [Float](repeating: 0, count: chunk.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_512(query: query, candidates: candidates, range: start..<(start + chunk.count), out: sub)
+                    }
+                    return (start, tmp)
+                }
+            }
+            var parts: [(Int, [Float])] = []
+            parts.reserveCapacity((n + chunkSize - 1) / chunkSize)
+            for await p in group { parts.append(p) }
+            return parts.sorted { $0.0 < $1.0 }
+        }
+        var out = [Float](repeating: 0, count: n)
+        for (start, vals) in chunks { out.replaceSubrange(start..<(start+vals.count), with: vals) }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_parallel(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) async -> [Float] {
+        let n = candidates.count
+        if n == 0 { return [] }
+        let chunkSize = optimalChunkSize(for: n)
+        let chunks = await withTaskGroup(of: (Int, [Float]).self) { group in
+            for (idx, chunk) in candidates.chunked(by: chunkSize).enumerated() {
+                let start = idx * chunkSize
+                group.addTask {
+                    var tmp = [Float](repeating: 0, count: chunk.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_768(query: query, candidates: candidates, range: start..<(start + chunk.count), out: sub)
+                    }
+                    return (start, tmp)
+                }
+            }
+            var parts: [(Int, [Float])] = []
+            parts.reserveCapacity((n + chunkSize - 1) / chunkSize)
+            for await p in group { parts.append(p) }
+            return parts.sorted { $0.0 < $1.0 }
+        }
+        var out = [Float](repeating: 0, count: n)
+        for (start, vals) in chunks { out.replaceSubrange(start..<(start+vals.count), with: vals) }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_parallel(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) async -> [Float] {
+        let n = candidates.count
+        if n == 0 { return [] }
+        let chunkSize = optimalChunkSize(for: n)
+        let chunks = await withTaskGroup(of: (Int, [Float]).self) { group in
+            for (idx, chunk) in candidates.chunked(by: chunkSize).enumerated() {
+                let start = idx * chunkSize
+                group.addTask {
+                    var tmp = [Float](repeating: 0, count: chunk.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: start..<(start + chunk.count), out: sub)
+                    }
+                    return (start, tmp)
+                }
+            }
+            var parts: [(Int, [Float])] = []
+            parts.reserveCapacity((n + chunkSize - 1) / chunkSize)
+            for await p in group { parts.append(p) }
+            return parts.sorted { $0.0 < $1.0 }
+        }
+        var out = [Float](repeating: 0, count: n)
+        for (start, vals) in chunks { out.replaceSubrange(start..<(start+vals.count), with: vals) }
+        return out
+    }
+
+    // Parallel Cosine fused
+    private static func computeDistances_cosine_fused_parallel(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) async -> [Float] {
+        let n = candidates.count
+        if n == 0 { return [] }
+        let chunkSize = optimalChunkSize(for: n)
+        let chunks = await withTaskGroup(of: (Int, [Float]).self) { group in
+            for (idx, chunk) in candidates.chunked(by: chunkSize).enumerated() {
+                let start = idx * chunkSize
+                group.addTask {
+                    var tmp = [Float](repeating: 0, count: chunk.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: start..<(start + chunk.count), out: sub)
+                    }
+                    return (start, tmp)
+                }
+            }
+            var parts: [(Int, [Float])] = []
+            parts.reserveCapacity((n + chunkSize - 1) / chunkSize)
+            for await p in group { parts.append(p) }
+            return parts.sorted { $0.0 < $1.0 }
+        }
+        var out = [Float](repeating: 0, count: n)
+        for (start, vals) in chunks { out.replaceSubrange(start..<(start+vals.count), with: vals) }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_parallel(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) async -> [Float] {
+        let n = candidates.count
+        if n == 0 { return [] }
+        let chunkSize = optimalChunkSize(for: n)
+        let chunks = await withTaskGroup(of: (Int, [Float]).self) { group in
+            for (idx, chunk) in candidates.chunked(by: chunkSize).enumerated() {
+                let start = idx * chunkSize
+                group.addTask {
+                    var tmp = [Float](repeating: 0, count: chunk.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: start..<(start + chunk.count), out: sub)
+                    }
+                    return (start, tmp)
+                }
+            }
+            var parts: [(Int, [Float])] = []
+            parts.reserveCapacity((n + chunkSize - 1) / chunkSize)
+            for await p in group { parts.append(p) }
+            return parts.sorted { $0.0 < $1.0 }
+        }
+        var out = [Float](repeating: 0, count: n)
+        for (start, vals) in chunks { out.replaceSubrange(start..<(start+vals.count), with: vals) }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_parallel(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) async -> [Float] {
+        let n = candidates.count
+        if n == 0 { return [] }
+        let chunkSize = optimalChunkSize(for: n)
+        let chunks = await withTaskGroup(of: (Int, [Float]).self) { group in
+            for (idx, chunk) in candidates.chunked(by: chunkSize).enumerated() {
+                let start = idx * chunkSize
+                group.addTask {
+                    var tmp = [Float](repeating: 0, count: chunk.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: start..<(start + chunk.count), out: sub)
+                    }
+                    return (start, tmp)
+                }
+            }
+            var parts: [(Int, [Float])] = []
+            parts.reserveCapacity((n + chunkSize - 1) / chunkSize)
+            for await p in group { parts.append(p) }
+            return parts.sorted { $0.0 < $1.0 }
+        }
+        var out = [Float](repeating: 0, count: n)
+        for (start, vals) in chunks { out.replaceSubrange(start..<(start+vals.count), with: vals) }
+        return out
     }
 
     private static func heapSelect(

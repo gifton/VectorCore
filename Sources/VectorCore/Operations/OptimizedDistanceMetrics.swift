@@ -118,21 +118,21 @@ extension CosineDistance {
     @inlinable
     @inline(__always)
     public func distance(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
-        1.0 - a.cosineSimilarity(to: b)
+        CosineKernels.distance512_fused(a, b)
     }
 
     /// Specialized implementation for Vector768Optimized
     @inlinable
     @inline(__always)
     public func distance(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
-        1.0 - a.cosineSimilarity(to: b)
+        CosineKernels.distance768_fused(a, b)
     }
 
     /// Specialized implementation for Vector1536Optimized
     @inlinable
     @inline(__always)
     public func distance(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
-        1.0 - a.cosineSimilarity(to: b)
+        CosineKernels.distance1536_fused(a, b)
     }
 
     /// Optimized batch distance for Vector512Optimized
@@ -141,7 +141,8 @@ extension CosineDistance {
         query: Vector512Optimized,
         candidates: [Vector512Optimized]
     ) -> [DistanceScore] {
-        candidates.map { 1.0 - query.cosineSimilarity(to: $0) }
+        // Fused path for higher throughput and fewer passes
+        return candidates.map { CosineKernels.distance512_fused(query, $0) }
     }
 
     /// Optimized batch distance for Vector768Optimized
@@ -150,7 +151,7 @@ extension CosineDistance {
         query: Vector768Optimized,
         candidates: [Vector768Optimized]
     ) -> [DistanceScore] {
-        candidates.map { 1.0 - query.cosineSimilarity(to: $0) }
+        return candidates.map { CosineKernels.distance768_fused(query, $0) }
     }
 
     /// Optimized batch distance for Vector1536Optimized
@@ -159,7 +160,7 @@ extension CosineDistance {
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized]
     ) -> [DistanceScore] {
-        candidates.map { 1.0 - query.cosineSimilarity(to: $0) }
+        return candidates.map { CosineKernels.distance1536_fused(query, $0) }
     }
 }
 

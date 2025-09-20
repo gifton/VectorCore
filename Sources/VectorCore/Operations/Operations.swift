@@ -65,6 +65,39 @@ public enum Operations {
             throw VectorError.dimensionMismatch(expected: expectedDim, actual: v.scalarCount)
         }
 
+        // Optimized Top‑K fast paths for Vector*Optimized + supported metrics
+        if k < vectors.count { // only worth it when K < N
+            // Euclidean distance Top‑K via squared kernels (monotonic → correct indices)
+            if metric is EuclideanDistance {
+                if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                    let results = try await topk_euclid_optimized(query: q, candidates: c, k: k, dim: 512)
+                    return results
+                }
+                if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                    let results = try await topk_euclid_optimized(query: q, candidates: c, k: k, dim: 768)
+                    return results
+                }
+                if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                    let results = try await topk_euclid_optimized(query: q, candidates: c, k: k, dim: 1536)
+                    return results
+                }
+            }
+            // Cosine fused Top‑K (512 supported)
+            if metric is CosineDistance {
+                if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                    let results = try await topk_cosine_fused_512(query: q, candidates: c, k: k)
+                    return results
+                }
+            }
+            // Dot product Top‑K (512 supported) — return negative dot as distance
+            if metric is DotProductDistance {
+                if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                    let results = try await topk_dot_512(query: q, candidates: c, k: k)
+                    return results
+                }
+            }
+        }
+
         let distances = try await computeDistances(
             from: query,
             to: vectors,
@@ -129,6 +162,109 @@ public enum Operations {
         }
     }
 
+    // MARK: - Optimized Top‑K helpers
+
+    @usableFromInline
+    static func mergeBuffers(_ a: TopKBuffer, _ b: TopKBuffer, isMinHeap: Bool, k: Int) -> TopKBuffer {
+        var out = TopKBuffer(k: k, isMinHeap: isMinHeap)
+        TopKSelectionKernels.mergeTopK(a, b, into: &out)
+        return out
+    }
+
+    @inline(__always)
+    private static func toResults(_ buf: TopKBuffer, sqrtValues: Bool = false, negateValues: Bool = false) -> [NearestNeighborResult] {
+        let count = min(buf.size, buf.k)
+        var pairs: [(Int, Float)] = []
+        pairs.reserveCapacity(count)
+        for i in 0..<count {
+            var v = buf.vals[i]
+            if sqrtValues { v = sqrt(v) }
+            if negateValues { v = -v }
+            pairs.append((buf.idxs[i], v))
+        }
+        return pairs.sorted { $0.1 < $1.1 }.map { NearestNeighborResult(index: $0.0, distance: $0.1) }
+    }
+
+    // Euclidean Top‑K using squared distance kernels for selection, sqrt at the end for distances
+    private static func topk_euclid_optimized(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        k: Int,
+        dim: Int
+    ) async throws -> [NearestNeighborResult] {
+        let n = candidates.count
+        let initial = TopKBuffer(k: k, isMinHeap: false)
+        let buf = try await computeProvider.parallelReduce(items: 0..<n, initial: initial, { range in
+            var local = TopKBuffer(k: k, isMinHeap: false)
+            TopKSelectionKernels.range_topk_euclid2_512(query: query, candidates: candidates, range: range, k: k, localTopK: &local)
+            return local
+        }, { a, b in mergeBuffers(a, b, isMinHeap: false, k: k) })
+        return toResults(buf, sqrtValues: true)
+    }
+
+    private static func topk_euclid_optimized(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        k: Int,
+        dim: Int
+    ) async throws -> [NearestNeighborResult] {
+        let n = candidates.count
+        let initial = TopKBuffer(k: k, isMinHeap: false)
+        let buf = try await computeProvider.parallelReduce(items: 0..<n, initial: initial, { range in
+            var local = TopKBuffer(k: k, isMinHeap: false)
+            TopKSelectionKernels.range_topk_euclid2_768(query: query, candidates: candidates, range: range, k: k, localTopK: &local)
+            return local
+        }, { a, b in mergeBuffers(a, b, isMinHeap: false, k: k) })
+        return toResults(buf, sqrtValues: true)
+    }
+
+    private static func topk_euclid_optimized(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        k: Int,
+        dim: Int
+    ) async throws -> [NearestNeighborResult] {
+        let n = candidates.count
+        let initial = TopKBuffer(k: k, isMinHeap: false)
+        let buf = try await computeProvider.parallelReduce(items: 0..<n, initial: initial, { range in
+            var local = TopKBuffer(k: k, isMinHeap: false)
+            TopKSelectionKernels.range_topk_euclid2_1536(query: query, candidates: candidates, range: range, k: k, localTopK: &local)
+            return local
+        }, { a, b in mergeBuffers(a, b, isMinHeap: false, k: k) })
+        return toResults(buf, sqrtValues: true)
+    }
+
+    private static func topk_cosine_fused_512(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        k: Int
+    ) async throws -> [NearestNeighborResult] {
+        let n = candidates.count
+        let initial = TopKBuffer(k: k, isMinHeap: false)
+        let buf = try await computeProvider.parallelReduce(items: 0..<n, initial: initial, { range in
+            var local = TopKBuffer(k: k, isMinHeap: false)
+            TopKSelectionKernels.range_topk_cosine_fused_512(query: query, candidates: candidates, range: range, k: k, localTopK: &local)
+            return local
+        }, { a, b in mergeBuffers(a, b, isMinHeap: false, k: k) })
+        return toResults(buf)
+    }
+
+    private static func topk_dot_512(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        k: Int
+    ) async throws -> [NearestNeighborResult] {
+        let n = candidates.count
+        let initial = TopKBuffer(k: k, isMinHeap: true)
+        let buf = try await computeProvider.parallelReduce(items: 0..<n, initial: initial, { range in
+            var local = TopKBuffer(k: k, isMinHeap: true)
+            TopKSelectionKernels.range_topk_dot_512(query: query, candidates: candidates, range: range, k: k, localTopK: &local)
+            return local
+        }, { a, b in mergeBuffers(a, b, isMinHeap: true, k: k) })
+        // Convert similarity to distance via negation
+        return toResults(buf, negateValues: true)
+    }
+
     // MARK: - Distance Computation
 
     /// Compute distances from query to all vectors
@@ -159,14 +295,345 @@ public enum Operations {
             }
         }()
 
-        let parallel = ParallelHeuristic.shouldParallelize(dim: dim, items: items, variant: variant, metric: metricClass)
+        // Decide parallelism using AutoTuning if available; otherwise fallback heuristic
+        var tunedMinChunk: Int? = nil
+        var parallel: Bool
+        if let kind = {
+            switch metricClass {
+            case .euclideanLike:
+                // We are using euclidean (sqrt) at this level
+                return KernelKind.euclid
+            case .cosine:
+                return KernelKind.cosineFused
+            case .dot:
+                return KernelKind.dot
+            case .manhattan:
+                return nil
+            }
+        }() {
+            let cores = ProcessInfo.processInfo.activeProcessorCount
+            // Calibrator: measure seq cost over a tiny sample; estimate parallel overhead and effective factor
+            let tuning = AutoTuning.calibrateIfNeeded(dim: dim, kind: kind, providerCores: cores) {
+                let M = max(32, min(items, 256))
+                var idx = 0
+                let clock = ContinuousClock()
+                let start = clock.now
+                if M > 0 {
+                    for _ in 0..<M {
+                        let v = vectors[idx]
+                        _ = metric.distance(query, v)
+                        idx &+= 1
+                    }
+                }
+                let elapsed = start.duration(to: clock.now).nanoseconds
+                let a = (M > 0) ? (elapsed / Double(M)) : 1_000.0
+                let Tp = ParallelHeuristic.parallelOverheadNs(items: M)
+                let peff = Double(min(cores, 8)) * 0.7
+                return CalibrationProbes(nsPerCandidateSeq: a, parallelOverheadNs: Tp, effectiveParallelFactor: peff)
+            }
+            tunedMinChunk = tuning.minChunk
+            parallel = items >= tuning.breakEvenN
+        } else {
+            parallel = ParallelHeuristic.shouldParallelize(dim: dim, items: items, variant: variant, metric: metricClass)
+        }
 
+        // Fast paths using register-blocked batch kernels for optimized types
+        if variant == .optimized {
+            // Euclidean distance (sqrt)
+            if metric is EuclideanDistance {
+                if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                    return try await batchKernelDistances_euclid(query: q, candidates: c, dim: 512, parallel: parallel, tunedMinChunk: tunedMinChunk)
+                }
+                if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                    return try await batchKernelDistances_euclid(query: q, candidates: c, dim: 768, parallel: parallel, tunedMinChunk: tunedMinChunk)
+                }
+                if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                    return try await batchKernelDistances_euclid(query: q, candidates: c, dim: 1536, parallel: parallel, tunedMinChunk: tunedMinChunk)
+                }
+            }
+            // Cosine distance (fused one-pass)
+            if metric is CosineDistance {
+                if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                    return try await batchKernelDistances_cosineFused(query: q, candidates: c, dim: 512, parallel: parallel, tunedMinChunk: tunedMinChunk)
+                }
+                if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                    return try await batchKernelDistances_cosineFused(query: q, candidates: c, dim: 768, parallel: parallel, tunedMinChunk: tunedMinChunk)
+                }
+                if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                    return try await batchKernelDistances_cosineFused(query: q, candidates: c, dim: 1536, parallel: parallel, tunedMinChunk: tunedMinChunk)
+                }
+            }
+        }
+
+        // Fallback: existing per-candidate path
         if parallel {
             return try await computeProvider.parallelExecute(items: 0..<vectors.count) { i in
                 metric.distance(query, vectors[i])
             }
         } else {
             return vectors.map { metric.distance(query, $0) }
+        }
+    }
+
+    // MARK: - Optimized batch-kernel helpers
+
+    @usableFromInline
+    struct _Chunk: Sendable { let start: Int; let values: [Float] }
+
+    @inline(__always)
+    private static func minChunk(forDim dim: Int) -> Int {
+        switch dim {
+        case 1536: return 512
+        case 768: return 256
+        default: return 256
+        }
+    }
+
+    // Euclidean (sqrt) batch via BatchKernels
+    private static func batchKernelDistances_euclid(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int,
+        parallel: Bool,
+        tunedMinChunk: Int? = nil
+    ) async throws -> [Float] {
+        let n = candidates.count
+        if !parallel {
+            var out = [Float](repeating: 0, count: n)
+            out.withUnsafeMutableBufferPointer { buf in
+                var start = 0
+                let step = tunedMinChunk ?? minChunk(forDim: dim)
+                while start < n {
+                    let end = min(start + step, n)
+                    let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                    BatchKernels.range_euclid_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                    start = end
+                }
+            }
+            return out
+        } else {
+            let chunks: [_Chunk] = try await computeProvider.parallelReduce(
+                items: 0..<n,
+                initial: [],
+                minChunk: tunedMinChunk ?? minChunk(forDim: dim),
+                { range in
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_512(query: query, candidates: candidates, range: range, out: sub)
+                    }
+                    return [_Chunk(start: range.lowerBound, values: tmp)]
+                },
+                { $0 + $1 }
+            )
+            var out = [Float](repeating: 0, count: n)
+            for ch in chunks { out.replaceSubrange(ch.start..<(ch.start + ch.values.count), with: ch.values) }
+            return out
+        }
+    }
+
+    private static func batchKernelDistances_euclid(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int,
+        parallel: Bool,
+        tunedMinChunk: Int? = nil
+    ) async throws -> [Float] {
+        let n = candidates.count
+        if !parallel {
+            var out = [Float](repeating: 0, count: n)
+            out.withUnsafeMutableBufferPointer { buf in
+                var start = 0
+                let step = tunedMinChunk ?? minChunk(forDim: dim)
+                while start < n {
+                    let end = min(start + step, n)
+                    let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                    BatchKernels.range_euclid_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                    start = end
+                }
+            }
+            return out
+        } else {
+            let chunks: [_Chunk] = try await computeProvider.parallelReduce(
+                items: 0..<n,
+                initial: [],
+                minChunk: tunedMinChunk ?? minChunk(forDim: dim),
+                { range in
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_768(query: query, candidates: candidates, range: range, out: sub)
+                    }
+                    return [_Chunk(start: range.lowerBound, values: tmp)]
+                },
+                { $0 + $1 }
+            )
+            var out = [Float](repeating: 0, count: n)
+            for ch in chunks { out.replaceSubrange(ch.start..<(ch.start + ch.values.count), with: ch.values) }
+            return out
+        }
+    }
+
+    private static func batchKernelDistances_euclid(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int,
+        parallel: Bool,
+        tunedMinChunk: Int? = nil
+    ) async throws -> [Float] {
+        let n = candidates.count
+        if !parallel {
+            var out = [Float](repeating: 0, count: n)
+            out.withUnsafeMutableBufferPointer { buf in
+                var start = 0
+                let step = tunedMinChunk ?? minChunk(forDim: dim)
+                while start < n {
+                    let end = min(start + step, n)
+                    let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                    BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                    start = end
+                }
+            }
+            return out
+        } else {
+            let chunks: [_Chunk] = try await computeProvider.parallelReduce(
+                items: 0..<n,
+                initial: [],
+                minChunk: tunedMinChunk ?? minChunk(forDim: dim),
+                { range in
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: range, out: sub)
+                    }
+                    return [_Chunk(start: range.lowerBound, values: tmp)]
+                },
+                { $0 + $1 }
+            )
+            var out = [Float](repeating: 0, count: n)
+            for ch in chunks { out.replaceSubrange(ch.start..<(ch.start + ch.values.count), with: ch.values) }
+            return out
+        }
+    }
+
+    // Cosine (fused) batch via BatchKernels
+    private static func batchKernelDistances_cosineFused(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int,
+        parallel: Bool,
+        tunedMinChunk: Int? = nil
+    ) async throws -> [Float] {
+        let n = candidates.count
+        if !parallel {
+            var out = [Float](repeating: 0, count: n)
+            out.withUnsafeMutableBufferPointer { buf in
+                var start = 0
+                let step = tunedMinChunk ?? minChunk(forDim: dim)
+                while start < n {
+                    let end = min(start + step, n)
+                    let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                    BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                    start = end
+                }
+            }
+            return out
+        } else {
+            let chunks: [_Chunk] = try await computeProvider.parallelReduce(
+                items: 0..<n,
+                initial: [],
+                minChunk: tunedMinChunk ?? minChunk(forDim: dim),
+                { range in
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: range, out: sub)
+                    }
+                    return [_Chunk(start: range.lowerBound, values: tmp)]
+                },
+                { $0 + $1 }
+            )
+            var out = [Float](repeating: 0, count: n)
+            for ch in chunks { out.replaceSubrange(ch.start..<(ch.start + ch.values.count), with: ch.values) }
+            return out
+        }
+    }
+
+    private static func batchKernelDistances_cosineFused(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int,
+        parallel: Bool,
+        tunedMinChunk: Int? = nil
+    ) async throws -> [Float] {
+        let n = candidates.count
+        if !parallel {
+            var out = [Float](repeating: 0, count: n)
+            out.withUnsafeMutableBufferPointer { buf in
+                var start = 0
+                let step = tunedMinChunk ?? minChunk(forDim: dim)
+                while start < n {
+                    let end = min(start + step, n)
+                    let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                    BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                    start = end
+                }
+            }
+            return out
+        } else {
+            let chunks: [_Chunk] = try await computeProvider.parallelReduce(
+                items: 0..<n,
+                initial: [],
+                minChunk: tunedMinChunk ?? minChunk(forDim: dim),
+                { range in
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: range, out: sub)
+                    }
+                    return [_Chunk(start: range.lowerBound, values: tmp)]
+                },
+                { $0 + $1 }
+            )
+            var out = [Float](repeating: 0, count: n)
+            for ch in chunks { out.replaceSubrange(ch.start..<(ch.start + ch.values.count), with: ch.values) }
+            return out
+        }
+    }
+
+    private static func batchKernelDistances_cosineFused(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int,
+        parallel: Bool,
+        tunedMinChunk: Int? = nil
+    ) async throws -> [Float] {
+        let n = candidates.count
+        if !parallel {
+            var out = [Float](repeating: 0, count: n)
+            out.withUnsafeMutableBufferPointer { buf in
+                var start = 0
+                let step = tunedMinChunk ?? minChunk(forDim: dim)
+                while start < n {
+                    let end = min(start + step, n)
+                    let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                    BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                    start = end
+                }
+            }
+            return out
+        } else {
+            let chunks: [_Chunk] = try await computeProvider.parallelReduce(
+                items: 0..<n,
+                initial: [],
+                minChunk: tunedMinChunk ?? minChunk(forDim: dim),
+                { range in
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: range, out: sub)
+                    }
+                    return [_Chunk(start: range.lowerBound, values: tmp)]
+                },
+                { $0 + $1 }
+            )
+            var out = [Float](repeating: 0, count: n)
+            for ch in chunks { out.replaceSubrange(ch.start..<(ch.start + ch.values.count), with: ch.values) }
+            return out
         }
     }
 

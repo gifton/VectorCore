@@ -161,6 +161,34 @@ func printPretty(results: [BenchResult]) {
         print("\n--- A/B Summary (euclidean2 vs euclidean) ---")
         for l in abLines.sorted() { print(l) }
     }
+
+    // A/B summary: cosine fused vs preNormalized for batch cases
+    var cosByKey: [Key: [String: BenchResult]] = [:]
+    for r in results {
+        let p = CaseParsing.parse(name: r.name)
+        guard p.kind == "batch", p.metric == "cosine" else { continue }
+        let key = Key(dim: p.dim, n: p.n, variant: p.variant, provider: p.provider)
+        cosByKey[key, default: [:]][p.variant ?? ""] = r
+    }
+    var cosLines: [String] = []
+    for (key, dict) in cosByKey {
+        guard let rf = dict["optimized-fused"], let rp = dict["optimized-preNorm"] else { continue }
+        let nsF = Double(rf.totalNanoseconds) / Double(max(rf.iterations, 1))
+        let nsP = Double(rp.totalNanoseconds) / Double(max(rp.iterations, 1))
+        let unitF = nsF / Double(max(rf.unitCount, 1))
+        let unitP = nsP / Double(max(rp.unitCount, 1))
+        let delta = (unitF - unitP) / unitF * 100.0
+        let dimS = key.dim.map(String.init) ?? "?"
+        let nS = key.n.map(String.init) ?? "?"
+        let provS = key.provider ?? "?"
+        let line = String(format: "AB batch d=%@ N=%@ cosine %@  preNorm vs fused: unit/op=%8.2f ns vs %8.2f ns  Δ=%6.2f%%",
+                          dimS, nS, provS, unitP, unitF, delta)
+        cosLines.append(line)
+    }
+    if !cosLines.isEmpty {
+        print("\n--- A/B Summary (cosine preNorm vs fused) ---")
+        for l in cosLines.sorted() { print(l) }
+    }
 }
 
 @main

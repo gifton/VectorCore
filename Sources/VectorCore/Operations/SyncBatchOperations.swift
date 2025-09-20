@@ -59,16 +59,44 @@ public enum SyncBatchOperations {
         guard k > 0 else { return [] }
         guard !vectors.isEmpty else { return [] }
 
-        // For small k, use heap selection
+        // Optimized fast path for Vector*Optimized + Euclidean/Cosine using BatchKernels
+        if let _ = metric as? EuclideanDistance {
+            if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 512)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 768)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 1536)
+                return selectTopK(from: dists, k: k)
+            }
+        } else if let _ = metric as? CosineDistance {
+            if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 512)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 768)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 1536)
+                return selectTopK(from: dists, k: k)
+            }
+        }
+
+        // For small k, use heap selection (generic path)
         if k < vectors.count / 10 {
             return heapSelect(query: query, vectors: vectors, k: k, metric: metric)
         }
 
-        // For larger k, compute all distances and partial sort
+        // For larger k, compute all distances and partial sort (generic path)
         let distances = vectors.enumerated().map { index, vector in
             (index: index, distance: metric.distance(query, vector))
         }
-
         return Array(distances.sorted { $0.distance < $1.distance }.prefix(k))
     }
 
@@ -475,6 +503,161 @@ public enum SyncBatchOperations {
     }
 
     // MARK: - Private Helpers
+
+    @inline(__always)
+    private static func minChunk(forDim dim: Int) -> Int {
+        switch dim { case 1536: return 512; case 768: return 256; default: return 256 }
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    @inline(__always)
+    private static func selectTopK(from distances: [Float], k: Int) -> [(index: Int, distance: Float)] {
+        let n = distances.count
+        let kClamped = min(k, n)
+        // Small k: max-heap on precomputed distances
+        if kClamped < n / 10 {
+            var heap = [(index: Int, distance: Float)]()
+            heap.reserveCapacity(kClamped)
+            for (i, d) in distances.enumerated() {
+                if heap.count < kClamped {
+                    heap.append((i, d))
+                    if heap.count == kClamped { heap.sort { $0.distance > $1.distance } }
+                } else if d < heap[0].distance {
+                    heap[0] = (i, d)
+                    // Simple bubble-down restore
+                    var idx = 0
+                    while idx < kClamped - 1 && heap[idx].distance < heap[idx + 1].distance {
+                        heap.swapAt(idx, idx + 1)
+                        idx += 1
+                    }
+                }
+            }
+            return heap.sorted { $0.distance < $1.distance }
+        } else {
+            // Large k: sort pairs
+            let pairs = distances.enumerated().map { (index: $0.offset, distance: $0.element) }
+            return Array(pairs.sorted { $0.distance < $1.distance }.prefix(kClamped))
+        }
+    }
 
     private static func heapSelect<V: VectorProtocol, M: DistanceMetric>(
         query: V,

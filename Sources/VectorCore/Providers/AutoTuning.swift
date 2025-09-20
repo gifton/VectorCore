@@ -3,7 +3,8 @@ import Foundation
 // MARK: - Definitions
 
 public enum KernelKind: Hashable, Sendable, CustomStringConvertible {
-    case euclid2, euclid, cosineFused, cosinePreNorm, dot
+    case euclid2, euclid, cosineFused, cosinePreNorm, dot, euclid2SoA
+    case euclid2Mixed, cosineMixed
 
     public var description: String {
         switch self {
@@ -12,6 +13,9 @@ public enum KernelKind: Hashable, Sendable, CustomStringConvertible {
         case .cosineFused: return "cosineFused"
         case .cosinePreNorm: return "cosinePreNorm"
         case .dot: return "dot"
+        case .euclid2SoA: return "euclid2SoA"
+        case .euclid2Mixed: return "euclid2Mixed"
+        case .cosineMixed: return "cosineMixed"
         }
     }
 }

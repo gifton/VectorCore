@@ -40,6 +40,18 @@ struct BatchBench: BenchmarkSuite {
         return true
     }
 
+    private static func soaEnabled() -> Bool {
+        // Enable SoA (Structure-of-Arrays) kernels when env var set to 1
+        let env = ProcessInfo.processInfo.environment["VC_SOA"]
+        return env == "1"
+    }
+
+    private static func mixedPrecisionEnabled() -> Bool {
+        // Enable FP16 mixed-precision kernels when env var set to 1
+        let env = ProcessInfo.processInfo.environment["VC_MIXED_PRECISION"]
+        return env == "1"
+    }
+
     // Batch sizes are profile-driven (see CLIOptions.batchNs)
 
     private static func run512(_ options: CLIOptions) async -> [BenchResult] {
@@ -91,6 +103,24 @@ struct BatchBench: BenchmarkSuite {
                 let pren = await runBatchOptimizedCosinePreNorm(name: labelCP, query: qNorm, candidates: candsNorm512, provider: provider, options: options, minChunk: 256)
                 all.append(contentsOf: pren)
             }
+
+            // SoA (Structure-of-Arrays) benchmarks when enabled
+            if soaEnabled() && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 512) {
+                let labelSoA = "batch.euclidean2.512.N\(n).optimized-soa"
+                let soaResult = await runBatchSoA512(name: labelSoA, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: soaResult)
+            }
+
+            // FP16 Mixed-Precision benchmarks when enabled
+            if mixedPrecisionEnabled() && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 512) {
+                let labelFP16 = "batch.euclidean2.512.N\(n).optimized-fp16"
+                let fp16Result = await runBatchFP16_512(name: labelFP16, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: fp16Result)
+
+                let labelCosineFP16 = "batch.cosine.512.N\(n).optimized-fp16"
+                let cosineFP16Result = await runBatchCosineFP16_512(name: labelCosineFP16, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: cosineFP16Result)
+            }
         }
         return all
     }
@@ -137,6 +167,24 @@ struct BatchBench: BenchmarkSuite {
                 let pren = await runBatchOptimizedCosinePreNorm(name: labelCP, query: qNorm, candidates: candsNorm768, provider: provider, options: options, minChunk: 256)
                 all.append(contentsOf: pren)
             }
+
+            // SoA (Structure-of-Arrays) benchmarks when enabled
+            if soaEnabled() && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 768) {
+                let labelSoA = "batch.euclidean2.768.N\(n).optimized-soa"
+                let soaResult = await runBatchSoA768(name: labelSoA, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: soaResult)
+            }
+
+            // FP16 Mixed-Precision benchmarks when enabled
+            if mixedPrecisionEnabled() && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 768) {
+                let labelFP16 = "batch.euclidean2.768.N\(n).optimized-fp16"
+                let fp16Result = await runBatchFP16_768(name: labelFP16, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: fp16Result)
+
+                let labelCosineFP16 = "batch.cosine.768.N\(n).optimized-fp16"
+                let cosineFP16Result = await runBatchCosineFP16_768(name: labelCosineFP16, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: cosineFP16Result)
+            }
         }
         return all
     }
@@ -182,6 +230,24 @@ struct BatchBench: BenchmarkSuite {
                 let labelCP = "batch.cosine.1536.N\(n).optimized-preNorm.\(mode)"
                 let pren = await runBatchOptimizedCosinePreNorm(name: labelCP, query: qNorm, candidates: candsNorm1536, provider: provider, options: options, minChunk: 512)
                 all.append(contentsOf: pren)
+            }
+
+            // SoA (Structure-of-Arrays) benchmarks when enabled
+            if soaEnabled() && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 1536) {
+                let labelSoA = "batch.euclidean2.1536.N\(n).optimized-soa"
+                let soaResult = await runBatchSoA1536(name: labelSoA, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: soaResult)
+            }
+
+            // FP16 Mixed-Precision benchmarks when enabled
+            if mixedPrecisionEnabled() && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 1536) {
+                let labelFP16 = "batch.euclidean2.1536.N\(n).optimized-fp16"
+                let fp16Result = await runBatchFP16_1536(name: labelFP16, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: fp16Result)
+
+                let labelCosineFP16 = "batch.cosine.1536.N\(n).optimized-fp16"
+                let cosineFP16Result = await runBatchCosineFP16_1536(name: labelCosineFP16, query: queryO, candidates: candsO, options: options)
+                all.append(contentsOf: cosineFP16Result)
             }
         }
         return all
@@ -674,6 +740,349 @@ struct BatchBench: BenchmarkSuite {
                 }
                 return local
             } _: { $0 + $1 }
+        }
+        return [res]
+    }
+
+    // MARK: - SoA (Structure-of-Arrays) Benchmark Functions
+
+    private static func runBatchSoA512(
+        name: String,
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Build SoA once (this cost is part of the benchmark)
+        let soa = SoA<Vector512Optimized>.build(from: candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: buffer)
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: buffer)
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    private static func runBatchSoA768(
+        name: String,
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Build SoA once (this cost is part of the benchmark)
+        let soa = SoA<Vector768Optimized>.build(from: candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: buffer)
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: buffer)
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    private static func runBatchSoA1536(
+        name: String,
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Build SoA once (this cost is part of the benchmark)
+        let soa = SoA<Vector1536Optimized>.build(from: candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: buffer)
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: buffer)
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    // MARK: - FP16 Mixed-Precision Benchmark Functions
+
+    private static func runBatchFP16_512(
+        name: String,
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_euclid2_mixed_512(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_euclid2_mixed_512(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    private static func runBatchFP16_768(
+        name: String,
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_euclid2_mixed_768(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_euclid2_mixed_768(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    private static func runBatchFP16_1536(
+        name: String,
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        let candidatesFP16 = MixedPrecisionKernels.convertToFP16_1536(candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_euclid2_mixed_1536(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_euclid2_mixed_1536(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    private static func runBatchCosineFP16_512(
+        name: String,
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_cosine_mixed_512(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_cosine_mixed_512(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    private static func runBatchCosineFP16_768(
+        name: String,
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_cosine_mixed_768(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_cosine_mixed_768(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
+        }
+        return [res]
+    }
+
+    private static func runBatchCosineFP16_1536(
+        name: String,
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        options: CLIOptions
+    ) async -> [BenchResult] {
+        let n = candidates.count
+
+        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        let candidatesFP16 = MixedPrecisionKernels.convertToFP16_1536(candidates)
+
+        await Harness.warmupAsync {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_cosine_mixed_1536(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let sum = results.reduce(0, +)
+            blackHole(sum)
+        }
+
+        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+            var results = [Float](repeating: 0, count: n)
+            results.withUnsafeMutableBufferPointer { buffer in
+                MixedPrecisionKernels.range_cosine_mixed_1536(
+                    query: query,
+                    candidatesFP16: candidatesFP16,
+                    range: 0..<n,
+                    out: buffer
+                )
+            }
+            let total = results.reduce(0, +)
+            blackHole(total)
         }
         return [res]
     }

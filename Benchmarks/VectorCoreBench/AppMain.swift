@@ -6,7 +6,7 @@ import VectorCore
 // MARK: - CLI Parsing
 
 struct CLIOptions {
-    var suites: [String] = ["dot", "distance", "normalize", "batch"]
+    var suites: [String] = ["dot", "distance", "normalize", "batch", "graph"]
     var minTimeSeconds: Double = 0.5
     var repeats: Int? = nil
     var samples: Int = 1
@@ -207,7 +207,8 @@ struct App {
             DistanceBench.name: DistanceBench.self,
             NormalizationBench.name: NormalizationBench.self,
             BatchBench.name: BatchBench.self,
-            MemoryBench.name: MemoryBench.self
+            MemoryBench.name: MemoryBench.self,
+            GraphPrimitivesBench.name: GraphPrimitivesBench.self
         ]
 
         for s in options.suites {

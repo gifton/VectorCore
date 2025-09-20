@@ -71,7 +71,6 @@ public struct Harness {
     }
 
     public static func measure(name: String, minTimeSeconds: Double, repeats: Int?, unitCount: Int = 1, samples: Int = 1, _ body: () -> Void) -> BenchResult {
-        let minNs = UInt64(minTimeSeconds * 1_000_000_000)
 
         // Single-sample fast path if samples == 1
         if samples <= 1 {
@@ -144,7 +143,6 @@ public struct Harness {
     }
 
     public static func measureAsync(name: String, minTimeSeconds: Double, repeats: Int?, unitCount: Int = 1, samples: Int = 1, _ body: @Sendable () async -> Void) async -> BenchResult {
-        let minNs = UInt64(minTimeSeconds * 1_000_000_000)
 
         // Single-sample fast path if samples == 1
         if samples <= 1 {

@@ -5,6 +5,7 @@ import Foundation
 public enum KernelKind: Hashable, Sendable, CustomStringConvertible {
     case euclid2, euclid, cosineFused, cosinePreNorm, dot, euclid2SoA
     case euclid2Mixed, cosineMixed
+    case quantizedINT8, quantizedEuclid, quantizedCosine, quantizedDot
 
     public var description: String {
         switch self {
@@ -16,6 +17,10 @@ public enum KernelKind: Hashable, Sendable, CustomStringConvertible {
         case .euclid2SoA: return "euclid2SoA"
         case .euclid2Mixed: return "euclid2Mixed"
         case .cosineMixed: return "cosineMixed"
+        case .quantizedINT8: return "quantizedINT8"
+        case .quantizedEuclid: return "quantizedEuclid"
+        case .quantizedCosine: return "quantizedCosine"
+        case .quantizedDot: return "quantizedDot"
         }
     }
 }

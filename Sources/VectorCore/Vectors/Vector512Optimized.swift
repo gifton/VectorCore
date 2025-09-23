@@ -338,6 +338,12 @@ extension Vector512Optimized: CustomDebugStringConvertible {
     }
 }
 
+// MARK: - OptimizedVector Conformance
+
+extension Vector512Optimized: OptimizedVector {
+    public static var laneCount: Int { 4 }
+}
+
 // MARK: - VectorType Conformance
 
 extension Vector512Optimized: VectorType {}

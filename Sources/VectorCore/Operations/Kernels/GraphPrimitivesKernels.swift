@@ -16,7 +16,7 @@ public enum GraphError: Error {
     case initializationError(String)
 }
 
-// MARK: 1. Sparse Matrix Representation (CSR)
+// MARK: - Sparse Matrix Representation (CSR)
 
 /// Represents a sparse matrix in Compressed Sparse Row (CSR) format.
 public struct SparseMatrix: Sendable {
@@ -226,7 +226,7 @@ public struct WeightedGraph: Sendable {
     }
 }
 
-// MARK: 2. Graph Storage Optimization
+// MARK: - Graph Storage Optimization
 
 public struct GraphStorageConfig: Sendable {
     // Memory layout optimization
@@ -303,7 +303,7 @@ public final class OptimizedGraphStorage: @unchecked Sendable {
     }
 }
 
-// MARK: - 3. Aggregation Function Registry
+// MARK: - Aggregation Function Registry
 
 public enum AggregationFunction: Sendable, Hashable {
     case sum, mean, max, min
@@ -355,7 +355,7 @@ public enum GraphPrimitivesKernels {
     // Implementation follows in extensions.
 }
 
-// MARK: 1. Optimized Sparse Matrix-Vector Multiplication (SpMV/SpMM)
+// MARK: - Optimized Sparse Matrix-Vector Multiplication (SpMV/SpMM)
 
 extension GraphPrimitivesKernels {
 
@@ -380,7 +380,7 @@ extension GraphPrimitivesKernels {
         let rowsPerChunk = computeOptimalChunkSize(
             totalRows: matrix.rows,
             averageRowDensity: matrix.averageRowDensity,
-            vectorDimension: Vector.quantDimension
+            vectorDimension: Vector.zero.scalarCount
         )
 
         let numChunks = (matrix.rows + rowsPerChunk - 1) / rowsPerChunk
@@ -468,8 +468,8 @@ extension GraphPrimitivesKernels {
                     let inputVector = input[colIdx]
 
                     // accumulator += weight * input[colIdx] (Optimized operations)
-                    let weightedVector = inputVector.multiply(by: weight)
-                    accumulator = accumulator.add(weightedVector)
+                    let weightedVector = inputVector * weight
+                    accumulator = accumulator + weightedVector
                 }
             } else {
                 // Unweighted SpMM
@@ -481,7 +481,7 @@ extension GraphPrimitivesKernels {
                     let inputVector = input[colIdx]
 
                     // accumulator += input[colIdx] (Optimized operations)
-                    accumulator = accumulator.add(inputVector)
+                    accumulator = accumulator + inputVector
                 }
             }
 
@@ -490,7 +490,7 @@ extension GraphPrimitivesKernels {
             if normalize && nnzInRow > 1 {
                 // Normalization factor: 1.0 / sqrt(nnz)
                 let normFactor = 1.0 / sqrt(Float(nnzInRow))
-                accumulator = accumulator.multiply(by: normFactor)
+                accumulator = accumulator * normFactor
             }
 
             // Write the result to the output buffer using relative index.
@@ -523,7 +523,7 @@ extension GraphPrimitivesKernels {
     }
 }
 
-// MARK: 2. Neighbor Aggregation Kernels
+// MARK: Neighbor Aggregation Kernels
 
 extension GraphPrimitivesKernels {
 
@@ -540,7 +540,7 @@ extension GraphPrimitivesKernels {
         output.reserveCapacity(graph.nodeCount)
 
         let matrix = graph.adjacency
-        let kernel = AggregationKernel<Vector>(function: aggregation, vectorDimension: Vector.quantDimension)
+        let kernel = AggregationKernel<Vector>(function: aggregation, vectorDimension: Vector.zero.scalarCount)
 
         // Process each node's neighborhood
         for nodeIdx in 0..<graph.nodeCount {
@@ -623,7 +623,7 @@ extension GraphPrimitivesKernels {
     }
 }
 
-// MARK: 3. Graph Structure Manipulation
+// MARK: - Graph Structure Manipulation
 
 extension GraphPrimitivesKernels {
 
@@ -821,7 +821,7 @@ extension GraphPrimitivesKernels {
     }
 }
 
-// MARK: 4. Memory-Efficient Vector Aggregation
+// MARK: - Memory-Efficient Vector Aggregation
 
 extension GraphPrimitivesKernels {
 
@@ -835,7 +835,7 @@ extension GraphPrimitivesKernels {
         // Accumulate using optimized vector addition.
         var result = vectors[0]
         for i in 1..<vectors.count {
-            result = result.add(vectors[i])
+            result = result + vectors[i]
         }
         return result
     }
@@ -851,7 +851,7 @@ extension GraphPrimitivesKernels {
         let count = Float(vectors.count)
 
         let scale = 1.0 / count
-        return sum.divide(by: scale)
+        return sum / scale
     }
 
     /// Compute element-wise maximum of vectors.
@@ -861,11 +861,15 @@ extension GraphPrimitivesKernels {
     ) -> Vector {
         guard !vectors.isEmpty else { return Vector.zero }
 
-        var result = vectors[0]
-        for i in 1..<vectors.count {
-            result = result.elementwiseMax(vectors[i])
+        let scalarCount = vectors[0].scalarCount
+        let resultArray = (0..<scalarCount).map { index in
+            var maxValue = vectors[0][index]
+            for i in 1..<vectors.count {
+                maxValue = max(maxValue, vectors[i][index])
+            }
+            return maxValue
         }
-        return result
+        return try! Vector(resultArray)
     }
 
     /// Compute element-wise minimum of vectors.
@@ -875,11 +879,15 @@ extension GraphPrimitivesKernels {
     ) -> Vector {
         guard !vectors.isEmpty else { return Vector.zero }
 
-        var result = vectors[0]
-        for i in 1..<vectors.count {
-            result = result.elementwiseMin(vectors[i])
+        let scalarCount = vectors[0].scalarCount
+        let resultArray = (0..<scalarCount).map { index in
+            var minValue = vectors[0][index]
+            for i in 1..<vectors.count {
+                minValue = min(minValue, vectors[i][index])
+            }
+            return minValue
         }
-        return result
+        return try! Vector(resultArray)
     }
 
     /// Weighted sum aggregation.
@@ -892,10 +900,10 @@ extension GraphPrimitivesKernels {
         guard !vectors.isEmpty else { return Vector.zero }
 
         // Fused multiply-add accumulation pattern.
-        var result = vectors[0].multiply(by: weights[0])
+        var result = vectors[0] * weights[0]
         for i in 1..<vectors.count {
-            let weighted = vectors[i].multiply(by: weights[i])
-            result = result.add(weighted)
+            let weighted = vectors[i] * weights[i]
+            result = result + weighted
         }
         return result
     }
@@ -910,7 +918,7 @@ extension GraphPrimitivesKernels {
         let sumOfWeights = weights.reduce(0.0, +)
 
         if sumOfWeights > 0.0 {
-            return weightedSum.divide(by: sumOfWeights)
+            return weightedSum / sumOfWeights
         } else {
             return Vector.zero // Handle zero sum of weights
         }

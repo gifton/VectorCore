@@ -338,6 +338,12 @@ extension Vector768Optimized: CustomDebugStringConvertible {
     }
 }
 
+// MARK: - OptimizedVector Conformance
+
+extension Vector768Optimized: OptimizedVector {
+    public static var laneCount: Int { 4 }
+}
+
 // MARK: - VectorType Conformance
 
 extension Vector768Optimized: VectorType {}

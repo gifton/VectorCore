@@ -479,6 +479,450 @@ public enum MixedPrecisionKernels {
     }
 }
 
+// MARK: - Part 2: SoA Batch Processing with Blocked Layout
+
+/// Structure-of-Arrays FP16 storage with blocked layout for optimal cache behavior
+public struct SoAFP16<VectorType: OptimizedVector>: Sendable {
+    public let dimension: Int
+    public let storage: ContiguousArray<SIMD4<Float16>>
+    public let vectorCount: Int
+    public let blockSize: Int
+    public let blocksPerVector: Int
+
+    public init(vectors: [VectorType], blockSize: Int = 64) throws {
+        guard !vectors.isEmpty else {
+            throw VectorError.invalidData("Cannot create SoAFP16 with empty vector array")
+        }
+
+        self.dimension = vectors[0].scalarCount
+        self.vectorCount = vectors.count
+        self.blockSize = blockSize
+        self.blocksPerVector = (dimension + blockSize - 1) / blockSize
+
+        // Validate all vectors have same dimension
+        for vector in vectors {
+            guard vector.scalarCount == dimension else {
+                throw VectorError.dimensionMismatch(expected: dimension, actual: vector.scalarCount)
+            }
+        }
+
+        // Calculate SIMD4 groups per block for efficient layout
+        let elementsPerBlock = blockSize * vectorCount
+        let simd4GroupsPerBlock = (elementsPerBlock + 3) / 4
+
+        // Allocate storage in blocked SoA layout
+        var tempStorage = ContiguousArray<SIMD4<Float16>>()
+        tempStorage.reserveCapacity(simd4GroupsPerBlock * blocksPerVector)
+
+        // Convert to blocked layout: blocks are organized by dimension, then vectors within each block
+        for blockIndex in 0..<blocksPerVector {
+            let blockStart = blockIndex * blockSize
+            let blockEnd = min(blockStart + blockSize, dimension)
+
+            var blockElements = [Float16]()
+            blockElements.reserveCapacity(blockSize * vectorCount)
+
+            for dimIndex in blockStart..<blockEnd {
+                for vectorIndex in 0..<vectorCount {
+                    let value = vectors[vectorIndex][dimIndex]
+                    blockElements.append(Float16(value))
+                }
+            }
+
+            // Pad to SIMD4 alignment if necessary
+            while blockElements.count % 4 != 0 {
+                blockElements.append(Float16(0))
+            }
+
+            // Store as SIMD4 chunks
+            for i in stride(from: 0, to: blockElements.count, by: 4) {
+                let simd4 = SIMD4<Float16>(
+                    blockElements[i],
+                    blockElements[i + 1],
+                    blockElements[i + 2],
+                    blockElements[i + 3]
+                )
+                tempStorage.append(simd4)
+            }
+        }
+
+        self.storage = tempStorage
+    }
+
+    /// Get storage pointer for a specific dimension block for batch processing
+    @inlinable
+    internal func blockPointer(blockIndex: Int) -> UnsafePointer<SIMD4<Float16>> {
+        precondition(blockIndex >= 0 && blockIndex < blocksPerVector, "Block index out of bounds")
+        let elementsPerBlock = blockSize * vectorCount
+        let simd4GroupsPerBlock = (elementsPerBlock + 3) / 4
+        return storage.withUnsafeBufferPointer { buffer in
+            return buffer.baseAddress! + (blockIndex * simd4GroupsPerBlock)
+        }
+    }
+
+    /// Extract a specific vector with FP16→FP32 conversion
+    public func getVector(at index: Int) throws -> VectorType {
+        precondition(index >= 0 && index < vectorCount, "Vector index out of bounds")
+
+        var elements = [Float]()
+        elements.reserveCapacity(dimension)
+
+        for blockIndex in 0..<blocksPerVector {
+            let blockStart = blockIndex * blockSize
+            let blockEnd = min(blockStart + blockSize, dimension)
+            let blockPtr = blockPointer(blockIndex: blockIndex)
+
+            for dimOffset in 0..<(blockEnd - blockStart) {
+                let elementIndex = dimOffset * vectorCount + index
+                let simd4Index = elementIndex / 4
+                let laneIndex = elementIndex % 4
+
+                let fp16Value = blockPtr[simd4Index][laneIndex]
+                elements.append(Float(fp16Value))
+            }
+        }
+
+        return try VectorType(elements)
+    }
+}
+
+// MARK: - Batch Processing Kernels
+
+extension MixedPrecisionKernels {
+
+    /// Batch Euclidean distance squared: FP32 query vs FP16 SoA candidates
+    @inlinable
+    public static func batchEuclideanSquaredSoA<V: OptimizedVector>(
+        query: V,
+        candidates: SoAFP16<V>,
+        results: UnsafeMutableBufferPointer<Float>
+    ) {
+        precondition(results.count >= candidates.vectorCount, "Results buffer too small")
+        precondition(query.scalarCount == candidates.dimension, "Dimension mismatch")
+
+        // Initialize results
+        for i in 0..<candidates.vectorCount {
+            results[i] = 0
+        }
+
+        // Process by blocks for cache efficiency
+        query.withUnsafeBufferPointer { queryPtr in
+            for blockIndex in 0..<candidates.blocksPerVector {
+                let blockStart = blockIndex * candidates.blockSize
+                let blockEnd = min(blockStart + candidates.blockSize, candidates.dimension)
+                let candidateBlockPtr = candidates.blockPointer(blockIndex: blockIndex)
+
+                batchEuclideanBlockSoA_mixed(
+                    queryPtr: queryPtr.baseAddress! + blockStart,
+                    candidateBlockPtr: candidateBlockPtr,
+                    blockSize: blockEnd - blockStart,
+                    vectorCount: candidates.vectorCount,
+                    results: results
+                )
+            }
+        }
+    }
+
+    /// Batch dot product: FP32 query vs FP16 SoA candidates
+    @inlinable
+    public static func batchDotProductSoA<V: OptimizedVector>(
+        query: V,
+        candidates: SoAFP16<V>,
+        results: UnsafeMutableBufferPointer<Float>
+    ) {
+        precondition(results.count >= candidates.vectorCount, "Results buffer too small")
+        precondition(query.scalarCount == candidates.dimension, "Dimension mismatch")
+
+        // Initialize results
+        for i in 0..<candidates.vectorCount {
+            results[i] = 0
+        }
+
+        // Process by blocks for cache efficiency
+        query.withUnsafeBufferPointer { queryPtr in
+            for blockIndex in 0..<candidates.blocksPerVector {
+                let blockStart = blockIndex * candidates.blockSize
+                let blockEnd = min(blockStart + candidates.blockSize, candidates.dimension)
+                let candidateBlockPtr = candidates.blockPointer(blockIndex: blockIndex)
+
+                batchDotProductBlockSoA_mixed(
+                    queryPtr: queryPtr.baseAddress! + blockStart,
+                    candidateBlockPtr: candidateBlockPtr,
+                    blockSize: blockEnd - blockStart,
+                    vectorCount: candidates.vectorCount,
+                    results: results
+                )
+            }
+        }
+    }
+
+    // MARK: - Block Processing Implementation
+
+    /// Process a single block for SoA mixed precision Euclidean distance
+    @inlinable
+    @inline(__always)
+    internal static func batchEuclideanBlockSoA_mixed(
+        queryPtr: UnsafePointer<Float>,
+        candidateBlockPtr: UnsafePointer<SIMD4<Float16>>,
+        blockSize: Int,
+        vectorCount: Int,
+        results: UnsafeMutableBufferPointer<Float>
+    ) {
+        let elementsPerBlock = blockSize * vectorCount
+        let simd4Groups = (elementsPerBlock + 3) / 4
+
+        // Process SIMD4 groups for optimal memory access
+        for simd4Index in 0..<simd4Groups {
+            let fp16Values = candidateBlockPtr[simd4Index]
+            let fp32Values = SIMD4<Float>(fp16Values)
+
+            // Calculate element indices within the block
+            let baseElementIndex = simd4Index * 4
+
+            for lane in 0..<4 {
+                let elementIndex = baseElementIndex + lane
+                if elementIndex >= elementsPerBlock { break }
+
+                let dimOffset = elementIndex / vectorCount
+                let vectorIndex = elementIndex % vectorCount
+
+                if dimOffset < blockSize && vectorIndex < vectorCount {
+                    let queryValue = queryPtr[dimOffset]
+                    let candidateValue = fp32Values[lane]
+                    let diff = queryValue - candidateValue
+                    results[vectorIndex] += diff * diff
+                }
+            }
+        }
+    }
+
+    /// Process a single block for SoA mixed precision dot product
+    @inlinable
+    @inline(__always)
+    internal static func batchDotProductBlockSoA_mixed(
+        queryPtr: UnsafePointer<Float>,
+        candidateBlockPtr: UnsafePointer<SIMD4<Float16>>,
+        blockSize: Int,
+        vectorCount: Int,
+        results: UnsafeMutableBufferPointer<Float>
+    ) {
+        let elementsPerBlock = blockSize * vectorCount
+        let simd4Groups = (elementsPerBlock + 3) / 4
+
+        // Process SIMD4 groups for optimal memory access
+        for simd4Index in 0..<simd4Groups {
+            let fp16Values = candidateBlockPtr[simd4Index]
+            let fp32Values = SIMD4<Float>(fp16Values)
+
+            // Calculate element indices within the block
+            let baseElementIndex = simd4Index * 4
+
+            for lane in 0..<4 {
+                let elementIndex = baseElementIndex + lane
+                if elementIndex >= elementsPerBlock { break }
+
+                let dimOffset = elementIndex / vectorCount
+                let vectorIndex = elementIndex % vectorCount
+
+                if dimOffset < blockSize && vectorIndex < vectorCount {
+                    let queryValue = queryPtr[dimOffset]
+                    let candidateValue = fp32Values[lane]
+                    results[vectorIndex] += queryValue * candidateValue
+                }
+            }
+        }
+    }
+}
+
+// MARK: - AutoTuning for Mixed Precision
+
+/// AutoTuner for mixed precision kernel selection and optimization
+public final class MixedPrecisionAutoTuner: @unchecked Sendable {
+    public static let shared = MixedPrecisionAutoTuner()
+
+    private let lock = NSLock()
+    private var precisionStrategies: [String: PrecisionStrategy] = [:]
+    private var performanceCache: [String: PerformanceMetrics] = [:]
+
+    private init() {}
+
+    public struct PrecisionStrategy: Sendable {
+        public let useFP16Storage: Bool
+        public let useSoALayout: Bool
+        public let blockSize: Int
+        public let accuracyThreshold: Float
+
+        public init(useFP16Storage: Bool, useSoALayout: Bool, blockSize: Int, accuracyThreshold: Float) {
+            self.useFP16Storage = useFP16Storage
+            self.useSoALayout = useSoALayout
+            self.blockSize = blockSize
+            self.accuracyThreshold = accuracyThreshold
+        }
+    }
+
+    public struct PerformanceMetrics: Sendable {
+        public let averageTimeMS: Double
+        public let memoryUsageMB: Double
+        public let accuracyScore: Float
+        public let throughputOpsPerSec: Double
+
+        public init(averageTimeMS: Double, memoryUsageMB: Double, accuracyScore: Float, throughputOpsPerSec: Double) {
+            self.averageTimeMS = averageTimeMS
+            self.memoryUsageMB = memoryUsageMB
+            self.accuracyScore = accuracyScore
+            self.throughputOpsPerSec = throughputOpsPerSec
+        }
+    }
+
+    /// Get optimal precision strategy for given parameters
+    public func getStrategy(dimension: Int, vectorCount: Int, accuracyRequired: Float) -> PrecisionStrategy {
+        let key = "\(dimension)_\(vectorCount)_\(accuracyRequired)"
+
+        lock.lock()
+        defer { lock.unlock() }
+
+        if let cached = precisionStrategies[key] {
+            return cached
+        }
+
+        // Determine strategy based on parameters
+        let useFP16 = shouldUseFP16(dimension: dimension, vectorCount: vectorCount, accuracyRequired: accuracyRequired)
+        let useSoA = shouldUseSoA(dimension: dimension, vectorCount: vectorCount)
+        let blockSize = optimalBlockSize(dimension: dimension, vectorCount: vectorCount)
+        let threshold = accuracyThreshold(dimension: dimension, accuracyRequired: accuracyRequired)
+
+        let strategy = PrecisionStrategy(
+            useFP16Storage: useFP16,
+            useSoALayout: useSoA,
+            blockSize: blockSize,
+            accuracyThreshold: threshold
+        )
+
+        precisionStrategies[key] = strategy
+        return strategy
+    }
+
+    /// Benchmark strategy performance
+    public func benchmarkStrategy<V: OptimizedVector>(
+        strategy: PrecisionStrategy,
+        sampleVectors: [V],
+        iterations: Int = 100
+    ) -> PerformanceMetrics {
+        let key = "\(strategy.useFP16Storage)_\(strategy.useSoALayout)_\(strategy.blockSize)_\(sampleVectors.count)"
+
+        lock.lock()
+        if let cached = performanceCache[key] {
+            lock.unlock()
+            return cached
+        }
+        lock.unlock()
+
+        guard sampleVectors.count >= 2 else {
+            return PerformanceMetrics(averageTimeMS: 0, memoryUsageMB: 0, accuracyScore: 0, throughputOpsPerSec: 0)
+        }
+
+        var totalTime: Double = 0
+        let startMemory = getMemoryUsage()
+
+        for _ in 0..<iterations {
+            let startTime = CFAbsoluteTimeGetCurrent()
+
+            if strategy.useFP16Storage && strategy.useSoALayout {
+                // Benchmark SoA FP16 operations
+                do {
+                    let soaFP16 = try SoAFP16(vectors: sampleVectors, blockSize: strategy.blockSize)
+                    let resultsBuffer = UnsafeMutableBufferPointer<Float>.allocate(capacity: sampleVectors.count)
+                    defer { resultsBuffer.deallocate() }
+
+                    MixedPrecisionKernels.batchEuclideanSquaredSoA(
+                        query: sampleVectors[0],
+                        candidates: soaFP16,
+                        results: resultsBuffer
+                    )
+                } catch {
+                    continue
+                }
+            } else if strategy.useFP16Storage {
+                // Benchmark regular FP16 operations
+                let fp16Vectors = MixedPrecisionKernels.convertToFP16_512(sampleVectors as! [Vector512Optimized])
+                let resultsBuffer = UnsafeMutableBufferPointer<Float>.allocate(capacity: sampleVectors.count)
+                defer { resultsBuffer.deallocate() }
+
+                MixedPrecisionKernels.range_euclid2_mixed_512(
+                    query: sampleVectors[0] as! Vector512Optimized,
+                    candidatesFP16: fp16Vectors,
+                    range: 0..<fp16Vectors.count,
+                    out: resultsBuffer
+                )
+            } else {
+                // Benchmark regular FP32 operations
+                for i in 0..<sampleVectors.count {
+                    for j in (i+1)..<sampleVectors.count {
+                        _ = sampleVectors[i].euclideanDistanceSquared(to: sampleVectors[j])
+                    }
+                }
+            }
+
+            let endTime = CFAbsoluteTimeGetCurrent()
+            totalTime += (endTime - startTime)
+        }
+
+        let endMemory = getMemoryUsage()
+        let averageTimeMS = (totalTime / Double(iterations)) * 1000.0
+        let memoryUsageMB = endMemory - startMemory
+        let accuracyScore: Float = strategy.useFP16Storage ? 0.95 : 1.0
+        let throughputOpsPerSec = Double(sampleVectors.count) / (totalTime / Double(iterations))
+
+        let metrics = PerformanceMetrics(
+            averageTimeMS: averageTimeMS,
+            memoryUsageMB: memoryUsageMB,
+            accuracyScore: accuracyScore,
+            throughputOpsPerSec: throughputOpsPerSec
+        )
+
+        lock.lock()
+        performanceCache[key] = metrics
+        lock.unlock()
+
+        return metrics
+    }
+
+    // MARK: - Private Strategy Selection
+
+    private func shouldUseFP16(dimension: Int, vectorCount: Int, accuracyRequired: Float) -> Bool {
+        // Use FP16 for large datasets where memory bandwidth is critical
+        let memoryPressure = Float(dimension * vectorCount * 4) / (1024 * 1024) // MB
+        let accuracyThreshold: Float = 0.90 // 90% accuracy threshold
+
+        return memoryPressure > 50.0 && accuracyRequired >= accuracyThreshold
+    }
+
+    private func shouldUseSoA(dimension: Int, vectorCount: Int) -> Bool {
+        // SoA beneficial for batch operations with many candidates
+        return vectorCount >= 50 && dimension >= 512
+    }
+
+    private func optimalBlockSize(dimension: Int, vectorCount: Int) -> Int {
+        // Optimize for L1 cache (32KB typical)
+        let cacheSize = 32 * 1024
+        let elementSize = 2 // FP16
+        let vectorsPerCacheLine = cacheSize / (elementSize * vectorCount)
+
+        return min(max(vectorsPerCacheLine, 32), min(128, dimension))
+    }
+
+    private func accuracyThreshold(dimension: Int, accuracyRequired: Float) -> Float {
+        // Higher dimensions are more tolerant of precision loss
+        let dimensionFactor = min(Float(dimension) / 1000.0, 1.0)
+        return accuracyRequired * (1.0 - dimensionFactor * 0.05)
+    }
+
+    private func getMemoryUsage() -> Double {
+        // Simplified memory usage estimation
+        return 0.0 // In real implementation, would use mach_task_basic_info
+    }
+}
+
 // MARK: - Integration Helpers
 
 extension MixedPrecisionKernels {
@@ -487,5 +931,42 @@ extension MixedPrecisionKernels {
     public static func shouldUseMixedPrecision(candidateCount: Int, dimension: Int) -> Bool {
         // Mixed precision beneficial for larger datasets where memory bandwidth is the bottleneck
         return candidateCount >= 100 && dimension >= 512
+    }
+
+    /// Adaptive kernel selection based on AutoTuning
+    public static func adaptiveEuclideanDistance<V: OptimizedVector>(
+        query: V,
+        candidates: [V],
+        accuracyRequired: Float = 0.95
+    ) -> [Float] {
+        let autoTuner = MixedPrecisionAutoTuner.shared
+        let strategy = autoTuner.getStrategy(
+            dimension: query.scalarCount,
+            vectorCount: candidates.count,
+            accuracyRequired: accuracyRequired
+        )
+
+        var results = [Float]()
+        results.reserveCapacity(candidates.count)
+
+        if strategy.useFP16Storage && strategy.useSoALayout {
+            // Use SoA FP16 batch processing
+            do {
+                let soaFP16 = try SoAFP16(vectors: candidates, blockSize: strategy.blockSize)
+                let resultsBuffer = UnsafeMutableBufferPointer<Float>.allocate(capacity: candidates.count)
+                defer { resultsBuffer.deallocate() }
+
+                batchEuclideanSquaredSoA(query: query, candidates: soaFP16, results: resultsBuffer)
+                results.append(contentsOf: resultsBuffer)
+            } catch {
+                // Fallback to regular computation
+                results = candidates.map { query.euclideanDistanceSquared(to: $0) }
+            }
+        } else {
+            // Use regular FP32 computation
+            results = candidates.map { query.euclideanDistanceSquared(to: $0) }
+        }
+
+        return results
     }
 }

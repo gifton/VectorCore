@@ -20,6 +20,16 @@ let package = Package(
             name: "vectorcore-bench",
             targets: ["VectorCoreBench"]
         ),
+        // Graph traversal demo executable
+        .executable(
+            name: "graph-demo",
+            targets: ["GraphTraversalDemo"]
+        ),
+        // Batch distance demo executable
+        .executable(
+            name: "batch-distance-demo",
+            targets: ["BatchDistanceDemo"]
+        ),
     ],
     dependencies: [],
     targets: [
@@ -51,6 +61,16 @@ let package = Package(
             name: "VectorCoreBench",
             dependencies: ["VectorCore"],
             path: "Benchmarks/VectorCoreBench"
+        ),
+        // Graph traversal demo executable
+        .executableTarget(
+            name: "GraphTraversalDemo",
+            dependencies: ["VectorCore"]
+        ),
+        // Batch distance demo executable
+        .executableTarget(
+            name: "BatchDistanceDemo",
+            dependencies: ["VectorCore"]
         )
     ]
 )

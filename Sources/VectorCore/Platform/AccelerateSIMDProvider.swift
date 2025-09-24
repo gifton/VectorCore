@@ -33,6 +33,8 @@ public struct AccelerateFloatProvider: SIMDProvider {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
+        // vDSP_vsub computes: result = B - A when called as vDSP_vsub(A, 1, B, 1, result, 1, N)
+        // So to compute a - b, we need vDSP_vsub(b, 1, a, 1, result, 1, count)
         vDSP_vsub(b, 1, a, 1, result, 1, vDSP_Length(count))
     }
 

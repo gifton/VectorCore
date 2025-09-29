@@ -102,16 +102,49 @@ public struct SparseMatrix: Sendable {
         rowPointers: ContiguousArray<UInt32>,
         columnIndices: ContiguousArray<UInt32>,
         values: ContiguousArray<Float>? = nil
+    ) {
+        // Validation with assertions for debug builds
+        assert(rowPointers.count == rows + 1,
+               "rowPointers size must be rows + 1")
+        let nnz = columnIndices.count
+        if let lastPtr = rowPointers.last {
+            assert(nnz == Int(lastPtr),
+                   "columnIndices size mismatch with rowPointers cumulative count")
+        }
+        if let values = values {
+            assert(values.count == nnz,
+                   "values size mismatch with nonZeros")
+        }
+
+        self.rows = rows
+        self.cols = cols
+        self.nonZeros = nnz
+        self.rowPointers = rowPointers
+        self.columnIndices = columnIndices
+        self.values = values
+
+        // Initialize managed aligned storage
+        self.alignedStorage = AlignedStorage(rowPtrsCount: rowPointers.count, nnz: nnz, rowPointers: rowPointers, columnIndices: columnIndices, values: values)
+    }
+
+    // Throwing init for validation
+    public init(
+        rows: Int,
+        cols: Int,
+        rowPointers: ContiguousArray<UInt32>,
+        columnIndices: ContiguousArray<UInt32>,
+        values: ContiguousArray<Float>? = nil,
+        validate: Bool
     ) throws {
-        // Validation
+        // Validation checks for throwing initializer
         guard rowPointers.count == rows + 1 else {
             throw GraphError.invalidCSRFormat("rowPointers size must be rows + 1")
         }
         let nnz = columnIndices.count
         if let lastPtr = rowPointers.last {
-             guard nnz == Int(lastPtr) else {
+            guard nnz == Int(lastPtr) else {
                 throw GraphError.invalidCSRFormat("columnIndices size mismatch with rowPointers cumulative count")
-             }
+            }
         }
         if let values = values {
             guard values.count == nnz else {
@@ -119,6 +152,7 @@ public struct SparseMatrix: Sendable {
             }
         }
 
+        // Initialize directly (bypass the non-throwing init to avoid assertions)
         self.rows = rows
         self.cols = cols
         self.nonZeros = nnz
@@ -135,11 +169,11 @@ public struct SparseMatrix: Sendable {
         rows: Int,
         cols: Int,
         edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>
-    ) throws {
+    ) {
          // Convert the named tuple to regular tuple for the API
          let apiEdges = edges.map { ($0.row, $0.col, $0.value) }
          let matrix = GraphPrimitivesKernels.edgeListToCSR(nodeCount: max(rows, cols), edges: ContiguousArray(apiEdges))
-         try self.init(
+         self.init(
             rows: matrix.rows,
             cols: matrix.cols,
             rowPointers: matrix.rowPointers,
@@ -169,6 +203,144 @@ public struct SparseMatrix: Sendable {
     public var memoryFootprint: Int {
         MemoryLayout<UInt32>.size * (rows + 1 + nonZeros) +
         (values != nil ? MemoryLayout<Float>.size * nonZeros : 0)
+    }
+
+    // MARK: - Validation Methods
+
+    /// Validates that all column indices are within bounds [0, cols)
+    public func hasValidIndices() -> Bool {
+        for i in 0..<rows {
+            let rowStart = Int(rowPointers[i])
+            let rowEnd = Int(rowPointers[i + 1])
+
+            // Check that row pointers are monotonically increasing
+            guard rowStart <= rowEnd else {
+                return false
+            }
+
+            // Check each column index in this row
+            for idx in rowStart..<rowEnd {
+                let colIndex = Int(columnIndices[idx])
+                guard colIndex >= 0 && colIndex < cols else {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    /// Computes degree distribution statistics
+    public func computeDegreeDistribution() -> (min: Int, max: Int, mean: Float) {
+        guard rows > 0 else {
+            return (min: 0, max: 0, mean: 0.0)
+        }
+
+        var minDegree = Int.max
+        var maxDegree = 0
+        var totalDegree = 0
+
+        for i in 0..<rows {
+            let degree = Int(rowPointers[i + 1] - rowPointers[i])
+            minDegree = min(minDegree, degree)
+            maxDegree = max(maxDegree, degree)
+            totalDegree += degree
+        }
+
+        // Handle empty graph case
+        if minDegree == Int.max {
+            minDegree = 0
+        }
+
+        let meanDegree = Float(totalDegree) / Float(rows)
+        return (min: minDegree, max: maxDegree, mean: meanDegree)
+    }
+
+    /// Validates graph connectivity using BFS
+    public func validateConnectivity() -> Bool {
+        guard rows > 0 && rows == cols else {
+            return false  // Must be square matrix for graph adjacency
+        }
+
+        // Use BFS to check if graph is connected
+        var visited = ContiguousArray<Bool>(repeating: false, count: rows)
+        var queue = [0]  // Start from node 0
+        visited[0] = true
+        var visitedCount = 1
+        var head = 0
+
+        while head < queue.count {
+            let node = queue[head]
+            head += 1
+
+            let rowStart = Int(rowPointers[node])
+            let rowEnd = Int(rowPointers[node + 1])
+
+            for idx in rowStart..<rowEnd {
+                let neighbor = Int(columnIndices[idx])
+                if !visited[neighbor] {
+                    visited[neighbor] = true
+                    visitedCount += 1
+                    queue.append(neighbor)
+                }
+            }
+
+            // Also check incoming edges (treat as undirected for connectivity)
+            for i in 0..<rows {
+                let neighborRowStart = Int(rowPointers[i])
+                let neighborRowEnd = Int(rowPointers[i + 1])
+
+                for idx in neighborRowStart..<neighborRowEnd {
+                    if Int(columnIndices[idx]) == node && !visited[i] {
+                        visited[i] = true
+                        visitedCount += 1
+                        queue.append(i)
+                    }
+                }
+            }
+        }
+
+        return visitedCount == rows
+    }
+
+    /// Comprehensive validation combining all checks
+    public func validate() -> (isValid: Bool, issues: [String]) {
+        var issues: [String] = []
+
+        // Check indices
+        if !hasValidIndices() {
+            issues.append("Invalid column indices found (out of bounds)")
+        }
+
+        // Check row pointer consistency
+        if rowPointers.count != rows + 1 {
+            issues.append("Row pointers array size mismatch")
+        }
+
+        if let lastPtr = rowPointers.last {
+            if Int(lastPtr) != columnIndices.count {
+                issues.append("Row pointers don't match column indices count")
+            }
+            if Int(lastPtr) != nonZeros {
+                issues.append("Reported nonZeros doesn't match actual count")
+            }
+        }
+
+        // Check values array if present
+        if let vals = values {
+            if vals.count != columnIndices.count {
+                issues.append("Values array size doesn't match column indices")
+            }
+
+            // Check for NaN or infinite values
+            for (i, val) in vals.enumerated() {
+                if !val.isFinite {
+                    issues.append("Non-finite value at index \(i)")
+                    break  // Report only the first occurrence
+                }
+            }
+        }
+
+        return (isValid: issues.isEmpty, issues: issues)
     }
 }
 
@@ -690,8 +862,8 @@ extension GraphPrimitivesKernels {
             currentRow += 1
         }
 
-        // Construct the SparseMatrix. Using try! as internal construction is assumed safe.
-        return try! SparseMatrix(
+        // Construct the SparseMatrix.
+        return SparseMatrix(
             rows: nodeCount,
             cols: nodeCount,
             rowPointers: rowPointers,
@@ -756,8 +928,8 @@ extension GraphPrimitivesKernels {
             }
         }
 
-        // Using try! as internal construction is assumed safe.
-        return try! SparseMatrix(
+        // Construct the transposed matrix.
+        return SparseMatrix(
             rows: newRows,
             cols: newCols,
             rowPointers: newRowPointers,

@@ -602,6 +602,10 @@ public enum HierarchicalClusteringKernels {
                 let leftCluster = ClusterNode(id: leftId, vectorIndices: leftIndices, centroid: leftCentroid, radius: leftRadius, parent: currentCluster.id)
                 let rightCluster = ClusterNode(id: rightId, vectorIndices: rightIndices, centroid: rightCentroid, radius: rightRadius, parent: currentCluster.id)
 
+                // Initially add child nodes to the dictionary (they may be updated later when processed)
+                nodesDict[leftId] = leftCluster
+                nodesDict[rightId] = rightCluster
+
                 // Update current cluster to be internal node
                 let mergeDistance = computeDistance(leftCentroid, rightCentroid, metric: distanceMetric)
                 let internalNode = ClusterNode(
@@ -610,7 +614,7 @@ public enum HierarchicalClusteringKernels {
                 )
                 nodesDict[internalNode.id] = internalNode
 
-                // Add children to queue
+                // Add children to queue for further processing
                 splittingQueue.append((leftCluster, depth + 1))
                 splittingQueue.append((rightCluster, depth + 1))
             }

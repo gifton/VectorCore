@@ -10,6 +10,32 @@ import Foundation
 import Accelerate
 import simd
 
+// MARK: - Graph Construction Error Types
+
+/// Errors that can occur during graph construction operations
+public enum GraphConstructionError: Error, CustomStringConvertible {
+    case invalidParameters(String)
+    case dimensionMismatch(expected: Int, got: Int)
+    case insufficientData(String)
+    case invalidGraphStructure(String)
+    case numericalInstability(String)
+
+    public var description: String {
+        switch self {
+        case .invalidParameters(let message):
+            return "Invalid parameters: \(message)"
+        case .dimensionMismatch(let expected, let got):
+            return "Dimension mismatch: expected \(expected), got \(got)"
+        case .insufficientData(let message):
+            return "Insufficient data: \(message)"
+        case .invalidGraphStructure(let message):
+            return "Invalid graph structure: \(message)"
+        case .numericalInstability(let message):
+            return "Numerical instability: \(message)"
+        }
+    }
+}
+
 // MARK: - Vector Type System Integration
 
 /// Base protocol for graph-compatible vectors
@@ -149,8 +175,53 @@ extension ContiguousArray: GraphVector where Element == Float {
         return result
     }
 
+    public func abs() -> ContiguousArray<Float> {
+        var result = ContiguousArray<Float>(repeating: 0, count: count)
+        self.withUnsafeBufferPointer { srcPtr in
+            result.withUnsafeMutableBufferPointer { dstPtr in
+                vDSP_vabs(srcPtr.baseAddress!, 1, dstPtr.baseAddress!, 1, vDSP_Length(count))
+            }
+        }
+        return result
+    }
+
     public func toFloatArray() -> [Float] {
         return Array(self)
+    }
+
+    // MARK: - Operator Overloads for Convenience
+
+    /// Element-wise multiplication operator
+    public static func * (lhs: ContiguousArray<Float>, rhs: ContiguousArray<Float>) -> ContiguousArray<Float> {
+        precondition(lhs.count == rhs.count, "Vector dimensions must match")
+        var result = ContiguousArray<Float>(repeating: 0, count: lhs.count)
+        lhs.withUnsafeBufferPointer { lhsPtr in
+            rhs.withUnsafeBufferPointer { rhsPtr in
+                result.withUnsafeMutableBufferPointer { resPtr in
+                    vDSP_vmul(lhsPtr.baseAddress!, 1, rhsPtr.baseAddress!, 1, resPtr.baseAddress!, 1, vDSP_Length(lhs.count))
+                }
+            }
+        }
+        return result
+    }
+
+    /// Element-wise addition operator
+    public static func + (lhs: ContiguousArray<Float>, rhs: ContiguousArray<Float>) -> ContiguousArray<Float> {
+        precondition(lhs.count == rhs.count, "Vector dimensions must match")
+        var result = ContiguousArray<Float>(repeating: 0, count: lhs.count)
+        lhs.withUnsafeBufferPointer { lhsPtr in
+            rhs.withUnsafeBufferPointer { rhsPtr in
+                result.withUnsafeMutableBufferPointer { resPtr in
+                    vDSP_vadd(lhsPtr.baseAddress!, 1, rhsPtr.baseAddress!, 1, resPtr.baseAddress!, 1, vDSP_Length(lhs.count))
+                }
+            }
+        }
+        return result
+    }
+
+    /// Element-wise subtraction operator
+    public static func - (lhs: ContiguousArray<Float>, rhs: ContiguousArray<Float>) -> ContiguousArray<Float> {
+        return lhs.subtract(rhs)
     }
 }
 
@@ -268,7 +339,8 @@ extension GraphConstructionKernels {
             let magnitudeB = b.magnitude
 
             guard magnitudeA > Float.ulpOfOne && magnitudeB > Float.ulpOfOne else {
-                return (magnitudeA == 0 && magnitudeB == 0) ? 0.0 : 1.0
+                // Return maximum distance (2.0) for zero vectors
+                return 2.0
             }
 
             let similarity = dotProduct / (magnitudeA * magnitudeB)
@@ -277,15 +349,93 @@ extension GraphConstructionKernels {
         case .manhattan:
             let diff = a.subtract(b)
             var absSum: Float = 0
+
+            // Check each component for infinity/NaN
             for i in 0..<a.dimensions {
-                absSum += abs(diff[i])
+                let component = abs(diff[i])
+                guard component.isFinite else {
+                    return Float.infinity
+                }
+                absSum += component
             }
+
+            // Check final sum for overflow
+            guard absSum.isFinite else {
+                return Float.infinity
+            }
+
             return absSum
 
         case .custom(let f):
             let aArray = ContiguousArray(a.toFloatArray())
             let bArray = ContiguousArray(b.toFloatArray())
             return f(aArray, bArray)
+        }
+    }
+
+    // MARK: - Sorted Array Helpers for Performance
+
+    /// Helper functions for maintaining sorted ContiguousArray (replaces Set for better cache locality)
+    @usableFromInline
+    internal struct SortedArray<T: Comparable> {
+        @usableFromInline
+        var elements: ContiguousArray<T>
+
+        @inlinable
+        init(capacity: Int = 0) {
+            self.elements = ContiguousArray<T>()
+            if capacity > 0 {
+                self.elements.reserveCapacity(capacity)
+            }
+        }
+
+        @inlinable
+        var count: Int { elements.count }
+
+        @inlinable
+        var isEmpty: Bool { elements.isEmpty }
+
+        /// Binary search to find insertion point
+        @inlinable
+        func insertionIndex(for element: T) -> Int {
+            var left = 0
+            var right = elements.count
+
+            while left < right {
+                let mid = (left + right) / 2
+                if elements[mid] < element {
+                    left = mid + 1
+                } else {
+                    right = mid
+                }
+            }
+            return left
+        }
+
+        /// Insert element maintaining sorted order
+        @inlinable
+        mutating func insert(_ element: T) {
+            let index = insertionIndex(for: element)
+            if index < elements.count && elements[index] == element {
+                return  // Already exists
+            }
+            elements.insert(element, at: index)
+        }
+
+        /// Check if element exists (binary search)
+        @inlinable
+        func contains(_ element: T) -> Bool {
+            let index = insertionIndex(for: element)
+            return index < elements.count && elements[index] == element
+        }
+
+        /// Remove element if it exists
+        @inlinable
+        mutating func remove(_ element: T) {
+            let index = insertionIndex(for: element)
+            if index < elements.count && elements[index] == element {
+                elements.remove(at: index)
+            }
         }
     }
 
@@ -789,7 +939,7 @@ extension GraphConstructionKernels {
             return NSWGraph(graph: try! SparseMatrix(rows: 0, cols: 0, edges: []), entryPoint: -1)
         }
 
-        var adjacencyList = Array(repeating: Set<Int32>(), count: n)
+        var adjacencyList = Array(repeating: SortedArray<Int32>(capacity: options.M * 2), count: n)
         var entryPoint: Int32 = 0
 
         for i in 1..<n {
@@ -849,9 +999,17 @@ extension GraphConstructionKernels {
             }
         }
 
+        // Pre-allocate edges with accurate capacity
+        var totalEdges = 0
+        for adj in adjacencyList {
+            totalEdges += adj.count
+        }
+
         var edges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+        edges.reserveCapacity(totalEdges)
+
         for (i, neighbors) in adjacencyList.enumerated() {
-            for j in neighbors {
+            for j in neighbors.elements {
                 let dist = computeDistance(vectors[i], vectors[Int(j)], metric: options.metric)
                 edges.append((UInt32(i), UInt32(j), dist))
             }
@@ -869,7 +1027,10 @@ extension GraphConstructionKernels {
         directed: Bool = false,
         weighted: Bool = false
     ) -> SparseMatrix {
+        // Pre-allocate edges with accurate capacity
+        let totalEdges = directed ? n * (n - 1) : n * (n - 1) / 2
         var edges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+        edges.reserveCapacity(totalEdges)
 
         for i in 0..<n {
             let jStart = directed ? 0 : i + 1
@@ -892,9 +1053,17 @@ extension GraphConstructionKernels {
         n: Int,
         k: Int,
         p: Float
-    ) -> SparseMatrix {
+    ) throws -> SparseMatrix {
         guard k % 2 == 0 && k < n && k > 0 else {
-            fatalError("Invalid parameters for Watts-Strogatz model. N>K>0 and K must be even.")
+            throw GraphConstructionError.invalidParameters(
+                "Watts-Strogatz model requires N > K > 0 and K must be even. Got n=\(n), k=\(k)"
+            )
+        }
+
+        guard p >= 0 && p <= 1 else {
+            throw GraphConstructionError.invalidParameters(
+                "Rewiring probability p must be between 0 and 1. Got p=\(p)"
+            )
         }
 
         var adj = Array(repeating: Set<Int>(), count: n)
@@ -926,7 +1095,11 @@ extension GraphConstructionKernels {
             }
         }
 
+        // Pre-allocate edges with accurate capacity
+        let totalEdges = adj.reduce(0) { $0 + $1.count }
         var edges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+        edges.reserveCapacity(totalEdges)
+
         for (i, neighbors) in adj.enumerated() {
             for j in neighbors {
                 edges.append((UInt32(i), UInt32(j), 1.0))
@@ -939,9 +1112,11 @@ extension GraphConstructionKernels {
     public static func generateScaleFreeGraph(
         n: Int,
         m: Int
-    ) -> SparseMatrix {
+    ) throws -> SparseMatrix {
         guard n > m && m >= 1 else {
-            fatalError("Invalid parameters for Barabási–Albert model. N>M>=1.")
+            throw GraphConstructionError.invalidParameters(
+                "Barabási–Albert model requires N > M >= 1. Got n=\(n), m=\(m)"
+            )
         }
 
         var adj = Array(repeating: Set<Int>(), count: n)
@@ -975,7 +1150,11 @@ extension GraphConstructionKernels {
             }
         }
 
+        // Pre-allocate edges with accurate capacity
+        let totalEdges = adj.reduce(0) { $0 + $1.count }
         var edges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+        edges.reserveCapacity(totalEdges)
+
         for (i, neighbors) in adj.enumerated() {
             for j in neighbors {
                 edges.append((UInt32(i), UInt32(j), 1.0))
@@ -1013,12 +1192,12 @@ extension GraphConstructionKernels {
     private static func searchNSW<Vector: GraphVector>(
         query: Vector,
         vectors: ContiguousArray<Vector>,
-        adjacencyList: [Set<Int32>],
+        adjacencyList: [SortedArray<Int32>],
         entryPoint: Int32,
         ef: Int,
         metric: DistanceMetric
     ) -> [NSWSearchResult] {
-        var visited = Set<Int32>()
+        var visited = SortedArray<Int32>(capacity: ef * 2)
         var candidates = GraphPriorityQueue<NSWSearchResult>(sort: <)
         var results = GraphPriorityQueue<NSWSearchResult>(sort: >)
 
@@ -1038,7 +1217,7 @@ extension GraphConstructionKernels {
                 }
             }
 
-            for neighborId in adjacencyList[Int(c.id)] {
+            for neighborId in adjacencyList[Int(c.id)].elements {
                 if !visited.contains(neighborId) {
                     visited.insert(neighborId)
 
@@ -1102,13 +1281,13 @@ extension GraphConstructionKernels {
 
     private static func pruneConnections<Vector: GraphVector>(
         nodeId: Int32,
-        adjacencyList: inout [Set<Int32>],
+        adjacencyList: inout [SortedArray<Int32>],
         vectors: ContiguousArray<Vector>,
         M: Int,
         metric: DistanceMetric,
         useHeuristic: Bool
     ) {
-        let connections = adjacencyList[Int(nodeId)]
+        let connections = adjacencyList[Int(nodeId)].elements
         let nodeVector = vectors[Int(nodeId)]
 
         let connectionDistances = connections.map { connId -> NSWSearchResult in
@@ -1125,7 +1304,11 @@ extension GraphConstructionKernels {
             useHeuristic: useHeuristic
         )
 
-        adjacencyList[Int(nodeId)] = Set(prunedConnections)
+        // Clear and rebuild the sorted array with pruned connections
+        adjacencyList[Int(nodeId)] = SortedArray<Int32>(capacity: M)
+        for conn in prunedConnections {
+            adjacencyList[Int(nodeId)].insert(conn)
+        }
     }
 }
 

@@ -284,6 +284,9 @@ extension GraphPrimitivesKernels {
 
                 var localCentrality = ContiguousArray<Float>(repeating: 0.0, count: n)
 
+                // Guard against invalid range when start >= end
+                guard start < end else { return }
+
                 for idx in start..<end {
                     let source = sources[idx]
                     let contribution = computeBetweennessContribution(

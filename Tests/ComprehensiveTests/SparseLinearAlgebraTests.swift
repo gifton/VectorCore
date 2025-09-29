@@ -462,7 +462,8 @@ final class SparseLinearAlgebraTests: XCTestCase {
                 rows: 2, cols: 2,
                 rowPointers: [0, 2, 1],  // Wrong size for 2 rows
                 columnIndices: [0, 1],
-                values: [1.0, 2.0]
+                values: [1.0, 2.0],
+                validate: true
             )
         ) { error in
             guard case GraphError.invalidCSRFormat = error else {
@@ -477,7 +478,8 @@ final class SparseLinearAlgebraTests: XCTestCase {
                 rows: 2, cols: 2,
                 rowPointers: [0, 1, 3],  // Says 3 total entries
                 columnIndices: [0, 1],    // But only 2 entries
-                values: [1.0, 2.0]
+                values: [1.0, 2.0],
+                validate: true
             )
         ) { error in
             guard case GraphError.invalidCSRFormat = error else {
@@ -492,7 +494,8 @@ final class SparseLinearAlgebraTests: XCTestCase {
                 rows: 2, cols: 2,
                 rowPointers: [0, 1, 2],
                 columnIndices: [0, 1],
-                values: [1.0]  // Only 1 value but 2 entries
+                values: [1.0],  // Only 1 value but 2 entries
+                validate: true
             )
         ) { error in
             guard case GraphError.invalidCSRFormat = error else {

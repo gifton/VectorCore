@@ -1,14 +1,14 @@
 //
-//  GraphAnalysisPart2Tests.swift
+//  GraphPropertiesTests.swift
 //  VectorCore
 //
-//  Tests for Graph Analysis Kernels - Part 2
+//  Tests for Graph Properties and Algorithms Kernels
 //
 
 import XCTest
 @testable import VectorCore
 
-final class GraphAnalysisPart2Tests: XCTestCase {
+final class GraphPropertiesTests: XCTestCase {
 
     // MARK: - Test Helpers
 
@@ -83,93 +83,17 @@ final class GraphAnalysisPart2Tests: XCTestCase {
         )
     }
 
-    // MARK: - BFS Tests
-
-    func testBreadthFirstSearch() {
-        let graph = createSimpleGraph()
-        let result = GraphPrimitivesKernels.breadthFirstSearch(matrix: graph, source: 0)
-
-        XCTAssertEqual(result.distances.count, 5)
-        XCTAssertEqual(result.distances[0], 0, "Source should have distance 0")
-        XCTAssertEqual(result.distances[1], 1, "Node 1 should be at distance 1")
-        XCTAssertEqual(result.distances[2], 1, "Node 2 should be at distance 1")
-        XCTAssertGreaterThan(result.distances[3], 0, "Node 3 should be reachable")
-        XCTAssertGreaterThan(result.distances[4], 0, "Node 4 should be reachable")
-    }
-
-    func testBFSUnreachableNodes() {
-        // Create a disconnected graph
-        let rows = 3
-        let cols = 3
-        let rowPointers = ContiguousArray<UInt32>([0, 1, 2, 2])  // Node 2 has no connections
-        let columnIndices = ContiguousArray<UInt32>([1, 0])
-        let values: ContiguousArray<Float>? = nil
-
-        let graph = SparseMatrix(
-            rows: rows,
-            cols: cols,
-            rowPointers: rowPointers,
-            columnIndices: columnIndices,
-            values: values
-        )
-
-        let result = GraphPrimitivesKernels.breadthFirstSearch(matrix: graph, source: 0)
-        XCTAssertEqual(result.distances[2], -1, "Unreachable node should have distance -1")
-    }
-
-    // MARK: - DFS Tests
-
-    func testDepthFirstSearch() {
-        let graph = createSimpleGraph()
-        let result = GraphPrimitivesKernels.depthFirstSearch(
-            matrix: graph,
-            source: 0,
-            options: GraphPrimitivesKernels.DFSOptions(visitAll: false, detectCycles: false)
-        )
-
-        XCTAssertEqual(result.discoveryTime.count, 5)
-        XCTAssertGreaterThan(result.discoveryTime[0], 0, "Source should be discovered")
-        XCTAssertGreaterThan(result.finishTime[0], 0, "Source should be finished")
-    }
-
-    func testDFSCycleDetection() {
-        let graph = createSimpleGraph()  // This graph has a cycle
-        let result = GraphPrimitivesKernels.depthFirstSearch(
-            matrix: graph,
-            source: nil,
-            options: GraphPrimitivesKernels.DFSOptions(visitAll: true, detectCycles: true)
-        )
-
-        XCTAssertTrue(!result.backEdges.isEmpty, "Should detect cycles via back edges")
-    }
-
-    // MARK: - Connected Components Tests
-
-    func testConnectedComponentsUndirected() {
-        let graph = createSimpleGraph()
-        let result = GraphPrimitivesKernels.connectedComponents(matrix: graph, directed: false)
-
-        XCTAssertEqual(result.componentIds.count, 5)
-        // All nodes should be in the same component if the graph is connected
-        let firstComponent = result.componentIds[0]
-        for id in result.componentIds {
-            XCTAssertEqual(id, firstComponent, "All nodes should be in the same component")
-        }
-    }
-
-    func testStronglyConnectedComponents() {
-        let graph = createSimpleGraph()
-        let result = GraphPrimitivesKernels.connectedComponents(matrix: graph, directed: true)
-
-        XCTAssertEqual(result.componentIds.count, 5)
-        XCTAssertGreaterThan(result.numberOfComponents, 0, "Should have at least one SCC")
-    }
+    // NOTE: BFS, DFS, and Connected Components tests removed as these are already
+    // tested in GraphTraversalTests.swift with the existing implementations
 
     // MARK: - Graph Properties Tests
 
     func testGraphPropertiesBasic() {
         let graph = createSimpleGraph()
-        let properties = GraphPrimitivesKernels.computeGraphProperties(matrix: graph, directed: true)
+        let properties = GraphPrimitivesKernels.computeGraphProperties(
+            matrix: graph,
+            options: GraphPrimitivesKernels.GraphPropertiesOptions(directed: true)
+        )
 
         XCTAssertGreaterThan(properties.diameter, 0, "Diameter should be positive")
         XCTAssertGreaterThan(properties.radius, 0, "Radius should be positive")
@@ -180,7 +104,10 @@ final class GraphAnalysisPart2Tests: XCTestCase {
 
     func testDegreeDistribution() {
         let graph = createCompleteGraph(n: 5)
-        let properties = GraphPrimitivesKernels.computeGraphProperties(matrix: graph, directed: false)
+        let properties = GraphPrimitivesKernels.computeGraphProperties(
+            matrix: graph,
+            options: GraphPrimitivesKernels.GraphPropertiesOptions(directed: false)
+        )
 
         let degDist = properties.degreeDistribution
         XCTAssertEqual(degDist.degrees.count, 5)
@@ -191,19 +118,28 @@ final class GraphAnalysisPart2Tests: XCTestCase {
 
     func testBipartiteness() {
         let bipartiteGraph = createBipartiteGraph()
-        let properties = GraphPrimitivesKernels.computeGraphProperties(matrix: bipartiteGraph, directed: false)
+        let properties = GraphPrimitivesKernels.computeGraphProperties(
+            matrix: bipartiteGraph,
+            options: GraphPrimitivesKernels.GraphPropertiesOptions(directed: false)
+        )
 
         XCTAssertTrue(properties.isBipartite, "K(3,3) should be bipartite")
 
         // Test non-bipartite graph (triangle)
         let triangleGraph = createCompleteGraph(n: 3)
-        let triangleProperties = GraphPrimitivesKernels.computeGraphProperties(matrix: triangleGraph, directed: false)
+        let triangleProperties = GraphPrimitivesKernels.computeGraphProperties(
+            matrix: triangleGraph,
+            options: GraphPrimitivesKernels.GraphPropertiesOptions(directed: false)
+        )
         XCTAssertFalse(triangleProperties.isBipartite, "Triangle should not be bipartite")
     }
 
     func testAssortativity() {
         let graph = createCompleteGraph(n: 5)
-        let properties = GraphPrimitivesKernels.computeGraphProperties(matrix: graph, directed: false)
+        let properties = GraphPrimitivesKernels.computeGraphProperties(
+            matrix: graph,
+            options: GraphPrimitivesKernels.GraphPropertiesOptions(directed: false)
+        )
 
         // Complete graph has neutral assortativity (all nodes have same degree)
         XCTAssertTrue(abs(properties.assortativity - 1.0) < 0.1 || abs(properties.assortativity) < 0.1,
@@ -257,7 +193,10 @@ final class GraphAnalysisPart2Tests: XCTestCase {
             values: values
         )
 
-        let motifs = GraphPrimitivesKernels.detectMotifs(matrix: graph, motifSizes: [3])
+        let motifs = GraphPrimitivesKernels.detectMotifs(
+            matrix: graph,
+            options: GraphPrimitivesKernels.MotifDetectionOptions(motifSizes: [3])
+        )
 
         if let triangleCount = motifs.motifCounts[.triangle] {
             XCTAssertGreaterThan(triangleCount, 0, "K4 should have triangles")
@@ -268,7 +207,10 @@ final class GraphAnalysisPart2Tests: XCTestCase {
 
     func test4NodeMotifs() {
         let graph = createCompleteGraph(n: 5)
-        let motifs = GraphPrimitivesKernels.detectMotifs(matrix: graph, motifSizes: [4])
+        let motifs = GraphPrimitivesKernels.detectMotifs(
+            matrix: graph,
+            options: GraphPrimitivesKernels.MotifDetectionOptions(motifSizes: [4])
+        )
 
         // K5 should have many 4-node motifs
         if let squareCount = motifs.motifCounts[.square] {
@@ -325,7 +267,10 @@ final class GraphAnalysisPart2Tests: XCTestCase {
         let graph = createCompleteGraph(n: 50)
 
         measure {
-            _ = GraphPrimitivesKernels.computeGraphProperties(matrix: graph, directed: false)
+            _ = GraphPrimitivesKernels.computeGraphProperties(
+                matrix: graph,
+                options: GraphPrimitivesKernels.GraphPropertiesOptions(directed: false)
+            )
         }
     }
 
@@ -341,7 +286,10 @@ final class GraphAnalysisPart2Tests: XCTestCase {
         let graph = createCompleteGraph(n: 20)
 
         measure {
-            _ = GraphPrimitivesKernels.detectMotifs(matrix: graph, motifSizes: [3, 4])
+            _ = GraphPrimitivesKernels.detectMotifs(
+                matrix: graph,
+                options: GraphPrimitivesKernels.MotifDetectionOptions(motifSizes: [3, 4])
+            )
         }
     }
 }

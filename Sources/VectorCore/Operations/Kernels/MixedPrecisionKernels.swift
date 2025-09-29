@@ -15,9 +15,22 @@ import simd
 public struct Vector512FP16: Sendable {
     public let storage: ContiguousArray<SIMD4<Float16>>  // 128 lanes
 
+    // FP16 range constants
+    private static let fp16Max: Float = 65504.0
+    private static let fp16Min: Float = -65504.0
+
     public init(from vector: Vector512Optimized) {
-        // Efficient FP32→FP16 conversion using Swift's automatic NEON intrinsics
-        let fp16Storage = vector.storage.map { SIMD4<Float16>($0) }
+        // Efficient FP32→FP16 conversion with clamping for finite out-of-range values
+        let fp16Storage = vector.storage.map { simd4 in
+            // Clamp finite values to FP16 range, preserve infinity and NaN
+            let clamped = SIMD4<Float>(
+                simd4.x.isNaN || simd4.x.isInfinite ? simd4.x : max(Self.fp16Min, min(Self.fp16Max, simd4.x)),
+                simd4.y.isNaN || simd4.y.isInfinite ? simd4.y : max(Self.fp16Min, min(Self.fp16Max, simd4.y)),
+                simd4.z.isNaN || simd4.z.isInfinite ? simd4.z : max(Self.fp16Min, min(Self.fp16Max, simd4.z)),
+                simd4.w.isNaN || simd4.w.isInfinite ? simd4.w : max(Self.fp16Min, min(Self.fp16Max, simd4.w))
+            )
+            return SIMD4<Float16>(clamped)
+        }
         self.storage = ContiguousArray(fp16Storage)
     }
 
@@ -41,8 +54,22 @@ public struct Vector512FP16: Sendable {
 public struct Vector768FP16: Sendable {
     public let storage: ContiguousArray<SIMD4<Float16>>  // 192 lanes
 
+    // FP16 range constants
+    private static let fp16Max: Float = 65504.0
+    private static let fp16Min: Float = -65504.0
+
     public init(from vector: Vector768Optimized) {
-        let fp16Storage = vector.storage.map { SIMD4<Float16>($0) }
+        // Efficient FP32→FP16 conversion with clamping for finite out-of-range values
+        let fp16Storage = vector.storage.map { simd4 in
+            // Clamp finite values to FP16 range, preserve infinity and NaN
+            let clamped = SIMD4<Float>(
+                simd4.x.isNaN || simd4.x.isInfinite ? simd4.x : max(Self.fp16Min, min(Self.fp16Max, simd4.x)),
+                simd4.y.isNaN || simd4.y.isInfinite ? simd4.y : max(Self.fp16Min, min(Self.fp16Max, simd4.y)),
+                simd4.z.isNaN || simd4.z.isInfinite ? simd4.z : max(Self.fp16Min, min(Self.fp16Max, simd4.z)),
+                simd4.w.isNaN || simd4.w.isInfinite ? simd4.w : max(Self.fp16Min, min(Self.fp16Max, simd4.w))
+            )
+            return SIMD4<Float16>(clamped)
+        }
         self.storage = ContiguousArray(fp16Storage)
     }
 
@@ -65,8 +92,22 @@ public struct Vector768FP16: Sendable {
 public struct Vector1536FP16: Sendable {
     public let storage: ContiguousArray<SIMD4<Float16>>  // 384 lanes
 
+    // FP16 range constants
+    private static let fp16Max: Float = 65504.0
+    private static let fp16Min: Float = -65504.0
+
     public init(from vector: Vector1536Optimized) {
-        let fp16Storage = vector.storage.map { SIMD4<Float16>($0) }
+        // Efficient FP32→FP16 conversion with clamping for finite out-of-range values
+        let fp16Storage = vector.storage.map { simd4 in
+            // Clamp finite values to FP16 range, preserve infinity and NaN
+            let clamped = SIMD4<Float>(
+                simd4.x.isNaN || simd4.x.isInfinite ? simd4.x : max(Self.fp16Min, min(Self.fp16Max, simd4.x)),
+                simd4.y.isNaN || simd4.y.isInfinite ? simd4.y : max(Self.fp16Min, min(Self.fp16Max, simd4.y)),
+                simd4.z.isNaN || simd4.z.isInfinite ? simd4.z : max(Self.fp16Min, min(Self.fp16Max, simd4.z)),
+                simd4.w.isNaN || simd4.w.isInfinite ? simd4.w : max(Self.fp16Min, min(Self.fp16Max, simd4.w))
+            )
+            return SIMD4<Float16>(clamped)
+        }
         self.storage = ContiguousArray(fp16Storage)
     }
 
@@ -525,7 +566,14 @@ public struct SoAFP16<VectorType: OptimizedVector>: Sendable {
             for dimIndex in blockStart..<blockEnd {
                 for vectorIndex in 0..<vectorCount {
                     let value = vectors[vectorIndex][dimIndex]
-                    blockElements.append(Float16(value))
+                    // Clamp finite values to FP16 range, preserve infinity and NaN
+                    let clampedValue: Float
+                    if value.isNaN || value.isInfinite {
+                        clampedValue = value
+                    } else {
+                        clampedValue = max(-65504.0, min(65504.0, value))
+                    }
+                    blockElements.append(Float16(clampedValue))
                 }
             }
 

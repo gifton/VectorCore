@@ -77,7 +77,7 @@ final class GraphAnalysisTests: XCTestCase {
 
     // MARK: - PageRank Tests
 
-    func testPageRankBasic() {
+    func testPageRankBasic() async {
         let graph = createTestGraph()
         let options = GraphPrimitivesKernels.PageRankOptions(
             dampingFactor: 0.85,
@@ -85,7 +85,7 @@ final class GraphAnalysisTests: XCTestCase {
             maxIterations: 100
         )
 
-        let result = GraphPrimitivesKernels.pageRank(matrix: graph, options: options)
+        let result = await GraphPrimitivesKernels.pageRank(matrix: graph, options: options)
 
         XCTAssertEqual(result.scores.count, 4)
         XCTAssertTrue(result.converged, "PageRank should converge")
@@ -100,7 +100,7 @@ final class GraphAnalysisTests: XCTestCase {
         XCTAssertEqual(maxIndex, 2, "Node 2 should have highest PageRank")
     }
 
-    func testPageRankPersonalized() {
+    func testPageRankPersonalized() async {
         let graph = createTestGraph()
         let personalization: [Int32: Float] = [0: 1.0] // Personalized to node 0
 
@@ -111,14 +111,14 @@ final class GraphAnalysisTests: XCTestCase {
             personalized: personalization
         )
 
-        let result = GraphPrimitivesKernels.pageRank(matrix: graph, options: options)
+        let result = await GraphPrimitivesKernels.pageRank(matrix: graph, options: options)
 
         XCTAssertTrue(result.converged)
         // Node 0 and its neighbors should have higher scores
         XCTAssertGreaterThan(result.scores[0], 0.2, "Node 0 should have high score in personalized PageRank")
     }
 
-    func testPageRankDanglingNodes() {
+    func testPageRankDanglingNodes() async {
         // Create graph with dangling node (no outgoing edges)
         let rows = 3
         let cols = 3
@@ -134,7 +134,7 @@ final class GraphAnalysisTests: XCTestCase {
             values: values
         )
 
-        let result = GraphPrimitivesKernels.pageRank(matrix: graph)
+        let result = await GraphPrimitivesKernels.pageRank(matrix: graph)
 
         XCTAssertTrue(result.converged)
         let sum = result.scores.reduce(0, +)
@@ -143,7 +143,7 @@ final class GraphAnalysisTests: XCTestCase {
 
     // MARK: - Betweenness Centrality Tests
 
-    func testBetweennessCentralityBasic() {
+    func testBetweennessCentralityBasic() async {
         let graph = createTestGraph()
         let options = GraphPrimitivesKernels.BetweennessCentralityOptions(
             normalized: true,
@@ -151,7 +151,7 @@ final class GraphAnalysisTests: XCTestCase {
             parallel: false
         )
 
-        let centrality = GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
+        let centrality = await GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
 
         XCTAssertEqual(centrality.count, 4)
         // All values should be non-negative
@@ -160,7 +160,7 @@ final class GraphAnalysisTests: XCTestCase {
         }
     }
 
-    func testBetweennessCentralityWeighted() {
+    func testBetweennessCentralityWeighted() async {
         let graph = createWeightedGraph()
         let options = GraphPrimitivesKernels.BetweennessCentralityOptions(
             normalized: true,
@@ -168,7 +168,7 @@ final class GraphAnalysisTests: XCTestCase {
             parallel: false
         )
 
-        let centrality = GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
+        let centrality = await GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
 
         XCTAssertEqual(centrality.count, 4)
         // Check that at least one node has non-zero centrality
@@ -176,7 +176,7 @@ final class GraphAnalysisTests: XCTestCase {
         XCTAssertGreaterThan(maxCentrality, 0, "At least one node should have non-zero centrality")
     }
 
-    func testBetweennessCentralityApproximate() {
+    func testBetweennessCentralityApproximate() async {
         let graph = createLineGraph(n: 10)
         let options = GraphPrimitivesKernels.BetweennessCentralityOptions(
             normalized: true,
@@ -185,7 +185,7 @@ final class GraphAnalysisTests: XCTestCase {
             sampleSize: 5
         )
 
-        let centrality = GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
+        let centrality = await GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
 
         XCTAssertEqual(centrality.count, 10)
         // Middle nodes should have higher centrality in a line graph
@@ -194,7 +194,7 @@ final class GraphAnalysisTests: XCTestCase {
         XCTAssertGreaterThan(centrality[middleIndex], centrality[9], "Middle nodes should have higher centrality")
     }
 
-    func testBetweennessCentralityParallel() {
+    func testBetweennessCentralityParallel() async {
         let graph = createLineGraph(n: 20)
         let serialOptions = GraphPrimitivesKernels.BetweennessCentralityOptions(
             normalized: true,
@@ -205,13 +205,13 @@ final class GraphAnalysisTests: XCTestCase {
             parallel: true
         )
 
-        let serialCentrality = GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: serialOptions)
-        let parallelCentrality = GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: parallelOptions)
+        let serialCentrality = await GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: serialOptions)
+        let parallelCentrality = await GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: parallelOptions)
 
         // Results should be approximately the same
         for i in 0..<serialCentrality.count {
             XCTAssertEqual(serialCentrality[i], parallelCentrality[i], accuracy: 1e-5,
-                          "Serial and parallel results should match")
+                           "Serial and parallel results should match")
         }
     }
 
@@ -370,14 +370,14 @@ final class GraphAnalysisTests: XCTestCase {
 
     // MARK: - Performance Tests
 
-    func testPageRankPerformance() {
+    func testPageRankPerformance() async {
         measure {
             let graph = createLineGraph(n: 100)
-            _ = GraphPrimitivesKernels.pageRank(matrix: graph)
+            _ = await GraphPrimitivesKernels.pageRank(matrix: graph)
         }
     }
 
-    func testBetweennessCentralityPerformance() {
+    func testBetweennessCentralityPerformance() async {
         let graph = createLineGraph(n: 50)
         let options = GraphPrimitivesKernels.BetweennessCentralityOptions(
             normalized: true,
@@ -386,7 +386,7 @@ final class GraphAnalysisTests: XCTestCase {
         )
 
         measure {
-            _ = GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
+            _ = await GraphPrimitivesKernels.betweennessCentrality(matrix: graph, options: options)
         }
     }
 

@@ -2,6 +2,7 @@
   "metadata" : {
     "arch" : "arm64",
     "buildConfiguration" : "release",
+    "cpuCores" : 8,
     "date" : "2025-09-17T04:42:21Z",
     "deviceModel" : "arm64",
     "dims" : [

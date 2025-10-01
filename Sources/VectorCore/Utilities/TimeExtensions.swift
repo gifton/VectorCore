@@ -7,4 +7,3 @@ extension Duration {
         return Double(sec) * 1_000_000_000 + Double(attos) * 1e-9
     }
 }
-

@@ -46,7 +46,7 @@ final class LSHVerificationTests: XCTestCase {
         // We can't directly test private getBucketKey, but we can verify consistency
 
         let dimension = 10
-        let vectors = ContiguousArray((0..<5).map { i in
+        let vectors = ContiguousArray((0..<5).map { _ in
             ContiguousArray<Float>((0..<dimension).map { _ in Float.random(in: -1...1) })
         })
 
@@ -144,7 +144,7 @@ final class LSHVerificationTests: XCTestCase {
 
     // MARK: - Integration Test
 
-    func testFullIntegration() {
+    func testFullIntegration() async {
         // Test that all components work together
         let vectors = ContiguousArray((0..<50).map { i in
             ContiguousArray<Float>([
@@ -161,7 +161,7 @@ final class LSHVerificationTests: XCTestCase {
             symmetric: true
         )
 
-        let knnGraph = GraphConstructionKernels.buildKNNGraph(
+        let knnGraph = await GraphConstructionKernels.buildKNNGraph(
             vectors: vectors,
             options: knnOptions
         )

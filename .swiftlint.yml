@@ -52,7 +52,9 @@ cyclomatic_complexity:
   error: 30
 
 identifier_name:
-  min_length: 2
+  min_length: 1  # Allow single-letter variables
+  max_length: 60  # Allow long descriptive names
+  allowed_symbols: ["_"]  # Allow underscores in names (vec1_fp16, d_ik, P_eff, N_star)
   excluded:
     # Common loop indices
     - i
@@ -63,7 +65,7 @@ identifier_name:
     - y
     - z
     - w
-    # Mathematical variables
+    # Mathematical variables (lowercase)
     - a  # First operand
     - b  # Second operand
     - c  # Third operand/result
@@ -81,6 +83,36 @@ identifier_name:
     - v  # Vector
     - o  # Output/offset
     - f  # Float/function
+    # Mathematical variables (uppercase by convention - linear algebra, matrices, dimensions)
+    - A
+    - B
+    - C
+    - D
+    - E
+    - F
+    - G
+    - H
+    - I
+    - J
+    - K
+    - L
+    - M
+    - N
+    - O
+    - P
+    - Q
+    - R
+    - S
+    - T
+    - U
+    - V
+    - W
+    - X
+    - Y
+    - Z
+    - P_eff  # Effective parallelism
+    - N_star  # Optimal batch size
+    - Tp  # Thread pool size
     # Other
     - id
     - op  # Operation

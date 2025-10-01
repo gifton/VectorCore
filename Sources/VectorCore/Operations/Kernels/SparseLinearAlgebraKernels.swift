@@ -102,7 +102,7 @@ extension GraphPrimitivesKernels {
         A: SparseMatrix,
         B: SparseMatrix,
         options: SpGEMMOptions = SpGEMMOptions()
-    ) throws -> SparseMatrix {
+    ) async throws -> SparseMatrix {
         guard A.cols == B.rows else {
             throw SparseMatrixError.invalidDimensions(
                 "Matrix dimensions incompatible: A.cols (\(A.cols)) != B.rows (\(B.rows))"
@@ -115,7 +115,7 @@ extension GraphPrimitivesKernels {
             try validateCSRFormat(B)
         }
 
-        return try parallelSpGEMM(A: A, B: B, options: options)
+        return try await parallelSpGEMM(A: A, B: B, options: options)
     }
 
     // MARK: - Parallel SpGEMM with Improved Load Balancing
@@ -124,7 +124,7 @@ extension GraphPrimitivesKernels {
         A: SparseMatrix,
         B: SparseMatrix,
         options: SpGEMMOptions
-    ) throws -> SparseMatrix {
+    ) async throws -> SparseMatrix {
         let m = A.rows
         let n = B.cols
         let numThreads = ProcessInfo.processInfo.activeProcessorCount
@@ -141,7 +141,7 @@ extension GraphPrimitivesKernels {
         // Thread-local results with pre-allocation hints
         // Use a class to safely share mutable state across concurrent tasks
         final class ThreadSafeResults: @unchecked Sendable {
-            var results: Array<SpGEMMResult?>
+            var results: [SpGEMMResult?]
             var lock = os_unfair_lock_s()
 
             init(count: Int) {
@@ -159,24 +159,33 @@ extension GraphPrimitivesKernels {
 
         let threadSafeResults = ThreadSafeResults(count: rowPartitions.count)
 
-        // Execute SpGEMM chunks concurrently
-        DispatchQueue.concurrentPerform(iterations: rowPartitions.count) { threadId in
-            let (startRow, endRow) = rowPartitions[threadId]
-            guard startRow < endRow else { return }
+        // Execute SpGEMM chunks concurrently with TaskGroup
+        let numTasks = rowPartitions.count
 
-            do {
-                let result = try computeSpGEMMChunk(
-                    A: A, B: B,
-                    startRow: startRow,
-                    endRow: endRow,
-                    options: options
-                )
+        await withTaskGroup(of: Void.self) { group in
+            for taskId in 0..<numTasks {
+                group.addTask {
+                    let (startRow, endRow) = rowPartitions[taskId]
+                    guard startRow < endRow else { return }
 
-                threadSafeResults.setResult(result, at: threadId)
-            } catch {
-                // Handle error - in production, might want to propagate
-                print("Thread \(threadId) failed: \(error)")
+                    if Task.isCancelled { return }
+
+                    do {
+                        let result = try computeSpGEMMChunk(
+                            A: A, B: B,
+                            startRow: startRow,
+                            endRow: endRow,
+                            options: options
+                        )
+
+                        threadSafeResults.setResult(result, at: taskId)
+                    } catch {
+                        // Handle error - in production, might want to propagate
+                        print("Task \(taskId) failed: \(error)")
+                    }
+                }
             }
+            await group.waitForAll()
         }
 
         // Filter out nil results and merge
@@ -575,7 +584,7 @@ extension GraphPrimitivesKernels {
 
         // Allocate CSC arrays
         var rowIndices = ContiguousArray<UInt32>(repeating: 0, count: nnz)
-        var values: ContiguousArray<Float>? = nil
+        var values: ContiguousArray<Float>?
         if matrix.values != nil {
             values = ContiguousArray<Float>(repeating: 0, count: nnz)
         }

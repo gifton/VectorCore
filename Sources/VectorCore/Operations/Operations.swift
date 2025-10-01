@@ -296,7 +296,7 @@ public enum Operations {
         }()
 
         // Decide parallelism using AutoTuning if available; otherwise fallback heuristic
-        var tunedMinChunk: Int? = nil
+        var tunedMinChunk: Int?
         var parallel: Bool
         if let kind = {
             switch metricClass {

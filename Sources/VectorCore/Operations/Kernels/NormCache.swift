@@ -157,4 +157,3 @@ public enum CosineBatchHelpers {
         candidates.map { (try? $0.normalized().get()) ?? $0 }
     }
 }
-

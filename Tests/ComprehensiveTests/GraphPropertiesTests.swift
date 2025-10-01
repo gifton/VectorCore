@@ -143,7 +143,7 @@ final class GraphPropertiesTests: XCTestCase {
 
         // Complete graph has neutral assortativity (all nodes have same degree)
         XCTAssertTrue(abs(properties.assortativity - 1.0) < 0.1 || abs(properties.assortativity) < 0.1,
-                     "Complete graph should have neutral or perfect assortativity")
+                      "Complete graph should have neutral or perfect assortativity")
     }
 
     // MARK: - K-Core Decomposition Tests
@@ -240,7 +240,7 @@ final class GraphPropertiesTests: XCTestCase {
             for idx in rowStart..<rowEnd {
                 let j = Int(graph.columnIndices[idx])
                 XCTAssertNotEqual(result.colors[i], result.colors[j],
-                                 "Adjacent nodes should have different colors")
+                                  "Adjacent nodes should have different colors")
             }
         }
     }

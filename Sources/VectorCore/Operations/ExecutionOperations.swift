@@ -38,7 +38,7 @@ extension ExecutionOperations {
     ) async throws -> [(index: Int, distance: Float)] where M.Scalar == Float, V.Scalar == Float {
 
         let count = vectors.count
-        guard count > 0 else { return [] }
+        guard !isEmpty else { return [] }
         guard k > 0 else { return [] }
 
         // Validate dimensions

@@ -121,7 +121,7 @@ struct CosineKernelsTests {
 }
 
 // Simple deterministic RNG for tests
-fileprivate struct SeededRandom {
+private struct SeededRandom {
     private var state: UInt64
     init(seed: UInt64) { self.state = seed &* 0x9E3779B97F4A7C15 }
     mutating func next() -> UInt64 {
@@ -138,4 +138,3 @@ fileprivate struct SeededRandom {
         return range.lowerBound + (range.upperBound - range.lowerBound) * f
     }
 }
-

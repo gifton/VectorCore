@@ -2248,7 +2248,7 @@ struct HierarchicalClusteringKernelsTests {
 
             // Find root (node with highest merge distance)
             let rootNode = dendrogram.nodes.max(by: { $0.mergeDistance < $1.mergeDistance })!
-            let newickString = exportNewick(node: rootNode, nodes: dendrogram.nodes)
+            let newickString = exportNewick(node: rootNode, nodes: Array(dendrogram.nodes))
 
             #expect(newickString.contains("("), "Newick format should have parentheses")
             #expect(newickString.contains(":"), "Newick format should have branch lengths")
@@ -2288,7 +2288,7 @@ struct HierarchicalClusteringKernelsTests {
                 }
             }
 
-            let d3Tree = exportD3(node: rootNode, nodes: dendrogram.nodes)
+            let d3Tree = exportD3(node: rootNode, nodes: Array(dendrogram.nodes))
 
             #expect(d3Tree.children != nil, "Root should have children")
             #expect(d3Tree.value != nil, "Root should have merge distance value")

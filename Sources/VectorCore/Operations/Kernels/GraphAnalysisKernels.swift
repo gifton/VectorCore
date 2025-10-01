@@ -15,7 +15,7 @@ extension GraphPrimitivesKernels {
 
     // MARK: - PageRank Types
 
-    public struct PageRankOptions {
+    public struct PageRankOptions: Sendable {
         public let dampingFactor: Float
         public let tolerance: Float
         public let maxIterations: Int
@@ -49,7 +49,7 @@ extension GraphPrimitivesKernels {
     public static func pageRank(
         matrix: SparseMatrix,
         options: PageRankOptions = PageRankOptions()
-    ) -> PageRankResult {
+    ) async -> PageRankResult {
         let n = matrix.rows
         let damping = options.dampingFactor
         let tolerance = options.tolerance
@@ -92,7 +92,7 @@ extension GraphPrimitivesKernels {
 
         while iteration < options.maxIterations && !converged {
             if options.parallel && n > 1000 {
-                parallelPageRankIteration(
+                await parallelPageRankIteration(
                     matrix: matrix,
                     scores: scores,
                     newScores: &newScores,
@@ -176,7 +176,7 @@ extension GraphPrimitivesKernels {
         outDegrees: ContiguousArray<Int>,
         damping: Float,
         personalization: ContiguousArray<Float>
-    ) {
+    ) async {
         let n = matrix.rows
 
         // Initialize new scores
@@ -184,56 +184,86 @@ extension GraphPrimitivesKernels {
             newScores[i] = (1.0 - damping) * personalization[i]
         }
 
-        // Use atomic buffer for thread-safe updates
-        let atomicBuffer = UnsafeMutablePointer<Float>.allocate(capacity: n)
+        // Use Sendable buffer wrapper for thread-safe concurrent access
+        let bufferWrapper = SendableBufferWrapper<Float>(capacity: n)
         newScores.withUnsafeBufferPointer { ptr in
-            atomicBuffer.initialize(from: ptr.baseAddress!, count: n)
+            bufferWrapper.pointer.initialize(from: ptr.baseAddress!, count: n)
         }
 
         defer {
-            // Copy back and cleanup
+            // Copy back to newScores
             for i in 0..<n {
-                newScores[i] = atomicBuffer[i]
+                newScores[i] = bufferWrapper.pointer[i]
             }
-            atomicBuffer.deinitialize(count: n)
-            atomicBuffer.deallocate()
         }
 
         // Use striped locking for thread-safe updates
         let stripeCount = 128
         let locks = (0..<stripeCount).map { _ in NSLock() }
 
-        DispatchQueue.concurrentPerform(iterations: n) { i in
-            if outDegrees[i] > 0 {
-                let contribution = damping * scores[i] / Float(outDegrees[i])
+        // Use 2x oversubscription for better load balancing
+        let numProcessors = ProcessInfo.processInfo.activeProcessorCount
+        let numTasks = numProcessors * 2
+        let chunkSize = (n + numTasks - 1) / numTasks
 
-                let rowStart = Int(matrix.rowPointers[i])
-                let rowEnd = Int(matrix.rowPointers[i + 1])
+        await withTaskGroup(of: Void.self) { group in
+            for taskId in 0..<numTasks {
+                group.addTask {
+                    let start = taskId * chunkSize
+                    let end = min((taskId + 1) * chunkSize, n)
+                    guard start < n else { return }
 
-                for idx in rowStart..<rowEnd {
-                    let j = Int(matrix.columnIndices[idx])
+                    for i in start..<end {
+                        // Check for cancellation at chunk boundaries
+                        if Task.isCancelled {
+                            return
+                        }
 
-                    let lock = locks[j % stripeCount]
-                    lock.lock()
-                    atomicBuffer[j] += contribution
-                    lock.unlock()
-                }
-            } else {
-                // Handle dangling nodes
-                let contribution = damping * scores[i] / Float(n)
-                for j in 0..<n {
-                    let lock = locks[j % stripeCount]
-                    lock.lock()
-                    atomicBuffer[j] += contribution
-                    lock.unlock()
+                        // Yield periodically for fairness
+                        if (i - start) % 500 == 0 {
+                            await Task.yield()
+                        }
+
+                        // Perform locked updates in a non-async context
+                        let performUpdate: () -> Void = {
+                            if outDegrees[i] > 0 {
+                                let contribution = damping * scores[i] / Float(outDegrees[i])
+
+                                let rowStart = Int(matrix.rowPointers[i])
+                                let rowEnd = Int(matrix.rowPointers[i + 1])
+
+                                for idx in rowStart..<rowEnd {
+                                    let j = Int(matrix.columnIndices[idx])
+
+                                    let lock = locks[j % stripeCount]
+                                    lock.lock()
+                                    bufferWrapper.pointer[j] += contribution
+                                    lock.unlock()
+                                }
+                            } else {
+                                // Handle dangling nodes
+                                let contribution = damping * scores[i] / Float(n)
+                                for j in 0..<n {
+                                    let lock = locks[j % stripeCount]
+                                    lock.lock()
+                                    bufferWrapper.pointer[j] += contribution
+                                    lock.unlock()
+                                }
+                            }
+                        }
+                        performUpdate()
+                    }
                 }
             }
+
+            // Wait for all tasks to complete
+            await group.waitForAll()
         }
     }
 
     // MARK: - Betweenness Centrality
 
-    public struct BetweennessCentralityOptions {
+    public struct BetweennessCentralityOptions: Sendable {
         public let normalized: Bool
         public let weighted: Bool
         public let approximate: Bool
@@ -258,7 +288,7 @@ extension GraphPrimitivesKernels {
     public static func betweennessCentrality(
         matrix: SparseMatrix,
         options: BetweennessCentralityOptions = BetweennessCentralityOptions()
-    ) -> ContiguousArray<Float> {
+    ) async -> ContiguousArray<Float> {
         let n = matrix.rows
         var centrality = ContiguousArray<Float>(repeating: 0.0, count: n)
 
@@ -272,42 +302,67 @@ extension GraphPrimitivesKernels {
         }
 
         if options.parallel && sources.count > 10 {
-            // Parallel computation with thread-local storage
-            let numThreads = min(ProcessInfo.processInfo.activeProcessorCount, sources.count)
-            let chunkSize = (sources.count + numThreads - 1) / numThreads
+            // Use 2x oversubscription for better load balancing
+            let numProcessors = ProcessInfo.processInfo.activeProcessorCount
+            let numTasks = min(numProcessors * 2, sources.count)
+            let chunkSize = (sources.count + numTasks - 1) / numTasks
 
-            var threadLocalCentrality = Array(repeating: ContiguousArray<Float>(repeating: 0.0, count: n), count: numThreads)
-
-            DispatchQueue.concurrentPerform(iterations: numThreads) { t in
-                let start = t * chunkSize
-                let end = min((t + 1) * chunkSize, sources.count)
-
-                var localCentrality = ContiguousArray<Float>(repeating: 0.0, count: n)
-
-                // Guard against invalid range when start >= end
-                guard start < end else { return }
-
-                for idx in start..<end {
-                    let source = sources[idx]
-                    let contribution = computeBetweennessContribution(
-                        matrix: matrix,
-                        source: source,
-                        weighted: options.weighted
-                    )
-
-                    // Accumulate locally using vDSP_vadd
-                    localCentrality.withUnsafeMutableBufferPointer { destPtr in
-                        contribution.withUnsafeBufferPointer { srcPtr in
-                            vDSP_vadd(destPtr.baseAddress!, 1, srcPtr.baseAddress!, 1, destPtr.baseAddress!, 1, vDSP_Length(n))
+            // Use TaskGroup for structured concurrency
+            let allLocalCentrality = await withTaskGroup(
+                of: ContiguousArray<Float>.self,
+                returning: [ContiguousArray<Float>].self
+            ) { group in
+                // Schedule tasks
+                for taskId in 0..<numTasks {
+                    group.addTask {
+                        let start = taskId * chunkSize
+                        let end = min((taskId + 1) * chunkSize, sources.count)
+                        guard start < end else {
+                            return ContiguousArray<Float>(repeating: 0.0, count: n)
                         }
+
+                        var localCentrality = ContiguousArray<Float>(repeating: 0.0, count: n)
+
+                        for idx in start..<end {
+                            // Check for cancellation
+                            if Task.isCancelled {
+                                return localCentrality
+                            }
+
+                            // Yield periodically for fairness
+                            if (idx - start) % 100 == 0 {
+                                await Task.yield()
+                            }
+
+                            let source = sources[idx]
+                            let contribution = computeBetweennessContribution(
+                                matrix: matrix,
+                                source: source,
+                                weighted: options.weighted
+                            )
+
+                            // Accumulate locally using vDSP_vadd
+                            localCentrality.withUnsafeMutableBufferPointer { destPtr in
+                                contribution.withUnsafeBufferPointer { srcPtr in
+                                    vDSP_vadd(destPtr.baseAddress!, 1, srcPtr.baseAddress!, 1, destPtr.baseAddress!, 1, vDSP_Length(n))
+                                }
+                            }
+                        }
+
+                        return localCentrality
                     }
                 }
 
-                threadLocalCentrality[t] = localCentrality
+                // Collect results from all tasks
+                var results: [ContiguousArray<Float>] = []
+                for await localCentrality in group {
+                    results.append(localCentrality)
+                }
+                return results
             }
 
             // Reduction phase
-            for localCentrality in threadLocalCentrality {
+            for localCentrality in allLocalCentrality {
                 centrality.withUnsafeMutableBufferPointer { destPtr in
                     localCentrality.withUnsafeBufferPointer { srcPtr in
                         vDSP_vadd(destPtr.baseAddress!, 1, srcPtr.baseAddress!, 1, destPtr.baseAddress!, 1, vDSP_Length(n))
@@ -446,7 +501,7 @@ extension GraphPrimitivesKernels {
 
     // MARK: - Eigenvector Centrality
 
-    public struct EigenvectorCentralityOptions {
+    public struct EigenvectorCentralityOptions: Sendable {
         public let tolerance: Float
         public let maxIterations: Int
         public let startVector: ContiguousArray<Float>?
@@ -518,7 +573,7 @@ extension GraphPrimitivesKernels {
 
     // MARK: - Community Detection (Louvain Algorithm)
 
-    public struct CommunityDetectionOptions {
+    public struct CommunityDetectionOptions: Sendable {
         public let resolution: Float
         public let randomSeed: Int?
         public let maxIterations: Int
@@ -1037,5 +1092,463 @@ private struct SeededRandomNumberGenerator: RandomNumberGenerator {
     mutating func next() -> UInt64 {
         state = state &* 6364136223846793005 &+ 1442695040888963407
         return state
+    }
+}
+
+// MARK: - Advanced Centrality Measures
+
+extension GraphPrimitivesKernels {
+
+    // MARK: - 1. Strongly Connected Components (Tarjan's Algorithm)
+
+    /// Internal state management for Tarjan's algorithm.
+    /// Optimized using arrays for O(1) access, assuming contiguous node IDs 0..N-1.
+    private struct TarjanState {
+        var index: Int = 0                    // Global DFS counter
+        var stack: [Int] = []                 // DFS stack
+        var onStack: [Bool]                   // O(1) membership check
+        var indices: [Int]                    // node -> discovery time (-1 if unvisited)
+        var lowLinks: [Int]                   // node -> lowest reachable index
+        var sccs: [Set<Int>] = []             // Result accumulator
+
+        init(nodeCount: Int) {
+            self.indices = Array(repeating: -1, count: nodeCount)
+            self.lowLinks = Array(repeating: -1, count: nodeCount)
+            self.onStack = Array(repeating: false, count: nodeCount)
+            self.stack.reserveCapacity(nodeCount)
+        }
+    }
+
+    /// Find strongly connected components using Tarjan's algorithm.
+    ///
+    /// A strongly connected component (SCC) is a maximal set of vertices where
+    /// every vertex is reachable from every other vertex in the set.
+    ///
+    /// # Algorithm
+    /// Tarjan's single-pass DFS with discovery times and low-link values.
+    /// Iterative implementation to avoid stack overflow on deep graphs.
+    ///
+    /// # Complexity
+    /// - Time: O(V + E)
+    /// - Space: O(V)
+    ///
+    /// # Parameters
+    /// - `graph`: Directed graph in CSR format
+    ///
+    /// # Returns
+    /// Array of SCCs, each SCC is a `Set<Int>` of node IDs
+    ///
+    /// # Example
+    /// ```swift
+    /// let graph = SparseMatrix(...)
+    /// let sccs = GraphPrimitivesKernels.findStronglyConnectedComponents(graph: graph)
+    /// print("Found \(sccs.count) strongly connected components")
+    /// ```
+    public static func findStronglyConnectedComponents(
+        graph: SparseMatrix
+    ) -> [Set<Int>] {
+        let nodeCount = graph.rows
+        var state = TarjanState(nodeCount: nodeCount)
+
+        // Iterate over all nodes to handle disconnected components
+        for v in 0..<nodeCount {
+            if state.indices[v] == -1 {
+                tarjanDFSIterative(v, graph: graph, state: &state)
+            }
+        }
+
+        return state.sccs
+    }
+
+    /// Iterative DFS for Tarjan's algorithm (stack-overflow safe).
+    ///
+    /// Uses explicit call stack to simulate recursion. Each frame tracks:
+    /// - Current node
+    /// - Neighbor iteration index
+    /// - Whether we're returning from a child call
+    private static func tarjanDFSIterative(_ start: Int, graph: SparseMatrix, state: inout TarjanState) {
+        // Call stack: (node, neighborIndex, isReturning)
+        var callStack: [(node: Int, neighborIdx: Int, returning: Bool)] = [(start, 0, false)]
+
+        while !callStack.isEmpty {
+            var frame = callStack.removeLast()
+            let v = frame.node
+
+            if !frame.returning {
+                // First visit to node v
+                if state.indices[v] != -1 {
+                    continue  // Already processed
+                }
+
+                // Initialize discovery time and low-link
+                state.indices[v] = state.index
+                state.lowLinks[v] = state.index
+                state.index += 1
+                state.stack.append(v)
+                state.onStack[v] = true
+
+                // Mark frame for post-processing after exploring children
+                callStack.append((v, 0, true))
+            }
+
+            // Process neighbors using CSR format directly
+            let start = Int(graph.rowPointers[v])
+            let end = Int(graph.rowPointers[v + 1])
+            var childProcessed = false
+
+            for idx in frame.neighborIdx..<(end - start) {
+                let w = Int(graph.columnIndices[start + idx])
+
+                if state.indices[w] == -1 {
+                    // Tree edge: unvisited neighbor
+                    // Push continuation frame and child frame
+                    callStack.append((v, idx + 1, true))  // Resume from next neighbor
+                    callStack.append((w, 0, false))        // Visit child
+                    childProcessed = true
+                    break
+                } else if state.onStack[w] {
+                    // Back edge: update low-link
+                    state.lowLinks[v] = min(state.lowLinks[v], state.indices[w])
+                }
+                // Forward/cross edges: ignore
+            }
+
+            // Post-processing after all children explored
+            if frame.returning && !childProcessed {
+                // Check if v is SCC root
+                if state.lowLinks[v] == state.indices[v] {
+                    var scc = Set<Int>()
+                    // Pop stack until v to extract SCC
+                    while let node = state.stack.popLast() {
+                        state.onStack[node] = false
+                        scc.insert(node)
+                        if node == v { break }
+                    }
+                    state.sccs.append(scc)
+                }
+
+                // Update parent's low-link (if parent exists on call stack)
+                if let parentFrame = callStack.last(where: { !$0.returning }) {
+                    let parent = parentFrame.node
+                    state.lowLinks[parent] = min(state.lowLinks[parent], state.lowLinks[v])
+                }
+            }
+        }
+    }
+
+    // MARK: - 2. Eigenvector Centrality (Power Iteration)
+
+    /// Compute eigenvector centrality using power iteration.
+    ///
+    /// Eigenvector centrality assigns scores based on the principle that connections
+    /// to high-scoring nodes contribute more than connections to low-scoring nodes.
+    ///
+    /// # Mathematical Foundation
+    /// Solves the eigenvector equation: `A·x = λ·x`
+    /// - A: Adjacency matrix
+    /// - x: Centrality vector (principal eigenvector)
+    /// - λ: Largest eigenvalue
+    ///
+    /// Computed via power iteration: `x_{k+1} = A·x_k / ||A·x_k||₂`
+    ///
+    /// # Complexity
+    /// - Time: O(iterations × E)
+    /// - Space: O(V)
+    ///
+    /// # Parameters
+    /// - `graph`: Undirected or directed graph (if directed, uses incoming edges)
+    /// - `maxIterations`: Maximum iterations (default: 100)
+    /// - `tolerance`: Convergence threshold for L1 norm change (default: 1e-6)
+    ///
+    /// # Returns
+    /// Array of centrality scores indexed by node ID, or `nil` if doesn't converge
+    ///
+    /// # Convergence Notes
+    /// - May not converge for bipartite graphs (oscillation)
+    /// - Disconnected graphs: some components may have zero centrality
+    /// - Zero-degree nodes remain zero throughout
+    ///
+    /// # Example
+    /// ```swift
+    /// if let centrality = GraphPrimitivesKernels.eigenvectorCentrality(graph: graph) {
+    ///     let topNode = centrality.enumerated().max { $0.element < $1.element }
+    ///     print("Most central node: \(topNode?.offset ?? -1)")
+    /// }
+    /// ```
+    public static func eigenvectorCentrality(
+        graph: SparseMatrix,
+        maxIterations: Int = 100,
+        tolerance: Float = 1e-6
+    ) -> [Float]? {
+        let N = graph.rows
+        guard N > 0 else { return [] }
+
+        // Initialize centrality vector uniformly: x = [1/√N, ..., 1/√N]
+        let initialValue = 1.0 / sqrt(Float(N))
+        var x = [Float](repeating: initialValue, count: N)
+        var y = [Float](repeating: 0.0, count: N)
+
+        // Power iteration loop
+        for _ in 0..<maxIterations {
+            // Matrix-Vector Multiply: y = A·x (using CSR format)
+            graph.rowPointers.withUnsafeBufferPointer { rowPtrs in
+                graph.columnIndices.withUnsafeBufferPointer { colIndices in
+                    for i in 0..<N {
+                        var sum: Float = 0.0
+                        let start = Int(rowPtrs[i])
+                        let end = Int(rowPtrs[i+1])
+
+                        if let weights = graph.values {
+                            // Weighted graph
+                            weights.withUnsafeBufferPointer { valPtr in
+                                for j in start..<end {
+                                    let col = Int(colIndices[j])
+                                    sum += valPtr[j] * x[col]
+                                }
+                            }
+                        } else {
+                            // Unweighted graph
+                            for j in start..<end {
+                                let col = Int(colIndices[j])
+                                sum += x[col]
+                            }
+                        }
+                        y[i] = sum
+                    }
+                }
+            }
+
+            // Compute L2 norm: ||y||₂
+            let norm: Float
+            #if canImport(Accelerate)
+            // SIMD-optimized sum of squares
+            var sumSq: Float = 0
+            vDSP_svesq(y, 1, &sumSq, vDSP_Length(N))
+            norm = sqrt(sumSq)
+            #else
+            norm = sqrt(y.reduce(0) { $0 + $1 * $1 })
+            #endif
+
+            // Handle degenerate case: zero vector (graph with no edges)
+            if norm == 0 || !norm.isFinite {
+                return nil  // Non-convergent or degenerate graph
+            }
+
+            // Normalize: x_new = y / ||y||₂ and compute convergence metric
+            var l1Change: Float = 0.0
+            for i in 0..<N {
+                let normalizedValue = y[i] / norm
+                l1Change += abs(normalizedValue - x[i])
+                x[i] = normalizedValue
+            }
+
+            // Check convergence: ||x_new - x||₁ < tolerance
+            if l1Change < tolerance {
+                return x
+            }
+        }
+
+        // Did not converge within maxIterations
+        return nil
+    }
+
+    // MARK: - 3. Average Path Length
+
+    /// Compute average shortest path length for the graph.
+    ///
+    /// Calculates the mean of all-pairs shortest paths. Useful for measuring
+    /// graph diameter and connectivity. Infinite paths (disconnected nodes) are excluded.
+    ///
+    /// # Algorithm Selection
+    /// Automatically chooses the most efficient algorithm based on graph size:
+    /// - **Small graphs (N < 500)**: Floyd-Warshall O(V³)
+    /// - **Medium graphs**: BFS from each node O(V(V+E))
+    /// - **Large graphs (N > 10,000)**: Monte Carlo sampling O(S(V+E))
+    ///
+    /// # Complexity
+    /// - Time: O(V³) or O(V(V+E)) or O(S(V+E)) depending on algorithm
+    /// - Space: O(V²) for Floyd-Warshall, O(V) otherwise
+    ///
+    /// # Parameters
+    /// - `graph`: Undirected or directed graph
+    /// - `sampling`: Override auto-selection (default: auto based on size)
+    /// - `sampleSize`: Number of source nodes to sample (default: min(1000, N))
+    ///
+    /// # Returns
+    /// Average path length, or `nil` if graph is completely disconnected
+    ///
+    /// # Example
+    /// ```swift
+    /// if let avgPath = await GraphPrimitivesKernels.averagePathLength(graph: graph) {
+    ///     print("Average shortest path: \(avgPath)")
+    /// }
+    /// ```
+    public static func averagePathLength(
+        graph: SparseMatrix,
+        sampling: Bool? = nil,
+        sampleSize: Int? = nil
+    ) async -> Float? {
+        let N = graph.rows
+        guard N > 1 else { return 0.0 }
+
+        // Algorithm selection logic
+        let useSampling = sampling ?? (N > 10_000)
+        let actualSampleSize = sampleSize ?? min(1000, N)
+
+        if useSampling && N > actualSampleSize {
+            return await averagePathLengthSampled(graph, sampleSize: actualSampleSize)
+        } else if N < 500 {
+            // Floyd-Warshall for small graphs (works for both weighted and unweighted)
+            return averagePathLengthFloydWarshall(graph)
+        } else {
+            // BFS for medium/large graphs
+            return await averagePathLengthBFS(graph)
+        }
+    }
+
+    // MARK: - Floyd-Warshall Implementation (Small Graphs)
+
+    /// Floyd-Warshall all-pairs shortest path algorithm.
+    ///
+    /// Complexity: O(V³) time, O(V²) space
+    /// Suitable for small dense graphs (N < 500)
+    private static func averagePathLengthFloydWarshall(_ graph: SparseMatrix) -> Float? {
+        let N = graph.rows
+
+        // Safety check: Floyd-Warshall is O(V³) and should only be used for small graphs
+        guard N < 500 else {
+            assertionFailure("Floyd-Warshall called with N=\(N) (should be < 500). Use BFS or sampling instead.")
+            return nil
+        }
+
+        // Initialize distance matrix with infinity
+        var dist = [[Float]](
+            repeating: [Float](repeating: Float.infinity, count: N),
+            count: N
+        )
+
+        // Set diagonal to 0 (distance to self)
+        for i in 0..<N {
+            dist[i][i] = 0
+        }
+
+        // Set direct edges from adjacency matrix
+        graph.rowPointers.withUnsafeBufferPointer { rowPtrs in
+            graph.columnIndices.withUnsafeBufferPointer { colIndices in
+                if let weights = graph.values {
+                    // Weighted graph
+                    weights.withUnsafeBufferPointer { valPtr in
+                        for i in 0..<N {
+                            let start = Int(rowPtrs[i])
+                            let end = Int(rowPtrs[i+1])
+                            for j in start..<end {
+                                let col = Int(colIndices[j])
+                                // Handle multi-edges: take minimum weight
+                                dist[i][col] = min(dist[i][col], valPtr[j])
+                            }
+                        }
+                    }
+                } else {
+                    // Unweighted graph (distance = 1)
+                    for i in 0..<N {
+                        let start = Int(rowPtrs[i])
+                        let end = Int(rowPtrs[i+1])
+                        for j in start..<end {
+                            let col = Int(colIndices[j])
+                            dist[i][col] = 1.0
+                        }
+                    }
+                }
+            }
+        }
+
+        // Floyd-Warshall: k is intermediate vertex
+        for k in 0..<N {
+            for i in 0..<N {
+                for j in 0..<N {
+                    let throughK = dist[i][k] + dist[k][j]
+                    if throughK < dist[i][j] {
+                        dist[i][j] = throughK
+                    }
+                }
+            }
+        }
+
+        // Compute average of finite paths (excluding self-distances)
+        var totalDistance: Double = 0.0
+        var pathCount: Int = 0
+
+        for i in 0..<N {
+            for j in 0..<N {
+                if i != j && dist[i][j].isFinite {
+                    totalDistance += Double(dist[i][j])
+                    pathCount += 1
+                }
+            }
+        }
+
+        return pathCount > 0 ? Float(totalDistance / Double(pathCount)) : nil
+    }
+
+    // MARK: - BFS-Based Implementations (Medium/Large Graphs)
+
+    /// Helper for BFS-based average path length calculation.
+    ///
+    /// Integrates with VectorCore's async BFS API.
+    /// Accumulates distances from specified source nodes to all reachable targets.
+    private static func calculateAverageFromBFS(
+        graph: SparseMatrix,
+        sources: ArraySlice<Int>
+    ) async -> Float? {
+        var totalLength: Int64 = 0
+        var pathCount: Int64 = 0
+
+        // Run BFS from each source node
+        for startNode in sources {
+            // Use VectorCore's async BFS with default options
+            let result = await GraphPrimitivesKernels.breadthFirstSearch(
+                matrix: graph,
+                source: Int32(startNode),
+                options: GraphPrimitivesKernels.BFSOptions()
+            )
+
+            // Extract distances from BFSResult
+            // distances[i] = hop count from source to node i (-1 if unreachable)
+            for (nodeId, distance) in result.distances.enumerated() {
+                if nodeId != startNode && distance != -1 {
+                    totalLength += Int64(distance)
+                    pathCount += 1
+                }
+            }
+        }
+
+        return pathCount > 0 ? Float(totalLength) / Float(pathCount) : nil
+    }
+
+    /// BFS from all nodes (exact average for medium graphs).
+    ///
+    /// Complexity: O(V(V+E))
+    private static func averagePathLengthBFS(_ graph: SparseMatrix) async -> Float? {
+        let sources = (0..<graph.rows)
+        return await calculateAverageFromBFS(graph: graph, sources: ArraySlice(sources))
+    }
+
+    /// Sampled BFS (approximate average for very large graphs).
+    ///
+    /// Uses random sampling of source nodes to estimate average path length.
+    /// Trades accuracy for performance on graphs with N > 10,000.
+    ///
+    /// Complexity: O(S(V+E)) where S = sample size
+    private static func averagePathLengthSampled(
+        _ graph: SparseMatrix,
+        sampleSize: Int
+    ) async -> Float? {
+        let N = graph.rows
+
+        // Random sample of source nodes
+        let allNodes = Array(0..<N)
+        let sampledNodes = allNodes.shuffled().prefix(sampleSize)
+
+        return await calculateAverageFromBFS(graph: graph, sources: sampledNodes)
     }
 }

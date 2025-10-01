@@ -121,7 +121,7 @@ public struct HierarchicalTree: Sendable {
         assert(node.id == storage.nodes.count)
         storage.nodes.append(node)
         if node.isLeaf {
-             storage.leafNodeIds.insert(node.id)
+            storage.leafNodeIds.insert(node.id)
         }
     }
 
@@ -333,9 +333,9 @@ public enum HierarchicalClusteringKernels {
         let n = vectors.count
         guard n > 1 else {
             // Handle 0 or 1 vector case
-             if n == 1 {
-                 let node = ClusterNode(id: 0, vectorIndices: [0], centroid: vectors[0], radius: 0.0)
-                 return HierarchicalTree(nodes: [node], rootNodeId: 0, leafNodeIds: [0], dimension: 512, linkageCriterion: linkageCriterion, distanceMetric: distanceMetric)
+            if n == 1 {
+                let node = ClusterNode(id: 0, vectorIndices: [0], centroid: vectors[0], radius: 0.0)
+                return HierarchicalTree(nodes: [node], rootNodeId: 0, leafNodeIds: [0], dimension: 512, linkageCriterion: linkageCriterion, distanceMetric: distanceMetric)
             }
             return HierarchicalTree(nodes: [], rootNodeId: -1, leafNodeIds: [], dimension: 512, linkageCriterion: linkageCriterion, distanceMetric: distanceMetric)
         }
@@ -512,9 +512,9 @@ public enum HierarchicalClusteringKernels {
 
             // Handle empty clusters
             if cluster1.isEmpty && !cluster2.isEmpty {
-                 let furthest = cluster2.max { a, b in computeDistance(vectors[a], centroid2, metric: distanceMetric) < computeDistance(vectors[b], centroid2, metric: distanceMetric) }!
-                 cluster2.remove(furthest)
-                 cluster1.insert(furthest)
+                let furthest = cluster2.max { a, b in computeDistance(vectors[a], centroid2, metric: distanceMetric) < computeDistance(vectors[b], centroid2, metric: distanceMetric) }!
+                cluster2.remove(furthest)
+                cluster1.insert(furthest)
             } else if cluster2.isEmpty && !cluster1.isEmpty {
                 let furthest = cluster1.max { a, b in computeDistance(vectors[a], centroid1, metric: distanceMetric) < computeDistance(vectors[b], centroid1, metric: distanceMetric) }!
                 cluster1.remove(furthest)
@@ -551,7 +551,7 @@ public enum HierarchicalClusteringKernels {
         var nextNodeId = 0
 
         if n == 0 {
-             return HierarchicalTree(nodes: [], rootNodeId: -1, leafNodeIds: [], dimension: 512, linkageCriterion: .centroid, distanceMetric: distanceMetric)
+            return HierarchicalTree(nodes: [], rootNodeId: -1, leafNodeIds: [], dimension: 512, linkageCriterion: .centroid, distanceMetric: distanceMetric)
         }
 
         // Initialize root
@@ -582,7 +582,14 @@ public enum HierarchicalClusteringKernels {
 
                 if leftIndices.isEmpty || rightIndices.isEmpty {
                     // Treat as leaf if split fails
-                    let leafNode = ClusterNode(id: currentCluster.id, vectorIndices: currentCluster.vectorIndices, centroid: currentCluster.centroid, radius: currentCluster.radius, parent: currentCluster.parent, height: 0)
+                    let leafNode = ClusterNode(
+                        id: currentCluster.id,
+                        vectorIndices: currentCluster.vectorIndices,
+                        centroid: currentCluster.centroid,
+                        radius: currentCluster.radius,
+                        parent: currentCluster.parent,
+                        height: 0
+                    )
                     nodesDict[currentCluster.id] = leafNode
                     leafNodeIds.insert(currentCluster.id)
                     continue
@@ -626,21 +633,21 @@ public enum HierarchicalClusteringKernels {
         // Calculate heights recursively
         @discardableResult
         func calculateHeight(nodeId: Int, nodes: inout [ClusterNode]) -> Int {
-             guard nodeId < nodes.count else { return 0 }
-             let node = nodes[nodeId]
+            guard nodeId < nodes.count else { return 0 }
+            let node = nodes[nodeId]
 
-             if node.isLeaf { return 0 }
+            if node.isLeaf { return 0 }
 
-             let leftHeight = node.leftChild.map { calculateHeight(nodeId: $0, nodes: &nodes) } ?? 0
-             let rightHeight = node.rightChild.map { calculateHeight(nodeId: $0, nodes: &nodes) } ?? 0
-             let height = max(leftHeight, rightHeight) + 1
+            let leftHeight = node.leftChild.map { calculateHeight(nodeId: $0, nodes: &nodes) } ?? 0
+            let rightHeight = node.rightChild.map { calculateHeight(nodeId: $0, nodes: &nodes) } ?? 0
+            let height = max(leftHeight, rightHeight) + 1
 
-             nodes[nodeId] = ClusterNode(
-                 id: node.id, vectorIndices: node.vectorIndices, centroid: node.centroid, radius: node.radius,
-                 leftChild: node.leftChild, rightChild: node.rightChild, parent: node.parent,
-                 height: height, mergeDistance: node.mergeDistance
-             )
-             return height
+            nodes[nodeId] = ClusterNode(
+                id: node.id, vectorIndices: node.vectorIndices, centroid: node.centroid, radius: node.radius,
+                leftChild: node.leftChild, rightChild: node.rightChild, parent: node.parent,
+                height: height, mergeDistance: node.mergeDistance
+            )
+            return height
         }
 
         _ = calculateHeight(nodeId: 0, nodes: &finalNodes)
@@ -881,13 +888,13 @@ extension HierarchicalTree {
                     let distance = computeDistance(query, vectors[vectorIndex], metric: distanceMetric)
 
                     if distance < worstDistInTopK {
-                         let candidate = SearchCandidate(vectorIndex: vectorIndex, distance: distance, nodeId: node.id)
-                         topKHeap.insert(candidate)
+                        let candidate = SearchCandidate(vectorIndex: vectorIndex, distance: distance, nodeId: node.id)
+                        topKHeap.insert(candidate)
 
-                         // Update the threshold if heap is full
-                         if topKHeap.count == k, let top = topKHeap.peek() {
-                             worstDistInTopK = top.distance
-                         }
+                        // Update the threshold if heap is full
+                        if topKHeap.count == k, let top = topKHeap.peek() {
+                            worstDistInTopK = top.distance
+                        }
                     }
                 }
             } else {
@@ -899,7 +906,7 @@ extension HierarchicalTree {
 
                     // Add to frontier if promising
                     if childBound < worstDistInTopK {
-                         frontier.insert((childBound, child.id))
+                        frontier.insert((childBound, child.id))
                     }
                 }
             }
@@ -909,9 +916,9 @@ extension HierarchicalTree {
         let sortedCandidates = topKHeap.extractSorted()
 
         // Format results (smallest distance first)
-        let results = sortedCandidates.reversed().enumerated().map { index, candidate in
-             let confidence: Float = 1.0
-             return HierarchicalSearchResult(
+        let results = sortedCandidates.reversed().enumerated().map { _, candidate in
+            let confidence: Float = 1.0
+            return HierarchicalSearchResult(
                 vectorIndex: candidate.vectorIndex,
                 distance: candidate.distance,
                 confidence: confidence
@@ -1082,7 +1089,7 @@ public struct IncrementalHierarchicalClustering {
     /// Restructure the tree by merging the new vector with the target node
     private mutating func restructureTree(vectorIndex: Int, targetNodeId: Int) -> ClusteringUpdate {
         guard let targetNode = tree.node(withId: targetNodeId) else {
-             return ClusteringUpdate(type: .error, affectedNodes: [])
+            return ClusteringUpdate(type: .error, affectedNodes: [])
         }
 
         // 1. Create a new leaf node for the incoming vector
@@ -1113,8 +1120,8 @@ public struct IncrementalHierarchicalClustering {
         )
 
         let updatedNewVectorNode = ClusterNode(
-             id: newVectorNode.id, vectorIndices: newVectorNode.vectorIndices, centroid: newVectorNode.centroid, radius: newVectorNode.radius,
-             parent: newParentId
+            id: newVectorNode.id, vectorIndices: newVectorNode.vectorIndices, centroid: newVectorNode.centroid, radius: newVectorNode.radius,
+            parent: newParentId
         )
 
         // 4. Update the tree structure

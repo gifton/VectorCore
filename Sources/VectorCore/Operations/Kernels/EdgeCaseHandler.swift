@@ -322,7 +322,7 @@ public enum EdgeCaseHandler {
 
     /// Validates SoA structure before operations
     public static func validateSoA<V: SoACompatible>(soa: SoA<V>) throws {
-        guard soa.count > 0 else {
+        guard !soa.isEmpty else {
             throw VectorError.invalidData("SoA structure is empty")
         }
 

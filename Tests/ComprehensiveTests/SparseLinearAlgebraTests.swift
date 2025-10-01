@@ -99,11 +99,11 @@ final class SparseLinearAlgebraTests: XCTestCase {
 
     // MARK: - SpGEMM Tests
 
-    func testSpGEMMBasic() throws {
+    func testSpGEMMBasic() async throws {
         let A = createTestMatrix()
         let B = createTestMatrix()
 
-        let C = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let C = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: A, B: B,
             options: .init(validateInput: true)
         )
@@ -118,29 +118,29 @@ final class SparseLinearAlgebraTests: XCTestCase {
         for i in 0..<3 {
             for j in 0..<3 {
                 XCTAssertEqual(actualC[i][j], expectedC[i][j], accuracy: 1e-5,
-                             "Mismatch at (\(i), \(j))")
+                               "Mismatch at (\(i), \(j))")
             }
         }
     }
 
-    func testSpGEMMIdentity() throws {
+    func testSpGEMMIdentity() async throws {
         let A = createTestMatrix()
         let I = createIdentityMatrix(size: 3)
 
         // A * I should equal A
-        let AI = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: I)
+        let AI = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: I)
         XCTAssertEqual(sparseToDense(AI), sparseToDense(A))
 
         // I * A should equal A
-        let IA = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: I, B: A)
+        let IA = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: I, B: A)
         XCTAssertEqual(sparseToDense(IA), sparseToDense(A))
     }
 
-    func testSpGEMMSymbolic() throws {
+    func testSpGEMMSymbolic() async throws {
         let A = createTestMatrix()
         let B = createTestMatrix()
 
-        let symbolic = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let symbolic = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: A, B: B,
             options: .init(symbolicOnly: true)
         )
@@ -150,18 +150,18 @@ final class SparseLinearAlgebraTests: XCTestCase {
         XCTAssertGreaterThan(symbolic.nonZeros, 0)
 
         // Pattern should match numeric result
-        let numeric = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
+        let numeric = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
         XCTAssertEqual(symbolic.columnIndices, numeric.columnIndices)
     }
 
-    func testSpGEMMWithThresholding() throws {
+    func testSpGEMMWithThresholding() async throws {
         let edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)> = [
             (0, 0, 0.001), (0, 1, 2.0),
             (1, 0, 3.0), (1, 1, 0.0001)
         ]
         let A = try GraphPrimitivesKernels.cooToCSR(edges: edges, rows: 2, cols: 2)
 
-        let C = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let C = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: A, B: A,
             options: .init(numericalThreshold: 0.01)
         )
@@ -284,7 +284,7 @@ final class SparseLinearAlgebraTests: XCTestCase {
             (0, 0, 1.0),
             (0, 0, 2.0),  // Duplicate - should sum to 3.0
             (1, 1, 4.0),
-            (1, 1, 5.0),  // Duplicate - should sum to 9.0
+            (1, 1, 5.0)  // Duplicate - should sum to 9.0
         ]
 
         let csr = try GraphPrimitivesKernels.cooToCSR(
@@ -313,7 +313,7 @@ final class SparseLinearAlgebraTests: XCTestCase {
 
     // MARK: - Triangular Solve Tests
 
-    func testLowerTriangularSolve() throws {
+    func testLowerTriangularSolve() async throws {
         let L = createLowerTriangular()
         let b = ContiguousArray<Float>([4.0, 8.0, 26.0])
 
@@ -325,7 +325,7 @@ final class SparseLinearAlgebraTests: XCTestCase {
         )
 
         // Verify L * x = b
-        let Lx = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let Lx = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: L,
             B: SparseMatrix(
                 rows: 3, cols: 1,
@@ -359,7 +359,7 @@ final class SparseLinearAlgebraTests: XCTestCase {
         XCTAssertEqual(x[2], 2.0, accuracy: 1e-5)
     }
 
-    func testTriangularSolveTranspose() throws {
+    func testTriangularSolveTranspose() async throws {
         let L = createLowerTriangular()
         let b = ContiguousArray<Float>([10.0, 14.0, 22.0])
 
@@ -373,7 +373,7 @@ final class SparseLinearAlgebraTests: XCTestCase {
 
         // Verify by computing L^T * x
         let LT = GraphPrimitivesKernels.csrToCSC(L)
-        let LTx = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let LTx = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: LT,
             B: SparseMatrix(
                 rows: 3, cols: 1,
@@ -507,7 +507,7 @@ final class SparseLinearAlgebraTests: XCTestCase {
 
     // MARK: - Performance Tests
 
-    func testLargeSpGEMMPerformance() throws {
+    func testLargeSpGEMMPerformance() async throws {
         // Create larger sparse matrices for performance testing
         let n = 100
         var edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)> = []
@@ -554,24 +554,24 @@ final class SparseLinearAlgebraTests: XCTestCase {
 
     // MARK: - Edge Cases
 
-    func testEmptyMatrices() throws {
+    func testEmptyMatrices() async throws {
         let empty = try SparseMatrix(rows: 3, cols: 3, edges: [])
         let A = createTestMatrix()
 
         // Empty * A = Empty
-        let result1 = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: empty, B: A)
+        let result1 = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: empty, B: A)
         XCTAssertEqual(result1.nonZeros, 0)
 
         // A * Empty = Empty
-        let result2 = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: empty)
+        let result2 = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: empty)
         XCTAssertEqual(result2.nonZeros, 0)
     }
 
-    func testSingleElementMatrix() throws {
+    func testSingleElementMatrix() async throws {
         let edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)> = [(0, 0, 5.0)]
         let single = try GraphPrimitivesKernels.cooToCSR(edges: edges, rows: 1, cols: 1)
 
-        let squared = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: single, B: single)
+        let squared = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: single, B: single)
 
         XCTAssertEqual(squared.nonZeros, 1)
         XCTAssertEqual(squared.values?[0], 25.0)  // 5 * 5

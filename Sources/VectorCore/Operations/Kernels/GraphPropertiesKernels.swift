@@ -56,7 +56,7 @@ extension GraphPrimitivesKernels {
     public static func computeGraphProperties(
         matrix: SparseMatrix,
         options: GraphPropertiesOptions = GraphPropertiesOptions()
-    ) -> GraphPropertiesResult {
+    ) async -> GraphPropertiesResult {
         let startTime = CFAbsoluteTimeGetCurrent()
         let n = matrix.rows
 
@@ -73,7 +73,7 @@ extension GraphPrimitivesKernels {
         let degreeDistribution = computeDegreeDistribution(matrix: matrix, directed: options.directed)
 
         // 2. Graph Distances (using existing BFS from GraphTraversalKernels)
-        let (diameter, radius, avgPathLength) = computeGraphDistances(
+        let (diameter, radius, avgPathLength) = await computeGraphDistances(
             matrix: matrix,
             parallel: options.parallel,
             useSampling: options.sampleForDistances
@@ -174,7 +174,7 @@ extension GraphPrimitivesKernels {
         matrix: SparseMatrix,
         parallel: Bool,
         useSampling: Bool
-    ) -> (diameter: Int, radius: Int, avgPathLength: Float) {
+    ) async -> (diameter: Int, radius: Int, avgPathLength: Float) {
         let n = matrix.rows
 
         // Determine sampling strategy
@@ -195,41 +195,82 @@ extension GraphPrimitivesKernels {
         var totalPathCount = 0
 
         if parallel && sources.count > 10 {
-            // Parallel computation
-            let lock = NSLock()
+            // Parallel computation with TaskGroup using return values pattern
+            let numTasks = min(ProcessInfo.processInfo.activeProcessorCount * 2, sources.count)
+            let chunkSize = (sources.count + numTasks - 1) / numTasks
 
-            DispatchQueue.concurrentPerform(iterations: sources.count) { idx in
-                let source = sources[idx]
-                let bfsResult = GraphPrimitivesKernels.breadthFirstSearch(
-                    matrix: matrix,
-                    source: Int32(source)
-                )
+            let results = await withTaskGroup(
+                of: (maxEccentricity: Int, minEccentricity: Int, pathSum: Double, pathCount: Int).self,
+                returning: [(Int, Int, Double, Int)].self
+            ) { group in
+                for taskId in 0..<numTasks {
+                    group.addTask {
+                        let start = taskId * chunkSize
+                        let end = min((taskId + 1) * chunkSize, sources.count)
+                        guard start < end else { return (0, Int.max, 0, 0) }
 
-                var localEccentricity = 0
-                var localSum: Double = 0
-                var localCount = 0
+                        var taskMaxEccentricity = 0
+                        var taskMinEccentricity = Int.max
+                        var taskPathSum: Double = 0
+                        var taskPathCount = 0
 
-                for dist in bfsResult.distances {
-                    if dist > 0 {
-                        localEccentricity = max(localEccentricity, Int(dist))
-                        localSum += Double(dist)
-                        localCount += 1
+                        for idx in start..<end {
+                            if Task.isCancelled { return (taskMaxEccentricity, taskMinEccentricity, taskPathSum, taskPathCount) }
+
+                            if (idx - start) % 50 == 0 {
+                                await Task.yield()
+                            }
+
+                            let source = sources[idx]
+                            let bfsResult = await GraphPrimitivesKernels.breadthFirstSearch(
+                                matrix: matrix,
+                                source: Int32(source)
+                            )
+
+                            var localEccentricity = 0
+                            var localSum: Double = 0
+                            var localCount = 0
+
+                            for dist in bfsResult.distances {
+                                if dist > 0 {
+                                    localEccentricity = max(localEccentricity, Int(dist))
+                                    localSum += Double(dist)
+                                    localCount += 1
+                                }
+                            }
+
+                            if localEccentricity > 0 {
+                                taskMaxEccentricity = max(taskMaxEccentricity, localEccentricity)
+                                taskMinEccentricity = min(taskMinEccentricity, localEccentricity)
+                            }
+                            taskPathSum += localSum
+                            taskPathCount += localCount
+                        }
+
+                        return (taskMaxEccentricity, taskMinEccentricity, taskPathSum, taskPathCount)
                     }
                 }
 
-                lock.lock()
-                if localEccentricity > 0 {
-                    diameter = max(diameter, localEccentricity)
-                    radius = min(radius, localEccentricity)
+                var collected: [(Int, Int, Double, Int)] = []
+                for await result in group {
+                    collected.append(result)
                 }
-                totalPathSum += localSum
-                totalPathCount += localCount
-                lock.unlock()
+                return collected
+            }
+
+            // Reduction phase - combine results from all tasks
+            for (maxEcc, minEcc, pathSum, pathCount) in results {
+                if maxEcc > 0 {
+                    diameter = max(diameter, maxEcc)
+                    radius = min(radius, minEcc)
+                }
+                totalPathSum += pathSum
+                totalPathCount += pathCount
             }
         } else {
             // Serial computation
             for source in sources {
-                let bfsResult = GraphPrimitivesKernels.breadthFirstSearch(
+                let bfsResult = await GraphPrimitivesKernels.breadthFirstSearch(
                     matrix: matrix,
                     source: Int32(source)
                 )

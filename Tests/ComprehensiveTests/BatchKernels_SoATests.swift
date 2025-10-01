@@ -169,7 +169,7 @@ struct BatchKernels_SoATests {
 
         @Test
         func testDotProduct512() {
-            // NOTE: Current BatchKernels_SoA only implements Euclidean squared distance
+            // Test batch cosine distance using SoA layout
             // This test demonstrates the need for additional SoA kernels
 
             let candidateCount = 8
@@ -203,13 +203,19 @@ struct BatchKernels_SoATests {
             let dotProduct = DotKernels.dot512(normalizedQuery, normalizedCandidate)
             #expect(dotProduct >= -1.0 && dotProduct <= 1.0, "Unit vector dot product should be in [-1, 1]: \(dotProduct)")
 
-            // TODO: Implement SoA dot product kernel and compare results
-            // let soaResults = BatchKernels_SoA.batchDotProduct512(query: query, candidates: candidates)
+            // Test SoA dot product kernel implementation
+            let soaResults = BatchKernels_SoA.batchDotProduct512(query: query, candidates: candidates)
+
+            // Verify results match reference implementation
+            for (i, soaResult) in soaResults.enumerated() {
+                let refResult = DotKernels.dot512(query, candidates[i])
+                #expect(abs(soaResult - refResult) < 1e-5, "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
+            }
         }
 
         @Test
         func testDotProduct768() {
-            // NOTE: Current BatchKernels_SoA only implements Euclidean squared distance
+            // Test batch cosine distance using SoA layout
 
             let candidateCount = 6
             let query = Vector768Optimized(repeating: 0.5)
@@ -222,13 +228,19 @@ struct BatchKernels_SoATests {
 
             // Reference results computed successfully
 
-            // TODO: Implement SoA dot product kernel for 768-dim vectors
-            // let soaResults = BatchKernels_SoA.batchDotProduct768(query: query, candidates: candidates)
+            // Test SoA dot product kernel for 768-dim vectors
+            let soaResults = BatchKernels_SoA.batchDotProduct768(query: query, candidates: candidates)
+
+            // Verify results match reference implementation
+            for (i, soaResult) in soaResults.enumerated() {
+                let refResult = DotKernels.dot768(query, candidates[i])
+                #expect(abs(soaResult - refResult) < 1e-5, "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
+            }
         }
 
         @Test
         func testDotProduct1536() {
-            // NOTE: Current BatchKernels_SoA only implements Euclidean squared distance
+            // Test batch cosine distance using SoA layout
 
             let candidateCount = 4
             let query = Vector1536Optimized(repeating: 0.25)
@@ -241,13 +253,19 @@ struct BatchKernels_SoATests {
 
             // Reference results computed successfully
 
-            // TODO: Implement SoA dot product kernel for 1536-dim vectors
-            // let soaResults = BatchKernels_SoA.batchDotProduct1536(query: query, candidates: candidates)
+            // Test SoA dot product kernel for 1536-dim vectors
+            let soaResults = BatchKernels_SoA.batchDotProduct1536(query: query, candidates: candidates)
+
+            // Verify results match reference implementation
+            for (i, soaResult) in soaResults.enumerated() {
+                let refResult = DotKernels.dot1536(query, candidates[i])
+                #expect(abs(soaResult - refResult) < 1e-5, "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
+            }
         }
 
         @Test
         func testCosineDistance512() {
-            // NOTE: Current BatchKernels_SoA only implements Euclidean squared distance
+            // Test batch cosine distance using SoA layout
 
             let candidateCount = 8
             let query = Vector512Optimized(repeating: 1.0)
@@ -278,13 +296,22 @@ struct BatchKernels_SoATests {
             let oppositeDistance = CosineKernels.distance512_fused(query, opposite)
             #expect(abs(oppositeDistance - 2.0) < 1e-3, "Opposite vectors should have cosine distance 2: \(oppositeDistance)")
 
-            // TODO: Implement SoA cosine distance kernel
-            // let soaResults = BatchKernels_SoA.batchCosineDistance512(query: query, candidates: candidates)
+            // Test SoA cosine distance kernel
+            let soaResults = BatchKernels_SoA.batchCosineDistance512(query: query, candidates: candidates)
+
+            // Verify SoA results are in valid range and match reference
+            for (i, soaDistance) in soaResults.enumerated() {
+                #expect(soaDistance >= 0.0 && soaDistance <= 2.0, "SoA cosine distance \(i) out of range: \(soaDistance)")
+
+                // Compare with reference implementation
+                let refDistance = CosineKernels.distance512_fused(query, candidates[i])
+                #expect(abs(soaDistance - refDistance) < 1e-5, "SoA mismatch at \(i): SoA=\(soaDistance), Ref=\(refDistance)")
+            }
         }
 
         @Test
         func testCosineDistance768() {
-            // NOTE: Current BatchKernels_SoA only implements Euclidean squared distance
+            // Test batch cosine distance using SoA layout
 
             let candidateCount = 6
             let query = Vector768Optimized(repeating: 0.5)
@@ -299,13 +326,21 @@ struct BatchKernels_SoATests {
                 #expect(distance >= 0.0 && distance <= 2.0, "Cosine distance \(i) out of range [0, 2]: \(distance)")
             }
 
-            // TODO: Implement SoA cosine distance kernel for 768-dim vectors
-            // let soaResults = BatchKernels_SoA.batchCosineDistance768(query: query, candidates: candidates)
+            // Test SoA cosine distance kernel for 768-dim vectors
+            let soaResults = BatchKernels_SoA.batchCosineDistance768(query: query, candidates: candidates)
+
+            // Verify results match reference implementation
+            for (i, soaDistance) in soaResults.enumerated() {
+                #expect(soaDistance >= 0.0 && soaDistance <= 2.0, "SoA cosine distance \(i) out of range: \(soaDistance)")
+
+                let refDistance = referenceResults[i]
+                #expect(abs(soaDistance - refDistance) < 1e-5, "SoA mismatch at \(i): SoA=\(soaDistance), Ref=\(refDistance)")
+            }
         }
 
         @Test
         func testCosineDistance1536() {
-            // NOTE: Current BatchKernels_SoA only implements Euclidean squared distance
+            // Test batch cosine distance using SoA layout
 
             let candidateCount = 4
             let query = Vector1536Optimized(repeating: 0.25)
@@ -320,8 +355,16 @@ struct BatchKernels_SoATests {
                 #expect(distance >= 0.0 && distance <= 2.0, "Cosine distance \(i) out of range [0, 2]: \(distance)")
             }
 
-            // TODO: Implement SoA cosine distance kernel for 1536-dim vectors
-            // let soaResults = BatchKernels_SoA.batchCosineDistance1536(query: query, candidates: candidates)
+            // Test SoA cosine distance kernel for 1536-dim vectors
+            let soaResults = BatchKernels_SoA.batchCosineDistance1536(query: query, candidates: candidates)
+
+            // Verify results match reference implementation
+            for (i, soaDistance) in soaResults.enumerated() {
+                #expect(soaDistance >= 0.0 && soaDistance <= 2.0, "SoA cosine distance \(i) out of range: \(soaDistance)")
+
+                let refDistance = referenceResults[i]
+                #expect(abs(soaDistance - refDistance) < 1e-5, "SoA mismatch at \(i): SoA=\(soaDistance), Ref=\(refDistance)")
+            }
         }
     }
 
@@ -2630,12 +2673,13 @@ struct BatchKernels_SoATests {
 
             // Test 1: Norm caching for cosine distance
             class NormCache {
-                private var cache: [ObjectIdentifier: Float] = [:]
+                private var cache: [String: Float] = [:]
                 private var hits = 0
                 private var misses = 0
 
                 func getNorm(_ vector: Vector512Optimized) -> Float {
-                    let key = ObjectIdentifier(vector)
+                    // Create simple hash key from first few elements
+                    let key = "\(vector[0])_\(vector[1])_\(vector[2])"
 
                     if let cached = cache[key] {
                         hits += 1
@@ -2767,11 +2811,11 @@ struct BatchKernels_SoATests {
 
             // Test 4: Cache invalidation on vector updates
             class InvalidatingCache {
-                private var cache: [ObjectIdentifier: [Float]] = [:]
-                private var versions: [ObjectIdentifier: Int] = [:]
+                private var cache: [String: [Float]] = [:]
+                private var versions: [String: Int] = [:]
 
                 func invalidate(_ vector: Vector512Optimized) {
-                    let key = ObjectIdentifier(vector)
+                    let key = "\(vector[0])_\(vector[1])_\(vector[2])"
                     versions[key, default: 0] += 1
                     // Remove cached results involving this vector
                     cache.removeValue(forKey: key)
@@ -2781,7 +2825,7 @@ struct BatchKernels_SoATests {
                     query: Vector512Optimized,
                     candidates: [Vector512Optimized]
                 ) -> [Float] {
-                    let key = ObjectIdentifier(query)
+                    let key = "\(query[0])_\(query[1])_\(query[2])"
 
                     if let cached = cache[key] {
                         return cached

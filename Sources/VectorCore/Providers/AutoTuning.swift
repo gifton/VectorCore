@@ -159,8 +159,7 @@ public enum AutoTuning {
         let referenceN = min(N_star, Config.MAX_BREAKEVEN_N)
         let targetTasks = Config.TARGET_TASKS_PER_CORE * Double(providerCores)
         var minChunk = Int(ceil(Double(referenceN) / targetTasks))
-        if dim >= 1536 { minChunk = Int(Double(minChunk) * 2.0) }
-        else if dim >= 768 { minChunk = Int(Double(minChunk) * 1.25) }
+        if dim >= 1536 { minChunk = Int(Double(minChunk) * 2.0) } else if dim >= 768 { minChunk = Int(Double(minChunk) * 1.25) }
         minChunk = alignTo64(minChunk)
         minChunk = max(Config.MIN_CHUNK_SIZE, min(Config.MAX_CHUNK_SIZE, minChunk))
 

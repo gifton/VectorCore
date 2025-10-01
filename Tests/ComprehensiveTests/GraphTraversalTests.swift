@@ -99,10 +99,10 @@ final class GraphTraversalTests: XCTestCase {
 
     // MARK: - Part 1: Basic Traversal Tests
 
-    func testBreadthFirstSearch() {
+    func testBreadthFirstSearch() async {
         let graph = createSimpleGraph()
 
-        let result = GraphPrimitivesKernels.breadthFirstSearch(
+        let result = await GraphPrimitivesKernels.breadthFirstSearch(
             matrix: graph,
             source: 0,
             options: .init(parallel: false)
@@ -127,16 +127,16 @@ final class GraphTraversalTests: XCTestCase {
         XCTAssertEqual(result.visitOrder.first, 0)
     }
 
-    func testParallelBFS() {
+    func testParallelBFS() async {
         let graph = createSimpleGraph()
 
-        let serialResult = GraphPrimitivesKernels.breadthFirstSearch(
+        let serialResult = await GraphPrimitivesKernels.breadthFirstSearch(
             matrix: graph,
             source: 0,
             options: .init(parallel: false)
         )
 
-        let parallelResult = GraphPrimitivesKernels.breadthFirstSearch(
+        let parallelResult = await GraphPrimitivesKernels.breadthFirstSearch(
             matrix: graph,
             source: 0,
             options: .init(parallel: true)
@@ -198,10 +198,10 @@ final class GraphTraversalTests: XCTestCase {
         XCTAssertEqual(sameDistance, 0)
     }
 
-    func testDirectionOptimizingBFS() {
+    func testDirectionOptimizingBFS() async {
         let graph = createGridGraph(size: 10)
 
-        let result = GraphPrimitivesKernels.breadthFirstSearch(
+        let result = await GraphPrimitivesKernels.breadthFirstSearch(
             matrix: graph,
             source: 0,
             options: .init(directionOptimizing: true)
@@ -222,10 +222,10 @@ final class GraphTraversalTests: XCTestCase {
 
     // MARK: - Part 2: Shortest Path Tests
 
-    func testDijkstraShortestPath() {
+    func testDijkstraShortestPath() async {
         let graph = createWeightedGraph()
 
-        let result = GraphPrimitivesKernels.dijkstraShortestPath(
+        let result = await GraphPrimitivesKernels.dijkstraShortestPath(
             matrix: graph,
             options: .init(source: 0, target: 5)
         )
@@ -250,10 +250,10 @@ final class GraphTraversalTests: XCTestCase {
         XCTAssertEqual(path, [0, 1, 4, 5])
     }
 
-    func testDijkstraWithMaxDistance() {
+    func testDijkstraWithMaxDistance() async {
         let graph = createWeightedGraph()
 
-        let result = GraphPrimitivesKernels.dijkstraShortestPath(
+        let result = await GraphPrimitivesKernels.dijkstraShortestPath(
             matrix: graph,
             options: .init(source: 0, maxDistance: 5.0)
         )
@@ -413,12 +413,12 @@ final class GraphTraversalTests: XCTestCase {
 
     // MARK: - Edge Cases
 
-    func testSingleNodeGraph() {
+    func testSingleNodeGraph() async {
         let edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)> = []
         let graph = try! SparseMatrix(rows: 1, cols: 1, edges: edges)
 
         // BFS on single node
-        let bfsResult = GraphPrimitivesKernels.breadthFirstSearch(
+        let bfsResult = await GraphPrimitivesKernels.breadthFirstSearch(
             matrix: graph,
             source: 0
         )
@@ -426,7 +426,7 @@ final class GraphTraversalTests: XCTestCase {
         XCTAssertEqual(bfsResult.levels.count, 1)
 
         // Dijkstra on single node
-        let dijkstraResult = GraphPrimitivesKernels.dijkstraShortestPath(
+        let dijkstraResult = await GraphPrimitivesKernels.dijkstraShortestPath(
             matrix: graph,
             options: .init(source: 0)
         )
@@ -439,12 +439,12 @@ final class GraphTraversalTests: XCTestCase {
         XCTAssertEqual(componentResult.numberOfComponents, 1)
     }
 
-    func testEmptyGraph() {
+    func testEmptyGraph() async {
         let edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)> = []
         let graph = try! SparseMatrix(rows: 5, cols: 5, edges: edges)
 
         // BFS on disconnected nodes
-        let bfsResult = GraphPrimitivesKernels.breadthFirstSearch(
+        let bfsResult = await GraphPrimitivesKernels.breadthFirstSearch(
             matrix: graph,
             source: 0
         )
@@ -491,11 +491,11 @@ final class GraphTraversalTests: XCTestCase {
 
     // MARK: - Performance Tests
 
-    func testLargeGraphPerformance() {
+    func testLargeGraphPerformance() async {
         self.measure {
             let graph = createGridGraph(size: 100) // 10,000 nodes
 
-            _ = GraphPrimitivesKernels.breadthFirstSearch(
+            _ = await GraphPrimitivesKernels.breadthFirstSearch(
                 matrix: graph,
                 source: 0,
                 options: .init(parallel: true)
@@ -503,22 +503,22 @@ final class GraphTraversalTests: XCTestCase {
         }
     }
 
-    func testDijkstraPerformance() {
+    func testDijkstraPerformance() async {
         let graph = createGridGraph(size: 50) // 2,500 nodes
 
         self.measure {
-            _ = GraphPrimitivesKernels.dijkstraShortestPath(
+            _ = await GraphPrimitivesKernels.dijkstraShortestPath(
                 matrix: graph,
                 options: .init(source: 0, target: 2499, parallel: false)
             )
         }
     }
 
-    func testParallelDijkstraPerformance() {
+    func testParallelDijkstraPerformance() async {
         let graph = createGridGraph(size: 100) // 10,000 nodes
 
         self.measure {
-            _ = GraphPrimitivesKernels.dijkstraShortestPath(
+            _ = await GraphPrimitivesKernels.dijkstraShortestPath(
                 matrix: graph,
                 options: .init(source: 0, target: 9999, parallel: true)
             )
@@ -527,10 +527,10 @@ final class GraphTraversalTests: XCTestCase {
 
     // MARK: - Correctness Validation
 
-    func testBFSParentPointers() {
+    func testBFSParentPointers() async {
         let graph = createSimpleGraph()
 
-        let result = GraphPrimitivesKernels.breadthFirstSearch(
+        let result = await GraphPrimitivesKernels.breadthFirstSearch(
             matrix: graph,
             source: 0
         )
@@ -558,10 +558,10 @@ final class GraphTraversalTests: XCTestCase {
         }
     }
 
-    func testDijkstraOptimality() {
+    func testDijkstraOptimality() async {
         let graph = createWeightedGraph()
 
-        let result = GraphPrimitivesKernels.dijkstraShortestPath(
+        let result = await GraphPrimitivesKernels.dijkstraShortestPath(
             matrix: graph,
             options: .init(source: 0)
         )
@@ -577,7 +577,7 @@ final class GraphTraversalTests: XCTestCase {
         XCTAssertEqual(result.distances[5], 7)
     }
 
-    func testAStarAdmissibility() {
+    func testAStarAdmissibility() async {
         let graph = createGridGraph(size: 10)
 
         // Admissible heuristic (Manhattan distance)
@@ -597,7 +597,7 @@ final class GraphTraversalTests: XCTestCase {
         )
 
         // Compare with Dijkstra (should give same optimal distance)
-        let dijkstraResult = GraphPrimitivesKernels.dijkstraShortestPath(
+        let dijkstraResult = await GraphPrimitivesKernels.dijkstraShortestPath(
             matrix: graph,
             options: .init(source: 0, target: 99)
         )

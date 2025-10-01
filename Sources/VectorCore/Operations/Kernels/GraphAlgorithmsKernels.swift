@@ -42,13 +42,13 @@ extension GraphPrimitivesKernels {
     public static func detectMotifs(
         matrix: SparseMatrix,
         options: MotifDetectionOptions = MotifDetectionOptions()
-    ) -> MotifResult {
+    ) async -> MotifResult {
         let startTime = CFAbsoluteTimeGetCurrent()
         var motifCounts: [MotifType: Int] = [:]
 
         // Count 3-node motifs
         if options.motifSizes.contains(3) {
-            let triangleCount = countTriangles(matrix: matrix, parallel: options.parallel)
+            let triangleCount = await countTriangles(matrix: matrix, parallel: options.parallel)
             motifCounts[.triangle] = triangleCount
         }
 
@@ -68,52 +68,72 @@ extension GraphPrimitivesKernels {
     }
 
     /// Efficient triangle counting using node iterator with intersection
-    private static func countTriangles(matrix: SparseMatrix, parallel: Bool) -> Int {
+    private static func countTriangles(matrix: SparseMatrix, parallel: Bool) async -> Int {
         let n = matrix.rows
 
         if parallel && n > 100 {
-            // Parallel triangle counting
-            let triangleCounts = UnsafeMutableBufferPointer<Int>.allocate(capacity: n)
-            triangleCounts.initialize(repeating: 0)
-            defer { triangleCounts.deallocate() }
+            // Parallel triangle counting with Sendable buffer wrapper
+            let bufferWrapper = SendableMutableBufferWrapper<Int>(capacity: n)
+            bufferWrapper.bufferPointer.initialize(repeating: 0)
 
-            DispatchQueue.concurrentPerform(iterations: n) { i in
-                var localCount = 0
-                let rowStartI = Int(matrix.rowPointers[i])
-                let rowEndI = Int(matrix.rowPointers[i + 1])
+            let numTasks = min(ProcessInfo.processInfo.activeProcessorCount * 2, n)
+            let chunkSize = (n + numTasks - 1) / numTasks
 
-                for idx1 in rowStartI..<rowEndI {
-                    let j = Int(matrix.columnIndices[idx1])
-                    if j <= i { continue }  // Avoid counting same triangle multiple times
+            await withTaskGroup(of: Void.self) { group in
+                for taskId in 0..<numTasks {
+                    group.addTask {
+                        let start = taskId * chunkSize
+                        let end = min((taskId + 1) * chunkSize, n)
+                        guard start < end else { return }
 
-                    let rowStartJ = Int(matrix.rowPointers[j])
-                    let rowEndJ = Int(matrix.rowPointers[j + 1])
+                        for i in start..<end {
+                            if Task.isCancelled { return }
 
-                    // Two-pointer intersection for common neighbors
-                    var ptrI = rowStartI
-                    var ptrJ = rowStartJ
-
-                    while ptrI < rowEndI && ptrJ < rowEndJ {
-                        let kI = Int(matrix.columnIndices[ptrI])
-                        let kJ = Int(matrix.columnIndices[ptrJ])
-
-                        if kI == kJ {
-                            if kI > j {  // Ensure i < j < k to count each triangle once
-                                localCount += 1
+                            if (i - start) % 200 == 0 {
+                                await Task.yield()
                             }
-                            ptrI += 1
-                            ptrJ += 1
-                        } else if kI < kJ {
-                            ptrI += 1
-                        } else {
-                            ptrJ += 1
+
+                            var localCount = 0
+                            let rowStartI = Int(matrix.rowPointers[i])
+                            let rowEndI = Int(matrix.rowPointers[i + 1])
+
+                            for idx1 in rowStartI..<rowEndI {
+                                let j = Int(matrix.columnIndices[idx1])
+                                if j <= i { continue }  // Avoid counting same triangle multiple times
+
+                                let rowStartJ = Int(matrix.rowPointers[j])
+                                let rowEndJ = Int(matrix.rowPointers[j + 1])
+
+                                // Two-pointer intersection for common neighbors
+                                var ptrI = rowStartI
+                                var ptrJ = rowStartJ
+
+                                while ptrI < rowEndI && ptrJ < rowEndJ {
+                                    let kI = Int(matrix.columnIndices[ptrI])
+                                    let kJ = Int(matrix.columnIndices[ptrJ])
+
+                                    if kI == kJ {
+                                        if kI > j {  // Ensure i < j < k to count each triangle once
+                                            localCount += 1
+                                        }
+                                        ptrI += 1
+                                        ptrJ += 1
+                                    } else if kI < kJ {
+                                        ptrI += 1
+                                    } else {
+                                        ptrJ += 1
+                                    }
+                                }
+                            }
+                            bufferWrapper.bufferPointer[i] = localCount
                         }
                     }
                 }
-                triangleCounts[i] = localCount
+
+                await group.waitForAll()
             }
 
-            return triangleCounts.reduce(0, +)
+            return bufferWrapper.bufferPointer.reduce(0, +)
         } else {
             // Serial triangle counting
             var triangleCount = 0
@@ -320,7 +340,7 @@ extension GraphPrimitivesKernels {
         // Find next node to color (max saturation, tie-break by degree)
         func findNextNode() -> Int? {
             var maxSat = -1
-            var nextNode: Int? = nil
+            var nextNode: Int?
             var maxDeg = -1
 
             for i in 0..<n {

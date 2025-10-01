@@ -93,11 +93,11 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
 
     // MARK: - SpGEMM Tests
 
-    func testBasicSpGEMM() throws {
+    func testBasicSpGEMM() async throws {
         let A = createTestMatrix()
         let B = createTestMatrix()
 
-        let C = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
+        let C = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
 
         // Verify dimensions
         XCTAssertEqual(C.rows, A.rows)
@@ -112,25 +112,25 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
         for i in 0..<C.rows {
             for j in 0..<C.cols {
                 XCTAssertEqual(actualC[i][j], expectedC[i][j], accuracy: 1e-5,
-                             "Mismatch at (\(i), \(j))")
+                               "Mismatch at (\(i), \(j))")
             }
         }
     }
 
-    func testSpGEMMWithIdentity() throws {
+    func testSpGEMMWithIdentity() async throws {
         let A = createTestMatrix()
         let I = createIdentityMatrix(size: 3)
 
         // A * I = A
-        let C1 = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: I)
+        let C1 = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: I)
         XCTAssertEqual(toDense(C1), toDense(A))
 
         // I * A = A
-        let C2 = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: I, B: A)
+        let C2 = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: I, B: A)
         XCTAssertEqual(toDense(C2), toDense(A))
     }
 
-    func testSymbolicSpGEMM() throws {
+    func testSymbolicSpGEMM() async throws {
         let A = createTestMatrix()
         let B = createTestMatrix()
 
@@ -138,7 +138,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
             symbolicOnly: true
         )
 
-        let C = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let C = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: A, B: B, options: options
         )
 
@@ -149,7 +149,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
         XCTAssertGreaterThan(C.nonZeros, 0)
     }
 
-    func testSpGEMMWithThresholding() throws {
+    func testSpGEMMWithThresholding() async throws {
         let A = createRandomSparseMatrix(rows: 10, cols: 10, density: 0.3)
         let B = createRandomSparseMatrix(rows: 10, cols: 10, density: 0.3)
 
@@ -158,7 +158,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
             numericalThreshold: threshold
         )
 
-        let C = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let C = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: A, B: B, options: options
         )
 
@@ -170,15 +170,15 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
         }
     }
 
-    func testParallelSpGEMMConsistency() throws {
+    func testParallelSpGEMMConsistency() async throws {
         let A = createRandomSparseMatrix(rows: 50, cols: 50, density: 0.2)
         let B = createRandomSparseMatrix(rows: 50, cols: 50, density: 0.2)
 
         // Run parallel version (default)
-        let C_parallel = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
+        let C_parallel = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
 
         // Run sequential version (create a copy to ensure independent computation)
-        let C_sequential = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
+        let C_sequential = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(
             A: A, B: B,
             options: GraphPrimitivesKernels.SpGEMMOptions()
         )
@@ -351,7 +351,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
             (0, 0, 1.0),
             (1, 2, 3.0),
             (0, 2, 2.0),
-            (1, 0, 4.0),
+            (1, 0, 4.0)
         ]
 
         let matrix = try GraphPrimitivesKernels.cooToCSR(
@@ -384,7 +384,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
             (0, 0, 1.0),
             (0, 0, 2.0),  // Duplicate, should sum to 3.0
             (1, 1, 4.0),
-            (1, 1, 5.0),  // Duplicate, should sum to 9.0
+            (1, 1, 5.0)  // Duplicate, should sum to 9.0
         ]
 
         let matrix = try GraphPrimitivesKernels.cooToCSR(
@@ -499,16 +499,16 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
 
     // MARK: - Edge Cases
 
-    func testEmptyMatrices() throws {
+    func testEmptyMatrices() async throws {
         let empty = try GraphPrimitivesKernels.cooToCSR(edges: [], rows: 3, cols: 3)
         let A = createTestMatrix()
 
         // Empty * A = Empty
-        let C1 = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: empty, B: A)
+        let C1 = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: empty, B: A)
         XCTAssertEqual(C1.nonZeros, 0)
 
         // A * Empty = Empty
-        let C2 = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: empty)
+        let C2 = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: empty)
         XCTAssertEqual(C2.nonZeros, 0)
 
         // Empty + A = A
@@ -516,23 +516,23 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
         XCTAssertEqual(toDense(C3), toDense(A))
     }
 
-    func testSingleElementMatrix() throws {
+    func testSingleElementMatrix() async throws {
         let edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)> = [
             (0, 0, 5.0)
         ]
         let A = try! GraphPrimitivesKernels.cooToCSR(edges: edges, rows: 1, cols: 1)
 
         // A * A
-        let C = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: A)
+        let C = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: A)
         XCTAssertEqual(C.values?[0] ?? 0, 25.0, accuracy: 1e-5)
     }
 
-    func testLargeMatrixOperations() throws {
+    func testLargeMatrixOperations() async throws {
         let A = createRandomSparseMatrix(rows: 100, cols: 100, density: 0.1)
         let B = createRandomSparseMatrix(rows: 100, cols: 100, density: 0.1)
 
         // Test operations complete without error
-        let C = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
+        let C = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
         XCTAssertGreaterThan(C.nonZeros, 0)
 
         let D = try GraphPrimitivesKernels.sparseMatrixAdd(A: A, B: B)
@@ -544,7 +544,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
 
     // MARK: - Performance Tests
 
-    func testSpGEMMPerformance() throws {
+    func testSpGEMMPerformance() async throws {
         let A = createRandomSparseMatrix(rows: 500, cols: 500, density: 0.05)
         let B = createRandomSparseMatrix(rows: 500, cols: 500, density: 0.05)
 
@@ -553,7 +553,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
         }
     }
 
-    func testParallelSpGEMMScaling() throws {
+    func testParallelSpGEMMScaling() async throws {
         let sizes = [100, 200, 400]
         var times: [Double] = []
 
@@ -562,7 +562,7 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
             let B = createRandomSparseMatrix(rows: size, cols: size, density: 0.1)
 
             let start = CFAbsoluteTimeGetCurrent()
-            _ = try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
+            _ = try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
             let time = CFAbsoluteTimeGetCurrent() - start
             times.append(time)
 
@@ -601,12 +601,12 @@ final class SparseLinearAlgebraKernelTests: XCTestCase {
 
     // MARK: - Input Validation Tests
 
-    func testDimensionMismatch() throws {
+    func testDimensionMismatch() async throws {
         let A = createRandomSparseMatrix(rows: 3, cols: 4, density: 0.5)
         let B = createRandomSparseMatrix(rows: 5, cols: 3, density: 0.5)
 
         XCTAssertThrowsError(
-            try GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
+            try await GraphPrimitivesKernels.sparseMatrixMatrixMultiply(A: A, B: B)
         ) { error in
             guard case SparseMatrixError.invalidDimensions = error else {
                 XCTFail("Expected dimension mismatch error")

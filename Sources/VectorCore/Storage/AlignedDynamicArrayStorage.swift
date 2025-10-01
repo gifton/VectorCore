@@ -163,7 +163,7 @@ extension AlignedDynamicArrayStorage {
 extension AlignedDynamicArrayStorage: AlignedStorage {
     public var guaranteedAlignment: Int { alignment }
 
-    
+
     @inlinable
     public func verifyAlignment() -> Bool {
         AlignedMemory.isAligned(ptr, to: alignment)

@@ -98,6 +98,13 @@ public struct Vector1536Optimized: Sendable {
         }
     }
 
+    /// Initialize from SIMD storage directly
+    @inlinable
+    public init(fromSIMDStorage storage: ContiguousArray<SIMD4<Float>>) {
+        precondition(storage.count == 384, "Storage must contain exactly 384 SIMD4 elements")
+        self.storage = storage
+    }
+
     // MARK: - Element Access
 
     /// Access individual elements
@@ -347,3 +354,53 @@ extension Vector1536Optimized: OptimizedVector {
 // MARK: - VectorType Conformance
 
 extension Vector1536Optimized: VectorType {}
+
+// MARK: - Arithmetic Extensions for Streaming K-means
+
+extension Vector1536Optimized {
+    /// Add another vector element-wise
+    @inlinable
+    public func adding(_ other: Vector1536Optimized) -> Vector1536Optimized {
+        var result = ContiguousArray<SIMD4<Float>>()
+        result.reserveCapacity(384)
+
+        for i in 0..<384 {
+            result.append(storage[i] + other.storage[i])
+        }
+
+        return Vector1536Optimized(fromSIMDStorage: result)
+    }
+
+    /// Subtract another vector element-wise
+    @inlinable
+    public func subtracting(_ other: Vector1536Optimized) -> Vector1536Optimized {
+        var result = ContiguousArray<SIMD4<Float>>()
+        result.reserveCapacity(384)
+
+        for i in 0..<384 {
+            result.append(storage[i] - other.storage[i])
+        }
+
+        return Vector1536Optimized(fromSIMDStorage: result)
+    }
+
+    /// Scale by a scalar value
+    @inlinable
+    public func scaled(by scalar: Float) -> Vector1536Optimized {
+        var result = ContiguousArray<SIMD4<Float>>()
+        result.reserveCapacity(384)
+
+        let simdScalar = SIMD4<Float>(repeating: scalar)
+        for i in 0..<384 {
+            result.append(storage[i] * simdScalar)
+        }
+
+        return Vector1536Optimized(fromSIMDStorage: result)
+    }
+
+    /// Static zero vector
+    @inlinable
+    public static var zero: Vector1536Optimized {
+        Vector1536Optimized()
+    }
+}

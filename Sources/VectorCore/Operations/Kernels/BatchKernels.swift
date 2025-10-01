@@ -454,7 +454,7 @@ public extension BatchKernels {
     // Vectorized sqrt for the out buffer (length = range.count)
     @inlinable
     static func applySqrt(out: UnsafeMutableBufferPointer<Float>, count: Int) {
-        guard count > 0, let base = out.baseAddress else { return }
+        guard !isEmpty, let base = out.baseAddress else { return }
         var i = 0
         while i + 3 < count {
             let v = SIMD4<Float>(base[i+0], base[i+1], base[i+2], base[i+3])

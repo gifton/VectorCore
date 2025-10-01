@@ -229,7 +229,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        guard count > 0 else { return 0 }
+        guard !isEmpty else { return 0 }
 
         var result = a[0]
         var i = 1
@@ -258,7 +258,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        guard count > 0 else { return 0 }
+        guard !isEmpty else { return 0 }
 
         var result = a[0]
         var i = 1
@@ -287,7 +287,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        guard count > 0 else { return 0 }
+        guard !isEmpty else { return 0 }
 
         var result = abs(a[0])
         var i = 1

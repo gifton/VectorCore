@@ -144,7 +144,7 @@ public enum QuantizationSchemes {
         }
 
         let count = Float(original.count)
-        let mse = count > 0 ? sumSqErr / count : 0.0
+        let mse = !isEmpty ? sumSqErr / count : 0.0
 
         // Calculate SNR = 10 * log10( P_signal / P_noise )
         let snr: Float

@@ -478,7 +478,7 @@ struct QuantizedKernelsComprehensiveTests {
             // Second round-trip should produce nearly identical results to first
             for i in 0..<512 {
                 #expect(abs(firstRoundArray[i] - secondRoundArray[i]) < 0.001,
-                       "Round-trip should be stable")
+                        "Round-trip should be stable")
             }
         }
 
@@ -898,7 +898,7 @@ struct QuantizedKernelsComprehensiveTests {
 
             for _ in 0..<iterations {
                 let quantized = Vector512INT8(from: vector)
-                let _ = quantized.toFP32()
+                _ = quantized.toFP32()
             }
 
             let elapsed = CFAbsoluteTimeGetCurrent() - start
@@ -917,7 +917,7 @@ struct QuantizedKernelsComprehensiveTests {
             let start = CFAbsoluteTimeGetCurrent()
 
             for _ in 0..<iterations {
-                let _ = QuantizedKernels.euclidean512(query: quant1, candidate: vec2)
+                _ = QuantizedKernels.euclidean512(query: quant1, candidate: vec2)
             }
 
             let elapsed = CFAbsoluteTimeGetCurrent() - start

@@ -1723,7 +1723,7 @@ struct ErrorHandlingTests {
 
             // Test that error creation is lightweight
             let singleErrorStart = Date()
-            let _ = VectorError.invalidData("Performance test")
+            _ = VectorError.invalidData("Performance test")
             let singleErrorTime = Date().timeIntervalSince(singleErrorStart)
             #expect(singleErrorTime < 0.001, "Single error creation should be sub-millisecond")
         }
@@ -1856,7 +1856,7 @@ extension ErrorHandlingTests {
             do {
                 // Try to allocate gigantic array
                 let hugeSize = Int.max / 100  // Still huge but won't crash immediately
-                let _ = UnsafeMutablePointer<Float>.allocate(capacity: hugeSize)
+                _ = UnsafeMutablePointer<Float>.allocate(capacity: hugeSize)
                 // If this succeeds (unlikely), we should deallocate
                 // But usually this will fail or trigger memory pressure
             } catch {
@@ -1879,7 +1879,7 @@ extension ErrorHandlingTests {
             // Simulate stack overflow scenario (recursive allocation)
             func recursiveAllocation(depth: Int) {
                 guard depth < 100 else { return }  // Safety limit
-                let _ = [Float](repeating: 0, count: 10000)
+                _ = [Float](repeating: 0, count: 10000)
                 recursiveAllocation(depth: depth + 1)
             }
             recursiveAllocation(depth: 0)

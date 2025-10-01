@@ -200,7 +200,7 @@ public extension CPUComputeProvider {
         _ combine: @Sendable @escaping (R, R) -> R
     ) async throws -> R {
         let count = items.count
-        if count == 0 { return initial }
+        if isEmpty { return initial }
         let shouldParallelize: Bool = {
             switch mode {
             case .sequential: return false
@@ -276,7 +276,7 @@ public extension CPUComputeProvider {
         _ combine: @Sendable @escaping (R, R) -> R
     ) async throws -> R {
         let count = items.count
-        if count == 0 { return initial }
+        if isEmpty { return initial }
         let shouldParallelize: Bool = {
             switch mode {
             case .sequential: return false
@@ -359,7 +359,7 @@ private extension CPUComputeProvider {
         }
 
         // Prepare temporary output buffer
-        var tmp = Array<R>(repeating: template, count: mN)
+        var tmp = [R](repeating: template, count: mN)
         let clock = ContinuousClock()
 
         // Warm-up
@@ -385,7 +385,7 @@ private extension CPUComputeProvider {
 }
 
 fileprivate extension UnsafeMutableBufferPointer {
-    var first: Element? { count > 0 ? self[0] : nil }
+    var first: Element? { !isEmpty ? self[0] : nil }
 }
 
 // MARK: - Factory Methods

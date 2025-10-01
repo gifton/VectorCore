@@ -170,16 +170,16 @@ public struct SparseMatrix: Sendable {
         cols: Int,
         edges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>
     ) {
-         // Convert the named tuple to regular tuple for the API
-         let apiEdges = edges.map { ($0.row, $0.col, $0.value) }
-         let matrix = GraphPrimitivesKernels.edgeListToCSR(nodeCount: max(rows, cols), edges: ContiguousArray(apiEdges))
-         self.init(
+        // Convert the named tuple to regular tuple for the API
+        let apiEdges = edges.map { ($0.row, $0.col, $0.value) }
+        let matrix = GraphPrimitivesKernels.edgeListToCSR(nodeCount: max(rows, cols), edges: ContiguousArray(apiEdges))
+        self.init(
             rows: matrix.rows,
             cols: matrix.cols,
             rowPointers: matrix.rowPointers,
             columnIndices: matrix.columnIndices,
             values: matrix.values
-         )
+        )
     }
 
     // Matrix properties
@@ -202,7 +202,7 @@ public struct SparseMatrix: Sendable {
     // Memory usage (of the primary CSR arrays)
     public var memoryFootprint: Int {
         MemoryLayout<UInt32>.size * (rows + 1 + nonZeros) +
-        (values != nil ? MemoryLayout<Float>.size * nonZeros : 0)
+            (values != nil ? MemoryLayout<Float>.size * nonZeros : 0)
     }
 
     // MARK: - Validation Methods
@@ -461,7 +461,7 @@ public final class OptimizedGraphStorage: @unchecked Sendable {
         let rowEnd = Int(matrix.rowPointers[rowIndex+1])
         let count = rowEnd - rowStart
 
-        guard count > 0 else {
+        guard !isEmpty else {
             // Return valid but empty pointers for empty rows.
             return (UnsafePointer(matrix.alignedColIndices), nil, 0)
         }
@@ -729,16 +729,16 @@ extension GraphPrimitivesKernels {
             var neighbors = ContiguousArray<Vector>()
             neighbors.reserveCapacity(neighborCount)
 
-            var weights: ContiguousArray<Float>? = nil
+            var weights: ContiguousArray<Float>?
 
             // Initialize weights array if needed.
             if aggregation.requiresWeights {
-                 if let matrixValues = matrix.values {
+                if let matrixValues = matrix.values {
                     // Efficiently slice the weights
                     weights = ContiguousArray(matrixValues[neighborStart..<neighborEnd])
-                 } else {
+                } else {
                     fatalError("Aggregation function requires weights, but the graph matrix has none.")
-                 }
+                }
             }
 
             // Collect neighbor features
@@ -890,7 +890,7 @@ extension GraphPrimitivesKernels {
         for entryIdx in 0..<nnz {
             let col = Int(matrix.columnIndices[entryIdx])
             if col < newRows {
-                 newRowPointers[col + 1] += 1
+                newRowPointers[col + 1] += 1
             }
         }
 
@@ -1115,7 +1115,7 @@ extension GraphPrimitivesKernels {
             return sumVectors(vectors)
 
         } else if p.isInfinite {
-             // L-infinity norm (Max norm): Max(|v_i|)
+            // L-infinity norm (Max norm): Max(|v_i|)
             return maxVectors(vectors)
 
         } else {

@@ -542,7 +542,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        guard count > 0 else { return 0 }
+        guard !isEmpty else { return 0 }
 
         var result = a[0]
         var i = 1
@@ -579,7 +579,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        guard count > 0 else { return 0 }
+        guard !isEmpty else { return 0 }
 
         var result = a[0]
         var i = 1
@@ -616,7 +616,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
-        guard count > 0 else { return 0 }
+        guard !isEmpty else { return 0 }
 
         var result = abs(a[0])
         var i = 1

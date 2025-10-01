@@ -235,7 +235,7 @@ public struct GraphConstructionKernels {}
 
 // MARK: - Helper Types for NSW
 
-fileprivate struct NSWSearchResult: Comparable {
+private struct NSWSearchResult: Comparable {
     let id: Int32
     let distance: Float
 
@@ -313,11 +313,11 @@ extension GraphConstructionKernels {
 
     // MARK: - Distance Metrics
 
-    public enum DistanceMetric {
+    public enum DistanceMetric: Sendable {
         case euclidean
         case cosine
         case manhattan
-        case custom((ContiguousArray<Float>, ContiguousArray<Float>) -> Float)
+        case custom(@Sendable (ContiguousArray<Float>, ContiguousArray<Float>) -> Float)
     }
 
     @inlinable
@@ -494,15 +494,15 @@ extension GraphConstructionKernels {
                     target.withUnsafeBufferPointer { tgtPtr in
                         // Compute difference: diff = target - source
                         vDSP_vsub(srcPtr.baseAddress!, 1,
-                                 tgtPtr.baseAddress!, 1,
-                                 diffPtr.baseAddress!, 1,
-                                 vDSP_Length(dim))
+                                  tgtPtr.baseAddress!, 1,
+                                  diffPtr.baseAddress!, 1,
+                                  vDSP_Length(dim))
 
                         // Compute squared L2 norm
                         var squaredDist: Float = 0
                         vDSP_svesq(diffPtr.baseAddress!, 1,
-                                  &squaredDist,
-                                  vDSP_Length(dim))
+                                   &squaredDist,
+                                   vDSP_Length(dim))
 
                         result[i] = sqrt(squaredDist)
                     }
@@ -541,9 +541,9 @@ extension GraphConstructionKernels {
                     // Compute dot product
                     var dotProduct: Float = 0
                     vDSP_dotpr(srcPtr.baseAddress!, 1,
-                              tgtPtr.baseAddress!, 1,
-                              &dotProduct,
-                              vDSP_Length(dim))
+                               tgtPtr.baseAddress!, 1,
+                               &dotProduct,
+                               vDSP_Length(dim))
 
                     // Compute target magnitude
                     var targetMagSq: Float = 0
@@ -578,15 +578,15 @@ extension GraphConstructionKernels {
                     target.withUnsafeBufferPointer { tgtPtr in
                         // Compute difference: diff = target - source
                         vDSP_vsub(srcPtr.baseAddress!, 1,
-                                 tgtPtr.baseAddress!, 1,
-                                 diffPtr.baseAddress!, 1,
-                                 vDSP_Length(dim))
+                                  tgtPtr.baseAddress!, 1,
+                                  diffPtr.baseAddress!, 1,
+                                  vDSP_Length(dim))
 
                         // Compute L1 norm (sum of absolute values)
                         var l1Norm: Float = 0
                         vDSP_svemg(diffPtr.baseAddress!, 1,
-                                  &l1Norm,
-                                  vDSP_Length(dim))
+                                   &l1Norm,
+                                   vDSP_Length(dim))
 
                         result[i] = l1Norm
                     }
@@ -613,7 +613,7 @@ extension GraphConstructionKernels {
 
     // MARK: - k-NN Graph Construction
 
-    public struct KNNGraphOptions {
+    public struct KNNGraphOptions: Sendable {
         public let k: Int
         public let metric: DistanceMetric
         public let approximate: Bool
@@ -638,17 +638,17 @@ extension GraphConstructionKernels {
         }
     }
 
-    public static func buildKNNGraph<Vector: GraphVector>(
+    public static func buildKNNGraph<Vector: GraphVector & Sendable>(
         vectors: ContiguousArray<Vector>,
         options: KNNGraphOptions
-    ) -> SparseMatrix {
+    ) async -> SparseMatrix {
         let n = vectors.count
         guard n > 0 else { return try! SparseMatrix(rows: 0, cols: 0, edges: []) }
 
         if options.approximate && n > 10000 {
-            return buildApproximateKNNGraph(vectors: vectors, options: options)
+            return await buildApproximateKNNGraph(vectors: vectors, options: options)
         } else if options.parallel && n > 1000 {
-            return buildParallelKNNGraph(vectors: vectors, options: options)
+            return await buildParallelKNNGraph(vectors: vectors, options: options)
         } else {
             return buildExactKNNGraph(vectors: vectors, options: options)
         }
@@ -705,64 +705,88 @@ extension GraphConstructionKernels {
 
     // MARK: - Parallel k-NN Construction
 
-    private static func buildParallelKNNGraph<Vector: GraphVector>(
+    private static func buildParallelKNNGraph<Vector: GraphVector & Sendable>(
         vectors: ContiguousArray<Vector>,
         options: KNNGraphOptions
-    ) -> SparseMatrix {
+    ) async -> SparseMatrix {
         let n = vectors.count
         let maxK = options.includeSelfLoops ? n : max(0, n - 1)
         let k = min(options.k, maxK)
 
         if k <= 0 { return try! SparseMatrix(rows: n, cols: n, edges: []) }
 
-        let numThreads = ProcessInfo.processInfo.activeProcessorCount
-        let chunkSize = (n + numThreads - 1) / numThreads
+        // Use 2x oversubscription for better load balancing
+        let numProcessors = ProcessInfo.processInfo.activeProcessorCount
+        let numTasks = numProcessors * 2
+        let chunkSize = (n + numTasks - 1) / numTasks
 
-        var threadLocalEdges = Array(repeating: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>(), count: numThreads)
-
-        DispatchQueue.concurrentPerform(iterations: numThreads) { threadId in
-            let start = threadId * chunkSize
-            let end = min((threadId + 1) * chunkSize, n)
-
-            var localEdges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
-            localEdges.reserveCapacity((end - start) * k * (options.symmetric ? 2 : 1))
-
-            for i in start..<end {
-                // Use batch distance computation for this row
-                let batchDistances = computeDistancesBatch(
-                    from: vectors[i],
-                    to: vectors,
-                    metric: options.metric
-                )
-
-                // Create indexed distances array
-                var distances = ContiguousArray<(index: Int, distance: Float)>()
-                distances.reserveCapacity(n)
-
-                for j in 0..<n {
-                    if i == j && !options.includeSelfLoops {
-                        continue
+        // Use TaskGroup for structured concurrency
+        let allEdges = await withTaskGroup(
+            of: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>.self,
+            returning: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>.self
+        ) { group in
+            // Schedule tasks
+            for taskId in 0..<numTasks {
+                group.addTask {
+                    let start = taskId * chunkSize
+                    let end = min((taskId + 1) * chunkSize, n)
+                    guard start < n else {
+                        return ContiguousArray()
                     }
-                    distances.append((j, batchDistances[j]))
-                }
 
-                // Sort and select k nearest
-                distances.sort { $0.distance < $1.distance }
+                    var localEdges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+                    localEdges.reserveCapacity((end - start) * k * (options.symmetric ? 2 : 1))
 
-                for (j, dist) in distances.prefix(k) {
-                    localEdges.append((UInt32(i), UInt32(j), dist))
-                    if options.symmetric {
-                        localEdges.append((UInt32(j), UInt32(i), dist))
+                    for i in start..<end {
+                        // Check for cancellation at chunk boundaries
+                        if Task.isCancelled {
+                            return localEdges
+                        }
+
+                        // Yield periodically for fairness
+                        if (i - start) % 2000 == 0 {
+                            await Task.yield()
+                        }
+
+                        // Use batch distance computation for this row
+                        let batchDistances = computeDistancesBatch(
+                            from: vectors[i],
+                            to: vectors,
+                            metric: options.metric
+                        )
+
+                        // Create indexed distances array
+                        var distances = ContiguousArray<(index: Int, distance: Float)>()
+                        distances.reserveCapacity(n)
+
+                        for j in 0..<n {
+                            if i == j && !options.includeSelfLoops {
+                                continue
+                            }
+                            distances.append((j, batchDistances[j]))
+                        }
+
+                        // Sort and select k nearest
+                        distances.sort { $0.distance < $1.distance }
+
+                        for (j, dist) in distances.prefix(k) {
+                            localEdges.append((UInt32(i), UInt32(j), dist))
+                            if options.symmetric {
+                                localEdges.append((UInt32(j), UInt32(i), dist))
+                            }
+                        }
                     }
+
+                    return localEdges
                 }
             }
 
-            threadLocalEdges[threadId] = localEdges
-        }
-
-        var allEdges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
-        for edges in threadLocalEdges {
-            allEdges.append(contentsOf: edges)
+            // Collect results from all tasks
+            var combined = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+            for await edges in group {
+                combined.append(contentsOf: edges)
+            }
+            return combined
         }
 
         return GraphConstructionKernels.cooToCSR(edges: allEdges, rows: n, cols: n)
@@ -770,10 +794,10 @@ extension GraphConstructionKernels {
 
     // MARK: - Approximate k-NN using LSH
 
-    private static func buildApproximateKNNGraph<Vector: GraphVector>(
+    private static func buildApproximateKNNGraph<Vector: GraphVector & Sendable>(
         vectors: ContiguousArray<Vector>,
         options: KNNGraphOptions
-    ) -> SparseMatrix {
+    ) async -> SparseMatrix {
         let n = vectors.count
         let k = min(options.k, options.includeSelfLoops ? n : max(0, n - 1))
         if k <= 0 { return try! SparseMatrix(rows: n, cols: n, edges: []) }
@@ -782,6 +806,7 @@ extension GraphConstructionKernels {
         let numHashes = 12
         let bucketWidth: Float = 4.0
 
+        // Build LSH index (mutable phase)
         var lshIndex = EuclideanLSHIndex(
             numTables: numTables,
             numHashes: numHashes,
@@ -793,43 +818,74 @@ extension GraphConstructionKernels {
             lshIndex.insert(vector: vector, id: i)
         }
 
-        let numThreads = ProcessInfo.processInfo.activeProcessorCount
-        let chunkSize = (n + numThreads - 1) / numThreads
-        var threadLocalEdges = Array(repeating: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>(), count: numThreads)
+        // After population, index is read-only and thread-safe
+        let immutableIndex = lshIndex
 
-        DispatchQueue.concurrentPerform(iterations: numThreads) { threadId in
-            let start = threadId * chunkSize
-            let end = min((threadId + 1) * chunkSize, n)
-            var localEdges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+        // Use 2x oversubscription for better load balancing
+        let numProcessors = ProcessInfo.processInfo.activeProcessorCount
+        let numTasks = numProcessors * 2
+        let chunkSize = (n + numTasks - 1) / numTasks
 
-            for i in start..<end {
-                let candidates = lshIndex.query(vector: vectors[i], candidateMultiplier: 3)
-
-                var distances = ContiguousArray<(index: Int, distance: Float)>()
-                for j in candidates {
-                    if i == j && !options.includeSelfLoops {
-                        continue
+        // Use TaskGroup for structured concurrency
+        let allEdges = await withTaskGroup(
+            of: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>.self,
+            returning: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>.self
+        ) { group in
+            // Schedule tasks
+            for taskId in 0..<numTasks {
+                group.addTask {
+                    let start = taskId * chunkSize
+                    let end = min((taskId + 1) * chunkSize, n)
+                    guard start < n else {
+                        return ContiguousArray()
                     }
 
-                    let dist = computeDistance(vectors[i], vectors[j], metric: options.metric)
-                    distances.append((j, dist))
-                }
+                    var localEdges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
 
-                distances.sort { $0.distance < $1.distance }
+                    for i in start..<end {
+                        // Check for cancellation at chunk boundaries
+                        if Task.isCancelled {
+                            return localEdges
+                        }
 
-                for (j, dist) in distances.prefix(k) {
-                    localEdges.append((UInt32(i), UInt32(j), dist))
-                    if options.symmetric {
-                        localEdges.append((UInt32(j), UInt32(i), dist))
+                        // Yield periodically for fairness
+                        if (i - start) % 2000 == 0 {
+                            await Task.yield()
+                        }
+
+                        // Query LSH index (thread-safe read-only operation)
+                        let candidates = immutableIndex.query(vector: vectors[i], candidateMultiplier: 3)
+
+                        var distances = ContiguousArray<(index: Int, distance: Float)>()
+                        for j in candidates {
+                            if i == j && !options.includeSelfLoops {
+                                continue
+                            }
+
+                            let dist = computeDistance(vectors[i], vectors[j], metric: options.metric)
+                            distances.append((j, dist))
+                        }
+
+                        distances.sort { $0.distance < $1.distance }
+
+                        for (j, dist) in distances.prefix(k) {
+                            localEdges.append((UInt32(i), UInt32(j), dist))
+                            if options.symmetric {
+                                localEdges.append((UInt32(j), UInt32(i), dist))
+                            }
+                        }
                     }
+
+                    return localEdges
                 }
             }
-            threadLocalEdges[threadId] = localEdges
-        }
 
-        var allEdges = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
-        for edges in threadLocalEdges {
-            allEdges.append(contentsOf: edges)
+            // Collect results from all tasks
+            var combined = ContiguousArray<(row: UInt32, col: UInt32, value: Float?)>()
+            for await edges in group {
+                combined.append(contentsOf: edges)
+            }
+            return combined
         }
 
         return GraphConstructionKernels.cooToCSR(edges: allEdges, rows: n, cols: n)
@@ -837,7 +893,7 @@ extension GraphConstructionKernels {
 
     // MARK: - Range-based Graph Construction
 
-    public struct RangeGraphOptions {
+    public struct RangeGraphOptions: Sendable {
         public let radius: Float
         public let adaptiveRadius: Bool
         public let minDegree: Int?
@@ -905,7 +961,7 @@ extension GraphConstructionKernels {
 
     // MARK: - Navigable Small World (NSW) Construction
 
-    public struct NSWOptions {
+    public struct NSWOptions: Sendable {
         public let M: Int
         public let efConstruction: Int
         public let metric: DistanceMetric

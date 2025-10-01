@@ -245,7 +245,7 @@ struct GraphPrimitivesComprehensiveTests {
             #expect(matrix.rowPointers[0] == 0)
             for i in 1..<matrix.rowPointers.count {
                 #expect(matrix.rowPointers[i] >= matrix.rowPointers[i-1],
-                       "Row pointers should be monotonically increasing")
+                        "Row pointers should be monotonically increasing")
             }
 
             // Last row pointer should equal number of non-zeros
@@ -272,7 +272,7 @@ struct GraphPrimitivesComprehensiveTests {
                 if endIdx > startIdx + 1 {
                     for i in startIdx..<(endIdx-1) {
                         #expect(matrix.columnIndices[i] <= matrix.columnIndices[i+1],
-                               "Column indices should be sorted within each row")
+                                "Column indices should be sorted within each row")
                     }
                 }
             }
@@ -652,7 +652,7 @@ struct GraphPrimitivesComprehensiveTests {
             let graph = try SparseMatrix(rows: 6, cols: 6, edges: edges)
 
             // Run Dijkstra from node 0
-            let result = GraphPrimitivesKernels.dijkstraShortestPath(
+            let result = await GraphPrimitivesKernels.dijkstraShortestPath(
                 matrix: graph,
                 options: GraphPrimitivesKernels.DijkstraOptions(source: 0)
             )
@@ -825,7 +825,7 @@ struct GraphPrimitivesComprehensiveTests {
             let graph = try SparseMatrix(rows: nodeCount, cols: nodeCount, edges: edges)
 
             // Perform parallel BFS
-            let parallelResult = GraphPrimitivesKernels.breadthFirstSearch(
+            let parallelResult = await GraphPrimitivesKernels.breadthFirstSearch(
                 matrix: graph,
                 source: 0,
                 options: GraphPrimitivesKernels.BFSOptions(
@@ -835,7 +835,7 @@ struct GraphPrimitivesComprehensiveTests {
             )
 
             // Perform sequential BFS for comparison
-            let sequentialResult = GraphPrimitivesKernels.breadthFirstSearch(
+            let sequentialResult = await GraphPrimitivesKernels.breadthFirstSearch(
                 matrix: graph,
                 source: 0,
                 options: GraphPrimitivesKernels.BFSOptions(
@@ -932,7 +932,7 @@ struct GraphPrimitivesComprehensiveTests {
                 (6, 6, 1.0),
                 // Connections between SCCs (but not forming cycles)
                 (2, 3, 1.0),  // From SCC1 to SCC2
-                (4, 6, 1.0),  // From SCC2 to SCC4
+                (4, 6, 1.0)  // From SCC2 to SCC4
             ]
 
             let graph = try SparseMatrix(rows: 7, cols: 7, edges: edges)
@@ -965,7 +965,7 @@ struct GraphPrimitivesComprehensiveTests {
 
             // Nodes 0,1,2 should be in same component
             #expect(component0 == component1 && component1 == component2,
-                   "Nodes 0,1,2 should be in same SCC")
+                    "Nodes 0,1,2 should be in same SCC")
 
             // Nodes 3,4 should be in same component
             let component3 = sccs.nodeComponents[3]
@@ -1107,7 +1107,7 @@ struct GraphPrimitivesComprehensiveTests {
 
             // Disconnected graph should have infinite diameter
             #expect(disconnectedDiameter == Int.max || disconnectedDiameter == -1,
-                   "Disconnected graph should have infinite diameter")
+                    "Disconnected graph should have infinite diameter")
         }
 
         @Test("Average path length")
@@ -1191,7 +1191,7 @@ struct GraphPrimitivesComprehensiveTests {
 
             // Should return infinity or special value for disconnected graph
             #expect(disconnectedAPL.isInfinite || disconnectedAPL < 0,
-                   "Disconnected graph should have infinite APL")
+                    "Disconnected graph should have infinite APL")
         }
 
         @Test("Clustering coefficient")
@@ -1209,12 +1209,12 @@ struct GraphPrimitivesComprehensiveTests {
 
             // Complete triangle has clustering coefficient = 1.0
             #expect(abs(triangleCC.global - 1.0) < 0.001,
-                   "Complete triangle should have CC = 1.0")
+                    "Complete triangle should have CC = 1.0")
 
             // All nodes should have local CC = 1.0
             for nodeCC in triangleCC.local {
                 #expect(abs(nodeCC - 1.0) < 0.001,
-                       "Each node in triangle should have CC = 1.0")
+                        "Each node in triangle should have CC = 1.0")
             }
 
             // Create a star graph (no triangles)
@@ -1255,11 +1255,11 @@ struct GraphPrimitivesComprehensiveTests {
 
             // Node 3: neighbors are 0,1 which are connected -> CC = 1.0
             #expect(abs(partialCC.local[3] - 1.0) < 0.01,
-                   "Node 3 should have high local CC")
+                    "Node 3 should have high local CC")
 
             // Node 4: neighbors are 2,3 which are not connected -> CC = 0.0
             #expect(partialCC.local[4] == 0.0,
-                   "Node 4 should have CC = 0")
+                    "Node 4 should have CC = 0")
 
             // Create a square (4-cycle) without diagonals
             let squareEdges: ContiguousArray<(row: UInt32, col: UInt32, value: Float?)> = [
@@ -1325,7 +1325,7 @@ struct GraphPrimitivesComprehensiveTests {
                 (2, 3, 1.0),
                 // Node 3: degree 2
                 (3, 1, 1.0),
-                (3, 2, 1.0),
+                (3, 2, 1.0)
                 // Node 4: degree 0 (isolated)
             ]
 
@@ -1400,9 +1400,9 @@ struct GraphPrimitivesComprehensiveTests {
 
             // All nodes should have same degree
             #expect(regularDistribution.minDegree == regularDistribution.maxDegree,
-                   "Regular graph should have uniform degree")
+                    "Regular graph should have uniform degree")
             #expect(regularDistribution.variance < 0.01,
-                   "Regular graph should have zero variance")
+                    "Regular graph should have zero variance")
         }
 
         @Test("Bridge and articulation point detection")
@@ -1460,8 +1460,8 @@ struct GraphPrimitivesComprehensiveTests {
 
             // Test compression ratio
             let originalSize = graph.columnIndices.count * MemoryLayout<UInt32>.size +
-                               graph.rowPointers.count * MemoryLayout<UInt32>.size +
-                               (graph.values?.count ?? 0) * MemoryLayout<Float>.size
+                graph.rowPointers.count * MemoryLayout<UInt32>.size +
+                (graph.values?.count ?? 0) * MemoryLayout<Float>.size
 
             // CSR format is already a form of compression
             let denseSize = 100 * 100 * MemoryLayout<Float>.size
@@ -1579,7 +1579,7 @@ struct GraphPrimitivesComprehensiveTests {
                     }
                 }
 
-                let _ = try SparseMatrix(rows: size, cols: size, edges: edges)
+                _ = try SparseMatrix(rows: size, cols: size, edges: edges)
                 let elapsed = Date().timeIntervalSince(startTime)
                 constructionTimes.append(elapsed)
             }
@@ -1984,7 +1984,7 @@ struct GraphPrimitivesComprehensiveTests {
                 (1, 0, 1.0),
                 // Component 2 (disconnected)
                 (2, 3, 2.0),
-                (3, 2, 2.0),
+                (3, 2, 2.0)
                 // Node 4 is isolated (no edges)
             ]
 
@@ -2204,7 +2204,7 @@ struct GraphPrimitivesComprehensiveTests {
                     }
                 }
 
-                let _ = try SparseMatrix(rows: nodeCount, cols: nodeCount, edges: edges)
+                _ = try SparseMatrix(rows: nodeCount, cols: nodeCount, edges: edges)
                 weakScalingTimes.append(Date().timeIntervalSince(startTime))
             }
 
@@ -2230,7 +2230,7 @@ struct GraphPrimitivesComprehensiveTests {
                     }
                 }
 
-                let _ = try SparseMatrix(rows: fixedNodeCount, cols: fixedNodeCount, edges: edges)
+                _ = try SparseMatrix(rows: fixedNodeCount, cols: fixedNodeCount, edges: edges)
                 strongScalingTimes.append(Date().timeIntervalSince(startTime))
             }
 
@@ -2306,22 +2306,22 @@ struct GraphGenerator {
     static func randomGraph(nodes: Int, edgeProbability: Float) -> SparseMatrix {
         // TODO: Generate Erdős–Rényi random graph
         try! SparseMatrix(rows: nodes, cols: nodes,
-                         rowPointers: ContiguousArray<UInt32>([0]),
-                         columnIndices: ContiguousArray<UInt32>())
+                          rowPointers: ContiguousArray<UInt32>([0]),
+                          columnIndices: ContiguousArray<UInt32>())
     }
 
     static func smallWorldGraph(nodes: Int, k: Int, p: Float) -> SparseMatrix {
         // TODO: Generate Watts-Strogatz small-world graph
         try! SparseMatrix(rows: nodes, cols: nodes,
-                         rowPointers: ContiguousArray<UInt32>([0]),
-                         columnIndices: ContiguousArray<UInt32>())
+                          rowPointers: ContiguousArray<UInt32>([0]),
+                          columnIndices: ContiguousArray<UInt32>())
     }
 
     static func scaleFreeGraph(nodes: Int, m: Int) -> SparseMatrix {
         // TODO: Generate Barabási–Albert scale-free graph
         try! SparseMatrix(rows: nodes, cols: nodes,
-                         rowPointers: ContiguousArray<UInt32>([0]),
-                         columnIndices: ContiguousArray<UInt32>())
+                          rowPointers: ContiguousArray<UInt32>([0]),
+                          columnIndices: ContiguousArray<UInt32>())
     }
 }
 

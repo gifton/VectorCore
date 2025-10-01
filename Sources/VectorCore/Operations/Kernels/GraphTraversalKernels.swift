@@ -105,6 +105,19 @@ extension GraphPrimitivesKernels {
         }
     }
 
+    /// Mutable state for DFS traversal (reduces parameter count in helper functions)
+    private struct DFSState {
+        var visited: ContiguousArray<Bool>
+        var visitOrder: ContiguousArray<Int32>
+        var finishOrder: ContiguousArray<Int32>
+        var parents: ContiguousArray<Int32>
+        var discoveryTime: ContiguousArray<Int32>
+        var finishTime: ContiguousArray<Int32>
+        var time: Int32
+        var backEdges: [(Int32, Int32)]
+        var crossEdges: [(Int32, Int32)]
+    }
+
     // MARK: - Performance Statistics
 
     public struct TraversalStatistics: Sendable {
@@ -121,7 +134,7 @@ extension GraphPrimitivesKernels {
         matrix: SparseMatrix,
         source: Int32,
         options: BFSOptions = BFSOptions()
-    ) -> BFSResult {
+    ) async -> BFSResult {
         let startTime = CFAbsoluteTimeGetCurrent()
         let nodeCount = Int32(matrix.rows)
 
@@ -159,7 +172,7 @@ extension GraphPrimitivesKernels {
                 options: options
             )
         } else if options.parallel && nodeCount > 1000 {
-            result = parallelBFS(
+            result = await parallelBFS(
                 matrix: matrix,
                 source: source,
                 distances: &distances,
@@ -332,9 +345,9 @@ extension GraphPrimitivesKernels {
         visitOrder: inout ContiguousArray<Int32>,
         levels: inout [[Int32]],
         options: BFSOptions
-    ) -> BFSResult {
+    ) async -> BFSResult {
         let nodeCount = Int32(matrix.rows)
-        let numThreads = ProcessInfo.processInfo.activeProcessorCount
+        let numTasks = ProcessInfo.processInfo.activeProcessorCount * 2  // 2x oversubscription
 
         // Create thread-safe state
         let state = ParallelBFSState(nodeCount: Int(nodeCount), source: source)
@@ -359,39 +372,51 @@ extension GraphPrimitivesKernels {
             let nextDistance = currentDistance + 1
 
             // Work-stealing approach for better load balancing
-            let chunkSize = max(1, (frontierCount + numThreads - 1) / numThreads)
+            let chunkSize = max(1, (frontierCount + numTasks - 1) / numTasks)
 
-            DispatchQueue.concurrentPerform(iterations: numThreads) { threadId in
-                let startIdx = threadId * chunkSize
-                let endIdx = min(startIdx + chunkSize, frontierCount)
+            await withTaskGroup(of: Void.self) { group in
+                for taskId in 0..<numTasks {
+                    group.addTask {
+                        let startIdx = taskId * chunkSize
+                        let endIdx = min(startIdx + chunkSize, frontierCount)
 
-                guard startIdx < endIdx else { return }
+                        guard startIdx < endIdx else { return }
 
-                var localFrontier = ContiguousArray<Int32>()
-                localFrontier.reserveCapacity(endIdx - startIdx)
+                        var localFrontier = ContiguousArray<Int32>()
+                        localFrontier.reserveCapacity(endIdx - startIdx)
 
-                for i in startIdx..<endIdx {
-                    let node = frontierCopy[i]
+                        for i in startIdx..<endIdx {
+                            if Task.isCancelled { return }
 
-                    // Prefetch for cache optimization
-                    if options.prefetching && i + 1 < endIdx {
-                        prefetchAdjacencyList(matrix: matrix, node: frontierCopy[i + 1])
-                    }
+                            if (i - startIdx) % 100 == 0 {
+                                await Task.yield()
+                            }
 
-                    let rowStart = Int(matrix.rowPointers[Int(node)])
-                    let rowEnd = Int(matrix.rowPointers[Int(node) + 1])
+                            let node = frontierCopy[i]
 
-                    for idx in rowStart..<rowEnd {
-                        let neighbor = Int32(matrix.columnIndices[idx])
+                            // Prefetch for cache optimization
+                            if options.prefetching && i + 1 < endIdx {
+                                prefetchAdjacencyList(matrix: matrix, node: frontierCopy[i + 1])
+                            }
 
-                        if state.tryVisitNode(neighbor, from: node, at: nextDistance) {
-                            localFrontier.append(neighbor)
+                            let rowStart = Int(matrix.rowPointers[Int(node)])
+                            let rowEnd = Int(matrix.rowPointers[Int(node) + 1])
+
+                            for idx in rowStart..<rowEnd {
+                                let neighbor = Int32(matrix.columnIndices[idx])
+
+                                if state.tryVisitNode(neighbor, from: node, at: nextDistance) {
+                                    localFrontier.append(neighbor)
+                                }
+                            }
                         }
+
+                        // Merge local results
+                        state.addToNextFrontier(localFrontier)
                     }
                 }
 
-                // Merge local results
-                state.addToNextFrontier(localFrontier)
+                await group.waitForAll()
             }
 
             currentFrontier = state.nextFrontier
@@ -590,49 +615,35 @@ extension GraphPrimitivesKernels {
             )
         }
 
-        var visitOrder = ContiguousArray<Int32>()
-        var finishOrder = ContiguousArray<Int32>()
-        var parents = ContiguousArray<Int32>(repeating: -1, count: Int(nodeCount))
-        var discoveryTime = ContiguousArray<Int32>(repeating: -1, count: Int(nodeCount))
-        var finishTime = ContiguousArray<Int32>(repeating: -1, count: Int(nodeCount))
-        var backEdges: [(Int32, Int32)] = []
-        var crossEdges: [(Int32, Int32)] = []
-
-        var visited = ContiguousArray<Bool>(repeating: false, count: Int(nodeCount))
-        var time: Int32 = 0
+        // Create DFS state
+        var state = DFSState(
+            visited: ContiguousArray<Bool>(repeating: false, count: Int(nodeCount)),
+            visitOrder: ContiguousArray<Int32>(),
+            finishOrder: ContiguousArray<Int32>(),
+            parents: ContiguousArray<Int32>(repeating: -1, count: Int(nodeCount)),
+            discoveryTime: ContiguousArray<Int32>(repeating: -1, count: Int(nodeCount)),
+            finishTime: ContiguousArray<Int32>(repeating: -1, count: Int(nodeCount)),
+            time: 0,
+            backEdges: [],
+            crossEdges: []
+        )
 
         // Visit source component
         dfsVisit(
             matrix: matrix,
             startNode: source,
-            visited: &visited,
-            visitOrder: &visitOrder,
-            finishOrder: &finishOrder,
-            parents: &parents,
-            discoveryTime: &discoveryTime,
-            finishTime: &finishTime,
-            time: &time,
-            backEdges: &backEdges,
-            crossEdges: &crossEdges,
+            state: &state,
             options: options
         )
 
         // Visit remaining components if requested
         if options.visitAll {
             for node in 0..<nodeCount {
-                if !visited[Int(node)] {
+                if !state.visited[Int(node)] {
                     dfsVisit(
                         matrix: matrix,
                         startNode: node,
-                        visited: &visited,
-                        visitOrder: &visitOrder,
-                        finishOrder: &finishOrder,
-                        parents: &parents,
-                        discoveryTime: &discoveryTime,
-                        finishTime: &finishTime,
-                        time: &time,
-                        backEdges: &backEdges,
-                        crossEdges: &crossEdges,
+                        state: &state,
                         options: options
                     )
                 }
@@ -641,21 +652,21 @@ extension GraphPrimitivesKernels {
 
         let elapsedTime = CFAbsoluteTimeGetCurrent() - startTime
         let statistics = TraversalStatistics(
-            nodesVisited: visitOrder.count,
-            edgesExplored: computeEdgesExplored(matrix: matrix, visited: discoveryTime),
+            nodesVisited: state.visitOrder.count,
+            edgesExplored: computeEdgesExplored(matrix: matrix, visited: state.discoveryTime),
             elapsedTime: elapsedTime,
             parallelSpeedup: nil,
             cacheHits: nil
         )
 
         return DFSResult(
-            visitOrder: visitOrder,
-            finishOrder: finishOrder,
-            parents: parents,
-            discoveryTime: discoveryTime,
-            finishTime: finishTime,
-            backEdges: backEdges,
-            crossEdges: crossEdges,
+            visitOrder: state.visitOrder,
+            finishOrder: state.finishOrder,
+            parents: state.parents,
+            discoveryTime: state.discoveryTime,
+            finishTime: state.finishTime,
+            backEdges: state.backEdges,
+            crossEdges: state.crossEdges,
             statistics: statistics
         )
     }
@@ -665,15 +676,7 @@ extension GraphPrimitivesKernels {
     private static func dfsVisit(
         matrix: SparseMatrix,
         startNode: Int32,
-        visited: inout ContiguousArray<Bool>,
-        visitOrder: inout ContiguousArray<Int32>,
-        finishOrder: inout ContiguousArray<Int32>,
-        parents: inout ContiguousArray<Int32>,
-        discoveryTime: inout ContiguousArray<Int32>,
-        finishTime: inout ContiguousArray<Int32>,
-        time: inout Int32,
-        backEdges: inout [(Int32, Int32)],
-        crossEdges: inout [(Int32, Int32)],
+        state: inout DFSState,
         options: DFSOptions
     ) {
         // Stack frame for iterative DFS
@@ -1079,7 +1082,7 @@ extension GraphPrimitivesKernels {
     public static func dijkstraShortestPath(
         matrix: SparseMatrix,
         options: DijkstraOptions
-    ) -> DijkstraResult {
+    ) async -> DijkstraResult {
         let nodeCount = matrix.rows
         var distances = ContiguousArray<Float>(repeating: .infinity, count: nodeCount)
         var parents = ContiguousArray<Int32>(repeating: -1, count: nodeCount)
@@ -1088,7 +1091,7 @@ extension GraphPrimitivesKernels {
         distances[Int(options.source)] = 0
 
         if options.parallel && nodeCount > 10000 {
-            return parallelDijkstra(
+            return await parallelDijkstra(
                 matrix: matrix,
                 distances: &distances,
                 parents: &parents,
@@ -1165,7 +1168,7 @@ extension GraphPrimitivesKernels {
         parents: inout ContiguousArray<Int32>,
         visitOrder: inout ContiguousArray<Int32>,
         options: DijkstraOptions
-    ) -> DijkstraResult {
+    ) async -> DijkstraResult {
         let nodeCount = matrix.rows
         let delta = estimateDelta(matrix: matrix)
         let numBuckets = 128
@@ -1186,27 +1189,47 @@ extension GraphPrimitivesKernels {
                 let nodes = state.extractBucket(bucketIdx)
                 guard !nodes.isEmpty else { continue }
 
-                // Process nodes in parallel
-                DispatchQueue.concurrentPerform(iterations: nodes.count) { i in
-                    let u = nodes[i]
-                    let uDist = state.getDistance(node: Int(u))
+                // Process nodes in parallel with TaskGroup
+                let numTasks = min(ProcessInfo.processInfo.activeProcessorCount * 2, nodes.count)
+                let chunkSize = max(1, (nodes.count + numTasks - 1) / numTasks)
 
-                    // Skip if we found a better path
-                    if uDist > Float(bucketIdx + 1) * delta { return }
+                await withTaskGroup(of: Void.self) { group in
+                    for taskId in 0..<numTasks {
+                        group.addTask {
+                            let start = taskId * chunkSize
+                            let end = min((taskId + 1) * chunkSize, nodes.count)
+                            guard start < end else { return }
 
-                    let rowStart = Int(matrix.rowPointers[Int(u)])
-                    let rowEnd = Int(matrix.rowPointers[Int(u) + 1])
+                            for i in start..<end {
+                                if Task.isCancelled { return }
 
-                    for idx in rowStart..<rowEnd {
-                        let v = matrix.columnIndices[idx]
-                        let weight = matrix.values?[idx] ?? 1.0
-                        let newDist = uDist + weight
+                                if (i - start) % 50 == 0 {
+                                    await Task.yield()
+                                }
 
-                        // Try to update distance
-                        if state.tryUpdateDistance(node: Int(v), newDistance: newDist, parent: u) {
-                            state.addToBucket(node: Int32(v), distance: newDist)
+                                let u = nodes[i]
+                                let uDist = state.getDistance(node: Int(u))
+
+                                // Skip if we found a better path
+                                if uDist > Float(bucketIdx + 1) * delta { continue }
+
+                                let rowStart = Int(matrix.rowPointers[Int(u)])
+                                let rowEnd = Int(matrix.rowPointers[Int(u) + 1])
+
+                                for idx in rowStart..<rowEnd {
+                                    let v = matrix.columnIndices[idx]
+                                    let weight = matrix.values?[idx] ?? 1.0
+                                    let newDist = uDist + weight
+
+                                    // Try to update distance
+                                    if state.tryUpdateDistance(node: Int(v), newDistance: newDist, parent: u) {
+                                        state.addToBucket(node: Int32(v), distance: newDist)
+                                    }
+                                }
+                            }
                         }
                     }
+                    await group.waitForAll()
                 }
             }
         }

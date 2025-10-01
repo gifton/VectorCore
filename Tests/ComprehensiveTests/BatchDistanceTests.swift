@@ -115,7 +115,7 @@ final class BatchDistanceTests: XCTestCase {
             XCTAssertEqual(batchDistances.count, individualDistances.count)
             for i in 0..<batchDistances.count {
                 XCTAssertEqual(batchDistances[i], individualDistances[i], accuracy: accuracy,
-                             "Mismatch at index \(i) for metric \(name)")
+                               "Mismatch at index \(i) for metric \(name)")
             }
         }
     }
@@ -157,7 +157,7 @@ final class BatchDistanceTests: XCTestCase {
         XCTAssertGreaterThan(speedup, 1.5, "Batch computation should be significantly faster")
     }
 
-    func testKNNGraphWithBatchDistances() {
+    func testKNNGraphWithBatchDistances() async {
         // Create test vectors
         let vectors = ContiguousArray((0..<20).map { _ in
             ContiguousArray((0..<64).map { _ in Float.random(in: -1...1) })
@@ -170,7 +170,7 @@ final class BatchDistanceTests: XCTestCase {
         )
 
         // This will use the batch distance computation internally
-        let graph = GraphConstructionKernels.buildKNNGraph(
+        let graph = await GraphConstructionKernels.buildKNNGraph(
             vectors: vectors,
             options: options
         )

@@ -335,9 +335,23 @@ public enum HierarchicalClusteringKernels {
             // Handle 0 or 1 vector case
             if n == 1 {
                 let node = ClusterNode(id: 0, vectorIndices: [0], centroid: vectors[0], radius: 0.0)
-                return HierarchicalTree(nodes: [node], rootNodeId: 0, leafNodeIds: [0], dimension: 512, linkageCriterion: linkageCriterion, distanceMetric: distanceMetric)
+                return HierarchicalTree(
+                    nodes: [node],
+                    rootNodeId: 0,
+                    leafNodeIds: [0],
+                    dimension: 512,
+                    linkageCriterion: linkageCriterion,
+                    distanceMetric: distanceMetric
+                )
             }
-            return HierarchicalTree(nodes: [], rootNodeId: -1, leafNodeIds: [], dimension: 512, linkageCriterion: linkageCriterion, distanceMetric: distanceMetric)
+            return HierarchicalTree(
+                nodes: [],
+                rootNodeId: -1,
+                leafNodeIds: [],
+                dimension: 512,
+                linkageCriterion: linkageCriterion,
+                distanceMetric: distanceMetric
+            )
         }
 
         // 1. Initialize leaf nodes
@@ -512,10 +526,14 @@ public enum HierarchicalClusteringKernels {
 
             // Handle empty clusters
             if cluster1.isEmpty && !cluster2.isEmpty {
+                // swiftlint:disable:next line_length
+                // Justification: Mathematical closure for finding furthest point - breaking would obscure the comparison logic
                 let furthest = cluster2.max { a, b in computeDistance(vectors[a], centroid2, metric: distanceMetric) < computeDistance(vectors[b], centroid2, metric: distanceMetric) }!
                 cluster2.remove(furthest)
                 cluster1.insert(furthest)
             } else if cluster2.isEmpty && !cluster1.isEmpty {
+                // swiftlint:disable:next line_length
+                // Justification: Mathematical closure for finding furthest point - breaking would obscure the comparison logic
                 let furthest = cluster1.max { a, b in computeDistance(vectors[a], centroid1, metric: distanceMetric) < computeDistance(vectors[b], centroid1, metric: distanceMetric) }!
                 cluster1.remove(furthest)
                 cluster2.insert(furthest)

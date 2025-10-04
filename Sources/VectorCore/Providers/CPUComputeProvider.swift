@@ -200,7 +200,7 @@ public extension CPUComputeProvider {
         _ combine: @Sendable @escaping (R, R) -> R
     ) async throws -> R {
         let count = items.count
-        if isEmpty { return initial }
+        if count == 0 { return initial }
         let shouldParallelize: Bool = {
             switch mode {
             case .sequential: return false
@@ -276,7 +276,7 @@ public extension CPUComputeProvider {
         _ combine: @Sendable @escaping (R, R) -> R
     ) async throws -> R {
         let count = items.count
-        if isEmpty { return initial }
+        if count == 0 { return initial }
         let shouldParallelize: Bool = {
             switch mode {
             case .sequential: return false

@@ -126,6 +126,10 @@ public enum AutoTuning {
 
     // MARK: - Calculation Logic
 
+    // swiftlint:disable identifier_name
+    // Justification: Mathematical notation follows published parallel heuristic formulas:
+    // P_eff = effective parallelism factor, Tp = parallel overhead, N_star = optimal batch size
+    // Using standard notation improves formula readability and matches academic literature
     private static func calculateTuning(dim: Int, probes: CalibrationProbes, providerCores: Int) -> Tuning {
         let P_eff = probes.effectiveParallelFactor
         let Tp = probes.parallelOverheadNs
@@ -165,6 +169,7 @@ public enum AutoTuning {
 
         return Tuning(breakEvenN: N_star, minChunk: minChunk, modeBias: bias)
     }
+    // swiftlint:enable identifier_name
 
     // MARK: - Helpers
 
@@ -177,11 +182,14 @@ public enum AutoTuning {
     }
 
     private static func logTuning(dim: Int, kind: KernelKind, tuning: Tuning, durationMs: Double, probes: CalibrationProbes) {
+        // swiftlint:disable line_length
+        // Justification: Format string for diagnostic logging - breaking would obscure parameter alignment
         let message = String(
             format: "[VectorCore.AutoTuning] %d/%@: N*=%d, Chunk=%d, Bias=%@. (Time: %.2fms, Total: %.2fms | Probes: a=%.1f, Tp=%.0f, P_eff=%.2f)",
             dim, kind.description, tuning.breakEvenN, tuning.minChunk, String(describing: tuning.modeBias), durationMs, accumulatedCalibrationTimeMs,
             probes.nsPerCandidateSeq, probes.parallelOverheadNs, probes.effectiveParallelFactor
         )
+        // swiftlint:enable line_length
         print(message)
     }
 }

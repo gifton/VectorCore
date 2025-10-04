@@ -275,6 +275,14 @@ extension HierarchicalTree {
     ///     print(result.description)
     /// }
     /// ```
+    // swiftlint:disable:next cyclomatic_complexity
+    // Justification: Hierarchical tree validation requires checking:
+    // 1. Root node existence and properties
+    // 2. Parent-child bidirectional consistency
+    // 3. Height monotonicity constraints
+    // 4. Leaf node properties (no children, height=0)
+    // 5. Merge distance ordering
+    // Comprehensive validation cannot be simplified without losing correctness guarantees.
     public func validateHierarchy() -> ValidationResult {
         var errors: [String] = []
 

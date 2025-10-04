@@ -708,14 +708,14 @@ extension GraphPrimitivesKernels {
             switch frame.phase {
             case .discovery:
                 // First visit to node
-                if visited[Int(frame.node)] {
+                if state.visited[Int(frame.node)] {
                     continue
                 }
 
-                visited[Int(frame.node)] = true
-                discoveryTime[Int(frame.node)] = time
-                time += 1
-                visitOrder.append(frame.node)
+                state.visited[Int(frame.node)] = true
+                state.discoveryTime[Int(frame.node)] = state.time
+                state.time += 1
+                state.visitOrder.append(frame.node)
 
                 // Setup neighbor exploration
                 let rowStart = Int(matrix.rowPointers[Int(frame.node)])
@@ -752,8 +752,8 @@ extension GraphPrimitivesKernels {
                     let neighbor = Int32(matrix.columnIndices[frame.neighborIdx])
                     frame.neighborIdx += 1
 
-                    if !visited[Int(neighbor)] {
-                        parents[Int(neighbor)] = frame.node
+                    if !state.visited[Int(neighbor)] {
+                        state.parents[Int(neighbor)] = frame.node
 
                         // Continue exploring current node after visiting neighbor
                         if frame.neighborIdx < frame.neighborEnd {
@@ -771,13 +771,13 @@ extension GraphPrimitivesKernels {
                         break
                     } else if options.classifyEdges || options.detectCycles {
                         // Classify edge
-                        if discoveryTime[Int(neighbor)] < discoveryTime[Int(frame.node)] {
-                            if finishTime[Int(neighbor)] == -1 {
+                        if state.discoveryTime[Int(neighbor)] < state.discoveryTime[Int(frame.node)] {
+                            if state.finishTime[Int(neighbor)] == -1 {
                                 // Back edge (to ancestor)
-                                backEdges.append((frame.node, neighbor))
+                                state.backEdges.append((frame.node, neighbor))
                             } else {
                                 // Cross edge
-                                crossEdges.append((frame.node, neighbor))
+                                state.crossEdges.append((frame.node, neighbor))
                             }
                         }
                     }
@@ -785,15 +785,22 @@ extension GraphPrimitivesKernels {
 
             case .finishing:
                 // Post-order processing
-                finishTime[Int(frame.node)] = time
-                time += 1
-                finishOrder.append(frame.node)
+                state.finishTime[Int(frame.node)] = state.time
+                state.time += 1
+                state.finishOrder.append(frame.node)
             }
         }
     }
 
     // MARK: - Bidirectional BFS
 
+    // swiftlint:disable:next cyclomatic_complexity
+    // Justification: Bidirectional BFS inherently requires high complexity:
+    // 1. Simultaneous frontier expansion from source and target
+    // 2. Intersection detection between forward/backward searches
+    // 3. Path reconstruction from meeting point
+    // 4. Directed vs undirected graph handling (reverse matrix)
+    // This is a classic graph algorithm that cannot be meaningfully decomposed.
     public static func bidirectionalBFS(
         matrix: SparseMatrix,
         reverseMatrix: SparseMatrix? = nil,  // For directed graphs

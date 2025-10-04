@@ -215,6 +215,13 @@ extension GraphPrimitivesKernels {
 
     // MARK: - Optimized SpGEMM Chunk Computation
 
+    // swiftlint:disable:next cyclomatic_complexity
+    // Justification: SpGEMM (sparse matrix multiplication) requires complex branching for:
+    // 1. Accumulator workspace management (numeric vs symbolic)
+    // 2. Duplicate handling strategies (sum vs keep-first)
+    // 3. Memory threshold management for dense row detection
+    // 4. Multiple early-exit conditions for performance
+    // This is a performance-critical kernel where algorithmic complexity cannot be reduced.
     private static func computeSpGEMMChunk(
         A: SparseMatrix,
         B: SparseMatrix,

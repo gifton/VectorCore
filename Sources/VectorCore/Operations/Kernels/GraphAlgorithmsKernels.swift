@@ -68,6 +68,13 @@ extension GraphPrimitivesKernels {
     }
 
     /// Efficient triangle counting using node iterator with intersection
+    // swiftlint:disable:next cyclomatic_complexity
+    // Justification: Triangle counting requires complex logic for:
+    // 1. Parallel vs sequential execution paths
+    // 2. Task group coordination and buffer management
+    // 3. Neighbor set intersection algorithms
+    // 4. Three-way edge existence checks (i-j, j-k, i-k)
+    // This is a fundamental graph mining operation with unavoidable branching.
     private static func countTriangles(matrix: SparseMatrix, parallel: Bool) async -> Int {
         let n = matrix.rows
 

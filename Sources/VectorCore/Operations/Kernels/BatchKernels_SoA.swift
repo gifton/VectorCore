@@ -16,6 +16,10 @@ import Glibc   // For sqrt, max, min on Linux
 import WinSDK  // For sqrt, max, min on Windows
 #endif
 
+#if canImport(Accelerate)
+import Accelerate  // For vDSP Manhattan distance operations
+#endif
+
 /// SoA-optimized batch kernels for high-performance vector similarity computation
 ///
 /// These kernels leverage Structure-of-Arrays memory layout to achieve better
@@ -511,7 +515,7 @@ public enum BatchKernels_SoA {
         }
 
         // Verify memory alignment
-        if !soa.isEmpty {
+        if soa.count != 0 {
             let firstPtr = soa.lanePointer(0)
             let address = UInt(bitPattern: firstPtr)
             guard address & 0xF == 0 else {
@@ -977,6 +981,486 @@ public enum BatchKernels_SoA {
         return results
     }
 
+    // MARK: - Manhattan Distance (L1 Norm)
+
+    #if canImport(Accelerate)
+
+    /// Batch Manhattan distance (L1 norm) for 512-dimensional vectors
+    ///
+    /// Computes: d(query, candidate[i]) = Σ |query[j] - candidate[i][j]|
+    ///
+    /// **Algorithm**: SoA transformation with vDSP vectorization
+    /// - Per-dimension processing (better cache locality)
+    /// - vDSP operations: vsadd (broadcast), vabs, vadd (accumulate)
+    /// - Automatic blocking for N > 10,000 (cache-friendly)
+    ///
+    /// **Performance**: ~10-15% faster than Euclidean (no squaring)
+    ///
+    /// - Parameters:
+    ///   - query: Query vector (512-dim)
+    ///   - candidates: Array of candidate vectors
+    /// - Returns: Array of Manhattan distances
+    /// - Complexity: O(N × D) where N = candidates, D = 512
+    public static func batchManhattan512(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized]
+    ) -> [Float] {
+        guard !candidates.isEmpty else { return [] }
+
+        #if DEBUG
+        assert(query.storage.count == 128, "Invalid 512-dim query vector")
+        assert(candidates.allSatisfy { $0.storage.count == 128 }, "Invalid candidate dimensions")
+        #endif
+
+        var distances = [Float](repeating: 0.0, count: candidates.count)
+
+        if candidates.count > 10_000 {
+            manhattan512CoreBlocked(
+                query: query,
+                candidates: candidates,
+                distances: &distances
+            )
+        } else {
+            manhattan512Core(
+                query: query,
+                candidates: candidates,
+                distances: &distances
+            )
+        }
+
+        return distances
+    }
+
+    /// Batch Manhattan distance for 768-dimensional vectors
+    public static func batchManhattan768(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized]
+    ) -> [Float] {
+        guard !candidates.isEmpty else { return [] }
+
+        #if DEBUG
+        assert(query.storage.count == 192, "Invalid 768-dim query vector")
+        assert(candidates.allSatisfy { $0.storage.count == 192 }, "Invalid candidate dimensions")
+        #endif
+
+        var distances = [Float](repeating: 0.0, count: candidates.count)
+
+        if candidates.count > 10_000 {
+            manhattan768CoreBlocked(
+                query: query,
+                candidates: candidates,
+                distances: &distances
+            )
+        } else {
+            manhattan768Core(
+                query: query,
+                candidates: candidates,
+                distances: &distances
+            )
+        }
+
+        return distances
+    }
+
+    /// Batch Manhattan distance for 1536-dimensional vectors
+    public static func batchManhattan1536(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized]
+    ) -> [Float] {
+        guard !candidates.isEmpty else { return [] }
+
+        #if DEBUG
+        assert(query.storage.count == 384, "Invalid 1536-dim query vector")
+        assert(candidates.allSatisfy { $0.storage.count == 384 }, "Invalid candidate dimensions")
+        #endif
+
+        var distances = [Float](repeating: 0.0, count: candidates.count)
+
+        if candidates.count > 10_000 {
+            manhattan1536CoreBlocked(
+                query: query,
+                candidates: candidates,
+                distances: &distances
+            )
+        } else {
+            manhattan1536Core(
+                query: query,
+                candidates: candidates,
+                distances: &distances
+            )
+        }
+
+        return distances
+    }
+
+    // MARK: - Manhattan Distance Core Implementations
+
+    @inline(__always)
+    @usableFromInline
+    internal static func manhattan512Core(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        distances: inout [Float]
+    ) {
+        let N = candidates.count
+        let D = 512
+        let simdCount = 128
+
+        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
+        var candidateValues = ContiguousArray<Float>(repeating: 0, count: N)
+        var diffValues = ContiguousArray<Float>(repeating: 0, count: N)
+        var absValues = ContiguousArray<Float>(repeating: 0, count: N)
+
+        // Extract query to contiguous array (once)
+        for i in 0..<simdCount {
+            let simd = query.storage[i]
+            queryValues[i * 4 + 0] = simd[0]
+            queryValues[i * 4 + 1] = simd[1]
+            queryValues[i * 4 + 2] = simd[2]
+            queryValues[i * 4 + 3] = simd[3]
+        }
+
+        // Process each dimension (SoA transformation)
+        for d in 0..<D {
+            let queryVal = queryValues[d]
+            let simdIndex = d / 4
+            let laneIndex = d % 4
+
+            // Extract dimension d from all candidates
+            for i in 0..<N {
+                candidateValues[i] = candidates[i].storage[simdIndex][laneIndex]
+            }
+
+            // Compute differences: diff[i] = candidate[i][d] - query[d]
+            var negQueryVal = -queryVal
+            candidateValues.withUnsafeBufferPointer { candidatesPtr in
+                diffValues.withUnsafeMutableBufferPointer { diffPtr in
+                    vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+
+            // Compute absolute values
+            diffValues.withUnsafeBufferPointer { diffPtr in
+                absValues.withUnsafeMutableBufferPointer { absPtr in
+                    vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+
+            // Accumulate to distances
+            distances.withUnsafeMutableBufferPointer { distPtr in
+                absValues.withUnsafeBufferPointer { absPtr in
+                    vDSP_vadd(distPtr.baseAddress!, 1, absPtr.baseAddress!, 1, distPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+        }
+    }
+
+    @inline(__always)
+    @usableFromInline
+    internal static func manhattan512CoreBlocked(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        distances: inout [Float]
+    ) {
+        let N = candidates.count
+        let D = 512
+        let simdCount = 128
+        let blockSize = 256
+
+        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
+
+        // Extract query once
+        for i in 0..<simdCount {
+            let simd = query.storage[i]
+            queryValues[i * 4 + 0] = simd[0]
+            queryValues[i * 4 + 1] = simd[1]
+            queryValues[i * 4 + 2] = simd[2]
+            queryValues[i * 4 + 3] = simd[3]
+        }
+
+        // Allocate working buffers for maximum block size once
+        var candidateValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        var diffValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        var absValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+
+        // Process in blocks
+        for blockStart in stride(from: 0, to: N, by: blockSize) {
+            let blockEnd = min(blockStart + blockSize, N)
+            let blockN = blockEnd - blockStart
+
+            distances.withUnsafeMutableBufferPointer { distancesPtr in
+                guard let distancesBaseAddress = distancesPtr.baseAddress else { return }
+                let blockDistancesPtr = distancesBaseAddress.advanced(by: blockStart)
+
+                // Process each dimension for this block
+                for d in 0..<D {
+                    let queryVal = queryValues[d]
+                    let simdIndex = d / 4
+                    let laneIndex = d % 4
+
+                    // Extract dimension d from block candidates
+                    for i in 0..<blockN {
+                        candidateValues[i] = candidates[blockStart + i].storage[simdIndex][laneIndex]
+                    }
+
+                    // Compute differences
+                    var negQueryVal = -queryVal
+                    candidateValues.withUnsafeBufferPointer { candidatesPtr in
+                        diffValues.withUnsafeMutableBufferPointer { diffPtr in
+                            vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(blockN))
+                        }
+                    }
+
+                    // Compute absolute values
+                    diffValues.withUnsafeBufferPointer { diffPtr in
+                        absValues.withUnsafeMutableBufferPointer { absPtr in
+                            vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(blockN))
+                        }
+                    }
+
+                    // Accumulate in-place
+                    absValues.withUnsafeBufferPointer { absPtr in
+                        vDSP_vadd(blockDistancesPtr, 1, absPtr.baseAddress!, 1, blockDistancesPtr, 1, vDSP_Length(blockN))
+                    }
+                }
+            }
+        }
+    }
+
+    @inline(__always)
+    @usableFromInline
+    internal static func manhattan768Core(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        distances: inout [Float]
+    ) {
+        let N = candidates.count
+        let D = 768
+        let simdCount = 192
+
+        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
+        var candidateValues = ContiguousArray<Float>(repeating: 0, count: N)
+        var diffValues = ContiguousArray<Float>(repeating: 0, count: N)
+        var absValues = ContiguousArray<Float>(repeating: 0, count: N)
+
+        // Extract query
+        for i in 0..<simdCount {
+            let simd = query.storage[i]
+            queryValues[i * 4 + 0] = simd[0]
+            queryValues[i * 4 + 1] = simd[1]
+            queryValues[i * 4 + 2] = simd[2]
+            queryValues[i * 4 + 3] = simd[3]
+        }
+
+        // Process each dimension
+        for d in 0..<D {
+            let queryVal = queryValues[d]
+            let simdIndex = d / 4
+            let laneIndex = d % 4
+
+            for i in 0..<N {
+                candidateValues[i] = candidates[i].storage[simdIndex][laneIndex]
+            }
+
+            var negQueryVal = -queryVal
+            candidateValues.withUnsafeBufferPointer { candidatesPtr in
+                diffValues.withUnsafeMutableBufferPointer { diffPtr in
+                    vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+            diffValues.withUnsafeBufferPointer { diffPtr in
+                absValues.withUnsafeMutableBufferPointer { absPtr in
+                    vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+            distances.withUnsafeMutableBufferPointer { distPtr in
+                absValues.withUnsafeBufferPointer { absPtr in
+                    vDSP_vadd(distPtr.baseAddress!, 1, absPtr.baseAddress!, 1, distPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+        }
+    }
+
+    @inline(__always)
+    @usableFromInline
+    internal static func manhattan768CoreBlocked(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        distances: inout [Float]
+    ) {
+        let N = candidates.count
+        let D = 768
+        let simdCount = 192
+        let blockSize = 256
+
+        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
+
+        for i in 0..<simdCount {
+            let simd = query.storage[i]
+            queryValues[i * 4 + 0] = simd[0]
+            queryValues[i * 4 + 1] = simd[1]
+            queryValues[i * 4 + 2] = simd[2]
+            queryValues[i * 4 + 3] = simd[3]
+        }
+
+        var candidateValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        var diffValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        var absValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+
+        for blockStart in stride(from: 0, to: N, by: blockSize) {
+            let blockEnd = min(blockStart + blockSize, N)
+            let blockN = blockEnd - blockStart
+
+            distances.withUnsafeMutableBufferPointer { distancesPtr in
+                guard let distancesBaseAddress = distancesPtr.baseAddress else { return }
+                let blockDistancesPtr = distancesBaseAddress.advanced(by: blockStart)
+
+                for d in 0..<D {
+                    let queryVal = queryValues[d]
+                    let simdIndex = d / 4
+                    let laneIndex = d % 4
+
+                    for i in 0..<blockN {
+                        candidateValues[i] = candidates[blockStart + i].storage[simdIndex][laneIndex]
+                    }
+
+                    var negQueryVal = -queryVal
+                    candidateValues.withUnsafeBufferPointer { candidatesPtr in
+                        diffValues.withUnsafeMutableBufferPointer { diffPtr in
+                            vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(blockN))
+                        }
+                    }
+                    diffValues.withUnsafeBufferPointer { diffPtr in
+                        absValues.withUnsafeMutableBufferPointer { absPtr in
+                            vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(blockN))
+                        }
+                    }
+                    absValues.withUnsafeBufferPointer { absPtr in
+                        vDSP_vadd(blockDistancesPtr, 1, absPtr.baseAddress!, 1, blockDistancesPtr, 1, vDSP_Length(blockN))
+                    }
+                }
+            }
+        }
+    }
+
+    @inline(__always)
+    @usableFromInline
+    internal static func manhattan1536Core(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        distances: inout [Float]
+    ) {
+        let N = candidates.count
+        let D = 1536
+        let simdCount = 384
+
+        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
+        var candidateValues = ContiguousArray<Float>(repeating: 0, count: N)
+        var diffValues = ContiguousArray<Float>(repeating: 0, count: N)
+        var absValues = ContiguousArray<Float>(repeating: 0, count: N)
+
+        // Extract query
+        for i in 0..<simdCount {
+            let simd = query.storage[i]
+            queryValues[i * 4 + 0] = simd[0]
+            queryValues[i * 4 + 1] = simd[1]
+            queryValues[i * 4 + 2] = simd[2]
+            queryValues[i * 4 + 3] = simd[3]
+        }
+
+        // Process each dimension
+        for d in 0..<D {
+            let queryVal = queryValues[d]
+            let simdIndex = d / 4
+            let laneIndex = d % 4
+
+            for i in 0..<N {
+                candidateValues[i] = candidates[i].storage[simdIndex][laneIndex]
+            }
+
+            var negQueryVal = -queryVal
+            candidateValues.withUnsafeBufferPointer { candidatesPtr in
+                diffValues.withUnsafeMutableBufferPointer { diffPtr in
+                    vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+            diffValues.withUnsafeBufferPointer { diffPtr in
+                absValues.withUnsafeMutableBufferPointer { absPtr in
+                    vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+            distances.withUnsafeMutableBufferPointer { distPtr in
+                absValues.withUnsafeBufferPointer { absPtr in
+                    vDSP_vadd(distPtr.baseAddress!, 1, absPtr.baseAddress!, 1, distPtr.baseAddress!, 1, vDSP_Length(N))
+                }
+            }
+        }
+    }
+
+    @inline(__always)
+    @usableFromInline
+    internal static func manhattan1536CoreBlocked(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        distances: inout [Float]
+    ) {
+        let N = candidates.count
+        let D = 1536
+        let simdCount = 384
+        let blockSize = 256
+
+        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
+
+        for i in 0..<simdCount {
+            let simd = query.storage[i]
+            queryValues[i * 4 + 0] = simd[0]
+            queryValues[i * 4 + 1] = simd[1]
+            queryValues[i * 4 + 2] = simd[2]
+            queryValues[i * 4 + 3] = simd[3]
+        }
+
+        var candidateValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        var diffValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        var absValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+
+        for blockStart in stride(from: 0, to: N, by: blockSize) {
+            let blockEnd = min(blockStart + blockSize, N)
+            let blockN = blockEnd - blockStart
+
+            distances.withUnsafeMutableBufferPointer { distancesPtr in
+                guard let distancesBaseAddress = distancesPtr.baseAddress else { return }
+                let blockDistancesPtr = distancesBaseAddress.advanced(by: blockStart)
+
+                for d in 0..<D {
+                    let queryVal = queryValues[d]
+                    let simdIndex = d / 4
+                    let laneIndex = d % 4
+
+                    for i in 0..<blockN {
+                        candidateValues[i] = candidates[blockStart + i].storage[simdIndex][laneIndex]
+                    }
+
+                    var negQueryVal = -queryVal
+                    candidateValues.withUnsafeBufferPointer { candidatesPtr in
+                        diffValues.withUnsafeMutableBufferPointer { diffPtr in
+                            vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(blockN))
+                        }
+                    }
+                    diffValues.withUnsafeBufferPointer { diffPtr in
+                        absValues.withUnsafeMutableBufferPointer { absPtr in
+                            vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(blockN))
+                        }
+                    }
+                    absValues.withUnsafeBufferPointer { absPtr in
+                        vDSP_vadd(blockDistancesPtr, 1, absPtr.baseAddress!, 1, blockDistancesPtr, 1, vDSP_Length(blockN))
+                    }
+                }
+            }
+        }
+    }
+
+    #endif // canImport(Accelerate)
+
     // MARK: - Error Handling Variants
 
     /// Safe variant with error handling for cosine distance
@@ -993,7 +1477,7 @@ public enum BatchKernels_SoA {
         }
 
         // Verify memory alignment
-        if !soa.isEmpty {
+        if soa.count != 0 {
             let firstPtr = soa.lanePointer(0)
             let address = UInt(bitPattern: firstPtr)
             guard address & 0xF == 0 else {

@@ -158,10 +158,15 @@ public enum BatchKernels {
                 let q8 = q[k+8], q9 = q[k+9], q10 = q[k+10], q11 = q[k+11]
                 let q12 = q[k+12], q13 = q[k+13], q14 = q[k+14], q15 = q[k+15]
 
+                // swiftlint:disable:next line_length
+                // Justification: SIMD fused multiply-add chain - breaking would hurt register allocation and readability
                 a0 += q0 * c0[k+0] + q2 * c0[k+2] + q4 * c0[k+4] + q6 * c0[k+6] + q8 * c0[k+8] + q10 * c0[k+10] + q12 * c0[k+12] + q14 * c0[k+14]
+                // swiftlint:disable:next line_length
                 a1 += q1 * c0[k+1] + q3 * c0[k+3] + q5 * c0[k+5] + q7 * c0[k+7] + q9 * c0[k+9] + q11 * c0[k+11] + q13 * c0[k+13] + q15 * c0[k+15]
 
+                // swiftlint:disable:next line_length
                 b0 += q0 * c1[k+0] + q2 * c1[k+2] + q4 * c1[k+4] + q6 * c1[k+6] + q8 * c1[k+8] + q10 * c1[k+10] + q12 * c1[k+12] + q14 * c1[k+14]
+                // swiftlint:disable:next line_length
                 b1 += q1 * c1[k+1] + q3 * c1[k+3] + q5 * c1[k+5] + q7 * c1[k+7] + q9 * c1[k+9] + q11 * c1[k+11] + q13 * c1[k+13] + q15 * c1[k+15]
             }
             let d0 = ((a0 + a1) + (a2 + a3)).sum()
@@ -454,7 +459,7 @@ public extension BatchKernels {
     // Vectorized sqrt for the out buffer (length = range.count)
     @inlinable
     static func applySqrt(out: UnsafeMutableBufferPointer<Float>, count: Int) {
-        guard !isEmpty, let base = out.baseAddress else { return }
+        guard count != 0, let base = out.baseAddress else { return }
         var i = 0
         while i + 3 < count {
             let v = SIMD4<Float>(base[i+0], base[i+1], base[i+2], base[i+3])

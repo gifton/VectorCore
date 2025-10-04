@@ -124,7 +124,13 @@ public struct SparseMatrix: Sendable {
         self.values = values
 
         // Initialize managed aligned storage
-        self.alignedStorage = AlignedStorage(rowPtrsCount: rowPointers.count, nnz: nnz, rowPointers: rowPointers, columnIndices: columnIndices, values: values)
+        self.alignedStorage = AlignedStorage(
+            rowPtrsCount: rowPointers.count,
+            nnz: nnz,
+            rowPointers: rowPointers,
+            columnIndices: columnIndices,
+            values: values
+        )
     }
 
     // Throwing init for validation
@@ -161,7 +167,13 @@ public struct SparseMatrix: Sendable {
         self.values = values
 
         // Initialize managed aligned storage
-        self.alignedStorage = AlignedStorage(rowPtrsCount: rowPointers.count, nnz: nnz, rowPointers: rowPointers, columnIndices: columnIndices, values: values)
+        self.alignedStorage = AlignedStorage(
+            rowPtrsCount: rowPointers.count,
+            nnz: nnz,
+            rowPointers: rowPointers,
+            columnIndices: columnIndices,
+            values: values
+        )
     }
 
     // Initializer from edge list (COO format).
@@ -461,7 +473,7 @@ public final class OptimizedGraphStorage: @unchecked Sendable {
         let rowEnd = Int(matrix.rowPointers[rowIndex+1])
         let count = rowEnd - rowStart
 
-        guard !isEmpty else {
+        guard count != 0 else {
             // Return valid but empty pointers for empty rows.
             return (UnsafePointer(matrix.alignedColIndices), nil, 0)
         }

@@ -353,14 +353,14 @@ public enum BatchKernels {
                 let d12=c1[k+12], d13=c1[k+13], d14=c1[k+14], d15=c1[k+15]
 
                 qc0a += q0*c00; qc0a += q2*c02; qc0a += q4*c04; qc0a += q6*c06; qc0a += q8*c08; qc0a += q10*c10; qc0a += q12*c12; qc0a += q14*c14
-                qc0b += q1*c01 + q3*c03 + q5*c05 + q7*c07 + q9*c09 + q11*c11 + q13*c13 + q15*c15
+                qc0b += q1*c01; qc0b += q3*c03; qc0b += q5*c05; qc0b += q7*c07; qc0b += q9*c09; qc0b += q11*c11; qc0b += q13*c13; qc0b += q15*c15
                 cc0a += c00*c00; cc0a += c02*c02; cc0a += c04*c04; cc0a += c06*c06; cc0a += c08*c08; cc0a += c10*c10; cc0a += c12*c12; cc0a += c14*c14
-                cc0b += c01*c01 + c03*c03 + c05*c05 + c07*c07 + c09*c09 + c11*c11 + c13*c13 + c15*c15
+                cc0b += c01*c01; cc0b += c03*c03; cc0b += c05*c05; cc0b += c07*c07; cc0b += c09*c09; cc0b += c11*c11; cc0b += c13*c13; cc0b += c15*c15
 
                 qc1a += q0*d00; qc1a += q2*d02; qc1a += q4*d04; qc1a += q6*d06; qc1a += q8*d08; qc1a += q10*d10; qc1a += q12*d12; qc1a += q14*d14
-                qc1b += q1*d01 + q3*d03 + q5*d05 + q7*d07 + q9*d09 + q11*d11 + q13*d13 + q15*d15
+                qc1b += q1*d01; qc1b += q3*d03; qc1b += q5*d05; qc1b += q7*d07; qc1b += q9*d09; qc1b += q11*d11; qc1b += q13*d13; qc1b += q15*d15
                 cc1a += d00*d00; cc1a += d02*d02; cc1a += d04*d04; cc1a += d06*d06; cc1a += d08*d08; cc1a += d10*d10; cc1a += d12*d12; cc1a += d14*d14
-                cc1b += d01*d01 + d03*d03 + d05*d05 + d07*d07 + d09*d09 + d11*d11 + d13*d13 + d15*d15
+                cc1b += d01*d01; cc1b += d03*d03; cc1b += d05*d05; cc1b += d07*d07; cc1b += d09*d09; cc1b += d11*d11; cc1b += d13*d13; cc1b += d15*d15
             }
             let dot0 = (qc0a + qc0b).sum()
             let cc0 = (cc0a + cc0b).sum()
@@ -412,14 +412,14 @@ public enum BatchKernels {
                 let d12=c1[k+12], d13=c1[k+13], d14=c1[k+14], d15=c1[k+15]
 
                 qc0a += q0*c00; qc0a += q2*c02; qc0a += q4*c04; qc0a += q6*c06; qc0a += q8*c08; qc0a += q10*c10; qc0a += q12*c12; qc0a += q14*c14
-                qc0b += q1*c01 + q3*c03 + q5*c05 + q7*c07 + q9*c09 + q11*c11 + q13*c13 + q15*c15
+                qc0b += q1*c01; qc0b += q3*c03; qc0b += q5*c05; qc0b += q7*c07; qc0b += q9*c09; qc0b += q11*c11; qc0b += q13*c13; qc0b += q15*c15
                 cc0a += c00*c00; cc0a += c02*c02; cc0a += c04*c04; cc0a += c06*c06; cc0a += c08*c08; cc0a += c10*c10; cc0a += c12*c12; cc0a += c14*c14
-                cc0b += c01*c01 + c03*c03 + c05*c05 + c07*c07 + c09*c09 + c11*c11 + c13*c13 + c15*c15
+                cc0b += c01*c01; cc0b += c03*c03; cc0b += c05*c05; cc0b += c07*c07; cc0b += c09*c09; cc0b += c11*c11; cc0b += c13*c13; cc0b += c15*c15
 
                 qc1a += q0*d00; qc1a += q2*d02; qc1a += q4*d04; qc1a += q6*d06; qc1a += q8*d08; qc1a += q10*d10; qc1a += q12*d12; qc1a += q14*d14
-                qc1b += q1*d01 + q3*d03 + q5*d05 + q7*d07 + q9*d09 + q11*d11 + q13*d13 + q15*d15
+                qc1b += q1*d01; qc1b += q3*d03; qc1b += q5*d05; qc1b += q7*d07; qc1b += q9*d09; qc1b += q11*d11; qc1b += q13*d13; qc1b += q15*d15
                 cc1a += d00*d00; cc1a += d02*d02; cc1a += d04*d04; cc1a += d06*d06; cc1a += d08*d08; cc1a += d10*d10; cc1a += d12*d12; cc1a += d14*d14
-                cc1b += d01*d01 + d03*d03 + d05*d05 + d07*d07 + d09*d09 + d11*d11 + d13*d13 + d15*d15
+                cc1b += d01*d01; cc1b += d03*d03; cc1b += d05*d05; cc1b += d07*d07; cc1b += d09*d09; cc1b += d11*d11; cc1b += d13*d13; cc1b += d15*d15
             }
             let dot0 = (qc0a + qc0b).sum()
             let cc0 = (cc0a + cc0b).sum()

@@ -127,7 +127,7 @@ public enum MixedPrecisionKernels {
                 // Subnormal: value = (-1)^sign × 2^(-14) × (mantissa / 1024)
                 let e = -14
                 let m = Float(mantissa) / 1024.0
-                let value = ldexp(m, e)
+                let value = scalbn(m, e)
                 return sign == 1 ? -value : value
             }
         } else if exponent == 0x1F {
@@ -141,7 +141,7 @@ public enum MixedPrecisionKernels {
             // Normal number: value = (-1)^sign × 2^(exp-15) × (1 + mantissa/1024)
             let e = Int(exponent) - fp16ExponentBias
             let m = 1.0 + Float(mantissa) / 1024.0
-            let value = ldexp(m, e)
+            let value = scalbn(m, e)
             return sign == 1 ? -value : value
         }
     }
@@ -3646,7 +3646,7 @@ public struct MixedPrecisionBenchmark {
         var vec1 = Vector512Optimized()
         var vec2 = Vector512Optimized()
 
-        for i in 0..<128 {
+        for _ in 0..<128 {
             vec1.storage.append(SIMD4<Float>(
                 Float.random(in: -1...1),
                 Float.random(in: -1...1),

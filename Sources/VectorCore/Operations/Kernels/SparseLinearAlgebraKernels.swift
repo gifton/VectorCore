@@ -437,7 +437,7 @@ extension GraphPrimitivesKernels {
             cRowPointers[i + 1] = UInt32(cColumnIndices.count)
         }
 
-        return try SparseMatrix(
+        return SparseMatrix(
             rows: m,
             cols: n,
             rowPointers: cRowPointers,

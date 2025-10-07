@@ -627,7 +627,6 @@ public enum BatchKernels_SoA {
 
     /// Compute L2 norm (magnitude) of a vector
     @inlinable
-    @usableFromInline
     internal static func computeNorm<Vector: SoACompatible>(_ vector: Vector) -> Float {
         var normSqAcc = SIMD4<Float>.zero
         let storage = vector.storage

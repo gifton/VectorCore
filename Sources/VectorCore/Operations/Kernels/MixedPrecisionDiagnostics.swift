@@ -244,7 +244,9 @@ public final class MixedPrecisionDiagnostics: @unchecked Sendable {
         sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
         var brandString = [CChar](repeating: 0, count: size)
         sysctlbyname("machdep.cpu.brand_string", &brandString, &size, nil, 0)
-        return String(cString: brandString)
+        // Convert CChar array to UInt8, truncating null terminator
+        let utf8Bytes = brandString.prefix(while: { $0 != 0 }).map { UInt8(bitPattern: $0) }
+        return String(decoding: utf8Bytes, as: UTF8.self)
         #else
         return "Unknown"
         #endif

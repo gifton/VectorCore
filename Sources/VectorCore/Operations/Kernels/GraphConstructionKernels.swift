@@ -1285,7 +1285,7 @@ extension GraphConstructionKernels {
                         results.enqueue(neighborResult)
 
                         if results.count > ef {
-                            results.dequeue()
+                            _ = results.dequeue()
                         }
                     }
                 }

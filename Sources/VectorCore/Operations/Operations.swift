@@ -314,7 +314,8 @@ public enum Operations {
             let cores = ProcessInfo.processInfo.activeProcessorCount
             // Calibrator: measure seq cost over a tiny sample; estimate parallel overhead and effective factor
             let tuning = AutoTuning.calibrateIfNeeded(dim: dim, kind: kind, providerCores: cores) {
-                let M = max(32, min(items, 256))
+                // Fix: Clamp M to actual array size to prevent out-of-bounds access when items < 32
+                let M = min(max(32, min(items, 256)), items)
                 var idx = 0
                 let clock = ContinuousClock()
                 let start = clock.now

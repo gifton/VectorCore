@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+@preconcurrency import Darwin
 @testable import VectorCore
 
 @Suite("Mixed Precision - Performance Benchmarks")

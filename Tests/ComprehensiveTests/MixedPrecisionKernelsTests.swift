@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+@preconcurrency import Darwin
 @testable import VectorCore
 
 // MARK: - Type Aliases for Nested Mixed Precision Types

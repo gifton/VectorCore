@@ -1144,13 +1144,10 @@ struct QuantizedKernelsTests {
             var info = mach_task_basic_info()
             var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
 
-            // Capture task self (Darwin API not marked Sendable in Swift 6)
-            nonisolated(unsafe) let currentTask = mach_task_self_
-
             // Measure baseline
             _ = withUnsafeMutablePointer(to: &info) { ptr in
                 ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { int_ptr in
-                    task_info(currentTask, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
+                    task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
                 }
             }
             let baselineMemory = info.resident_size
@@ -1160,7 +1157,7 @@ struct QuantizedKernelsTests {
 
             _ = withUnsafeMutablePointer(to: &info) { ptr in
                 ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { int_ptr in
-                    task_info(currentTask, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
+                    task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
                 }
             }
             let fp32Memory = info.resident_size - baselineMemory

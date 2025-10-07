@@ -609,7 +609,7 @@ struct BatchBench: BenchmarkSuite {
         minChunk: Int
     ) async -> [BenchResult] {
         let n = candidates.count
-        var out = [Float](repeating: 0, count: n)
+        let _ = [Float](repeating: 0, count: n)
         await Harness.warmupAsync {
             let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
                 var local: Float = 0
@@ -644,7 +644,7 @@ struct BatchBench: BenchmarkSuite {
         minChunk: Int
     ) async -> [BenchResult] {
         let n = candidates.count
-        var out = [Float](repeating: 0, count: n)
+        let _ = [Float](repeating: 0, count: n)
         await Harness.warmupAsync {
             let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
                 var local: Float = 0
@@ -681,7 +681,7 @@ struct BatchBench: BenchmarkSuite {
         minChunk: Int
     ) async -> [BenchResult] {
         let n = candidates.count
-        var out = [Float](repeating: 0, count: n)
+        let _ = [Float](repeating: 0, count: n)
         await Harness.warmupAsync {
             let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
                 var local: Float = 0
@@ -718,7 +718,7 @@ struct BatchBench: BenchmarkSuite {
         minChunk: Int
     ) async -> [BenchResult] {
         let n = candidates.count
-        var out = [Float](repeating: 0, count: n)
+        let _ = [Float](repeating: 0, count: n)
         await Harness.warmupAsync {
             let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
                 var local: Float = 0

@@ -70,6 +70,29 @@ public enum AlignedMemory {
 
         return ptr.assumingMemoryBound(to: T.self)
     }
+
+    /// Deallocate memory previously allocated via posix_memalign or aligned_alloc.
+    ///
+    /// - Parameter ptr: Pointer returned by allocateAligned or posix_memalign
+    ///
+    /// - Important: Memory allocated with `posix_memalign` MUST be freed with `free()`,
+    ///   not with Swift's `.deallocate()`. Using `.deallocate()` on memory allocated
+    ///   by `posix_memalign` causes undefined behavior and heap corruption.
+    @inlinable
+    public static func deallocate<T>(_ ptr: UnsafeMutablePointer<T>) {
+        free(UnsafeMutableRawPointer(ptr))
+    }
+
+    /// Deallocate raw memory previously allocated via posix_memalign or aligned_alloc.
+    ///
+    /// - Parameter ptr: Raw pointer returned by allocateAligned or posix_memalign
+    ///
+    /// - Important: Memory allocated with `posix_memalign` MUST be freed with `free()`,
+    ///   not with Swift's `.deallocate()`.
+    @inlinable
+    public static func deallocate(_ ptr: UnsafeMutableRawPointer) {
+        free(ptr)
+    }
 }
 
 /// Protocol for storage types that guarantee memory alignment

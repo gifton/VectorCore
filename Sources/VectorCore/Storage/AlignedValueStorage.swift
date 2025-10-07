@@ -134,7 +134,7 @@ public struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
         deinit {
             // Clean up allocated memory
             ptr.deinitialize(count: count)
-            ptr.deallocate()
+            AlignedMemory.deallocate(ptr)
         }
     }
 

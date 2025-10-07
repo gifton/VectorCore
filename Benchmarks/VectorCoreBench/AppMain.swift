@@ -207,8 +207,7 @@ struct App {
             DistanceBench.name: DistanceBench.self,
             NormalizationBench.name: NormalizationBench.self,
             BatchBench.name: BatchBench.self,
-            MemoryBench.name: MemoryBench.self,
-            GraphPrimitivesBench.name: GraphPrimitivesBench.self
+            MemoryBench.name: MemoryBench.self
         ]
 
         for s in options.suites {

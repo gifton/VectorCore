@@ -1853,15 +1853,12 @@ extension ErrorHandlingTests {
         switch scenario {
         case 0:
             // Attempt to allocate enormous array (may trigger memory warnings)
-            do {
-                // Try to allocate gigantic array
-                let hugeSize = Int.max / 100  // Still huge but won't crash immediately
-                _ = UnsafeMutablePointer<Float>.allocate(capacity: hugeSize)
-                // If this succeeds (unlikely), we should deallocate
-                // But usually this will fail or trigger memory pressure
-            } catch {
-                // Expected to fail
-            }
+            // Note: allocate doesn't throw, but may trigger system memory pressure
+            // Try to allocate gigantic array
+            let hugeSize = Int.max / 100  // Still huge but won't crash immediately
+            _ = UnsafeMutablePointer<Float>.allocate(capacity: hugeSize)
+            // If this succeeds (unlikely), we should deallocate
+            // But usually this will fail or trigger memory pressure
 
         case 1:
             // Create memory pressure by allocating many small objects

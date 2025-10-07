@@ -958,7 +958,7 @@ struct HierarchicalClusteringComprehensiveTests {
             let tree3Clusters = HierarchicalClusteringKernels.agglomerativeClustering(
                 vectors: vectors,
                 linkageCriterion: .single,
-                distanceMetric: .euclidean,
+                distanceMetric: .euclidean
             )
 
             let clusters3 = HierarchicalClusteringComprehensiveTests().extractClustersFromTree(
@@ -972,7 +972,7 @@ struct HierarchicalClusteringComprehensiveTests {
             let treeDistThreshold = HierarchicalClusteringKernels.agglomerativeClustering(
                 vectors: vectors,
                 linkageCriterion: .single,
-                distanceMetric: .euclidean,
+                distanceMetric: .euclidean
             )
 
             // Verify no merges occurred above the threshold
@@ -1140,7 +1140,7 @@ struct HierarchicalClusteringComprehensiveTests {
             let aggTree = HierarchicalClusteringKernels.agglomerativeClustering(
                 vectors: vectors,
                 linkageCriterion: .average,
-                distanceMetric: .euclidean,
+                distanceMetric: .euclidean
             )
 
             let divTree = HierarchicalClusteringKernels.divisiveClustering(

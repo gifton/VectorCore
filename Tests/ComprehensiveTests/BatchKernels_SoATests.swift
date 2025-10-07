@@ -3138,7 +3138,7 @@ struct BatchKernels_SoATests {
         return endTime - startTime
     }
 
-    private static func getMemoryUsage() -> Int {
+    nonisolated private static func getMemoryUsage() -> Int {
         // Simplified memory usage measurement
         // In a real implementation, you might use more sophisticated memory tracking
         var info = mach_task_basic_info()

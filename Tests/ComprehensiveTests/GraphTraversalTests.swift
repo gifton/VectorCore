@@ -8,7 +8,7 @@ import XCTest
 
 // MARK: - Test Suite
 
-final class GraphTraversalTests: XCTestCase {
+final class GraphTraversalTests: XCTestCase, @unchecked Sendable {
 
     // MARK: - Test Helpers
 

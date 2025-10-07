@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 @testable import VectorCore
-import Darwin.Mach
+@preconcurrency import Darwin.Mach
 
 @Suite("BatchKernels SoA")
 struct BatchKernels_SoATests {
@@ -3138,15 +3138,16 @@ struct BatchKernels_SoATests {
         return endTime - startTime
     }
 
-    nonisolated private static func getMemoryUsage() -> Int {
+    private static func getMemoryUsage() -> Int {
         // Simplified memory usage measurement
         // In a real implementation, you might use more sophisticated memory tracking
         var info = mach_task_basic_info()
         var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
 
+        // Access mach_task_self_ directly - @preconcurrency import allows this
         let result = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
-                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) { infoPtr in
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), infoPtr, &count)
             }
         }
 

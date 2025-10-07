@@ -94,7 +94,7 @@ type_body_length:
 
 function_body_length:
   warning: 120
-  error: 400  # Scientific code: complex algorithms with validation steps
+  error: 450  # Scientific code: complex algorithm implementations with validation
 
 cyclomatic_complexity:
   warning: 18

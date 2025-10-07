@@ -26,8 +26,8 @@ struct MixedPrecisionKernelsTests {
             let fp32Vector = try Vector512Optimized(Array(repeating: 1.5, count: 512))
             let fp16Vector = Vector512FP16(from: fp32Vector)
 
-            // Verify storage size (128 SIMD4<Float16> lanes)
-            #expect(fp16Vector.storage.count == 128)
+            // Verify storage size (512 UInt16 elements representing 512 FP16 values)
+            #expect(fp16Vector.storage.count == 512)
 
             // Test round-trip conversion
             let reconstructed = fp16Vector.toFP32()
@@ -63,8 +63,8 @@ struct MixedPrecisionKernelsTests {
             let fp32Vector = try Vector768Optimized(Array(repeating: 2.5, count: 768))
             let fp16Vector = Vector768FP16(from: fp32Vector)
 
-            // Verify storage size (192 SIMD4<Float16> lanes)
-            #expect(fp16Vector.storage.count == 192)
+            // Verify storage size (768 UInt16 elements representing 768 FP16 values)
+            #expect(fp16Vector.storage.count == 768)
 
             // Test round-trip conversion
             let reconstructed = fp16Vector.toFP32()
@@ -90,8 +90,8 @@ struct MixedPrecisionKernelsTests {
             let fp32Vector = try Vector1536Optimized(Array(repeating: 3.14159, count: 1536))
             let fp16Vector = Vector1536FP16(from: fp32Vector)
 
-            // Verify storage size (384 SIMD4<Float16> lanes)
-            #expect(fp16Vector.storage.count == 384)
+            // Verify storage size (1536 UInt16 elements representing 1536 FP16 values)
+            #expect(fp16Vector.storage.count == 1536)
 
             // Test round-trip conversion
             let reconstructed = fp16Vector.toFP32()

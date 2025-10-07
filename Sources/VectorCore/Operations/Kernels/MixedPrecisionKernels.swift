@@ -349,7 +349,21 @@ public enum MixedPrecisionKernels {
         public static let dimension = 768
 
         public init(from vector: Vector768Optimized) {
+            // Validate input vector has correct storage size
+            precondition(
+                vector.storage.count == 192,
+                "Vector768Optimized must have exactly 192 SIMD4 lanes, got \(vector.storage.count)"
+            )
+
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
+
+            // Verify conversion produced correct element count
+            #if DEBUG
+            assert(
+                self.storage.count == Self.dimension,
+                "FP16 conversion must produce \(Self.dimension) elements, got \(self.storage.count)"
+            )
+            #endif
         }
 
         public init(fp16Values: [UInt16]) {
@@ -377,7 +391,21 @@ public enum MixedPrecisionKernels {
         public static let dimension = 1536
 
         public init(from vector: Vector1536Optimized) {
+            // Validate input vector has correct storage size
+            precondition(
+                vector.storage.count == 384,
+                "Vector1536Optimized must have exactly 384 SIMD4 lanes, got \(vector.storage.count)"
+            )
+
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
+
+            // Verify conversion produced correct element count
+            #if DEBUG
+            assert(
+                self.storage.count == Self.dimension,
+                "FP16 conversion must produce \(Self.dimension) elements, got \(self.storage.count)"
+            )
+            #endif
         }
 
         public init(fp16Values: [UInt16]) {

@@ -154,6 +154,16 @@ public enum BatchKernels_SoA {
         query: Vector512Optimized,
         candidates: [Vector512Optimized]
     ) -> [Float] {
+        // Validate query vector dimensions
+        precondition(query.storage.count == 128, "Invalid 512-dim query vector: storage has \(query.storage.count) lanes, expected 128")
+
+        // Validate candidates in DEBUG mode
+        #if DEBUG
+        for (idx, candidate) in candidates.enumerated() {
+            assert(candidate.storage.count == 128, "Invalid candidate[\(idx)] dimensions: storage has \(candidate.storage.count) lanes, expected 128")
+        }
+        #endif
+
         let soa = SoA512.build(from: candidates)
         var results = [Float](repeating: 0.0, count: candidates.count)
 
@@ -169,6 +179,16 @@ public enum BatchKernels_SoA {
         query: Vector768Optimized,
         candidates: [Vector768Optimized]
     ) -> [Float] {
+        // Validate query vector dimensions
+        precondition(query.storage.count == 192, "Invalid 768-dim query vector: storage has \(query.storage.count) lanes, expected 192")
+
+        // Validate candidates in DEBUG mode
+        #if DEBUG
+        for (idx, candidate) in candidates.enumerated() {
+            assert(candidate.storage.count == 192, "Invalid candidate[\(idx)] dimensions: storage has \(candidate.storage.count) lanes, expected 192")
+        }
+        #endif
+
         let soa = SoA768.build(from: candidates)
         var results = [Float](repeating: 0.0, count: candidates.count)
 
@@ -184,6 +204,16 @@ public enum BatchKernels_SoA {
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized]
     ) -> [Float] {
+        // Validate query vector dimensions
+        precondition(query.storage.count == 384, "Invalid 1536-dim query vector: storage has \(query.storage.count) lanes, expected 384")
+
+        // Validate candidates in DEBUG mode
+        #if DEBUG
+        for (idx, candidate) in candidates.enumerated() {
+            assert(candidate.storage.count == 384, "Invalid candidate[\(idx)] dimensions: storage has \(candidate.storage.count) lanes, expected 384")
+        }
+        #endif
+
         let soa = SoA1536.build(from: candidates)
         var results = [Float](repeating: 0.0, count: candidates.count)
 
@@ -1007,9 +1037,22 @@ public enum BatchKernels_SoA {
     ) -> [Float] {
         guard !candidates.isEmpty else { return [] }
 
+        // Validate vector dimensions (runs in both DEBUG and RELEASE)
+        precondition(query.storage.count == 128, "Invalid 512-dim query vector: storage has \(query.storage.count) lanes, expected 128")
+
         #if DEBUG
-        assert(query.storage.count == 128, "Invalid 512-dim query vector")
-        assert(candidates.allSatisfy { $0.storage.count == 128 }, "Invalid candidate dimensions")
+        // Additional debug validation
+        for (idx, candidate) in candidates.enumerated() {
+            assert(candidate.storage.count == 128, "Invalid candidate[\(idx)] dimensions: storage has \(candidate.storage.count) lanes, expected 128")
+        }
+        #else
+        // Quick validation in release mode (check first and last to catch common issues)
+        if let first = candidates.first {
+            precondition(first.storage.count == 128, "Invalid candidate dimensions detected")
+        }
+        if candidates.count > 1, let last = candidates.last {
+            precondition(last.storage.count == 128, "Invalid candidate dimensions detected")
+        }
         #endif
 
         var distances = [Float](repeating: 0.0, count: candidates.count)
@@ -1038,9 +1081,22 @@ public enum BatchKernels_SoA {
     ) -> [Float] {
         guard !candidates.isEmpty else { return [] }
 
+        // Validate vector dimensions (runs in both DEBUG and RELEASE)
+        precondition(query.storage.count == 192, "Invalid 768-dim query vector: storage has \(query.storage.count) lanes, expected 192")
+
         #if DEBUG
-        assert(query.storage.count == 192, "Invalid 768-dim query vector")
-        assert(candidates.allSatisfy { $0.storage.count == 192 }, "Invalid candidate dimensions")
+        // Additional debug validation
+        for (idx, candidate) in candidates.enumerated() {
+            assert(candidate.storage.count == 192, "Invalid candidate[\(idx)] dimensions: storage has \(candidate.storage.count) lanes, expected 192")
+        }
+        #else
+        // Quick validation in release mode
+        if let first = candidates.first {
+            precondition(first.storage.count == 192, "Invalid candidate dimensions detected")
+        }
+        if candidates.count > 1, let last = candidates.last {
+            precondition(last.storage.count == 192, "Invalid candidate dimensions detected")
+        }
         #endif
 
         var distances = [Float](repeating: 0.0, count: candidates.count)
@@ -1069,9 +1125,22 @@ public enum BatchKernels_SoA {
     ) -> [Float] {
         guard !candidates.isEmpty else { return [] }
 
+        // Validate vector dimensions (runs in both DEBUG and RELEASE)
+        precondition(query.storage.count == 384, "Invalid 1536-dim query vector: storage has \(query.storage.count) lanes, expected 384")
+
         #if DEBUG
-        assert(query.storage.count == 384, "Invalid 1536-dim query vector")
-        assert(candidates.allSatisfy { $0.storage.count == 384 }, "Invalid candidate dimensions")
+        // Additional debug validation
+        for (idx, candidate) in candidates.enumerated() {
+            assert(candidate.storage.count == 384, "Invalid candidate[\(idx)] dimensions: storage has \(candidate.storage.count) lanes, expected 384")
+        }
+        #else
+        // Quick validation in release mode
+        if let first = candidates.first {
+            precondition(first.storage.count == 384, "Invalid candidate dimensions detected")
+        }
+        if candidates.count > 1, let last = candidates.last {
+            precondition(last.storage.count == 384, "Invalid candidate dimensions detected")
+        }
         #endif
 
         var distances = [Float](repeating: 0.0, count: candidates.count)

@@ -304,7 +304,21 @@ public enum MixedPrecisionKernels {
         /// Performs FP32→FP16 conversion with round-to-nearest-even rounding.
         /// Values exceeding FP16 range (±65504) are clamped to ±infinity.
         public init(from vector: Vector512Optimized) {
+            // Validate input vector has correct storage size
+            precondition(
+                vector.storage.count == 128,
+                "Vector512Optimized must have exactly 128 SIMD4 lanes, got \(vector.storage.count)"
+            )
+
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
+
+            // Verify conversion produced correct element count
+            #if DEBUG
+            assert(
+                self.storage.count == Self.dimension,
+                "FP16 conversion must produce \(Self.dimension) elements, got \(self.storage.count)"
+            )
+            #endif
         }
 
         /// Initialize from raw FP16 values (as UInt16 bit patterns)
@@ -741,6 +755,15 @@ public enum MixedPrecisionKernels {
             result.append(fp32ToFp16_scalar(simd[2]))
             result.append(fp32ToFp16_scalar(simd[3]))
         }
+
+        // Validate output size
+        #if DEBUG
+        assert(
+            result.count == floatCount,
+            "FP16 conversion produced \(result.count) elements, expected \(floatCount)"
+        )
+        #endif
+
         return result
     }
 
@@ -752,6 +775,13 @@ public enum MixedPrecisionKernels {
         _ fp16Values: ContiguousArray<UInt16>,
         laneCount: Int
     ) -> ContiguousArray<SIMD4<Float>> {
+        // Validate input size matches expected lane count
+        let expectedElementCount = laneCount * 4
+        precondition(
+            fp16Values.count == expectedElementCount,
+            "FP16 input size mismatch: expected \(expectedElementCount) elements for \(laneCount) lanes, got \(fp16Values.count)"
+        )
+
         var result = ContiguousArray<SIMD4<Float>>()
         result.reserveCapacity(laneCount)
 
@@ -784,6 +814,14 @@ public enum MixedPrecisionKernels {
                 i += 4
             }
         }
+
+        // Validate output size
+        #if DEBUG
+        assert(
+            result.count == laneCount,
+            "Conversion produced \(result.count) lanes, expected \(laneCount)"
+        )
+        #endif
 
         return result
     }

@@ -1,0 +1,199 @@
+# SwiftLint Configuration for VectorCore
+# High-performance scientific computing library with SIMD/GPU kernels
+# Configured to allow mathematical notation and performance-critical patterns
+
+# ============================================================================
+# DISABLED RULES
+# ============================================================================
+
+disabled_rules:
+  - todo  # TODOs are tracked separately in project management
+  - force_try  # Used intentionally in performance-critical paths with known-safe operations
+  - force_cast  # Used in type-erased contexts with runtime guarantees
+  - large_tuple  # Mathematical operations often return (result, metadata) tuples
+  - nesting  # Deep nesting acceptable in test fixtures and graph algorithms
+  - empty_count  # Performance-critical code: count != 0 is clearer than isEmpty in some contexts
+  - type_name  # Allow underscores in test names like BatchKernels_SoATests
+  - shorthand_operator  # Mathematical code: explicit forms (a = a + b) aid clarity
+  - identifier_name  # Allow mathematical notation (M, N, A, B, etc.)
+  - generic_type_name  # Allow underscores in generic types (V_FP32, V_INT8, V_FP16)
+
+# ============================================================================
+# OPT-IN RULES (Enable additional checks)
+# ============================================================================
+
+opt_in_rules:
+  # NOTE: empty_count removed - it's disabled in root config for performance-critical code
+  - closure_spacing  # Consistent closure formatting
+  - contains_over_first_not_nil  # Performance optimization
+  - sorted_first_last  # Performance optimization
+  - redundant_nil_coalescing  # Code clarity
+  - explicit_init  # Prefer Type() over .init()
+
+# NOTE: identifier_name and type_name rules are disabled above, so no configuration needed
+
+# ============================================================================
+# LINE LENGTH (Accommodate Long Type Signatures)
+# ============================================================================
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_urls: true
+  ignores_function_declarations: true
+  ignores_comments: true
+  ignores_interpolated_strings: true
+
+# ============================================================================
+# FILE AND TYPE LENGTH (Large Kernel Files)
+# ============================================================================
+
+file_length:
+  warning: 1400
+  error: 5000  # Scientific code: comprehensive kernel implementations
+  ignore_comment_only_lines: true
+
+type_body_length:
+  warning: 900
+  error: 4000  # Scientific code: comprehensive test suites
+
+function_body_length:
+  warning: 120
+  error: 450  # Scientific code: complex algorithm implementations with validation
+
+# ============================================================================
+# COMPLEXITY (Performance-Critical Algorithms)
+# ============================================================================
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+  ignores_case_statements: true
+
+# ============================================================================
+# PARAMETER COUNTS (Kernel Functions)
+# ============================================================================
+
+function_parameter_count:
+  warning: 6
+  error: 8
+  ignores_default_parameters: true
+
+# ============================================================================
+# TRAILING WHITESPACE & NEWLINES
+# ============================================================================
+
+trailing_whitespace:
+  ignores_empty_lines: false
+  ignores_comments: false
+
+trailing_newline:
+  enabled: true
+
+# ============================================================================
+# EXCLUDED PATHS
+# ============================================================================
+
+excluded:
+  - .build
+  - build
+  - Carthage
+  - Pods
+  - DerivedData
+  - .swiftpm
+  - Package.swift
+  - "**/.build"
+  - "**/DerivedData"
+  - "**/*.generated.swift"
+  - "**/Mocks/*.swift"
+
+# Only include Swift source files
+included:
+  - Sources
+  - Tests
+  - Benchmarks
+
+# ============================================================================
+# REPORTER (Output Format)
+# ============================================================================
+
+reporter: "xcode"  # Xcode-compatible output format
+
+# ============================================================================
+# CUSTOM RULES
+# ============================================================================
+
+custom_rules:
+
+  # Prefer SIMD operations in performance-critical code
+  prefer_simd_operations:
+    name: "Prefer SIMD Operations"
+    message: "Consider using SIMD operations for better performance"
+    regex: 'for\s+\w+\s+in\s+0\.\.<?(?:storage\.count|lanes|dimension)'
+    severity: warning
+    match_kinds:
+      - keyword
+    excluded:
+      - "*/Tests/*"
+      - "*/Benchmarks/*"
+
+  # Encourage @inlinable for small, frequently-called functions
+  missing_inlinable:
+    name: "Consider @inlinable"
+    message: "Small public functions in performance-critical paths should be @inlinable"
+    regex: 'public\s+func\s+\w+\([^)]{0,50}\)\s+->\s+\w+\s*\{'
+    severity: warning
+    excluded:
+      - "*/Tests/*"
+      - "*/Protocols/*"
+      - "*/Errors/*"
+
+  # Discourage capturing self in performance-critical closures
+  closure_capture_self:
+    name: "Avoid Self Capture in Closures"
+    message: "Capturing self in closures may impact performance; consider [weak self]"
+    regex: '\{\s*(?!.*\[(?:weak|unowned)\s+self\]).*self\.'
+    severity: warning
+    excluded:
+      - "*/Tests/*"
+      - "*/Benchmarks/*"
+
+# ============================================================================
+# RULES CONFIGURATION
+# ============================================================================
+
+# NOTE: function_name configuration removed - invalid in SwiftLint 0.61+
+
+# Statement position (but allow flexibility for compact code)
+statement_position:
+  statement_mode: default
+
+# Collection element alignment
+collection_alignment:
+  align_colons: false
+
+# NOTE: shorthand_operator is disabled above
+
+# Syntactic sugar
+syntactic_sugar: warning
+
+# Unused closure parameters
+unused_closure_parameter: warning
+
+# Unused enumerated
+unused_enumerated: warning
+
+# Vertical whitespace
+vertical_whitespace:
+  max_empty_lines: 2
+
+# Redundant optional initialization
+redundant_optional_initialization: warning
+
+# ============================================================================
+# ANALYZER RULES (Require compilation)
+# ============================================================================
+
+analyzer_rules:
+  - unused_declaration
+  - unused_import

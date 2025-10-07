@@ -69,7 +69,7 @@ public final class MemoryPool: @unchecked Sendable {
     // MARK: - Pool Statistics
 
     /// Statistics about pool usage for monitoring and optimization
-    public struct PoolStatistics {
+    internal struct PoolStatistics {
         public let totalAllocated: Int
         public let totalInUse: Int
         public let hitRate: Double
@@ -112,7 +112,7 @@ public final class MemoryPool: @unchecked Sendable {
     // MARK: - Initialization
 
     /// Initialize with optional configuration
-    public init(configuration: Configuration = Configuration()) {
+    internal init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
         setupCleanupTimer()
     }
@@ -176,7 +176,7 @@ public final class MemoryPool: @unchecked Sendable {
     }
 
     /// Use a buffer temporarily with automatic return to pool
-    public func withBuffer<T, R>(
+    internal func withBuffer<T, R>(
         type: T.Type,
         count: Int,
         alignment: Int = 16,
@@ -185,7 +185,8 @@ public final class MemoryPool: @unchecked Sendable {
         guard let handle = acquire(type: type, count: count, alignment: alignment) else {
             // Fallback to direct aligned allocation; if that fails, rethrow allocation error up as VectorError via body
             if let pointer = try? AlignedMemory.allocateAligned(type: T.self, count: count, alignment: alignment) {
-                defer { pointer.deallocate() }
+                // posix_memalign → must free with `free()`, not `.deallocate()`
+                defer { AlignedMemory.deallocate(pointer) }
                 let buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
                 return try body(buffer)
             } else {
@@ -203,7 +204,7 @@ public final class MemoryPool: @unchecked Sendable {
     }
 
     /// Get current statistics
-    public var statistics: PoolStatistics {
+    internal var statistics: PoolStatistics {
         queue.sync {
             let hitRate = stats.hits + stats.misses > 0
                 ? Double(stats.hits) / Double(stats.hits + stats.misses)
@@ -243,7 +244,8 @@ public final class MemoryPool: @unchecked Sendable {
                     // Remove old entries
                     sizePool.removeAll { entry in
                         if entry.lastAccessed < cutoffDate {
-                            entry.pointer.deallocate()
+                            // Pooled entries originate from posix_memalign-backed allocations
+                            AlignedMemory.deallocate(entry.pointer)
                             totalFreed += entry.capacity
                             return true
                         }
@@ -315,8 +317,8 @@ public final class MemoryPool: @unchecked Sendable {
                 )
                 self.pools[typeID]![sizeKey]!.append(entry)
             } else {
-                // Pool full, deallocate
-                rawPointer.deallocate()
+                // Pool full, deallocate (posix_memalign-backed pointer)
+                AlignedMemory.deallocate(rawPointer)
                 self.stats.totalAllocated -= sizeKey * MemoryLayout<T>.stride
             }
 
@@ -361,7 +363,8 @@ public final class MemoryPool: @unchecked Sendable {
         for typePool in pools.values {
             for sizePool in typePool.values {
                 for entry in sizePool {
-                    entry.pointer.deallocate()
+                    // Pooled entries are aligned allocations
+                    AlignedMemory.deallocate(entry.pointer)
                 }
             }
         }

@@ -14,7 +14,7 @@ extension ExecutionOperations {
 
     /// Element-wise addition with automatic type preservation
     @inlinable
-    public static func add<V: VectorProtocol & VectorFactory>(
+    internal static func add<V: VectorProtocol & VectorFactory>(
         _ vectors: [V],
         _ scalar: V.Scalar,
         context: any ExecutionContext = CPUContext.automatic
@@ -24,7 +24,7 @@ extension ExecutionOperations {
 
     /// Element-wise multiplication with automatic type preservation
     @inlinable
-    public static func multiply<V: VectorProtocol & VectorFactory>(
+    internal static func multiply<V: VectorProtocol & VectorFactory>(
         _ vectors: [V],
         by scalar: V.Scalar,
         context: any ExecutionContext = CPUContext.automatic
@@ -33,7 +33,7 @@ extension ExecutionOperations {
     }
 
     /// Normalize vectors to unit length
-    public static func normalize<V: VectorProtocol & VectorFactory>(
+    internal static func normalize<V: VectorProtocol & VectorFactory>(
         _ vectors: [V],
         context: any ExecutionContext = CPUContext.automatic
     ) async throws -> [V] where V.Scalar == Float {
@@ -76,7 +76,7 @@ extension ExecutionOperations {
     }
 
     /// Apply element-wise function to vector pairs
-    public static func combine<V: VectorProtocol & VectorFactory>(
+    internal static func combine<V: VectorProtocol & VectorFactory>(
         _ vectors1: [V],
         _ vectors2: [V],
         _ operation: @Sendable @escaping (Float, Float) -> Float,

@@ -69,7 +69,7 @@ public struct ErrorContext: Sendable {
         self.line = 0
         self.function = ""
         self.timestamp = Date()
-        self.additionalInfo = [:]
+        self.additionalInfo = additionalInfo
     }
     #endif
 }
@@ -180,6 +180,19 @@ public struct VectorError: Error, Sendable {
         )
     }
 
+    /// Create error with pre-built context (used by ErrorBuilder)
+    @inlinable
+    internal init(
+        kind: ErrorKind,
+        context: ErrorContext,
+        underlying: (any Error)? = nil
+    ) {
+        self.kind = kind
+        self.context = context
+        self.underlyingError = underlying
+        self.errorChain = []
+    }
+
     /// Chain errors for root cause analysis
     public func chain(with error: VectorError) -> VectorError {
         var newError = self
@@ -280,13 +293,18 @@ public struct ErrorBuilder {
     }
 
     public func build() -> VectorError {
-        var error = VectorError(
-            kind,
-            message: info["message"],
-            underlying: underlying,
+        // Create error context with all accumulated info
+        let errorContext = ErrorContext(
             file: context.file,
             line: context.line,
-            function: context.function
+            function: context.function,
+            additionalInfo: info
+        )
+
+        var error = VectorError(
+            kind: kind,
+            context: errorContext,
+            underlying: underlying
         )
         error.errorChain = chain
         return error

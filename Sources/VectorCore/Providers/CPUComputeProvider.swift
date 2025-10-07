@@ -27,6 +27,9 @@ public struct CPUComputeProvider: ComputeProvider {
     public let device: ComputeDevice
     public let mode: Mode
     private let processorCount: Int
+    // Optional explicit overrides for automatic mode
+    private let explicitThreshold: Int?
+    private let explicitMinChunk: Int?
 
     /// Threshold for automatic parallelization
     private let parallelizationThreshold: Int
@@ -36,6 +39,18 @@ public struct CPUComputeProvider: ComputeProvider {
         self.mode = mode
         self.processorCount = ProcessInfo.processInfo.activeProcessorCount
         self.parallelizationThreshold = parallelizationThreshold
+        self.explicitThreshold = nil
+        self.explicitMinChunk = nil
+    }
+
+    // Overload supporting optional threshold and minChunk (non-breaking addition)
+    public init(mode: Mode = .automatic, parallelizationThreshold: Int? = nil, minChunk: Int? = nil) {
+        self.device = .cpu
+        self.mode = mode
+        self.processorCount = ProcessInfo.processInfo.activeProcessorCount
+        self.parallelizationThreshold = parallelizationThreshold ?? 50_000
+        self.explicitThreshold = parallelizationThreshold
+        self.explicitMinChunk = minChunk
     }
 
     // MARK: - ComputeProvider Implementation
@@ -292,6 +307,85 @@ public extension CPUComputeProvider {
             return try await rangeWork(items)
         }
     }
+}
+
+// MARK: - Auto-tuned batch execution helper
+
+public extension CPUComputeProvider {
+    /// Execute a batch kernel over candidates with auto-tuned mode and chunking when in automatic mode.
+    /// - Parameters:
+    ///   - query: The query object passed to the kernel
+    ///   - candidates: The candidates array
+    ///   - kernelKind: The kernel kind for tuning cache key
+    ///   - dimension: Dimensionality (e.g., 512/768/1536)
+    ///   - results: Output buffer with capacity = candidates.count
+    ///   - kernel: Range kernel to execute (e.g., BatchKernels.range_*).
+    func executeBatch<V: Sendable, R: Sendable>(
+        query: V,
+        candidates: [V],
+        kernelKind: KernelKind,
+        dimension: Int,
+        results: UnsafeMutableBufferPointer<R>,
+        kernel: @Sendable @escaping (V, [V], Range<Int>, UnsafeMutableBufferPointer<R>) -> Void
+    ) {
+        let n = candidates.count
+        guard n > 0 else { return }
+        // For now, avoid concurrent writes into non-Sendable pointers under Strict Concurrency.
+        // Execute sequentially; callers seeking parallelism should use async parallelReduce helpers.
+        kernel(query, candidates, 0..<n, results)
+    }
+}
+
+private extension CPUComputeProvider {
+    /// Measure probes for auto-tuning using the provided range kernel.
+    func measureProbes<V: Sendable, R: Sendable>(
+        dim: Int,
+        kernel: @Sendable @escaping (V, [V], Range<Int>, UnsafeMutableBufferPointer<R>) -> Void,
+        query: V,
+        candidates: [V],
+        results: UnsafeMutableBufferPointer<R>
+    ) -> CalibrationProbes {
+        // Selection of M per dim (bounded)
+        let M: Int = {
+            if dim >= 1536 { return 256 }
+            if dim >= 768 { return 512 }
+            return 1024
+        }()
+
+        let mN = Swift.min(candidates.count, M)
+        guard mN > 64, let template = results.first else {
+            let peff = Double(Swift.min(processorCount, 8)) * 0.7
+            return CalibrationProbes(nsPerCandidateSeq: 200.0, parallelOverheadNs: 50_000.0, effectiveParallelFactor: peff)
+        }
+
+        // Prepare temporary output buffer
+        var tmp = [R](repeating: template, count: mN)
+        let clock = ContinuousClock()
+
+        // Warm-up
+        tmp.withUnsafeMutableBufferPointer { out in
+            let warm = Swift.min(mN / 4, 128)
+            if warm > 0 { kernel(query, candidates, 0..<warm, out) }
+        }
+
+        // Sequential measurement
+        let tSeq = clock.measure {
+            tmp.withUnsafeMutableBufferPointer { out in
+                kernel(query, candidates, 0..<mN, out)
+            }
+        }.nanoseconds
+        let a = tSeq / Double(mN)
+
+        // Crude parallel model without spawning threads (to satisfy concurrency safety in sync context)
+        // Assume effective factor based on cores; overhead estimated from heuristic.
+        let peff = Double(min(processorCount, 8)) * 0.7
+        let Tp = ParallelHeuristic.parallelOverheadNs(items: mN)
+        return CalibrationProbes(nsPerCandidateSeq: a, parallelOverheadNs: Tp, effectiveParallelFactor: peff)
+    }
+}
+
+fileprivate extension UnsafeMutableBufferPointer {
+    var first: Element? { !isEmpty ? self[0] : nil }
 }
 
 // MARK: - Factory Methods

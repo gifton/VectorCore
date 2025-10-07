@@ -6,7 +6,7 @@
 import Foundation
 
 /// Binary format utilities for platform-independent serialization
-public enum BinaryFormat {
+internal enum BinaryFormat {
 
     // MARK: - Constants
 

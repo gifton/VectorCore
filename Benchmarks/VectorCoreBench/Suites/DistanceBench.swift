@@ -31,6 +31,9 @@ struct DistanceBench: BenchmarkSuite {
         let c = CosineDistance()
         let m = ManhattanDistance()
         let d = DotProductDistance()
+        let ch = ChebyshevDistance()
+        let h = HammingDistance()
+        let mk = MinkowskiDistance(p: 3.0)
 
         // Generic
         Harness.warmup { withExtendedLifetime((g1,g2)) { let v = e.distance(g1, g2); blackHole(v) } }
@@ -53,20 +56,44 @@ struct DistanceBench: BenchmarkSuite {
             withExtendedLifetime((g1,g2)) { let v = d.distance(g1, g2); blackHole(v) }
         }
 
+        Harness.warmup { withExtendedLifetime((g1,g2)) { let v = ch.distance(g1, g2); blackHole(v) } }
+        let r5 = Harness.measure(name: "dist.chebyshev.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
+            withExtendedLifetime((g1,g2)) { let v = ch.distance(g1, g2); blackHole(v) }
+        }
+
+        Harness.warmup { withExtendedLifetime((g1,g2)) { let v = h.distance(g1, g2); blackHole(v) } }
+        let r6 = Harness.measure(name: "dist.hamming.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
+            withExtendedLifetime((g1,g2)) { let v = h.distance(g1, g2); blackHole(v) }
+        }
+
+        Harness.warmup { withExtendedLifetime((g1,g2)) { let v = mk.distance(g1, g2); blackHole(v) } }
+        let r7 = Harness.measure(name: "dist.minkowski.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
+            withExtendedLifetime((g1,g2)) { let v = mk.distance(g1, g2); blackHole(v) }
+        }
+
         // Optimized
         Harness.warmup { withExtendedLifetime((o1,o2)) { let v = e.distance(o1, o2); blackHole(v) } }
-        let r5 = Harness.measure(name: "dist.euclidean.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = e.distance(o1, o2); blackHole(v) } }
+        let r8 = Harness.measure(name: "dist.euclidean.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = e.distance(o1, o2); blackHole(v) } }
 
         Harness.warmup { withExtendedLifetime((o1,o2)) { let v = c.distance(o1, o2); blackHole(v) } }
-        let r6 = Harness.measure(name: "dist.cosine.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = c.distance(o1, o2); blackHole(v) } }
+        let r9 = Harness.measure(name: "dist.cosine.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = c.distance(o1, o2); blackHole(v) } }
 
         Harness.warmup { withExtendedLifetime((o1,o2)) { let v = m.distance(o1, o2); blackHole(v) } }
-        let r7 = Harness.measure(name: "dist.manhattan.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = m.distance(o1, o2); blackHole(v) } }
+        let r10 = Harness.measure(name: "dist.manhattan.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = m.distance(o1, o2); blackHole(v) } }
 
         Harness.warmup { withExtendedLifetime((o1,o2)) { let v = d.distance(o1, o2); blackHole(v) } }
-        let r8 = Harness.measure(name: "dist.dot.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = d.distance(o1, o2); blackHole(v) } }
+        let r11 = Harness.measure(name: "dist.dot.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = d.distance(o1, o2); blackHole(v) } }
 
-        return [r1, r2, r3, r4, r5, r6, r7, r8]
+        Harness.warmup { withExtendedLifetime((o1,o2)) { let v = ch.distance(o1, o2); blackHole(v) } }
+        let r12 = Harness.measure(name: "dist.chebyshev.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = ch.distance(o1, o2); blackHole(v) } }
+
+        Harness.warmup { withExtendedLifetime((o1,o2)) { let v = h.distance(o1, o2); blackHole(v) } }
+        let r13 = Harness.measure(name: "dist.hamming.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = h.distance(o1, o2); blackHole(v) } }
+
+        Harness.warmup { withExtendedLifetime((o1,o2)) { let v = mk.distance(o1, o2); blackHole(v) } }
+        let r14 = Harness.measure(name: "dist.minkowski.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = mk.distance(o1, o2); blackHole(v) } }
+
+        return [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14]
     }
 
     private static func bench768(_ options: CLIOptions) -> [BenchResult] {
@@ -82,6 +109,9 @@ struct DistanceBench: BenchmarkSuite {
         let c = CosineDistance()
         let m = ManhattanDistance()
         let d = DotProductDistance()
+        let ch = ChebyshevDistance()
+        let h = HammingDistance()
+        let mk = MinkowskiDistance(p: 3.0)
 
         Harness.warmup { blackHole(e.distance(g1, g2)) }
         let r1 = Harness.measure(name: "dist.euclidean.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = e.distance(g1, g2); blackHole(v) } }
@@ -91,17 +121,29 @@ struct DistanceBench: BenchmarkSuite {
         let r3 = Harness.measure(name: "dist.manhattan.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = m.distance(g1, g2); blackHole(v) } }
         Harness.warmup { blackHole(d.distance(g1, g2)) }
         let r4 = Harness.measure(name: "dist.dot.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = d.distance(g1, g2); blackHole(v) } }
+        Harness.warmup { blackHole(ch.distance(g1, g2)) }
+        let r5 = Harness.measure(name: "dist.chebyshev.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = ch.distance(g1, g2); blackHole(v) } }
+        Harness.warmup { blackHole(h.distance(g1, g2)) }
+        let r6 = Harness.measure(name: "dist.hamming.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = h.distance(g1, g2); blackHole(v) } }
+        Harness.warmup { blackHole(mk.distance(g1, g2)) }
+        let r7 = Harness.measure(name: "dist.minkowski.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = mk.distance(g1, g2); blackHole(v) } }
 
         Harness.warmup { blackHole(e.distance(o1, o2)) }
-        let r5 = Harness.measure(name: "dist.euclidean.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = e.distance(o1, o2); blackHole(v) } }
+        let r8 = Harness.measure(name: "dist.euclidean.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = e.distance(o1, o2); blackHole(v) } }
         Harness.warmup { blackHole(c.distance(o1, o2)) }
-        let r6 = Harness.measure(name: "dist.cosine.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = c.distance(o1, o2); blackHole(v) } }
+        let r9 = Harness.measure(name: "dist.cosine.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = c.distance(o1, o2); blackHole(v) } }
         Harness.warmup { blackHole(m.distance(o1, o2)) }
-        let r7 = Harness.measure(name: "dist.manhattan.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = m.distance(o1, o2); blackHole(v) } }
+        let r10 = Harness.measure(name: "dist.manhattan.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = m.distance(o1, o2); blackHole(v) } }
         Harness.warmup { blackHole(d.distance(o1, o2)) }
-        let r8 = Harness.measure(name: "dist.dot.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = d.distance(o1, o2); blackHole(v) } }
+        let r11 = Harness.measure(name: "dist.dot.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = d.distance(o1, o2); blackHole(v) } }
+        Harness.warmup { blackHole(ch.distance(o1, o2)) }
+        let r12 = Harness.measure(name: "dist.chebyshev.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = ch.distance(o1, o2); blackHole(v) } }
+        Harness.warmup { blackHole(h.distance(o1, o2)) }
+        let r13 = Harness.measure(name: "dist.hamming.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = h.distance(o1, o2); blackHole(v) } }
+        Harness.warmup { blackHole(mk.distance(o1, o2)) }
+        let r14 = Harness.measure(name: "dist.minkowski.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = mk.distance(o1, o2); blackHole(v) } }
 
-        return [r1, r2, r3, r4, r5, r6, r7, r8]
+        return [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14]
     }
 
     private static func bench1536(_ options: CLIOptions) -> [BenchResult] {
@@ -117,6 +159,9 @@ struct DistanceBench: BenchmarkSuite {
         let c = CosineDistance()
         let m = ManhattanDistance()
         let d = DotProductDistance()
+        let ch = ChebyshevDistance()
+        let h = HammingDistance()
+        let mk = MinkowskiDistance(p: 3.0)
 
         Harness.warmup { blackHole(e.distance(g1, g2)) }
         let r1 = Harness.measure(name: "dist.euclidean.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = e.distance(g1, g2); blackHole(v) } }
@@ -126,16 +171,28 @@ struct DistanceBench: BenchmarkSuite {
         let r3 = Harness.measure(name: "dist.manhattan.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = m.distance(g1, g2); blackHole(v) } }
         Harness.warmup { blackHole(d.distance(g1, g2)) }
         let r4 = Harness.measure(name: "dist.dot.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = d.distance(g1, g2); blackHole(v) } }
+        Harness.warmup { blackHole(ch.distance(g1, g2)) }
+        let r5 = Harness.measure(name: "dist.chebyshev.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = ch.distance(g1, g2); blackHole(v) } }
+        Harness.warmup { blackHole(h.distance(g1, g2)) }
+        let r6 = Harness.measure(name: "dist.hamming.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = h.distance(g1, g2); blackHole(v) } }
+        Harness.warmup { blackHole(mk.distance(g1, g2)) }
+        let r7 = Harness.measure(name: "dist.minkowski.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((g1,g2)) { let v = mk.distance(g1, g2); blackHole(v) } }
 
         Harness.warmup { blackHole(e.distance(o1, o2)) }
-        let r5 = Harness.measure(name: "dist.euclidean.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = e.distance(o1, o2); blackHole(v) } }
+        let r8 = Harness.measure(name: "dist.euclidean.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = e.distance(o1, o2); blackHole(v) } }
         Harness.warmup { blackHole(c.distance(o1, o2)) }
-        let r6 = Harness.measure(name: "dist.cosine.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = c.distance(o1, o2); blackHole(v) } }
+        let r9 = Harness.measure(name: "dist.cosine.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = c.distance(o1, o2); blackHole(v) } }
         Harness.warmup { blackHole(m.distance(o1, o2)) }
-        let r7 = Harness.measure(name: "dist.manhattan.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = m.distance(o1, o2); blackHole(v) } }
+        let r10 = Harness.measure(name: "dist.manhattan.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = m.distance(o1, o2); blackHole(v) } }
         Harness.warmup { blackHole(d.distance(o1, o2)) }
-        let r8 = Harness.measure(name: "dist.dot.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = d.distance(o1, o2); blackHole(v) } }
+        let r11 = Harness.measure(name: "dist.dot.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = d.distance(o1, o2); blackHole(v) } }
+        Harness.warmup { blackHole(ch.distance(o1, o2)) }
+        let r12 = Harness.measure(name: "dist.chebyshev.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = ch.distance(o1, o2); blackHole(v) } }
+        Harness.warmup { blackHole(h.distance(o1, o2)) }
+        let r13 = Harness.measure(name: "dist.hamming.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = h.distance(o1, o2); blackHole(v) } }
+        Harness.warmup { blackHole(mk.distance(o1, o2)) }
+        let r14 = Harness.measure(name: "dist.minkowski.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { withExtendedLifetime((o1,o2)) { let v = mk.distance(o1, o2); blackHole(v) } }
 
-        return [r1, r2, r3, r4, r5, r6, r7, r8]
+        return [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14]
     }
 }

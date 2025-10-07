@@ -98,6 +98,13 @@ public struct Vector768Optimized: Sendable {
         }
     }
 
+    /// Initialize from SIMD storage directly
+    @inlinable
+    public init(fromSIMDStorage storage: ContiguousArray<SIMD4<Float>>) {
+        precondition(storage.count == 192, "Storage must contain exactly 192 SIMD4 elements")
+        self.storage = storage
+    }
+
     // MARK: - Element Access
 
     /// Access individual elements
@@ -171,50 +178,7 @@ extension Vector768Optimized {
     @inlinable
     @inline(__always)
     public func dotProduct(_ other: Vector768Optimized) -> Scalar {
-        #if DEBUG
-        assert(storage.count == 192, "Invalid storage size for Vector768")
-        assert(other.storage.count == 192, "Invalid storage size for other Vector768")
-        #endif
-
-        // Use 4 accumulators to hide latency and improve pipelining
-        var sum0 = SIMD4<Float>()
-        var sum1 = SIMD4<Float>()
-        var sum2 = SIMD4<Float>()
-        var sum3 = SIMD4<Float>()
-
-        // Process 16 SIMD4 vectors at a time using 4 accumulators (192 / 16 = 12 iterations)
-        for i in stride(from: 0, to: 192, by: 16) {
-            #if DEBUG
-            assert(i + 15 < 192, "Loop index out of bounds in dotProduct")
-            #endif
-            // Accumulator 0 - Process 4 SIMD4 vectors
-            sum0 += storage[i] * other.storage[i]
-            sum0 += storage[i+1] * other.storage[i+1]
-            sum0 += storage[i+2] * other.storage[i+2]
-            sum0 += storage[i+3] * other.storage[i+3]
-
-            // Accumulator 1
-            sum1 += storage[i+4] * other.storage[i+4]
-            sum1 += storage[i+5] * other.storage[i+5]
-            sum1 += storage[i+6] * other.storage[i+6]
-            sum1 += storage[i+7] * other.storage[i+7]
-
-            // Accumulator 2
-            sum2 += storage[i+8] * other.storage[i+8]
-            sum2 += storage[i+9] * other.storage[i+9]
-            sum2 += storage[i+10] * other.storage[i+10]
-            sum2 += storage[i+11] * other.storage[i+11]
-
-            // Accumulator 3
-            sum3 += storage[i+12] * other.storage[i+12]
-            sum3 += storage[i+13] * other.storage[i+13]
-            sum3 += storage[i+14] * other.storage[i+14]
-            sum3 += storage[i+15] * other.storage[i+15]
-        }
-
-        // Combine accumulators
-        let finalSum = sum0 + sum1 + sum2 + sum3
-        return finalSum.x + finalSum.y + finalSum.z + finalSum.w
+        DotKernels.dot768(self, other)
     }
 
     /// Optimized squared Euclidean distance
@@ -222,72 +186,13 @@ extension Vector768Optimized {
     @inlinable
     @inline(__always)
     public func euclideanDistanceSquared(to other: Vector768Optimized) -> Scalar {
-        #if DEBUG
-        assert(storage.count == 192, "Invalid storage size for Vector768")
-        assert(other.storage.count == 192, "Invalid storage size for other Vector768")
-        #endif
-
-        // Use 4 accumulators for better pipelining
-        var sum0 = SIMD4<Float>()
-        var sum1 = SIMD4<Float>()
-        var sum2 = SIMD4<Float>()
-        var sum3 = SIMD4<Float>()
-
-        // Process 16 SIMD4 vectors at a time
-        for i in stride(from: 0, to: 192, by: 16) {
-            #if DEBUG
-            assert(i + 15 < 192, "Loop index out of bounds in euclideanDistanceSquared")
-            #endif
-            // Accumulator 0
-            let diff0 = storage[i] - other.storage[i]
-            let diff1 = storage[i+1] - other.storage[i+1]
-            let diff2 = storage[i+2] - other.storage[i+2]
-            let diff3 = storage[i+3] - other.storage[i+3]
-            sum0 += diff0 * diff0
-            sum0 += diff1 * diff1
-            sum0 += diff2 * diff2
-            sum0 += diff3 * diff3
-
-            // Accumulator 1
-            let diff4 = storage[i+4] - other.storage[i+4]
-            let diff5 = storage[i+5] - other.storage[i+5]
-            let diff6 = storage[i+6] - other.storage[i+6]
-            let diff7 = storage[i+7] - other.storage[i+7]
-            sum1 += diff4 * diff4
-            sum1 += diff5 * diff5
-            sum1 += diff6 * diff6
-            sum1 += diff7 * diff7
-
-            // Accumulator 2
-            let diff8 = storage[i+8] - other.storage[i+8]
-            let diff9 = storage[i+9] - other.storage[i+9]
-            let diff10 = storage[i+10] - other.storage[i+10]
-            let diff11 = storage[i+11] - other.storage[i+11]
-            sum2 += diff8 * diff8
-            sum2 += diff9 * diff9
-            sum2 += diff10 * diff10
-            sum2 += diff11 * diff11
-
-            // Accumulator 3
-            let diff12 = storage[i+12] - other.storage[i+12]
-            let diff13 = storage[i+13] - other.storage[i+13]
-            let diff14 = storage[i+14] - other.storage[i+14]
-            let diff15 = storage[i+15] - other.storage[i+15]
-            sum3 += diff12 * diff12
-            sum3 += diff13 * diff13
-            sum3 += diff14 * diff14
-            sum3 += diff15 * diff15
-        }
-
-        // Combine accumulators
-        let finalSum = sum0 + sum1 + sum2 + sum3
-        return finalSum.x + finalSum.y + finalSum.z + finalSum.w
+        EuclideanKernels.squared768(self, other)
     }
 
     /// Euclidean distance (with square root)
     @inlinable
     public func euclideanDistance(to other: Vector768Optimized) -> Scalar {
-        sqrt(euclideanDistanceSquared(to: other))
+        EuclideanKernels.distance768(self, other)
     }
 
     /// Magnitude squared (more efficient when square root not needed)
@@ -305,19 +210,7 @@ extension Vector768Optimized {
     /// Normalized vector
     @inlinable
     public func normalized() -> Result<Vector768Optimized, VectorError> {
-        let mag = magnitude
-        guard mag > 0 else {
-            return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector"))
-        }
-
-        let scale = 1.0 / mag
-        var result = Vector768Optimized()
-
-        for i in 0..<192 {
-            result.storage[i] = storage[i] * scale
-        }
-
-        return .success(result)
+        NormalizeKernels.normalized768(self)
     }
 
     /// Cosine similarity
@@ -452,6 +345,66 @@ extension Vector768Optimized: CustomDebugStringConvertible {
     }
 }
 
+// MARK: - OptimizedVector Conformance
+
+extension Vector768Optimized: OptimizedVector {
+    public static var laneCount: Int { 4 }
+}
+
 // MARK: - VectorType Conformance
 
 extension Vector768Optimized: VectorType {}
+
+// MARK: - AnalyzableVector Conformance
+
+extension Vector768Optimized: MixedPrecisionKernels.AnalyzableVector {}
+
+// MARK: - Arithmetic Extensions for Streaming K-means
+
+extension Vector768Optimized {
+    /// Add another vector element-wise
+    @inlinable
+    public func adding(_ other: Vector768Optimized) -> Vector768Optimized {
+        var result = ContiguousArray<SIMD4<Float>>()
+        result.reserveCapacity(192)
+
+        for i in 0..<192 {
+            result.append(storage[i] + other.storage[i])
+        }
+
+        return Vector768Optimized(fromSIMDStorage: result)
+    }
+
+    /// Subtract another vector element-wise
+    @inlinable
+    public func subtracting(_ other: Vector768Optimized) -> Vector768Optimized {
+        var result = ContiguousArray<SIMD4<Float>>()
+        result.reserveCapacity(192)
+
+        for i in 0..<192 {
+            result.append(storage[i] - other.storage[i])
+        }
+
+        return Vector768Optimized(fromSIMDStorage: result)
+    }
+
+    /// Scale by a scalar value
+    @inlinable
+    public func scaled(by scalar: Float) -> Vector768Optimized {
+        var result = ContiguousArray<SIMD4<Float>>()
+        result.reserveCapacity(192)
+
+        let simdScalar = SIMD4<Float>(repeating: scalar)
+        for i in 0..<192 {
+            result.append(storage[i] * simdScalar)
+        }
+
+        return Vector768Optimized(fromSIMDStorage: result)
+    }
+
+    /// Static zero vector
+    @inlinable
+    public static var zero: Vector768Optimized {
+        Vector768Optimized()
+    }
+}

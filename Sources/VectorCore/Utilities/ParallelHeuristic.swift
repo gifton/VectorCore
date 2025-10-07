@@ -41,6 +41,13 @@ enum ParallelHeuristic {
         ProcessInfo.processInfo.environment["VECTORCORE_HEURISTIC_DEBUG"] == "1"
     }
 
+    // swiftlint:disable:next function_parameter_count
+    // Justification: Debug logging requires all 8 parameters for comprehensive diagnostics:
+    // - dim, items: workload characteristics
+    // - variant, metric: algorithm selection
+    // - perItem, total, overhead: performance measurements
+    // - parallel: execution strategy
+    // Creating a config struct would obscure the direct parameter-to-log mapping.
     private static func debugLog(dim: Int, items: Int, variant: Variant, metric: MetricClass, perItem: Double, total: Double, overhead: Double, parallel: Bool) {
         guard debugEnabled else { return }
         let v = (variant == .optimized) ? "optimized" : "generic"

@@ -221,6 +221,10 @@ public enum VectorTypeFactory {
         case 3072:
             return Vector<Dim3072>.basis(axis: index)
         default:
+            // Double-check bounds for safety in concurrent scenarios
+            guard index < dimension else {
+                throw VectorError.indexOutOfBounds(index: index, dimension: dimension)
+            }
             var values = Array(repeating: Float(0), count: dimension)
             values[index] = 1.0
             return DynamicVector(values)

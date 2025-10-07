@@ -38,7 +38,8 @@ import Foundation
 /// // Mutation triggers COW if needed
 /// storage[0] = 42.0  // Allocates new storage if shared
 /// ```
-public struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
+@usableFromInline
+internal struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
     /// Internal reference type for COW implementation.
     /// This class holds the actual aligned memory and is shared between copies
     /// until mutation occurs.
@@ -134,7 +135,7 @@ public struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
         deinit {
             // Clean up allocated memory
             ptr.deinitialize(count: count)
-            ptr.deallocate()
+            AlignedMemory.deallocate(ptr)
         }
     }
 

@@ -19,7 +19,7 @@ let package = Package(
         .executable(
             name: "vectorcore-bench",
             targets: ["VectorCoreBench"]
-        ),
+        )
     ],
     dependencies: [],
     targets: [

@@ -49,7 +49,7 @@ extension ExecutionContext {
 
 extension ExecutionContext where Self == CPUContext {
     /// Default execution context - automatically uses available CPU cores
-    public static var `default`: any ExecutionContext {
+    internal static var `default`: any ExecutionContext {
         CPUContext.automatic
     }
 }

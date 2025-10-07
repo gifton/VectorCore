@@ -21,17 +21,23 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
 
     public var count: Int { _count }
 
+    /// Tracks whether allocation used posix_memalign (via AlignedMemory)
+    @usableFromInline
+    internal let usedPosixAlignedAlloc: Bool
+
     /// Initialize with specified dimension and alignment
     public init(dimension: Int, alignment: Int = AlignedMemory.optimalAlignment) {
         self._count = dimension
         self.alignment = alignment
         if let p = try? AlignedMemory.allocateAligned(count: dimension, alignment: alignment) {
             self.ptr = p
+            self.usedPosixAlignedAlloc = true
         } else {
             // Fallback: allocate with natural alignment to avoid hard crash
             let raw = UnsafeMutableRawPointer.allocate(byteCount: dimension * MemoryLayout<Float>.stride,
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
+            self.usedPosixAlignedAlloc = false
         }
 
         // Zero-initialize for safety
@@ -44,10 +50,12 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
         self.alignment = alignment
         if let p = try? AlignedMemory.allocateAligned(count: dimension, alignment: alignment) {
             self.ptr = p
+            self.usedPosixAlignedAlloc = true
         } else {
             let raw = UnsafeMutableRawPointer.allocate(byteCount: dimension * MemoryLayout<Float>.stride,
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
+            self.usedPosixAlignedAlloc = false
         }
 
         ptr.initialize(repeating: value, count: dimension)
@@ -59,10 +67,12 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
         self.alignment = AlignedMemory.optimalAlignment
         if let p = try? AlignedMemory.allocateAligned(count: values.count, alignment: alignment) {
             self.ptr = p
+            self.usedPosixAlignedAlloc = true
         } else {
             let raw = UnsafeMutableRawPointer.allocate(byteCount: values.count * MemoryLayout<Float>.stride,
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
+            self.usedPosixAlignedAlloc = false
         }
 
         ptr.initialize(from: values, count: values.count)
@@ -74,10 +84,12 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
         self.alignment = alignment
         if let p = try? AlignedMemory.allocateAligned(count: values.count, alignment: alignment) {
             self.ptr = p
+            self.usedPosixAlignedAlloc = true
         } else {
             let raw = UnsafeMutableRawPointer.allocate(byteCount: values.count * MemoryLayout<Float>.stride,
                                                        alignment: MemoryLayout<Float>.alignment)
             self.ptr = raw.assumingMemoryBound(to: Float.self)
+            self.usedPosixAlignedAlloc = false
         }
 
         ptr.initialize(from: values, count: values.count)
@@ -93,7 +105,11 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
 
     deinit {
         ptr.deinitialize(count: _count)
-        ptr.deallocate()
+        if usedPosixAlignedAlloc {
+            AlignedMemory.deallocate(ptr)
+        } else {
+            ptr.deallocate()
+        }
     }
 
     @inlinable
@@ -163,6 +179,8 @@ extension AlignedDynamicArrayStorage {
 extension AlignedDynamicArrayStorage: AlignedStorage {
     public var guaranteedAlignment: Int { alignment }
 
+
+    @inlinable
     public func verifyAlignment() -> Bool {
         AlignedMemory.isAligned(ptr, to: alignment)
     }

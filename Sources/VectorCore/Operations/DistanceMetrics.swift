@@ -4,8 +4,8 @@
 //
 //
 //  Design Note: Distance metrics do NOT validate dimension compatibility.
-//  This is by design - dimension validation happens at API boundaries
-//  (e.g., ExecutionOperations) to avoid redundant checks in hot paths.
+//  This is by design — dimension validation happens at the public API layer
+//  (e.g., Operations/BatchOperations) to avoid redundant checks in hot paths.
 //  Debug assertions are included for development-time safety.
 //
 
@@ -35,11 +35,8 @@ public struct EuclideanDistance: DistanceMetric {
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
 
-        let aArray = a.toArray()
-        let bArray = b.toArray()
-
-        return aArray.withUnsafeBufferPointer { aBuffer in
-            bArray.withUnsafeBufferPointer { bBuffer in
+        return a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
                 let result = SIMDOperations.FloatProvider.distanceSquared(
                     aBuffer.baseAddress!,
                     bBuffer.baseAddress!,
@@ -99,15 +96,12 @@ public struct CosineDistance: DistanceMetric {
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
 
-        let aArray = a.toArray()
-        let bArray = b.toArray()
-
         var dotProduct: Float = 0
         var aMagnitudeSq: Float = 0
         var bMagnitudeSq: Float = 0
 
-        aArray.withUnsafeBufferPointer { aBuffer in
-            bArray.withUnsafeBufferPointer { bBuffer in
+        a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
                 // Dot product
                 dotProduct = SIMDOperations.FloatProvider.dot(
                     aBuffer.baseAddress!,
@@ -160,27 +154,13 @@ public struct ManhattanDistance: DistanceMetric {
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
 
-        let aArray = a.toArray()
-        let bArray = b.toArray()
         var result: Float = 0
 
-        aArray.withUnsafeBufferPointer { aBuffer in
-            bArray.withUnsafeBufferPointer { bBuffer in
-                // Compute difference
-                var diff = [Float](repeating: 0, count: aBuffer.count)
-                diff.withUnsafeMutableBufferPointer { diffBuffer in
-                    SIMDOperations.FloatProvider.subtract(
-                        aBuffer.baseAddress!,
-                        bBuffer.baseAddress!,
-                        result: diffBuffer.baseAddress!,
-                        count: aBuffer.count
-                    )
-
-                    // Sum of absolute values
-                    result = SIMDOperations.FloatProvider.sumOfMagnitudes(
-                        diffBuffer.baseAddress!,
-                        count: diffBuffer.count
-                    )
+        a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
+                // Sum of absolute differences directly
+                for i in 0..<aBuffer.count {
+                    result += abs(aBuffer[i] - bBuffer[i])
                 }
             }
         }
@@ -206,12 +186,10 @@ public struct DotProductDistance: DistanceMetric {
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
 
-        let aArray = a.toArray()
-        let bArray = b.toArray()
         var result: Float = 0
 
-        aArray.withUnsafeBufferPointer { aBuffer in
-            bArray.withUnsafeBufferPointer { bBuffer in
+        a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
                 result = SIMDOperations.FloatProvider.dot(
                     aBuffer.baseAddress!,
                     bBuffer.baseAddress!,
@@ -242,27 +220,14 @@ public struct ChebyshevDistance: DistanceMetric {
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
 
-        let aArray = a.toArray()
-        let bArray = b.toArray()
         var result: Float = 0
 
-        aArray.withUnsafeBufferPointer { aBuffer in
-            bArray.withUnsafeBufferPointer { bBuffer in
-                // Compute difference
-                var diff = [Float](repeating: 0, count: aBuffer.count)
-                diff.withUnsafeMutableBufferPointer { diffBuffer in
-                    SIMDOperations.FloatProvider.subtract(
-                        aBuffer.baseAddress!,
-                        bBuffer.baseAddress!,
-                        result: diffBuffer.baseAddress!,
-                        count: aBuffer.count
-                    )
-
-                    // Maximum absolute value
-                    result = SIMDOperations.FloatProvider.maximumMagnitude(
-                        diffBuffer.baseAddress!,
-                        count: diffBuffer.count
-                    )
+        a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
+                // Find maximum absolute difference directly
+                for i in 0..<aBuffer.count {
+                    let diff = abs(aBuffer[i] - bBuffer[i])
+                    result = max(result, diff)
                 }
             }
         }
@@ -293,12 +258,10 @@ public struct HammingDistance: DistanceMetric {
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
 
-        let aArray = a.toArray()
-        let bArray = b.toArray()
         var count: Float = 0
 
-        aArray.withUnsafeBufferPointer { aBuffer in
-            bArray.withUnsafeBufferPointer { bBuffer in
+        a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
                 for i in 0..<aBuffer.count {
                     let aBit = aBuffer[i] > threshold ? 1 : 0
                     let bBit = bBuffer[i] > threshold ? 1 : 0
@@ -343,12 +306,10 @@ public struct MinkowskiDistance: DistanceMetric {
             return ChebyshevDistance().distance(a, b)
         }
 
-        let aArray = a.toArray()
-        let bArray = b.toArray()
         var sum: Float = 0
 
-        aArray.withUnsafeBufferPointer { aBuffer in
-            bArray.withUnsafeBufferPointer { bBuffer in
+        a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
                 for i in 0..<aBuffer.count {
                     let diff = abs(aBuffer[i] - bBuffer[i])
                     sum += pow(diff, p)

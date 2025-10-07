@@ -405,7 +405,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
 
 // MARK: - Batch Operations with NaN/Infinity Handling
 
-public extension SyncBatchOperations {
+internal extension SyncBatchOperations {
 
     /// Filter out vectors containing non-finite values
     ///

@@ -10,7 +10,7 @@ import Foundation
 #if MOVE_ONLY_EXPERIMENTAL
 /// Move-only storage for zero-copy semantics
 /// This is the core storage type that provides manual memory management
-public struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copyable {
+internal struct MoveOnlyStorage<Element: BinaryFloatingPoint & SIMDScalar>: ~Copyable {
     private let pointer: UnsafeMutableRawPointer
     public let capacity: Int
     public let alignment: Int
@@ -110,7 +110,8 @@ final class StorageBuffer<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked
 // MARK: - Managed Storage with COW
 
 /// Managed storage with copy-on-write semantics
-public struct ManagedStorage<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked Sendable {
+@usableFromInline
+internal struct ManagedStorage<Element: BinaryFloatingPoint & SIMDScalar>: @unchecked Sendable {
     private var buffer: StorageBuffer<Element>
 
     public var capacity: Int { buffer.capacity }
@@ -231,7 +232,8 @@ extension ManagedStorage {
 // MARK: - Equatable Conformance
 
 extension ManagedStorage: Equatable where Element: Equatable {
-    public static func == (lhs: ManagedStorage, rhs: ManagedStorage) -> Bool {
+    @usableFromInline
+    internal static func == (lhs: ManagedStorage, rhs: ManagedStorage) -> Bool {
         guard lhs.capacity == rhs.capacity else { return false }
         return lhs.withUnsafeBufferPointer { lhsBuffer in
             rhs.withUnsafeBufferPointer { rhsBuffer in
@@ -249,7 +251,8 @@ extension ManagedStorage: Equatable where Element: Equatable {
 // MARK: - Slice Support
 
 /// A view into a contiguous region of storage
-public struct StorageSlice<Element: BinaryFloatingPoint & SIMDScalar> {
+@usableFromInline
+internal struct StorageSlice<Element: BinaryFloatingPoint & SIMDScalar> {
     private let base: UnsafePointer<Element>
     public let count: Int
 

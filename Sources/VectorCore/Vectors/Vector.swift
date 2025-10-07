@@ -276,12 +276,6 @@ extension Vector: Collection {
     }
 }
 
-// MARK: - Array Conversion
-
-extension Vector {
-    // toArray() is provided by VectorProtocol default implementation
-}
-
 // MARK: - Equatable & Hashable
 
 extension Vector: Equatable {

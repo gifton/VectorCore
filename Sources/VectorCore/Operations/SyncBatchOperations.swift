@@ -36,7 +36,9 @@ import Foundation
 /// // Compute centroid
 /// let centroid = SyncBatchOperations.centroid(of: vectors)
 /// ```
-public enum SyncBatchOperations {
+///
+/// - Note: This API is internal. Use `BatchOperations` (async) or `Operations` for public APIs.
+internal enum SyncBatchOperations {
 
     // MARK: - Nearest Neighbor Search
 
@@ -50,7 +52,7 @@ public enum SyncBatchOperations {
     ///   - k: Number of nearest neighbors to find
     ///   - metric: Distance metric to use (default: Euclidean)
     /// - Returns: Array of (index, distance) tuples sorted by distance
-    public static func findNearest<V: VectorProtocol, M: DistanceMetric>(
+    internal static func findNearest<V: VectorProtocol, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
@@ -59,16 +61,44 @@ public enum SyncBatchOperations {
         guard k > 0 else { return [] }
         guard !vectors.isEmpty else { return [] }
 
-        // For small k, use heap selection
+        // Optimized fast path for Vector*Optimized + Euclidean/Cosine using BatchKernels
+        if let _ = metric as? EuclideanDistance {
+            if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 512)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 768)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                let dists = computeDistances_euclid_optimized_serial(query: q, candidates: c, dim: 1536)
+                return selectTopK(from: dists, k: k)
+            }
+        } else if let _ = metric as? CosineDistance {
+            if let q = query as? Vector512Optimized, let c = vectors as? [Vector512Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 512)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector768Optimized, let c = vectors as? [Vector768Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 768)
+                return selectTopK(from: dists, k: k)
+            }
+            if let q = query as? Vector1536Optimized, let c = vectors as? [Vector1536Optimized] {
+                let dists = computeDistances_cosine_fused_serial(query: q, candidates: c, dim: 1536)
+                return selectTopK(from: dists, k: k)
+            }
+        }
+
+        // For small k, use heap selection (generic path)
         if k < vectors.count / 10 {
             return heapSelect(query: query, vectors: vectors, k: k, metric: metric)
         }
 
-        // For larger k, compute all distances and partial sort
+        // For larger k, compute all distances and partial sort (generic path)
         let distances = vectors.enumerated().map { index, vector in
             (index: index, distance: metric.distance(query, vector))
         }
-
         return Array(distances.sorted { $0.distance < $1.distance }.prefix(k))
     }
 
@@ -80,7 +110,7 @@ public enum SyncBatchOperations {
     ///   - radius: Maximum distance threshold
     ///   - metric: Distance metric to use
     /// - Returns: Array of (index, distance) tuples within radius
-    public static func findWithinRadius<V: VectorProtocol, M: DistanceMetric>(
+    internal static func findWithinRadius<V: VectorProtocol, M: DistanceMetric>(
         of query: V,
         in vectors: [V],
         radius: Float,
@@ -100,7 +130,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - transform: Transformation function
     /// - Returns: Transformed vectors
-    public static func map<V: VectorProtocol, U: VectorProtocol>(
+    internal static func map<V: VectorProtocol, U: VectorProtocol>(
         _ vectors: [V],
         transform: (V) throws -> U
     ) rethrows -> [U] {
@@ -112,7 +142,7 @@ public enum SyncBatchOperations {
     /// - Parameters:
     ///   - vectors: Vectors to transform (modified in-place)
     ///   - transform: In-place transformation function
-    public static func mapInPlace<V: VectorProtocol>(
+    internal static func mapInPlace<V: VectorProtocol>(
         _ vectors: inout [V],
         transform: (inout V) throws -> Void
     ) rethrows {
@@ -127,7 +157,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - predicate: Filter predicate
     /// - Returns: Filtered vectors
-    public static func filter<V: VectorProtocol>(
+    internal static func filter<V: VectorProtocol>(
         _ vectors: [V],
         predicate: (V) throws -> Bool
     ) rethrows -> [V] {
@@ -140,7 +170,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - predicate: Partitioning predicate
     /// - Returns: Tuple of (matching, non-matching) vectors
-    public static func partition<V: VectorProtocol>(
+    internal static func partition<V: VectorProtocol>(
         _ vectors: [V],
         by predicate: (V) throws -> Bool
     ) rethrows -> (matching: [V], nonMatching: [V]) {
@@ -167,7 +197,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Centroid vector, or nil if input is empty
-    public static func centroid<D: StaticDimension>(
+    internal static func centroid<D: StaticDimension>(
         of vectors: [Vector<D>]
     ) -> Vector<D>? {
         guard !vectors.isEmpty else { return nil }
@@ -195,7 +225,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - weights: Weights for each vector
     /// - Returns: Weighted centroid, or nil if input is empty
-    public static func weightedCentroid<D: StaticDimension>(
+    internal static func weightedCentroid<D: StaticDimension>(
         of vectors: [Vector<D>],
         weights: [Float]
     ) throws -> Vector<D>? where D.Storage: VectorStorageOperations {
@@ -221,7 +251,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Sum vector, or nil if input is empty
-    public static func sum<D: StaticDimension>(
+    internal static func sum<D: StaticDimension>(
         _ vectors: [Vector<D>]
     ) -> Vector<D>? where D.Storage: VectorStorageOperations {
         guard !vectors.isEmpty else { return nil }
@@ -238,7 +268,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Mean vector, or nil if input is empty
-    public static func mean<D: StaticDimension>(
+    internal static func mean<D: StaticDimension>(
         _ vectors: [Vector<D>]
     ) -> Vector<D>? where D.Storage: VectorStorageOperations {
         centroid(of: vectors)
@@ -250,7 +280,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Statistics including count, mean magnitude, and std deviation
-    public static func statistics<V: VectorProtocol>(
+    internal static func statistics<V: VectorProtocol>(
         for vectors: [V]
     ) -> BatchStatistics where V.Scalar == Float {
         guard !vectors.isEmpty else {
@@ -282,7 +312,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - zscore: Z-score threshold for outlier detection (default: 3)
     /// - Returns: Indices of outlier vectors
-    public static func findOutliers<V: VectorProtocol>(
+    internal static func findOutliers<V: VectorProtocol>(
         in vectors: [V],
         zscoreThreshold: Float = 3
     ) -> [Int] where V.Scalar == Float {
@@ -303,7 +333,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - metric: Distance metric to use
     /// - Returns: Symmetric distance matrix
-    public static func pairwiseDistances<V: VectorProtocol, M: DistanceMetric>(
+    internal static func pairwiseDistances<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
         metric: M = EuclideanDistance()
     ) -> [[Float]] where M.Scalar == Float, V.Scalar == Float {
@@ -329,7 +359,7 @@ public enum SyncBatchOperations {
     ///   - candidates: Candidate vectors
     ///   - metric: Distance metric to use
     /// - Returns: Distance matrix [queries x candidates]
-    public static func batchDistances<V: VectorProtocol, M: DistanceMetric>(
+    internal static func batchDistances<V: VectorProtocol, M: DistanceMetric>(
         from queries: [V],
         to candidates: [V],
         metric: M = EuclideanDistance()
@@ -350,7 +380,7 @@ public enum SyncBatchOperations {
     ///   - centroids: Cluster centroids
     ///   - metric: Distance metric to use
     /// - Returns: Array of centroid indices for each vector
-    public static func assignToCentroids<V: VectorProtocol, M: DistanceMetric>(
+    internal static func assignToCentroids<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
         centroids: [V],
         metric: M = EuclideanDistance()
@@ -378,7 +408,7 @@ public enum SyncBatchOperations {
     ///   - assignments: Cluster assignment for each vector
     ///   - k: Number of clusters
     /// - Returns: Updated centroids
-    public static func updateCentroids<D: StaticDimension>(
+    internal static func updateCentroids<D: StaticDimension>(
         vectors: [Vector<D>],
         assignments: [Int],
         k: Int
@@ -404,7 +434,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - k: Number of samples
     /// - Returns: Random sample of k vectors
-    public static func randomSample<V>(
+    internal static func randomSample<V>(
         from vectors: [V],
         k: Int
     ) -> [V] {
@@ -440,7 +470,7 @@ public enum SyncBatchOperations {
     ///   - k: Total number of samples
     ///   - strata: Number of magnitude-based strata
     /// - Returns: Stratified sample
-    public static func stratifiedSample<V: VectorProtocol>(
+    internal static func stratifiedSample<V: VectorProtocol>(
         from vectors: [V],
         k: Int,
         strata: Int = 5
@@ -475,6 +505,161 @@ public enum SyncBatchOperations {
     }
 
     // MARK: - Private Helpers
+
+    @inline(__always)
+    private static func minChunk(forDim dim: Int) -> Int {
+        switch dim { case 1536: return 512; case 768: return 256; default: return 256 }
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_euclid_optimized_serial(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector512Optimized,
+        candidates: [Vector512Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector768Optimized,
+        candidates: [Vector768Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    private static func computeDistances_cosine_fused_serial(
+        query: Vector1536Optimized,
+        candidates: [Vector1536Optimized],
+        dim: Int
+    ) -> [Float] {
+        let n = candidates.count
+        var out = [Float](repeating: 0, count: n)
+        out.withUnsafeMutableBufferPointer { buf in
+            var start = 0
+            let step = minChunk(forDim: dim)
+            while start < n {
+                let end = min(start + step, n)
+                let sub = UnsafeMutableBufferPointer<Float>(start: buf.baseAddress!.advanced(by: start), count: end - start)
+                BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: start..<end, out: sub)
+                start = end
+            }
+        }
+        return out
+    }
+
+    @inline(__always)
+    private static func selectTopK(from distances: [Float], k: Int) -> [(index: Int, distance: Float)] {
+        let n = distances.count
+        let kClamped = min(k, n)
+        // Small k: max-heap on precomputed distances
+        if kClamped < n / 10 {
+            var heap = [(index: Int, distance: Float)]()
+            heap.reserveCapacity(kClamped)
+            for (i, d) in distances.enumerated() {
+                if heap.count < kClamped {
+                    heap.append((i, d))
+                    if heap.count == kClamped { heap.sort { $0.distance > $1.distance } }
+                } else if d < heap[0].distance {
+                    heap[0] = (i, d)
+                    // Simple bubble-down restore
+                    var idx = 0
+                    while idx < kClamped - 1 && heap[idx].distance < heap[idx + 1].distance {
+                        heap.swapAt(idx, idx + 1)
+                        idx += 1
+                    }
+                }
+            }
+            return heap.sorted { $0.distance < $1.distance }
+        } else {
+            // Large k: sort pairs
+            let pairs = distances.enumerated().map { (index: $0.offset, distance: $0.element) }
+            return Array(pairs.sorted { $0.distance < $1.distance }.prefix(kClamped))
+        }
+    }
 
     private static func heapSelect<V: VectorProtocol, M: DistanceMetric>(
         query: V,
@@ -517,7 +702,7 @@ public enum SyncBatchOperations {
 
 // MARK: - Batch Processing Extensions
 
-public extension Array where Element: VectorProtocol {
+internal extension Array where Element: VectorProtocol {
     /// Find k nearest neighbors to a query
     func findNearest<M: DistanceMetric>(
         to query: Element,
@@ -541,7 +726,7 @@ public extension Array where Element: VectorProtocol {
 }
 
 // Extension specifically for Vector<D> types to support centroid
-public extension Array {
+internal extension Array {
     /// Compute centroid of vectors
     func centroid<D: StaticDimension>() -> Vector<D>? where Element == Vector<D>, D.Storage: VectorStorageOperations {
         SyncBatchOperations.centroid(of: self)

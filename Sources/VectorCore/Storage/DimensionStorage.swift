@@ -294,7 +294,8 @@ extension DimensionStorage {
 
 extension DimensionStorage {
     /// Create a slice view of the storage
-    public func slice(from start: Int, to end: Int) -> StorageSlice<Element> {
+    @usableFromInline
+    internal func slice(from start: Int, to end: Int) -> StorageSlice<Element> {
         switch storage {
         case .hybrid, .managed:
             // Both storage types can provide slices through buffer pointers
@@ -306,7 +307,8 @@ extension DimensionStorage {
     }
 
     /// Create a slice with a range
-    public func slice(_ range: Range<Int>) -> StorageSlice<Element> {
+    @usableFromInline
+    internal func slice(_ range: Range<Int>) -> StorageSlice<Element> {
         slice(from: range.lowerBound, to: range.upperBound)
     }
 }

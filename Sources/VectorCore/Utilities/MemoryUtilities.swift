@@ -7,7 +7,7 @@ import Foundation
 // MARK: - Memory Management Namespace
 
 /// Namespace for memory management types and utilities
-public enum Memory {
+internal enum Memory {
     // MARK: - Pressure Monitor
 
     /// Monitor system memory pressure
@@ -63,7 +63,7 @@ public enum Memory {
 /// ```swift
 /// let size = vectorMemorySize(SIMD16<Float>.self)  // Returns 64 bytes
 /// ```
-public func vectorMemorySize<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
+internal func vectorMemorySize<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
     return MemoryLayout<Vector>.size
 }
 
@@ -76,7 +76,7 @@ public func vectorMemorySize<Vector: SIMD>(_ type: Vector.Type) -> Int where Vec
 /// ```swift
 /// let alignment = vectorMemoryAlignment(SIMD8<Float>.self)  // Returns 32 bytes
 /// ```
-public func vectorMemoryAlignment<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
+internal func vectorMemoryAlignment<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
     return MemoryLayout<Vector>.alignment
 }
 
@@ -167,7 +167,7 @@ public func alignedCopy<T>(
 ///     return buffer.reduce(0, +)
 /// }
 /// ```
-public func withTemporaryBuffer<T, Result>(
+internal func withTemporaryBuffer<T, Result>(
     of type: T.Type,
     capacity: Int,
     alignment: Int = 64,
@@ -207,10 +207,70 @@ public func withTemporaryBuffer<T, Result>(
 /// }
 /// // Use sensitive data...
 /// ```
-public func secureZero<T>(_ buffer: UnsafeMutableBufferPointer<T>) {
+internal func secureZero<T>(_ buffer: UnsafeMutableBufferPointer<T>) {
     guard let baseAddress = buffer.baseAddress else { return }
 
     // Use memset_s for secure zeroing when available
     let byteCount = buffer.count * MemoryLayout<T>.stride
     _ = memset_s(baseAddress, byteCount, 0, byteCount)
 }
+
+// MARK: - Sendable Buffer Wrapper
+
+/// Thread-safe wrapper for UnsafeMutablePointer to enable Sendable conformance
+///
+/// This wrapper provides controlled concurrent access to unsafe memory buffers.
+/// The buffer is isolated within the wrapper and only accessed through the
+/// nonisolated pointer property, making it safe to use across concurrency domains.
+///
+/// - Warning: Caller is responsible for ensuring thread-safe access patterns
+internal final class SendableBufferWrapper<T> {
+    private let buffer: UnsafeMutablePointer<T>
+    public let capacity: Int
+
+    /// Initialize with allocated capacity
+    public init(capacity: Int) {
+        self.capacity = capacity
+        self.buffer = UnsafeMutablePointer<T>.allocate(capacity: capacity)
+    }
+
+    /// Access the underlying pointer from any isolation domain
+    public nonisolated var pointer: UnsafeMutablePointer<T> {
+        buffer
+    }
+
+    /// Clean up allocated memory
+    deinit {
+        buffer.deallocate()
+    }
+}
+
+extension SendableBufferWrapper: @unchecked Sendable {}
+
+/// Thread-safe wrapper for UnsafeMutableBufferPointer to enable Sendable conformance
+internal final class SendableMutableBufferWrapper<T> {
+    private let buffer: UnsafeMutableBufferPointer<T>
+
+    /// Initialize with allocated capacity
+    public init(capacity: Int) {
+        let ptr = UnsafeMutablePointer<T>.allocate(capacity: capacity)
+        self.buffer = UnsafeMutableBufferPointer(start: ptr, count: capacity)
+    }
+
+    /// Access the underlying buffer pointer from any isolation domain
+    public nonisolated var bufferPointer: UnsafeMutableBufferPointer<T> {
+        buffer
+    }
+
+    /// Access the base pointer from any isolation domain
+    public nonisolated var pointer: UnsafeMutablePointer<T>? {
+        buffer.baseAddress
+    }
+
+    /// Clean up allocated memory
+    deinit {
+        buffer.baseAddress?.deallocate()
+    }
+}
+
+extension SendableMutableBufferWrapper: @unchecked Sendable {}

@@ -115,7 +115,7 @@ public actor SwiftBufferPool: BufferProvider {
             await cleanupIfNeeded()
         } else {
             // Too large for pooling, deallocate immediately
-            handle.pointer.deallocate()
+            AlignedMemory.deallocate(handle.pointer)
         }
     }
 
@@ -132,7 +132,7 @@ public actor SwiftBufferPool: BufferProvider {
         // Deallocate all pooled buffers
         for (_, entries) in pools {
             for entry in entries {
-                entry.buffer.deallocate()
+                AlignedMemory.deallocate(entry.buffer)
             }
         }
         pools.removeAll()
@@ -179,7 +179,7 @@ public actor SwiftBufferPool: BufferProvider {
 
                 // Deallocate removed buffers
                 for entry in removed {
-                    entry.buffer.deallocate()
+                    AlignedMemory.deallocate(entry.buffer)
                 }
 
                 if filtered.isEmpty {

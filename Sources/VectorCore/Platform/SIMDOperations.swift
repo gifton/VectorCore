@@ -9,7 +9,7 @@
 import Foundation
 
 /// Global namespace for SIMD operations on Float vectors
-public enum FloatSIMD {
+internal enum FloatSIMD {
     // MARK: - Arithmetic Operations
 
     @inlinable
@@ -198,7 +198,7 @@ public enum FloatSIMD {
 }
 
 /// Global namespace for SIMD operations on Double vectors
-public enum DoubleSIMD {
+internal enum DoubleSIMD {
     // MARK: - Arithmetic Operations
 
     @inlinable

@@ -9,6 +9,7 @@
 import Foundation
 import simd
 
+@usableFromInline
 internal enum CosineKernels {
 
     // Helper for safe division/clamping and zero-magnitude guards

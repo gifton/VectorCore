@@ -9,7 +9,7 @@ import Foundation
 
 /// Thread-safe memory pool that reduces allocation overhead by reusing memory buffers
 /// for temporary calculations in vector operations.
-internal final class MemoryPool: @unchecked Sendable {
+public final class MemoryPool: @unchecked Sendable {
     // MARK: - Singleton
 
     /// Shared memory pool instance for application-wide buffer reuse
@@ -18,7 +18,7 @@ internal final class MemoryPool: @unchecked Sendable {
     // MARK: - Configuration
 
     /// Configuration parameters for memory pool behavior
-    internal struct Configuration {
+    public struct Configuration {
         /// Maximum number of buffers to keep per size category
         public var maxBuffersPerSize: Int = 10
         /// Maximum total memory to use for pooled buffers (in bytes)
@@ -32,7 +32,7 @@ internal final class MemoryPool: @unchecked Sendable {
     // MARK: - Buffer Handle
 
     /// Handle to a borrowed buffer that automatically returns to pool on deallocation
-    internal final class BufferHandle<T> {
+    public final class BufferHandle<T> {
         fileprivate let buffer: UnsafeMutableBufferPointer<T>
         fileprivate weak var pool: MemoryPool?
         fileprivate let sizeKey: Int
@@ -120,7 +120,7 @@ internal final class MemoryPool: @unchecked Sendable {
     // MARK: - Public API
 
     /// Acquire a buffer from the pool
-    internal func acquire<T>(
+    public func acquire<T>(
         type: T.Type,
         count: Int,
         alignment: Int = 16
@@ -228,12 +228,12 @@ internal final class MemoryPool: @unchecked Sendable {
     /// Synchronize with the internal queue to ensure all pending
     /// pool operations (returns, stats updates, cleanups) have completed.
     /// Useful for tests to avoid arbitrary sleeps.
-    internal func quiesce() {
+    public func quiesce() {
         queue.sync(flags: .barrier) { }
     }
 
     /// Manually trigger cleanup
-    internal func cleanup() {
+    public func cleanup() {
         let cutoffDate = Date().addingTimeInterval(-configuration.cleanupInterval)
 
         queue.async(flags: .barrier) {

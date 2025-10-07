@@ -9,6 +9,7 @@ import Foundation
 // MARK: - Alignment Strategy
 
 /// Memory alignment strategy for SIMD operations
+@usableFromInline
 internal enum AlignmentStrategy: Sendable {
     /// Fixed 64-byte alignment (cache line)
     case cacheLine
@@ -23,7 +24,8 @@ internal enum AlignmentStrategy: Sendable {
     case elementDefault
 
     /// Get the alignment value in bytes
-    public var value: Int {
+    @usableFromInline
+    internal var value: Int {
         switch self {
         case .cacheLine:
             return 64
@@ -50,6 +52,7 @@ internal enum AlignmentStrategy: Sendable {
 
 // MARK: - Alignment Utilities
 
+@usableFromInline
 internal enum AlignmentUtility {
     /// Check if a pointer is aligned to the specified boundary
     @inlinable

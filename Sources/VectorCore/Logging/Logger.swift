@@ -23,7 +23,7 @@ import os.log
 /// logger.log("Vector operation completed", level: .info)
 /// logger.log("Memory allocation failed", level: .critical)
 /// ```
-internal enum LogLevel: Int, Comparable, Sendable {
+public enum LogLevel: Int, Comparable, Sendable {
     /// Detailed information for debugging purposes.
     case debug = 0
 
@@ -74,7 +74,7 @@ internal enum LogLevel: Int, Comparable, Sendable {
 /// LogConfiguration.shared.minimumLevel = .warning
 /// LogConfiguration.shared.enableOSLog = true
 /// ```
-internal final class LogConfiguration: @unchecked Sendable {
+public final class LogConfiguration: @unchecked Sendable {
     private var _minimumLevel: LogLevel
     private let lock = NSLock()
 
@@ -105,7 +105,7 @@ internal final class LogConfiguration: @unchecked Sendable {
 }
 
 /// Simple logger for VectorCore
-internal struct Logger: Sendable {
+public struct Logger: Sendable {
     private let subsystem: String
     private let category: String
     private let osLog: OSLog
@@ -211,12 +211,12 @@ internal struct Logger: Sendable {
 /// Logger for core vector operations.
 ///
 /// Use for logging vector creation, manipulation, and basic operations.
-internal let coreLogger = Logger(category: "Core")
+public let coreLogger = Logger(category: "Core")
 
 /// Logger for storage and memory operations.
 ///
 /// Use for logging memory allocation, deallocation, and storage management.
-internal let storageLogger = Logger(category: "Storage")
+public let storageLogger = Logger(category: "Storage")
 
 /// Logger for batch operations.
 ///

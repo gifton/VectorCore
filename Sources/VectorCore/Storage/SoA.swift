@@ -12,7 +12,7 @@ import simd
 // MARK: - Protocol for SoA Compatible Vectors
 
 /// Protocol defining the requirements for vectors compatible with SoA layout
-internal protocol SoACompatible: Sendable {
+public protocol SoACompatible: Sendable {
     static var dimension: Int { get }
     static var lanes: Int { get }
     var storage: ContiguousArray<SIMD4<Float>> { get }
@@ -44,7 +44,7 @@ extension Vector1536Optimized: SoACompatible {
 /// This provides superior cache locality when processing multiple candidates
 /// with the same query vector, as all candidates' data for a given lane
 /// are stored contiguously in memory.
-internal final class SoA<Vector: SoACompatible>: @unchecked Sendable {
+public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     public let lanes: Int
     public let count: Int
 

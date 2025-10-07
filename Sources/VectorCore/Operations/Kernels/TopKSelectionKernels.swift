@@ -6,6 +6,7 @@ import simd
 /// Fixed-capacity Top‑K heap buffer.
 /// Distances (minimize) → use Max-Heap (isMinHeap = false).
 /// Similarities (maximize) → use Min-Heap (isMinHeap = true).
+@usableFromInline
 internal struct TopKBuffer: Sendable {
     public let k: Int
     public var vals: [Float]
@@ -74,6 +75,7 @@ internal struct TopKBuffer: Sendable {
 
 // MARK: - Kernels
 
+@usableFromInline
 internal enum TopKSelectionKernels {
 
     // Merge two partial Top‑Ks into out (deterministic)

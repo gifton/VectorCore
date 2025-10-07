@@ -515,7 +515,7 @@ internal final class AlignedBuffer<Element> {
 
     /// Tracks whether allocation used posix_memalign (via AlignedMemory)
     @usableFromInline
-    private let usedPosixAlignedAlloc: Bool
+    internal let usedPosixAlignedAlloc: Bool
 
     /// Initialize with capacity
     @usableFromInline

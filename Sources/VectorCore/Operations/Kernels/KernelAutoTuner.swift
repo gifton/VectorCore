@@ -20,7 +20,7 @@ import Darwin
 /// Strategies represent distinct implementation approaches, not configuration
 /// parameters. Each strategy maps to a specific kernel implementation with
 /// different performance characteristics.
-internal enum KernelStrategy: String, Codable, Sendable {
+public enum KernelStrategy: String, Codable, Sendable {
     // CPU Strategies
     case cpuAoS             // Array-of-Structures (simple loops, minimal overhead)
     case cpuSoA             // Structure-of-Arrays (auto-selects 2-way/4-way blocking)
@@ -34,7 +34,7 @@ internal enum KernelStrategy: String, Codable, Sendable {
 // MARK: - 2. Workload Characteristics
 
 /// Characteristics of a computation workload
-internal struct WorkloadCharacteristics: Sendable {
+public struct WorkloadCharacteristics: Sendable {
     public let dimension: Int           // Vector dimension (512, 768, 1536)
     public let batchSize: Int           // Number of candidates
     public let precisionMode: PrecisionMode
@@ -65,7 +65,7 @@ internal struct WorkloadCharacteristics: Sendable {
 // MARK: - 3. Performance Profile
 
 /// Performance profile for a specific kernel + workload combination
-internal struct PerformanceProfile: Codable, Sendable {
+public struct PerformanceProfile: Codable, Sendable {
     public let strategy: KernelStrategy
     public let workload: String         // Hash of workload characteristics
     public let throughput: Double       // Operations/sec

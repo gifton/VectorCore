@@ -8,6 +8,7 @@
 import Foundation
 import simd
 
+@usableFromInline
 internal enum ManhattanKernels {
 
     @inline(__always)

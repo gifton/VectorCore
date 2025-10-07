@@ -23,6 +23,8 @@ Indicative performance (Apple Silicon M‑series): optimized 512/768/1536‑dime
 
 Whether you're building ML pipelines, processing embeddings, or need fast numerical computing, VectorCore delivers the performance you need with an API you'll love.
 
+Note: Kernel helpers, storage backends, and buffer pools are internal implementation details and not part of the public API surface; see Docs/API_Overview_Map.md for the high-level map.
+
 ## ⚡️ GPU Acceleration
 
 VectorCore is CPU-only and contains no GPU/Metal code. If you need GPU acceleration, use the separate VectorAccelerate package, which implements GPU-backed compute while integrating seamlessly with VectorCore types and protocols.

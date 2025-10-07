@@ -74,7 +74,7 @@ private let nativeFloat16Supported = false
 /// - Relative error < 0.1% for typical normalized embedding vectors
 /// - Absolute error bounded by machine epsilon for FP32 operations
 /// - Complies with IEEE 754 rounding semantics
-internal enum MixedPrecisionKernels {
+public enum MixedPrecisionKernels {
 
     // MARK: - Internal FP16 Conversion Helpers (Scalar)
 
@@ -3993,7 +3993,7 @@ public extension MixedPrecisionKernels.Vector1536FP16 {
 /// Factory methods for creating FP16 vectors from raw Float arrays.
 ///
 /// Provides convenient initialization from Float arrays with automatic FP32→FP16 conversion.
-internal enum MixedPrecisionFactory {
+public enum MixedPrecisionFactory {
 
     /// Create Vector512FP16 from array of FP32 values.
     ///
@@ -5044,7 +5044,7 @@ public final class FP16VectorPool: @unchecked Sendable {
 ///     // Fallback to software conversion
 /// }
 /// ```
-internal enum PlatformCapabilities {
+public enum PlatformCapabilities {
 
     /// True if platform has native hardware FP16 arithmetic support
     ///

@@ -16,7 +16,7 @@ import Darwin
 // MARK: - Precision Strategy
 
 /// Mixed precision execution strategies for batch distance computations
-internal enum MixedPrecisionStrategy: String, Codable, Sendable, CaseIterable {
+public enum MixedPrecisionStrategy: String, Codable, Sendable, CaseIterable {
     case fullFP32           // Baseline: Full FP32 precision (no conversion)
     case queryFP16Standard  // FP16 query × FP16 SoA, standard kernel
     case queryFP16Blocked   // FP16 query × FP16 SoA, register-blocked kernel (8 candidates)

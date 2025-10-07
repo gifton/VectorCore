@@ -13,7 +13,7 @@ import simd
 // MARK: - Linear Quantization Parameters
 
 /// Parameters for linear (affine) quantization: q = round(x/scale + zeroPoint).
-internal struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
+public struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
     public let scale: Float
     public let zeroPoint: Int8
     public let minValue: Float
@@ -157,7 +157,7 @@ extension QuantizedVectorINT8 {
 
 // MARK: Specific INT8 Vector Types
 
-internal struct Vector512INT8: QuantizedVectorINT8 {
+public struct Vector512INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector512Optimized
     public var storage: ContiguousArray<SIMD4<Int8>>
     public let quantizationParams: LinearQuantizationParams
@@ -170,7 +170,7 @@ internal struct Vector512INT8: QuantizedVectorINT8 {
     }
 }
 
-internal struct Vector768INT8: QuantizedVectorINT8 {
+public struct Vector768INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector768Optimized
     public var storage: ContiguousArray<SIMD4<Int8>>
     public let quantizationParams: LinearQuantizationParams
@@ -183,7 +183,7 @@ internal struct Vector768INT8: QuantizedVectorINT8 {
     }
 }
 
-internal struct Vector1536INT8: QuantizedVectorINT8 {
+public struct Vector1536INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector1536Optimized
     public var storage: ContiguousArray<SIMD4<Int8>>
     public let quantizationParams: LinearQuantizationParams
@@ -381,6 +381,7 @@ extension Vector1536INT8 {
 
 // MARK: - Core Distance Kernels and Helpers
 
+@usableFromInline
 internal enum QuantizedKernels {
 
     // MARK: Conversion Helpers (NEON Optimization)
@@ -809,6 +810,7 @@ extension QuantizedKernels {
 
 // MARK: - Calibration and Error Analysis
 
+@usableFromInline
 internal enum QuantizationStrategy {
     case symmetric, asymmetric, perChannel
 }
@@ -969,7 +971,7 @@ extension Vector1536INT8 {
 /// Dim 0: [V0_d0, V1_d0, V2_d0, V3_d0], [V4_d0, V5_d0, V6_d0, V7_d0], ...
 /// Dim 1: [V0_d1, V1_d1, V2_d1, V3_d1], [V4_d1, V5_d1, V6_d1, V7_d1], ...
 /// ...
-internal struct SoAINT8<VectorType: OptimizedVector>: Sendable {
+public struct SoAINT8<VectorType: OptimizedVector>: Sendable {
     public let dimension: Int
     /// Storage layout: D * ceil(N/4) entries of SIMD4<Int8>.
     public let storage: ContiguousArray<SIMD4<Int8>>

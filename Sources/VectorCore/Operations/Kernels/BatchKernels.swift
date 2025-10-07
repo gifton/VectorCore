@@ -10,7 +10,7 @@
 import Foundation
 import simd
 
-internal enum BatchKernels {
+public enum BatchKernels {
 
     // MARK: - Euclidean Squared (2-way blocked)
 
@@ -437,7 +437,7 @@ internal enum BatchKernels {
 
 // MARK: - Euclidean (sqrt wrapper over euclid2)
 
-internal extension BatchKernels {
+public extension BatchKernels {
     @inlinable
     static func range_euclid_512(query: Vector512Optimized, candidates: [Vector512Optimized], range: Range<Int>, out: UnsafeMutableBufferPointer<Float>) {
         range_euclid2_512(query: query, candidates: candidates, range: range, out: out)

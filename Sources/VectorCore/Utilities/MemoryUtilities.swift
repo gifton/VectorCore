@@ -97,7 +97,7 @@ internal func vectorMemoryAlignment<Vector: SIMD>(_ type: Vector.Type) -> Int wh
 ///     // Safe to use with 32-byte aligned SIMD operations
 /// }
 /// ```
-internal func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
+public func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
     return Int(bitPattern: pointer) % alignment == 0
 }
 
@@ -126,7 +126,7 @@ internal func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bo
 ///     preferredAlignment: 64
 /// )
 /// ```
-internal func alignedCopy<T>(
+public func alignedCopy<T>(
     from source: UnsafePointer<T>,
     to destination: UnsafeMutablePointer<T>,
     count: Int,

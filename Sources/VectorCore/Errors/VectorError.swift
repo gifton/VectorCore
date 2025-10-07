@@ -69,7 +69,7 @@ public struct ErrorContext: Sendable {
         self.line = 0
         self.function = ""
         self.timestamp = Date()
-        self.additionalInfo = [:]
+        self.additionalInfo = additionalInfo
     }
     #endif
 }

@@ -1137,10 +1137,201 @@ extension GraphPrimitivesKernels {
     }
 }
 
+// MARK: - Graph Analytics
+
+extension GraphPrimitivesKernels {
+
+    /// Degree distribution analysis result for graph topology analysis
+    ///
+    /// Provides comprehensive statistics about node degree distribution in a graph,
+    /// including power-law characteristics for scale-free network detection.
+    ///
+    /// This is a specialized version used by `analyzeDegreeDistribution` with
+    /// extended power-law analysis capabilities.
+    public struct DegreeDistributionResult: Sendable {
+        /// Degree of each node (number of edges)
+        public let degrees: [Int]
+
+        /// Minimum degree in the graph
+        public let minDegree: Int
+
+        /// Maximum degree in the graph
+        public let maxDegree: Int
+
+        /// Average degree across all nodes
+        public let avgDegree: Double
+
+        /// Histogram mapping degree → count of nodes with that degree
+        public let histogram: [Int: Int]
+
+        /// Power-law exponent from log-log regression (negative for scale-free networks)
+        public let logLogSlope: Double
+
+        /// Variance of degree distribution
+        public let variance: Double
+
+        public init(
+            degrees: [Int],
+            minDegree: Int,
+            maxDegree: Int,
+            avgDegree: Double,
+            histogram: [Int: Int],
+            logLogSlope: Double,
+            variance: Double
+        ) {
+            self.degrees = degrees
+            self.minDegree = minDegree
+            self.maxDegree = maxDegree
+            self.avgDegree = avgDegree
+            self.histogram = histogram
+            self.logLogSlope = logLogSlope
+            self.variance = variance
+        }
+    }
+
+    /// Analyzes the degree distribution of a graph
+    ///
+    /// Computes comprehensive degree distribution statistics including:
+    /// - Per-node degrees (out-degree for directed graphs)
+    /// - Min/max/average degree
+    /// - Degree histogram (degree → count mapping)
+    /// - Variance of degree distribution
+    /// - Power-law exponent via log-log linear regression
+    ///
+    /// The log-log slope (power-law exponent) is computed using linear regression on
+    /// the log-log plot of (degree, frequency). For scale-free networks following
+    /// P(k) ∝ k^(-γ), this slope approximates -γ (typically negative).
+    ///
+    /// **Algorithm:**
+    /// 1. Count edges per node using CSR row pointers: O(N)
+    /// 2. Compute basic statistics (min, max, mean): O(N)
+    /// 3. Build histogram: O(N)
+    /// 4. Compute variance: O(N)
+    /// 5. Linear regression on log-log plot: O(K) where K = unique degrees
+    ///
+    /// **Complexity:** O(N + K) where N = nodes, K = unique degrees
+    ///
+    /// - Parameter matrix: Sparse adjacency matrix in CSR format
+    /// - Returns: Comprehensive degree distribution statistics
+    ///
+    /// **Example:**
+    /// ```swift
+    /// let graph = SparseMatrix(rows: 5, cols: 5, edges: edges)
+    /// let dist = GraphPrimitivesKernels.analyzeDegreeDistribution(matrix: graph)
+    /// print("Average degree: \(dist.avgDegree)")
+    /// print("Power-law slope: \(dist.logLogSlope)")
+    /// ```
+    public static func analyzeDegreeDistribution(matrix: SparseMatrix) -> DegreeDistributionResult {
+        let nodeCount = matrix.rows
+
+        // Handle empty graph
+        guard nodeCount > 0 else {
+            return DegreeDistributionResult(
+                degrees: [],
+                minDegree: 0,
+                maxDegree: 0,
+                avgDegree: 0.0,
+                histogram: [:],
+                logLogSlope: 0.0,
+                variance: 0.0
+            )
+        }
+
+        // Step 1: Compute degree for each node
+        // For CSR format, degree = rowPointers[i+1] - rowPointers[i]
+        var degrees = Array<Int>()
+        degrees.reserveCapacity(nodeCount)
+
+        var minDegree = Int.max
+        var maxDegree = 0
+        var totalDegree = 0
+
+        for i in 0..<nodeCount {
+            let degree = Int(matrix.rowPointers[i + 1] - matrix.rowPointers[i])
+            degrees.append(degree)
+            minDegree = min(minDegree, degree)
+            maxDegree = max(maxDegree, degree)
+            totalDegree += degree
+        }
+
+        // Handle case where all degrees are Int.max (shouldn't happen but be defensive)
+        if minDegree == Int.max {
+            minDegree = 0
+        }
+
+        // Step 2: Compute average degree
+        let avgDegree = Double(totalDegree) / Double(nodeCount)
+
+        // Step 3: Compute variance
+        // Var(X) = E[(X - μ)²] = (1/N) * Σ(x_i - μ)²
+        var varianceSum: Double = 0.0
+        for degree in degrees {
+            let diff = Double(degree) - avgDegree
+            varianceSum += diff * diff
+        }
+        let variance = varianceSum / Double(nodeCount)
+
+        // Step 4: Build histogram (degree → frequency)
+        var histogram: [Int: Int] = [:]
+        for degree in degrees {
+            histogram[degree, default: 0] += 1
+        }
+
+        // Step 5: Compute log-log slope (power-law exponent)
+        // For power-law: P(k) ∝ k^(-γ)
+        // In log-log space: log(P(k)) = -γ * log(k) + C
+        // Use linear regression to estimate slope
+        var logLogSlope: Double = 0.0
+
+        if maxDegree > 1 {
+            // Filter to non-zero degrees for log calculation
+            var sumLogX: Double = 0.0
+            var sumLogY: Double = 0.0
+            var sumLogXLogY: Double = 0.0
+            var sumLogXSquared: Double = 0.0
+            var validPoints = 0
+
+            for (degree, count) in histogram {
+                if degree > 0 && count > 0 {
+                    let logDegree = log(Double(degree))
+                    let logCount = log(Double(count))
+
+                    sumLogX += logDegree
+                    sumLogY += logCount
+                    sumLogXLogY += logDegree * logCount
+                    sumLogXSquared += logDegree * logDegree
+                    validPoints += 1
+                }
+            }
+
+            // Linear regression: slope = (n*Σxy - Σx*Σy) / (n*Σx² - (Σx)²)
+            if validPoints > 1 {
+                let n = Double(validPoints)
+                let numerator = n * sumLogXLogY - sumLogX * sumLogY
+                let denominator = n * sumLogXSquared - sumLogX * sumLogX
+
+                // Avoid division by zero
+                if abs(denominator) > 1e-10 {
+                    logLogSlope = numerator / denominator
+                }
+            }
+        }
+
+        return DegreeDistributionResult(
+            degrees: degrees,
+            minDegree: minDegree,
+            maxDegree: maxDegree,
+            avgDegree: avgDegree,
+            histogram: histogram,
+            logLogSlope: logLogSlope,
+            variance: variance
+        )
+    }
+}
+
 // MARK: - Integration with AutoTuning
 
 extension AutoTuning {
-
     // Stub for benchmarking function used in calibration.
     internal static func benchmarkSparseMatVec(
         nodeCount: Int,

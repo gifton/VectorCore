@@ -11,6 +11,16 @@ import Testing
 import Foundation
 @testable import VectorCore
 
+// MARK: - Type Aliases for Nested Mixed Precision Types
+
+fileprivate typealias Vector512FP16 = MixedPrecisionKernels.Vector512FP16
+fileprivate typealias Vector768FP16 = MixedPrecisionKernels.Vector768FP16
+fileprivate typealias Vector1536FP16 = MixedPrecisionKernels.Vector1536FP16
+fileprivate typealias SoAFP16 = MixedPrecisionKernels.SoAFP16
+fileprivate typealias SoA512FP16 = MixedPrecisionKernels.SoA512FP16
+fileprivate typealias SoA768FP16 = MixedPrecisionKernels.SoA768FP16
+fileprivate typealias SoA1536FP16 = MixedPrecisionKernels.SoA1536FP16
+
 /// Comprehensive test suite for complex VectorCore kernel implementations
 @Suite("Complex Kernel Tests")
 struct ComplexKernelTests {

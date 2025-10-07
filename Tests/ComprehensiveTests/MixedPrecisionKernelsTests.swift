@@ -2,6 +2,16 @@ import Testing
 import Foundation
 @testable import VectorCore
 
+// MARK: - Type Aliases for Nested Mixed Precision Types
+
+fileprivate typealias Vector512FP16 = MixedPrecisionKernels.Vector512FP16
+fileprivate typealias Vector768FP16 = MixedPrecisionKernels.Vector768FP16
+fileprivate typealias Vector1536FP16 = MixedPrecisionKernels.Vector1536FP16
+fileprivate typealias SoAFP16 = MixedPrecisionKernels.SoAFP16
+fileprivate typealias SoA512FP16 = MixedPrecisionKernels.SoA512FP16
+fileprivate typealias SoA768FP16 = MixedPrecisionKernels.SoA768FP16
+fileprivate typealias SoA1536FP16 = MixedPrecisionKernels.SoA1536FP16
+
 @Suite("Mixed Precision Kernels")
 struct MixedPrecisionKernelsTests {
 
@@ -989,17 +999,38 @@ struct MixedPrecisionKernelsTests {
 
             // Test load/store patterns
             var results: [Float] = []
-            for i in stride(from: 0, to: 128, by: 4) {  // Process 4 SIMD4 chunks at a time
-                let chunk1 = vFP16.storage[i]
-                let chunk2 = vFP16.storage[i + 1]
-                let chunk3 = vFP16.storage[i + 2]
-                let chunk4 = vFP16.storage[i + 3]
+            for i in stride(from: 0, to: 512, by: 16) {  // Process 16 FP16 values at a time
+                // Load 16 consecutive UInt16 (FP16) values and group into 4 SIMD4<Float>
+                let fp16_chunk1 = vFP16.storage[i..<(i+4)]
+                let fp16_chunk2 = vFP16.storage[(i+4)..<(i+8)]
+                let fp16_chunk3 = vFP16.storage[(i+8)..<(i+12)]
+                let fp16_chunk4 = vFP16.storage[(i+12)..<(i+16)]
 
-                // Convert to FP32 and sum (simulating real computation)
-                let fp32_1 = SIMD4<Float>(chunk1)
-                let fp32_2 = SIMD4<Float>(chunk2)
-                let fp32_3 = SIMD4<Float>(chunk3)
-                let fp32_4 = SIMD4<Float>(chunk4)
+                // Convert each chunk of 4 FP16 values to SIMD4<Float>
+                let fp32_1 = SIMD4<Float>(
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk1[fp16_chunk1.startIndex]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk1[fp16_chunk1.startIndex + 1]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk1[fp16_chunk1.startIndex + 2]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk1[fp16_chunk1.startIndex + 3])
+                )
+                let fp32_2 = SIMD4<Float>(
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk2[fp16_chunk2.startIndex]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk2[fp16_chunk2.startIndex + 1]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk2[fp16_chunk2.startIndex + 2]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk2[fp16_chunk2.startIndex + 3])
+                )
+                let fp32_3 = SIMD4<Float>(
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk3[fp16_chunk3.startIndex]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk3[fp16_chunk3.startIndex + 1]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk3[fp16_chunk3.startIndex + 2]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk3[fp16_chunk3.startIndex + 3])
+                )
+                let fp32_4 = SIMD4<Float>(
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk4[fp16_chunk4.startIndex]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk4[fp16_chunk4.startIndex + 1]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk4[fp16_chunk4.startIndex + 2]),
+                    MixedPrecisionKernels.fp16ToFp32_scalar(fp16_chunk4[fp16_chunk4.startIndex + 3])
+                )
 
                 results.append((fp32_1 + fp32_2 + fp32_3 + fp32_4).sum())
             }

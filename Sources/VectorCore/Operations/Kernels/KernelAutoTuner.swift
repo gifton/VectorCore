@@ -745,6 +745,37 @@ public actor KernelAutoTuner {
             print("KernelAutoTuner: Failed to save profiles to \(url): \(error)")
         }
     }
+
+    // MARK: - Mixed Precision Integration
+
+    /// Select optimal mixed precision strategy for given workload
+    ///
+    /// When the high-level strategy is .cpuMixedPrecision, this delegates to
+    /// MixedPrecisionAutoTuner for fine-grained variant selection (standard vs blocked,
+    /// FP16 query vs FP32 query, etc.).
+    ///
+    /// - Parameters:
+    ///   - workload: Workload characteristics
+    /// - Returns: Specific mixed precision strategy
+    public func selectMixedPrecisionStrategy(
+        for workload: WorkloadCharacteristics
+    ) async -> MixedPrecisionStrategy {
+        // Map PrecisionMode to accuracy requirement
+        let accuracyRequirement: Float = switch workload.precisionMode {
+        case .fp32Full:
+            0.0001  // Very strict: 0.01% error
+        case .fp16Acceptable:
+            0.001   // Standard: 0.1% error
+        case .int8Acceptable:
+            0.01    // Relaxed: 1% error
+        }
+
+        return await MixedPrecisionAutoTuner.shared.selectOptimalStrategy(
+            candidateCount: workload.batchSize,
+            accuracyRequirement: accuracyRequirement,
+            dimension: workload.dimension
+        )
+    }
 }
 
 // MARK: - Platform Compatibility Extensions

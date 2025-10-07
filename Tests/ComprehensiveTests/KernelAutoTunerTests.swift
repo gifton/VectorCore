@@ -213,7 +213,7 @@ final class KernelAutoTunerTests: XCTestCase {
 
         let aosProfile = profiles.first { $0.strategy == .cpuAoS }
         XCTAssertNotNil(aosProfile, "cpuAoS should be profiled")
-        XCTAssertEqual(aosProfile?.accuracy, 1.0, accuracy: 0.01, "cpuAoS should have perfect accuracy")
+        XCTAssertEqual(Double(aosProfile?.accuracy ?? 0), 1.0, accuracy: 0.01, "cpuAoS should have perfect accuracy")
     }
 
     func testAccuracyMixedPrecision() async {

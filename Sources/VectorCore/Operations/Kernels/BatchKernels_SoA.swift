@@ -1103,54 +1103,36 @@ public enum BatchKernels_SoA {
         distances: inout [Float]
     ) {
         let N = candidates.count
-        let D = 512
-        let simdCount = 128
+        let lanes = 128  // 512 / 4 SIMD blocks
 
-        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
-        var candidateValues = ContiguousArray<Float>(repeating: 0, count: N)
-        var diffValues = ContiguousArray<Float>(repeating: 0, count: N)
-        var absValues = ContiguousArray<Float>(repeating: 0, count: N)
-
-        // Extract query to contiguous array (once)
-        for i in 0..<simdCount {
-            let simd = query.storage[i]
-            queryValues[i * 4 + 0] = simd[0]
-            queryValues[i * 4 + 1] = simd[1]
-            queryValues[i * 4 + 2] = simd[2]
-            queryValues[i * 4 + 3] = simd[3]
+        // Zero-initialize distances
+        for i in 0..<N {
+            distances[i] = 0.0
         }
 
-        // Process each dimension (SoA transformation)
-        for d in 0..<D {
-            let queryVal = queryValues[d]
-            let simdIndex = d / 4
-            let laneIndex = d % 4
+        let queryStorage = query.storage
 
-            // Extract dimension d from all candidates
-            for i in 0..<N {
-                candidateValues[i] = candidates[i].storage[simdIndex][laneIndex]
-            }
+        // SIMD-first processing: Process SIMD4 blocks (128 iterations vs 512 scalar)
+        for i in 0..<lanes {
+            let q_simd = queryStorage[i]  // Load 4 query values at once
 
-            // Compute differences: diff[i] = candidate[i][d] - query[d]
-            var negQueryVal = -queryVal
-            candidateValues.withUnsafeBufferPointer { candidatesPtr in
-                diffValues.withUnsafeMutableBufferPointer { diffPtr in
-                    vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(N))
-                }
-            }
+            // Process all candidates for this SIMD block
+            for j in 0..<N {
+                let c_simd = candidates[j].storage[i]  // Load 4 candidate values (SIMD4 load!)
 
-            // Compute absolute values
-            diffValues.withUnsafeBufferPointer { diffPtr in
-                absValues.withUnsafeMutableBufferPointer { absPtr in
-                    vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(N))
-                }
-            }
+                // Compute Manhattan distance for these 4 dimensions using SIMD operations
+                let diff = q_simd - c_simd  // SIMD subtraction
 
-            // Accumulate to distances
-            distances.withUnsafeMutableBufferPointer { distPtr in
-                absValues.withUnsafeBufferPointer { absPtr in
-                    vDSP_vadd(distPtr.baseAddress!, 1, absPtr.baseAddress!, 1, distPtr.baseAddress!, 1, vDSP_Length(N))
-                }
+                // Manual abs and sum (SIMD4 doesn't have abs, so we use scalar but it's still faster)
+                let abs_diff = SIMD4<Float>(
+                    abs(diff[0]),
+                    abs(diff[1]),
+                    abs(diff[2]),
+                    abs(diff[3])
+                )
+
+                // Accumulate to distance (horizontal reduction)
+                distances[j] += abs_diff[0] + abs_diff[1] + abs_diff[2] + abs_diff[3]
             }
         }
     }
@@ -1163,65 +1145,37 @@ public enum BatchKernels_SoA {
         distances: inout [Float]
     ) {
         let N = candidates.count
-        let D = 512
-        let simdCount = 128
+        let lanes = 128
         let blockSize = 256
 
-        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
-
-        // Extract query once
-        for i in 0..<simdCount {
-            let simd = query.storage[i]
-            queryValues[i * 4 + 0] = simd[0]
-            queryValues[i * 4 + 1] = simd[1]
-            queryValues[i * 4 + 2] = simd[2]
-            queryValues[i * 4 + 3] = simd[3]
+        // Zero-initialize all distances
+        for i in 0..<N {
+            distances[i] = 0.0
         }
 
-        // Allocate working buffers for maximum block size once
-        var candidateValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
-        var diffValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
-        var absValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        let queryStorage = query.storage
 
-        // Process in blocks
+        // Process candidates in blocks for better cache locality
         for blockStart in stride(from: 0, to: N, by: blockSize) {
             let blockEnd = min(blockStart + blockSize, N)
-            let blockN = blockEnd - blockStart
 
-            distances.withUnsafeMutableBufferPointer { distancesPtr in
-                guard let distancesBaseAddress = distancesPtr.baseAddress else { return }
-                let blockDistancesPtr = distancesBaseAddress.advanced(by: blockStart)
+            // SIMD-first processing for this block
+            for i in 0..<lanes {
+                let q_simd = queryStorage[i]
 
-                // Process each dimension for this block
-                for d in 0..<D {
-                    let queryVal = queryValues[d]
-                    let simdIndex = d / 4
-                    let laneIndex = d % 4
+                // Process all candidates in this block for this SIMD block
+                for j in blockStart..<blockEnd {
+                    let c_simd = candidates[j].storage[i]
+                    let diff = q_simd - c_simd
 
-                    // Extract dimension d from block candidates
-                    for i in 0..<blockN {
-                        candidateValues[i] = candidates[blockStart + i].storage[simdIndex][laneIndex]
-                    }
+                    let abs_diff = SIMD4<Float>(
+                        abs(diff[0]),
+                        abs(diff[1]),
+                        abs(diff[2]),
+                        abs(diff[3])
+                    )
 
-                    // Compute differences
-                    var negQueryVal = -queryVal
-                    candidateValues.withUnsafeBufferPointer { candidatesPtr in
-                        diffValues.withUnsafeMutableBufferPointer { diffPtr in
-                            vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(blockN))
-                        }
-                    }
-
-                    // Compute absolute values
-                    diffValues.withUnsafeBufferPointer { diffPtr in
-                        absValues.withUnsafeMutableBufferPointer { absPtr in
-                            vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(blockN))
-                        }
-                    }
-
-                    // Accumulate in-place
-                    absValues.withUnsafeBufferPointer { absPtr in
-                        vDSP_vadd(blockDistancesPtr, 1, absPtr.baseAddress!, 1, blockDistancesPtr, 1, vDSP_Length(blockN))
-                    }
+                    distances[j] += abs_diff[0] + abs_diff[1] + abs_diff[2] + abs_diff[3]
                 }
             }
         }
@@ -1235,48 +1189,31 @@ public enum BatchKernels_SoA {
         distances: inout [Float]
     ) {
         let N = candidates.count
-        let D = 768
-        let simdCount = 192
+        let lanes = 192  // 768 / 4 SIMD blocks
 
-        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
-        var candidateValues = ContiguousArray<Float>(repeating: 0, count: N)
-        var diffValues = ContiguousArray<Float>(repeating: 0, count: N)
-        var absValues = ContiguousArray<Float>(repeating: 0, count: N)
-
-        // Extract query
-        for i in 0..<simdCount {
-            let simd = query.storage[i]
-            queryValues[i * 4 + 0] = simd[0]
-            queryValues[i * 4 + 1] = simd[1]
-            queryValues[i * 4 + 2] = simd[2]
-            queryValues[i * 4 + 3] = simd[3]
+        // Zero-initialize distances
+        for i in 0..<N {
+            distances[i] = 0.0
         }
 
-        // Process each dimension
-        for d in 0..<D {
-            let queryVal = queryValues[d]
-            let simdIndex = d / 4
-            let laneIndex = d % 4
+        let queryStorage = query.storage
 
-            for i in 0..<N {
-                candidateValues[i] = candidates[i].storage[simdIndex][laneIndex]
-            }
+        // SIMD-first processing
+        for i in 0..<lanes {
+            let q_simd = queryStorage[i]
 
-            var negQueryVal = -queryVal
-            candidateValues.withUnsafeBufferPointer { candidatesPtr in
-                diffValues.withUnsafeMutableBufferPointer { diffPtr in
-                    vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(N))
-                }
-            }
-            diffValues.withUnsafeBufferPointer { diffPtr in
-                absValues.withUnsafeMutableBufferPointer { absPtr in
-                    vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(N))
-                }
-            }
-            distances.withUnsafeMutableBufferPointer { distPtr in
-                absValues.withUnsafeBufferPointer { absPtr in
-                    vDSP_vadd(distPtr.baseAddress!, 1, absPtr.baseAddress!, 1, distPtr.baseAddress!, 1, vDSP_Length(N))
-                }
+            for j in 0..<N {
+                let c_simd = candidates[j].storage[i]
+                let diff = q_simd - c_simd
+
+                let abs_diff = SIMD4<Float>(
+                    abs(diff[0]),
+                    abs(diff[1]),
+                    abs(diff[2]),
+                    abs(diff[3])
+                )
+
+                distances[j] += abs_diff[0] + abs_diff[1] + abs_diff[2] + abs_diff[3]
             }
         }
     }
@@ -1289,55 +1226,35 @@ public enum BatchKernels_SoA {
         distances: inout [Float]
     ) {
         let N = candidates.count
-        let D = 768
-        let simdCount = 192
+        let lanes = 192
         let blockSize = 256
 
-        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
-
-        for i in 0..<simdCount {
-            let simd = query.storage[i]
-            queryValues[i * 4 + 0] = simd[0]
-            queryValues[i * 4 + 1] = simd[1]
-            queryValues[i * 4 + 2] = simd[2]
-            queryValues[i * 4 + 3] = simd[3]
+        // Zero-initialize all distances
+        for i in 0..<N {
+            distances[i] = 0.0
         }
 
-        var candidateValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
-        var diffValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
-        var absValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        let queryStorage = query.storage
 
+        // Process candidates in blocks
         for blockStart in stride(from: 0, to: N, by: blockSize) {
             let blockEnd = min(blockStart + blockSize, N)
-            let blockN = blockEnd - blockStart
 
-            distances.withUnsafeMutableBufferPointer { distancesPtr in
-                guard let distancesBaseAddress = distancesPtr.baseAddress else { return }
-                let blockDistancesPtr = distancesBaseAddress.advanced(by: blockStart)
+            for i in 0..<lanes {
+                let q_simd = queryStorage[i]
 
-                for d in 0..<D {
-                    let queryVal = queryValues[d]
-                    let simdIndex = d / 4
-                    let laneIndex = d % 4
+                for j in blockStart..<blockEnd {
+                    let c_simd = candidates[j].storage[i]
+                    let diff = q_simd - c_simd
 
-                    for i in 0..<blockN {
-                        candidateValues[i] = candidates[blockStart + i].storage[simdIndex][laneIndex]
-                    }
+                    let abs_diff = SIMD4<Float>(
+                        abs(diff[0]),
+                        abs(diff[1]),
+                        abs(diff[2]),
+                        abs(diff[3])
+                    )
 
-                    var negQueryVal = -queryVal
-                    candidateValues.withUnsafeBufferPointer { candidatesPtr in
-                        diffValues.withUnsafeMutableBufferPointer { diffPtr in
-                            vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(blockN))
-                        }
-                    }
-                    diffValues.withUnsafeBufferPointer { diffPtr in
-                        absValues.withUnsafeMutableBufferPointer { absPtr in
-                            vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(blockN))
-                        }
-                    }
-                    absValues.withUnsafeBufferPointer { absPtr in
-                        vDSP_vadd(blockDistancesPtr, 1, absPtr.baseAddress!, 1, blockDistancesPtr, 1, vDSP_Length(blockN))
-                    }
+                    distances[j] += abs_diff[0] + abs_diff[1] + abs_diff[2] + abs_diff[3]
                 }
             }
         }
@@ -1351,48 +1268,31 @@ public enum BatchKernels_SoA {
         distances: inout [Float]
     ) {
         let N = candidates.count
-        let D = 1536
-        let simdCount = 384
+        let lanes = 384  // 1536 / 4 SIMD blocks
 
-        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
-        var candidateValues = ContiguousArray<Float>(repeating: 0, count: N)
-        var diffValues = ContiguousArray<Float>(repeating: 0, count: N)
-        var absValues = ContiguousArray<Float>(repeating: 0, count: N)
-
-        // Extract query
-        for i in 0..<simdCount {
-            let simd = query.storage[i]
-            queryValues[i * 4 + 0] = simd[0]
-            queryValues[i * 4 + 1] = simd[1]
-            queryValues[i * 4 + 2] = simd[2]
-            queryValues[i * 4 + 3] = simd[3]
+        // Zero-initialize distances
+        for i in 0..<N {
+            distances[i] = 0.0
         }
 
-        // Process each dimension
-        for d in 0..<D {
-            let queryVal = queryValues[d]
-            let simdIndex = d / 4
-            let laneIndex = d % 4
+        let queryStorage = query.storage
 
-            for i in 0..<N {
-                candidateValues[i] = candidates[i].storage[simdIndex][laneIndex]
-            }
+        // SIMD-first processing
+        for i in 0..<lanes {
+            let q_simd = queryStorage[i]
 
-            var negQueryVal = -queryVal
-            candidateValues.withUnsafeBufferPointer { candidatesPtr in
-                diffValues.withUnsafeMutableBufferPointer { diffPtr in
-                    vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(N))
-                }
-            }
-            diffValues.withUnsafeBufferPointer { diffPtr in
-                absValues.withUnsafeMutableBufferPointer { absPtr in
-                    vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(N))
-                }
-            }
-            distances.withUnsafeMutableBufferPointer { distPtr in
-                absValues.withUnsafeBufferPointer { absPtr in
-                    vDSP_vadd(distPtr.baseAddress!, 1, absPtr.baseAddress!, 1, distPtr.baseAddress!, 1, vDSP_Length(N))
-                }
+            for j in 0..<N {
+                let c_simd = candidates[j].storage[i]
+                let diff = q_simd - c_simd
+
+                let abs_diff = SIMD4<Float>(
+                    abs(diff[0]),
+                    abs(diff[1]),
+                    abs(diff[2]),
+                    abs(diff[3])
+                )
+
+                distances[j] += abs_diff[0] + abs_diff[1] + abs_diff[2] + abs_diff[3]
             }
         }
     }
@@ -1405,55 +1305,35 @@ public enum BatchKernels_SoA {
         distances: inout [Float]
     ) {
         let N = candidates.count
-        let D = 1536
-        let simdCount = 384
+        let lanes = 384
         let blockSize = 256
 
-        var queryValues = ContiguousArray<Float>(repeating: 0, count: D)
-
-        for i in 0..<simdCount {
-            let simd = query.storage[i]
-            queryValues[i * 4 + 0] = simd[0]
-            queryValues[i * 4 + 1] = simd[1]
-            queryValues[i * 4 + 2] = simd[2]
-            queryValues[i * 4 + 3] = simd[3]
+        // Zero-initialize all distances
+        for i in 0..<N {
+            distances[i] = 0.0
         }
 
-        var candidateValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
-        var diffValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
-        var absValues = ContiguousArray<Float>(repeating: 0, count: blockSize)
+        let queryStorage = query.storage
 
+        // Process candidates in blocks
         for blockStart in stride(from: 0, to: N, by: blockSize) {
             let blockEnd = min(blockStart + blockSize, N)
-            let blockN = blockEnd - blockStart
 
-            distances.withUnsafeMutableBufferPointer { distancesPtr in
-                guard let distancesBaseAddress = distancesPtr.baseAddress else { return }
-                let blockDistancesPtr = distancesBaseAddress.advanced(by: blockStart)
+            for i in 0..<lanes {
+                let q_simd = queryStorage[i]
 
-                for d in 0..<D {
-                    let queryVal = queryValues[d]
-                    let simdIndex = d / 4
-                    let laneIndex = d % 4
+                for j in blockStart..<blockEnd {
+                    let c_simd = candidates[j].storage[i]
+                    let diff = q_simd - c_simd
 
-                    for i in 0..<blockN {
-                        candidateValues[i] = candidates[blockStart + i].storage[simdIndex][laneIndex]
-                    }
+                    let abs_diff = SIMD4<Float>(
+                        abs(diff[0]),
+                        abs(diff[1]),
+                        abs(diff[2]),
+                        abs(diff[3])
+                    )
 
-                    var negQueryVal = -queryVal
-                    candidateValues.withUnsafeBufferPointer { candidatesPtr in
-                        diffValues.withUnsafeMutableBufferPointer { diffPtr in
-                            vDSP_vsadd(candidatesPtr.baseAddress!, 1, &negQueryVal, diffPtr.baseAddress!, 1, vDSP_Length(blockN))
-                        }
-                    }
-                    diffValues.withUnsafeBufferPointer { diffPtr in
-                        absValues.withUnsafeMutableBufferPointer { absPtr in
-                            vDSP_vabs(diffPtr.baseAddress!, 1, absPtr.baseAddress!, 1, vDSP_Length(blockN))
-                        }
-                    }
-                    absValues.withUnsafeBufferPointer { absPtr in
-                        vDSP_vadd(blockDistancesPtr, 1, absPtr.baseAddress!, 1, blockDistancesPtr, 1, vDSP_Length(blockN))
-                    }
+                    distances[j] += abs_diff[0] + abs_diff[1] + abs_diff[2] + abs_diff[3]
                 }
             }
         }

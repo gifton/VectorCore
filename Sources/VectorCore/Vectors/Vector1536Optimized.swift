@@ -355,6 +355,10 @@ extension Vector1536Optimized: OptimizedVector {
 
 extension Vector1536Optimized: VectorType {}
 
+// MARK: - AnalyzableVector Conformance
+
+extension Vector1536Optimized: MixedPrecisionKernels.AnalyzableVector {}
+
 // MARK: - Arithmetic Extensions for Streaming K-means
 
 extension Vector1536Optimized {

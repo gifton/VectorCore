@@ -43,6 +43,9 @@ public struct ClusterNode: Sendable, Hashable {
     public var isLeaf: Bool { leftChild == nil && rightChild == nil }
     public var isRoot: Bool { parent == nil }
     public var size: Int { vectorIndices.count }
+
+    /// Alias for mergeDistance for test compatibility
+    public var distance: Float { mergeDistance }
 }
 
 /// Hierarchical clustering tree with Copy-on-Write semantics
@@ -94,6 +97,55 @@ public struct HierarchicalTree: Sendable {
 
     public var rootNode: ClusterNode? { node(withId: rootNodeId) }
     public var nodeCount: Int { storage.nodes.count }
+
+    // MARK: - Test Compatibility Properties
+
+    /// Alias for rootNode for test compatibility
+    public var root: ClusterNode? { rootNode }
+
+    /// Total number of vectors (leaf nodes) in the tree
+    public var vectorCount: Int {
+        leafNodeIds.reduce(0) { count, leafId in
+            guard let leaf = node(withId: leafId) else { return count }
+            return count + leaf.vectorIndices.count
+        }
+    }
+
+    /// Merge distance at the root level
+    public var mergeDistance: Float {
+        rootNode?.mergeDistance ?? 0.0
+    }
+
+    /// Number of unique clusters at the current cut level
+    /// For a fully merged tree, this is 1 (the root cluster)
+    public var clusterCount: Int {
+        // Count non-leaf nodes + leaf nodes that haven't been merged
+        let nonLeafCount = storage.nodes.filter { !$0.isLeaf }.count
+        return max(1, nonLeafCount > 0 ? nonLeafCount : leafNodeIds.count)
+    }
+
+    /// Cluster assignments for each vector index
+    /// Returns array of tuples mapping vector index to cluster ID
+    public var assignments: [(vectorIndex: Int, clusterID: Int)] {
+        var result: [(vectorIndex: Int, clusterID: Int)] = []
+
+        // For each leaf node, assign all its vectors to that cluster
+        for leafId in leafNodeIds {
+            guard let leaf = node(withId: leafId) else { continue }
+            for vectorIdx in leaf.vectorIndices {
+                result.append((vectorIndex: vectorIdx, clusterID: leafId))
+            }
+        }
+
+        // If no leaves (fully merged), assign all vectors to root
+        if result.isEmpty, let root = rootNode {
+            for vectorIdx in root.vectorIndices {
+                result.append((vectorIndex: vectorIdx, clusterID: rootNodeId))
+            }
+        }
+
+        return result.sorted { $0.vectorIndex < $1.vectorIndex }
+    }
 
     // MARK: Mutation Helpers (for Incremental Clustering)
 

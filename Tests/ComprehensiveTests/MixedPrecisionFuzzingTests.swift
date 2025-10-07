@@ -4,6 +4,16 @@ import Testing
 import Foundation
 @testable import VectorCore
 
+// MARK: - Type Aliases for Nested Mixed Precision Types
+
+fileprivate typealias Vector512FP16 = MixedPrecisionKernels.Vector512FP16
+fileprivate typealias Vector768FP16 = MixedPrecisionKernels.Vector768FP16
+fileprivate typealias Vector1536FP16 = MixedPrecisionKernels.Vector1536FP16
+fileprivate typealias SoAFP16 = MixedPrecisionKernels.SoAFP16
+fileprivate typealias SoA512FP16 = MixedPrecisionKernels.SoA512FP16
+fileprivate typealias SoA768FP16 = MixedPrecisionKernels.SoA768FP16
+fileprivate typealias SoA1536FP16 = MixedPrecisionKernels.SoA1536FP16
+
 /// Property-based fuzzing tests for Mixed Precision Kernels
 ///
 /// These tests use randomized inputs to discover edge cases and verify
@@ -33,9 +43,15 @@ struct MixedPrecisionFuzzingTests {
                 let fp16 = convertToFP16(original, dimension: dimension)
                 let reconstructed = convertToFP32(fp16, dimension: dimension)
 
+                // Get concrete Float arrays for comparison
+                // Note: Explicitly type as [Float] to avoid existential type issues
+                // All test vectors use Float as Scalar type, so this is safe
+                let originalArray: [Float] = original.toArray() as! [Float]
+                let reconstructedArray: [Float] = reconstructed.toArray() as! [Float]
+
                 for i in 0..<dimension {
-                    let originalValue = original[i]
-                    let reconstructedValue = reconstructed[i]
+                    let originalValue = originalArray[i]
+                    let reconstructedValue = reconstructedArray[i]
 
                     if abs(originalValue) > 0.001 {
                         let relativeError = abs(reconstructedValue - originalValue) / abs(originalValue)
@@ -316,10 +332,11 @@ struct MixedPrecisionFuzzingTests {
                 var expectedOrder: [Float] = []
 
                 for scale in stride(from: 0.1, to: 2.0, by: 0.1) {
-                    let candidateValues = queryValues.map { $0 * scale }
+                    let scaleFloat = Float(scale)
+                    let candidateValues = queryValues.map { $0 * scaleFloat }
                     let vec = try Vector512Optimized(candidateValues)
                     candidates.append(MixedPrecisionKernels.Vector512FP16(from: vec))
-                    expectedOrder.append(scale)
+                    expectedOrder.append(scaleFloat)
                 }
 
                 var batchResults = [Float](repeating: 0, count: candidates.count)

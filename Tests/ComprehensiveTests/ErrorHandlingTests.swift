@@ -42,7 +42,7 @@ struct ErrorHandlingTests {
 
         @Test("Error creation with underlying error")
         func testErrorCreationWithUnderlying() async throws {
-            let systemError = MockSystemError(code: 500, message: "System failure")
+            let systemError = SimpleMockSystemError(code: 500, message: "System failure")
             let error = VectorError(.systemError, message: "Wrapper error", underlying: systemError)
 
             #expect(error.kind == .systemError)
@@ -161,7 +161,7 @@ struct ErrorHandlingTests {
 
         @Test("Error builder with underlying error")
         func testErrorBuilderWithUnderlying() async throws {
-            let systemError = MockSystemError(code: 404, message: "Resource not found")
+            let systemError = SimpleMockSystemError(code: 404, message: "Resource not found")
             let error = ErrorBuilder(.systemError)
                 .underlying(systemError)
                 .build()
@@ -186,7 +186,7 @@ struct ErrorHandlingTests {
 
         @Test("Complex error builder scenario")
         func testComplexErrorBuilder() async throws {
-            let systemError = MockSystemError(code: 500, message: "GPU driver error")
+            let systemError = SimpleMockSystemError(code: 500, message: "GPU driver error")
             let rootError = VectorError(.resourceUnavailable, message: "GPU memory exhausted")
 
             let error = ErrorBuilder(.operationFailed)
@@ -1994,26 +1994,29 @@ extension ErrorHandlingTests {
     }
 }
 
-// MARK: - Mock Error Types for Testing
+// MARK: - Simple Mock Error Types for VectorError Testing
+//
+// Note: These are minimal mock errors used for testing VectorError's underlying
+// error handling. For comprehensive error injection testing, see TestHelpers/ErrorHandlingMocks.swift
 
-/// Mock system error for testing underlying error handling
-struct MockSystemError: Error, CustomStringConvertible {
+/// Simple mock system error for testing VectorError wrapping
+struct SimpleMockSystemError: Error, CustomStringConvertible {
     let code: Int
     let message: String
 
     var description: String {
-        "MockSystemError(\(code)): \(message)"
+        "SimpleMockSystemError(\(code)): \(message)"
     }
 }
 
-/// Mock configuration error for testing
-struct MockConfigurationError: Error {
+/// Simple mock configuration error for testing
+struct SimpleMockConfigurationError: Error {
     let setting: String
     let reason: String
 }
 
-/// Mock allocation error for testing
-struct MockAllocationError: Error {
+/// Simple mock allocation error for testing
+struct SimpleMockAllocationError: Error {
     let requestedSize: Int
     let availableSize: Int
 }

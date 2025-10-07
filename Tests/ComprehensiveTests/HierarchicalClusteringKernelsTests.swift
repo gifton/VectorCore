@@ -1695,7 +1695,7 @@ struct HierarchicalClusteringKernelsTests {
 
             // Centroid linkage can suffer from inversions (non-monotonic merge distances)
             // This is a known property we should be aware of
-            #expect(centroidDendrogram.root.mergeDistance > 0, "Final merge should have positive distance")
+            #expect(centroidDendrogram.root?.mergeDistance ?? 0 > 0, "Final merge should have positive distance")
 
             // Compare with Ward linkage (which also uses centroids but with different criterion)
             let wardDendrogram = HierarchicalClusteringKernels.agglomerativeClustering(
@@ -1918,15 +1918,15 @@ struct HierarchicalClusteringKernelsTests {
             // Test cluster merge history
             // Verify that cutting at different heights gives correct clusters
             let cut1 = dendrogram.cutAtHeight(0.5)  // Before any merges
-            #expect(cut1.clusterCount == vectors.count,
+            #expect(Set(cut1.map { $0.clusterID }).count == vectors.count,
                    "Cutting below all merges should give n clusters")
 
             let cut2 = dendrogram.cutAtHeight(1.5)  // After first merge
-            #expect(cut2.clusterCount == vectors.count - 1,
+            #expect(Set(cut2.map { $0.clusterID }).count == vectors.count - 1,
                    "Should have one less cluster after first merge")
 
             let cutAll = dendrogram.cutAtHeight(Float.infinity)  // All merged
-            #expect(cutAll.clusterCount == 1,
+            #expect(Set(cutAll.map { $0.clusterID }).count == 1,
                    "Cutting at infinity should give 1 cluster")
 
             // Test node relationships
@@ -2332,7 +2332,7 @@ struct HierarchicalClusteringKernelsTests {
                 var colors = [Int](repeating: 0, count: vectors.count)
 
                 // Mock: Simple color assignment based on cutting at certain height
-                let cutHeight = dendrogram.root.mergeDistance * 0.5
+                let cutHeight = (dendrogram.root?.mergeDistance ?? 0) * 0.5
                 var currentColor = 0
 
                 func assignClusterColors(nodeIndex: Int, color: Int) {
@@ -2779,10 +2779,10 @@ struct HierarchicalClusteringKernelsTests {
             // d(r,k) = α_p * d(p,k) + α_q * d(q,k) + β * d(p,q) + γ * |d(p,k) - d(q,k)|
 
             class IncrementalDistanceMatrix {
-                private var distances: [[Float?]]
-                private var activeIndices: Set<Int>
+                var distances: [[Float?]]  // Made internal for test access
+                var activeIndices: Set<Int>  // Changed from private
                 private let linkage: LinkageCriterion
-                private var mergeHistory: [(cluster1: Int, cluster2: Int, newCluster: Int, distance: Float)] = []
+                var mergeHistory: [(cluster1: Int, cluster2: Int, newCluster: Int, distance: Float)] = []  // Changed from private
                 var updateCount = 0
                 var fullComputations = 0
 

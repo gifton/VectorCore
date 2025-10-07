@@ -757,21 +757,23 @@ struct BatchBench: BenchmarkSuite {
         // Build SoA once (this cost is part of the benchmark)
         let soa = SoA<Vector512Optimized>.build(from: candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: buffer)
-            }
-            let sum = results.reduce(0, +)
+            BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: resultsPtr)
+            var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: buffer)
-            }
-            let total = results.reduce(0, +)
+            BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: resultsPtr)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -788,21 +790,23 @@ struct BatchBench: BenchmarkSuite {
         // Build SoA once (this cost is part of the benchmark)
         let soa = SoA<Vector768Optimized>.build(from: candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: buffer)
-            }
-            let sum = results.reduce(0, +)
+            BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: resultsPtr)
+            var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: buffer)
-            }
-            let total = results.reduce(0, +)
+            BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: resultsPtr)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -819,21 +823,23 @@ struct BatchBench: BenchmarkSuite {
         // Build SoA once (this cost is part of the benchmark)
         let soa = SoA<Vector1536Optimized>.build(from: candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: buffer)
-            }
-            let sum = results.reduce(0, +)
+            BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: resultsPtr)
+            var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: buffer)
-            }
-            let total = results.reduce(0, +)
+            BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: resultsPtr)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -852,31 +858,33 @@ struct BatchBench: BenchmarkSuite {
         // Convert candidates to FP16 once (this cost is part of the benchmark)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                MixedPrecisionKernels.range_euclid2_mixed_512(
-                    query: query,
-                    candidatesFP16: candidatesFP16,
-                    range: 0..<n,
-                    out: buffer
-                )
-            }
-            let sum = results.reduce(0, +)
+            MixedPrecisionKernels.range_euclid2_mixed_512(
+                query: query,
+                candidatesFP16: candidatesFP16,
+                range: 0..<n,
+                out: resultsPtr
+            )
+            var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                MixedPrecisionKernels.range_euclid2_mixed_512(
-                    query: query,
-                    candidatesFP16: candidatesFP16,
-                    range: 0..<n,
-                    out: buffer
-                )
-            }
-            let total = results.reduce(0, +)
+            MixedPrecisionKernels.range_euclid2_mixed_512(
+                query: query,
+                candidatesFP16: candidatesFP16,
+                range: 0..<n,
+                out: resultsPtr
+            )
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -893,31 +901,33 @@ struct BatchBench: BenchmarkSuite {
         // Convert candidates to FP16 once (this cost is part of the benchmark)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                MixedPrecisionKernels.range_euclid2_mixed_768(
-                    query: query,
-                    candidatesFP16: candidatesFP16,
-                    range: 0..<n,
-                    out: buffer
-                )
-            }
-            let sum = results.reduce(0, +)
+            MixedPrecisionKernels.range_euclid2_mixed_768(
+                query: query,
+                candidatesFP16: candidatesFP16,
+                range: 0..<n,
+                out: resultsPtr
+            )
+            var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
-                MixedPrecisionKernels.range_euclid2_mixed_768(
-                    query: query,
-                    candidatesFP16: candidatesFP16,
-                    range: 0..<n,
-                    out: buffer
-                )
-            }
-            let total = results.reduce(0, +)
+            MixedPrecisionKernels.range_euclid2_mixed_768(
+                query: query,
+                candidatesFP16: candidatesFP16,
+                range: 0..<n,
+                out: resultsPtr
+            )
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -934,31 +944,46 @@ struct BatchBench: BenchmarkSuite {
         // Convert candidates to FP16 once (this cost is part of the benchmark)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_1536(candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_euclid2_mixed_1536(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let sum = results.reduce(0, +)
+
+                var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_euclid2_mixed_1536(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let total = results.reduce(0, +)
+
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -975,31 +1000,46 @@ struct BatchBench: BenchmarkSuite {
         // Convert candidates to FP16 once (this cost is part of the benchmark)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_cosine_mixed_512(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let sum = results.reduce(0, +)
+
+                var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_cosine_mixed_512(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let total = results.reduce(0, +)
+
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -1016,31 +1056,46 @@ struct BatchBench: BenchmarkSuite {
         // Convert candidates to FP16 once (this cost is part of the benchmark)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_cosine_mixed_768(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let sum = results.reduce(0, +)
+
+                var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_cosine_mixed_768(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let total = results.reduce(0, +)
+
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]
@@ -1057,31 +1112,46 @@ struct BatchBench: BenchmarkSuite {
         // Convert candidates to FP16 once (this cost is part of the benchmark)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_1536(candidates)
 
+        // Allocate results buffer once to avoid excessive allocations in warmup loop
+        // Use UnsafeMutableBufferPointer directly for @Sendable compatibility
+        nonisolated(unsafe) let resultsPtr = UnsafeMutableBufferPointer<Float>.allocate(capacity: n)
+        defer { resultsPtr.deallocate() }
+        resultsPtr.initialize(repeating: 0)
+
+
         await Harness.warmupAsync {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_cosine_mixed_1536(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let sum = results.reduce(0, +)
+
+                var sum: Float = 0
+            for i in 0..<n { sum += resultsPtr[i] }
             blackHole(sum)
         }
 
         let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            var results = [Float](repeating: 0, count: n)
-            results.withUnsafeMutableBufferPointer { buffer in
                 MixedPrecisionKernels.range_cosine_mixed_1536(
+
                     query: query,
+
                     candidatesFP16: candidatesFP16,
+
                     range: 0..<n,
-                    out: buffer
+
+                    out: resultsPtr
+
                 )
-            }
-            let total = results.reduce(0, +)
+
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
             blackHole(total)
         }
         return [res]

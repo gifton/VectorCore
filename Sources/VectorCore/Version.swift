@@ -38,7 +38,7 @@ public struct VectorCoreVersion {
     /// Minor version number.
     ///
     /// Incremented when adding functionality in a backwards-compatible manner.
-    public static let minor = 1
+    public static let minor = 2
 
     /// Patch version number.
     ///
@@ -49,7 +49,7 @@ public struct VectorCoreVersion {
     ///
     /// Examples: "alpha", "beta.1", "rc.2"
     /// nil for stable releases.
-    public static let prerelease: String? = "alpha"
+    public static let prerelease: String? = "beta"
 
     /// Build metadata.
     ///

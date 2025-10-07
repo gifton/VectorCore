@@ -1277,9 +1277,9 @@ struct GraphPrimitivesComprehensiveTests {
             #expect(squareCC.global == 0.0, "Square without diagonals should have CC = 0")
 
             // Add one diagonal to create triangles
-            let squareWithDiagonalEdges = squareEdges + [
-                (0, 2, 1.0), (2, 0, 1.0)  // Add diagonal
-            ]
+            var squareWithDiagonalEdges = squareEdges
+            squareWithDiagonalEdges.append((UInt32(0), UInt32(2), Float(1.0)))
+            squareWithDiagonalEdges.append((UInt32(2), UInt32(0), Float(1.0)))
 
             let squareWithDiagonal = try SparseMatrix(rows: 4, cols: 4, edges: squareWithDiagonalEdges)
             // Mock: Square with diagonal has CC > 0

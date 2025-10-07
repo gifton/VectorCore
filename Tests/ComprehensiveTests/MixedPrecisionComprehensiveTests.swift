@@ -4,6 +4,16 @@ import Testing
 import Foundation
 @testable import VectorCore
 
+// MARK: - Type Aliases for Nested Mixed Precision Types
+
+fileprivate typealias Vector512FP16 = MixedPrecisionKernels.Vector512FP16
+fileprivate typealias Vector768FP16 = MixedPrecisionKernels.Vector768FP16
+fileprivate typealias Vector1536FP16 = MixedPrecisionKernels.Vector1536FP16
+fileprivate typealias SoAFP16 = MixedPrecisionKernels.SoAFP16
+fileprivate typealias SoA512FP16 = MixedPrecisionKernels.SoA512FP16
+fileprivate typealias SoA768FP16 = MixedPrecisionKernels.SoA768FP16
+fileprivate typealias SoA1536FP16 = MixedPrecisionKernels.SoA1536FP16
+
 /// Comprehensive test suite for Mixed Precision Kernels per spec requirements
 ///
 /// Tests cover:
@@ -26,7 +36,7 @@ struct MixedPrecisionComprehensiveTests {
                 Array(repeating: 1.0, count: 512),
                 (0..<512).map { Float($0) / 512.0 },
                 (0..<512).map { sin(Float($0) * .pi / 256) },
-                (0..<512).map { Float.random(in: -1...1) }
+                (0..<512).map { _ in Float.random(in: -1...1) }
             ]
 
             for (idx, values) in testVectors.enumerated() {
@@ -364,7 +374,7 @@ struct MixedPrecisionComprehensiveTests {
             // Create candidate vectors at varying distances
             var candidates: [Vector512Optimized] = []
             for scale in stride(from: 0.1, through: 2.0, by: 0.1) {
-                let candidateValues = queryValues.map { $0 * scale }
+                let candidateValues = queryValues.map { $0 * Float(scale) }
                 candidates.append(try Vector512Optimized(candidateValues))
             }
 
@@ -606,7 +616,7 @@ struct MixedPrecisionComprehensiveTests {
         @Test("End-to-end similarity search accuracy")
         func testSimilaritySearchAccuracy() throws {
             // Simulate a similarity search scenario
-            let queryValues = (0..<512).map { Float.random(in: -1...1) }
+            let queryValues = (0..<512).map { _ in Float.random(in: -1...1) }
             let query = try Vector512Optimized(queryValues)
 
             // Create a database of candidate vectors

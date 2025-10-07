@@ -75,6 +75,41 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
         buffer.deallocate()
     }
 
+    /// Public initializer for test compatibility: creates SoA from vectors
+    ///
+    /// - Parameters:
+    ///   - vectors: Array of vectors to convert to SoA layout
+    ///   - blockSize: Ignored parameter for API compatibility (reserved for future chunking optimizations)
+    public init(vectors: [Vector], blockSize: Int = 32) {
+        let count = vectors.count
+        self.count = count
+        self.lanes = Vector.lanes
+        self.bufferCapacity = self.lanes * self.count
+
+        if bufferCapacity > 0 {
+            self.buffer = UnsafeMutablePointer<SIMD4<Float>>.allocate(capacity: bufferCapacity)
+            self.buffer.initialize(repeating: .zero, count: bufferCapacity)
+        } else {
+            self.buffer = UnsafeMutablePointer<SIMD4<Float>>.allocate(capacity: 0)
+        }
+
+        // Populate the SoA structure from vectors
+        guard count > 0 else { return }
+
+        let lanes = Vector.lanes
+        let bufferPtr = self.buffer
+
+        for j in 0..<count {
+            let vector = vectors[j]
+            let vectorStorage = vector.storage
+
+            for i in 0..<lanes {
+                let destinationIndex = i * count + j
+                bufferPtr[destinationIndex] = vectorStorage[i]
+            }
+        }
+    }
+
     /// Builds the SoA structure from an Array-of-Structures (AoS) candidate set.
     ///
     /// Transforms the memory layout from [Candidate][Lane] to [Lane][Candidate]

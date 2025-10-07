@@ -1571,7 +1571,7 @@ struct HierarchicalClusteringComprehensiveTests {
             // Check symmetry and self-distance
             for i in 0..<min(10, vectorCount) {
                 for j in (i+1)..<min(10, vectorCount) {
-                    let dist = distanceMatrix.mergeDistance(i: i, j: j)
+                    let dist = distanceMatrix.distance(i: i, j: j)
                     #expect(dist >= 0, "Distances should be non-negative")
                     #expect(!dist.isNaN && !dist.isInfinite, "Distances should be valid")
                 }
@@ -2379,8 +2379,9 @@ struct HierarchicalClusteringComprehensiveTests {
             // Calculate purity for overlapping clusters
             var overlappingPurity: Float = 0.0
             for clusterIdx in 0..<3 {
-                let clusterMembers = overlappingResult.assignments.enumerated()
-                    .compactMap { $0.element == clusterIdx ? $0.offset : nil }
+                let clusterMembers = overlappingResult.assignments
+                    .filter { $0.clusterID == clusterIdx }
+                    .map { $0.vectorIndex }
 
                 guard !clusterMembers.isEmpty else { continue }
 
@@ -2730,7 +2731,7 @@ struct HierarchicalClusteringComprehensiveTests {
             // Verify that duplicates are grouped together
             var clusterSizes = [Int: Int]()
             for assignment in mixedClusters.assignments {
-                clusterSizes[assignment, default: 0] += 1
+                clusterSizes[assignment.clusterID, default: 0] += 1
             }
 
             // Should have clusters of size 3, 3, and 1
@@ -2990,7 +2991,7 @@ struct HierarchicalClusteringComprehensiveTests {
                        "Should handle special float values")
             } catch {
                 // It's acceptable to throw an error for invalid inputs
-                #expect(error is VectorError || error is ValidationError,
+                #expect(error is VectorError,
                        "Should throw appropriate error for invalid values")
             }
 
@@ -3032,7 +3033,7 @@ struct HierarchicalClusteringComprehensiveTests {
             // Mocking cut result forFloat.infinity)
             #expect(largeCut.clusterCount == 1,
                    "Infinite height should give single cluster")
-            #expect(Set(largeCut.assignments).count == 1,
+            #expect(Set(largeCut.assignments.map { $0.clusterID }).count == 1,
                    "All points should be in same cluster at infinite height")
         }
 

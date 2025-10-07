@@ -3635,16 +3635,16 @@ struct QuantizedKernelsTests {
 
             // Compute distances in FP32
             for candidate in candidates {
-                let dist = QuantizedKernels.euclideanSquaredDistance(query, candidate)
-                distancesFP32.append(dist)
+                let dist = EuclideanKernels.distance512(query, candidate)
+                distancesFP32.append(dist * dist) // Square the distance
             }
 
             // Compute distances in INT8 (simulated - would use optimized kernel in production)
             for candidateQ in candidatesQuantized {
                 // Dequantize for now (in production, would compute directly in INT8)
                 let candidateFP32 = candidateQ.toFP32()
-                let dist = QuantizedKernels.euclideanSquaredDistance(query, candidateFP32)
-                distancesINT8.append(dist)
+                let dist = EuclideanKernels.distance512(query, candidateFP32)
+                distancesINT8.append(dist * dist) // Square the distance
             }
 
             // Verify relative ordering is preserved
@@ -3671,7 +3671,8 @@ struct QuantizedKernelsTests {
             var similarityFP32 = [[Float]](repeating: [Float](repeating: 0, count: matrixSize), count: matrixSize)
             for i in 0..<matrixSize {
                 for j in 0..<matrixSize {
-                    similarityFP32[i][j] = QuantizedKernels.euclideanSquaredDistance(vectorSubset[i], vectorSubset[j])
+                    let dist = EuclideanKernels.distance512(vectorSubset[i], vectorSubset[j])
+                    similarityFP32[i][j] = dist * dist  // Square the distance
                 }
             }
 

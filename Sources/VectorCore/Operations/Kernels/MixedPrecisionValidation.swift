@@ -12,7 +12,7 @@ import simd
 // MARK: - Performance Metrics
 
 /// Performance metrics for mixed precision operations
-public struct MixedPrecisionMetrics: Sendable {
+internal struct MixedPrecisionMetrics: Sendable {
     /// Time spent on FP16 conversion (seconds)
     public var fp16ConversionTime: TimeInterval = 0
 
@@ -144,7 +144,7 @@ public actor PerformanceProfiler {
 // MARK: - Precision Validator
 
 /// Utilities for validating mixed precision accuracy
-public enum PrecisionValidator {
+internal enum PrecisionValidator {
 
     // MARK: - Conversion Validation
 

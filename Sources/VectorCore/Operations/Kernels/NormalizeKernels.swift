@@ -9,7 +9,8 @@
 import Foundation
 import simd
 
-public enum NormalizeKernels {
+@usableFromInline
+internal enum NormalizeKernels {
 
     // Compute magnitude squared using 4 accumulators over SIMD4 lanes
     @inline(__always)
@@ -68,7 +69,8 @@ public enum NormalizeKernels {
 
     // MARK: - In-place APIs
 
-    public static func normalize512_inplace(_ v: inout Vector512Optimized) -> Result<Void, VectorError> {
+    @usableFromInline
+    static func normalize512_inplace(_ v: inout Vector512Optimized) -> Result<Void, VectorError> {
         let ms = magnitudeSquared(storage: v.storage, laneCount: 128)
         if ms <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
         let inv = 1.0 / sqrt(ms)
@@ -76,7 +78,8 @@ public enum NormalizeKernels {
         return .success(())
     }
 
-    public static func normalize768_inplace(_ v: inout Vector768Optimized) -> Result<Void, VectorError> {
+    @usableFromInline
+    static func normalize768_inplace(_ v: inout Vector768Optimized) -> Result<Void, VectorError> {
         let ms = magnitudeSquared(storage: v.storage, laneCount: 192)
         if ms <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
         let inv = 1.0 / sqrt(ms)
@@ -84,7 +87,8 @@ public enum NormalizeKernels {
         return .success(())
     }
 
-    public static func normalize1536_inplace(_ v: inout Vector1536Optimized) -> Result<Void, VectorError> {
+    @usableFromInline
+    static func normalize1536_inplace(_ v: inout Vector1536Optimized) -> Result<Void, VectorError> {
         let ms = magnitudeSquared(storage: v.storage, laneCount: 384)
         if ms <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
         let inv = 1.0 / sqrt(ms)
@@ -94,7 +98,8 @@ public enum NormalizeKernels {
 
     // MARK: - Out-of-place APIs
 
-    public static func normalized512(_ a: Vector512Optimized) -> Result<Vector512Optimized, VectorError> {
+    @usableFromInline
+    static func normalized512(_ a: Vector512Optimized) -> Result<Vector512Optimized, VectorError> {
         var copy = a
         switch normalize512_inplace(&copy) {
         case .success: return .success(copy)
@@ -102,7 +107,8 @@ public enum NormalizeKernels {
         }
     }
 
-    public static func normalized768(_ a: Vector768Optimized) -> Result<Vector768Optimized, VectorError> {
+    @usableFromInline
+    static func normalized768(_ a: Vector768Optimized) -> Result<Vector768Optimized, VectorError> {
         var copy = a
         switch normalize768_inplace(&copy) {
         case .success: return .success(copy)
@@ -110,7 +116,8 @@ public enum NormalizeKernels {
         }
     }
 
-    public static func normalized1536(_ a: Vector1536Optimized) -> Result<Vector1536Optimized, VectorError> {
+    @usableFromInline
+    static func normalized1536(_ a: Vector1536Optimized) -> Result<Vector1536Optimized, VectorError> {
         var copy = a
         switch normalize1536_inplace(&copy) {
         case .success: return .success(copy)

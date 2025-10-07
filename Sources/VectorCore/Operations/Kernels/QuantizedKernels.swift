@@ -13,7 +13,7 @@ import simd
 // MARK: - Linear Quantization Parameters
 
 /// Parameters for linear (affine) quantization: q = round(x/scale + zeroPoint).
-public struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
+internal struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
     public let scale: Float
     public let zeroPoint: Int8
     public let minValue: Float
@@ -76,7 +76,8 @@ public protocol QuantizedVectorINT8: Sendable, VectorProtocol {
 
 extension QuantizedVectorINT8 {
     public var dimension: Int { return Self.laneCount * 4 }
-    public static var laneCount: Int { return FloatVectorType.laneCount }
+    // Note: laneCount is defined in each concrete struct (Vector512INT8, Vector768INT8, Vector1536INT8)
+    // to return the correct number of SIMD4 chunks (e.g., 128 for 512-dim, not 4)
     public var memoryFootprint: Int {
         return Self.laneCount * 4 + MemoryLayout<LinearQuantizationParams>.size
     }
@@ -156,7 +157,7 @@ extension QuantizedVectorINT8 {
 
 // MARK: Specific INT8 Vector Types
 
-public struct Vector512INT8: QuantizedVectorINT8 {
+internal struct Vector512INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector512Optimized
     public var storage: ContiguousArray<SIMD4<Int8>>
     public let quantizationParams: LinearQuantizationParams
@@ -169,7 +170,7 @@ public struct Vector512INT8: QuantizedVectorINT8 {
     }
 }
 
-public struct Vector768INT8: QuantizedVectorINT8 {
+internal struct Vector768INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector768Optimized
     public var storage: ContiguousArray<SIMD4<Int8>>
     public let quantizationParams: LinearQuantizationParams
@@ -182,7 +183,7 @@ public struct Vector768INT8: QuantizedVectorINT8 {
     }
 }
 
-public struct Vector1536INT8: QuantizedVectorINT8 {
+internal struct Vector1536INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector1536Optimized
     public var storage: ContiguousArray<SIMD4<Int8>>
     public let quantizationParams: LinearQuantizationParams
@@ -380,7 +381,7 @@ extension Vector1536INT8 {
 
 // MARK: - Core Distance Kernels and Helpers
 
-public enum QuantizedKernels {
+internal enum QuantizedKernels {
 
     // MARK: Conversion Helpers (NEON Optimization)
 
@@ -808,11 +809,11 @@ extension QuantizedKernels {
 
 // MARK: - Calibration and Error Analysis
 
-public enum QuantizationStrategy {
+internal enum QuantizationStrategy {
     case symmetric, asymmetric, perChannel
 }
 
-public struct QuantizationCalibrator {
+internal struct QuantizationCalibrator {
     public static func calibrate<V: OptimizedVector>(
         vectors: [V], strategy: QuantizationStrategy = .symmetric
     ) -> LinearQuantizationParams {
@@ -868,13 +869,13 @@ public struct QuantizationCalibrator {
     }
 }
 
-public struct QuantizationError {
+internal struct QuantizationError {
     public let meanAbsoluteError: Float
     public let maxAbsoluteError: Float
     public let rootMeanSquareError: Float
 }
 
-public struct QuantizationErrorAnalyzer {
+internal struct QuantizationErrorAnalyzer {
     public static func analyzeError<V: QuantizedVectorINT8>(
         original: V.FloatVectorType,
         quantized: V
@@ -968,7 +969,7 @@ extension Vector1536INT8 {
 /// Dim 0: [V0_d0, V1_d0, V2_d0, V3_d0], [V4_d0, V5_d0, V6_d0, V7_d0], ...
 /// Dim 1: [V0_d1, V1_d1, V2_d1, V3_d1], [V4_d1, V5_d1, V6_d1, V7_d1], ...
 /// ...
-public struct SoAINT8<VectorType: OptimizedVector>: Sendable {
+internal struct SoAINT8<VectorType: OptimizedVector>: Sendable {
     public let dimension: Int
     /// Storage layout: D * ceil(N/4) entries of SIMD4<Int8>.
     public let storage: ContiguousArray<SIMD4<Int8>>
@@ -1252,7 +1253,7 @@ extension QuantizedKernels {
 
 // MARK: - Phase 2: Quality Analysis Framework
 
-public struct QuantizationQualityAnalyzer {
+internal struct QuantizationQualityAnalyzer {
     public struct QualityMetrics: Sendable {
         public let meanAbsoluteError: Float
         public let rootMeanSquareError: Float
@@ -1373,7 +1374,7 @@ public final class QuantizedAutoTuner: @unchecked Sendable {
 
 // MARK: - Phase 2: Advanced Quantization Techniques (Framework Stubs)
 
-public struct AdaptiveQuantizer {
+internal struct AdaptiveQuantizer {
     public enum AdaptiveStrategy {
         case distributionBased, errorBudgetBased
     }
@@ -1389,7 +1390,7 @@ public struct AdaptiveQuantizer {
 
 // MARK: - Phase 2: Production Deployment Frameworks (Stubs)
 
-public struct ProductionQuantizationParams: Sendable {
+internal struct ProductionQuantizationParams: Sendable {
     public let targetAccuracy: Float
     public let memoryBudget: Int
     public let performanceTarget: Double // operations per second
@@ -1401,7 +1402,7 @@ public struct ProductionQuantizationParams: Sendable {
     }
 }
 
-public struct QuantizationCalibrationPipeline {
+internal struct QuantizationCalibrationPipeline {
     public static func calibrateForProduction(
         testVectors: [Vector512Optimized],
         params: ProductionQuantizationParams

@@ -16,7 +16,7 @@ import Darwin
 // MARK: - Precision Strategy
 
 /// Mixed precision execution strategies for batch distance computations
-public enum MixedPrecisionStrategy: String, Codable, Sendable, CaseIterable {
+internal enum MixedPrecisionStrategy: String, Codable, Sendable, CaseIterable {
     case fullFP32           // Baseline: Full FP32 precision (no conversion)
     case queryFP16Standard  // FP16 query × FP16 SoA, standard kernel
     case queryFP16Blocked   // FP16 query × FP16 SoA, register-blocked kernel (8 candidates)
@@ -43,7 +43,7 @@ public enum MixedPrecisionStrategy: String, Codable, Sendable, CaseIterable {
 // MARK: - Performance Metrics
 
 /// Performance and accuracy metrics for a specific strategy
-public struct StrategyMetrics: Codable, Sendable {
+internal struct StrategyMetrics: Codable, Sendable {
     public let strategy: MixedPrecisionStrategy
     public let meanLatency: TimeInterval      // Average execution time
     public let medianLatency: TimeInterval    // Median execution time

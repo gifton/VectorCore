@@ -26,7 +26,7 @@ import Accelerate  // For vDSP Manhattan distance operations
 /// cache locality when processing multiple candidates against a single query.
 /// The key optimization is that all candidates' data for a given lane are
 /// stored contiguously, minimizing cache misses during batch processing.
-public enum BatchKernels_SoA {
+internal enum BatchKernels_SoA {
 
     // MARK: - Generic Implementation
 

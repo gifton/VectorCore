@@ -6,7 +6,7 @@
 import Foundation
 
 /// CRC32 checksum implementation
-public struct CRC32 {
+internal struct CRC32 {
     private static let polynomial: UInt32 = 0xEDB88320
     private static let table: [UInt32] = {
         (0..<256).map { i in
@@ -17,7 +17,7 @@ public struct CRC32 {
     }()
 
     /// Calculate CRC32 checksum for data
-    public static func checksum(_ data: Data) -> UInt32 {
+    internal static func checksum(_ data: Data) -> UInt32 {
         data.reduce(~UInt32(0)) { crc, byte in
             let index = Int((crc ^ UInt32(byte)) & 0xFF)
             return (crc >> 8) ^ table[index]
@@ -25,14 +25,14 @@ public struct CRC32 {
     }
 
     /// Calculate CRC32 checksum for byte array
-    public static func checksum(_ bytes: [UInt8]) -> UInt32 {
+    internal static func checksum(_ bytes: [UInt8]) -> UInt32 {
         checksum(Data(bytes))
     }
 }
 
 // MARK: - Data Extensions
 
-public extension Data {
+internal extension Data {
     /// Calculate CRC32 checksum
     func crc32() -> UInt32 {
         CRC32.checksum(self)
@@ -41,7 +41,7 @@ public extension Data {
 
 // MARK: - Array Extensions
 
-public extension Array where Element == UInt8 {
+internal extension Array where Element == UInt8 {
     /// Calculate CRC32 checksum
     func crc32() -> UInt32 {
         CRC32.checksum(self)

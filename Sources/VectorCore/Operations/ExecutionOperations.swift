@@ -9,7 +9,9 @@ import Foundation
 // MARK: - Operations Namespace
 
 /// High-performance vector operations with ExecutionContext support
-public enum ExecutionOperations {
+///
+/// - Note: This API is internal. Use `Operations` for the public async API.
+internal enum ExecutionOperations {
     // Thresholds based on empirical testing
     internal static let parallelThreshold = 1000
     internal static let vectorizedThreshold = 64
@@ -29,7 +31,7 @@ extension ExecutionOperations {
     ///   - metric: Distance metric (default: Euclidean)
     ///   - context: Execution context (default: automatic CPU)
     /// - Returns: Array of (index, distance) pairs sorted by distance
-    public static func findNearest<V: VectorProtocol, M: DistanceMetric>(
+    internal static func findNearest<V: VectorProtocol, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int = 10,
@@ -179,7 +181,7 @@ extension ExecutionOperations {
 
 extension ExecutionOperations {
     /// Process multiple queries efficiently
-    public static func findNearestBatch<V: VectorProtocol, M: DistanceMetric>(
+    internal static func findNearestBatch<V: VectorProtocol, M: DistanceMetric>(
         queries: [V],
         in vectors: [V],
         k: Int = 10,
@@ -245,7 +247,7 @@ extension ExecutionOperations {
 
 extension ExecutionOperations {
     /// Map operation with automatic parallelization
-    public static func map<V: VectorProtocol & VectorFactory>(
+    internal static func map<V: VectorProtocol & VectorFactory>(
         _ vectors: [V],
         transform: @Sendable @escaping (Float) -> Float,
         context: any ExecutionContext = CPUContext.automatic
@@ -294,7 +296,7 @@ extension ExecutionOperations {
     }
 
     /// Reduce operation
-    public static func reduce<V: VectorProtocol>(
+    internal static func reduce<V: VectorProtocol>(
         _ vectors: [V],
         _ initialResult: V,
         _ nextPartialResult: @Sendable @escaping (V, V) -> V,
@@ -370,7 +372,7 @@ extension ExecutionOperations {
 
 extension ExecutionOperations {
     /// Compute pairwise distance matrix
-    public static func distanceMatrix<V: VectorProtocol, M: DistanceMetric>(
+    internal static func distanceMatrix<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
         metric: M = EuclideanDistance(),
         context: any ExecutionContext = CPUContext.automatic
@@ -421,7 +423,7 @@ extension ExecutionOperations {
 
 extension ExecutionOperations {
     /// Compute centroid of vectors
-    public static func centroid<V: VectorProtocol>(
+    internal static func centroid<V: VectorProtocol>(
         of vectors: [V],
         context: any ExecutionContext = CPUContext.automatic
     ) async throws -> DynamicVector where V.Scalar == Float {
@@ -585,11 +587,11 @@ extension ExecutionOperations {
 // MARK: - Performance Context
 
 /// Context for managing operation performance
-public struct OperationContext: Sendable {
-    public let bufferPool: BufferPool
-    public let executionContext: any ExecutionContext
+internal struct OperationContext: Sendable {
+    internal let bufferPool: BufferPool
+    internal let executionContext: any ExecutionContext
 
-    public init(
+    internal init(
         bufferPool: BufferPool = globalBufferPool,
         executionContext: any ExecutionContext = CPUContext.automatic
     ) {
@@ -598,7 +600,7 @@ public struct OperationContext: Sendable {
     }
 
     /// Use temporary buffer for an operation
-    public func withTemporaryBuffer<T>(
+    internal func withTemporaryBuffer<T>(
         count: Int,
         _ body: (UnsafeMutableBufferPointer<Float>) async throws -> T
     ) async rethrows -> T where T: Sendable {

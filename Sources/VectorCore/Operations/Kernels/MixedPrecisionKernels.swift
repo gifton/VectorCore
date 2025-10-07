@@ -74,7 +74,7 @@ private let nativeFloat16Supported = false
 /// - Relative error < 0.1% for typical normalized embedding vectors
 /// - Absolute error bounded by machine epsilon for FP32 operations
 /// - Complies with IEEE 754 rounding semantics
-public enum MixedPrecisionKernels {
+internal enum MixedPrecisionKernels {
 
     // MARK: - Internal FP16 Conversion Helpers (Scalar)
 
@@ -3589,7 +3589,7 @@ public enum MixedPrecisionKernels {
 // MARK: - Benchmark Utilities
 
 /// Benchmarking utilities for measuring precision/performance tradeoffs
-public struct MixedPrecisionBenchmark {
+internal struct MixedPrecisionBenchmark {
 
     /// Performance measurement result
     public struct BenchmarkResult: Sendable {
@@ -3993,7 +3993,7 @@ public extension MixedPrecisionKernels.Vector1536FP16 {
 /// Factory methods for creating FP16 vectors from raw Float arrays.
 ///
 /// Provides convenient initialization from Float arrays with automatic FP32→FP16 conversion.
-public enum MixedPrecisionFactory {
+internal enum MixedPrecisionFactory {
 
     /// Create Vector512FP16 from array of FP32 values.
     ///
@@ -5044,7 +5044,7 @@ public final class FP16VectorPool: @unchecked Sendable {
 ///     // Fallback to software conversion
 /// }
 /// ```
-public enum PlatformCapabilities {
+internal enum PlatformCapabilities {
 
     /// True if platform has native hardware FP16 arithmetic support
     ///
@@ -5164,7 +5164,7 @@ public enum PlatformCapabilities {
 /// ```
 ///
 /// - Note: Requires Phase 2 MixedPrecisionAutoTuner to be initialized for optimal performance
-public struct MixedPrecisionProvider: DistanceProvider {
+internal struct MixedPrecisionProvider: DistanceProvider {
 
     /// Threshold for batch size to enable mixed precision
     /// Below this threshold, FP32 is used (conversion overhead dominates)

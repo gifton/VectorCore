@@ -8,7 +8,7 @@
 import Foundation
 
 /// Platform-specific configuration and capability detection
-public enum PlatformConfiguration {
+internal enum PlatformConfiguration {
     // MARK: - Cache Configuration
 
     /// L1 data cache line size in bytes

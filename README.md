@@ -221,13 +221,39 @@ let cosine = v1.cosineSimilarity(to: v2)
 ### Batch Operations
 
 ```swift
-// Async batch operations
+// Auto-parallelized batch operations for large datasets
 let nearest = await BatchOperations.findNearest(to: query, in: vectors, k: 10)
 let distances = await BatchOperations.pairwiseDistances(vectors)
 
-// Synchronous utilities
-let centroid = SyncBatchOperations.centroid(of: vectors)
-let sum = SyncBatchOperations.sum(vectors)
+// Centroid and statistics
+let centroid: Vector<Dim512> = Operations.centroid(of: vectors)
+let stats = await BatchOperations.statistics(for: vectors)
+```
+
+### Provider Configuration
+
+VectorCore uses `@TaskLocal` for zero-cost provider abstraction:
+
+```swift
+// Override SIMD provider (e.g., for custom Accelerate integration)
+await Operations.$simdProvider.withValue(AccelerateSIMDProvider()) {
+    let centroid = Operations.centroid(of: vectors)
+    // All operations in this scope use Accelerate vDSP
+}
+
+// Override compute provider (e.g., for GPU via VectorAccelerate)
+await Operations.$computeProvider.withValue(MetalComputeProvider()) {
+    let results = try await Operations.findNearest(to: query, in: database, k: 100)
+    // GPU-accelerated search
+}
+
+// Multiple provider overrides
+await Operations.$simdProvider.withValue(AccelerateSIMDProvider()) {
+    await Operations.$computeProvider.withValue(CPUComputeProvider.automatic) {
+        // Fully customized execution environment
+        let normalized = try await Operations.normalize(vectors)
+    }
+}
 ```
 
 ### Error Handling
@@ -265,12 +291,53 @@ The optimized vector types (`Vector512Optimized`, `Vector768Optimized`, `Vector1
 ## 📱 Requirements
 
 - **Swift:** 6.0+
+- **Swift Language Mode**: Swift 6 with **StrictConcurrency** enabled
+- **Concurrency**: Full `Sendable` conformance for all public types
 - **Platforms:**
   - macOS 14.0+
   - iOS 17.0+
   - tvOS 17.0+
   - watchOS 10.0+
   - visionOS 1.0+
+
+### Concurrency Safety
+
+VectorCore is built with **Swift 6 Strict Concurrency** from the ground up:
+
+- ✅ All public types conform to `Sendable` (data race safety)
+- ✅ Async operations use structured concurrency (`async`/`await`)
+- ✅ Provider configuration via `@TaskLocal` (zero-cost, thread-safe)
+- ✅ Buffer pooling via `actor` (isolation guarantees)
+- ✅ No global mutable state (except thread-safe caches)
+
+**Migration from Swift 5**:
+If your project uses Swift 5.x, you may see warnings about `Sendable` conformance. To migrate:
+
+```swift
+// Enable strict concurrency in your Package.swift
+swiftSettings: [
+    .enableExperimentalFeature("StrictConcurrency")
+]
+
+// Or in Xcode: Build Settings → Swift Compiler → Strict Concurrency Checking → Complete
+```
+
+See [Swift Evolution SE-0337](https://github.com/apple/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md) for details.
+
+## 📚 Documentation
+
+### Guides
+
+- **[Package Boundaries](Docs/Package_Boundaries.md)** - Understanding the 4-package architecture (Core, Index, Accelerate, Store) and when to use each
+- **[Performance Guide](Docs/Performance_Guide.md)** - Optimized vector types, provider tuning, benchmarking, and performance best practices
+- **[Memory Alignment](Docs/Memory_Alignment.md)** - Aligned allocation/deallocation, SIMD requirements, and avoiding common pitfalls
+
+### API Documentation
+
+- **Vector Types**: `Vector<D>`, `DynamicVector`, `Vector{512,768,1536}Optimized`
+- **Operations**: `Operations` (primary API), `BatchOperations` (auto-parallelized batches)
+- **Distance Metrics**: `EuclideanDistance`, `CosineDistance`, `ManhattanDistance`, `ChebyshevDistance`, `HammingDistance`, `MinkowskiDistance`, `DotProductDistance`
+- **Providers**: `SIMDProvider`, `ComputeProvider`, `BufferProvider` (plug-in architecture via `@TaskLocal`)
 
 ## 🤝 Contributing
 

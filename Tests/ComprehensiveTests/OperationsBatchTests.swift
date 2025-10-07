@@ -35,7 +35,7 @@ struct OperationsBatchTests {
             try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
         }
         let parallel = try await Operations.distanceMatrix(between: vectors, and: vectors)
-        let serial = SyncBatchOperations.pairwiseDistances(vectors)
+        let serial = await BatchOperations.pairwiseDistances(vectors)
         #expect(parallel.count == serial.count && parallel.first?.count == serial.first?.count)
         for i in stride(from: 0, to: n, by: 23) {
             for j in stride(from: 0, to: n, by: 31) {

@@ -57,7 +57,7 @@ struct OperationsTests {
         }
         let k = 5
         let result = try await Operations.findNearest(to: query, in: vectors, k: k)
-        let baseline = SyncBatchOperations.findNearest(to: query, in: vectors, k: k)
+        let baseline = await BatchOperations.findNearest(to: query, in: vectors, k: k)
         #expect(result.count == k && baseline.count == k)
         #expect(Set(result.map { $0.index }) == Set(baseline.map { $0.index }))
     }

@@ -3,7 +3,7 @@ import simd
 
 // MARK: - Norm Cache (per dimension)
 
-public struct NormCache512: Sendable {
+internal struct NormCache512: Sendable {
     public let count: Int
     public let magnitudes: [Float]
 
@@ -19,7 +19,7 @@ public struct NormCache512: Sendable {
     }
 }
 
-public struct NormCache768: Sendable {
+internal struct NormCache768: Sendable {
     public let count: Int
     public let magnitudes: [Float]
 
@@ -34,7 +34,7 @@ public struct NormCache768: Sendable {
     }
 }
 
-public struct NormCache1536: Sendable {
+internal struct NormCache1536: Sendable {
     public let count: Int
     public let magnitudes: [Float]
 
@@ -51,7 +51,7 @@ public struct NormCache1536: Sendable {
 
 // MARK: - Cosine Batch Helpers
 
-public enum CosineBatchHelpers {
+internal enum CosineBatchHelpers {
 
     // Using precomputed magnitudes (NormCache)
     @inlinable

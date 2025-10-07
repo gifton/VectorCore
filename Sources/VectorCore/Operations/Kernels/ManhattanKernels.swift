@@ -8,7 +8,7 @@
 import Foundation
 import simd
 
-public enum ManhattanKernels {
+internal enum ManhattanKernels {
 
     @inline(__always)
     private static func distance(storageA: ContiguousArray<SIMD4<Float>>, storageB: ContiguousArray<SIMD4<Float>>, laneCount: Int) -> Float {

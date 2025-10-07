@@ -9,7 +9,8 @@
 import Foundation
 import simd
 
-public enum EuclideanKernels {
+@usableFromInline
+internal enum EuclideanKernels {
 
     @inline(__always)
     private static func squared(storageA: ContiguousArray<SIMD4<Float>>, storageB: ContiguousArray<SIMD4<Float>>, laneCount: Int) -> Float {
@@ -55,35 +56,35 @@ public enum EuclideanKernels {
 
     // MARK: - Public per-dimension helpers (squared)
 
-    @inline(__always)
-    public static func squared512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func squared512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         squared(storageA: a.storage, storageB: b.storage, laneCount: 128)
     }
 
-    @inline(__always)
-    public static func squared768(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func squared768(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
         squared(storageA: a.storage, storageB: b.storage, laneCount: 192)
     }
 
-    @inline(__always)
-    public static func squared1536(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func squared1536(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
         squared(storageA: a.storage, storageB: b.storage, laneCount: 384)
     }
 
     // MARK: - Euclidean distance (sqrt wrapper)
 
-    @inline(__always)
-    public static func distance512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func distance512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         sqrt(squared512(a, b))
     }
 
-    @inline(__always)
-    public static func distance768(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func distance768(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
         sqrt(squared768(a, b))
     }
 
-    @inline(__always)
-    public static func distance1536(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func distance1536(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
         sqrt(squared1536(a, b))
     }
 }

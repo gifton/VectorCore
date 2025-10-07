@@ -7,7 +7,7 @@ import Foundation
 // MARK: - Memory Management Namespace
 
 /// Namespace for memory management types and utilities
-public enum Memory {
+internal enum Memory {
     // MARK: - Pressure Monitor
 
     /// Monitor system memory pressure
@@ -63,7 +63,7 @@ public enum Memory {
 /// ```swift
 /// let size = vectorMemorySize(SIMD16<Float>.self)  // Returns 64 bytes
 /// ```
-public func vectorMemorySize<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
+internal func vectorMemorySize<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
     return MemoryLayout<Vector>.size
 }
 
@@ -76,7 +76,7 @@ public func vectorMemorySize<Vector: SIMD>(_ type: Vector.Type) -> Int where Vec
 /// ```swift
 /// let alignment = vectorMemoryAlignment(SIMD8<Float>.self)  // Returns 32 bytes
 /// ```
-public func vectorMemoryAlignment<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
+internal func vectorMemoryAlignment<Vector: SIMD>(_ type: Vector.Type) -> Int where Vector.Scalar: BinaryFloatingPoint {
     return MemoryLayout<Vector>.alignment
 }
 
@@ -97,7 +97,7 @@ public func vectorMemoryAlignment<Vector: SIMD>(_ type: Vector.Type) -> Int wher
 ///     // Safe to use with 32-byte aligned SIMD operations
 /// }
 /// ```
-public func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
+internal func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
     return Int(bitPattern: pointer) % alignment == 0
 }
 
@@ -126,7 +126,7 @@ public func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool
 ///     preferredAlignment: 64
 /// )
 /// ```
-public func alignedCopy<T>(
+internal func alignedCopy<T>(
     from source: UnsafePointer<T>,
     to destination: UnsafeMutablePointer<T>,
     count: Int,
@@ -167,7 +167,7 @@ public func alignedCopy<T>(
 ///     return buffer.reduce(0, +)
 /// }
 /// ```
-public func withTemporaryBuffer<T, Result>(
+internal func withTemporaryBuffer<T, Result>(
     of type: T.Type,
     capacity: Int,
     alignment: Int = 64,
@@ -207,7 +207,7 @@ public func withTemporaryBuffer<T, Result>(
 /// }
 /// // Use sensitive data...
 /// ```
-public func secureZero<T>(_ buffer: UnsafeMutableBufferPointer<T>) {
+internal func secureZero<T>(_ buffer: UnsafeMutableBufferPointer<T>) {
     guard let baseAddress = buffer.baseAddress else { return }
 
     // Use memset_s for secure zeroing when available
@@ -224,7 +224,7 @@ public func secureZero<T>(_ buffer: UnsafeMutableBufferPointer<T>) {
 /// nonisolated pointer property, making it safe to use across concurrency domains.
 ///
 /// - Warning: Caller is responsible for ensuring thread-safe access patterns
-public final class SendableBufferWrapper<T> {
+internal final class SendableBufferWrapper<T> {
     private let buffer: UnsafeMutablePointer<T>
     public let capacity: Int
 
@@ -248,7 +248,7 @@ public final class SendableBufferWrapper<T> {
 extension SendableBufferWrapper: @unchecked Sendable {}
 
 /// Thread-safe wrapper for UnsafeMutableBufferPointer to enable Sendable conformance
-public final class SendableMutableBufferWrapper<T> {
+internal final class SendableMutableBufferWrapper<T> {
     private let buffer: UnsafeMutableBufferPointer<T>
 
     /// Initialize with allocated capacity

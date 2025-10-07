@@ -10,7 +10,7 @@ import Foundation
 import simd
 
 /// Central edge case handler for kernel operations
-public enum EdgeCaseHandler {
+internal enum EdgeCaseHandler {
 
     // MARK: - Array Size Edge Cases
 

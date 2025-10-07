@@ -9,7 +9,7 @@ import Foundation
 // MARK: - Buffer Wrapper
 
 /// Wrapper for unsafe buffer pointers to make them Sendable
-public struct SendableBuffer: @unchecked Sendable {
+internal struct SendableBuffer: @unchecked Sendable {
     public let buffer: UnsafeMutableBufferPointer<Float>
 
     init(_ buffer: UnsafeMutableBufferPointer<Float>) {
@@ -20,7 +20,7 @@ public struct SendableBuffer: @unchecked Sendable {
 // MARK: - Buffer Pool
 
 /// Thread-safe pool for reusing memory buffers
-public actor BufferPool {
+internal actor BufferPool {
     /// Available buffers organized by size
     private var available: [Int: [UnsafeMutableBufferPointer<Float>]] = [:]
 
@@ -57,7 +57,7 @@ public actor BufferPool {
     /// - Parameters:
     ///   - maxBuffersPerSize: Maximum buffers to keep for each size
     ///   - memoryLimit: Total memory limit in MB (default 256MB)
-    public init(maxBuffersPerSize: Int = 10, memoryLimitMB: Int = 256) {
+    internal init(maxBuffersPerSize: Int = 10, memoryLimitMB: Int = 256) {
         self.maxBuffersPerSize = maxBuffersPerSize
         self.memoryLimit = memoryLimitMB * 1024 * 1024
     }
@@ -65,7 +65,7 @@ public actor BufferPool {
     // MARK: - Buffer Management
 
     /// Acquire a buffer of specified size
-    public func acquire(count: Int) -> SendableBuffer {
+    internal func acquire(count: Int) -> SendableBuffer {
         stats.acquisitions += 1
 
         // Check if we have an available buffer
@@ -91,7 +91,7 @@ public actor BufferPool {
     }
 
     /// Release a buffer back to the pool
-    public func release(_ sendableBuffer: SendableBuffer) {
+    internal func release(_ sendableBuffer: SendableBuffer) {
         let buffer = sendableBuffer.buffer
         stats.releases += 1
 
@@ -110,7 +110,7 @@ public actor BufferPool {
     }
 
     /// Clear all buffers from the pool
-    public func clear() {
+    internal func clear() {
         for (_, buffers) in available {
             for buffer in buffers {
                 deallocateBuffer(buffer)
@@ -121,7 +121,7 @@ public actor BufferPool {
     }
 
     /// Get current statistics
-    public func getStatistics() -> Statistics {
+    internal func getStatistics() -> Statistics {
         stats
     }
 
@@ -156,7 +156,7 @@ public actor BufferPool {
     }
 
     /// Clean up all buffers - call this before deinit
-    public func cleanup() {
+    internal func cleanup() {
         // Clean up all remaining buffers
         for (_, buffers) in available {
             for buffer in buffers {
@@ -202,21 +202,21 @@ public actor TypedBufferPool<Element> {
 
 // MARK: - Global Buffer Pool
 
-/// Shared buffer pool for vector operations
-public let globalBufferPool = BufferPool()
+/// Shared buffer pool for vector operations (internal)
+internal let globalBufferPool = BufferPool()
 
 // MARK: - Buffer Pool Context
 
 /// Context for using buffer pool in operations
-public struct BufferPoolContext {
+internal struct BufferPoolContext {
     private let pool: BufferPool
 
-    public init(pool: BufferPool = globalBufferPool) {
+    internal init(pool: BufferPool = globalBufferPool) {
         self.pool = pool
     }
 
     /// Use a temporary buffer for an operation
-    public func withTemporaryBuffer<T>(
+    internal func withTemporaryBuffer<T>(
         count: Int,
         _ body: (UnsafeMutableBufferPointer<Float>) async throws -> T
     ) async rethrows -> T where T: Sendable {
@@ -232,7 +232,7 @@ public struct BufferPoolContext {
     }
 
     /// Use multiple temporary buffers
-    public func withTemporaryBuffers<T>(
+    internal func withTemporaryBuffers<T>(
         counts: [Int],
         _ body: ([UnsafeMutableBufferPointer<Float>]) async throws -> T
     ) async rethrows -> T where T: Sendable {

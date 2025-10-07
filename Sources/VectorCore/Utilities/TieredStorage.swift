@@ -9,7 +9,8 @@ import Foundation
 
 /// Adaptive storage container that automatically selects the optimal backing store
 /// based on element count and access patterns, enabling efficient memory usage for different vector sizes.
-public struct TieredStorage<Element> {
+@usableFromInline
+internal struct TieredStorage<Element> {
     // MARK: - Storage Tiers
 
     /// Storage tier variants optimized for different size ranges
@@ -93,7 +94,8 @@ public struct TieredStorage<Element> {
     // MARK: - Initialization
 
     /// Initialize with capacity and optional performance hint
-    public init(capacity: Int, hint: PerformanceHint = .sequential) {
+    @usableFromInline
+    internal init(capacity: Int, hint: PerformanceHint = .sequential) {
         self.performanceHint = hint
 
         // Create empty tier with specified capacity
@@ -113,7 +115,8 @@ public struct TieredStorage<Element> {
     }
 
     /// Initialize from a sequence of elements
-    public init<S: Sequence>(_ elements: S) where S.Element == Element {
+    @usableFromInline
+    internal init<S: Sequence>(_ elements: S) where S.Element == Element {
         let array = Array(elements)
         self.performanceHint = .sequential
 
@@ -131,7 +134,8 @@ public struct TieredStorage<Element> {
     // MARK: - Element Access
 
     /// Access elements by index
-    public subscript(index: Int) -> Element {
+    @usableFromInline
+    internal subscript(index: Int) -> Element {
         get {
             precondition(index >= 0 && index < count, "Index out of bounds")
             switch tier {
@@ -187,7 +191,8 @@ public struct TieredStorage<Element> {
     // MARK: - Bulk Operations
 
     /// Access storage as unsafe buffer pointer
-    public func withUnsafeBufferPointer<R>(
+    @usableFromInline
+    internal func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Element>) throws -> R
     ) rethrows -> R {
         switch tier {
@@ -203,7 +208,8 @@ public struct TieredStorage<Element> {
     }
 
     /// Mutate storage through unsafe buffer pointer
-    public mutating func withUnsafeMutableBufferPointer<R>(
+    @usableFromInline
+    internal mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
         ensureUniqueTier()
@@ -507,6 +513,10 @@ internal final class AlignedBuffer<Element> {
     @usableFromInline
     internal let alignment: Int = 64  // Cache line size
 
+    /// Tracks whether allocation used posix_memalign (via AlignedMemory)
+    @usableFromInline
+    private let usedPosixAlignedAlloc: Bool
+
     /// Initialize with capacity
     @usableFromInline
     internal init(capacity: Int) {
@@ -517,11 +527,13 @@ internal final class AlignedBuffer<Element> {
         do {
             let typed = try AlignedMemory.allocateAligned(type: Element.self, count: capacity, alignment: alignment)
             self.ptr = typed
+            self.usedPosixAlignedAlloc = true
         } catch {
             // Fallback: allocate with natural alignment to avoid hard crash
             let raw = UnsafeMutableRawPointer.allocate(byteCount: capacity * MemoryLayout<Element>.stride,
                                                        alignment: MemoryLayout<Element>.alignment)
             self.ptr = raw.bindMemory(to: Element.self, capacity: capacity)
+            self.usedPosixAlignedAlloc = false
         }
     }
 
@@ -535,17 +547,23 @@ internal final class AlignedBuffer<Element> {
         do {
             let typed = try AlignedMemory.allocateAligned(type: Element.self, count: capacity, alignment: alignment)
             self.ptr = typed
+            self.usedPosixAlignedAlloc = true
         } catch {
             let raw = UnsafeMutableRawPointer.allocate(byteCount: capacity * MemoryLayout<Element>.stride,
                                                        alignment: MemoryLayout<Element>.alignment)
             self.ptr = raw.bindMemory(to: Element.self, capacity: capacity)
+            self.usedPosixAlignedAlloc = false
         }
         ptr.initialize(from: elements, count: count)
     }
 
     deinit {
         ptr.deinitialize(count: count)
-        ptr.deallocate()
+        if usedPosixAlignedAlloc {
+            AlignedMemory.deallocate(ptr)
+        } else {
+            ptr.deallocate()
+        }
     }
 
     /// Element access

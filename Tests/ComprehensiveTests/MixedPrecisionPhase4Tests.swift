@@ -300,7 +300,7 @@ struct MixedPrecisionPhase4Tests {
         let count = 1024
         let source = (0..<count).map { _ in Float.random(in: -100...100) }
 
-        var sourceBuffer = source
+        let sourceBuffer = source
         var destination = [UInt16](repeating: 0, count: count)
 
         // Convert using platform-optimized function
@@ -327,7 +327,7 @@ struct MixedPrecisionPhase4Tests {
         // Test various odd sizes to ensure tail handling works
         for count in [1, 3, 7, 15, 17, 63, 100, 1000] {
             let source = (0..<count).map { _ in Float.random(in: -10...10) }
-            var sourceBuffer = source
+            let sourceBuffer = source
             var destination = [UInt16](repeating: 0, count: count)
 
             sourceBuffer.withUnsafeBufferPointer { srcPtr in
@@ -361,7 +361,7 @@ struct MixedPrecisionPhase4Tests {
             0.000000059604645, // Min FP16 subnormal (2^-24)
         ]
 
-        var source = specialValues
+        let source = specialValues
         var destination = [UInt16](repeating: 0, count: specialValues.count)
 
         source.withUnsafeBufferPointer { srcPtr in
@@ -414,7 +414,7 @@ struct MixedPrecisionPhase4Tests {
     func testIntegration_PlatformAwareness() throws {
         // Create provider with platform-specific threshold
         let threshold = PlatformCapabilities.hasNativeHardwareFP16 ? 16 : 64
-        let provider = MixedPrecisionProvider(minBatchSize: threshold)
+        _ = MixedPrecisionProvider(minBatchSize: threshold)
 
         // Log platform-aware configuration
         print("Platform: \(PlatformCapabilities.platformName)")

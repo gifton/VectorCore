@@ -6,7 +6,8 @@ import VectorCore
 // MARK: - CLI Parsing
 
 struct CLIOptions {
-    var suites: [String] = ["dot", "distance", "normalize", "batch", "graph"]
+    // Default to active suites only (graph removed)
+    var suites: [String] = ["dot", "distance", "normalize", "batch"]
     var minTimeSeconds: Double = 0.5
     var repeats: Int? = nil
     var samples: Int = 1

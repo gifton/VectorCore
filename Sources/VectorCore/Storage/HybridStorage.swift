@@ -9,7 +9,7 @@ import Foundation
 // MARK: - Hybrid Storage
 
 /// Storage that uses stack allocation for small vectors and heap for large ones
-public struct HybridStorage<Element: BinaryFloatingPoint & SIMDScalar> {
+internal struct HybridStorage<Element: BinaryFloatingPoint & SIMDScalar> {
     /// Storage backing - either inline or heap
     private var backing: Backing
 

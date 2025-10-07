@@ -9,7 +9,7 @@ import Foundation
 // MARK: - Alignment Strategy
 
 /// Memory alignment strategy for SIMD operations
-public enum AlignmentStrategy: Sendable {
+internal enum AlignmentStrategy: Sendable {
     /// Fixed 64-byte alignment (cache line)
     case cacheLine
 
@@ -50,7 +50,7 @@ public enum AlignmentStrategy: Sendable {
 
 // MARK: - Alignment Utilities
 
-public enum AlignmentUtility {
+internal enum AlignmentUtility {
     /// Check if a pointer is aligned to the specified boundary
     @inlinable
     public static func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
@@ -89,7 +89,7 @@ public enum AlignmentUtility {
 // MARK: - Aligned Allocator
 
 /// Utility for aligned memory allocation
-public struct AlignedAllocator {
+internal struct AlignedAllocator {
     /// Allocate aligned memory
     @inlinable
     public static func allocate(

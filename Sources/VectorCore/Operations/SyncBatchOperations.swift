@@ -36,7 +36,9 @@ import Foundation
 /// // Compute centroid
 /// let centroid = SyncBatchOperations.centroid(of: vectors)
 /// ```
-public enum SyncBatchOperations {
+///
+/// - Note: This API is internal. Use `BatchOperations` (async) or `Operations` for public APIs.
+internal enum SyncBatchOperations {
 
     // MARK: - Nearest Neighbor Search
 
@@ -50,7 +52,7 @@ public enum SyncBatchOperations {
     ///   - k: Number of nearest neighbors to find
     ///   - metric: Distance metric to use (default: Euclidean)
     /// - Returns: Array of (index, distance) tuples sorted by distance
-    public static func findNearest<V: VectorProtocol, M: DistanceMetric>(
+    internal static func findNearest<V: VectorProtocol, M: DistanceMetric>(
         to query: V,
         in vectors: [V],
         k: Int,
@@ -108,7 +110,7 @@ public enum SyncBatchOperations {
     ///   - radius: Maximum distance threshold
     ///   - metric: Distance metric to use
     /// - Returns: Array of (index, distance) tuples within radius
-    public static func findWithinRadius<V: VectorProtocol, M: DistanceMetric>(
+    internal static func findWithinRadius<V: VectorProtocol, M: DistanceMetric>(
         of query: V,
         in vectors: [V],
         radius: Float,
@@ -128,7 +130,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - transform: Transformation function
     /// - Returns: Transformed vectors
-    public static func map<V: VectorProtocol, U: VectorProtocol>(
+    internal static func map<V: VectorProtocol, U: VectorProtocol>(
         _ vectors: [V],
         transform: (V) throws -> U
     ) rethrows -> [U] {
@@ -140,7 +142,7 @@ public enum SyncBatchOperations {
     /// - Parameters:
     ///   - vectors: Vectors to transform (modified in-place)
     ///   - transform: In-place transformation function
-    public static func mapInPlace<V: VectorProtocol>(
+    internal static func mapInPlace<V: VectorProtocol>(
         _ vectors: inout [V],
         transform: (inout V) throws -> Void
     ) rethrows {
@@ -155,7 +157,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - predicate: Filter predicate
     /// - Returns: Filtered vectors
-    public static func filter<V: VectorProtocol>(
+    internal static func filter<V: VectorProtocol>(
         _ vectors: [V],
         predicate: (V) throws -> Bool
     ) rethrows -> [V] {
@@ -168,7 +170,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - predicate: Partitioning predicate
     /// - Returns: Tuple of (matching, non-matching) vectors
-    public static func partition<V: VectorProtocol>(
+    internal static func partition<V: VectorProtocol>(
         _ vectors: [V],
         by predicate: (V) throws -> Bool
     ) rethrows -> (matching: [V], nonMatching: [V]) {
@@ -195,7 +197,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Centroid vector, or nil if input is empty
-    public static func centroid<D: StaticDimension>(
+    internal static func centroid<D: StaticDimension>(
         of vectors: [Vector<D>]
     ) -> Vector<D>? {
         guard !vectors.isEmpty else { return nil }
@@ -223,7 +225,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - weights: Weights for each vector
     /// - Returns: Weighted centroid, or nil if input is empty
-    public static func weightedCentroid<D: StaticDimension>(
+    internal static func weightedCentroid<D: StaticDimension>(
         of vectors: [Vector<D>],
         weights: [Float]
     ) throws -> Vector<D>? where D.Storage: VectorStorageOperations {
@@ -249,7 +251,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Sum vector, or nil if input is empty
-    public static func sum<D: StaticDimension>(
+    internal static func sum<D: StaticDimension>(
         _ vectors: [Vector<D>]
     ) -> Vector<D>? where D.Storage: VectorStorageOperations {
         guard !vectors.isEmpty else { return nil }
@@ -266,7 +268,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Mean vector, or nil if input is empty
-    public static func mean<D: StaticDimension>(
+    internal static func mean<D: StaticDimension>(
         _ vectors: [Vector<D>]
     ) -> Vector<D>? where D.Storage: VectorStorageOperations {
         centroid(of: vectors)
@@ -278,7 +280,7 @@ public enum SyncBatchOperations {
     ///
     /// - Parameter vectors: Input vectors
     /// - Returns: Statistics including count, mean magnitude, and std deviation
-    public static func statistics<V: VectorProtocol>(
+    internal static func statistics<V: VectorProtocol>(
         for vectors: [V]
     ) -> BatchStatistics where V.Scalar == Float {
         guard !vectors.isEmpty else {
@@ -310,7 +312,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - zscore: Z-score threshold for outlier detection (default: 3)
     /// - Returns: Indices of outlier vectors
-    public static func findOutliers<V: VectorProtocol>(
+    internal static func findOutliers<V: VectorProtocol>(
         in vectors: [V],
         zscoreThreshold: Float = 3
     ) -> [Int] where V.Scalar == Float {
@@ -331,7 +333,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - metric: Distance metric to use
     /// - Returns: Symmetric distance matrix
-    public static func pairwiseDistances<V: VectorProtocol, M: DistanceMetric>(
+    internal static func pairwiseDistances<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
         metric: M = EuclideanDistance()
     ) -> [[Float]] where M.Scalar == Float, V.Scalar == Float {
@@ -357,7 +359,7 @@ public enum SyncBatchOperations {
     ///   - candidates: Candidate vectors
     ///   - metric: Distance metric to use
     /// - Returns: Distance matrix [queries x candidates]
-    public static func batchDistances<V: VectorProtocol, M: DistanceMetric>(
+    internal static func batchDistances<V: VectorProtocol, M: DistanceMetric>(
         from queries: [V],
         to candidates: [V],
         metric: M = EuclideanDistance()
@@ -378,7 +380,7 @@ public enum SyncBatchOperations {
     ///   - centroids: Cluster centroids
     ///   - metric: Distance metric to use
     /// - Returns: Array of centroid indices for each vector
-    public static func assignToCentroids<V: VectorProtocol, M: DistanceMetric>(
+    internal static func assignToCentroids<V: VectorProtocol, M: DistanceMetric>(
         _ vectors: [V],
         centroids: [V],
         metric: M = EuclideanDistance()
@@ -406,7 +408,7 @@ public enum SyncBatchOperations {
     ///   - assignments: Cluster assignment for each vector
     ///   - k: Number of clusters
     /// - Returns: Updated centroids
-    public static func updateCentroids<D: StaticDimension>(
+    internal static func updateCentroids<D: StaticDimension>(
         vectors: [Vector<D>],
         assignments: [Int],
         k: Int
@@ -432,7 +434,7 @@ public enum SyncBatchOperations {
     ///   - vectors: Input vectors
     ///   - k: Number of samples
     /// - Returns: Random sample of k vectors
-    public static func randomSample<V>(
+    internal static func randomSample<V>(
         from vectors: [V],
         k: Int
     ) -> [V] {
@@ -468,7 +470,7 @@ public enum SyncBatchOperations {
     ///   - k: Total number of samples
     ///   - strata: Number of magnitude-based strata
     /// - Returns: Stratified sample
-    public static func stratifiedSample<V: VectorProtocol>(
+    internal static func stratifiedSample<V: VectorProtocol>(
         from vectors: [V],
         k: Int,
         strata: Int = 5
@@ -700,7 +702,7 @@ public enum SyncBatchOperations {
 
 // MARK: - Batch Processing Extensions
 
-public extension Array where Element: VectorProtocol {
+internal extension Array where Element: VectorProtocol {
     /// Find k nearest neighbors to a query
     func findNearest<M: DistanceMetric>(
         to query: Element,
@@ -724,7 +726,7 @@ public extension Array where Element: VectorProtocol {
 }
 
 // Extension specifically for Vector<D> types to support centroid
-public extension Array {
+internal extension Array {
     /// Compute centroid of vectors
     func centroid<D: StaticDimension>() -> Vector<D>? where Element == Vector<D>, D.Storage: VectorStorageOperations {
         SyncBatchOperations.centroid(of: self)

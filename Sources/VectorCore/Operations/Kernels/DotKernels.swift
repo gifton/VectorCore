@@ -10,7 +10,8 @@
 import Foundation
 import simd
 
-public enum DotKernels {
+@usableFromInline
+internal enum DotKernels {
 
     // Core implementation: 4 independent accumulators, stride 16 lanes.
     // Accepts storage buffers directly to avoid introducing new protocols.
@@ -58,18 +59,18 @@ public enum DotKernels {
 
     // MARK: - Public per-dimension entry points
 
-    @inline(__always)
-    public static func dot512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func dot512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         dot(storageA: a.storage, storageB: b.storage, laneCount: 128)
     }
 
-    @inline(__always)
-    public static func dot768(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func dot768(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
         dot(storageA: a.storage, storageB: b.storage, laneCount: 192)
     }
 
-    @inline(__always)
-    public static func dot1536(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
+    @usableFromInline @inline(__always)
+    static func dot1536(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
         dot(storageA: a.storage, storageB: b.storage, laneCount: 384)
     }
 }

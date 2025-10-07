@@ -4,8 +4,8 @@
 //
 //
 //  Design Note: Distance metrics do NOT validate dimension compatibility.
-//  This is by design - dimension validation happens at API boundaries
-//  (e.g., ExecutionOperations) to avoid redundant checks in hot paths.
+//  This is by design — dimension validation happens at the public API layer
+//  (e.g., Operations/BatchOperations) to avoid redundant checks in hot paths.
 //  Debug assertions are included for development-time safety.
 //
 

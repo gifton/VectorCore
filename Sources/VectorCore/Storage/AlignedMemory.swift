@@ -6,9 +6,9 @@
 import Foundation
 
 /// Common alignment utilities for VectorCore storage types
-public enum AlignedMemory {
+internal enum AlignedMemory {
     /// Platform-specific optimal alignment for SIMD operations
-    public static var optimalAlignment: Int {
+    internal static var optimalAlignment: Int {
         #if arch(arm64)
         // Apple Silicon prefers 64-byte alignment (cache line size)
         return 64
@@ -23,24 +23,24 @@ public enum AlignedMemory {
     }
 
     /// Minimum alignment required for SIMD operations
-    public static let minimumAlignment: Int = 16
+    internal static let minimumAlignment: Int = 16
 
     /// Check if a pointer is properly aligned
     @inlinable
-    public static func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
+    internal static func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
         Int(bitPattern: pointer) % alignment == 0
     }
 
     /// Check if a mutable pointer is properly aligned
     @inlinable
-    public static func isAligned<T>(_ pointer: UnsafeMutablePointer<T>, to alignment: Int) -> Bool {
+    internal static func isAligned<T>(_ pointer: UnsafeMutablePointer<T>, to alignment: Int) -> Bool {
         Int(bitPattern: pointer) % alignment == 0
     }
 
     /// Allocate aligned memory for Float arrays
     /// - Throws: VectorError.allocationFailed if allocation fails
     @inlinable
-    public static func allocateAligned(
+    internal static func allocateAligned(
         count: Int,
         alignment: Int = optimalAlignment
     ) throws -> UnsafeMutablePointer<Float> {
@@ -50,7 +50,7 @@ public enum AlignedMemory {
     /// Allocate aligned memory for any type
     /// - Throws: VectorError.allocationFailed if allocation fails
     @inlinable
-    public static func allocateAligned<T>(
+    internal static func allocateAligned<T>(
         type: T.Type,
         count: Int,
         alignment: Int = optimalAlignment
@@ -79,7 +79,7 @@ public enum AlignedMemory {
     ///   not with Swift's `.deallocate()`. Using `.deallocate()` on memory allocated
     ///   by `posix_memalign` causes undefined behavior and heap corruption.
     @inlinable
-    public static func deallocate<T>(_ ptr: UnsafeMutablePointer<T>) {
+    internal static func deallocate<T>(_ ptr: UnsafeMutablePointer<T>) {
         free(UnsafeMutableRawPointer(ptr))
     }
 
@@ -90,7 +90,7 @@ public enum AlignedMemory {
     /// - Important: Memory allocated with `posix_memalign` MUST be freed with `free()`,
     ///   not with Swift's `.deallocate()`.
     @inlinable
-    public static func deallocate(_ ptr: UnsafeMutableRawPointer) {
+    internal static func deallocate(_ ptr: UnsafeMutableRawPointer) {
         free(ptr)
     }
 }

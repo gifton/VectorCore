@@ -159,15 +159,15 @@ public enum BatchKernels {
                 let q12 = q[k+12], q13 = q[k+13], q14 = q[k+14], q15 = q[k+15]
 
                 // swiftlint:disable:next line_length
-                // Justification: SIMD fused multiply-add chain - breaking would hurt register allocation and readability
-                a0 += q0 * c0[k+0] + q2 * c0[k+2] + q4 * c0[k+4] + q6 * c0[k+6] + q8 * c0[k+8] + q10 * c0[k+10] + q12 * c0[k+12] + q14 * c0[k+14]
+                // Justification: SIMD fused multiply-add chain - semicolons avoid Swift type-checker timeout
+                a0 += q0 * c0[k+0]; a0 += q2 * c0[k+2]; a0 += q4 * c0[k+4]; a0 += q6 * c0[k+6]; a0 += q8 * c0[k+8]; a0 += q10 * c0[k+10]; a0 += q12 * c0[k+12]; a0 += q14 * c0[k+14]
                 // swiftlint:disable:next line_length
-                a1 += q1 * c0[k+1] + q3 * c0[k+3] + q5 * c0[k+5] + q7 * c0[k+7] + q9 * c0[k+9] + q11 * c0[k+11] + q13 * c0[k+13] + q15 * c0[k+15]
+                a1 += q1 * c0[k+1]; a1 += q3 * c0[k+3]; a1 += q5 * c0[k+5]; a1 += q7 * c0[k+7]; a1 += q9 * c0[k+9]; a1 += q11 * c0[k+11]; a1 += q13 * c0[k+13]; a1 += q15 * c0[k+15]
 
                 // swiftlint:disable:next line_length
-                b0 += q0 * c1[k+0] + q2 * c1[k+2] + q4 * c1[k+4] + q6 * c1[k+6] + q8 * c1[k+8] + q10 * c1[k+10] + q12 * c1[k+12] + q14 * c1[k+14]
+                b0 += q0 * c1[k+0]; b0 += q2 * c1[k+2]; b0 += q4 * c1[k+4]; b0 += q6 * c1[k+6]; b0 += q8 * c1[k+8]; b0 += q10 * c1[k+10]; b0 += q12 * c1[k+12]; b0 += q14 * c1[k+14]
                 // swiftlint:disable:next line_length
-                b1 += q1 * c1[k+1] + q3 * c1[k+3] + q5 * c1[k+5] + q7 * c1[k+7] + q9 * c1[k+9] + q11 * c1[k+11] + q13 * c1[k+13] + q15 * c1[k+15]
+                b1 += q1 * c1[k+1]; b1 += q3 * c1[k+3]; b1 += q5 * c1[k+5]; b1 += q7 * c1[k+7]; b1 += q9 * c1[k+9]; b1 += q11 * c1[k+11]; b1 += q13 * c1[k+13]; b1 += q15 * c1[k+15]
             }
             let d0 = ((a0 + a1) + (a2 + a3)).sum()
             let d1 = ((b0 + b1) + (b2 + b3)).sum()
@@ -294,14 +294,14 @@ public enum BatchKernels {
                 let c1_12a=c1[k+12], c1_13a=c1[k+13], c1_14a=c1[k+14], c1_15a=c1[k+15]
 
                 qc0a += q0*c00; qc0a += q2*c02; qc0a += q4*c04; qc0a += q6*c06; qc0a += q8*c08; qc0a += q10*c10; qc0a += q12*c12; qc0a += q14*c14
-                qc0b += q1*c01 + q3*c03 + q5*c05 + q7*c07 + q9*c09 + q11*c11 + q13*c13 + q15*c15
+                qc0b += q1*c01; qc0b += q3*c03; qc0b += q5*c05; qc0b += q7*c07; qc0b += q9*c09; qc0b += q11*c11; qc0b += q13*c13; qc0b += q15*c15
                 cc0a += c00*c00; cc0a += c02*c02; cc0a += c04*c04; cc0a += c06*c06; cc0a += c08*c08; cc0a += c10*c10; cc0a += c12*c12; cc0a += c14*c14
-                cc0b += c01*c01 + c03*c03 + c05*c05 + c07*c07 + c09*c09 + c11*c11 + c13*c13 + c15*c15
+                cc0b += c01*c01; cc0b += c03*c03; cc0b += c05*c05; cc0b += c07*c07; cc0b += c09*c09; cc0b += c11*c11; cc0b += c13*c13; cc0b += c15*c15
 
                 qc1a += q0*c10a; qc1a += q2*c12a; qc1a += q4*c14a; qc1a += q6*c16a; qc1a += q8*c18a; qc1a += q10*c1_10a; qc1a += q12*c1_12a; qc1a += q14*c1_14a
-                qc1b += q1*c11a + q3*c13a + q5*c15a + q7*c17a + q9*c19a + q11*c1_11a + q13*c1_13a + q15*c1_15a
+                qc1b += q1*c11a; qc1b += q3*c13a; qc1b += q5*c15a; qc1b += q7*c17a; qc1b += q9*c19a; qc1b += q11*c1_11a; qc1b += q13*c1_13a; qc1b += q15*c1_15a
                 cc1a += c10a*c10a; cc1a += c12a*c12a; cc1a += c14a*c14a; cc1a += c16a*c16a; cc1a += c18a*c18a; cc1a += c1_10a*c1_10a; cc1a += c1_12a*c1_12a; cc1a += c1_14a*c1_14a
-                cc1b += c11a*c11a + c13a*c13a + c15a*c15a + c17a*c17a + c19a*c19a + c1_11a*c1_11a + c1_13a*c1_13a + c1_15a*c1_15a
+                cc1b += c11a*c11a; cc1b += c13a*c13a; cc1b += c15a*c15a; cc1b += c17a*c17a; cc1b += c19a*c19a; cc1b += c1_11a*c1_11a; cc1b += c1_13a*c1_13a; cc1b += c1_15a*c1_15a
             }
             let dot0 = (qc0a + qc0b).sum()
             let cc0 = (cc0a + cc0b).sum()

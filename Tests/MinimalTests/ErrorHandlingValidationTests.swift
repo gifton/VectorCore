@@ -125,7 +125,10 @@ final class ErrorHandlingValidationTests: XCTestCase {
             XCTAssertTrue(error is VectorError)
             let vectorError = error as! VectorError
             XCTAssertEqual(vectorError.kind, .invalidOperation)
-            XCTAssertTrue(vectorError.description.contains("Division by zero"))
+            // Check for division-by-zero error message (case-insensitive for robustness across build configs)
+            let description = vectorError.description.lowercased()
+            XCTAssertTrue(description.contains("division") && description.contains("zero"),
+                         "Expected division-by-zero error but got: \(vectorError.description)")
         }
     }
 

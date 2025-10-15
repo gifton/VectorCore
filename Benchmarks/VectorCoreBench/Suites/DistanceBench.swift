@@ -7,11 +7,27 @@ struct DistanceBench: BenchmarkSuite {
 
     static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult] {
         var results: [BenchResult] = []
+
+        // Pre-count all cases for progress tracking
+        let metrics = ["euclidean", "cosine", "manhattan", "dot", "chebyshev", "hamming", "minkowski"]
+        let variants = ["generic", "optimized"]
+        var allCaseNames: [String] = []
+        for dim in options.dims {
+            for metric in metrics {
+                for variant in variants {
+                    allCaseNames.append("dist.\(metric).\(dim).\(variant)")
+                }
+            }
+        }
+        let casesToRun = allCaseNames.filter { Filters.shouldRun(name: $0, options: options) }
+        let totalCases = casesToRun.count
+        var currentIndex = 0
+
         for dim in options.dims {
             switch dim {
-            case 512: results += bench512(options)
-            case 768: results += bench768(options)
-            case 1536: results += bench1536(options)
+            case 512: results += bench512(options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
+            case 768: results += bench768(options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
+            case 1536: results += bench1536(options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
             default:
                 fputs("[distance] unsupported dimension: \(dim)\n", stderr)
             }
@@ -19,7 +35,7 @@ struct DistanceBench: BenchmarkSuite {
         return results
     }
 
-    private static func bench512(_ options: CLIOptions) -> [BenchResult] {
+    private static func bench512(_ options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
         // Early gating: skip entire 512D set if no filters match any case name
         let _names512: [String] = [
             "dist.euclidean.512.generic","dist.cosine.512.generic","dist.manhattan.512.generic","dist.dot.512.generic","dist.chebyshev.512.generic","dist.hamming.512.generic","dist.minkowski.512.generic",
@@ -163,7 +179,7 @@ struct DistanceBench: BenchmarkSuite {
         return out
     }
 
-    private static func bench768(_ options: CLIOptions) -> [BenchResult] {
+    private static func bench768(_ options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
         // Early gating: skip entire 768D set if no filters match any case name
         let _names768: [String] = [
             "dist.euclidean.768.generic","dist.cosine.768.generic","dist.manhattan.768.generic","dist.dot.768.generic","dist.chebyshev.768.generic","dist.hamming.768.generic","dist.minkowski.768.generic",
@@ -296,7 +312,7 @@ struct DistanceBench: BenchmarkSuite {
         return out768
     }
 
-    private static func bench1536(_ options: CLIOptions) -> [BenchResult] {
+    private static func bench1536(_ options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
         // Early gating: skip entire 1536D set if no filters match any case name
         let _names: [String] = [
             "dist.euclidean.1536.generic","dist.cosine.1536.generic","dist.manhattan.1536.generic","dist.dot.1536.generic","dist.chebyshev.1536.generic","dist.hamming.1536.generic","dist.minkowski.1536.generic",

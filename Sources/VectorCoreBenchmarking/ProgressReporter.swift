@@ -100,9 +100,14 @@ public enum ProgressFormat: String, Sendable {
 /// Does not interfere with stdout results output.
 public struct ProgressReporter: Sendable {
     public let format: ProgressFormat
+    private let jsonEncoder: JSONEncoder
 
     public init(format: ProgressFormat) {
         self.format = format
+        // Pre-configure encoder once to avoid repeated allocation
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [] // Compact JSON on single line
+        self.jsonEncoder = encoder
     }
 
     /// Emit a progress event
@@ -131,17 +136,16 @@ public struct ProgressReporter: Sendable {
         case .suiteComplete(let suite, let cases, let durationMs):
             message = "[PROGRESS] Completed suite: \(suite) (\(cases) cases in \(String(format: "%.1f", durationMs))ms)"
         }
-        fputs("\(message)\n", stderr)
+        let output = message + "\n"
+        fputs(output, stderr)
         fflush(stderr)
     }
 
     private func emitJSON(_ event: ProgressEvent) {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [] // Compact JSON on single line
-
-        if let data = try? encoder.encode(event),
+        if let data = try? jsonEncoder.encode(event),
            let jsonString = String(data: data, encoding: .utf8) {
-            fputs("\(jsonString)\n", stderr)
+            let output = jsonString + "\n"
+            fputs(output, stderr)
             fflush(stderr)
         }
     }

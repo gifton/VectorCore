@@ -1,9 +1,11 @@
 import Foundation
+import VectorCore
+import VectorCoreBenchmarking
 
 struct NoopBench: BenchmarkSuite {
     static let name = "noop"
 
-    static func run(options: CLIOptions) async -> [BenchResult] {
+    static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult] {
         let label = "noop.scalar-add"
 
         Harness.warmup {

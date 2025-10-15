@@ -6,7 +6,7 @@
 import Foundation
 
 /// Protocol for compile-time dimension specification
-public protocol StaticDimension {
+public protocol StaticDimension: Sendable {
     /// The number of elements in vectors of this dimension
     static var value: Int { get }
 
@@ -166,7 +166,7 @@ public struct Dim256: StaticDimension {
 /// let sentenceEmbedding = Vector<Dim512>.ones()
 /// let bertOutput = Vector<Dim512>.normalized()
 /// ```
-public struct Dim512: StaticDimension {
+public struct Dim512: StaticDimension, Sendable {
     public static let value = 512
     public typealias Storage = DimensionStorage<Dim512, Float>
 }
@@ -182,7 +182,7 @@ public struct Dim512: StaticDimension {
 /// let bertEmbedding = Vector<Dim768>.zeros()
 /// let transformerOutput = Vector<Dim768>.random(in: -1...1)
 /// ```
-public struct Dim768: StaticDimension {
+public struct Dim768: StaticDimension, Sendable {
     public static let value = 768
     public typealias Storage = DimensionStorage<Dim768, Float>
 }
@@ -213,7 +213,7 @@ public struct Dim1024: StaticDimension {
 /// let gptEmbedding = Vector<Dim1536>.normalized()
 /// let largeFeatures = Vector<Dim1536>.zeros()
 /// ```
-public struct Dim1536: StaticDimension {
+public struct Dim1536: StaticDimension, Sendable {
     public static let value = 1536
     public typealias Storage = DimensionStorage<Dim1536, Float>
 }

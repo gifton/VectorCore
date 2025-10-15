@@ -15,6 +15,11 @@ let package = Package(
             name: "VectorCore",
             targets: ["VectorCore"]
         ),
+        // Benchmarking library (models and utilities for benchmark tooling)
+        .library(
+            name: "VectorCoreBenchmarking",
+            targets: ["VectorCoreBenchmarking"]
+        ),
         // Benchmark executable (lives under Benchmarks/VectorCoreBench)
         .executable(
             name: "vectorcore-bench",
@@ -26,13 +31,29 @@ let package = Package(
         // Main Library
         .target(
             name: "VectorCore",
-            dependencies: [],
+            dependencies: ["VectorCoreC"],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),
                 .enableUpcomingFeature("ExistentialAny")
             ]
         ),
-        
+        // C kernels target (scaffolded; usage gated in Swift)
+        .target(
+            name: "VectorCoreC",
+            path: "Sources/VectorCoreC",
+            publicHeadersPath: "include"
+        ),
+
+        // Benchmarking library - models and utilities for benchmark tools
+        .target(
+            name: "VectorCoreBenchmarking",
+            dependencies: ["VectorCore"],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ExistentialAny")
+            ]
+        ),
+
         // Test Target - Minimal working tests only
         .testTarget(
             name: "MinimalTests",
@@ -49,7 +70,7 @@ let package = Package(
         // Benchmark executable target (Phase 1 scaffold)
         .executableTarget(
             name: "VectorCoreBench",
-            dependencies: ["VectorCore"],
+            dependencies: ["VectorCore", "VectorCoreBenchmarking"],
             path: "Benchmarks/VectorCoreBench"
         )
     ]

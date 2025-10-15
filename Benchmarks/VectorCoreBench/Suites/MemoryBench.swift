@@ -1,10 +1,11 @@
 import Foundation
 import VectorCore
+import VectorCoreBenchmarking
 
 struct MemoryBench: BenchmarkSuite {
     static let name = "memory"
 
-    static func run(options: CLIOptions) async -> [BenchResult] {
+    static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult] {
         var results: [BenchResult] = []
         for dim in options.dims {
             results += bench(forDim: dim, options: options)

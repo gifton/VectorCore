@@ -1,34 +1,7 @@
 import Foundation
+import VectorCoreBenchmarking
 
-public struct BenchResult: Sendable {
-    public let name: String
-    public let iterations: Int
-    public let totalNanoseconds: UInt64
-    public let unitCount: Int // work units per iteration (e.g., candidates per batch). Default 1.
-    // Stats (present when samples > 1)
-    public let samples: Int
-    public let meanNsPerOp: Double?
-    public let medianNsPerOp: Double?
-    public let p90NsPerOp: Double?
-    public let stddevNsPerOp: Double?
-    public let rsdPercent: Double?
-
-    public init(name: String, iterations: Int, totalNanoseconds: UInt64, unitCount: Int = 1,
-                samples: Int = 1,
-                meanNsPerOp: Double? = nil, medianNsPerOp: Double? = nil, p90NsPerOp: Double? = nil,
-                stddevNsPerOp: Double? = nil, rsdPercent: Double? = nil) {
-        self.name = name
-        self.iterations = iterations
-        self.totalNanoseconds = totalNanoseconds
-        self.unitCount = unitCount
-        self.samples = samples
-        self.meanNsPerOp = meanNsPerOp
-        self.medianNsPerOp = medianNsPerOp
-        self.p90NsPerOp = p90NsPerOp
-        self.stddevNsPerOp = stddevNsPerOp
-        self.rsdPercent = rsdPercent
-    }
-}
+// BenchResult moved to VectorCoreBenchmarking library
 
 // MARK: - Stats helpers
 
@@ -60,8 +33,20 @@ private enum Stats {
     }
 }
 
+// MARK: - Harness configuration
+
+public enum HarnessConfig {
+    /// Default warmup duration used when warmup is enabled.
+    public static let defaultWarmupNs: UInt64 = 200_000_000 // 200ms
+    /// Minimum floor for target measurement time to avoid extremely short runs.
+    public static let minMeasurementNsFloor: UInt64 = 100_000 // 100µs
+    /// Fraction of target time used for initial iteration estimate during calibration.
+    public static let calibrationTargetFractionNumerator: UInt64 = 8
+    public static let calibrationTargetFractionDenominator: UInt64 = 10
+}
+
 public struct Harness {
-    public static func warmup(_ body: () -> Void, minWarmupNs: UInt64 = 200_000_000) {
+    public static func warmup(_ body: () -> Void, minWarmupNs: UInt64 = HarnessConfig.defaultWarmupNs) {
         let start = Clock.now()
         var iters = 0
         while Clock.now() - start < minWarmupNs {
@@ -70,7 +55,13 @@ public struct Harness {
         if iters == 0 { body() }
     }
 
-    public static func measure(name: String, minTimeSeconds: Double, repeats: Int?, unitCount: Int = 1, samples: Int = 1, _ body: () -> Void) -> BenchResult {
+    /// Measure a synchronous benchmark body to a minimum wall-time or fixed repeat count.
+    /// - Parameters:
+    ///   - warmupNs: Optional warmup duration before calibration/measurement. Default 0 (disabled) to avoid double warmup in existing suites.
+    public static func measure(name: String, minTimeSeconds: Double, repeats: Int?, unitCount: Int = 1, samples: Int = 1, warmupNs: UInt64 = 0, _ body: () -> Void) -> BenchResult {
+
+        // Optional built-in warmup (kept off by default for back-compat with explicit warmups in suites)
+        if warmupNs > 0 { warmup(body, minWarmupNs: warmupNs) }
 
         // Single-sample fast path if samples == 1
         if samples <= 1 {
@@ -89,8 +80,8 @@ public struct Harness {
 
             // Estimate iterations needed to hit ~80% of minNs
             let minNs = UInt64(minTimeSeconds * 1_000_000_000)
-            let target = max(minNs, 100_000)
-            let est = max(UInt64(1), (target * 8) / (single * 10))
+            let target = max(minNs, HarnessConfig.minMeasurementNsFloor)
+            let est = max(UInt64(1), (target * HarnessConfig.calibrationTargetFractionNumerator) / (single * HarnessConfig.calibrationTargetFractionDenominator))
             iterations = Int(est)
 
             start = Clock.now()
@@ -133,7 +124,7 @@ public struct Harness {
 
     // MARK: - Async measurement
 
-    public static func warmupAsync(_ body: @Sendable () async -> Void, minWarmupNs: UInt64 = 200_000_000) async {
+    public static func warmupAsync(_ body: @Sendable () async -> Void, minWarmupNs: UInt64 = HarnessConfig.defaultWarmupNs) async {
         let start = Clock.now()
         var iters = 0
         while Clock.now() - start < minWarmupNs {
@@ -142,7 +133,12 @@ public struct Harness {
         if iters == 0 { await body() }
     }
 
-    public static func measureAsync(name: String, minTimeSeconds: Double, repeats: Int?, unitCount: Int = 1, samples: Int = 1, _ body: @Sendable () async -> Void) async -> BenchResult {
+    /// Measure an async benchmark body with the same timing semantics as the sync variant.
+    /// - Parameters:
+    ///   - warmupNs: Optional warmup duration before calibration/measurement. Default 0 (disabled).
+    public static func measureAsync(name: String, minTimeSeconds: Double, repeats: Int?, unitCount: Int = 1, samples: Int = 1, warmupNs: UInt64 = 0, _ body: @Sendable () async -> Void) async -> BenchResult {
+
+        if warmupNs > 0 { await warmupAsync(body, minWarmupNs: warmupNs) }
 
         // Single-sample fast path if samples == 1
         if samples <= 1 {
@@ -160,8 +156,8 @@ public struct Harness {
             let single = max(end - start, 1)
 
             let minNs = UInt64(minTimeSeconds * 1_000_000_000)
-            let target = max(minNs, 100_000)
-            let est = max(UInt64(1), (target * 8) / (single * 10))
+            let target = max(minNs, HarnessConfig.minMeasurementNsFloor)
+            let est = max(UInt64(1), (target * HarnessConfig.calibrationTargetFractionNumerator) / (single * HarnessConfig.calibrationTargetFractionDenominator))
             iterations = Int(est)
 
             start = Clock.now()

@@ -1,4 +1,5 @@
 import Foundation
+import VectorCoreBenchmarking
 
 enum CSVWriter {
     static func write(cases: [BenchCase], metadata: BenchMetadata, to path: String) throws {
@@ -8,6 +9,8 @@ enum CSVWriter {
         rows.append("packageVersion,\(metadata.packageVersion)")
         rows.append("date,\(metadata.date)")
         if let sha = metadata.gitSHA { rows.append("gitSHA,\(sha)") }
+        if let label = metadata.runLabel { rows.append("runLabel,\(label)") }
+        rows.append("deviceTag,\(metadata.deviceTag)")
         rows.append("os,\(metadata.os)")
         rows.append("arch,\(metadata.arch)")
         if let model = metadata.deviceModel { rows.append("deviceModel,\(model)") }
@@ -15,6 +18,17 @@ enum CSVWriter {
         rows.append("buildConfiguration,\(metadata.buildConfiguration)")
         rows.append("suites,\(metadata.suites.joined(separator: ";"))")
         rows.append("dims,\(metadata.dims.map(String.init).joined(separator: ";"))")
+        rows.append("runSeed,\(metadata.runSeed)")
+        rows.append("benchExecutableBytes,\(metadata.binarySizes.benchExecutableBytes)")
+        if let vc = metadata.binarySizes.vectorCoreLibraryBytes { rows.append("vectorCoreLibraryBytes,\(vc)") }
+        // Flags
+        rows.append("preferSoA,\(metadata.flags.preferSoA)")
+        rows.append("useMixedPrecision,\(metadata.flags.useMixedPrecision)")
+        rows.append("abCompare,\(metadata.flags.abCompare)")
+        rows.append("abOnly,\(metadata.flags.abOnly)")
+        rows.append("useUnderscored,\(metadata.flags.useUnderscored)")
+        rows.append("useCKernels,\(metadata.flags.useCKernels)")
+        rows.append("releaseSize,\(metadata.flags.releaseSize)")
         rows.append("")
 
         // Data header

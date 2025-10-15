@@ -1,27 +1,47 @@
 import Foundation
 import VectorCore
+import VectorCoreBenchmarking
 
 struct MemoryBench: BenchmarkSuite {
     static let name = "memory"
 
-    static func run(options: CLIOptions) async -> [BenchResult] {
+    static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult] {
         var results: [BenchResult] = []
+
+        // Pre-count all cases for progress tracking
+        var allCaseNames: [String] = []
         for dim in options.dims {
-            results += bench(forDim: dim, options: options)
+            allCaseNames += [
+                "mem.alloc.aligned.\(dim)",
+                "mem.copy.\(dim)",
+                "mem.fill.\(dim)",
+                "mem.pool.acquire.\(dim)"
+            ]
+        }
+        let casesToRun = allCaseNames.filter { Filters.shouldRun(name: $0, options: options) }
+        let totalCases = casesToRun.count
+        var currentIndex = 0
+
+        for dim in options.dims {
+            results += bench(forDim: dim, options: options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
         }
         return results
     }
 
-    private static func bench(forDim dim: Int, options: CLIOptions) -> [BenchResult] {
+    private static func bench(forDim dim: Int, options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
         var out: [BenchResult] = []
 
-        // Choose buffer length proportional to dim (e.g., dim * 1024 floats)
         let count = max(dim * 1024, 64)
         let alignment = AlignedMemory.optimalAlignment
 
         // MARK: - Aligned alloc/free per-iteration
         do {
             let label = "mem.alloc.aligned.\(dim)"
+            if Filters.shouldRun(name: label, options: options) {
+
+            let caseStart = Date()
+            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
+
             Harness.warmup {
                 if let p: UnsafeMutablePointer<Float> = try? AlignedMemory.allocateAligned(type: Float.self, count: count, alignment: alignment) {
                     p.initialize(repeating: 0.0, count: min(8, count))
@@ -35,6 +55,11 @@ struct MemoryBench: BenchmarkSuite {
                 }
             }
             out.append(r)
+
+            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
+            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
+            currentIndex += 1
+            }
         }
 
         // Allocate persistent src/dst for copy/fill
@@ -43,7 +68,6 @@ struct MemoryBench: BenchmarkSuite {
         srcPtr.initialize(repeating: 0.5, count: count)
         dstPtr.initialize(repeating: 0.0, count: count)
 
-        // Ensure deallocation after benchmarks complete
         defer {
             srcPtr.deinitialize(count: count)
             dstPtr.deinitialize(count: count)
@@ -54,6 +78,11 @@ struct MemoryBench: BenchmarkSuite {
         // MARK: - Copy throughput
         do {
             let label = "mem.copy.\(dim)"
+            if Filters.shouldRun(name: label, options: options) {
+
+            let caseStart = Date()
+            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
+
             Harness.warmup {
                 alignedCopy(from: UnsafePointer(srcPtr), to: dstPtr, count: count, preferredAlignment: alignment)
                 blackHole(dstPtr[0])
@@ -63,11 +92,21 @@ struct MemoryBench: BenchmarkSuite {
                 blackHole(dstPtr[1])
             }
             out.append(r)
+
+            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
+            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
+            currentIndex += 1
+            }
         }
 
         // MARK: - Fill throughput
         do {
             let label = "mem.fill.\(dim)"
+            if Filters.shouldRun(name: label, options: options) {
+
+            let caseStart = Date()
+            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
+
             let value: Float = 0.123
             Harness.warmup {
                 var i = 0
@@ -80,12 +119,21 @@ struct MemoryBench: BenchmarkSuite {
                 blackHole(dstPtr[count - 1])
             }
             out.append(r)
+
+            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
+            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
+            currentIndex += 1
+            }
         }
 
         // MARK: - Pool acquire/return overhead
         do {
             let label = "mem.pool.acquire.\(dim)"
-            // Seed the pool
+            if Filters.shouldRun(name: label, options: options) {
+
+            let caseStart = Date()
+            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
+
             _ = MemoryPool.shared.acquire(type: Float.self, count: count, alignment: alignment)
             MemoryPool.shared.quiesce()
 
@@ -102,9 +150,13 @@ struct MemoryBench: BenchmarkSuite {
                 }
             }
             out.append(r)
+
+            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
+            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
+            currentIndex += 1
+            }
         }
 
         return out
     }
 }
-

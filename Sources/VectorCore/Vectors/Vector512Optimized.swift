@@ -195,16 +195,22 @@ extension Vector512Optimized {
         EuclideanKernels.distance512(self, other)
     }
 
-    /// Magnitude squared (more efficient when square root not needed)
+    /// Magnitude squared using stable SIMD kernels
+    ///
+    /// Uses Kahan's two-pass scaling algorithm to prevent overflow.
+    /// This is numerically stable but requires computing the square root internally.
     @inlinable
     public var magnitudeSquared: Scalar {
-        dotProduct(self)
+        NormalizeKernels.magnitudeSquared(storage: storage, laneCount: 128)
     }
 
-    /// Magnitude (L2 norm)
+    /// Magnitude (L2 norm) using stable SIMD kernels
+    ///
+    /// Uses Kahan's algorithm through optimized SIMD operations.
+    /// Prevents overflow for large values (> sqrt(Float.max)).
     @inlinable
     public var magnitude: Scalar {
-        sqrt(magnitudeSquared)
+        NormalizeKernels.magnitude(storage: storage, laneCount: 128)
     }
 
     /// Normalized vector

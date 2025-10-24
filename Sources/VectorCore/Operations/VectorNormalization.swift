@@ -10,38 +10,42 @@ extension Vector where D.Storage: VectorStorageOperations {
     ///
     /// This method computes 1/magnitude and multiplies, which is typically
     /// faster than division on modern processors.
+    ///
+    /// - Note: Uses stable magnitude calculation to prevent overflow
     @inlinable
     public func normalizedFast() -> Vector<D> {
-        let magSquared = magnitudeSquared
+        let mag = magnitude
 
         // Handle zero vector
-        guard magSquared > 0 else { return self }
+        guard mag > 0 else { return self }
 
         // Fast path for already normalized vectors
-        if Swift.abs(magSquared - 1.0) < 1e-12 {
+        if Swift.abs(mag - 1.0) < 1e-6 {
             return self
         }
 
-        // Use reciprocal square root for efficiency
-        let invMag = 1.0 / Foundation.sqrt(magSquared)
+        // Use reciprocal for efficiency
+        let invMag = 1.0 / mag
         return self * invMag
     }
 
     /// Normalize in place using reciprocal multiplication
+    ///
+    /// - Note: Uses stable magnitude calculation to prevent overflow
     @inlinable
     public mutating func normalizeFast() {
-        let magSquared = magnitudeSquared
+        let mag = magnitude
 
         // Handle zero vector
-        guard magSquared > 0 else { return }
+        guard mag > 0 else { return }
 
         // Fast path for already normalized vectors
-        if Swift.abs(magSquared - 1.0) < 1e-12 {
+        if Swift.abs(mag - 1.0) < 1e-6 {
             return
         }
 
-        // Use reciprocal square root for efficiency
-        let invMag = 1.0 / Foundation.sqrt(magSquared)
+        // Use reciprocal for efficiency
+        let invMag = 1.0 / mag
         self *= invMag
     }
 

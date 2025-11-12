@@ -30,8 +30,15 @@ internal enum NormalizeKernels {
 
         // Phase 1: Find maximum absolute value using SIMD max reduction
         var maxVec = SIMD4<Float>(repeating: 0)
+        // Track NaNs explicitly to propagate per IEEE expectations
+        var foundNaN = false
         for i in 0..<laneCount {
-            let absVec = abs(storage[i])
+            let v = storage[i]
+            if v[0].isNaN || v[1].isNaN || v[2].isNaN || v[3].isNaN {
+                foundNaN = true
+                // Continue scanning to keep timing consistent
+            }
+            let absVec = abs(v)
             maxVec = pointwiseMax(maxVec, absVec)
         }
 
@@ -39,7 +46,9 @@ internal enum NormalizeKernels {
         let maxAbs = max(max(maxVec[0], maxVec[1]), max(maxVec[2], maxVec[3]))
 
         // Handle edge cases
+        if foundNaN { return Float.nan }
         guard maxAbs > 0 else { return 0 }  // Zero vector
+        if maxAbs.isNaN { return Float.nan }
         guard maxAbs.isFinite else { return Float.infinity }  // Infinite components
 
         // Phase 2: Scale and compute sum of squares with SIMD
@@ -125,8 +134,13 @@ internal enum NormalizeKernels {
 
         // Phase 1: Find maximum absolute value using SIMD max reduction
         var maxVec = SIMD4<Float>(repeating: 0)
+        var foundNaN = false
         for i in 0..<laneCount {
-            let absVec = abs(storage[i])
+            let v = storage[i]
+            if v[0].isNaN || v[1].isNaN || v[2].isNaN || v[3].isNaN {
+                foundNaN = true
+            }
+            let absVec = abs(v)
             maxVec = pointwiseMax(maxVec, absVec)
         }
 
@@ -134,7 +148,9 @@ internal enum NormalizeKernels {
         let maxAbs = max(max(maxVec[0], maxVec[1]), max(maxVec[2], maxVec[3]))
 
         // Handle edge cases
+        if foundNaN { return Float.nan }
         guard maxAbs > 0 else { return 0 }  // Zero vector
+        if maxAbs.isNaN { return Float.nan }
         guard maxAbs.isFinite else { return Float.infinity }  // Infinite components
 
         // Phase 2: Scale and compute sum of squares with SIMD
@@ -221,27 +237,27 @@ internal enum NormalizeKernels {
 
     @usableFromInline
     static func normalize512_inplace(_ v: inout Vector512Optimized) -> Result<Void, VectorError> {
-        let ms = magnitudeSquared(storage: v.storage, laneCount: 128)
-        if ms <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
-        let inv = 1.0 / sqrt(ms)
+        let mag = magnitude(storage: v.storage, laneCount: 128)
+        if mag <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
+        let inv = 1.0 / mag
         scaleInPlace(storage: &v.storage, laneCount: 128, scale: inv)
         return .success(())
     }
 
     @usableFromInline
     static func normalize768_inplace(_ v: inout Vector768Optimized) -> Result<Void, VectorError> {
-        let ms = magnitudeSquared(storage: v.storage, laneCount: 192)
-        if ms <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
-        let inv = 1.0 / sqrt(ms)
+        let mag = magnitude(storage: v.storage, laneCount: 192)
+        if mag <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
+        let inv = 1.0 / mag
         scaleInPlace(storage: &v.storage, laneCount: 192, scale: inv)
         return .success(())
     }
 
     @usableFromInline
     static func normalize1536_inplace(_ v: inout Vector1536Optimized) -> Result<Void, VectorError> {
-        let ms = magnitudeSquared(storage: v.storage, laneCount: 384)
-        if ms <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
-        let inv = 1.0 / sqrt(ms)
+        let mag = magnitude(storage: v.storage, laneCount: 384)
+        if mag <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
+        let inv = 1.0 / mag
         scaleInPlace(storage: &v.storage, laneCount: 384, scale: inv)
         return .success(())
     }

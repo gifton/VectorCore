@@ -351,15 +351,21 @@ public extension VectorProtocol {
     ///         but prevents overflow and silent data corruption
     var magnitude: Scalar {
         // Kahan's two-pass algorithm for numerical stability
-        // Phase 1: Find maximum absolute value
+        // Phase 1: Find maximum absolute value and detect NaN early
         var maxAbs: Scalar = 0
+        var hasNaN = false
         withUnsafeBufferPointer { buffer in
             for element in buffer {
+                if element.isNaN { hasNaN = true; continue }
                 maxAbs = Swift.max(maxAbs, Swift.abs(element))
             }
         }
 
+        // Propagate NaN if any component is NaN
+        if hasNaN { return Scalar.nan }
+
         // Handle edge cases
+        if maxAbs.isNaN { return Scalar.nan }
         guard maxAbs > 0 else { return 0 }  // Zero vector
         guard maxAbs.isFinite else { return Scalar.infinity }  // Infinite components
 

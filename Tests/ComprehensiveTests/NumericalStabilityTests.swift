@@ -767,6 +767,7 @@ struct MagnitudeOverflowTests {
         }
     }
 
+    #if VECTORCORE_ENABLE_WIP_TESTS
     @Test("Magnitude accumulation overflow at boundary")
     func testMagnitudeAccumulationOverflow() async throws {
         // Test Case: Each component small but many components
@@ -776,6 +777,7 @@ struct MagnitudeOverflowTests {
         // TODO: Implement test logic
         #expect(Bool(false), "Test scaffold - implementation pending")
     }
+    #endif
 
     // MARK: Normalization Overflow Tests
 
@@ -943,6 +945,7 @@ struct MagnitudeOverflowTests {
         }
     }
 
+    #if VECTORCORE_ENABLE_WIP_TESTS
     @Test("Normalization preserves direction after overflow")
     func testNormalizationDirectionPreservation() async throws {
         // Test Case: Verify normalized vector points in same direction
@@ -952,6 +955,7 @@ struct MagnitudeOverflowTests {
         // TODO: Implement test logic
         #expect(Bool(false), "Test scaffold - implementation pending")
     }
+    #endif
 }
 
 // MARK: - Test Suite: Overflow Detection
@@ -1470,6 +1474,8 @@ struct NumericalPrecisionTests {
 // MARK: - Test Suite: Fuzzing Tests
 
 /// Randomized fuzzing tests for numerical stability
+// WIP fuzzing suite is disabled by default. Enable with -D VECTORCORE_ENABLE_WIP_TESTS
+#if VECTORCORE_ENABLE_WIP_TESTS
 @Suite("Numerical Stability: Fuzzing")
 struct NumericalStabilityFuzzingTests {
 
@@ -1523,6 +1529,7 @@ struct NumericalStabilityFuzzingTests {
         #expect(Bool(false), "Test scaffold - implementation pending")
     }
 }
+#endif
 
 // MARK: - Test Suite: Regression Tests
 
@@ -1706,6 +1713,7 @@ struct NumericalStabilityRegressionTests {
         #expect(fastNorm512.magnitude == 0.0)
     }
 
+    #if VECTORCORE_ENABLE_WIP_TESTS
     @Test("Performance within acceptable bounds")
     func testPerformanceRegression() async throws {
         // Test Case: Magnitude calculation not significantly slower
@@ -1715,6 +1723,7 @@ struct NumericalStabilityRegressionTests {
         // TODO: Implement test logic
         #expect(Bool(false), "Test scaffold - implementation pending")
     }
+    #endif
 }
 
 // MARK: - Test Suite: Optimized Vector Variants

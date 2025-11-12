@@ -133,7 +133,11 @@ public actor KernelAutoTuner {
     // MARK: - Initialization
 
     private init(persistenceURL: URL? = nil) {
-        self.persistenceURL = persistenceURL ?? Self.defaultPersistenceURL()
+        // Disable persistence during unit tests or when explicitly requested
+        let env = ProcessInfo.processInfo.environment
+        let disableCache = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || env["XCTestConfigurationFilePath"] != nil
+
+        self.persistenceURL = disableCache ? nil : (persistenceURL ?? Self.defaultPersistenceURL())
         // Note: Cannot call loadProfiles() synchronously in actor init
         // Profiles will be loaded lazily on first access
     }
@@ -176,15 +180,22 @@ public actor KernelAutoTuner {
 
         let workloadKey = hashWorkload(workload)
 
+        // When tuner cache is disabled (e.g., during tests), skip profile-based selection
+        // but still honor manual overrides.
+        let env = ProcessInfo.processInfo.environment
+        let cacheDisabled = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || env["XCTestConfigurationFilePath"] != nil
+
         // 1. Check override
         if let override = strategyOverrides[workloadKey] {
             return override
         }
 
-        // 2. Check cached profiles
-        if let profiles = profileCache[workloadKey],
-           let best = profiles.max(by: { $0.score < $1.score }) {
-            return best.strategy
+        if !cacheDisabled {
+            // 2. Check cached profiles
+            if let profiles = profileCache[workloadKey],
+               let best = profiles.max(by: { $0.score < $1.score }) {
+                return best.strategy
+            }
         }
 
         // 3. Fallback: heuristic-based selection
@@ -195,6 +206,12 @@ public actor KernelAutoTuner {
     public func setOverride(_ strategy: KernelStrategy, for workload: WorkloadCharacteristics) {
         let workloadKey = hashWorkload(workload)
         strategyOverrides[workloadKey] = strategy
+    }
+
+    /// Remove manual override for a specific workload
+    public func removeOverride(for workload: WorkloadCharacteristics) {
+        let workloadKey = hashWorkload(workload)
+        strategyOverrides.removeValue(forKey: workloadKey)
     }
 
     /// Heuristic-based strategy selection (no profiling data)

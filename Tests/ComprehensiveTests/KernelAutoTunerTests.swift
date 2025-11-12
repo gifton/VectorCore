@@ -124,6 +124,9 @@ final class KernelAutoTunerTests: XCTestCase {
         // Verify override is respected
         let selected = await KernelAutoTuner.shared.selectStrategy(for: workload)
         XCTAssertEqual(selected, .cpuQuantized, "Manual override should be respected")
+
+        // Cleanup: remove override to avoid influencing other tests
+        await KernelAutoTuner.shared.removeOverride(for: workload)
     }
 
     // MARK: - Profiling

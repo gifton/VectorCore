@@ -121,4 +121,80 @@ struct VectorNormalizationSuite {
         for i in 0..<4 { #expect(approxEqual(n[i], v[i] / m, tol: 1e-6)) }
     }
 
+    // MARK: - normalizedUnchecked() Tests
+
+    @Test
+    func testNormalizedUnchecked_ProducesUnitVector() {
+        let v = try! Vector<Dim8>([3, 4, 0, 0, 1, 2, 2, 0])
+        let u = v.normalizedUnchecked()
+        #expect(approxEqual(u.magnitude, 1, tol: 1e-6))
+    }
+
+    @Test
+    func testNormalizedUnchecked_PreservesDirection() {
+        let v = try! Vector<Dim4>([3, -4, 0, 0])
+        let m = v.magnitude
+        let u = v.normalizedUnchecked()
+        for i in 0..<4 { #expect(approxEqual(u[i], v[i] / m, tol: 1e-6)) }
+    }
+
+    @Test
+    func testNormalizedUnchecked_MatchesNormalized() {
+        let v = try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
+        let unchecked = v.normalizedUnchecked()
+        let checked = try! v.normalized().get()
+        for i in 0..<8 { #expect(approxEqual(unchecked[i], checked[i], tol: 1e-6)) }
+    }
+
+    @Test
+    func testNormalizedUnchecked_DynamicVector() {
+        let v = DynamicVector([3, 4, 0, 0, 1, 2, 2, 0])
+        let u = v.normalizedUnchecked()
+        #expect(approxEqual(u.magnitude, 1, tol: 1e-6))
+    }
+
+    @Test
+    func testNormalizedUnchecked_Vector384Optimized() {
+        let values = Array(repeating: Float(0.1), count: 384)
+        let v = try! Vector384Optimized(values)
+        let u = v.normalizedUnchecked()
+        #expect(approxEqual(u.magnitude, 1, tol: 1e-6))
+        // Verify direction preserved
+        let m = v.magnitude
+        #expect(approxEqual(u[0], v[0] / m, tol: 1e-6))
+        #expect(approxEqual(u[383], v[383] / m, tol: 1e-6))
+    }
+
+    @Test
+    func testNormalizedUnchecked_Vector512Optimized() {
+        let values = (0..<512).map { Float($0) * 0.01 }
+        let v = try! Vector512Optimized(values)
+        let u = v.normalizedUnchecked()
+        #expect(approxEqual(u.magnitude, 1, tol: 1e-6))
+    }
+
+    @Test
+    func testNormalizedUnchecked_Vector768Optimized() {
+        let values = (0..<768).map { Float($0) * 0.001 }
+        let v = try! Vector768Optimized(values)
+        let u = v.normalizedUnchecked()
+        #expect(approxEqual(u.magnitude, 1, tol: 1e-6))
+    }
+
+    @Test
+    func testNormalizedUnchecked_Vector1536Optimized() {
+        let values = Array(repeating: Float(0.05), count: 1536)
+        let v = try! Vector1536Optimized(values)
+        let u = v.normalizedUnchecked()
+        #expect(approxEqual(u.magnitude, 1, tol: 1e-6))
+    }
+
+    @Test
+    func testNormalizedUnchecked_Idempotency() {
+        let v = try! Vector<Dim8>((0..<8).map { _ in Float.random(in: -1...1) })
+        let n1 = v.normalizedUnchecked()
+        let n2 = n1.normalizedUnchecked()
+        for i in 0..<8 { #expect(approxEqual(n1[i], n2[i], tol: 1e-6)) }
+    }
+
 }

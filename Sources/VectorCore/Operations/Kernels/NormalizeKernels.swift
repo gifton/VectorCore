@@ -236,6 +236,15 @@ internal enum NormalizeKernels {
     // MARK: - In-place APIs
 
     @usableFromInline
+    static func normalize384_inplace(_ v: inout Vector384Optimized) -> Result<Void, VectorError> {
+        let mag = magnitude(storage: v.storage, laneCount: 96)
+        if mag <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
+        let inv = 1.0 / mag
+        scaleInPlace(storage: &v.storage, laneCount: 96, scale: inv)
+        return .success(())
+    }
+
+    @usableFromInline
     static func normalize512_inplace(_ v: inout Vector512Optimized) -> Result<Void, VectorError> {
         let mag = magnitude(storage: v.storage, laneCount: 128)
         if mag <= 0 { return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector")) }
@@ -265,6 +274,15 @@ internal enum NormalizeKernels {
     // MARK: - Out-of-place APIs
 
     @usableFromInline
+    static func normalized384(_ a: Vector384Optimized) -> Result<Vector384Optimized, VectorError> {
+        var copy = a
+        switch normalize384_inplace(&copy) {
+        case .success: return .success(copy)
+        case .failure(let e): return .failure(e)
+        }
+    }
+
+    @usableFromInline
     static func normalized512(_ a: Vector512Optimized) -> Result<Vector512Optimized, VectorError> {
         var copy = a
         switch normalize512_inplace(&copy) {
@@ -289,5 +307,59 @@ internal enum NormalizeKernels {
         case .success: return .success(copy)
         case .failure(let e): return .failure(e)
         }
+    }
+
+    // MARK: - Unchecked APIs (No zero-vector validation)
+
+    /// Normalize vector without zero-check. Caller guarantees magnitude > 0.
+    /// - Precondition: Vector magnitude > 0 (debug assertion only)
+    /// - Returns: Normalized copy of the vector
+    @usableFromInline @inline(__always)
+    static func normalizedUnchecked384(_ a: Vector384Optimized) -> Vector384Optimized {
+        var copy = a
+        let mag = magnitude(storage: copy.storage, laneCount: 96)
+        assert(mag > 0, "normalizedUnchecked called on zero vector")
+        let inv = 1.0 / mag
+        scaleInPlace(storage: &copy.storage, laneCount: 96, scale: inv)
+        return copy
+    }
+
+    /// Normalize vector without zero-check. Caller guarantees magnitude > 0.
+    /// - Precondition: Vector magnitude > 0 (debug assertion only)
+    /// - Returns: Normalized copy of the vector
+    @usableFromInline @inline(__always)
+    static func normalizedUnchecked512(_ a: Vector512Optimized) -> Vector512Optimized {
+        var copy = a
+        let mag = magnitude(storage: copy.storage, laneCount: 128)
+        assert(mag > 0, "normalizedUnchecked called on zero vector")
+        let inv = 1.0 / mag
+        scaleInPlace(storage: &copy.storage, laneCount: 128, scale: inv)
+        return copy
+    }
+
+    /// Normalize vector without zero-check. Caller guarantees magnitude > 0.
+    /// - Precondition: Vector magnitude > 0 (debug assertion only)
+    /// - Returns: Normalized copy of the vector
+    @usableFromInline @inline(__always)
+    static func normalizedUnchecked768(_ a: Vector768Optimized) -> Vector768Optimized {
+        var copy = a
+        let mag = magnitude(storage: copy.storage, laneCount: 192)
+        assert(mag > 0, "normalizedUnchecked called on zero vector")
+        let inv = 1.0 / mag
+        scaleInPlace(storage: &copy.storage, laneCount: 192, scale: inv)
+        return copy
+    }
+
+    /// Normalize vector without zero-check. Caller guarantees magnitude > 0.
+    /// - Precondition: Vector magnitude > 0 (debug assertion only)
+    /// - Returns: Normalized copy of the vector
+    @usableFromInline @inline(__always)
+    static func normalizedUnchecked1536(_ a: Vector1536Optimized) -> Vector1536Optimized {
+        var copy = a
+        let mag = magnitude(storage: copy.storage, laneCount: 384)
+        assert(mag > 0, "normalizedUnchecked called on zero vector")
+        let inv = 1.0 / mag
+        scaleInPlace(storage: &copy.storage, laneCount: 384, scale: inv)
+        return copy
     }
 }

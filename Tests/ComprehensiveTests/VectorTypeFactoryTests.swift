@@ -50,7 +50,9 @@ struct VectorTypeFactorySuite {
 
     @Test
     func testVectorOf_UnsupportedDimensionReturnsDynamicVector() {
-        let d = 384
+        // Use 333 as an unsupported dimension
+        // Note: 384 is now supported (for MiniLM/SBERT models)
+        let d = 333
         let vals = Array(repeating: Float(0.5), count: d)
         let anyVec = try! VectorTypeFactory.vector(of: d, from: vals)
         #expect((anyVec as? DynamicVector) != nil)

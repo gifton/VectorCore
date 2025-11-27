@@ -90,6 +90,9 @@ internal enum CosineKernels {
 
     // MARK: - Public fused per-dimension
 
+    public static func distance384_fused(_ a: Vector384Optimized, _ b: Vector384Optimized) -> Float {
+        fused(storageA: a.storage, storageB: b.storage, laneCount: 96)
+    }
     public static func distance512_fused(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         fused(storageA: a.storage, storageB: b.storage, laneCount: 128)
     }
@@ -102,6 +105,11 @@ internal enum CosineKernels {
 
     // MARK: - Pre-normalized fast paths (1 − dot)
 
+    @inline(__always)
+    public static func distance384_preNormalized(_ a: Vector384Optimized, _ b: Vector384Optimized) -> Float {
+        let dot = DotKernels.dot384(a, b)
+        return 1.0 - max(-1.0, min(1.0, dot))
+    }
     @inline(__always)
     public static func distance512_preNormalized(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         let dot = DotKernels.dot512(a, b)

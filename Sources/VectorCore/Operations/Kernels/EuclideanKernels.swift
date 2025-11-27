@@ -57,6 +57,11 @@ internal enum EuclideanKernels {
     // MARK: - Public per-dimension helpers (squared)
 
     @usableFromInline @inline(__always)
+    static func squared384(_ a: Vector384Optimized, _ b: Vector384Optimized) -> Float {
+        squared(storageA: a.storage, storageB: b.storage, laneCount: 96)
+    }
+
+    @usableFromInline @inline(__always)
     static func squared512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         squared(storageA: a.storage, storageB: b.storage, laneCount: 128)
     }
@@ -72,6 +77,11 @@ internal enum EuclideanKernels {
     }
 
     // MARK: - Euclidean distance (sqrt wrapper)
+
+    @usableFromInline @inline(__always)
+    static func distance384(_ a: Vector384Optimized, _ b: Vector384Optimized) -> Float {
+        sqrt(squared384(a, b))
+    }
 
     @usableFromInline @inline(__always)
     static func distance512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {

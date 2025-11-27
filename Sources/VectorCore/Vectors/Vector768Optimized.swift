@@ -219,6 +219,16 @@ extension Vector768Optimized {
         NormalizeKernels.normalized768(self)
     }
 
+    /// Normalized vector without error checking.
+    ///
+    /// Bypasses zero-vector validation for maximum performance in hot paths.
+    /// - Precondition: `magnitude > 0` (asserted in debug builds only)
+    /// - Warning: Calling on a zero vector produces NaN/Inf values
+    @inlinable
+    public func normalizedUnchecked() -> Vector768Optimized {
+        NormalizeKernels.normalizedUnchecked768(self)
+    }
+
     /// Cosine similarity
     @inlinable
     public func cosineSimilarity(to other: Vector768Optimized) -> Scalar {

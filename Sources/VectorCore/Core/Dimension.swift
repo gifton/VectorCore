@@ -155,6 +155,26 @@ public struct Dim256: StaticDimension {
     public typealias Storage = DimensionStorage<Dim256, Float>
 }
 
+/// A 384-dimensional vector type for MiniLM and SBERT embeddings.
+///
+/// `Dim384` provides compile-time dimension safety for 384-element vectors,
+/// the standard dimension for MiniLM models (all-MiniLM-L6-v2) and many
+/// Sentence-BERT variants. Optimized for on-device/edge embedding scenarios.
+///
+/// ## Example Usage
+/// ```swift
+/// let miniLMEmbedding = Vector<Dim384>.normalized()
+/// let sbertFeatures = Vector<Dim384>.random(in: -1...1)
+/// ```
+///
+/// ## Performance Note
+/// 384 dimensions = 96 SIMD4 lanes, aligning perfectly with the stride-16
+/// kernel pattern for maximum SIMD throughput.
+public struct Dim384: StaticDimension, Sendable {
+    public static let value = 384
+    public typealias Storage = DimensionStorage<Dim384, Float>
+}
+
 /// A 512-dimensional vector type for rich embeddings.
 ///
 /// `Dim512` provides compile-time dimension safety for 512-element vectors,

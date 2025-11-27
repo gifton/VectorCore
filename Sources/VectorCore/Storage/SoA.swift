@@ -19,6 +19,11 @@ public protocol SoACompatible: Sendable {
 }
 
 // Extend existing optimized vectors to be SoA compatible
+extension Vector384Optimized: SoACompatible {
+    public static var dimension: Int { 384 }
+    public static var lanes: Int { 96 } // 384 / 4
+}
+
 extension Vector512Optimized: SoACompatible {
     public static var dimension: Int { 512 }
     public static var lanes: Int { 128 } // 512 / 4
@@ -167,6 +172,9 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
 }
 
 // MARK: - Type Aliases for Specific Dimensions
+
+/// SoA container for 384-dimensional optimized vectors (MiniLM, SBERT)
+public typealias SoA384 = SoA<Vector384Optimized>
 
 /// SoA container for 512-dimensional optimized vectors
 public typealias SoA512 = SoA<Vector512Optimized>

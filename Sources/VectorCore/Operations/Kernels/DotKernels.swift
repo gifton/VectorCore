@@ -60,6 +60,11 @@ internal enum DotKernels {
     // MARK: - Public per-dimension entry points
 
     @usableFromInline @inline(__always)
+    static func dot384(_ a: Vector384Optimized, _ b: Vector384Optimized) -> Float {
+        dot(storageA: a.storage, storageB: b.storage, laneCount: 96)
+    }
+
+    @usableFromInline @inline(__always)
     static func dot512(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         dot(storageA: a.storage, storageB: b.storage, laneCount: 128)
     }

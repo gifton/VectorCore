@@ -139,7 +139,7 @@ jobs:
           VECTORCORE_TEST_EXTENDED: 0
         run: |
           echo "Running ComprehensiveTests Part 3..."
-          swift test --filter "^ComprehensiveTests\.(VectorNormalizationSuite|OperationsValidationTests|ConvenienceAPIsThrowingTests)"
+          swift test --filter "^ComprehensiveTests\.(VectorNormalizationSuite|OperationsValidationTests|ConvenienceAPIsThrowingTests|TopKSelectionSuite|IntegrationProtocolsSuite)"
 
       - name: Note about MemoryPool Tests
         run: |

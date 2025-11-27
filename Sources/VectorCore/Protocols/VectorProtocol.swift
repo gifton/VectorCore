@@ -407,6 +407,29 @@ public extension VectorProtocol {
         return .success(self / mag)
     }
 
+    /// Normalized (unit) vector without error checking.
+    ///
+    /// This method bypasses the zero-vector check for maximum performance in hot paths
+    /// where the caller guarantees the vector is non-zero.
+    ///
+    /// - Precondition: `magnitude > 0` (asserted in debug builds only)
+    /// - Warning: Calling on a zero vector produces undefined results (NaN/Inf values)
+    /// - Complexity: O(n) where n is scalarCount
+    /// - Note: Use `normalized()` if the vector may be zero
+    ///
+    /// ## Example Usage
+    /// ```swift
+    /// // Only use when you KNOW the vector is non-zero
+    /// let embedding = model.encode(text)  // Embeddings are typically non-zero
+    /// let unit = embedding.normalizedUnchecked()
+    /// ```
+    @inlinable
+    func normalizedUnchecked() -> Self {
+        let mag = magnitude
+        assert(mag > 0, "normalizedUnchecked() called on zero vector - use normalized() for safe handling")
+        return self / mag
+    }
+
     /// L1 norm (Manhattan norm)
     var l1Norm: Scalar {
         var sum: Scalar = 0

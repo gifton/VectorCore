@@ -69,6 +69,8 @@ public enum VectorTypeFactory {
             return try Vector<Dim128>(values)
         case 256:
             return try Vector<Dim256>(values)
+        case 384:
+            return try Vector<Dim384>(values)
         case 512:
             return try Vector<Dim512>(values)
         case 768:
@@ -107,6 +109,8 @@ public enum VectorTypeFactory {
             return Vector<Dim128>()
         case 256:
             return Vector<Dim256>()
+        case 384:
+            return Vector<Dim384>()
         case 512:
             return Vector<Dim512>()
         case 768:
@@ -130,6 +134,8 @@ public enum VectorTypeFactory {
             return Vector<Dim128>(repeating: 1)
         case 256:
             return Vector<Dim256>(repeating: 1)
+        case 384:
+            return Vector<Dim384>(repeating: 1)
         case 512:
             return Vector<Dim512>(repeating: 1)
         case 768:
@@ -176,10 +182,10 @@ public enum VectorTypeFactory {
     /// - Parameter approximateSize: Desired approximate dimension
     /// - Returns: Nearest supported dimension
     public static func optimalDimension(for approximateSize: Int) -> Int {
-        let supportedDimensions = [128, 256, 512, 768, 1536, 3072]
+        let supportedDimensions = [128, 256, 384, 512, 768, 1536, 3072]
 
         // Find the closest supported dimension
-        return supportedDimensions.min { abs($0 - approximateSize) < abs($1 - approximateSize) } ?? 512
+        return supportedDimensions.min { abs($0 - approximateSize) < abs($1 - approximateSize) } ?? 384
     }
 
     /// Check if a dimension is natively supported with optimized storage
@@ -188,7 +194,7 @@ public enum VectorTypeFactory {
     /// - Returns: true if dimension has an optimized implementation
     public static func isSupported(dimension: Int) -> Bool {
         switch dimension {
-        case 128, 256, 512, 768, 1536, 3072:
+        case 128, 256, 384, 512, 768, 1536, 3072:
             return true
         default:
             return false
@@ -212,6 +218,8 @@ public enum VectorTypeFactory {
             return Vector<Dim128>.basis(axis: index)
         case 256:
             return Vector<Dim256>.basis(axis: index)
+        case 384:
+            return Vector<Dim384>.basis(axis: index)
         case 512:
             return Vector<Dim512>.basis(axis: index)
         case 768:

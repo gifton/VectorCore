@@ -221,4 +221,100 @@ struct VectorDistanceMetricsSuite {
         }
     }
 
+    // MARK: - Manhattan SIMD Optimization Tests
+
+    @Test
+    func testManhattanDistance_SIMD_DivisibleBy4() {
+        // Test dimension divisible by 4 (pure SIMD path)
+        let metric = ManhattanDistance()
+        let a = try! Vector<Dim8>([1, 2, 3, 4, 5, 6, 7, 8])
+        let b = try! Vector<Dim8>([2, 4, 6, 8, 10, 12, 14, 16])
+        // Expected: |1-2| + |2-4| + |3-6| + |4-8| + |5-10| + |6-12| + |7-14| + |8-16|
+        //         = 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 = 36
+        let dist = metric.distance(a, b)
+        #expect(approxEqual(dist, 36, tol: 1e-5))
+    }
+
+    @Test
+    func testManhattanDistance_SIMD_NotDivisibleBy4() {
+        // Test dimensions with remainder (exercises scalar tail loop)
+        // Use Dim3 (3 elements - not divisible by 4)
+        let metric = ManhattanDistance()
+        let a = Vector<Dim3>(x: 1, y: 2, z: 3)
+        let b = Vector<Dim3>(x: 4, y: 6, z: 10)
+        // Expected: |1-4| + |2-6| + |3-10| = 3 + 4 + 7 = 14
+        let dist = metric.distance(a, b)
+        #expect(approxEqual(dist, 14, tol: 1e-5))
+    }
+
+    @Test
+    func testManhattanDistance_SIMD_SingleElement() {
+        // Test single element (pure scalar remainder)
+        let a = DynamicVector([5.0])
+        let b = DynamicVector([2.0])
+        let metric = ManhattanDistance()
+        let dist = metric.distance(a, b)
+        #expect(approxEqual(dist, 3, tol: 1e-5))
+    }
+
+    @Test
+    func testManhattanDistance_SIMD_DynamicVectorVariousDims() {
+        let metric = ManhattanDistance()
+        // Test various dimensions to ensure SIMD+scalar tail works
+        for dim in [1, 2, 3, 5, 7, 9, 13, 17, 100, 127, 128, 129, 255, 256, 257] {
+            let aVals = (0..<dim).map { Float($0) }
+            let bVals = (0..<dim).map { Float($0 + 1) }
+            let a = DynamicVector(aVals)
+            let b = DynamicVector(bVals)
+            // Each element differs by 1, so Manhattan distance = dim
+            let dist = metric.distance(a, b)
+            #expect(approxEqual(dist, Float(dim), tol: 1e-4), "Failed for dim=\(dim)")
+        }
+    }
+
+    @Test
+    func testManhattanDistance_SIMD_MatchesScalarReference() {
+        // Verify SIMD result matches scalar reference implementation
+        let a = DynamicVector((0..<100).map { _ in Float.random(in: -10...10) })
+        let b = DynamicVector((0..<100).map { _ in Float.random(in: -10...10) })
+
+        // Compute reference using scalar loop
+        var reference: Float = 0
+        for i in 0..<100 {
+            reference += abs(a[i] - b[i])
+        }
+
+        let metric = ManhattanDistance()
+        let result = metric.distance(a, b)
+        // Use relative tolerance since SIMD accumulation order differs from scalar
+        // For sums of ~600, 1e-3 relative tolerance is appropriate
+        #expect(approxEqual(result, reference, tol: 1e-3))
+    }
+
+    @Test
+    func testManhattanDistance_SIMD_NegativeValues() {
+        let metric = ManhattanDistance()
+        let a = try! Vector<Dim8>([-1, -2, -3, -4, 5, 6, 7, 8])
+        let b = try! Vector<Dim8>([1, 2, 3, 4, -5, -6, -7, -8])
+        // Expected: |-1-1| + |-2-2| + |-3-3| + |-4-4| + |5-(-5)| + |6-(-6)| + |7-(-7)| + |8-(-8)|
+        //         = 2 + 4 + 6 + 8 + 10 + 12 + 14 + 16 = 72
+        let dist = metric.distance(a, b)
+        #expect(approxEqual(dist, 72, tol: 1e-5))
+    }
+
+    @Test
+    func testManhattanDistance_SIMD_LargeDimension() {
+        // Test larger dimensions (512, 768, 1536)
+        let metric = ManhattanDistance()
+        for dim in [512, 768, 1536] {
+            let aVals = (0..<dim).map { Float($0) * 0.001 }
+            let bVals = (0..<dim).map { Float($0) * 0.001 + 0.1 }
+            let a = DynamicVector(aVals)
+            let b = DynamicVector(bVals)
+            // Each element differs by 0.1, so Manhattan distance = dim * 0.1
+            let dist = metric.distance(a, b)
+            #expect(approxEqual(dist, Float(dim) * 0.1, tol: 1e-3), "Failed for dim=\(dim)")
+        }
+    }
+
 }

@@ -219,6 +219,16 @@ extension Vector1536Optimized {
         NormalizeKernels.normalized1536(self)
     }
 
+    /// Normalized vector without error checking.
+    ///
+    /// Bypasses zero-vector validation for maximum performance in hot paths.
+    /// - Precondition: `magnitude > 0` (asserted in debug builds only)
+    /// - Warning: Calling on a zero vector produces NaN/Inf values
+    @inlinable
+    public func normalizedUnchecked() -> Vector1536Optimized {
+        NormalizeKernels.normalizedUnchecked1536(self)
+    }
+
     /// Cosine similarity
     @inlinable
     public func cosineSimilarity(to other: Vector1536Optimized) -> Scalar {

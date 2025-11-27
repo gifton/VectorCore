@@ -10,6 +10,7 @@
 //
 
 import Foundation
+import simd
 
 // MARK: - Distance Score
 
@@ -139,7 +140,7 @@ public struct CosineDistance: DistanceMetric {
 
 // MARK: - Manhattan Distance
 
-/// Manhattan (L1) distance metric
+/// Manhattan (L1) distance metric with SIMD acceleration
 public struct ManhattanDistance: DistanceMetric {
     public var name: String { "manhattan" }
     public let identifier = "manhattan"
@@ -147,7 +148,12 @@ public struct ManhattanDistance: DistanceMetric {
     public init() {}
 
     /// Compute Manhattan distance between two vectors
+    ///
+    /// Uses SIMD4 vectorization for improved performance on generic vectors.
+    /// Processes 4 elements per iteration with a scalar remainder loop.
+    ///
     /// - Precondition: Both vectors must have the same dimension
+    /// - Complexity: O(n) where n is the vector dimension
     @inlinable
     public func distance<Vector: VectorProtocol>(_ a: Vector, _ b: Vector) -> DistanceScore where Vector.Scalar == Float {
         #if DEBUG
@@ -158,9 +164,34 @@ public struct ManhattanDistance: DistanceMetric {
 
         a.withUnsafeBufferPointer { aBuffer in
             b.withUnsafeBufferPointer { bBuffer in
-                // Sum of absolute differences directly
-                for i in 0..<aBuffer.count {
-                    result += abs(aBuffer[i] - bBuffer[i])
+                let count = aBuffer.count
+                let simdCount = count / 4
+                let remainder = count % 4
+
+                // SIMD4 vectorized path: process 4 elements per iteration
+                var acc = SIMD4<Float>.zero
+                for i in 0..<simdCount {
+                    let offset = i * 4
+                    let a4 = SIMD4<Float>(
+                        aBuffer[offset],
+                        aBuffer[offset + 1],
+                        aBuffer[offset + 2],
+                        aBuffer[offset + 3]
+                    )
+                    let b4 = SIMD4<Float>(
+                        bBuffer[offset],
+                        bBuffer[offset + 1],
+                        bBuffer[offset + 2],
+                        bBuffer[offset + 3]
+                    )
+                    acc += abs(a4 - b4)
+                }
+                result = acc.sum()
+
+                // Scalar remainder loop for dimensions not divisible by 4
+                let remainderStart = simdCount * 4
+                for i in 0..<remainder {
+                    result += abs(aBuffer[remainderStart + i] - bBuffer[remainderStart + i])
                 }
             }
         }

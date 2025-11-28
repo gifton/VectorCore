@@ -655,20 +655,12 @@ struct ErrorHandlingTests {
             #expect(true, "Debug assertions are compiled out")
             #endif
 
-            // Verify the configuration is detected correctly
-            let isDebugBuild: Bool
+            // Verify the configuration is detected correctly at compile time
             #if DEBUG
-            isDebugBuild = true
+            #expect(true, "Debug validation is enabled in debug builds")
             #else
-            isDebugBuild = false
+            #expect(true, "Debug validation is disabled in release builds")
             #endif
-
-            // Test behavior matches build configuration
-            if isDebugBuild {
-                #expect(true, "Debug validation is enabled in debug builds")
-            } else {
-                #expect(true, "Debug validation is disabled in release builds")
-            }
         }
     }
 
@@ -1161,8 +1153,8 @@ struct ErrorHandlingTests {
         func testArrayBoundsValidation() async throws {
             // Test array bounds checking in various operations
 
-            // Test range validation
-            let dimension = 50
+            // Test range validation (dimension = 50, so valid indices are 0-49)
+            _ = 50  // dimension for context
             let invalidRanges: [(start: Int, end: Int, reason: String)] = [
                 (-1, 10, "Negative start index"),
                 (0, 51, "End exceeds dimension"),

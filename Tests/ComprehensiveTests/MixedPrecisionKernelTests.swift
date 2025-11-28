@@ -2589,7 +2589,7 @@ struct MixedPrecisionKernelTests {
                        "Dimension \(dim) should return valid strategy")
 
                 // Blocked strategies use 8-way register blocking
-                let usesBlocking = (strategy == .queryFP16Blocked || strategy == .queryFP32Blocked)
+                _ = (strategy == .queryFP16Blocked || strategy == .queryFP32Blocked)
                 // For larger workloads, blocked strategies often perform better
                 if count >= 50 {
                     // At least verify the strategy makes sense (any valid strategy is acceptable)
@@ -2808,7 +2808,7 @@ struct MixedPrecisionKernelTests {
             let largeMemoryMB = Float(1536 * 10000 * 4) / (1024 * 1024)
             #expect(largeMemoryMB > 50.0, "Large memory footprint")
             // For large workloads, FP16 strategies are likely beneficial
-            let usesFP16 = largeMemoryStrategy != .fullFP32
+            _ = largeMemoryStrategy != .fullFP32  // usesFP16 check
             // Just verify a valid strategy is returned
             #expect(MixedPrecisionStrategy.allCases.contains(largeMemoryStrategy))
 
@@ -3692,7 +3692,7 @@ struct MixedPrecisionKernelTests {
 
             // Large dataset should select an optimized strategy
             // All strategies except fullFP32 use FP16 for candidates and SoA layout
-            let usesOptimization = memoryStrategy != .fullFP32
+            _ = memoryStrategy != .fullFP32  // usesOptimization check
             #expect(MixedPrecisionStrategy.allCases.contains(memoryStrategy),
                    "Large dataset should select valid strategy")
 

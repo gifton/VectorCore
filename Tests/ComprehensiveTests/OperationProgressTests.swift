@@ -338,7 +338,7 @@ struct ProgressStreamSuite {
             #expect(progress.current == value)
         }
 
-        #expect(sum == 0 + 1 + 2 + 3 + 4)
+        #expect(sum == 10)  // 0 + 1 + 2 + 3 + 4
     }
 
     @Test

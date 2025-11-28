@@ -598,3 +598,88 @@ public extension Result where Failure == VectorError {
         mapError { $0.chain(with: error) }
     }
 }
+
+// MARK: - VSKError Conformance
+
+extension VectorError: VSKError {
+    public var errorCode: Int {
+        // Map error kind to unique code within VectorCore range (1000-1999)
+        1000 + kind.codeOffset
+    }
+
+    public var domain: String {
+        "VectorCore"
+    }
+
+    public var isRecoverable: Bool {
+        // Most errors are recoverable except for critical system errors
+        switch kind {
+        case .dataCorruption, .systemError, .resourceExhausted:
+            return false
+        default:
+            return true
+        }
+    }
+
+    public var recoverySuggestion: String? {
+        switch kind {
+        case .dimensionMismatch:
+            return "Ensure all vectors have the same dimensionality before performing operations"
+        case .invalidDimension:
+            return "Verify that the dimension is greater than zero and within reasonable bounds"
+        case .indexOutOfBounds:
+            return "Check that the index is within the valid range [0, dimension)"
+        case .invalidData:
+            return "Validate input data before processing"
+        case .allocationFailed:
+            return "Reduce batch size or free up system memory"
+        case .resourceExhausted:
+            return "Close unused resources or increase available memory"
+        case .invalidConfiguration:
+            return "Review configuration parameters and ensure they are valid"
+        case .unsupportedOperation:
+            return "Use a supported operation or check platform compatibility"
+        default:
+            return nil
+        }
+    }
+}
+
+private extension VectorError.ErrorKind {
+    /// Offset within VectorCore error code range
+    var codeOffset: Int {
+        switch self {
+        // Dimension errors: 0-99
+        case .dimensionMismatch: return 0
+        case .invalidDimension: return 1
+        case .unsupportedDimension: return 2
+
+        // Index errors: 100-199
+        case .indexOutOfBounds: return 100
+        case .invalidRange: return 101
+
+        // Data errors: 200-299
+        case .invalidData: return 200
+        case .dataCorruption: return 201
+        case .insufficientData: return 202
+
+        // Operation errors: 300-399
+        case .invalidOperation: return 300
+        case .unsupportedOperation: return 301
+        case .operationFailed: return 302
+
+        // Resource errors: 400-499
+        case .allocationFailed: return 400
+        case .resourceExhausted: return 401
+        case .resourceUnavailable: return 402
+
+        // Configuration errors: 500-599
+        case .invalidConfiguration: return 500
+        case .missingConfiguration: return 501
+
+        // System errors: 900-999
+        case .systemError: return 900
+        case .unknown: return 999
+        }
+    }
+}

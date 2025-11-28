@@ -152,7 +152,7 @@ struct SerializationEdgeCaseTests {
         @Test("Binary header validation")
         func testBinaryHeaderValidation() async throws {
             let vector = DynamicVector([1.0, 2.0, 3.0])
-            var validData = vector.encodeBinary()
+            let validData = vector.encodeBinary()
 
             // Test corrupt magic number
             var corruptMagic = validData
@@ -233,9 +233,9 @@ struct SerializationEdgeCaseTests {
             let vector = DynamicVector([Float.pi, 2.71828, 42.0])  // e ≈ 2.71828
             let data = vector.encodeBinary()
 
-            // Verify little-endian encoding of header magic number
-            let magic = BinaryHeader.magic  // 0x56454354
-            #expect(data[0] == 0x54)  // Least significant byte first
+            // Verify little-endian encoding of header magic number (0x56454354 = "VECT")
+            _ = BinaryHeader.magic  // Reference magic constant for documentation
+            #expect(data[0] == 0x54)  // 'T' - Least significant byte first
             #expect(data[1] == 0x43)
             #expect(data[2] == 0x45)
             #expect(data[3] == 0x56)  // Most significant byte last
@@ -543,9 +543,9 @@ struct SerializationEdgeCaseTests {
 
         @Test("JSON backward compatibility")
         func testJSONBackwardCompatibility() async throws {
-            // Simulate old format (just array of floats)
+            // Simulate old format (just array of floats) - kept for documentation
             let oldFormatJSON = "[1.0, 2.0, 3.0, 4.0]"
-            let oldData = oldFormatJSON.data(using: .utf8)!
+            _ = oldFormatJSON.data(using: .utf8)!  // Old format not currently supported
 
             // Current format includes dimension field
             let currentFormatJSON = "{\"dimension\": 4, \"elements\": [1.0, 2.0, 3.0, 4.0]}"

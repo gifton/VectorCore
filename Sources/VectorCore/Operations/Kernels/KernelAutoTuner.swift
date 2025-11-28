@@ -134,8 +134,20 @@ public actor KernelAutoTuner {
 
     private init(persistenceURL: URL? = nil) {
         // Disable persistence during unit tests or when explicitly requested
+        // Note: XCTestConfigurationFilePath is only set by Xcode/xcodebuild,
+        // not by `swift test`. We check multiple indicators:
+        // - XCTestConfigurationFilePath: Xcode test environment
+        // - CI/GITHUB_ACTIONS/TRAVIS: CI environments
+        // - __CFBundleIdentifier containing "test": SPM test environment
+        // - SWIFTPM_PACKAGE_DEPENDENCIES: SPM environment indicator
         let env = ProcessInfo.processInfo.environment
-        let disableCache = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || env["XCTestConfigurationFilePath"] != nil
+        let isXcodeTest = env["XCTestConfigurationFilePath"] != nil
+        let isCIEnvironment = env["CI"] != nil || env["GITHUB_ACTIONS"] != nil || env["TRAVIS"] != nil
+        // SPM sets __CFBundleIdentifier to package name during testing
+        let isSPMTest = (env["__CFBundleIdentifier"]?.contains("Test") == true) ||
+                        (env["__CFBundleIdentifier"]?.contains("test") == true) ||
+                        (ProcessInfo.processInfo.processName.contains("xctest"))
+        let disableCache = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || isXcodeTest || isCIEnvironment || isSPMTest
 
         self.persistenceURL = disableCache ? nil : (persistenceURL ?? Self.defaultPersistenceURL())
         // Note: Cannot call loadProfiles() synchronously in actor init
@@ -182,8 +194,15 @@ public actor KernelAutoTuner {
 
         // When tuner cache is disabled (e.g., during tests), skip profile-based selection
         // but still honor manual overrides.
+        // Note: XCTestConfigurationFilePath is only set by Xcode/xcodebuild,
+        // not by `swift test`. We check multiple indicators (same as init).
         let env = ProcessInfo.processInfo.environment
-        let cacheDisabled = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || env["XCTestConfigurationFilePath"] != nil
+        let isXcodeTest = env["XCTestConfigurationFilePath"] != nil
+        let isCIEnvironment = env["CI"] != nil || env["GITHUB_ACTIONS"] != nil || env["TRAVIS"] != nil
+        let isSPMTest = (env["__CFBundleIdentifier"]?.contains("Test") == true) ||
+                        (env["__CFBundleIdentifier"]?.contains("test") == true) ||
+                        (ProcessInfo.processInfo.processName.contains("xctest"))
+        let cacheDisabled = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || isXcodeTest || isCIEnvironment || isSPMTest
 
         // 1. Check override
         if let override = strategyOverrides[workloadKey] {

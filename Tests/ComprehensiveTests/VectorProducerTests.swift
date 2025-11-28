@@ -210,7 +210,9 @@ struct VectorProducerSuite {
             Issue.record("Expected invalidOperation error")
         } catch let error as VectorError {
             #expect(error.kind == .invalidOperation)
-            #expect(error.context.additionalInfo["message"]?.contains("empty results") == true)
+            // Message format is "produce(_:) failed: Producer returned empty results"
+            let message = error.context.additionalInfo["message"] ?? ""
+            #expect(message.contains("empty results"), "Expected message to contain 'empty results', got: \(message)")
         } catch {
             Issue.record("Unexpected error type: \(error)")
         }

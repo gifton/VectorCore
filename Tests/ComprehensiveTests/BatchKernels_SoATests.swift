@@ -2646,12 +2646,12 @@ struct BatchKernels_SoATests {
                 )
             }
 
-            let time768 = measureTime {
+            _ = measureTime {
                 _ = BatchKernels_SoA.batchEuclideanSquared768(
                     query: query768,
                     candidates: perfVectors768
                 )
-            }
+            }  // 768D timing measured but comparison only uses 512 vs 1536
 
             let time1536 = measureTime {
                 _ = BatchKernels_SoA.batchEuclideanSquared1536(
@@ -2700,7 +2700,7 @@ struct BatchKernels_SoATests {
 
             let normCache = NormCache()
             let vectors = generateTestVectors512(count: 20)
-            let query = vectors[0]  // Use first vector as query
+            _ = vectors[0]  // Query vector available for distance computations
 
             // Compute norms with caching
             for _ in 0..<3 {  // Multiple passes to test cache hits

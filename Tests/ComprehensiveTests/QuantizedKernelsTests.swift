@@ -1808,8 +1808,7 @@ struct QuantizedKernelsTests {
             print("Application-Level Accuracy:")
             print("  Search recall@10: \(searchAccuracy * 100)%")
 
-            // Test clustering quality (simple k-means simulation)
-            let k = 3
+            // Test clustering quality (simple k-means simulation with 3 clusters)
             let points = (0..<30).map { i in
                 Vector512Optimized { j in
                     Float(i / 10) + sin(Float(j) * 0.1) * 0.1  // 3 clusters
@@ -1926,7 +1925,7 @@ struct QuantizedKernelsTests {
 
             // Test data-dependent quantization
             let sparse = Vector512Optimized { i in i % 100 == 0 ? Float.random(in: -1...1) : 0 }
-            let denseUniform = Vector512Optimized { _ in Float.random(in: -1...1) }
+            _ = Vector512Optimized { _ in Float.random(in: -1...1) }  // Dense vector for comparison
 
             // Different strategies based on sparsity
             let sparseNonZeros = sparse.toArray().filter { $0 != 0 }.count
@@ -2231,7 +2230,7 @@ struct QuantizedKernelsTests {
             print("\n  Memory pressure test:")
 
             let pressureTestSize = 2000  // Large enough to cause pressure
-            let testIterations = 10
+            // Note: Could iterate for stress testing (currently single-pass validation)
 
             print("    Dataset size: \(pressureTestSize) vectors")
             print("    FP32 memory: \(pressureTestSize * fp32VectorSize / 1_000_000) MB")
@@ -2890,8 +2889,8 @@ struct QuantizedKernelsTests {
             let v2 = Vector512Optimized { _ in Float.random(in: -1...1) }
 
             let v1_int4 = SimulatedINT4(from: v1, symmetric: true)
-            let v1_int8 = Vector512INT8(from: v1)
-            let v1_int16 = SimulatedINT16(from: v1, symmetric: true)
+            _ = Vector512INT8(from: v1)  // INT8 quantization of v1
+            _ = SimulatedINT16(from: v1, symmetric: true)  // INT16 created for completeness
 
             let v2_int8 = Vector512INT8(from: v2)
 
@@ -3618,7 +3617,7 @@ struct QuantizedKernelsTests {
 
             // Create query vector
             let query = Vector512Optimized { _ in Float.random(in: -1...1) }
-            let queryQuantized = Vector512INT8(from: query)
+            _ = Vector512INT8(from: query)  // Quantized query for future INT8-only ops
 
             // Create batch of candidate vectors
             var candidates: [Vector512Optimized] = []
@@ -3665,8 +3664,8 @@ struct QuantizedKernelsTests {
 
             // Test similarity matrix computation
             let matrixSize = 10
-            var vectorSubset = Array(candidates.prefix(matrixSize))
-            var quantizedSubset = Array(candidatesQuantized.prefix(matrixSize))
+            let vectorSubset = Array(candidates.prefix(matrixSize))
+            _ = Array(candidatesQuantized.prefix(matrixSize))  // Quantized subset for future use
 
             // Compute similarity matrix in FP32
             var similarityFP32 = [[Float]](repeating: [Float](repeating: 0, count: matrixSize), count: matrixSize)
@@ -5039,8 +5038,9 @@ extension QuantizedKernelsTests {
 
             // Calculate statistics from calibration data
             let allValues = calibrationData.flatMap { $0.toArray() }
-            let minVal = allValues.min() ?? -1
-            let maxVal = allValues.max() ?? 1
+            // Note: Using percentiles instead of raw min/max for robustness against outliers
+            // _ = allValues.min() ?? -1  // Raw min unused in favor of p01
+            // _ = allValues.max() ?? 1   // Raw max unused in favor of p99
 
             // Use percentiles for robustness
             let sorted = allValues.sorted()

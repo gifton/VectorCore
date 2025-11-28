@@ -1412,7 +1412,7 @@ struct NumericalPrecisionTests {
             (Dim1536.self, 1536)
         ]
 
-        for (dimType, dimValue) in dims {
+        for (_, dimValue) in dims {
             // Create uniform vector for each dimension
             let vector: any VectorProtocol
             switch dimValue {
@@ -1677,6 +1677,7 @@ struct NumericalStabilityRegressionTests {
         // Test magnitude is zero
         #expect(zeroVector32.magnitude == 0.0, "Zero vector should have zero magnitude")
         #expect(zeroVector512.magnitude == 0.0, "Zero vector should have zero magnitude")
+        #expect(zeroVector768.magnitude == 0.0, "Zero vector should have zero magnitude")
 
         // Test Result-based normalized() fails
         let result32: Result<Vector<Dim32>, VectorError> = zeroVector32.normalized()

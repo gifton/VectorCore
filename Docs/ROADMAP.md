@@ -1,7 +1,7 @@
 # VectorCore Improvement Roadmap
 
-**Version Analyzed:** 0.1.4 (pre-release)
-**Date:** November 2025
+**Current Version:** 0.1.5 (Released November 2025)
+**Last Updated:** November 2025
 **Target Packages:** VectorIndex, VectorAccelerate, VectorIndexAccelerated, EmbedKit
 
 This document tracks identified improvement opportunities for VectorCore, organized by component and priority. Items marked with 🔒 may require API changes.
@@ -191,8 +191,8 @@ Added `normalizedUnchecked() -> Self` method that:
 ### 2.2 🔒 DistanceMetric Batch Requirements
 
 **File:** `Sources/VectorCore/Protocols/DistanceMetric.swift`
-**Priority:** Medium
-**Impact:** API Completeness
+**Priority:** Medium → **P1 (VectorAccelerate request)**
+**Impact:** API Completeness, GPU Acceleration
 
 The `DistanceMetric` protocol doesn't require batch operations, so implementations may not optimize for batch scenarios.
 
@@ -206,6 +206,25 @@ public protocol DistanceMetric: Sendable {
 - [ ] Add optional `batchDistance(query:candidates:)` with default implementation
 - [ ] Add `distanceMatrix(a:b:)` for cross-product computations
 - [ ] Document when batch vs single operations should be used
+
+**VectorAccelerate Request:**
+This enables VectorAccelerate to provide GPU-optimized batch distance implementations that VectorCore can dispatch to. Without protocol-based batch operations, VectorAccelerate must wrap static functions which prevents proper polymorphism.
+
+```swift
+// Proposed addition (~30 lines)
+public protocol DistanceMetric {
+    func distance<V>(_ a: V, _ b: V) -> Float where V.Scalar == Float
+
+    // NEW - optional with default sequential implementation
+    func batchDistance<V>(from query: V, to candidates: [V]) -> [Float]
+}
+
+extension DistanceMetric {
+    func batchDistance<V>(from query: V, to candidates: [V]) -> [Float] {
+        candidates.map { distance(query, $0) }
+    }
+}
+```
 
 ### 2.3 Generic Scalar Type Support
 
@@ -327,6 +346,15 @@ All normalization creates new vectors. In-place would reduce allocations.
 - [ ] Add `normalizeInPlace(vector: inout Vector)` variants
 - [ ] For optimized vectors, modify storage directly
 - [ ] Add batch in-place normalization
+
+**VectorIndex Request (Section 9.5 in VectorIndex/IMPROVEMENTS.md):**
+- [ ] **Raw buffer normalization** - For mmap/GPU buffer compatibility:
+  ```swift
+  public static func normalizeUnchecked(
+      _ buffer: UnsafeMutablePointer<Float>,
+      dimension: Int
+  )
+  ```
 
 ### 4.3 MixedPrecisionKernels Modularization
 
@@ -662,6 +690,21 @@ Created public `TopKSelection` API with:
 - [ ] Add SIMD-accelerated argmin for K=1
 - [ ] Add threshold-based filtering (only keep distances < threshold)
 
+**VectorIndex Requests (Section 9.5 in VectorIndex/IMPROVEMENTS.md):**
+- [ ] **Pointer-based TopK API** - Accept `UnsafePointer<Float>` for zero-copy from GPU/mmap buffers:
+  ```swift
+  public static func select(
+      k: Int,
+      from distances: UnsafePointer<Float>,
+      count: Int,
+      ids: UnsafePointer<Int32>?  // Optional custom ID array
+  ) -> (indices: [Int32], distances: [Float])
+  ```
+- [ ] **Configurable tie-breaking** - Deterministic behavior for reproducibility:
+  ```swift
+  public enum TieBreaker { case insertionOrder, smallerIndex, smallerValue }
+  ```
+
 ### 9.4 Batch Normalization
 
 **Priority:** Medium
@@ -889,22 +932,47 @@ No record of design decisions.
 | Priority | Items | Rationale |
 |----------|-------|-----------|
 | **P0 - Critical** | ~~Dim384 Support~~ ✅, 4.1, 5.1, 9.1, ~~9.3~~ ✅, ~~11.1~~ ✅, 11.2 | Direct impact on EmbedKit/VectorIndex/VectorAccelerate |
-| **P1 - High** | ~~2.1~~ ✅, 3.1, ~~8.1~~ ✅, 12.1, Dim1024 Support | Performance or API quality |
-| **P2 - Medium** | 1.1, 1.4, 2.2, 3.2, 4.2, 4.3, 4.4, 5.2, 5.3, 5.4, 7.2, 9.2, 9.4, 10.1, 10.2, 11.3, 12.2, 12.3, 13.1, 13.2 | Important but not blocking |
+| **P1 - High** | ~~2.1~~ ✅, 3.1, ~~8.1~~ ✅, 12.1, Dim1024 Support, **9.3-Pointer API**, **2.2-Batch Protocol** | Performance or API quality |
+| **P2 - Medium** | 1.1, 1.4, 3.2, 4.2, 4.3, 4.4, 5.2, 5.3, 5.4, 7.2, 9.2, 9.4, 10.1, 10.2, 11.3, 12.2, 12.3, 13.1, 13.2, **4.2-Raw Buffer Normalize**, **9.3-TieBreaker** | Important but not blocking |
 | **P3 - Low** | 1.2, 1.3, 2.3, 2.4, 3.3, 3.4, 4.5, 6.1, 6.2, 6.3, 7.1, 7.3, 8.2, 8.3, 8.4, 10.3, 12.4, 13.3 | Nice to have |
+
+### Downstream Package Requests
+
+**VectorIndex** (documented in `VectorIndex/IMPROVEMENTS.md` Section 9.5):
+
+| Request | Section | Priority | Rationale |
+|---------|---------|----------|-----------|
+| Pointer-based TopK API | 9.3 | P1 | Zero-copy from GPU/mmap buffers |
+| Raw buffer normalization | 4.2 | P2 | Mmap/GPU buffer compatibility |
+| Configurable tie-breaking | 9.3 | P2 | Reproducibility in tests/benchmarks |
+
+**VectorAccelerate** (analysis of integration patterns):
+
+| Request | Section | Priority | Rationale |
+|---------|---------|----------|-----------|
+| Batch distance protocol | 2.2 | P1 | Enables GPU-optimized batch operations via protocol dispatch |
+
+**Note:** Other VectorAccelerate suggestions were either already implemented in VectorCore (`withUnsafeBufferPointer`, `StaticDimension.value`, `VectorError`) or belong in VectorAccelerate's layer (GPU buffer protocols, acceleration providers). See analysis in VectorAccelerate agent prompt.
 
 ---
 
 ## Version Milestones
 
-### v0.2.0 (API Stabilization)
+### v0.1.5 (Released November 2025) ✅
 - [x] **Add Dim384 optimized vector type (EmbedKit critical)** ✅ DONE
 - [x] **Add normalizedUnchecked() API (Item 2.1)** ✅ DONE
 - [x] **Optimize generic Manhattan distance (Item 8.1)** ✅ DONE
 - [x] **Add Top-K Selection public API (Item 9.3)** ✅ DONE
 - [x] **Add VectorIndex Integration protocols (Item 11.1)** ✅ DONE
+
+### v0.2.0 (API Enhancements)
+- [ ] **Pointer-based TopK API** (VectorIndex request) - Zero-copy from GPU/mmap
+- [ ] **Batch distance protocol** (VectorAccelerate request) - GPU-optimized batch ops
+- [ ] **Raw buffer normalization** (VectorIndex request) - Mmap compatibility
+- [ ] **Configurable tie-breaking** (VectorIndex request) - Reproducibility
 - [ ] Resolve all 🔒 marked API changes
 - [ ] Complete remaining P0 items (4.1, 5.1, 9.1, 11.2)
+- [ ] Add Dim1024 optimized vector type (E5-large models)
 - [ ] Finalize protocol designs
 
 ### v0.3.0 (Performance)

@@ -681,8 +681,8 @@ struct MixedPrecisionComprehensiveTests {
                 fp32Vectors.append(try Vector512Optimized(values))
             }
 
-            // Convert to FP16
-            let fp16Vectors = fp32Vectors.map { MixedPrecisionKernels.Vector512FP16(from: $0) }
+            // Convert to FP16 (verifies conversion works; memory estimate uses known sizes)
+            _ = fp32Vectors.map { MixedPrecisionKernels.Vector512FP16(from: $0) }
 
             // Estimate memory usage
             let fp32MemoryBytes = vectorCount * 512 * MemoryLayout<Float>.size

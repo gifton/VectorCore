@@ -2,7 +2,7 @@
 
 > **Your journey into high-performance Swift programming starts here.**
 
-Welcome to the VectorCore Learning Guide—a comprehensive, hands-on exploration of low-level Swift programming techniques. Whether you've spent years building iOS apps or are comfortable with Swift's standard library, this guide will take you deeper into the machine, showing you how to write code that runs 10x faster than you thought possible.
+Welcome to the VectorCore Learning Guide; a comprehensive, hands-on exploration of low-level Swift programming techniques. Whether you've spent years building iOS apps or are comfortable with Swift's standard library, this guide will take you deeper into the machine, showing you how to write code that runs 10x faster than you thought possible.
 
 ---
 
@@ -126,4 +126,4 @@ Throughout this guide, we'll reference actual VectorCore source code:
 
 ---
 
-*VectorCore Learning Guide • Last updated: 2025*
+*VectorCore Learning Guide • Last updated: Dec 2025*

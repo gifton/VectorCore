@@ -26,6 +26,14 @@ public protocol DistanceMetric<Scalar>: Sendable {
 
     /// Unique identifier for the metric
     var identifier: String { get }
+
+    /// Batch distance computation from query to multiple candidates.
+    /// Promoted to a protocol requirement to enable polymorphic GPU dispatch
+    /// via witness-table lookup on `any DistanceMetric`.
+    func batchDistance<V: VectorProtocol>(
+        query: V,
+        candidates: [V]
+    ) -> [Scalar] where V.Scalar == Scalar
 }
 
 // MARK: - Default Implementations

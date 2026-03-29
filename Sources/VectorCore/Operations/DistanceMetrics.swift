@@ -53,7 +53,7 @@ public struct EuclideanDistance: DistanceMetric {
     public func batchDistance<Vector: VectorProtocol>(
         query: Vector,
         candidates: [Vector]
-    ) -> [DistanceScore] where Vector.Scalar == Float {
+    ) -> [Scalar] where Vector.Scalar == Float {
         #if DEBUG
         for candidate in candidates {
             assert(query.scalarCount == candidate.scalarCount,

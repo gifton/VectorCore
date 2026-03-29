@@ -34,6 +34,12 @@ public struct CPUComputeProvider: ComputeProvider {
     /// Threshold for automatic parallelization
     private let parallelizationThreshold: Int
 
+    /// Indicates whether the current task is already inside a parallel region.
+    /// Used to prevent nested parallelism (thread explosion from O(cores^2) tasks).
+    /// When true, all parallel methods fall through to sequential execution regardless
+    /// of the configured `mode` — even `.parallel` is suppressed to avoid oversubscription.
+    @TaskLocal internal static var isInsideParallelRegion: Bool = false
+
     public init(mode: Mode = .automatic, parallelizationThreshold: Int = 50_000) {
         self.device = .cpu
         self.mode = mode
@@ -97,6 +103,7 @@ public struct CPUComputeProvider: ComputeProvider {
 
         // Determine execution strategy
         let shouldParallelize: Bool = {
+            if CPUComputeProvider.isInsideParallelRegion { return false }
             switch mode {
             case .sequential:
                 return false
@@ -109,7 +116,8 @@ public struct CPUComputeProvider: ComputeProvider {
 
         if shouldParallelize {
             // Parallel execution using chunked TaskGroup to reduce scheduling overhead
-            return try await withThrowingTaskGroup(of: [(Int, T)].self) { group in
+            return try await CPUComputeProvider.$isInsideParallelRegion.withValue(true) {
+            try await withThrowingTaskGroup(of: [(Int, T)].self) { group in
                 let total = count
                 let cores = max(1, processorCount)
                 let targetTasks = max(1, min(total, cores))
@@ -140,6 +148,7 @@ public struct CPUComputeProvider: ComputeProvider {
                 allResults.sort { $0.0 < $1.0 }
                 return allResults.map { $0.1 }
             }
+            }
         } else {
             // Sequential execution
             var results: [T] = []
@@ -164,6 +173,7 @@ public extension CPUComputeProvider {
     ) async throws {
         let count = items.count
         let shouldParallelize: Bool = {
+            if CPUComputeProvider.isInsideParallelRegion { return false }
             switch mode {
             case .sequential: return false
             case .parallel: return true
@@ -176,17 +186,19 @@ public extension CPUComputeProvider {
             let cores = max(1, processorCount)
             let targetTasks = max(1, min(total, cores))
             let chunk = max(256, (total + targetTasks - 1) / targetTasks)
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                var start = items.lowerBound
-                while start < items.upperBound {
-                    let end = min(start + chunk, items.upperBound)
-                    let range = start..<end
-                    group.addTask {
-                        for i in range { try await body(i) }
+            try await CPUComputeProvider.$isInsideParallelRegion.withValue(true) {
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    var start = items.lowerBound
+                    while start < items.upperBound {
+                        let end = min(start + chunk, items.upperBound)
+                        let range = start..<end
+                        group.addTask {
+                            for i in range { try await body(i) }
+                        }
+                        start = end
                     }
-                    start = end
+                    for try await _ in group { _ = () }
                 }
-                for try await _ in group { _ = () }
             }
         } else {
             for i in items { try await body(i) }
@@ -202,6 +214,7 @@ public extension CPUComputeProvider {
         let count = items.count
         if count == 0 { return initial }
         let shouldParallelize: Bool = {
+            if CPUComputeProvider.isInsideParallelRegion { return false }
             switch mode {
             case .sequential: return false
             case .parallel: return true
@@ -214,17 +227,19 @@ public extension CPUComputeProvider {
             let cores = max(1, processorCount)
             let targetTasks = max(1, min(total, cores))
             let chunk = max(256, (total + targetTasks - 1) / targetTasks)
-            return try await withThrowingTaskGroup(of: R.self) { group in
-                var start = items.lowerBound
-                while start < items.upperBound {
-                    let end = min(start + chunk, items.upperBound)
-                    let range = start..<end
-                    group.addTask { try await rangeWork(range) }
-                    start = end
+            return try await CPUComputeProvider.$isInsideParallelRegion.withValue(true) {
+                try await withThrowingTaskGroup(of: R.self) { group in
+                    var start = items.lowerBound
+                    while start < items.upperBound {
+                        let end = min(start + chunk, items.upperBound)
+                        let range = start..<end
+                        group.addTask { try await rangeWork(range) }
+                        start = end
+                    }
+                    var acc = initial
+                    for try await part in group { acc = combine(acc, part) }
+                    return acc
                 }
-                var acc = initial
-                for try await part in group { acc = combine(acc, part) }
-                return acc
             }
         } else {
             // Sequential accumulation by invoking rangeWork on whole range
@@ -240,6 +255,7 @@ public extension CPUComputeProvider {
     ) async throws {
         let count = items.count
         let shouldParallelize: Bool = {
+            if CPUComputeProvider.isInsideParallelRegion { return false }
             switch mode {
             case .sequential: return false
             case .parallel: return true
@@ -253,15 +269,17 @@ public extension CPUComputeProvider {
             let targetTasks = max(1, min(total, cores))
             let base = max(256, (total + targetTasks - 1) / targetTasks)
             let chunk = max(minChunk, base)
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                var start = items.lowerBound
-                while start < items.upperBound {
-                    let end = min(start + chunk, items.upperBound)
-                    let range = start..<end
-                    group.addTask { for i in range { try await body(i) } }
-                    start = end
+            try await CPUComputeProvider.$isInsideParallelRegion.withValue(true) {
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    var start = items.lowerBound
+                    while start < items.upperBound {
+                        let end = min(start + chunk, items.upperBound)
+                        let range = start..<end
+                        group.addTask { for i in range { try await body(i) } }
+                        start = end
+                    }
+                    for try await _ in group { _ = () }
                 }
-                for try await _ in group { _ = () }
             }
         } else {
             for i in items { try await body(i) }
@@ -278,6 +296,7 @@ public extension CPUComputeProvider {
         let count = items.count
         if count == 0 { return initial }
         let shouldParallelize: Bool = {
+            if CPUComputeProvider.isInsideParallelRegion { return false }
             switch mode {
             case .sequential: return false
             case .parallel: return true
@@ -291,17 +310,19 @@ public extension CPUComputeProvider {
             let targetTasks = max(1, min(total, cores))
             let base = max(256, (total + targetTasks - 1) / targetTasks)
             let chunk = max(minChunk, base)
-            return try await withThrowingTaskGroup(of: R.self) { group in
-                var start = items.lowerBound
-                while start < items.upperBound {
-                    let end = min(start + chunk, items.upperBound)
-                    let range = start..<end
-                    group.addTask { try await rangeWork(range) }
-                    start = end
+            return try await CPUComputeProvider.$isInsideParallelRegion.withValue(true) {
+                try await withThrowingTaskGroup(of: R.self) { group in
+                    var start = items.lowerBound
+                    while start < items.upperBound {
+                        let end = min(start + chunk, items.upperBound)
+                        let range = start..<end
+                        group.addTask { try await rangeWork(range) }
+                        start = end
+                    }
+                    var acc = initial
+                    for try await part in group { acc = combine(acc, part) }
+                    return acc
                 }
-                var acc = initial
-                for try await part in group { acc = combine(acc, part) }
-                return acc
             }
         } else {
             return try await rangeWork(items)

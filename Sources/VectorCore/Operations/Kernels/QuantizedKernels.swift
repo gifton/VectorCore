@@ -445,6 +445,25 @@ extension QuantizedKernels {
         }
 
         // Optimized path for identical, symmetric quantization parameters.
+        let scale = query.quantizationParams.scale
+
+        #if VC_USE_C_KERNELS
+        // Use dot product decomposition: ||a-b||^2 = dot(a,a) - 2*dot(a,b) + dot(b,b)
+        // Three calls to the hardware-accelerated dotInt8 share data in L1 cache.
+        // Overflow-safe for well-formed quantization: max intermediate for 1536-d is ~99M,
+        // within Int32 range. Clamp to 0 defensively — wrapping arithmetic could produce
+        // negative values if quantization bounds are violated, and sqrt(negative) → NaN.
+        var l2sq: Int32 = 0
+        withSIMD4Int8Pointer(query.storage) { qPtr, qCount in
+            withSIMD4Int8Pointer(candidate.storage) { cPtr, cCount in
+                let dotQQ = CKernels.dotInt8(qPtr, qPtr, lanes: qCount)
+                let dotQC = CKernels.dotInt8(qPtr, cPtr, lanes: qCount)
+                let dotCC = CKernels.dotInt8(cPtr, cPtr, lanes: cCount)
+                l2sq = dotQQ &- 2 &* dotQC &+ dotCC
+            }
+        }
+        return scale * sqrt(Float(max(0, l2sq)))
+        #else
         let laneCount = V.laneCount
 
         // Use Int32 accumulators. Max accumulation for 1536 dimensions is safe within Int32 limits.
@@ -505,11 +524,9 @@ extension QuantizedKernels {
         // Final reduction and scaling.
         let totalAccumulator = acc1 + acc2 + acc3 + acc4
 
-        // Scaling factor is S^2.
-        let scale = query.quantizationParams.scale
-
         // D = sqrt(S^2 * Sum(diff^2)) = S * sqrt(Sum(diff^2))
         return scale * sqrt(Float(totalAccumulator))
+        #endif
     }
 
     /// Helper to compute (q-c)^2 and accumulate, promoting to Int16 intermediates.
@@ -671,6 +688,19 @@ extension QuantizedKernels {
         }
 
         var acc = FusedAccumulators()
+
+        #if VC_USE_C_KERNELS
+        // Route through hardware-accelerated dot product.
+        // dot(q,c), dot(q,q), and dot(c,c) are independent calls sharing L1 cache.
+        // Int32 -> Int64 promotion is lossless (max 1536-d value ~24.7M).
+        withSIMD4Int8Pointer(query.storage) { qPtr, qCount in
+            withSIMD4Int8Pointer(candidate.storage) { cPtr, cCount in
+                acc.dotProduct = Int64(CKernels.dotInt8(qPtr, cPtr, lanes: qCount))
+                acc.queryMagnitudeSquared = Int64(CKernels.dotInt8(qPtr, qPtr, lanes: qCount))
+                acc.candidateMagnitudeSquared = Int64(CKernels.dotInt8(cPtr, cPtr, lanes: cCount))
+            }
+        }
+        #else
         let laneCount = V.laneCount
 
         query.storage.withUnsafeBufferPointer { queryPtr in
@@ -699,6 +729,7 @@ extension QuantizedKernels {
                 }
             }
         }
+        #endif
         return acc
     }
 

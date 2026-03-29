@@ -59,6 +59,21 @@ enum CKernels {
         #endif
     }
 
+    /// INT8 dot product over `lanes` elements; returns Int32 accumulator.
+    /// Routes to SDOT (ARM) or AVX2 (x86) when C kernels are enabled.
+    static func dotInt8(_ a: UnsafePointer<Int8>, _ b: UnsafePointer<Int8>, lanes: Int) -> Int32 {
+        #if VC_USE_C_KERNELS
+        return vc_dot_int8(a, b, lanes)
+        #else
+        // Scalar fallback when C kernels are disabled
+        var acc: Int32 = 0
+        for i in 0..<lanes {
+            acc &+= Int32(a[i]) &* Int32(b[i])
+        }
+        return acc
+        #endif
+    }
+
     // Range L2^2 512: writes into out[0..(end-start))
     static func rangeL2sq512(q: UnsafePointer<Float>, base: UnsafePointer<Float>, strideFloats: Int, start: Int, end: Int, out: UnsafeMutablePointer<Float>) {
         #if VC_USE_C_KERNELS

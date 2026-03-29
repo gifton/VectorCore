@@ -124,6 +124,100 @@ public enum TopKSelection {
         )
     }
 
+    // MARK: - Zero-Copy Pointer API
+
+    /// Select the k smallest values from a raw distance buffer.
+    ///
+    /// Zero-copy API for GPU/IOSurface interop. Accepts raw pointers and returns
+    /// Int32 indices suitable for direct upload to GPU buffers.
+    ///
+    /// - Parameters:
+    ///   - k: Number of nearest neighbors to select
+    ///   - distances: Pointer to pre-computed distance values
+    ///   - count: Number of elements in the distances buffer
+    ///   - ids: Optional pointer to Int32 identifiers. If nil, indices 0..<count are used.
+    /// - Returns: Tuple of (indices, distances) sorted ascending by distance
+    /// - Complexity: O(n log k) for small k (heap, O(k) memory), O(n log n) for large k (sort, O(n) memory)
+    public static func select(
+        k: Int,
+        from distances: UnsafePointer<Float>,
+        count: Int,
+        ids: UnsafePointer<Int32>? = nil
+    ) -> (indices: [Int32], distances: [Float]) {
+        guard k > 0, count > 0 else {
+            return (indices: [], distances: [])
+        }
+        precondition(count <= Int(Int32.max), "Count exceeds Int32 range")
+
+        let actualK = min(k, count)
+
+        if actualK < count / 10 {
+            return heapSelectPointer(distances: distances, count: count, k: actualK, ids: ids)
+        } else {
+            return sortSelectPointer(distances: distances, count: count, k: actualK, ids: ids)
+        }
+    }
+
+    /// Heap-based selection from raw pointer — O(n log k)
+    private static func heapSelectPointer(
+        distances: UnsafePointer<Float>,
+        count: Int,
+        k: Int,
+        ids: UnsafePointer<Int32>?
+    ) -> (indices: [Int32], distances: [Float]) {
+        var buffer = TopKBuffer(k: k, isMinHeap: false)
+
+        for i in 0..<count {
+            buffer.pushIfBetter(val: distances[i], idx: i)
+        }
+
+        // Extract and sort ascending by distance
+        var pairs: [(Int, Float)] = []
+        pairs.reserveCapacity(buffer.size)
+        for i in 0..<buffer.size {
+            pairs.append((buffer.idxs[i], buffer.vals[i]))
+        }
+        pairs.sort { $0.1 < $1.1 }
+
+        if let ids = ids {
+            return (
+                indices: pairs.map { ids[$0.0] },
+                distances: pairs.map { $0.1 }
+            )
+        } else {
+            return (
+                indices: pairs.map { Int32($0.0) },
+                distances: pairs.map { $0.1 }
+            )
+        }
+    }
+
+    /// Sort-based selection from raw pointer — large k path
+    private static func sortSelectPointer(
+        distances: UnsafePointer<Float>,
+        count: Int,
+        k: Int,
+        ids: UnsafePointer<Int32>?
+    ) -> (indices: [Int32], distances: [Float]) {
+        var indexArray = Array(0..<count)
+        indexArray.sort { distances[$0] < distances[$1] }
+
+        let selected = indexArray.prefix(k)
+        if let ids = ids {
+            return (
+                indices: selected.map { ids[$0] },
+                distances: selected.map { distances[$0] }
+            )
+        } else {
+            return (
+                indices: selected.map { Int32($0) },
+                distances: selected.map { distances[$0] }
+            )
+        }
+    }
+
+    // MARK: - Generic Selection
+
     /// Select the k smallest values with custom comparison.
     ///
     /// - Parameters:

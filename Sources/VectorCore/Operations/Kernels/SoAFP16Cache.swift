@@ -17,13 +17,27 @@ import Foundation
 fileprivate struct SoAFP16CacheKey: Hashable, Sendable {
     let vectorHashes: [Int]
     let dimension: Int
-
+    
+    init(vectors: [Vector384Optimized], dimension: Int = 384) {
+        self.vectorHashes = vectors.map { $0.hashValue }
+        self.dimension = dimension
+    }
+    
     init(vectors: [Vector512Optimized], dimension: Int = 512) {
         self.vectorHashes = vectors.map { $0.hashValue }
         self.dimension = dimension
     }
-
-    // TODO: Add init for Vector768Optimized and Vector1536Optimized when their caches are implemented
+    
+    init(vectors: [Vector768Optimized], dimension: Int = 768) {
+        self.vectorHashes = vectors.map { $0.hashValue }
+        self.dimension = dimension
+    }
+    
+    init(vectors: [Vector1536Optimized], dimension: Int = 1536) {
+        self.vectorHashes = vectors.map { $0.hashValue }
+        self.dimension = dimension
+    }
+    
 }
 
 // MARK: - SoA FP16 Cache (512-dimensional)

@@ -9,8 +9,7 @@
 import Foundation
 import simd
 
-@usableFromInline
-internal enum NormalizeKernels {
+public enum NormalizeKernels {
 
     /// Compute magnitude squared using Kahan's two-pass scaling algorithm
     ///
@@ -361,5 +360,106 @@ internal enum NormalizeKernels {
         let inv = 1.0 / mag
         scaleInPlace(storage: &copy.storage, laneCount: 384, scale: inv)
         return copy
+    }
+
+    // MARK: - Zero-Copy Pointer API
+
+    /// Normalize a vector in place via raw pointer, for arbitrary dimension.
+    ///
+    /// Uses Kahan's two-pass scaling algorithm for numerical stability,
+    /// operating directly on the pointer without ContiguousArray abstraction.
+    /// SIMD4 loads via UnsafeMutableRawPointer avoid memory rebinding issues.
+    ///
+    /// - Precondition: The vector's magnitude must be > 0 (debug assertion only)
+    /// - Parameters:
+    ///   - buffer: Mutable pointer to float data (at least `dimension` elements, 16-byte aligned preferred)
+    ///   - dimension: Number of float elements in the vector
+    /// - Complexity: O(n) with 2 passes over the data
+    @inlinable
+    public static func normalizeUnchecked(
+        _ buffer: UnsafeMutablePointer<Float>,
+        dimension: Int
+    ) {
+        guard dimension > 0 else { return }
+
+        let simdCount = dimension / 4
+        let tailStart = simdCount * 4
+        let raw = UnsafeMutableRawPointer(buffer)
+
+        // --- Pass 1: Find maximum absolute value (overflow prevention) ---
+        var maxVec = SIMD4<Float>(repeating: 0)
+        for i in 0..<simdCount {
+            let v: SIMD4<Float> = raw.load(fromByteOffset: i * 16, as: SIMD4<Float>.self)
+            maxVec = pointwiseMax(maxVec, abs(v))
+        }
+        var maxAbs = max(max(maxVec[0], maxVec[1]), max(maxVec[2], maxVec[3]))
+
+        for i in tailStart..<dimension {
+            let absVal = abs(buffer[i])
+            if absVal > maxAbs { maxAbs = absVal }
+        }
+
+        assert(maxAbs > 0, "normalizeUnchecked called on zero vector")
+        guard maxAbs > 0 else { return }
+
+        // --- Pass 2: Compute scaled sum of squares ---
+        let scale = 1.0 / maxAbs
+        let simdScale = SIMD4<Float>(repeating: scale)
+
+        var acc0 = SIMD4<Float>.zero
+        var acc1 = SIMD4<Float>.zero
+        var acc2 = SIMD4<Float>.zero
+        var acc3 = SIMD4<Float>.zero
+
+        let unrolledCount = (simdCount / 4) * 4
+        for i in stride(from: 0, to: unrolledCount, by: 4) {
+            let s0: SIMD4<Float> = raw.load(fromByteOffset: (i) * 16, as: SIMD4<Float>.self) * simdScale
+            let s1: SIMD4<Float> = raw.load(fromByteOffset: (i + 1) * 16, as: SIMD4<Float>.self) * simdScale
+            let s2: SIMD4<Float> = raw.load(fromByteOffset: (i + 2) * 16, as: SIMD4<Float>.self) * simdScale
+            let s3: SIMD4<Float> = raw.load(fromByteOffset: (i + 3) * 16, as: SIMD4<Float>.self) * simdScale
+            acc0.addProduct(s0, s0)
+            acc1.addProduct(s1, s1)
+            acc2.addProduct(s2, s2)
+            acc3.addProduct(s3, s3)
+        }
+        for i in unrolledCount..<simdCount {
+            let s: SIMD4<Float> = raw.load(fromByteOffset: i * 16, as: SIMD4<Float>.self) * simdScale
+            acc0.addProduct(s, s)
+        }
+
+        var sumSquares = ((acc0 + acc1) + (acc2 + acc3)).sum()
+        for i in tailStart..<dimension {
+            let s = buffer[i] * scale
+            sumSquares += s * s
+        }
+
+        let mag = maxAbs * sqrt(sumSquares)
+        assert(mag > 0, "normalizeUnchecked: computed magnitude is zero")
+        guard mag > 0 else { return }
+
+        // --- Scale in place ---
+        let invMag = 1.0 / mag
+        let simdInvMag = SIMD4<Float>(repeating: invMag)
+
+        let scaleUnrolled = (simdCount / 4) * 4
+        for i in stride(from: 0, to: scaleUnrolled, by: 4) {
+            var v0: SIMD4<Float> = raw.load(fromByteOffset: (i) * 16, as: SIMD4<Float>.self)
+            var v1: SIMD4<Float> = raw.load(fromByteOffset: (i + 1) * 16, as: SIMD4<Float>.self)
+            var v2: SIMD4<Float> = raw.load(fromByteOffset: (i + 2) * 16, as: SIMD4<Float>.self)
+            var v3: SIMD4<Float> = raw.load(fromByteOffset: (i + 3) * 16, as: SIMD4<Float>.self)
+            v0 *= simdInvMag; v1 *= simdInvMag; v2 *= simdInvMag; v3 *= simdInvMag
+            raw.storeBytes(of: v0, toByteOffset: (i) * 16, as: SIMD4<Float>.self)
+            raw.storeBytes(of: v1, toByteOffset: (i + 1) * 16, as: SIMD4<Float>.self)
+            raw.storeBytes(of: v2, toByteOffset: (i + 2) * 16, as: SIMD4<Float>.self)
+            raw.storeBytes(of: v3, toByteOffset: (i + 3) * 16, as: SIMD4<Float>.self)
+        }
+        for i in scaleUnrolled..<simdCount {
+            var v: SIMD4<Float> = raw.load(fromByteOffset: i * 16, as: SIMD4<Float>.self)
+            v *= simdInvMag
+            raw.storeBytes(of: v, toByteOffset: i * 16, as: SIMD4<Float>.self)
+        }
+        for i in tailStart..<dimension {
+            buffer[i] *= invMag
+        }
     }
 }

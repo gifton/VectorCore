@@ -1,7 +1,7 @@
 # VectorCore Improvement Roadmap
 
-**Current Version:** 0.1.5 (Released November 2025)
-**Last Updated:** November 2025
+**Current Version:** 0.2.0 (Released March 2026)
+**Last Updated:** March 2026
 **Target Packages:** VectorIndex, VectorAccelerate, VectorIndexAccelerated, EmbedKit
 
 This document tracks identified improvement opportunities for VectorCore, organized by component and priority. Items marked with 🔒 may require API changes.
@@ -203,7 +203,7 @@ public protocol DistanceMetric: Sendable {
 ```
 
 **Recommendations:**
-- [ ] Add optional `batchDistance(query:candidates:)` with default implementation
+- [x] Add optional `batchDistance(query:candidates:)` with default implementation ✅ (v0.2.0 — promoted to protocol requirement)
 - [ ] Add `distanceMatrix(a:b:)` for cross-product computations
 - [ ] Document when batch vs single operations should be used
 
@@ -329,8 +329,8 @@ while i + 1 < end {
 ```
 
 **Recommendations:**
-- [ ] Implement 4-way blocked variants for batches > 64
-- [ ] Add adaptive blocking that selects 2-way vs 4-way based on batch size
+- [x] Implement 4-way blocked variants for batches > 64 ✅ (v0.2.0 — euclid2_blocked_4way in BatchKernels_SoA)
+- [x] Add adaptive blocking that selects 2-way vs 4-way based on batch size ✅ (v0.2.0 — branches on soa.count >= 4)
 - [ ] Benchmark optimal blocking factor on M1/M2/M3 chips
 - [ ] Consider 8-way for very large batches (cache permitting)
 
@@ -691,7 +691,7 @@ Created public `TopKSelection` API with:
 - [ ] Add threshold-based filtering (only keep distances < threshold)
 
 **VectorIndex Requests (Section 9.5 in VectorIndex/IMPROVEMENTS.md):**
-- [ ] **Pointer-based TopK API** - Accept `UnsafePointer<Float>` for zero-copy from GPU/mmap buffers:
+- [x] **Pointer-based TopK API** - Accept `UnsafePointer<Float>` for zero-copy from GPU/mmap buffers: ✅ (v0.2.0 — select(k:from:count:ids:) returning [Int32])
   ```swift
   public static func select(
       k: Int,
@@ -966,7 +966,7 @@ No record of design decisions.
 - [x] **Add VectorIndex Integration protocols (Item 11.1)** ✅ DONE
 
 ### v0.2.0 (API Enhancements)
-- [ ] **Pointer-based TopK API** (VectorIndex request) - Zero-copy from GPU/mmap
+- [x] **Pointer-based TopK API** (VectorIndex request) - Zero-copy from GPU/mmap ✅ v0.2.0
 - [ ] **Batch distance protocol** (VectorAccelerate request) - GPU-optimized batch ops
 - [ ] **Raw buffer normalization** (VectorIndex request) - Mmap compatibility
 - [ ] **Configurable tie-breaking** (VectorIndex request) - Reproducibility

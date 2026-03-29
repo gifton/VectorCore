@@ -9,17 +9,19 @@ extern float vc_scalar_l2sq_fp32_512(const float* a, const float* b);
 extern void  vc_scalar_range_l2sq_fp32_512(const float* q, const float* base, size_t strideFloats, size_t start, size_t end, float* out);
 extern int32_t vc_scalar_dot_int8(const int8_t* a, const int8_t* b, size_t lanes);
 
-// Arch-specific stubs (implemented only on matching arch)
+// Arch-specific implementations (compiled only on matching arch)
 #if defined(__aarch64__)
 extern float vc_arm64_dot_fp32_512(const float* a, const float* b);
 extern float vc_arm64_l2sq_fp32_512(const float* a, const float* b);
 extern void  vc_arm64_range_l2sq_fp32_512(const float* q, const float* base, size_t strideFloats, size_t start, size_t end, float* out);
+extern int32_t vc_arm64_dot_int8(const int8_t* a, const int8_t* b, size_t lanes);
 #endif
 
 #if defined(__x86_64__)
 extern float vc_x86_dot_fp32_512(const float* a, const float* b);
 extern float vc_x86_l2sq_fp32_512(const float* a, const float* b);
 extern void  vc_x86_range_l2sq_fp32_512(const float* q, const float* base, size_t strideFloats, size_t start, size_t end, float* out);
+extern int32_t vc_x86_dot_int8(const int8_t* a, const int8_t* b, size_t lanes);
 #endif
 
 // --- Public API ---
@@ -74,8 +76,11 @@ void vc_range_l2sq_fp32_512(
 }
 
 int32_t vc_dot_int8(const int8_t* a, const int8_t* b, size_t lanes) {
-    // For now, call scalar; arch variants will replace later.
-    // Runtime detection for SDOT/VNNI will route to optimized backends once available.
+#if defined(__aarch64__)
+    if (vc_has_neon()) return vc_arm64_dot_int8(a, b, lanes);
+#elif defined(__x86_64__)
+    if (vc_has_avx2()) return vc_x86_dot_int8(a, b, lanes);
+#endif
     return vc_scalar_dot_int8(a, b, lanes);
 }
 

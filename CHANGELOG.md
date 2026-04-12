@@ -5,6 +5,23 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-04-11
+
+### Added
+
+#### `NormalizationHint<V>` conforms to `IndexableVector`
+- `NormalizationHint<V: IndexableVector>` now conforms to `VectorProtocol`, `IndexableVector`, `Codable`, `Hashable`, and `Collection`
+- Enables passing hinted vectors directly to `<V: IndexableVector>` typed insert APIs in VectorAccelerate 0.4.3+ and VectorIndex 0.1.4+
+- Downstream cosine distance fast paths (dot product when `isNormalized == true`) are now reachable from consumer code
+- All `VectorProtocol` operations forward transparently to the wrapped vector
+- Mutation through any `VectorProtocol` API automatically invalidates hints (`isNormalized` resets to `false`, `cachedMagnitude` clears to `nil`)
+- Codable round-trip preserves vector data and hint metadata via keyed container
+- `Equatable`/`Hashable` include hint state: same vector with different hints are distinct values
+- Double-wrapping prevention: `hint.withNormalizationHint()` returns `self` instead of nesting
+
+### Tests
+- 13 new tests for `NormalizationHint` conformance: type conformance, storage forwarding, mutation invalidation, required initializers, equality, hashing, Codable round-trip (Vector512Optimized + DynamicVector), insert simulation, arithmetic, double-wrapping prevention, collection iteration
+
 ## [0.2.0] - 2026-03-28
 
 ### Added

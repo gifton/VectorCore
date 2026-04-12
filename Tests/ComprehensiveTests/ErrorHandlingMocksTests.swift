@@ -261,7 +261,7 @@ struct ErrorHandlingMocksTests {
 
     // MARK: - Error Injection Framework Tests
 
-    @Suite("Error Injection Framework")
+    @Suite("Error Injection Framework", .serialized)
     struct ErrorInjectionTests {
 
         @Test("Deterministic error injection")

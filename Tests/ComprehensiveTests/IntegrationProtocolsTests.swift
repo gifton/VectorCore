@@ -230,6 +230,218 @@ struct IntegrationProtocolsSuite {
         #expect(hint.isNormalized)
     }
 
+    // MARK: - NormalizationHint IndexableVector Conformance Tests
+
+    @Test
+    func testNormalizationHint_ConformsToIndexableVector() {
+        let v = try! Vector512Optimized(Array(repeating: Float(0.5), count: 512))
+        let hint = NormalizationHint(vector: v, isNormalized: true)
+
+        // Must compile: NormalizationHint is an IndexableVector
+        let _: any IndexableVector = hint
+        #expect(hint.isNormalized == true)
+        #expect(hint.cachedMagnitude == 1.0)
+    }
+
+    @Test
+    func testNormalizationHint_StorageForwarding() {
+        let v = try! Vector512Optimized(Array(repeating: Float(1.0), count: 512))
+        let hint = NormalizationHint(vector: v, isNormalized: false)
+
+        #expect(hint.scalarCount == 512)
+        #expect(hint.startIndex == 0)
+        #expect(hint.endIndex == 512)
+
+        let arr = hint.toArray()
+        #expect(arr.count == 512)
+        #expect(arr[0] == 1.0)
+        #expect(arr[511] == 1.0)
+
+        // Read via subscript
+        #expect(hint[0] == 1.0)
+        #expect(hint[255] == 1.0)
+    }
+
+    @Test
+    func testNormalizationHint_MutationInvalidatesHint_StorageSetter() {
+        let normalized = try! Vector512Optimized(
+            Array(repeating: Float(0.5), count: 512)
+        ).normalizedUnchecked()
+        var hint = NormalizationHint(vector: normalized, isNormalized: true)
+
+        #expect(hint.isNormalized == true)
+        #expect(hint.cachedMagnitude == 1.0)
+
+        // Mutate via storage setter
+        let other = try! Vector512Optimized(Array(repeating: Float(2.0), count: 512))
+        hint.storage = other.storage
+        #expect(hint.isNormalized == false)
+        #expect(hint.cachedMagnitude == nil)
+    }
+
+    @Test
+    func testNormalizationHint_MutationInvalidatesHint_MutableBuffer() {
+        let normalized = try! Vector512Optimized(
+            Array(repeating: Float(0.5), count: 512)
+        ).normalizedUnchecked()
+        var hint = NormalizationHint(vector: normalized, isNormalized: true)
+
+        #expect(hint.isNormalized == true)
+
+        hint.withUnsafeMutableBufferPointer { buffer in
+            buffer[0] = 42.0
+        }
+
+        #expect(hint.isNormalized == false)
+        #expect(hint.cachedMagnitude == nil)
+    }
+
+    @Test
+    func testNormalizationHint_RequiredInitializers() throws {
+        // init()
+        let zero = NormalizationHint<Vector512Optimized>()
+        #expect(zero.scalarCount == 512)
+        #expect(zero.isNormalized == false)
+        #expect(zero.isZero == true)
+
+        // init(_ array:)
+        let values = Array(repeating: Float(0.5), count: 512)
+        let fromArray = try NormalizationHint<Vector512Optimized>(values)
+        #expect(fromArray.scalarCount == 512)
+        #expect(fromArray[0] == 0.5)
+        #expect(fromArray.isNormalized == false)
+
+        // init(repeating:)
+        let repeated = NormalizationHint<Vector512Optimized>(repeating: 3.0)
+        #expect(repeated[0] == 3.0)
+        #expect(repeated[511] == 3.0)
+        #expect(repeated.isNormalized == false)
+    }
+
+    @Test
+    func testNormalizationHint_EqualityIncludesHint() {
+        let v = try! Vector512Optimized(Array(repeating: Float(0.5), count: 512))
+        let hint1 = NormalizationHint(vector: v, isNormalized: true)
+        let hint2 = NormalizationHint(vector: v, isNormalized: false)
+        let hint3 = NormalizationHint(vector: v, isNormalized: true)
+
+        #expect(hint1 != hint2)  // Same vector, different hint
+        #expect(hint1 == hint3)  // Same vector, same hint
+    }
+
+    @Test
+    func testNormalizationHint_HashableConsistency() {
+        let v = try! Vector512Optimized(Array(repeating: Float(0.5), count: 512))
+        let hint1 = NormalizationHint(vector: v, isNormalized: true)
+        let hint2 = NormalizationHint(vector: v, isNormalized: true)
+
+        #expect(hint1.hashValue == hint2.hashValue)
+
+        var set = Set<NormalizationHint<Vector512Optimized>>()
+        set.insert(hint1)
+        #expect(set.contains(hint2))
+    }
+
+    @Test
+    func testNormalizationHint_CodableRoundTrip() throws {
+        let v = try! Vector512Optimized(Array(repeating: Float(0.5), count: 512))
+        let original = NormalizationHint(vector: v, isNormalized: true)
+
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(
+            NormalizationHint<Vector512Optimized>.self, from: data
+        )
+
+        #expect(decoded == original)
+        #expect(decoded.isNormalized == true)
+        #expect(decoded.cachedMagnitude == 1.0)
+        #expect(decoded.toArray() == original.toArray())
+    }
+
+    @Test
+    func testNormalizationHint_CodableRoundTrip_DynamicVector() throws {
+        let v = DynamicVector([3, 4])
+        let original = NormalizationHint(vector: v, isNormalized: false)
+
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(
+            NormalizationHint<DynamicVector>.self, from: data
+        )
+
+        #expect(decoded.vector.toArray() == [3, 4])
+        #expect(decoded.isNormalized == false)
+    }
+
+    @Test
+    func testNormalizationHint_InsertSimulation() {
+        // Simulates what VectorIndex.insert<V: IndexableVector>(id:vector:) does
+        func simulateInsert<V: IndexableVector>(id: Int, vector: V) -> (
+            skippedNormalization: Bool,
+            usedCachedMagnitude: Bool
+        ) {
+            let skipNorm = vector.isNormalized
+            let usedCache = vector.cachedMagnitude != nil
+            return (skipNorm, usedCache)
+        }
+
+        // Without hint — bare vector always returns defaults
+        let v = try! Vector512Optimized(Array(repeating: Float(0.5), count: 512))
+        let result1 = simulateInsert(id: 0, vector: v)
+        #expect(result1.skippedNormalization == false)
+        #expect(result1.usedCachedMagnitude == false)
+
+        // With hint — fast path activates
+        let normalized = v.normalizedUnchecked()
+        let hint = NormalizationHint(vector: normalized, isNormalized: true)
+        let result2 = simulateInsert(id: 1, vector: hint)
+        #expect(result2.skippedNormalization == true)
+        #expect(result2.usedCachedMagnitude == true)
+    }
+
+    @Test
+    func testNormalizationHint_Arithmetic() throws {
+        let v1 = try NormalizationHint<Vector512Optimized>(
+            Array(repeating: Float(1.0), count: 512)
+        )
+        let v2 = try NormalizationHint<Vector512Optimized>(
+            Array(repeating: Float(2.0), count: 512)
+        )
+
+        // Arithmetic produces results with isNormalized == false
+        let sum = v1 + v2
+        #expect(sum[0] == 3.0)
+        #expect(sum.isNormalized == false)
+
+        let dot = v1.dotProduct(v2)
+        #expect(approxEqual(dot, 1024.0))  // 512 * 1 * 2
+    }
+
+    @Test
+    func testNormalizationHint_NoDoubleWrapping() {
+        let v = DynamicVector([3, 4])
+        let hint = NormalizationHint(vector: v, isNormalized: true)
+        let rewrapped = hint.withNormalizationHint()
+
+        // Should return NormalizationHint<DynamicVector>, not nested
+        #expect(type(of: rewrapped) == type(of: hint))
+        #expect(rewrapped.isNormalized == hint.isNormalized)
+    }
+
+    @Test
+    func testNormalizationHint_CollectionIteration() {
+        let hint = NormalizationHint(
+            vector: DynamicVector([0.5, 0.5, 0.5, 0.5]),
+            isNormalized: false
+        )
+
+        var count = 0
+        for element in hint {
+            #expect(element == 0.5)
+            count += 1
+        }
+        #expect(count == 4)
+    }
+
     // MARK: - SimpleVectorCollection Tests
 
     @Test

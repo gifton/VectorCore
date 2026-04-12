@@ -526,8 +526,12 @@ struct BatchKernels_SoATests {
             }
 
             // Test lane processing with different query patterns
-            let alternatingStorage = (0..<128).map { i in
-                SIMD4<Float>(Float(i % 2), Float((i + 1) % 2), Float(i % 3), Float((i + 2) % 3))
+            let alternatingStorage: [SIMD4<Float>] = (0..<128).map { (i: Int) -> SIMD4<Float> in
+                let a = Float(i % 2)
+                let b = Float((i + 1) % 2)
+                let c = Float(i % 3)
+                let d = Float((i + 2) % 3)
+                return SIMD4<Float>(a, b, c, d)
             }
             let alternatingArray = alternatingStorage.flatMap { simd4 in [simd4.x, simd4.y, simd4.z, simd4.w] }
             let alternatingQuery = try! Vector512Optimized(alternatingArray)
@@ -1513,13 +1517,12 @@ struct BatchKernels_SoATests {
             }
 
             // Test 2: Subnormal numbers
-            let subnormalStorage = (0..<128).map { i in
-                SIMD4<Float>(
-                    subnormal * Float(i + 1),
-                    subnormal * Float(i + 2),
-                    subnormal * Float(i + 3),
-                    subnormal * Float(i + 4)
-                )
+            let subnormalStorage: [SIMD4<Float>] = (0..<128).map { (i: Int) -> SIMD4<Float> in
+                let a = subnormal * Float(i + 1)
+                let b = subnormal * Float(i + 2)
+                let c = subnormal * Float(i + 3)
+                let d = subnormal * Float(i + 4)
+                return SIMD4<Float>(a, b, c, d)
             }
             let subnormalArray = subnormalStorage.flatMap { simd4 in [simd4.x, simd4.y, simd4.z, simd4.w] }
             let subnormalQuery = try! Vector512Optimized(subnormalArray)
@@ -1528,7 +1531,8 @@ struct BatchKernels_SoATests {
             let subnormalResult = BatchKernels_SoA.batchEuclideanSquared512(query: subnormalQuery, candidates: subnormalCandidates)
 
             #expect(subnormalResult.count == 1)
-            #expect(abs(subnormalResult[0]) < epsilon, "Identical subnormal vectors should have ~zero distance: \(subnormalResult[0])")
+            let subnormalDist = subnormalResult[0]
+            #expect(abs(subnormalDist) < epsilon, "Identical subnormal vectors should have ~zero distance: \(String(describing: subnormalDist))")
 
             // Test 3: Mixed normal and denormalized values
             let mixedStorage = (0..<128).map { i in

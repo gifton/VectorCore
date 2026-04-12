@@ -3643,23 +3643,8 @@ internal struct MixedPrecisionBenchmark {
         warmupIterations: Int = 100
     ) -> (fp32: BenchmarkResult, fp16: BenchmarkResult, speedup: Double) {
         // Create random test vectors
-        var vec1 = Vector512Optimized()
-        var vec2 = Vector512Optimized()
-
-        for _ in 0..<128 {
-            vec1.storage.append(SIMD4<Float>(
-                Float.random(in: -1...1),
-                Float.random(in: -1...1),
-                Float.random(in: -1...1),
-                Float.random(in: -1...1)
-            ))
-            vec2.storage.append(SIMD4<Float>(
-                Float.random(in: -1...1),
-                Float.random(in: -1...1),
-                Float.random(in: -1...1),
-                Float.random(in: -1...1)
-            ))
-        }
+        let vec1 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+        let vec2 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
 
         let vec1_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec1)
         let vec2_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec2)
@@ -3703,23 +3688,8 @@ internal struct MixedPrecisionBenchmark {
         var fp16Results: [Float] = []
 
         for _ in 0..<testVectors {
-            var vec1 = Vector512Optimized()
-            var vec2 = Vector512Optimized()
-
-            for _ in 0..<128 {
-                vec1.storage.append(SIMD4<Float>(
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1)
-                ))
-                vec2.storage.append(SIMD4<Float>(
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1)
-                ))
-            }
+            let vec1 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+            let vec2 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
 
             let vec1_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec1)
             let vec2_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec2)
@@ -3758,29 +3728,9 @@ internal struct MixedPrecisionBenchmark {
         iterations: Int = 100
     ) -> (mixed: BenchmarkResult, fp16: BenchmarkResult) {
         // Create test data
-        var query = Vector512Optimized()
-        var candidates: [Vector512Optimized] = []
-
-        for _ in 0..<128 {
-            query.storage.append(SIMD4<Float>(
-                Float.random(in: -1...1),
-                Float.random(in: -1...1),
-                Float.random(in: -1...1),
-                Float.random(in: -1...1)
-            ))
-        }
-
-        for _ in 0..<candidateCount {
-            var vec = Vector512Optimized()
-            for _ in 0..<128 {
-                vec.storage.append(SIMD4<Float>(
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1),
-                    Float.random(in: -1...1)
-                ))
-            }
-            candidates.append(vec)
+        let query = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+        let candidates: [Vector512Optimized] = (0..<candidateCount).map { _ in
+            try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
         }
 
         let candidatesFP16 = candidates.map { MixedPrecisionKernels.Vector512FP16(from: $0) }

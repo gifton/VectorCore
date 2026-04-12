@@ -140,7 +140,7 @@ struct MixedPrecisionPerformanceBenchmark {
         let batchSizes = [10, 100, 1000]
 
         print("\n=== Euclidean Batch Throughput (512-dim) ===")
-        print(String(format: "%-10s | %-15s | %-15s | %-10s | %-15s", "Batch Size", "FP32 (M/sec)", "FP16 (M/sec)", "Speedup", "Memory Saved"))
+        print("Batch Size | FP32 (M/sec)    | FP16 (M/sec)    | Speedup    | Memory Saved   ")
         print(String(repeating: "-", count: 80))
 
         for n in batchSizes {
@@ -167,8 +167,8 @@ struct MixedPrecisionPerformanceBenchmark {
             let speedup = fp16Throughput / fp32Throughput
             let memorySaved = n * 1024  // bytes
 
-            print(String(format: "%-10d | %-15.2f | %-15.2f | %-10.2fx | %-15s",
-                n, fp32Throughput, fp16Throughput, speedup, "\(memorySaved / 1024) KB"))
+            let memStr = "\(memorySaved / 1024) KB"
+            print(String(format: "%-10d | %-15.2f | %-15.2f | %-10.2fx | ", n, fp32Throughput, fp16Throughput, speedup) + memStr.padding(toLength: 15, withPad: " ", startingAt: 0))
         }
     }
 
@@ -177,7 +177,7 @@ struct MixedPrecisionPerformanceBenchmark {
     @Test("Dimension scaling: Euclidean performance across dimensions")
     func benchmarkDimensionScaling() throws {
         print("\n=== Dimension Scaling (Euclidean FP16×FP16) ===")
-        print(String(format: "%-10s | %-15s | %-15s | %-10s", "Dimension", "FP32 (ns)", "FP16 (ns)", "Speedup"))
+        print("Dimension  | FP32 (ns)       | FP16 (ns)       | Speedup   ")
         print(String(repeating: "-", count: 60))
 
         // 512-dim
@@ -231,7 +231,7 @@ struct MixedPrecisionPerformanceBenchmark {
     @Test("Accuracy: Relative error measurements across operations")
     func measureAccuracyLoss() throws {
         print("\n=== Accuracy Measurements ===")
-        print(String(format: "%-15s | %-20s | %-20s", "Operation", "FP16×FP16 Error %", "FP32×FP16 Error %"))
+        print("Operation       | FP16×FP16 Error %    | FP32×FP16 Error %   ")
         print(String(repeating: "-", count: 60))
 
         let trials = 100
@@ -269,9 +269,9 @@ struct MixedPrecisionPerformanceBenchmark {
         let avgCosError16x16 = cosineErrors16x16.reduce(0, +) / Float(trials)
         let avgCosError32x16 = cosineErrors32x16.reduce(0, +) / Float(trials)
 
-        print(String(format: "%-15s | %-20.4f | %-20.4f", "Euclidean",
+        print("Euclidean       | " + String(format: "%-20.4f | %-20.4f",
             avgEucError16x16 * 100, avgEucError32x16 * 100))
-        print(String(format: "%-15s | %-20.4f | %-20.4f", "Cosine",
+        print("Cosine          | " + String(format: "%-20.4f | %-20.4f",
             avgCosError16x16 * 100, avgCosError32x16 * 100))
 
         // Validate errors are acceptable
@@ -288,7 +288,7 @@ struct MixedPrecisionPerformanceBenchmark {
         print("\n=== Memory Footprint Analysis ===")
 
         let dimensions = [512, 768, 1536]
-        print(String(format: "%-10s | %-15s | %-15s | %-15s", "Dimension", "FP32 (bytes)", "FP16 (bytes)", "Savings %"))
+        print("Dimension  | FP32 (bytes)    | FP16 (bytes)    | Savings %      ")
         print(String(repeating: "-", count: 60))
 
         for dim in dimensions {
@@ -331,7 +331,7 @@ struct MixedPrecisionPerformanceBenchmark {
     @Test("Validate shouldUseMixedPrecision heuristic")
     func validateHeuristic() throws {
         print("\n=== Heuristic Validation ===")
-        print(String(format: "%-15s | %-10s | %-20s", "Batch Size", "Dimension", "Recommendation"))
+        print("Batch Size      | Dimension  | Recommendation      ")
         print(String(repeating: "-", count: 50))
 
         let testCases: [(Int, Int)] = [
@@ -349,8 +349,8 @@ struct MixedPrecisionPerformanceBenchmark {
                 dimension: dimension
             )
 
-            print(String(format: "%-15d | %-10d | %-20s",
-                batchSize, dimension, shouldUse ? "✅ Use FP16" : "❌ Use FP32"))
+            let rec = shouldUse ? "Use FP16" : "Use FP32"
+            print(String(format: "%-15d | %-10d | ", batchSize, dimension) + rec.padding(toLength: 20, withPad: " ", startingAt: 0))
         }
 
         // Validate heuristic logic

@@ -54,6 +54,22 @@ public enum NormalizeKernels {
         // By scaling all values by 1/maxAbs, we ensure |scaled| ≤ 1
         // This prevents overflow since 1² = 1
         let scale = 1.0 / maxAbs
+
+        // Subnormal guard: if maxAbs is subnormal (~1e-40), 1/maxAbs overflows to +Inf,
+        // which would poison every scaled square with Inf/NaN. maxAbs > 0 and isFinite
+        // both pass for subnormals, so they do not catch this. When the reciprocal is
+        // non-finite, fall back to a direct (unscaled) sum of squares: for a vector whose
+        // largest component is subnormal, every square is ~1e-80 and underflows safely
+        // toward 0 without any risk of overflow.
+        guard scale.isFinite else {
+            var direct: Float = 0
+            for i in 0..<laneCount {
+                let v = storage[i]
+                direct += (v * v).sum()
+            }
+            return direct
+        }
+
         let simdScale = SIMD4<Float>(repeating: scale)
 
         var acc0 = SIMD4<Float>()
@@ -154,6 +170,22 @@ public enum NormalizeKernels {
 
         // Phase 2: Scale and compute sum of squares with SIMD
         let scale = 1.0 / maxAbs
+
+        // Subnormal guard: if maxAbs is subnormal (~1e-40), 1/maxAbs overflows to +Inf,
+        // which would poison every scaled square with Inf/NaN. maxAbs > 0 and isFinite
+        // both pass for subnormals, so they do not catch this. When the reciprocal is
+        // non-finite, fall back to a direct (unscaled) L2 magnitude: for a vector whose
+        // largest component is subnormal, every square is ~1e-80 and underflows safely
+        // toward 0 without any risk of overflow.
+        guard scale.isFinite else {
+            var direct: Float = 0
+            for i in 0..<laneCount {
+                let v = storage[i]
+                direct += (v * v).sum()
+            }
+            return Foundation.sqrt(direct)
+        }
+
         let simdScale = SIMD4<Float>(repeating: scale)
 
         var acc0 = SIMD4<Float>()

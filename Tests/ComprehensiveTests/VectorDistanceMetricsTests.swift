@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import VectorCore
 
 @Suite("Distance Metrics")
@@ -315,6 +316,55 @@ struct VectorDistanceMetricsSuite {
             let dist = metric.distance(a, b)
             #expect(approxEqual(dist, Float(dim) * 0.1, tol: 1e-3), "Failed for dim=\(dim)")
         }
+    }
+
+    // MARK: - CosineDistance Micro-Vector Magnitude Floor (FIX 4.5)
+
+    @Test
+    func testCosineDistance_MicroMagnitudeParallelIsZero() {
+        // Two valid vectors of magnitude ~1e-4 pointing in the SAME direction.
+        // Magnitude product is ~1e-8, which is below Float.ulpOfOne (~1.19e-7)
+        // but far above Float.leastNormalMagnitude (~1.18e-38). With the buggy
+        // ulpOfOne guard this wrongly returned 1.0; the correct distance is ~0.
+        let metric = CosineDistance()
+        let base: [Float] = [1, 2, 3, 4, 5, 6, 7, 8]
+        // Scale so the resulting magnitude is on the order of 1e-4.
+        let scale: Float = 1e-4 / Float(Foundation.sqrt(base.map { $0 * $0 }.reduce(0, +)))
+        let aVals = base.map { $0 * scale }
+        let a = try! Vector<Dim8>(aVals)
+        let b = a // identical direction and magnitude
+
+        let dist = metric.distance(a, b)
+        #expect(approxEqual(dist, 0, tol: 1e-4))
+        // Sanity: magnitude product is indeed below the old ulpOfOne threshold.
+        let magProduct = a.magnitude * b.magnitude
+        #expect(magProduct < Float.ulpOfOne)
+        #expect(magProduct > Float.leastNormalMagnitude)
+    }
+
+    @Test
+    func testCosineDistance_MicroMagnitudeOppositeIsTwo() {
+        // Anti-parallel micro-vectors: cosine similarity = -1 ⇒ distance = 2.
+        let metric = CosineDistance()
+        let aVals: [Float] = (0..<8).map { Float($0 + 1) * 1e-5 }
+        let bVals = aVals.map { -$0 }
+        let a = try! Vector<Dim8>(aVals)
+        let b = try! Vector<Dim8>(bVals)
+
+        let dist = metric.distance(a, b)
+        #expect(approxEqual(dist, 2, tol: 1e-4))
+    }
+
+    @Test
+    func testCosineDistance_TrueZeroVectorReturnsOne() {
+        // A genuine zero vector still yields the maximum distance of 1.0,
+        // preserving the original zero-vector semantics.
+        let metric = CosineDistance()
+        let z = Vector<Dim8>.zero
+        let u = Vector<Dim8>(repeating: 1)
+
+        #expect(approxEqual(metric.distance(z, u), 1, tol: 1e-6))
+        #expect(approxEqual(metric.distance(z, z), 1, tol: 1e-6))
     }
 
 }

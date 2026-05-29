@@ -289,7 +289,15 @@ public final class MemoryPool: @unchecked Sendable {
         let pointerAddress = Int(bitPattern: rawPointer)
 
         queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
+            guard let self = self else {
+                // Pool was deallocated before this barrier task ran. The buffer is
+                // backed by posix_memalign (ARC-invisible), so dropping it here would
+                // leak. Reconstruct and free it directly.
+                if let leaked = UnsafeMutableRawPointer(bitPattern: pointerAddress) {
+                    AlignedMemory.deallocate(leaked)
+                }
+                return
+            }
             // Reconstruct pointer from address
             let rawPointer = UnsafeMutableRawPointer(bitPattern: pointerAddress)!
             // Initialize type pool if needed

@@ -5237,3 +5237,95 @@ extension QuantizedKernelsTests {
         }
     }
 }
+
+// MARK: - Regression: Int16 overflow in quantized Euclidean (Fix 4.1)
+
+/// Regression coverage for the Int16 wrapping-multiply overflow in the INT8
+/// Euclidean kernels. Component differences span [-255, 255], so diff² can reach
+/// 65025 which exceeds Int16's range [-32768, 32767]. Squaring in Int16 before
+/// widening to Int32 wraps (e.g. 255*255 = 65025 → -511), corrupting the
+/// accumulated sum-of-squares (it can even go negative, yielding NaN after sqrt).
+@Suite("Quantized Euclidean Int16 Overflow Regression")
+struct QuantizedEuclideanOverflowRegressionTests {
+
+    /// Drives the low-level `accumulateEuclidDiffSq` helper at the maximum
+    /// component spread (q = +127, c = -128 → diff = 255). The correct squared
+    /// contribution per 4-lane block is 4 * 255² = 260100. The buggy Int16
+    /// path would wrap each 65025 to -511 and accumulate 4 * (-511) = -2044.
+    @Test
+    func testAccumulateEuclidDiffSqNoInt16Wrap() {
+        let q = SIMD4<Int8>(127, 127, 127, 127)
+        let c = SIMD4<Int8>(-128, -128, -128, -128)
+        var acc: Int32 = 0
+        QuantizedKernels.accumulateEuclidDiffSq(q, c, &acc)
+
+        // diff = 127 - (-128) = 255; 255² = 65025; 4 lanes → 260100.
+        #expect(acc == 260_100, "Expected 4 * 255² = 260100, got \(acc)")
+        #expect(acc > 0, "Accumulated squared distance must be positive (no Int16 wrap)")
+    }
+
+    /// Mixed-spread case: diff values of 200 (>= 182, the overflow threshold).
+    /// 200² = 40000 still overflows Int16. Verifies widening is correct, not just
+    /// at the extreme.
+    @Test
+    func testAccumulateEuclidDiffSqMidRangeNoWrap() {
+        // q - c = 100 - (-100) = 200 on each lane → 200² = 40000.
+        let q = SIMD4<Int8>(100, 100, 100, 100)
+        let c = SIMD4<Int8>(-100, -100, -100, -100)
+        var acc: Int32 = 0
+        QuantizedKernels.accumulateEuclidDiffSq(q, c, &acc)
+        #expect(acc == 160_000, "Expected 4 * 200² = 160000, got \(acc)")
+    }
+
+    /// Drives the public `euclidean512` entry point with the maximum possible
+    /// per-component spread across all 512 dimensions, using matched symmetric
+    /// quantization params (scale = 1.0) so the optimized integer path is taken.
+    /// Correct distance = sqrt(512 * 255²) ≈ 5769.99. A wrapped accumulator would
+    /// produce a wildly wrong value (or NaN if the wrapped sum is negative).
+    @Test
+    func testEuclidean512MaxSpreadNoOverflow() {
+        // scale = absMax / 127 = 127 / 127 = 1.0, symmetric, zeroPoint = 0.
+        let params = LinearQuantizationParams(minValue: -127, maxValue: 127, symmetric: true)
+
+        let qStorage = ContiguousArray<SIMD4<Int8>>(repeating: SIMD4<Int8>(127, 127, 127, 127), count: 128)
+        let cStorage = ContiguousArray<SIMD4<Int8>>(repeating: SIMD4<Int8>(-128, -128, -128, -128), count: 128)
+
+        let q = Vector512INT8(storage: qStorage, params: params)
+        let c = Vector512INT8(storage: cStorage, params: params)
+
+        let dist = QuantizedKernels.euclidean512(query: q, candidate: c)
+
+        // sqrt(512 * 255²) = sqrt(33,292,800) ≈ 5769.991.
+        let expected: Float = 5769.991334
+        #expect(dist.isFinite, "Distance must be finite (no NaN from negative wrapped accumulator)")
+        #expect(dist > 0, "Distance must be positive")
+        #expect(abs(dist - expected) < 0.5, "Expected ≈\(expected), got \(dist)")
+    }
+
+    /// Same maximum-spread stress applied to the SoA batch INT8 path
+    /// (`batchEuclidean512`), which had an identical Int16-diff-squaring overflow.
+    @Test
+    func testBatchEuclidean512MaxSpreadNoOverflow() {
+        let params = LinearQuantizationParams(minValue: -127, maxValue: 127, symmetric: true)
+
+        // Query: all +127. Candidates: a single vector of all -128.
+        let qStorage = ContiguousArray<SIMD4<Int8>>(repeating: SIMD4<Int8>(127, 127, 127, 127), count: 128)
+        let query = Vector512INT8(storage: qStorage, params: params)
+
+        // Build the SoA from an FP32 candidate of all -128.0 using the same
+        // symmetric params (scale = 1.0), so quantize(-128) = -128 and the
+        // optimized integer batch path (symmetric + matching scales) is taken.
+        let candFP32 = Vector512Optimized(repeating: -128.0)
+        let soa = SoA512INT8(from: [candFP32], params: params)
+
+        var results = [Float](repeating: 0, count: 1)
+        results.withUnsafeMutableBufferPointer { buf in
+            QuantizedKernels.batchEuclidean512(query: query, candidates: soa, results: buf)
+        }
+
+        let expected: Float = 5769.991334
+        #expect(results[0].isFinite, "Batch distance must be finite (no Int16 wrap)")
+        #expect(results[0] > 0, "Batch distance must be positive")
+        #expect(abs(results[0] - expected) < 1.0, "Expected ≈\(expected), got \(results[0])")
+    }
+}

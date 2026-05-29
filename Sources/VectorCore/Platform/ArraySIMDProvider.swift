@@ -7,6 +7,10 @@
 
 import Foundation
 
+#if canImport(Accelerate)
+import Accelerate
+#endif
+
 /// Protocol for SIMD operations on arrays
 ///
 /// This protocol provides a convenient array-based interface for SIMD operations,
@@ -320,15 +324,51 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
     }
 
     public func abs(_ a: [Float]) -> [Float] {
-        a.map { Swift.abs($0) }
+        if a.isEmpty { return [] }
+        #if canImport(Accelerate)
+        var result = [Float](repeating: 0, count: a.count)
+        var n = Int32(a.count)
+        a.withUnsafeBufferPointer { src in
+            result.withUnsafeMutableBufferPointer { dst in
+                vvfabsf(dst.baseAddress!, src.baseAddress!, &n)
+            }
+        }
+        return result
+        #else
+        return a.map { Swift.abs($0) }
+        #endif
     }
 
     public func sqrt(_ a: [Float]) -> [Float] {
-        a.map { Foundation.sqrt($0) }
+        if a.isEmpty { return [] }
+        #if canImport(Accelerate)
+        var result = [Float](repeating: 0, count: a.count)
+        var n = Int32(a.count)
+        a.withUnsafeBufferPointer { src in
+            result.withUnsafeMutableBufferPointer { dst in
+                vvsqrtf(dst.baseAddress!, src.baseAddress!, &n)
+            }
+        }
+        return result
+        #else
+        return a.map { Foundation.sqrt($0) }
+        #endif
     }
 
     public func log(_ a: [Float]) -> [Float] {
-        a.map { Foundation.log($0) }
+        if a.isEmpty { return [] }
+        #if canImport(Accelerate)
+        var result = [Float](repeating: 0, count: a.count)
+        var n = Int32(a.count)
+        a.withUnsafeBufferPointer { src in
+            result.withUnsafeMutableBufferPointer { dst in
+                vvlogf(dst.baseAddress!, src.baseAddress!, &n)
+            }
+        }
+        return result
+        #else
+        return a.map { Foundation.log($0) }
+        #endif
     }
 
     public func clip(_ a: [Float], min minVal: Float, max maxVal: Float) -> [Float] {

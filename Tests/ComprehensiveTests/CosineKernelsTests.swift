@@ -118,6 +118,56 @@ struct CosineKernelsTests {
         let d = CosineKernels.distance768_fused(a, b)
         #expect(d >= 0 - 1e-6 && d <= 2 + 1e-6)
     }
+
+    // MARK: - Regression: +Inf overflow in cosine denominator (Fix 4.2)
+
+    /// For large unnormalized vectors, forming the product `sumAA * sumBB`
+    /// overflows Float to +Inf (e.g. 9e38 * 9e38). The old code then computed
+    /// `dot / sqrt(+Inf) = dot / +Inf = 0`, clamped to 0, and returned a spurious
+    /// distance of 1.0 for vectors that are in fact identical in direction.
+    /// The fix computes `sqrt(sumAA) * sqrt(sumBB)` so the denominator stays finite.
+    @Test
+    func testCosineDistanceNoOverflowForHugeIdenticalDirection() {
+        // Two vectors of identical direction with huge magnitude.
+        // ||v||² ≈ 9e38 for each; dot(a,b) ≈ 9e38 as well (parallel).
+        // sumAA * sumBB ≈ 8.1e77 → +Inf in Float. sqrt path keeps it finite.
+        let sumAA: Float = 9.0e38
+        let sumBB: Float = 9.0e38
+        let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+
+        // Confirm the product genuinely overflows (the bug's precondition).
+        #expect((sumAA * sumBB).isInfinite, "Precondition: product must overflow to +Inf")
+
+        let d = CosineKernels.calculateCosineDistance(dot: dot, sumAA: sumAA, sumBB: sumBB)
+        #expect(d.isFinite, "Distance must be finite, not derived from dot/Inf")
+        #expect(!d.isNaN, "Distance must not be NaN")
+        // Identical direction → cosine similarity ≈ 1 → distance ≈ 0, NOT 1.0.
+        #expect(approxEqual(d, 0, tol: 1e-5), "Expected ≈0 for identical direction, got \(d)")
+    }
+
+    /// Huge orthogonal-ish case: dot = 0 with huge magnitudes should yield
+    /// distance ≈ 1 (cosine similarity 0), and must remain finite.
+    @Test
+    func testCosineDistanceHugeMagnitudeOrthogonal() {
+        let sumAA: Float = 9.0e38
+        let sumBB: Float = 9.0e38
+        let dot: Float = 0.0
+
+        let d = CosineKernels.calculateCosineDistance(dot: dot, sumAA: sumAA, sumBB: sumBB)
+        #expect(d.isFinite && !d.isNaN, "Distance must be finite")
+        #expect(approxEqual(d, 1, tol: 1e-5), "Orthogonal huge vectors → distance ≈ 1, got \(d)")
+    }
+
+    /// Zero-vector semantics must be preserved exactly by the rewritten guard.
+    @Test
+    func testCosineDistanceZeroVectorSemanticsPreserved() {
+        let eps: Float = 1e-12
+        // Both zero → 0.
+        #expect(approxEqual(CosineKernels.calculateCosineDistance(dot: 0, sumAA: eps, sumBB: eps), 0, tol: 1e-6))
+        // One zero, one non-zero → 1.
+        #expect(approxEqual(CosineKernels.calculateCosineDistance(dot: 0, sumAA: eps, sumBB: 1.0), 1, tol: 1e-6))
+        #expect(approxEqual(CosineKernels.calculateCosineDistance(dot: 0, sumAA: 1.0, sumBB: eps), 1, tol: 1e-6))
+    }
 }
 
 // Simple deterministic RNG for tests

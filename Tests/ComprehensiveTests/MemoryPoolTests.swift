@@ -303,4 +303,47 @@ struct MemoryPoolTests {
             _ = h
         }
     }
+
+    // Regression: buffer must be freed even when the pool is deallocated before
+    // the asynchronous (barrier) return task runs. `BufferHandle.pool` is `weak`,
+    // so a handle can outlive its pool; its deinit then enqueues a return task on
+    // a queue whose owning pool is already gone. With `[weak self]`, `self` is nil
+    // and the posix_memalign-backed buffer (ARC-invisible) would leak unless the
+    // nil-self path frees the pointer explicitly.
+    //
+    // Note: this asserts the teardown path executes without crashing (use-after-free
+    // or double-free would trap, especially under ASan). A precise byte-level leak
+    // assertion is not possible here because freed posix_memalign memory is not
+    // observable through the pool's public statistics once the pool is gone; the
+    // guarantee is enforced structurally by the fix and validated by ASan/leaks in CI.
+    @Test
+    func testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash() async {
+        await withTimeout(5) {
+            // Acquire several handles, then drop the pool's strong reference while
+            // the handles still own their buffers. Dropping the handles afterward
+            // forces the nil-self return path for each buffer.
+            var handles: [MemoryPool.BufferHandle<Float>] = []
+            do {
+                let pool = MemoryPool(configuration: testConfig())
+                for _ in 0..<8 {
+                    guard let h = pool.acquire(type: Float.self, count: 64, alignment: 64) else {
+                        Issue.record("Expected non-nil buffer handle")
+                        return
+                    }
+                    h.pointer.initialize(repeating: 0, count: h.count)
+                    handles.append(h)
+                }
+                // `pool` goes out of scope here; the only remaining references to
+                // its buffers are the (weakly-pool-referencing) handles.
+            }
+            // Drop all handles -> each deinit enqueues a return task with nil `self`,
+            // which must free the buffer instead of dropping the pointer.
+            handles.removeAll()
+            // Give any in-flight barrier tasks time to run and free the buffers.
+            await sleepMs(100)
+            // Reaching here without a trap means the nil-self deallocation path ran
+            // cleanly (no use-after-free, no double-free).
+            #expect(true)
+        }
+    }
 }

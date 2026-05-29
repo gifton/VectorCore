@@ -1869,6 +1869,70 @@ struct OptimizedVectorStabilityTests {
 
         print("INFO: All optimized implementations consistent with generic")
     }
+
+    // MARK: - Regression: Subnormal reciprocal → NaN poisoning (Fix 4.4)
+
+    /// A vector whose largest component is subnormal (~1e-40) defeats the
+    /// two-pass scaling algorithm: `scale = 1/maxAbs` overflows to +Inf
+    /// (1/1e-40 = 1e40 > Float.greatestFiniteMagnitude). The old guards
+    /// (`maxAbs > 0`, `isFinite`, `isNaN`) all PASS for a subnormal maxAbs,
+    /// so each `storage[i] * simdScale` produced Inf/NaN, silently poisoning
+    /// the result. The fix detects the non-finite reciprocal and falls back to
+    /// a direct (unscaled) sum of squares, which underflows safely toward 0.
+    @Test("Magnitude of all-subnormal vector is finite, not NaN/Inf")
+    func testMagnitudeSubnormalVectorNotPoisoned() throws {
+        let subnormal: Float = 1e-40  // valid Float subnormal (< leastNormalMagnitude)
+        // Precondition: confirm 1/maxAbs really overflows for this input.
+        #expect((1.0 / subnormal).isInfinite, "Precondition: reciprocal must overflow to +Inf")
+
+        let v = Vector512Optimized(repeating: subnormal)
+
+        let mag = v.magnitude
+        #expect(mag.isFinite, "magnitude must be finite for subnormal input, got \(mag)")
+        #expect(!mag.isNaN, "magnitude must not be NaN")
+        #expect(mag >= 0, "magnitude must be non-negative")
+
+        let magSq = v.magnitudeSquared
+        #expect(magSq.isFinite, "magnitudeSquared must be finite, got \(magSq)")
+        #expect(!magSq.isNaN, "magnitudeSquared must not be NaN")
+        #expect(magSq >= 0, "magnitudeSquared must be non-negative")
+    }
+
+    /// Normalizing an all-subnormal vector must not produce NaN components.
+    /// Because the true magnitude underflows to ~0, normalization correctly
+    /// reports a zero-vector failure rather than emitting NaN/Inf.
+    @Test("Normalizing all-subnormal vector does not produce NaN")
+    func testNormalizeSubnormalVectorNoNaN() throws {
+        let subnormal: Float = 1e-40
+        let v = Vector512Optimized(repeating: subnormal)
+
+        switch v.normalized() {
+        case .success(let unit):
+            // If it normalized, every component must be finite (no NaN poisoning).
+            let arr = unit.toArray()
+            #expect(arr.allSatisfy { $0.isFinite && !$0.isNaN },
+                    "Normalized subnormal vector must have no NaN/Inf components")
+        case .failure:
+            // Acceptable: magnitude underflowed to ~0 → treated as zero vector.
+            // The key invariant is that no NaN escaped; reaching here proves that.
+            #expect(Bool(true))
+        }
+    }
+
+    /// A vector with a subnormal MAX component but slightly larger than the
+    /// flush-to-zero threshold for its square: verifies the fallback path also
+    /// handles the boundary near leastNonzeroMagnitude without NaN.
+    @Test("Magnitude with maximum subnormal component is finite")
+    func testMagnitudeMaxSubnormalComponentFinite() throws {
+        let nearlyNormal: Float = Float.leastNonzeroMagnitude * 8  // deep subnormal
+        // 1/nearlyNormal overflows to +Inf, triggering the fallback.
+        #expect((1.0 / nearlyNormal).isInfinite, "Precondition: reciprocal overflows")
+
+        let v = Vector768Optimized(repeating: nearlyNormal)
+        let mag = v.magnitude
+        #expect(mag.isFinite && !mag.isNaN, "magnitude must be finite, got \(mag)")
+        #expect(mag >= 0, "magnitude must be non-negative")
+    }
 }
 
 // MARK: - Test Documentation

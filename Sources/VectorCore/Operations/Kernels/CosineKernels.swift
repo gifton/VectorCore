@@ -15,7 +15,11 @@ internal enum CosineKernels {
     // Helper for safe division/clamping and zero-magnitude guards
     @inline(__always)
     public static func calculateCosineDistance(dot: Float, sumAA: Float, sumBB: Float) -> Float {
-        let epsilon: Float = 1e-9
+        // Absolute floor on the squared magnitudes. `Float.leastNormalMagnitude`
+        // (~1.18e-38) distinguishes mathematical zero from valid micro-vectors;
+        // the previous hardcoded 1e-9 floor corresponds to a magnitude of ~3.16e-5
+        // and wrongly classified small-but-valid vectors as zero (distance 1.0).
+        let epsilon = Float.leastNormalMagnitude
         // Guard each factor independently. Forming the product sumAA * sumBB can
         // overflow to +Inf for large unnormalized vectors (e.g. ~9e38 each), which
         // would make dot/Inf collapse to 0 and yield a spurious distance of 1.0.

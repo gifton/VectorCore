@@ -1933,6 +1933,54 @@ struct OptimizedVectorStabilityTests {
         #expect(mag.isFinite && !mag.isNaN, "magnitude must be finite, got \(mag)")
         #expect(mag >= 0, "magnitude must be non-negative")
     }
+
+    // MARK: - Regression: unchecked normalize paths (Fix 4.4, second pass)
+
+    /// The pointer `normalizeUnchecked` had `scale = 1.0/maxAbs` with no finite
+    /// guard. For a subnormal-dominated buffer the scale (and later 1/mag)
+    /// overflows; before the fix this either zeroed or poisoned the buffer.
+    /// After the fix the buffer is left unmodified (still finite) when it cannot
+    /// be normalized in FP32, and a normal vector still normalizes to unit length.
+    @Test("normalizeUnchecked(pointer) does not poison a subnormal buffer")
+    func testNormalizeUncheckedPointerSubnormalNoPoison() throws {
+        let subnormal = Float.leastNormalMagnitude / 100  // deep subnormal, nonzero
+        #expect((1.0 / subnormal).isInfinite, "Precondition: reciprocal overflows")
+
+        var buf = [Float](repeating: subnormal, count: 512)
+        buf.withUnsafeMutableBufferPointer { p in
+            NormalizeKernels.normalizeUnchecked(p.baseAddress!, dimension: 512)
+        }
+        #expect(buf.allSatisfy { $0.isFinite && !$0.isNaN },
+                "subnormal buffer must remain finite (no Inf/NaN poisoning)")
+
+        // Regression: a small-but-normal vector still normalizes to unit length.
+        var normalBuf = (0..<512).map { Float(($0 % 7) + 1) * 1e-5 }
+        normalBuf.withUnsafeMutableBufferPointer { p in
+            NormalizeKernels.normalizeUnchecked(p.baseAddress!, dimension: 512)
+        }
+        let mag = Foundation.sqrt(normalBuf.reduce(Float(0)) { $0 + $1 * $1 })
+        #expect(approxEqual(mag, 1.0, tol: 1e-4),
+                "normalizeUnchecked must produce unit length for a normal vector, got \(mag)")
+    }
+
+    /// The `normalizedUnchecked512` family computed `inv = 1.0/mag` with no guard.
+    /// After the magnitude fix `mag` is 0 for deep-subnormal input, so the old
+    /// code scaled by +Inf. The fix returns the input unchanged when 1/mag is
+    /// non-finite, while a normal vector still normalizes correctly.
+    @Test("normalizedUnchecked512 does not poison a subnormal vector")
+    func testNormalizedUnchecked512SubnormalNoPoison() throws {
+        let subnormal = Float.leastNormalMagnitude / 100
+        let v = Vector512Optimized(repeating: subnormal)
+        let result = NormalizeKernels.normalizedUnchecked512(v)
+        #expect(result.toArray().allSatisfy { $0.isFinite && !$0.isNaN },
+                "subnormal vector must remain finite through normalizedUnchecked512")
+
+        // Regression: a normal vector normalizes to unit magnitude.
+        let normal = try Vector512Optimized((0..<512).map { Float(($0 % 5) + 1) })
+        let unit = NormalizeKernels.normalizedUnchecked512(normal)
+        #expect(approxEqual(unit.magnitude, 1.0, tol: 1e-4),
+                "normalizedUnchecked512 must produce unit magnitude, got \(unit.magnitude)")
+    }
 }
 
 // MARK: - Test Documentation

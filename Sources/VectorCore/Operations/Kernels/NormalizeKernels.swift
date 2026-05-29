@@ -349,8 +349,11 @@ public enum NormalizeKernels {
     static func normalizedUnchecked384(_ a: Vector384Optimized) -> Vector384Optimized {
         var copy = a
         let mag = magnitude(storage: copy.storage, laneCount: 96)
-        assert(mag > 0, "normalizedUnchecked called on zero vector")
         let inv = 1.0 / mag
+        // mag == 0 (zero/underflowed) or deep-subnormal (1/mag overflows) → the
+        // vector is not normalizable in FP32; return it unchanged rather than
+        // scaling every element by Inf/NaN.
+        guard inv.isFinite else { return copy }
         scaleInPlace(storage: &copy.storage, laneCount: 96, scale: inv)
         return copy
     }
@@ -362,8 +365,11 @@ public enum NormalizeKernels {
     static func normalizedUnchecked512(_ a: Vector512Optimized) -> Vector512Optimized {
         var copy = a
         let mag = magnitude(storage: copy.storage, laneCount: 128)
-        assert(mag > 0, "normalizedUnchecked called on zero vector")
         let inv = 1.0 / mag
+        // mag == 0 (zero/underflowed) or deep-subnormal (1/mag overflows) → the
+        // vector is not normalizable in FP32; return it unchanged rather than
+        // scaling every element by Inf/NaN.
+        guard inv.isFinite else { return copy }
         scaleInPlace(storage: &copy.storage, laneCount: 128, scale: inv)
         return copy
     }
@@ -375,8 +381,11 @@ public enum NormalizeKernels {
     static func normalizedUnchecked768(_ a: Vector768Optimized) -> Vector768Optimized {
         var copy = a
         let mag = magnitude(storage: copy.storage, laneCount: 192)
-        assert(mag > 0, "normalizedUnchecked called on zero vector")
         let inv = 1.0 / mag
+        // mag == 0 (zero/underflowed) or deep-subnormal (1/mag overflows) → the
+        // vector is not normalizable in FP32; return it unchanged rather than
+        // scaling every element by Inf/NaN.
+        guard inv.isFinite else { return copy }
         scaleInPlace(storage: &copy.storage, laneCount: 192, scale: inv)
         return copy
     }
@@ -388,8 +397,11 @@ public enum NormalizeKernels {
     static func normalizedUnchecked1536(_ a: Vector1536Optimized) -> Vector1536Optimized {
         var copy = a
         let mag = magnitude(storage: copy.storage, laneCount: 384)
-        assert(mag > 0, "normalizedUnchecked called on zero vector")
         let inv = 1.0 / mag
+        // mag == 0 (zero/underflowed) or deep-subnormal (1/mag overflows) → the
+        // vector is not normalizable in FP32; return it unchanged rather than
+        // scaling every element by Inf/NaN.
+        guard inv.isFinite else { return copy }
         scaleInPlace(storage: &copy.storage, laneCount: 384, scale: inv)
         return copy
     }
@@ -435,7 +447,10 @@ public enum NormalizeKernels {
         guard maxAbs > 0 else { return }
 
         // --- Pass 2: Compute scaled sum of squares ---
-        let scale = 1.0 / maxAbs
+        // Clamp to leastNormalMagnitude so 1/maxAbs cannot overflow to +Inf for a
+        // subnormal-dominated vector (which would poison the scaled squares with
+        // Inf/NaN). |scaled| ≤ 1 afterwards, keeping the accumulation finite.
+        let scale = 1.0 / Swift.max(maxAbs, Float.leastNormalMagnitude)
         let simdScale = SIMD4<Float>(repeating: scale)
 
         var acc0 = SIMD4<Float>.zero
@@ -471,6 +486,10 @@ public enum NormalizeKernels {
 
         // --- Scale in place ---
         let invMag = 1.0 / mag
+        // If the true magnitude is too small to invert in FP32 (deep subnormal),
+        // 1/mag overflows to +Inf; leave the buffer unmodified rather than
+        // poisoning every element with Inf/NaN.
+        guard invMag.isFinite else { return }
         let simdInvMag = SIMD4<Float>(repeating: invMag)
 
         let scaleUnrolled = (simdCount / 4) * 4

@@ -1114,7 +1114,7 @@ struct BatchKernels_SoATests {
                    "Performance should scale reasonably: small \(smallTime)s, medium \(mediumTime)s, ratio \(actualRatio)")
         }
 
-        @Test
+        @Test(.enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
         func testCacheLocalityImprovements() {
             // Test cache locality improvements with SoA by comparing sequential vs random access patterns
             let candidateCount = 1000

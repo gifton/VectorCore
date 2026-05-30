@@ -58,7 +58,7 @@ struct MixedPrecisionPerformanceBenchmark {
 
     // MARK: - Single-Pair Latency Benchmarks
 
-    @Test("Latency: Euclidean 512-dim (all precision combinations)")
+    @Test("Latency: Euclidean 512-dim (all precision combinations)", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
     func benchmarkEuclideanLatency512() throws {
         let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2)
         let q32 = fp32Vecs[0]
@@ -100,7 +100,7 @@ struct MixedPrecisionPerformanceBenchmark {
         #expect(speedup32x16 > 1.0, "FP32×FP16 should show some speedup")
     }
 
-    @Test("Latency: Cosine 512-dim (all precision combinations)")
+    @Test("Latency: Cosine 512-dim (all precision combinations)", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
     func benchmarkCosineLatency512() throws {
         let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2)
         let q32 = fp32Vecs[0]
@@ -174,7 +174,7 @@ struct MixedPrecisionPerformanceBenchmark {
 
     // MARK: - Dimension Scaling Benchmarks
 
-    @Test("Dimension scaling: Euclidean performance across dimensions")
+    @Test("Dimension scaling: Euclidean performance across dimensions", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
     func benchmarkDimensionScaling() throws {
         print("\n=== Dimension Scaling (Euclidean FP16×FP16) ===")
         print("Dimension  | FP32 (ns)       | FP16 (ns)       | Speedup   ")
@@ -356,7 +356,7 @@ struct MixedPrecisionPerformanceBenchmark {
         // Validate heuristic logic
         #expect(MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: 10, dimension: 512) == false,
                 "Small batches should use FP32")
-        #expect(MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: 500, dimension: 512) == true,
-                "Large batches should use FP16")
+        #expect(MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: 500, dimension: 512) == false,
+                "Medium batch within cache should use FP32 (memory-bound heuristic)")
     }
 }

@@ -209,7 +209,9 @@ struct BatchKernels_SoATests {
             // Verify results match reference implementation
             for (i, soaResult) in soaResults.enumerated() {
                 let refResult = DotKernels.dot512(query, candidates[i])
-                #expect(abs(soaResult - refResult) < 1e-5, "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
+                // FP32 dot products differ in the last ULPs between the blocked SoA kernel and
+                // the naive reference due to summation order; scale tolerance to the magnitude.
+                #expect(abs(soaResult - refResult) <= 1e-5 * max(1.0, abs(refResult)), "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
             }
         }
 
@@ -234,7 +236,9 @@ struct BatchKernels_SoATests {
             // Verify results match reference implementation
             for (i, soaResult) in soaResults.enumerated() {
                 let refResult = DotKernels.dot768(query, candidates[i])
-                #expect(abs(soaResult - refResult) < 1e-5, "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
+                // FP32 dot products differ in the last ULPs between the blocked SoA kernel and
+                // the naive reference due to summation order; scale tolerance to the magnitude.
+                #expect(abs(soaResult - refResult) <= 1e-5 * max(1.0, abs(refResult)), "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
             }
         }
 
@@ -259,7 +263,9 @@ struct BatchKernels_SoATests {
             // Verify results match reference implementation
             for (i, soaResult) in soaResults.enumerated() {
                 let refResult = DotKernels.dot1536(query, candidates[i])
-                #expect(abs(soaResult - refResult) < 1e-5, "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
+                // FP32 dot products differ in the last ULPs between the blocked SoA kernel and
+                // the naive reference due to summation order; scale tolerance to the magnitude.
+                #expect(abs(soaResult - refResult) <= 1e-5 * max(1.0, abs(refResult)), "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
             }
         }
 
@@ -1509,11 +1515,14 @@ struct BatchKernels_SoATests {
             let smallResults = BatchKernels_SoA.batchEuclideanSquared512(query: smallQuery, candidates: smallCandidates)
             #expect(smallResults.count == 5)
 
-            // Results should be very small but non-negative
+            // Results should be very small but non-negative. The largest squared distance
+            // here is candidate i=4: 512 lanes × (4·epsilon)² ≈ 1.16e-10. Derive the bound
+            // from that exact maximum (the old 1e-10 literal sat *below* it).
+            let maxExpectedSq = Float(512) * (4 * epsilon) * (4 * epsilon)
             for result in smallResults {
                 #expect(result >= 0, "Distance with small values should be non-negative: \(result)")
                 #expect(result.isFinite, "Distance with small values should be finite: \(result)")
-                #expect(result < 1e-10, "Distance between small values should be small: \(result)")
+                #expect(result <= maxExpectedSq * 1.5, "Distance between small values should be small: \(result)")
             }
 
             // Test 2: Subnormal numbers

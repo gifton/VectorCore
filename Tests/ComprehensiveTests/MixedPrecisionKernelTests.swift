@@ -2725,16 +2725,26 @@ struct MixedPrecisionKernelTests {
 
             #expect(largeResults.count == largeCandidates.count)
 
-            // Verify results are consistent
+            // Verify results are consistent. adaptiveEuclideanDistance returns the actual
+            // (non-squared) Euclidean distance, so the reference must also be the distance.
             let referenceResults = largeCandidates.map {
-                query.euclideanDistanceSquared(to: $0)
+                query.euclideanDistance(to: $0)
             }
 
             for i in 0..<largeCandidates.count {
                 let adaptive = largeResults[i]
                 let reference = referenceResults[i]
-                let relError = abs(adaptive - reference) / reference
-                #expect(relError < 0.05, "Adaptive error too large: \(relError)")
+                if reference < 0.1 {
+                    // candidate i=9 ≈ query: the true distance (~1e-4, from FP32 construction
+                    // rounding) is far below FP16 resolution (~0.005·√512), so the FP16 path
+                    // legitimately rounds it toward 0. Relative error is ill-defined here —
+                    // check absolute error instead.
+                    #expect(abs(adaptive - reference) < 0.1,
+                           "Adaptive abs error too large near zero: \(abs(adaptive - reference))")
+                } else {
+                    let relError = abs(adaptive - reference) / reference
+                    #expect(relError < 0.05, "Adaptive error too large: \(relError)")
+                }
             }
 
             // Test fallback mechanisms with incompatible vectors
@@ -2770,11 +2780,20 @@ struct MixedPrecisionKernelTests {
 
                 #expect(results.count == size, "Should process all \(size) candidates")
 
-                // Results should be monotonically increasing for this pattern
+                // candidate_i is the constant vector 0.1·i; query is 0.01·d (mean ≈ 2.555).
+                // distance(i) = ‖query − 0.1·i‖ is convex in i, minimized near 0.1·i ≈ 2.555
+                // (i ≈ 25) — i.e. U-shaped, NOT monotonically increasing. Verify the single-
+                // minimum shape: non-increasing up to the minimum, non-decreasing after it.
                 if size > 1 {
+                    let minIdx = results.firstIndex(of: results.min()!)!
                     for i in 1..<size {
-                        #expect(results[i] >= results[i-1],
-                               "Distances should increase for this pattern")
+                        if i <= minIdx {
+                            #expect(results[i] <= results[i-1],
+                                   "Distances should decrease up to the minimum (i=\(i))")
+                        } else {
+                            #expect(results[i] >= results[i-1],
+                                   "Distances should increase after the minimum (i=\(i))")
+                        }
                     }
                 }
             }
@@ -3102,11 +3121,15 @@ struct MixedPrecisionKernelTests {
             )
             _ = CFAbsoluteTimeGetCurrent() - regularStart  // Regular time
 
-            // Both should complete and give similar results
+            // Both should complete and give similar results. NOTE: batchEuclideanSquaredSoA
+            // returns the actual distance (its name is a documented legacy misnomer — see
+            // MixedPrecisionKernels.swift:3318-3319), whereas range_euclid2_mixed_512 returns
+            // the *squared* distance. Compare like-for-like by sqrt-ing the reference.
             for i in 0..<vectorCount {
-                let diff = abs(soaResults[i] - regularResults[i])
-                #expect(diff < 0.01 || diff / regularResults[i] < 0.01,
-                       "SoA and regular results should match")
+                let reference = sqrt(regularResults[i])
+                let diff = abs(soaResults[i] - reference)
+                #expect(diff < 0.01 || diff / max(reference, 1e-6) < 0.01,
+                       "SoA and regular results should match (soa=\(soaResults[i]), ref=\(reference))")
             }
 
             // Test prefetching effectiveness with sequential access
@@ -3791,13 +3814,11 @@ struct MixedPrecisionKernelTests {
             // Output should not be modified
             #expect(output[0] == 999.999, "Output should not be modified for empty range")
 
-            // Test with empty SoA
-            do {
-                _ = try SoAFP16<Vector512Optimized>(vectors: [], blockSize: 64)
-                Issue.record("Should throw for empty vectors")
-            } catch let error as VectorError {
-                #expect(error.kind == .invalidData)
-            }
+            // Test with empty SoA: empty input yields a valid empty SoA (no throw),
+            // consistent with the graceful empty-handling above and testSoAFP16Initialization.
+            let emptySoA = try SoAFP16<Vector512Optimized>(vectors: [], blockSize: 64)
+            #expect(emptySoA.vectorCount == 0, "Empty vectors should yield an empty SoA")
+            #expect(emptySoA.dimension == 512)
 
             // Test adaptive with empty candidates
             let emptyCandidatesArray: [Vector512Optimized] = []

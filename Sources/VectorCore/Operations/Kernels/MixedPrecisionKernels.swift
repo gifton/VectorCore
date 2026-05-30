@@ -497,13 +497,22 @@ public enum MixedPrecisionKernels {
         ///   - blockSize: Ignored (reserved for future chunking optimizations)
         /// - Throws: VectorError if vectors have incompatible dimensions
         public init(vectors: [VectorType], blockSize: Int = 32) throws {
-            // Delegate to specialized creation functions
+            // An empty vector array yields a valid empty SoA (vectorCount == 0); the
+            // specialized builders below already handle that degenerate case without throwing.
+            // Delegate to the specialized creation function for each supported dimension.
             if VectorType.self == Vector512Optimized.self {
                 let soa = MixedPrecisionKernels.createSoA512FP16(from: vectors as! [Vector512Optimized])
                 self = soa as! Self
+            } else if VectorType.self == Vector768Optimized.self {
+                let soa = MixedPrecisionKernels.createSoA768FP16(from: vectors as! [Vector768Optimized])
+                self = soa as! Self
+            } else if VectorType.self == Vector1536Optimized.self {
+                let soa = MixedPrecisionKernels.createSoA1536FP16(from: vectors as! [Vector1536Optimized])
+                self = soa as! Self
             } else {
-                // Fallback: create empty SoA
-                self.init(capacity: vectors.count, dimension: 512)
+                throw VectorError.invalidData(
+                    "Unsupported vector type \(VectorType.self) for SoAFP16; expected Vector512/768/1536Optimized"
+                )
             }
         }
 
@@ -3351,13 +3360,15 @@ public enum MixedPrecisionKernels {
         let useFP16 = maxAbsValue < 100.0  // Heuristic threshold
 
         if useFP16 {
-            // Use mixed precision pathway
+            // Use mixed precision pathway. Build a proper dimension-major SoA for the single
+            // candidate via createSoA512FP16 — the kernel walks storageIndex over 512×4 = 2048
+            // elements per group, so the flat 512-element Vector512FP16.storage must NOT be
+            // force-wrapped as an SoA (that caused out-of-bounds reads → NaN distances).
             let queryFP16 = Vector512FP16(from: query)
-            let candidateFP16 = Vector512FP16(from: candidate)
-            // Compute distance manually since Vector512FP16 may not have euclideanDistance
+            let candidatesSoA = MixedPrecisionKernels.createSoA512FP16(from: [candidate])
             var result = [Float](repeating: 0, count: 1)
             result.withUnsafeMutableBufferPointer { buffer in
-                batchEuclidean512(query: queryFP16, candidates: SoA512FP16(storage: candidateFP16.storage, vectorCount: 1, dimension: 512), results: buffer)
+                batchEuclidean512(query: queryFP16, candidates: candidatesSoA, results: buffer)
             }
             return result[0]
         } else {

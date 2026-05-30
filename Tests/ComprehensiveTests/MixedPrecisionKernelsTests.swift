@@ -189,7 +189,9 @@ struct MixedPrecisionKernelsTests {
                 }
             }
 
-            // Test values outside FP16 range (should be clamped)
+            // Test values outside FP16 range. Per the documented conversion contract
+            // (MixedPrecisionKernels.swift:303-305), FP32→FP16 uses IEEE round-to-nearest:
+            // values exceeding ±65504 overflow to ±infinity (they are NOT saturated/clamped).
             let outOfRange: [Float] = [100000.0, -100000.0, 1e10, -1e10]
             for value in outOfRange {
                 let fp32Vector = try Vector512Optimized(Array(repeating: value, count: 512))
@@ -197,11 +199,8 @@ struct MixedPrecisionKernelsTests {
                 let reconstructed = fp16Vector.toFP32()
 
                 for i in 0..<512 {
-                    if value > 0 {
-                        #expect(reconstructed[i] <= 65504.0)
-                    } else {
-                        #expect(reconstructed[i] >= -65504.0)
-                    }
+                    #expect(reconstructed[i].isInfinite)
+                    #expect(reconstructed[i].sign == (value > 0 ? .plus : .minus))
                 }
             }
         }
@@ -634,8 +633,10 @@ struct MixedPrecisionKernelsTests {
                 let vFP16 = Vector512FP16(from: v)
                 let vBack = vFP16.toFP32()
 
-                // Should clamp to FP16 range
-                #expect(abs(vBack[0]) <= 65504.0, "Overflow should be clamped")
+                // IEEE round-to-nearest: values beyond ±65504 overflow to ±infinity
+                // (documented contract at MixedPrecisionKernels.swift:303-305), not saturated.
+                #expect(vBack[0].isInfinite, "Overflow should produce infinity")
+                #expect(vBack[0].sign == (value > 0 ? .plus : .minus))
             }
 
             // Underflow test (values too small become zero)
@@ -659,10 +660,19 @@ struct MixedPrecisionKernelsTests {
             let mixedFP16 = Vector512FP16(from: mixed)
             let mixedBack = mixedFP16.toFP32()
 
-            // Check that conversion doesn't crash and produces reasonable results
+            // Check that conversion doesn't crash and produces reasonable results.
+            // Lanes whose original magnitude exceeds the FP16 range overflow to infinity
+            // (IEEE round-to-nearest); the rest stay finite and within ±65504.
             for i in 0..<512 {
-                #expect(mixedBack[i].isFinite)
-                #expect(abs(mixedBack[i]) <= 65504.0)
+                let original: Float = i < 128 ? Float(i) * 1000.0
+                                    : i < 256 ? Float(i) * 0.001
+                                    : Float(i)
+                if abs(original) > 65504.0 {
+                    #expect(mixedBack[i].isInfinite)
+                } else {
+                    #expect(mixedBack[i].isFinite)
+                    #expect(abs(mixedBack[i]) <= 65504.0)
+                }
             }
         }
 
@@ -1597,13 +1607,14 @@ struct MixedPrecisionKernelsTests {
                 #expect(maxBack[i] == maxFP16, "Max FP16 value should round-trip")
             }
 
-            // Test values that overflow FP16 get clamped
+            // Test values that overflow FP16 → IEEE round-to-nearest produces +infinity
+            // (documented contract at MixedPrecisionKernels.swift:303-305), not saturation.
             let overflowVector = Vector512Optimized(repeating: 100000.0)
             let overflowVectorFP16 = Vector512FP16(from: overflowVector)
             let overflowBack = overflowVectorFP16.toFP32()
 
             for i in 0..<512 {
-                #expect(overflowBack[i] == maxFP16, "Overflow should clamp to max FP16")
+                #expect(overflowBack[i].isInfinite && overflowBack[i] > 0, "Overflow should produce +infinity")
             }
 
             // Test minimum normal value
@@ -1648,15 +1659,10 @@ struct MixedPrecisionKernelsTests {
                 let vectorFP16 = Vector512FP16(from: vector)
                 let back = vectorFP16.toFP32()
 
-                if value.isInfinite {
-                    // Infinity should clamp to max FP16
-                    let expected: Float = value > 0 ? 65504.0 : -65504.0
-                    #expect(back[0] == expected, "Infinity should clamp to max FP16")
-                } else {
-                    // Large values should clamp
-                    let expected: Float = value > 0 ? 65504.0 : -65504.0
-                    #expect(back[0] == expected, "Overflow should clamp to max FP16")
-                }
+                // IEEE round-to-nearest: both infinity inputs and values beyond ±65504
+                // overflow to ±infinity (MixedPrecisionKernels.swift:303-305), not saturation.
+                #expect(back[0].isInfinite, "Overflow/infinity should produce infinity")
+                #expect(back[0].sign == (value > 0 ? .plus : .minus))
             }
 
             // Test precision loss with many decimal places
@@ -1688,7 +1694,7 @@ struct MixedPrecisionKernelsTests {
                 case 0:
                     #expect(mixedBack[i].isNaN, "NaN should be preserved")
                 case 1:
-                    #expect(mixedBack[i] == 65504.0, "Overflow should clamp")
+                    #expect(mixedBack[i].isInfinite && mixedBack[i] > 0, "Overflow should produce +infinity")
                 case 2:
                     #expect(mixedBack[i] >= 0 && mixedBack[i] < 0.001, "Underflow should be near zero")
                 default:

@@ -74,6 +74,14 @@ public final class MixedPrecisionDiagnostics: @unchecked Sendable {
         logger.info("Mixed precision diagnostics disabled")
     }
 
+    /// Whether conversion recording is currently enabled. Cheap check so hot conversion
+    /// paths can skip building diagnostic buffers when tracking is off.
+    public var isRecording: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return isEnabled
+    }
+
     /// Get current statistics
     public func getStatistics() -> OverflowStatistics {
         lock.lock()

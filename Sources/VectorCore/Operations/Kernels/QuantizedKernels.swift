@@ -15,7 +15,11 @@ import simd
 /// Parameters for linear (affine) quantization: q = round(x/scale + zeroPoint).
 public struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
     public let scale: Float
-    public let zeroPoint: Int8
+    /// Affine zero point. Stored as `Int32` (not `Int8`): for asymmetric ranges that do not
+    /// straddle zero (e.g. [-10,-1] or near-constant data) the required offset
+    /// `round(-128 - min/scale)` exceeds the Int8 range, and clamping it to Int8 collapsed the
+    /// mapping (saturating one tail). The quantized *codes* remain Int8; only this offset widens.
+    public let zeroPoint: Int32
     public let minValue: Float
     public let maxValue: Float
     public let isSymmetric: Bool
@@ -36,10 +40,10 @@ public struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
             let range = maxValue - minValue
             self.scale = range <= Float.leastNormalMagnitude ? 1.0 : range / 255.0
 
-            // Calculate zero point: zp = round(-128 - min/scale)
+            // Calculate zero point: zp = round(-128 - min/scale). Clamp to Int32 (wide enough
+            // to hold the exact affine offset for any realistic range).
             let zpFloat = -128.0 - (minValue / self.scale)
-            // Nudge and clamp the zero point to the valid Int8 range.
-            self.zeroPoint = Int8(clamping: Int(zpFloat.rounded()))
+            self.zeroPoint = Int32(clamping: Int(zpFloat.rounded()))
         }
     }
 
@@ -393,7 +397,7 @@ internal enum QuantizedKernels {
     internal static func convertToFP32_NEON(
         int8Vec: SIMD4<Int8>,
         scale: Float,
-        zeroPoint: Int8
+        zeroPoint: Int32
     ) -> SIMD4<Float> {
         // 1. Widen Int8 -> Int32 (Sign extension).
         let int32Vec = SIMD4<Int32>(Int32(int8Vec.x), Int32(int8Vec.y), Int32(int8Vec.z), Int32(int8Vec.w))

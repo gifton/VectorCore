@@ -3344,17 +3344,35 @@ public enum MixedPrecisionKernels {
         }
     }
 
-    // MARK: - Test Compatibility Aliases
+    // MARK: - SoA Convenience
 
-    /// Alias for batchEuclidean512 - computes squared Euclidean distances using SoA layout
-    /// - Note: Results are actual distances (not squared), despite the name for backward compatibility
+    /// Batch Euclidean **distance** (FP16 query × FP16 SoA candidates) using SoA layout.
+    ///
+    /// Returns the actual Euclidean distance (i.e. with `sqrt`), identical to `batchEuclidean512`.
+    /// - Parameters:
+    ///   - query: FP16 query vector
+    ///   - candidates: SoA-layout FP16 candidate vectors
+    ///   - results: Output buffer for distances (capacity ≥ candidates.vectorCount)
+    @inlinable
+    public static func batchEuclideanSoA(
+        query: Vector512FP16,
+        candidates: SoA512FP16,
+        results: UnsafeMutableBufferPointer<Float>
+    ) {
+        batchEuclidean512(query: query, candidates: candidates, results: results)
+    }
+
+    /// Deprecated misnomer: despite the name, this returns the **actual** (non-squared)
+    /// Euclidean distance. Use ``batchEuclideanSoA`` instead. (If you need squared distances,
+    /// `BatchKernels_SoA.batchEuclideanSquared512` returns the true squared value.)
+    @available(*, deprecated, renamed: "batchEuclideanSoA", message: "Returns the actual Euclidean distance (not squared) despite the old name; use batchEuclideanSoA.")
     @inlinable
     public static func batchEuclideanSquaredSoA(
         query: Vector512FP16,
         candidates: SoA512FP16,
         results: UnsafeMutableBufferPointer<Float>
     ) {
-        batchEuclidean512(query: query, candidates: candidates, results: results)
+        batchEuclideanSoA(query: query, candidates: candidates, results: results)
     }
 
     /// Adaptive Euclidean distance computation with automatic precision selection

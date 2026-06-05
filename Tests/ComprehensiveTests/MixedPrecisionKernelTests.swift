@@ -1686,7 +1686,7 @@ struct MixedPrecisionKernelTests {
             // Convert query to FP16 for mixed precision computation
             let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
 
-            MixedPrecisionKernels.batchEuclideanSquaredSoA(
+            MixedPrecisionKernels.batchEuclideanSoA(
                 query: queryFP16,
                 candidates: soaCandidates,
                 results: soaResults
@@ -1705,7 +1705,7 @@ struct MixedPrecisionKernelTests {
             )
 
             // Verify SoA results match regular batch processing.
-            // NOTE: batchEuclideanSquaredSoA returns the actual Euclidean DISTANCE
+            // NOTE: batchEuclideanSoA returns the actual Euclidean DISTANCE
             // (the "Squared" name is a documented legacy misnomer), whereas
             // range_euclid2_mixed_512 returns the SQUARED distance. Compare like-for-like
             // by taking sqrt of the squared reference.
@@ -1731,7 +1731,7 @@ struct MixedPrecisionKernelTests {
                 let altResults = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
                 defer { altResults.deallocate() }
 
-                MixedPrecisionKernels.batchEuclideanSquaredSoA(
+                MixedPrecisionKernels.batchEuclideanSoA(
                     query: queryFP16,
                     candidates: soaAlt,
                     results: altResults
@@ -2013,7 +2013,7 @@ struct MixedPrecisionKernelTests {
             // This access pattern benefits from prefetching
             // Convert query to FP16 for mixed precision computation
             let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
-            MixedPrecisionKernels.batchEuclideanSquaredSoA(
+            MixedPrecisionKernels.batchEuclideanSoA(
                 query: queryFP16,
                 candidates: soa,
                 results: prefetchResults
@@ -3089,7 +3089,7 @@ struct MixedPrecisionKernelTests {
                 // Convert query to FP16 for mixed precision computation
                 let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
                 for _ in 0..<10 {  // Multiple iterations to measure
-                    MixedPrecisionKernels.batchEuclideanSquaredSoA(
+                    MixedPrecisionKernels.batchEuclideanSoA(
                         query: queryFP16,
                         candidates: soa,
                         results: results
@@ -3120,7 +3120,7 @@ struct MixedPrecisionKernelTests {
             let soaStart = CFAbsoluteTimeGetCurrent()
             // Convert query to FP16 for mixed precision computation
             let queryFP16_soa = MixedPrecisionKernels.Vector512FP16(from: query)
-            MixedPrecisionKernels.batchEuclideanSquaredSoA(
+            MixedPrecisionKernels.batchEuclideanSoA(
                 query: queryFP16_soa,
                 candidates: soaOpt,
                 results: soaResults
@@ -3137,7 +3137,7 @@ struct MixedPrecisionKernelTests {
             )
             _ = CFAbsoluteTimeGetCurrent() - regularStart  // Regular time
 
-            // Both should complete and give similar results. NOTE: batchEuclideanSquaredSoA
+            // Both should complete and give similar results. NOTE: batchEuclideanSoA
             // returns the actual distance (its name is a documented legacy misnomer — see
             // MixedPrecisionKernels.swift:3318-3319), whereas range_euclid2_mixed_512 returns
             // the *squared* distance. Compare like-for-like by sqrt-ing the reference.
@@ -3788,7 +3788,7 @@ struct MixedPrecisionKernelTests {
 
             // Convert query to FP16 for mixed precision computation
             let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
-            MixedPrecisionKernels.batchEuclideanSquaredSoA(
+            MixedPrecisionKernels.batchEuclideanSoA(
                 query: queryFP16,
                 candidates: soaDataset,
                 results: soaOutput
@@ -3899,13 +3899,13 @@ struct MixedPrecisionKernelTests {
 
             // Convert query to FP16 for mixed precision computation
             let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
-            MixedPrecisionKernels.batchEuclideanSquaredSoA(
+            MixedPrecisionKernels.batchEuclideanSoA(
                 query: queryFP16,
                 candidates: soaSingle,
                 results: output
             )
 
-            // batchEuclideanSquaredSoA returns the actual Euclidean DISTANCE (the "Squared"
+            // batchEuclideanSoA returns the actual Euclidean DISTANCE (the "Squared"
             // name is a documented legacy misnomer), so compare against the non-squared
             // reference distance (sqrt of the squared `expected` above).
             let expectedDistance = sqrt(expected)
@@ -4149,7 +4149,7 @@ struct MixedPrecisionKernelTests {
             }
 
             // Test bounds checking with SoA
-            // Note: batchEuclideanSquaredSoA is only available for 512-dimensional vectors
+            // Note: batchEuclideanSoA is only available for 512-dimensional vectors
             // 1536-dimensional SoA batch operations not yet implemented
             // TODO: Add SoA batch support for 1536-dimensional vectors
             /*
@@ -4157,7 +4157,7 @@ struct MixedPrecisionKernelTests {
             let soaBuffer = UnsafeMutableBufferPointer<Float>.allocate(capacity: candidateCount)
             defer { soaBuffer.deallocate() }
 
-            MixedPrecisionKernels.batchEuclideanSquaredSoA(
+            MixedPrecisionKernels.batchEuclideanSoA(
                 query: query,
                 candidates: soaCandidates,
                 results: soaBuffer
@@ -4408,7 +4408,7 @@ struct MixedPrecisionKernelTests {
 
             // Convert query to FP16 for batch operation
             let queryFP16 = Vector512FP16(from: vector)
-            MixedPrecisionKernels.batchEuclideanSquaredSoA(
+            MixedPrecisionKernels.batchEuclideanSoA(
                 query: queryFP16,
                 candidates: soaVectors,
                 results: batchOutput

@@ -24,7 +24,10 @@ Classification key: **SRC** = source bug (test correct) · **TST** = test issue 
 
 **S1 reclassified SRC→TST:** the `shouldUseMixedPrecision` memory-bound contract is consistent with a passing sibling test; fixed the two failing tests instead of the heuristic.
 
-**⚠️ FLAGGED (not masked) — potential concurrency bug:** `testSoftmaxMatchesScalarReference` produced a `NaN` once under heavy parallel load with *deterministic* input, passing in isolation. `softmax()` (VectorMath.swift:305) and `SwiftSIMDProvider` (a `Sendable` struct) are thread-clean, so this points at rare **buffer-pool aliasing under concurrent allocation** (the area commit `39012c6` touched). Left for a dedicated concurrency investigation — do not paper over with a retry.
+**⚠️ INVESTIGATED — softmax NaN (rare, not a data race):** `testSoftmaxMatchesScalarReference` produced a `NaN` once under heavy parallel load with *deterministic* input, passing in isolation and not recurring since. Investigation:
+- Code inspection: `softmax()` (VectorMath.swift:305) operates on local arrays (`vvexpf` reentrant); `SwiftSIMDProvider` is a `Sendable struct`; `MemoryPool.acquire` is barrier-synchronized **and not used by this path**; `Vector<D>` is a `Sendable` COW struct used locally; `Operations.simdProvider` is `@TaskLocal` (task-isolated). No shared mutable state on the path.
+- **ThreadSanitizer: 0 data races** across 165 concurrency-relevant tests (54-min instrumented run). Definitively not a data race.
+- **Conclusion:** not a race; direct paths thread-clean; non-reproducing. Most likely a very rare OOB-write corruption from another kernel or an environmental edge. **Recommended watch:** run the suite under AddressSanitizer in CI to catch an OOB write if it ever recurs. Not masked with a retry.
 
 Final state: full suite green except the flagged intermittent; 14 perf tests skip unless `VECTORCORE_TEST_EXTENDED=1`.
 

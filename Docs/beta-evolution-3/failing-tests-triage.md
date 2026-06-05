@@ -21,6 +21,10 @@ Classification key: **SRC** = source bug (test correct) · **TST** = test issue 
 | `3b0bb05` | Round 2 source: S2 subnormal FP16, S3 INT8 zeroPoint Int8→Int32 (API change), S4 diagnostics wiring, S5 analyzePrecision |
 | `b951c84` | Round 2: ~45 stale-test corrections + 13 debug-invalid perf tests gated behind `VECTORCORE_TEST_EXTENDED` |
 | `30cae1a` | Stabilized 3 flaky tests (surfaced under parallel run; not in audited set) |
+| `ec294c0` | API rename `batchEuclideanSquaredSoA` → `batchEuclideanSoA` (+ deprecated shim) |
+| `1d91d73` | **Fix heap-buffer-overflow** in SwiftFloatSIMDProvider SIMD8 reductions (softmax NaN) |
+| `24e6073` | SIMD provider bounds-safety sweep (regression guard, ASan-verified) |
+| `061fc2a` | **Seed RNG** in ~12 numerical-test files (~300 draws) — eliminates the systemic flakiness at the root |
 
 **S1 reclassified SRC→TST:** the `shouldUseMixedPrecision` memory-bound contract is consistent with a passing sibling test; fixed the two failing tests instead of the heuristic.
 
@@ -32,7 +36,9 @@ Classification key: **SRC** = source bug (test correct) · **TST** = test issue 
 
 This was the single highest-value find — a real memory-safety + correctness defect, surfaced only because the rare NaN was investigated with sanitizers rather than masked with a retry.
 
-Final state: full suite green except the flagged intermittent; 14 perf tests skip unless `VECTORCORE_TEST_EXTENDED=1`.
+**Systemic flakiness — ELIMINATED:** ~300 unseeded `Float/Int/Bool.random` draws across the numerical-test suites were the root of the rotating intermittent failures (and they masked the softmax overflow for 5 runs). Migrated every such test to a deterministic per-test `SeededGenerator` (commit `061fc2a`); verified identical results across repeated runs.
+
+**Final state: full suite GREEN — 996 tests, 0 failing, 18 perf tests skipped unless `VECTORCORE_TEST_EXTENDED=1`.** ThreadSanitizer-clean (0 races), AddressSanitizer-clean (the SIMD8 overflow was the sole finding, now fixed + guarded), deterministic.
 
 ---
 

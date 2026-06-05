@@ -154,12 +154,13 @@ internal enum NumericalStabilityHelpers {
     ) throws -> Vector<D> {
         let dim = Vector<D>.zero.scalarCount
         var array = Array<Float>(repeating: 0.0, count: dim)
+        var rng = SeededGenerator(seed: 0x5713_0001)
 
         for i in 0..<dim {
             // Random exponent in range
-            let exponent = Float.random(in: minExponent...maxExponent)
+            let exponent = Float.random(in: minExponent...maxExponent, using: &rng)
             // Random sign
-            let sign: Float = Bool.random() ? 1.0 : -1.0
+            let sign: Float = Bool.random(using: &rng) ? 1.0 : -1.0
             // Value = sign * 10^exponent
             let value = sign * pow(10.0, exponent)
             array[i] = value
@@ -1626,7 +1627,8 @@ struct NumericalStabilityRegressionTests {
 
             // Random unit vector
             (try {
-                let random = try Vector<Dim32>((0..<32).map { _ in Float.random(in: -1...1) })
+                var rng = SeededGenerator(seed: 0x5713_0002)
+                let random = try Vector<Dim32>((0..<32).map { _ in Float.random(in: -1...1, using: &rng) })
                 return random.normalizedFast()
             }(), "Random normalized")
         ]

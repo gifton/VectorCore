@@ -7,10 +7,10 @@ struct MixedPrecisionPart1ValidationTests {
 
     // MARK: - Helper Functions
 
-    func generateRandomVector512() -> Vector512Optimized {
+    func generateRandomVector512(using rng: inout SeededGenerator) -> Vector512Optimized {
         var values: [Float] = []
         for _ in 0..<512 {
-            values.append(Float.random(in: -1...1))
+            values.append(Float.random(in: -1...1, using: &rng))
         }
         return try! Vector512Optimized(values)
     }
@@ -19,8 +19,9 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Euclidean 512: FP16×FP16 accuracy")
     func testEuclidean512_FP16x16_Accuracy() throws {
-        let query = generateRandomVector512()
-        let candidate = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB1000001)
+        let query = generateRandomVector512(using: &rng)
+        let candidate = generateRandomVector512(using: &rng)
 
         let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
         let candidateFP16 = MixedPrecisionKernels.Vector512FP16(from: candidate)
@@ -35,8 +36,9 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Euclidean 512: FP32×FP16 accuracy")
     func testEuclidean512_FP32x16_Accuracy() throws {
-        let query = generateRandomVector512()
-        let candidate = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB1000002)
+        let query = generateRandomVector512(using: &rng)
+        let candidate = generateRandomVector512(using: &rng)
         let candidateFP16 = MixedPrecisionKernels.Vector512FP16(from: candidate)
 
         let refFP32 = EuclideanKernels.distance512(query, candidate)
@@ -49,8 +51,9 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Euclidean 512: FP16×FP32 accuracy")
     func testEuclidean512_FP16x32_Accuracy() throws {
-        let query = generateRandomVector512()
-        let candidate = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB1000003)
+        let query = generateRandomVector512(using: &rng)
+        let candidate = generateRandomVector512(using: &rng)
         let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
 
         let refFP32 = EuclideanKernels.distance512(query, candidate)
@@ -63,12 +66,13 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Euclidean 768: FP32×FP16 accuracy")
     func testEuclidean768_Mixed_Accuracy() throws {
+        var rng = SeededGenerator(seed: 0xB1000004)
         var values: [Float] = []
         for _ in 0..<768 {
-            values.append(Float.random(in: -1...1))
+            values.append(Float.random(in: -1...1, using: &rng))
         }
         let query = try Vector768Optimized(values)
-        let candidate = try Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1) })
+        let candidate = try Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })
         let candidateFP16 = MixedPrecisionKernels.Vector768FP16(from: candidate)
 
         let refFP32 = EuclideanKernels.distance768(query, candidate)
@@ -81,8 +85,9 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Euclidean 1536: FP32×FP16 accuracy")
     func testEuclidean1536_Mixed_Accuracy() throws {
-        let query = try Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
-        let candidate = try Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
+        var rng = SeededGenerator(seed: 0xB1000005)
+        let query = try Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1, using: &rng) })
+        let candidate = try Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1, using: &rng) })
         let candidateFP16 = MixedPrecisionKernels.Vector1536FP16(from: candidate)
 
         let refFP32 = EuclideanKernels.distance1536(query, candidate)
@@ -97,8 +102,9 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Cosine 512: FP16×FP16 accuracy")
     func testCosine512_FP16x16_Accuracy() throws {
-        let query = generateRandomVector512()
-        let candidate = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB1000006)
+        let query = generateRandomVector512(using: &rng)
+        let candidate = generateRandomVector512(using: &rng)
         let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
         let candidateFP16 = MixedPrecisionKernels.Vector512FP16(from: candidate)
 
@@ -112,8 +118,9 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Cosine 512: FP32×FP16 accuracy")
     func testCosine512_FP32x16_Accuracy() throws {
-        let query = generateRandomVector512()
-        let candidate = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB1000007)
+        let query = generateRandomVector512(using: &rng)
+        let candidate = generateRandomVector512(using: &rng)
         let candidateFP16 = MixedPrecisionKernels.Vector512FP16(from: candidate)
 
         let refFP32 = CosineKernels.distance512_fused(query, candidate)
@@ -126,8 +133,9 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Cosine 768: FP32×FP16 accuracy")
     func testCosine768_Mixed_Accuracy() throws {
-        let query = try Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1) })
-        let candidate = try Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1) })
+        var rng = SeededGenerator(seed: 0xB1000008)
+        let query = try Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })
+        let candidate = try Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })
         let candidateFP16 = MixedPrecisionKernels.Vector768FP16(from: candidate)
 
         let refFP32 = CosineKernels.distance768_fused(query, candidate)
@@ -155,9 +163,10 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Zero vectors handling")
     func testZeroVectors() throws {
+        var rng = SeededGenerator(seed: 0xB1000009)
         let zero = try Vector512Optimized(Array(repeating: 0.0, count: 512))
         let zeroFP16 = MixedPrecisionKernels.Vector512FP16(from: zero)
-        let nonZero = generateRandomVector512()
+        let nonZero = generateRandomVector512(using: &rng)
         let nonZeroFP16 = MixedPrecisionKernels.Vector512FP16(from: nonZero)
 
         // Euclidean with zeros
@@ -171,7 +180,8 @@ struct MixedPrecisionPart1ValidationTests {
 
     @Test("Identical vectors")
     func testIdenticalVectors() throws {
-        let vec = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB100000A)
+        let vec = generateRandomVector512(using: &rng)
         let vecFP16 = MixedPrecisionKernels.Vector512FP16(from: vec)
 
         let eucDist = MixedPrecisionKernels.euclidean512(vecFP16, vecFP16)

@@ -207,9 +207,10 @@ struct MixedPrecisionKernelsTests {
 
         @Test
         func testFP16ConversionPerformance() throws {
+            var rng = SeededGenerator(seed: 0xC4040001)
             let vectorCount = 1000
             let vectors = try (0..<vectorCount).map { _ in
-                try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100) })
+                try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })
             }
 
             // Measure FP32→FP16 conversion
@@ -495,13 +496,14 @@ struct MixedPrecisionKernelsTests {
         @Test
         func testFP16AccuracyLoss() throws {
             // Test quantification of FP16 accuracy loss
+            var rng = SeededGenerator(seed: 0xC4040002)
             let testCount = 100
             var absoluteErrors: [Float] = []
             var relativeErrors: [Float] = []
 
             for _ in 0..<testCount {
-                let v1 = try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100) })
-                let v2 = try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100) })
+                let v1 = try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })
+                let v2 = try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })
 
                 // Convert to FP16 and back
                 let v1FP16 = Vector512FP16(from: v1)
@@ -540,8 +542,9 @@ struct MixedPrecisionKernelsTests {
         @Test
         func testAccuracyVsPerformanceTradeoffs() throws {
             // Test accuracy vs performance tradeoffs
+            var rng = SeededGenerator(seed: 0xC4040003)
             let vectors = try (0..<100).map { _ in
-                try Vector512Optimized((0..<512).map { _ in Float.random(in: -10...10) })
+                try Vector512Optimized((0..<512).map { _ in Float.random(in: -10...10, using: &rng) })
             }
             let query = vectors[0]
 
@@ -717,12 +720,13 @@ struct MixedPrecisionKernelsTests {
         @Test
         func testStatisticalAccuracyAnalysis() throws {
             // Test statistical analysis of FP16 accuracy
+            var rng = SeededGenerator(seed: 0xC4040004)
             let sampleSize = 1000
             var absErrors: [Float] = []
             var relErrors: [Float] = []
 
             for _ in 0..<sampleSize {
-                let value = Float.random(in: -1000...1000)
+                let value = Float.random(in: -1000...1000, using: &rng)
                 let v = try Vector512Optimized(Array(repeating: value, count: 512))
                 let vFP16 = Vector512FP16(from: v)
                 let vBack = vFP16.toFP32()
@@ -768,11 +772,12 @@ struct MixedPrecisionKernelsTests {
         @Test
         func testMemoryFootprintReduction() throws {
             // Test 2x memory footprint reduction with FP16
+            var rng = SeededGenerator(seed: 0xC4040005)
             let vectorCount = 1000
 
             // Create FP32 vectors
             let fp32Vectors = try (0..<vectorCount).map { _ in
-                try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100) })
+                try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })
             }
 
             // Convert to FP16
@@ -808,12 +813,13 @@ struct MixedPrecisionKernelsTests {
             // Test cache efficiency improvements with FP16
             // Smaller data footprint = better cache utilization
 
+            var rng = SeededGenerator(seed: 0xC4040006)
             let sizes = [100, 1000, 10000]  // Different dataset sizes
 
             for size in sizes {
                 // Create test vectors
                 let fp32Vectors = try (0..<size).map { _ in
-                    try Vector512Optimized((0..<512).map { _ in Float.random(in: -10...10) })
+                    try Vector512Optimized((0..<512).map { _ in Float.random(in: -10...10, using: &rng) })
                 }
                 let fp16Vectors = fp32Vectors.map { Vector512FP16(from: $0) }
 
@@ -837,7 +843,7 @@ struct MixedPrecisionKernelsTests {
                 let fp16Time = Date().timeIntervalSince(fp16Start)
 
                 // Random access pattern (stress cache)
-                let indices = (0..<size).shuffled()
+                let indices = (0..<size).shuffled(using: &rng)
 
                 let fp32RandomStart = Date()
                 var fp32RandomSum: Float = 0
@@ -869,11 +875,12 @@ struct MixedPrecisionKernelsTests {
             // Test memory bandwidth utilization with FP16
             // FP16 uses 50% of the bandwidth of FP32
 
+            var rng = SeededGenerator(seed: 0xC4040007)
             let vectorCount = 10000
             let iterations = 10
 
             let fp32Vectors = try (0..<vectorCount).map { _ in
-                try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100) })
+                try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })
             }
             let fp16Vectors = fp32Vectors.map { Vector512FP16(from: $0) }
 
@@ -1108,8 +1115,9 @@ struct MixedPrecisionKernelsTests {
         @Test
         func testNEONFP16Conversions() throws {
             // Test batch conversion efficiency
+            var rng = SeededGenerator(seed: 0xC4040008)
             let batch = try (0..<100).map { _ in
-                try Vector512Optimized((0..<512).map { _ in Float.random(in: -10...10) })
+                try Vector512Optimized((0..<512).map { _ in Float.random(in: -10...10, using: &rng) })
             }
 
             let start = Date()
@@ -1186,11 +1194,12 @@ struct MixedPrecisionKernelsTests {
             // Test batch FP16 conversion performance
             // Measure amortized costs and identify bottlenecks
 
+            var rng = SeededGenerator(seed: 0xC4040009)
             let batchSizes = [10, 100, 1000, 10000]
 
             for batchSize in batchSizes {
                 let batch = try (0..<batchSize).map { _ in
-                    try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100) })
+                    try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })
                 }
 
                 // Measure batch conversion FP32→FP16
@@ -1261,9 +1270,10 @@ struct MixedPrecisionKernelsTests {
 
         @Test
         func testBatchMemoryAccessPatterns() throws {
+            var rng = SeededGenerator(seed: 0xC404000A)
             let batchSize = 100
             let batch = try (0..<batchSize).map { _ in
-                try Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+                try Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1, using: &rng) })
             }
 
             let fp16Batch = batch.map { Vector512FP16(from: $0) }
@@ -1932,13 +1942,14 @@ struct MixedPrecisionKernelsTests {
             // - Performance improvements
 
             // Simulate document embeddings (e.g., from BERT)
+            var rng = SeededGenerator(seed: 0xC404000B)
             let numDocuments = 100
             let documents = try (0..<numDocuments).map { docId in
                 // Create pseudo-semantic embeddings
                 try Vector512Optimized((0..<512).map { dim in
                     // Simulate clustered embeddings
                     let cluster = Float(docId / 10)  // Group similar documents
-                    let noise = Float.random(in: -0.1...0.1)
+                    let noise = Float.random(in: -0.1...0.1, using: &rng)
                     return sin(Float(dim) * cluster / 100.0) + noise
                 })
             }
@@ -1949,7 +1960,7 @@ struct MixedPrecisionKernelsTests {
             // Create query embedding
             let queryCluster = 5  // Looking for documents in cluster 5
             let query = try Vector512Optimized((0..<512).map { dim in
-                sin(Float(dim) * Float(queryCluster) / 100.0) + Float.random(in: -0.05...0.05)
+                sin(Float(dim) * Float(queryCluster) / 100.0) + Float.random(in: -0.05...0.05, using: &rng)
             })
             let queryFP16 = Vector512FP16(from: query)
 
@@ -2011,6 +2022,7 @@ struct MixedPrecisionKernelsTests {
             // - Scalability improvements
 
             // Simulate user and item embeddings
+            var rng = SeededGenerator(seed: 0xC404000C)
             let numUsers = 50
             let numItems = 200
 
@@ -2019,7 +2031,7 @@ struct MixedPrecisionKernelsTests {
                 try Vector512Optimized((0..<512).map { dim in
                     // Create user preference patterns
                     let preference = Float(userId % 5)  // User type
-                    return cos(Float(dim) * preference / 50.0) + Float.random(in: -0.1...0.1)
+                    return cos(Float(dim) * preference / 50.0) + Float.random(in: -0.1...0.1, using: &rng)
                 })
             }
 
@@ -2028,7 +2040,7 @@ struct MixedPrecisionKernelsTests {
                 try Vector512Optimized((0..<512).map { dim in
                     // Create item feature patterns
                     let category = Float(itemId % 5)  // Item category
-                    return sin(Float(dim) * category / 50.0) + Float.random(in: -0.1...0.1)
+                    return sin(Float(dim) * category / 50.0) + Float.random(in: -0.1...0.1, using: &rng)
                 })
             }
 
@@ -2087,6 +2099,7 @@ struct MixedPrecisionKernelsTests {
             // - Model accuracy preservation
 
             // Simulate a simple transformer attention mechanism
+            var rng = SeededGenerator(seed: 0xC404000D)
             let seqLength = 16
             let hiddenDim = 512
             let numHeads = 8
@@ -2097,7 +2110,7 @@ struct MixedPrecisionKernelsTests {
                 try Vector512Optimized((0..<hiddenDim).map { dim in
                     // Positional encoding + random features
                     sin(Float(pos) / pow(10000, Float(dim) / Float(hiddenDim))) +
-                    Float.random(in: -0.1...0.1)
+                    Float.random(in: -0.1...0.1, using: &rng)
                 })
             }
 
@@ -2154,14 +2167,14 @@ struct MixedPrecisionKernelsTests {
             let embeddings = try (0..<vocabSize).map { tokenId in
                 try Vector512Optimized((0..<512).map { dim in
                     // Learned embeddings simulation
-                    Float.random(in: -0.1...0.1) * sqrt(2.0 / Float(512))
+                    Float.random(in: -0.1...0.1, using: &rng) * sqrt(2.0 / Float(512))
                 })
             }
             let embeddingsFP16 = embeddings.map { Vector512FP16(from: $0) }
 
             // Simulate batch embedding lookup
             let batchSize = 32
-            let tokenIds = (0..<batchSize).map { _ in Int.random(in: 0..<vocabSize) }
+            let tokenIds = (0..<batchSize).map { _ in Int.random(in: 0..<vocabSize, using: &rng) }
 
             // Measure performance
             let fp32Start = Date()
@@ -2188,6 +2201,7 @@ struct MixedPrecisionKernelsTests {
             // - Processing speed improvements
 
             // Simulate image feature vectors (e.g., from ResNet or CLIP)
+            var rng = SeededGenerator(seed: 0xC404000E)
             let numImages = 100
             let featureDim = 512
 
@@ -2198,7 +2212,7 @@ struct MixedPrecisionKernelsTests {
                 return try Vector512Optimized((0..<featureDim).map { dim in
                     // Simulate visual features with category clustering
                     let baseFeature = sin(Float(dim * category) / 20.0)
-                    let variation = Float.random(in: -0.2...0.2)
+                    let variation = Float.random(in: -0.2...0.2, using: &rng)
                     return baseFeature + variation
                 })
             }
@@ -2277,25 +2291,26 @@ struct MixedPrecisionKernelsTests {
 
     // Generate FP32 test vectors for mixed precision testing
     private static func generateFP32TestVectors(count: Int, dimension: Int = 512) -> [Vector512Optimized] {
+        var rng = SeededGenerator(seed: 0xC404000F)
         return (0..<count).map { i in
             // Generate diverse test patterns
             let pattern = i % 5
             switch pattern {
             case 0:  // Random uniform
-                return Vector512Optimized { _ in Float.random(in: -1...1) }
+                return Vector512Optimized { _ in Float.random(in: -1...1, using: &rng) }
             case 1:  // Sparse
-                return Vector512Optimized { dim in dim % 10 == 0 ? Float.random(in: -1...1) : 0 }
+                return Vector512Optimized { dim in dim % 10 == 0 ? Float.random(in: -1...1, using: &rng) : 0 }
             case 2:  // Gradient
                 return Vector512Optimized { dim in Float(dim) / Float(dimension) }
             case 3:  // Sinusoidal
                 return Vector512Optimized { dim in sin(Float(dim) * Float(i) / 100.0) }
             default:  // Gaussian-like
-                let mean = Float.random(in: -0.5...0.5)
+                let mean = Float.random(in: -0.5...0.5, using: &rng)
                 let std: Float = 0.3
                 return Vector512Optimized { _ in
                     // Box-Muller approximation
-                    let u1 = Float.random(in: 0.001...0.999)
-                    let u2 = Float.random(in: 0.001...0.999)
+                    let u1 = Float.random(in: 0.001...0.999, using: &rng)
+                    let u2 = Float.random(in: 0.001...0.999, using: &rng)
                     let z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * .pi * u2)
                     return mean + std * z0
                 }

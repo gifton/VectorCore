@@ -7,12 +7,12 @@ struct MixedPrecisionPhase4Tests {
 
     // MARK: - Helper Functions
 
-    func generateRandomVector512() -> Vector512Optimized {
-        return try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+    func generateRandomVector512(using rng: inout SeededGenerator) -> Vector512Optimized {
+        return try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1, using: &rng) })
     }
 
-    func generateRandomVectors512(count: Int) -> [Vector512Optimized] {
-        return (0..<count).map { _ in generateRandomVector512() }
+    func generateRandomVectors512(count: Int, using rng: inout SeededGenerator) -> [Vector512Optimized] {
+        return (0..<count).map { _ in generateRandomVector512(using: &rng) }
     }
 
     // MARK: - FP16VectorPool Tests
@@ -67,8 +67,9 @@ struct MixedPrecisionPhase4Tests {
         #expect(pool.availableCount == 3, "Pool should be full again")
 
         // Create external vector and try to release (should be accepted)
+        var rng = SeededGenerator(seed: 0xB3000001)
         let externalVec = MixedPrecisionKernels.Vector512FP16(
-            from: generateRandomVector512()
+            from: generateRandomVector512(using: &rng)
         )
         pool.release(externalVec)
 
@@ -166,8 +167,9 @@ struct MixedPrecisionPhase4Tests {
     func testProvider_SingleDistance() async throws {
         let provider = MixedPrecisionProvider()
 
-        let vec1 = generateRandomVector512()
-        let vec2 = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB3000002)
+        let vec1 = generateRandomVector512(using: &rng)
+        let vec2 = generateRandomVector512(using: &rng)
 
         // Compute distance via provider
         let providerDist = try await provider.distance(
@@ -189,8 +191,9 @@ struct MixedPrecisionPhase4Tests {
     func testProvider_SmallBatch() async throws {
         let provider = MixedPrecisionProvider(minBatchSize: 50)
 
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 10)  // Below threshold
+        var rng = SeededGenerator(seed: 0xB3000003)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 10, using: &rng)  // Below threshold
 
         // Should use FP32 path (below minBatchSize)
         let distances = try await provider.batchDistance(
@@ -209,8 +212,9 @@ struct MixedPrecisionPhase4Tests {
     func testProvider_LargeBatch() async throws {
         let provider = MixedPrecisionProvider(minBatchSize: 32)
 
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 100)  // Above threshold
+        var rng = SeededGenerator(seed: 0xB3000004)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 100, using: &rng)  // Above threshold
 
         // Should use FP16 SoA path
         let distancesFP16 = try await provider.batchDistance(
@@ -241,8 +245,9 @@ struct MixedPrecisionPhase4Tests {
     func testProvider_CosineFallback() async throws {
         let provider = MixedPrecisionProvider()
 
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 50)
+        var rng = SeededGenerator(seed: 0xB3000005)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 50, using: &rng)
 
         // Cosine should fallback to FP32 (not yet implemented in FP16)
         let distances = try await provider.batchDistance(
@@ -267,10 +272,11 @@ struct MixedPrecisionPhase4Tests {
     func testProvider_BlockedKernelSelection() async throws {
         let provider = MixedPrecisionProvider(minBatchSize: 10)
 
-        let query = generateRandomVector512()
+        var rng = SeededGenerator(seed: 0xB3000006)
+        let query = generateRandomVector512(using: &rng)
 
         // Test boundary: batch size = 16 (should trigger blocked kernel)
-        let candidates16 = generateRandomVectors512(count: 16)
+        let candidates16 = generateRandomVectors512(count: 16, using: &rng)
         let distances16 = try await provider.batchDistance(
             from: query,
             to: candidates16,
@@ -281,7 +287,7 @@ struct MixedPrecisionPhase4Tests {
         #expect(distances16.allSatisfy { $0.isFinite }, "All distances should be finite")
 
         // Test larger batch (should definitely use blocked kernel)
-        let candidates100 = generateRandomVectors512(count: 100)
+        let candidates100 = generateRandomVectors512(count: 100, using: &rng)
         let distances100 = try await provider.batchDistance(
             from: query,
             to: candidates100,
@@ -297,8 +303,9 @@ struct MixedPrecisionPhase4Tests {
 
     @Test("Platform-optimized batch conversion: Correctness")
     func testPlatformConversion_Correctness() throws {
+        var rng = SeededGenerator(seed: 0xB3000007)
         let count = 1024
-        let source = (0..<count).map { _ in Float.random(in: -100...100) }
+        let source = (0..<count).map { _ in Float.random(in: -100...100, using: &rng) }
 
         let sourceBuffer = source
         var destination = [UInt16](repeating: 0, count: count)
@@ -324,9 +331,10 @@ struct MixedPrecisionPhase4Tests {
 
     @Test("Platform-optimized batch conversion: Alignment handling")
     func testPlatformConversion_UnalignedSizes() throws {
+        var rng = SeededGenerator(seed: 0xB3000008)
         // Test various odd sizes to ensure tail handling works
         for count in [1, 3, 7, 15, 17, 63, 100, 1000] {
-            let source = (0..<count).map { _ in Float.random(in: -10...10) }
+            let source = (0..<count).map { _ in Float.random(in: -10...10, using: &rng) }
             let sourceBuffer = source
             var destination = [UInt16](repeating: 0, count: count)
 
@@ -389,8 +397,9 @@ struct MixedPrecisionPhase4Tests {
         let pool = FP16VectorPool(capacity: 20, dimension: 512)
         let provider = MixedPrecisionProvider(minBatchSize: 10)
 
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 50)
+        var rng = SeededGenerator(seed: 0xB3000009)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 50, using: &rng)
 
         // Use provider for batch computation
         let distances = try await provider.batchDistance(

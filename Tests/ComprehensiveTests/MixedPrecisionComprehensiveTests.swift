@@ -31,12 +31,13 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Round-trip FP32→FP16→FP32 maintains accuracy")
         func testRoundTripConversion512() throws {
+            var rng = SeededGenerator(seed: 0xC0030001)
             // Test with normalized embedding-like vectors
             let testVectors: [[Float]] = [
                 Array(repeating: 1.0, count: 512),
                 (0..<512).map { Float($0) / 512.0 },
                 (0..<512).map { sin(Float($0) * .pi / 256) },
-                (0..<512).map { _ in Float.random(in: -1...1) }
+                (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
             ]
 
             for (idx, values) in testVectors.enumerated() {
@@ -159,14 +160,15 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("FP16 dot product accuracy vs FP32 baseline (512-dim)")
         func testDotProductAccuracy512() throws {
+            var rng = SeededGenerator(seed: 0xC0030002)
             let iterations = 100
             var maxRelativeError: Float = 0
             var errors: [Float] = []
 
             for _ in 0..<iterations {
                 // Generate random normalized vectors
-                let values1 = (0..<512).map { _ in Float.random(in: -1...1) }
-                let values2 = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values1 = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
+                let values2 = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
 
                 let vec1 = try Vector512Optimized(values1)
                 let vec2 = try Vector512Optimized(values2)
@@ -210,13 +212,14 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Mixed precision dot product accuracy (512-dim)")
         func testMixedPrecisionAccuracy512() throws {
+            var rng = SeededGenerator(seed: 0xC0030003)
             let iterations = 100
             var maxRelativeError: Float = 0
             var errors: [Float] = []
 
             for _ in 0..<iterations {
-                let values1 = (0..<512).map { _ in Float.random(in: -1...1) }
-                let values2 = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values1 = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
+                let values2 = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
 
                 let query = try Vector512Optimized(values1)
                 let candidate = try Vector512Optimized(values2)
@@ -254,10 +257,11 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Accuracy across all dimensions (512, 768, 1536)")
         func testAccuracyAllDimensions() throws {
+            var rng = SeededGenerator(seed: 0xC0030004)
             // Test 768-dim
             do {
-                let values1 = (0..<768).map { _ in Float.random(in: -1...1) }
-                let values2 = (0..<768).map { _ in Float.random(in: -1...1) }
+                let values1 = (0..<768).map { _ in Float.random(in: -1...1, using: &rng) }
+                let values2 = (0..<768).map { _ in Float.random(in: -1...1, using: &rng) }
 
                 let vec1 = try Vector768Optimized(values1)
                 let vec2 = try Vector768Optimized(values2)
@@ -279,8 +283,8 @@ struct MixedPrecisionComprehensiveTests {
 
             // Test 1536-dim
             do {
-                let values1 = (0..<1536).map { _ in Float.random(in: -1...1) }
-                let values2 = (0..<1536).map { _ in Float.random(in: -1...1) }
+                let values1 = (0..<1536).map { _ in Float.random(in: -1...1, using: &rng) }
+                let values2 = (0..<1536).map { _ in Float.random(in: -1...1, using: &rng) }
 
                 let vec1 = try Vector1536Optimized(values1)
                 let vec2 = try Vector1536Optimized(values2)
@@ -357,12 +361,13 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("No systematic bias in errors")
         func testErrorSymmetry() throws {
+            var rng = SeededGenerator(seed: 0xC0030005)
             var positiveErrors: [Float] = []
             var negativeErrors: [Float] = []
 
             for _ in 0..<100 {
-                let values1 = (0..<512).map { _ in Float.random(in: -1...1) }
-                let values2 = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values1 = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
+                let values2 = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
 
                 let vec1 = try Vector512Optimized(values1)
                 let vec2 = try Vector512Optimized(values2)
@@ -460,10 +465,11 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Batch dot FP16 correctness")
         func testBatchDotFP16() throws {
+            var rng = SeededGenerator(seed: 0xC0030006)
             let query = try Vector512Optimized((0..<512).map { Float($0) / 512.0 })
             var candidates: [Vector512Optimized] = []
             for _ in 0..<100 {
-                let values = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
                 candidates.append(try Vector512Optimized(values))
             }
 
@@ -486,10 +492,11 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Batch dot mixed precision correctness")
         func testBatchDotMixed() throws {
+            var rng = SeededGenerator(seed: 0xC0030007)
             let query = try Vector512Optimized((0..<512).map { Float($0) / 512.0 })
             var candidates: [Vector512Optimized] = []
             for _ in 0..<100 {
-                let values = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
                 candidates.append(try Vector512Optimized(values))
             }
 
@@ -529,10 +536,11 @@ struct MixedPrecisionComprehensiveTests {
         @Test("Batch operations preserve query precision")
         func testBatchPreservesQueryPrecision() throws {
             // This test verifies that batchDotMixed does NOT convert the query to FP16
+            var rng = SeededGenerator(seed: 0xC0030008)
             let query = try Vector512Optimized((0..<512).map { Float($0) / 512.0 })
             var candidates: [Vector512Optimized] = []
             for _ in 0..<50 {
-                let values = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
                 candidates.append(try Vector512Optimized(values))
             }
 
@@ -586,10 +594,11 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Precision analysis for normalized embeddings")
         func testPrecisionAnalysisNormalized() throws {
+            var rng = SeededGenerator(seed: 0xC0030009)
             // Create typical normalized embedding vectors
             var vectors: [Vector512Optimized] = []
             for _ in 0..<100 {
-                let values = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
                 // Normalize
                 let magnitude = sqrt(values.map { $0 * $0 }.reduce(0, +))
                 let normalized = values.map { $0 / magnitude }
@@ -614,10 +623,11 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Precision analysis for large values")
         func testPrecisionAnalysisLargeValues() throws {
+            var rng = SeededGenerator(seed: 0xC003000A)
             // Create vectors with values exceeding FP16 range
             var vectors: [Vector512Optimized] = []
             for _ in 0..<100 {
-                let values = (0..<512).map { _ in Float.random(in: -100000...100000) }
+                let values = (0..<512).map { _ in Float.random(in: -100000...100000, using: &rng) }
                 vectors.append(try Vector512Optimized(values))
             }
 
@@ -630,10 +640,11 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Optimal precision selection with error tolerance")
         func testOptimalPrecisionSelection() throws {
+            var rng = SeededGenerator(seed: 0xC003000B)
             // Create vectors with varying characteristics
             var smallRangeVectors: [Vector512Optimized] = []
             for _ in 0..<50 {
-                let values = (0..<512).map { _ in Float.random(in: -0.1...0.1) }
+                let values = (0..<512).map { _ in Float.random(in: -0.1...0.1, using: &rng) }
                 smallRangeVectors.append(try Vector512Optimized(values))
             }
 
@@ -666,14 +677,15 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("End-to-end similarity search accuracy")
         func testSimilaritySearchAccuracy() throws {
+            var rng = SeededGenerator(seed: 0xC003000C)
             // Simulate a similarity search scenario
-            let queryValues = (0..<512).map { _ in Float.random(in: -1...1) }
+            let queryValues = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
             let query = try Vector512Optimized(queryValues)
 
             // Create a database of candidate vectors
             var database: [Vector512Optimized] = []
             for _ in 0..<1000 {
-                let values = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
                 database.append(try Vector512Optimized(values))
             }
 
@@ -723,12 +735,13 @@ struct MixedPrecisionComprehensiveTests {
 
         @Test("Memory footprint reduction verification")
         func testMemoryFootprintReduction() throws {
+            var rng = SeededGenerator(seed: 0xC003000D)
             let vectorCount = 1000
 
             // Create FP32 vectors
             var fp32Vectors: [Vector512Optimized] = []
             for _ in 0..<vectorCount {
-                let values = (0..<512).map { _ in Float.random(in: -1...1) }
+                let values = (0..<512).map { _ in Float.random(in: -1...1, using: &rng) }
                 fp32Vectors.append(try Vector512Optimized(values))
             }
 

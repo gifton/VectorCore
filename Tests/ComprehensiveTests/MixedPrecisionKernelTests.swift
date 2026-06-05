@@ -531,11 +531,12 @@ struct MixedPrecisionKernelTests {
 
         @Test("Euclidean distance 1536D mixed precision accuracy")
         func testEuclidean1536MixedAccuracy() async throws {
+            var rng = SeededGenerator(seed: 0xC4050001)
             // Test with high-dimensional sparse vectors
             var sparseValues = Array(repeating: Float(0.0), count: 1536)
             // Set only 10% of values to non-zero
             for i in stride(from: 0, to: 1536, by: 10) {
-                sparseValues[i] = Float.random(in: -10...10)
+                sparseValues[i] = Float.random(in: -10...10, using: &rng)
             }
 
             let sparseQuery = try Vector1536Optimized(sparseValues)
@@ -546,9 +547,9 @@ struct MixedPrecisionKernelTests {
                 var values = Array(repeating: Float(0.0), count: 1536)
                 let nonZeroCount = Int(Float(1536) * Float(sparsityLevel))
                 for i in 0..<nonZeroCount {
-                    values[i] = Float.random(in: -5...5)
+                    values[i] = Float.random(in: -5...5, using: &rng)
                 }
-                values.shuffle()
+                values.shuffle(using: &rng)
                 candidates.append(try Vector1536Optimized(values))
             }
 
@@ -688,6 +689,7 @@ struct MixedPrecisionKernelTests {
 
         @Test("Cosine distance 768D mixed precision accuracy")
         func testCosine768MixedAccuracy() async throws {
+            var rng = SeededGenerator(seed: 0xC4050002)
             // Test parallel vectors (same direction)
             let parallelValues = (0..<768).map { Float($0 + 1) * 0.1 }
             let query = try Vector768Optimized(parallelValues)
@@ -722,7 +724,7 @@ struct MixedPrecisionKernelTests {
             #expect(abs(outputBuffer[0] - 2.0) < 1e-4, "Anti-parallel vectors distance: \(outputBuffer[0])")
 
             // Test numerical stability with small magnitudes
-            let smallMagnitudeValues = (0..<768).map { _ in Float.random(in: -1e-10...1e-10) }
+            let smallMagnitudeValues = (0..<768).map { _ in Float.random(in: -1e-10...1e-10, using: &rng) }
             let smallQuery = try Vector768Optimized(smallMagnitudeValues)
             let smallCandidates = [
                 try Vector768Optimized(smallMagnitudeValues.map { $0 * 1.1 }),
@@ -752,7 +754,7 @@ struct MixedPrecisionKernelTests {
                 mixedValues[i] = 100.0  // Some large values
             }
             let mixedQuery = try Vector768Optimized(mixedValues)
-            let mixedCandidate = try Vector768Optimized(mixedValues.shuffled())
+            let mixedCandidate = try Vector768Optimized(mixedValues.shuffled(using: &rng))
             let mixedFP16 = MixedPrecisionKernels.convertToFP16_768([mixedCandidate])
 
             MixedPrecisionKernels.range_cosine_mixed_768(
@@ -768,10 +770,11 @@ struct MixedPrecisionKernelTests {
 
         @Test("Cosine distance 1536D mixed precision accuracy")
         func testCosine1536MixedAccuracy() async throws {
+            var rng = SeededGenerator(seed: 0xC4050003)
             // Test with random unit vectors
             var randomUnitVectors: [Vector1536Optimized] = []
             for _ in 0..<5 {
-                let values = (0..<1536).map { _ in Float.random(in: -1...1) }
+                let values = (0..<1536).map { _ in Float.random(in: -1...1, using: &rng) }
                 let vec = try Vector1536Optimized(values)
                 let mag = vec.magnitude
                 let unitValues = values.map { $0 / mag }
@@ -808,7 +811,7 @@ struct MixedPrecisionKernelTests {
             let edgeQuery = try Vector1536Optimized(edgeValues1)
 
             // Nearly identical vector with rounding errors
-            let edgeValues2 = edgeValues1.map { $0 + Float.ulpOfOne * Float.random(in: -1...1) }
+            let edgeValues2 = edgeValues1.map { $0 + Float.ulpOfOne * Float.random(in: -1...1, using: &rng) }
             let edgeCandidate = try Vector1536Optimized(edgeValues2)
             let edgeFP16 = MixedPrecisionKernels.convertToFP16_1536([edgeCandidate])
 
@@ -1198,6 +1201,7 @@ struct MixedPrecisionKernelTests {
 
         @Test("Batch cosine distance computation")
         func testBatchCosineDistance() async throws {
+            var rng = SeededGenerator(seed: 0xC4050004)
             // Create normalized query vector
             let queryValues = (0..<768).map { Float(sin(Double($0) * 0.01)) }
             let queryVec = try Vector768Optimized(queryValues)
@@ -1220,7 +1224,7 @@ struct MixedPrecisionKernelTests {
 
             // Add random vectors
             for _ in 0..<10 {
-                let randomVals = (0..<768).map { _ in Float.random(in: -1...1) }
+                let randomVals = (0..<768).map { _ in Float.random(in: -1...1, using: &rng) }
                 let randomVec = try Vector768Optimized(randomVals)
                 let randomMag = randomVec.magnitude
                 candidates.append(try Vector768Optimized(randomVals.map { $0 / randomMag }))
@@ -1271,7 +1275,7 @@ struct MixedPrecisionKernelTests {
             var smallCandidates: [Vector768Optimized] = []
             for i in 0..<5 {
                 let smallVals = (0..<768).map { _ in
-                    Float.random(in: -1e-5...1e-5) * Float(i + 1)
+                    Float.random(in: -1e-5...1e-5, using: &rng) * Float(i + 1)
                 }
                 smallCandidates.append(try Vector768Optimized(smallVals))
             }
@@ -1513,6 +1517,7 @@ struct MixedPrecisionKernelTests {
 
         @Test("SoAFP16 vector extraction")
         func testSoAFP16VectorExtraction() async throws {
+            var rng = SeededGenerator(seed: 0xC4050005)
             // Create diverse test vectors
             let vectorCount = 7
             let testVectors: [Vector768Optimized] = (0..<vectorCount).map { i in
@@ -1523,7 +1528,7 @@ struct MixedPrecisionKernelTests {
                     case 1: return Float(sin(Double(j) * 0.01))  // Sine wave
                     case 2: return Float(cos(Double(j) * 0.01))  // Cosine wave
                     case 3: return j % 2 == 0 ? 1.0 : -1.0  // Alternating
-                    case 4: return Float.random(in: -10...10)  // Random
+                    case 4: return Float.random(in: -10...10, using: &rng)  // Random
                     case 5: return Float(j < 384 ? 1.0 : 0.0)  // Step function
                     default: return Float(exp(-Double(j) / 100.0))  // Exponential decay
                     }
@@ -1746,6 +1751,7 @@ struct MixedPrecisionKernelTests {
 
         @Test("Batch dot product SoA processing")
         func testBatchDotProductSoA() async throws {
+            var rng = SeededGenerator(seed: 0xC4050006)
             // Create normalized vectors for dot product testing
             let vectorCount = 12
             let dimension = 768
@@ -1770,7 +1776,7 @@ struct MixedPrecisionKernelTests {
 
             // Add random normalized vectors
             for _ in 0..<(vectorCount - 3) {
-                let randomValues = (0..<dimension).map { _ in Float.random(in: -1...1) }
+                let randomValues = (0..<dimension).map { _ in Float.random(in: -1...1, using: &rng) }
                 let randomVec = try Vector768Optimized(randomValues)
                 let randomMag = randomVec.magnitude
                 candidates.append(try Vector768Optimized(randomValues.map { $0 / randomMag }))
@@ -2389,6 +2395,7 @@ struct MixedPrecisionKernelTests {
 
         @Test("Gradient preservation in FP16")
         func testGradientPreservation() async throws {
+            var rng = SeededGenerator(seed: 0xC4050007)
             // Test small gradient values typical in deep learning
             let typicalGradient: Float = 1e-3
             let dimension = 768
@@ -2445,7 +2452,7 @@ struct MixedPrecisionKernelTests {
 
             for batch in 0..<batchSize {
                 let batchGradients = (0..<1536).map { i in
-                    typicalGradient * Float.random(in: -1...1) / Float(batch + 1)
+                    typicalGradient * Float.random(in: -1...1, using: &rng) / Float(batch + 1)
                 }
                 let batchVec = try Vector1536Optimized(batchGradients)
                 let batchFP16 = Vector1536FP16(from: batchVec)
@@ -2465,7 +2472,7 @@ struct MixedPrecisionKernelTests {
             // Test gradient sparsity preservation
             var sparseGradients = Array(repeating: Float(0), count: 768)
             for i in stride(from: 0, to: 768, by: 10) {
-                sparseGradients[i] = Float.random(in: -0.01...0.01)
+                sparseGradients[i] = Float.random(in: -0.01...0.01, using: &rng)
             }
 
             let sparseVec = try Vector768Optimized(sparseGradients)
@@ -3244,7 +3251,7 @@ struct MixedPrecisionKernelTests {
             #expect(output[1] > 0, "Different vectors should have >0 distance")
         }
 
-        @Test("Throughput scaling with batch size")
+        @Test("Throughput scaling with batch size", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
         func testThroughputScaling() async throws {
             // Test performance scaling with different batch sizes
             let dimension = 768
@@ -3346,7 +3353,7 @@ struct MixedPrecisionKernelTests {
             }
         }
 
-        @Test("Latency vs throughput trade-off")
+        @Test("Latency vs throughput trade-off", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
         func testLatencyVsThroughput() async throws {
             // Setup test vectors
             let dimension = 512
@@ -3694,8 +3701,10 @@ struct MixedPrecisionKernelTests {
             }
             let fallbackTime = CFAbsoluteTimeGetCurrent() - fallbackStart
 
-            // Fallback should still complete reasonably fast
-            #expect(fallbackTime < 1.0, "Fallback should complete in reasonable time")
+            // Wall-clock timing, invalid in a debug build; only assert under extended benchmarking.
+            if ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1" {
+                #expect(fallbackTime < 1.0, "Fallback should complete in reasonable time")
+            }
 
             // Test with dimension that might not be optimized
             let oddDimension = 317  // Prime number, not optimized

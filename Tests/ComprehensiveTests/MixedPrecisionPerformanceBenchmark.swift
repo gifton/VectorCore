@@ -48,9 +48,10 @@ struct MixedPrecisionPerformanceBenchmark {
     }
 
     /// Generate random test vectors
-    func generateVectors512(count: Int) -> ([Vector512Optimized], [MixedPrecisionKernels.Vector512FP16]) {
+    func generateVectors512(count: Int, seed: UInt64) -> ([Vector512Optimized], [MixedPrecisionKernels.Vector512FP16]) {
+        var rng = SeededGenerator(seed: seed)
         let fp32 = (0..<count).map { _ in
-            try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+            try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1, using: &rng) })
         }
         let fp16 = fp32.map { MixedPrecisionKernels.Vector512FP16(from: $0) }
         return (fp32, fp16)
@@ -60,7 +61,7 @@ struct MixedPrecisionPerformanceBenchmark {
 
     @Test("Latency: Euclidean 512-dim (all precision combinations)", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
     func benchmarkEuclideanLatency512() throws {
-        let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2)
+        let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2, seed: 0xBE070001)
         let q32 = fp32Vecs[0]
         let c32 = fp32Vecs[1]
         let q16 = fp16Vecs[0]
@@ -102,7 +103,7 @@ struct MixedPrecisionPerformanceBenchmark {
 
     @Test("Latency: Cosine 512-dim (all precision combinations)", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
     func benchmarkCosineLatency512() throws {
-        let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2)
+        let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2, seed: 0xBE070002)
         let q32 = fp32Vecs[0]
         let c32 = fp32Vecs[1]
         let q16 = fp16Vecs[0]
@@ -144,7 +145,7 @@ struct MixedPrecisionPerformanceBenchmark {
         print(String(repeating: "-", count: 80))
 
         for n in batchSizes {
-            let (fp32Cands, fp16Cands) = generateVectors512(count: n)
+            let (fp32Cands, fp16Cands) = generateVectors512(count: n, seed: 0xBE070003 &+ UInt64(n))
             let query32 = fp32Cands[0]
             let query16 = fp16Cands[0]
 
@@ -176,12 +177,13 @@ struct MixedPrecisionPerformanceBenchmark {
 
     @Test("Dimension scaling: Euclidean performance across dimensions", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
     func benchmarkDimensionScaling() throws {
+        var rng = SeededGenerator(seed: 0xBE070004)
         print("\n=== Dimension Scaling (Euclidean FP16×FP16) ===")
         print("Dimension  | FP32 (ns)       | FP16 (ns)       | Speedup   ")
         print(String(repeating: "-", count: 60))
 
         // 512-dim
-        let (fp32_512, fp16_512) = generateVectors512(count: 2)
+        let (fp32_512, fp16_512) = generateVectors512(count: 2, seed: 0xBE070005)
         let fp32Time512 = PrecisionTimer.measure {
             _ = EuclideanKernels.distance512(fp32_512[0], fp32_512[1])
         }
@@ -192,8 +194,8 @@ struct MixedPrecisionPerformanceBenchmark {
             512, fp32Time512.median, fp16Time512.median, fp32Time512.median / fp16Time512.median))
 
         // 768-dim
-        let fp32_768 = try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1) })
-        let cand32_768 = try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1) })
+        let fp32_768 = try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })
+        let cand32_768 = try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })
         let fp16_768 = MixedPrecisionKernels.Vector768FP16(from: fp32_768)
         let cand16_768 = MixedPrecisionKernels.Vector768FP16(from: cand32_768)
 
@@ -207,8 +209,8 @@ struct MixedPrecisionPerformanceBenchmark {
             768, fp32Time768.median, fp16Time768.median, fp32Time768.median / fp16Time768.median))
 
         // 1536-dim
-        let fp32_1536 = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
-        let cand32_1536 = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
+        let fp32_1536 = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1, using: &rng) })
+        let cand32_1536 = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1, using: &rng) })
         let fp16_1536 = MixedPrecisionKernels.Vector1536FP16(from: fp32_1536)
         let cand16_1536 = MixedPrecisionKernels.Vector1536FP16(from: cand32_1536)
 
@@ -240,8 +242,8 @@ struct MixedPrecisionPerformanceBenchmark {
         var cosineErrors16x16: [Float] = []
         var cosineErrors32x16: [Float] = []
 
-        for _ in 0..<trials {
-            let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2)
+        for trial in 0..<trials {
+            let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2, seed: 0xBE070006 &+ UInt64(trial))
             let q32 = fp32Vecs[0]
             let c32 = fp32Vecs[1]
             let q16 = fp16Vecs[0]

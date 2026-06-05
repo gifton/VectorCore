@@ -24,10 +24,13 @@ Classification key: **SRC** = source bug (test correct) · **TST** = test issue 
 
 **S1 reclassified SRC→TST:** the `shouldUseMixedPrecision` memory-bound contract is consistent with a passing sibling test; fixed the two failing tests instead of the heuristic.
 
-**⚠️ INVESTIGATED — softmax NaN (rare, not a data race):** `testSoftmaxMatchesScalarReference` produced a `NaN` once under heavy parallel load with *deterministic* input, passing in isolation and not recurring since. Investigation:
-- Code inspection: `softmax()` (VectorMath.swift:305) operates on local arrays (`vvexpf` reentrant); `SwiftSIMDProvider` is a `Sendable struct`; `MemoryPool.acquire` is barrier-synchronized **and not used by this path**; `Vector<D>` is a `Sendable` COW struct used locally; `Operations.simdProvider` is `@TaskLocal` (task-isolated). No shared mutable state on the path.
-- **ThreadSanitizer: 0 data races** across 165 concurrency-relevant tests (54-min instrumented run). Definitively not a data race.
-- **Conclusion:** not a race; direct paths thread-clean; non-reproducing. Most likely a very rare OOB-write corruption from another kernel or an environmental edge. **Recommended watch:** run the suite under AddressSanitizer in CI to catch an OOB write if it ever recurs. Not masked with a retry.
+**✅ ROOT-CAUSED & FIXED — softmax NaN was a heap-buffer-overflow (SRC):** `testSoftmaxMatchesScalarReference` intermittently produced a `NaN`. Investigation chain:
+- **ThreadSanitizer:** 0 data races (54-min run) → not a race; it's a *spatial* memory bug.
+- **AddressSanitizer:** caught a `heap-buffer-overflow` READ; a serial ASan run pinned the culprit test (softmax) and a 16-Float buffer read at index 16.
+- **Root cause** (`SwiftFloatSIMDProvider.swift`): the SIMD8 reduction loops (`maximum`/`minimum`/`maximumMagnitude`) seed `result = a[0]`, start `i = 1`, but bounded the loop with `while i < (count & ~7)` — correct only for a 0-based start. With `i = 1`, the last SIMD8 chunk reads `a[count]` whenever `count` is a multiple of 8 (8, 512, 768, 1536 — all standard dims). The garbage read occasionally decoded to `NaN`/`±inf`, became softmax's `maxVal`, and poisoned the result. Fixed to `while i + 8 <= count`. Commit `1d91d73`.
+- **Verified:** ASan-clean on the transcendental/softmax suite; softmax matches its scalar reference.
+
+This was the single highest-value find — a real memory-safety + correctness defect, surfaced only because the rare NaN was investigated with sanitizers rather than masked with a retry.
 
 Final state: full suite green except the flagged intermittent; 14 perf tests skip unless `VECTORCORE_TEST_EXTENDED=1`.
 

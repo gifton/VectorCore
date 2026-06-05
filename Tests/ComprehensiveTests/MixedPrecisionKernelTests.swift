@@ -3041,8 +3041,11 @@ struct MixedPrecisionKernelTests {
             // Note: Actual improvement depends on memory bandwidth limitations
             let speedup = fp32Time / fp16Time
 
-            // We expect some improvement, but exact amount varies by hardware
-            #expect(speedup > 0.8, "FP16 should not be significantly slower: speedup=\(speedup)")
+            // Wall-clock speedup, invalid in a debug build (FP16 decode overhead isn't
+            // vectorized); only assert under extended/release benchmarking.
+            if ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1" {
+                #expect(speedup > 0.8, "FP16 should not be significantly slower: speedup=\(speedup)")
+            }
 
             // Memory usage should be ~50% less
             let memoryRatio = Float(bytesProcessedFP16) / Float(bytesProcessedFP32)

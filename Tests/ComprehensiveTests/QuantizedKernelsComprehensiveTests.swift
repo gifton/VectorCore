@@ -833,10 +833,13 @@ struct QuantizedKernelsComprehensiveTests {
             let params50 = try calibrateVectors(Array(vectors.prefix(50)))
             let params100 = try calibrateVectors(vectors)
 
-            // Parameters should converge (not diverge) as sample size increases. With random
-            // calibration data the 10->50 scale step can already be ~0, making a strict `<`
-            // unsatisfiable; require the 50->100 step to be no larger (plus a tolerance).
-            #expect(abs(params50.scale - params100.scale) <= abs(params10.scale - params50.scale) + 1e-6)
+            // Parameters stabilize as sample size increases. The symmetric scale is absMax/127,
+            // and absMax over a superset of samples can only grow (prefix(10) ⊆ prefix(50) ⊆ all),
+            // so scale is monotonically non-decreasing with sample size. Assert that deterministic
+            // invariant rather than a strict convergence of the step size, which is not guaranteed
+            // for random data (the previous strict `<` flaked when an early step was already ~0).
+            #expect(params10.scale <= params50.scale + 1e-9)
+            #expect(params50.scale <= params100.scale + 1e-9)
         }
 
         @Test("Multi-vector calibration")

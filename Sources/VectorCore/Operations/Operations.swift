@@ -687,10 +687,23 @@ public enum Operations {
         let dimension = vectors.first!.scalarCount
         var sum = [Float](repeating: 0, count: dimension)
 
-        // Sum all vectors
-        for vector in vectors {
-            let values = vector.toArray()
-            sum = simdProvider.add(sum, values)
+        // Sum all vectors, accumulating in place. Going through `simdProvider.add`
+        // would allocate (and previously zero-fill) a fresh result array per vector —
+        // O(N) heap churn for an O(1)-memory reduction. The underlying SIMD add is a
+        // pure element-wise op, so aliasing `result` onto `sum` (sum += values) is safe.
+        sum.withUnsafeMutableBufferPointer { sumBuffer in
+            let sumPtr = sumBuffer.baseAddress!
+            for vector in vectors {
+                let values = vector.toArray()
+                values.withUnsafeBufferPointer { valuesBuffer in
+                    SwiftFloatSIMDProvider.add(
+                        sumPtr,
+                        valuesBuffer.baseAddress!,
+                        result: sumPtr,
+                        count: dimension
+                    )
+                }
+            }
         }
 
         // Divide by count

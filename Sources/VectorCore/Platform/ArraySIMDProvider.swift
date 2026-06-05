@@ -108,61 +108,74 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
 
     public init() {}
 
+    /// Allocate an output array of `count` floats **without** the redundant zero-fill.
+    ///
+    /// Every arithmetic/element-wise/transcendental op below fully overwrites its result
+    /// buffer via the underlying SIMD/vForce primitive, so `[Float](repeating: 0, count:)`
+    /// pays for a whole-buffer `memset` that is immediately discarded. `Array`'s
+    /// `unsafeUninitializedCapacity:` initializer hands us raw storage and skips the
+    /// zero-fill entirely — the closure is responsible for writing all `count` elements.
+    ///
+    /// - Important: `body` MUST initialize all `count` elements of the buffer. Empty
+    ///   requests short-circuit to `[]` so the SIMD primitives never see a nil base pointer.
+    @inline(__always)
+    private func uninitializedResult(
+        count: Int,
+        _ body: (UnsafeMutableBufferPointer<Float>) -> Void
+    ) -> [Float] {
+        guard count > 0 else { return [] }
+        return [Float](unsafeUninitializedCapacity: count) { buffer, initializedCount in
+            body(buffer)
+            initializedCount = count
+        }
+    }
+
     public func add(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
-        var result = [Float](repeating: 0, count: a.count)
-
-        a.withUnsafeBufferPointer { aBuffer in
-            b.withUnsafeBufferPointer { bBuffer in
-                result.withUnsafeMutableBufferPointer { resultBuffer in
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
                     SwiftFloatSIMDProvider.add(
                         aBuffer.baseAddress!,
                         bBuffer.baseAddress!,
                         result: resultBuffer.baseAddress!,
-                        count: a.count
+                        count: count
                     )
                 }
             }
         }
-
-        return result
     }
 
     public func subtract(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
-        var result = [Float](repeating: 0, count: a.count)
-
-        a.withUnsafeBufferPointer { aBuffer in
-            b.withUnsafeBufferPointer { bBuffer in
-                result.withUnsafeMutableBufferPointer { resultBuffer in
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
                     SwiftFloatSIMDProvider.subtract(
                         aBuffer.baseAddress!,
                         bBuffer.baseAddress!,
                         result: resultBuffer.baseAddress!,
-                        count: a.count
+                        count: count
                     )
                 }
             }
         }
-
-        return result
     }
 
     public func multiply(_ a: [Float], by scalar: Float) -> [Float] {
-        var result = [Float](repeating: 0, count: a.count)
-
-        a.withUnsafeBufferPointer { aBuffer in
-            result.withUnsafeMutableBufferPointer { resultBuffer in
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
                 SwiftFloatSIMDProvider.multiplyScalar(
                     aBuffer.baseAddress!,
                     scalar: scalar,
                     result: resultBuffer.baseAddress!,
-                    count: a.count
+                    count: count
                 )
             }
         }
-
-        return result
     }
 
     public func divide(_ a: [Float], by scalar: Float) -> [Float] {
@@ -263,130 +276,124 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
 
     public func elementWiseMin(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
-        var result = [Float](repeating: 0, count: a.count)
-
-        for i in 0..<a.count {
-            result[i] = Swift.min(a[i], b[i])
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
+                    for i in 0..<count {
+                        resultBuffer[i] = Swift.min(aBuffer[i], bBuffer[i])
+                    }
+                }
+            }
         }
-
-        return result
     }
 
     public func elementWiseMax(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
-        var result = [Float](repeating: 0, count: a.count)
-
-        for i in 0..<a.count {
-            result[i] = Swift.max(a[i], b[i])
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
+                    for i in 0..<count {
+                        resultBuffer[i] = Swift.max(aBuffer[i], bBuffer[i])
+                    }
+                }
+            }
         }
-
-        return result
     }
 
     public func elementWiseMultiply(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
-        var result = [Float](repeating: 0, count: a.count)
-
-        a.withUnsafeBufferPointer { aBuffer in
-            b.withUnsafeBufferPointer { bBuffer in
-                result.withUnsafeMutableBufferPointer { resultBuffer in
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
                     SwiftFloatSIMDProvider.multiply(
                         aBuffer.baseAddress!,
                         bBuffer.baseAddress!,
                         result: resultBuffer.baseAddress!,
-                        count: a.count
+                        count: count
                     )
                 }
             }
         }
-
-        return result
     }
 
     public func elementWiseDivide(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
-        var result = [Float](repeating: 0, count: a.count)
-
-        a.withUnsafeBufferPointer { aBuffer in
-            b.withUnsafeBufferPointer { bBuffer in
-                result.withUnsafeMutableBufferPointer { resultBuffer in
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
                     SwiftFloatSIMDProvider.divide(
                         aBuffer.baseAddress!,
                         bBuffer.baseAddress!,
                         result: resultBuffer.baseAddress!,
-                        count: a.count
+                        count: count
                     )
                 }
             }
         }
-
-        return result
     }
 
     public func abs(_ a: [Float]) -> [Float] {
-        if a.isEmpty { return [] }
+        let count = a.count
+        guard count > 0 else { return [] }
         #if canImport(Accelerate)
-        var result = [Float](repeating: 0, count: a.count)
-        var n = Int32(a.count)
-        a.withUnsafeBufferPointer { src in
-            result.withUnsafeMutableBufferPointer { dst in
+        return uninitializedResult(count: count) { dst in
+            var n = Int32(count)
+            a.withUnsafeBufferPointer { src in
                 vvfabsf(dst.baseAddress!, src.baseAddress!, &n)
             }
         }
-        return result
         #else
         return a.map { Swift.abs($0) }
         #endif
     }
 
     public func sqrt(_ a: [Float]) -> [Float] {
-        if a.isEmpty { return [] }
+        let count = a.count
+        guard count > 0 else { return [] }
         #if canImport(Accelerate)
-        var result = [Float](repeating: 0, count: a.count)
-        var n = Int32(a.count)
-        a.withUnsafeBufferPointer { src in
-            result.withUnsafeMutableBufferPointer { dst in
+        return uninitializedResult(count: count) { dst in
+            var n = Int32(count)
+            a.withUnsafeBufferPointer { src in
                 vvsqrtf(dst.baseAddress!, src.baseAddress!, &n)
             }
         }
-        return result
         #else
         return a.map { Foundation.sqrt($0) }
         #endif
     }
 
     public func log(_ a: [Float]) -> [Float] {
-        if a.isEmpty { return [] }
+        let count = a.count
+        guard count > 0 else { return [] }
         #if canImport(Accelerate)
-        var result = [Float](repeating: 0, count: a.count)
-        var n = Int32(a.count)
-        a.withUnsafeBufferPointer { src in
-            result.withUnsafeMutableBufferPointer { dst in
+        return uninitializedResult(count: count) { dst in
+            var n = Int32(count)
+            a.withUnsafeBufferPointer { src in
                 vvlogf(dst.baseAddress!, src.baseAddress!, &n)
             }
         }
-        return result
         #else
         return a.map { Foundation.log($0) }
         #endif
     }
 
     public func clip(_ a: [Float], min minVal: Float, max maxVal: Float) -> [Float] {
-        var result = [Float](repeating: 0, count: a.count)
-
-        a.withUnsafeBufferPointer { aBuffer in
-            result.withUnsafeMutableBufferPointer { resultBuffer in
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
                 SwiftFloatSIMDProvider.clip(
                     aBuffer.baseAddress!,
                     low: minVal,
                     high: maxVal,
                     result: resultBuffer.baseAddress!,
-                    count: a.count
+                    count: count
                 )
             }
         }
-
-        return result
     }
 
     public func minIndex(_ a: [Float]) -> Int {

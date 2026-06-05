@@ -24,8 +24,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -75,8 +74,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -126,8 +124,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -177,8 +174,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -227,8 +223,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -277,8 +272,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         let scalarVec4 = SIMD4<Float>(repeating: scalar)
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -325,8 +319,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         let scalarVec4 = SIMD4<Float>(repeating: scalar)
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -384,8 +377,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process in SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -428,8 +420,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process in SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -466,8 +457,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process in SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -505,8 +495,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process in SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -548,8 +537,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 1
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -585,8 +573,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 1
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -622,8 +609,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 1
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -662,8 +648,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         var i = 0
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
@@ -722,8 +707,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         let valueVec4 = SIMD4<Float>(repeating: value)
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             destination[i] = valueVec8[0]
             destination[i+1] = valueVec8[1]
             destination[i+2] = valueVec8[2]
@@ -766,8 +750,7 @@ public struct SwiftFloatSIMDProvider: SIMDProvider {
         let highVec4 = SIMD4<Float>(repeating: high)
 
         // Process SIMD8 chunks
-        let simd8Count = count & ~7
-        while i < simd8Count {
+        while i + 8 <= count {
             let va = SIMD8<Float>(
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]

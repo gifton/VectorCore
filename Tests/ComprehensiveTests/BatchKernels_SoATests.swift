@@ -6,6 +6,157 @@ import Foundation
 @Suite("BatchKernels SoA")
 struct BatchKernels_SoATests {
 
+    // MARK: - Issue 1.2: Tiled-Kernel Bitwise Equivalence
+
+    /// The large-batch tiled kernels (lane-outer / candidate-inner) must produce
+    /// results that are *bitwise-identical* to the register-blocked 4-way kernels —
+    /// they share the same per-candidate accumulation order over lanes and the same
+    /// single horizontal reduction, so only the memory traversal differs. These tests
+    /// exercise the tiled kernel directly (the dispatch threshold is ~8 MB, far above
+    /// normal test batch sizes) across sizes that straddle the 256-wide tile boundary.
+    @Suite("Tiled Kernel Equivalence (Issue 1.2)")
+    struct TiledKernelEquivalenceTests {
+
+        /// Sizes straddling the tile width (256) and the 4-way blocking edges (4, tail 1–3).
+        static let sizes = [1, 2, 3, 4, 5, 7, 255, 256, 257, 300, 512, 513, 600, 1000]
+
+        @Test
+        func tiledEuclid512MatchesFourWayBitwise() {
+            let query = BatchKernels_SoATests.generateTestVectors512(count: 1)[0]
+            for n in Self.sizes {
+                let candidates = BatchKernels_SoATests.generateTestVectors512(count: n)
+                let soa = SoA512.build(from: candidates)
+
+                var tiled = [Float](repeating: .nan, count: n)
+                var fourway = [Float](repeating: .nan, count: n)
+                tiled.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.euclid2_tiled(query: query, soa: soa, out: buf)
+                }
+                fourway.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.euclid2_blocked_4way(query: query, soa: soa, out: buf)
+                }
+                for i in 0..<n {
+                    #expect(tiled[i].bitPattern == fourway[i].bitPattern,
+                            "512 N=\(n) idx=\(i): tiled=\(tiled[i]) fourway=\(fourway[i])")
+                }
+            }
+        }
+
+        @Test
+        func tiledEuclid768MatchesFourWayBitwise() {
+            let query = BatchKernels_SoATests.generateTestVectors768(count: 1)[0]
+            for n in Self.sizes {
+                let candidates = BatchKernels_SoATests.generateTestVectors768(count: n)
+                let soa = SoA768.build(from: candidates)
+
+                var tiled = [Float](repeating: .nan, count: n)
+                var fourway = [Float](repeating: .nan, count: n)
+                tiled.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.euclid2_tiled(query: query, soa: soa, out: buf)
+                }
+                fourway.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.euclid2_blocked_4way(query: query, soa: soa, out: buf)
+                }
+                for i in 0..<n {
+                    #expect(tiled[i].bitPattern == fourway[i].bitPattern,
+                            "768 N=\(n) idx=\(i): tiled=\(tiled[i]) fourway=\(fourway[i])")
+                }
+            }
+        }
+
+        @Test
+        func tiledEuclid1536MatchesFourWayBitwise() {
+            let query = BatchKernels_SoATests.generateTestVectors1536(count: 1)[0]
+            for n in Self.sizes {
+                let candidates = BatchKernels_SoATests.generateTestVectors1536(count: n)
+                let soa = SoA1536.build(from: candidates)
+
+                var tiled = [Float](repeating: .nan, count: n)
+                var fourway = [Float](repeating: .nan, count: n)
+                tiled.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.euclid2_tiled(query: query, soa: soa, out: buf)
+                }
+                fourway.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.euclid2_blocked_4way(query: query, soa: soa, out: buf)
+                }
+                for i in 0..<n {
+                    #expect(tiled[i].bitPattern == fourway[i].bitPattern,
+                            "1536 N=\(n) idx=\(i): tiled=\(tiled[i]) fourway=\(fourway[i])")
+                }
+            }
+        }
+
+        @Test
+        func tiledDot512MatchesFourWayBitwise() {
+            let query = BatchKernels_SoATests.generateTestVectors512(count: 1)[0]
+            for n in Self.sizes {
+                let candidates = BatchKernels_SoATests.generateTestVectors512(count: n)
+                let soa = SoA512.build(from: candidates)
+
+                var tiled = [Float](repeating: .nan, count: n)
+                var fourway = [Float](repeating: .nan, count: n)
+                tiled.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.dot_tiled(query: query, soa: soa, out: buf)
+                }
+                fourway.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.dot_blocked_4way(query: query, soa: soa, out: buf)
+                }
+                for i in 0..<n {
+                    #expect(tiled[i].bitPattern == fourway[i].bitPattern,
+                            "dot512 N=\(n) idx=\(i): tiled=\(tiled[i]) fourway=\(fourway[i])")
+                }
+            }
+        }
+
+        @Test
+        func tiledCosineFused768MatchesFourWayBitwise() {
+            let query = BatchKernels_SoATests.generateTestVectors768(count: 1)[0]
+            let queryNorm = BatchKernels_SoA.computeNorm(query)
+            for n in Self.sizes {
+                let candidates = BatchKernels_SoATests.generateTestVectors768(count: n)
+                let soa = SoA768.build(from: candidates)
+
+                var tiled = [Float](repeating: .nan, count: n)
+                var fourway = [Float](repeating: .nan, count: n)
+                tiled.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.cosine_fused_tiled(query: query, queryNorm: queryNorm, soa: soa, out: buf)
+                }
+                fourway.withUnsafeMutableBufferPointer { buf in
+                    BatchKernels_SoA.cosine_fused_blocked_4way(query: query, queryNorm: queryNorm, soa: soa, out: buf)
+                }
+                for i in 0..<n {
+                    #expect(tiled[i].bitPattern == fourway[i].bitPattern,
+                            "cosine768 N=\(n) idx=\(i): tiled=\(tiled[i]) fourway=\(fourway[i])")
+                }
+            }
+        }
+
+        /// Exercises the real dispatch path at a batch size that crosses the ~8 MB
+        /// tiling threshold (5000 × 512-dim × 4 B = 10 MB), so the public kernel
+        /// actually routes through `euclid2_tiled` and spans multiple 256-wide tiles.
+        /// Validates the threshold math, multi-tile execution, and (under ASan) that
+        /// the stack-allocated accumulator tiles stay in bounds.
+        @Test
+        func largeBatchRoutesThroughTilingAndMatchesReference() {
+            let n = 5000
+            #expect(BatchKernels_SoA.shouldTile(count: n, lanes: 128),
+                    "N=\(n) at 512-dim should exceed the tiling threshold")
+
+            let query = BatchKernels_SoATests.generateTestVectors512(count: 1)[0]
+            let candidates = BatchKernels_SoATests.generateTestVectors512(count: n)
+
+            let results = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: candidates)
+            #expect(results.count == n)
+
+            // Spot-check against the scalar reference across the batch (incl. tile edges).
+            for i in stride(from: 0, to: n, by: 137) {
+                let reference = EuclideanKernels.squared512(query, candidates[i])
+                let error = abs(results[i] - reference)
+                #expect(error < 1e-2, "idx=\(i): tiled=\(results[i]) ref=\(reference) err=\(error)")
+            }
+        }
+    }
+
     // MARK: - Core Functionality Tests
 
     @Suite("Core SoA Functionality")

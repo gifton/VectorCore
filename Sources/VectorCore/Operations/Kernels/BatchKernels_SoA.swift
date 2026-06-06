@@ -184,18 +184,109 @@ public enum BatchKernels_SoA {
         }
     }
 
+    // MARK: - Cache-Tiling Threshold (Issue 1.2)
+
+    /// Candidate-buffer byte size above which lane-outer **tiling** beats the
+    /// register-blocked 4-way kernel.
+    ///
+    /// The 4-way kernels achieve optimal memory *traffic* (each candidate read once,
+    /// full cache-line utilization), but they iterate lanes innermost, producing
+    /// `L` (= 128…384) interleaved, widely-strided column streams. Once the candidate
+    /// buffer exceeds L2, the hardware prefetcher can no longer track `L` streams and
+    /// demand-miss latency is exposed. Above this threshold we switch to the tiled
+    /// kernels, which read each lane's column as a single sequential stream.
+    ///
+    /// Sized at ~8 MB (≈ Apple-silicon L2 working budget). For 512/768/1536-dim this
+    /// crosses over around N ≈ 4096 / 2730 / 1365 candidates respectively.
+    @usableFromInline
+    internal static let tilingByteThreshold = 8 * 1024 * 1024
+
+    /// Whether a batch is large enough that lane-outer tiling should be preferred.
+    @inline(__always)
+    @usableFromInline
+    internal static func shouldTile(count: Int, lanes: Int) -> Bool {
+        // candidate buffer bytes = count * lanes * sizeof(SIMD4<Float>)
+        count &* lanes &* MemoryLayout<SIMD4<Float>>.stride > tilingByteThreshold
+    }
+
+    // MARK: - Candidate-Tiled Euclidean (Issue 1.2)
+
+    /// Lane-outer / candidate-inner squared Euclidean distance for very large batches.
+    ///
+    /// Restructures the traversal so each lane's candidate column is consumed as ONE
+    /// long sequential stream (prefetcher-optimal), instead of the 4-way kernel's `L`
+    /// interleaved strided streams. Per-candidate SIMD4 partials live in a small
+    /// stack-allocated tile that stays L1-resident across all lanes; the candidate
+    /// columns themselves are streamed (read once, never revisited).
+    ///
+    /// - Important: The per-candidate accumulation order over lanes (i = 0…L-1) and the
+    ///   single horizontal `sum()` at the end are identical to `euclid2_blocked_4way`,
+    ///   so results are **bitwise-identical** to the 4-way path.
+    @inlinable
+    internal static func euclid2_tiled<Vector: SoACompatible>(
+        query: Vector,
+        soa: SoA<Vector>,
+        out: UnsafeMutableBufferPointer<Float>
+    ) {
+        let N = soa.count
+        guard N > 0 else { return }
+
+        #if DEBUG
+        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
+        #endif
+
+        let L = soa.lanes
+        let queryStorage = query.storage
+
+        // 256 candidates/tile → 4 KB of SIMD4 accumulators (L1-resident) held hot
+        // across every lane while the candidate columns stream past.
+        let tileWidth = 256
+
+        var tileStart = 0
+        while tileStart < N {
+            let tileLen = Swift.min(tileWidth, N - tileStart)
+
+            withUnsafeTemporaryAllocation(of: SIMD4<Float>.self, capacity: tileLen) { accs in
+                // Reset this tile's accumulators.
+                for t in 0..<tileLen {
+                    accs[t] = .zero
+                }
+
+                // Lane-outer: stream each lane's candidate column sequentially.
+                for i in 0..<L {
+                    let q_i = queryStorage[i]
+                    let lanePtr = soa.lanePointer(i) + tileStart
+                    for t in 0..<tileLen {
+                        let diff = q_i - lanePtr[t]
+                        accs[t].addProduct(diff, diff)
+                    }
+                }
+
+                // Horizontal reduction per candidate (single sum at the end → matches 4-way).
+                for t in 0..<tileLen {
+                    out[tileStart + t] = accs[t].sum()
+                }
+            }
+
+            tileStart += tileLen
+        }
+    }
+
     // MARK: - Dimension-Specific Public APIs
 
     /// Euclidean squared distance for 512-dimensional vectors using SoA layout
     ///
-    /// Uses 4-way register blocking for N >= 4, falling back to 2-way for smaller sets
+    /// Tiles for large batches (buffer > L2), 4-way register blocking for N >= 4,
+    /// falling back to 2-way for smaller sets.
     @inlinable
     public static func euclid2_512(
         query: Vector512Optimized,
         soa: SoA512,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            euclid2_tiled(query: query, soa: soa, out: out)
+        } else if soa.count >= 4 {
             euclid2_blocked_4way(query: query, soa: soa, out: out)
         } else {
             euclid2_blocked(query: query, soa: soa, out: out)
@@ -204,14 +295,17 @@ public enum BatchKernels_SoA {
 
     /// Euclidean squared distance for 768-dimensional vectors using SoA layout
     ///
-    /// Uses 4-way register blocking for N >= 4, falling back to 2-way for smaller sets
+    /// Tiles for large batches (buffer > L2), 4-way register blocking for N >= 4,
+    /// falling back to 2-way for smaller sets.
     @inlinable
     public static func euclid2_768(
         query: Vector768Optimized,
         soa: SoA768,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            euclid2_tiled(query: query, soa: soa, out: out)
+        } else if soa.count >= 4 {
             euclid2_blocked_4way(query: query, soa: soa, out: out)
         } else {
             euclid2_blocked(query: query, soa: soa, out: out)
@@ -220,14 +314,17 @@ public enum BatchKernels_SoA {
 
     /// Euclidean squared distance for 1536-dimensional vectors using SoA layout
     ///
-    /// Uses 4-way register blocking for N >= 4, falling back to 2-way for smaller sets
+    /// Tiles for large batches (buffer > L2), 4-way register blocking for N >= 4,
+    /// falling back to 2-way for smaller sets.
     @inlinable
     public static func euclid2_1536(
         query: Vector1536Optimized,
         soa: SoA1536,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            euclid2_tiled(query: query, soa: soa, out: out)
+        } else if soa.count >= 4 {
             euclid2_blocked_4way(query: query, soa: soa, out: out)
         } else {
             euclid2_blocked(query: query, soa: soa, out: out)
@@ -529,6 +626,55 @@ public enum BatchKernels_SoA {
         }
     }
 
+    // MARK: - Candidate-Tiled Dot Product (Issue 1.2)
+
+    /// Lane-outer / candidate-inner dot product for very large batches.
+    ///
+    /// Same cache rationale as `euclid2_tiled`: one sequential candidate stream per
+    /// lane instead of `L` interleaved strided streams. Per-candidate SIMD4 partials
+    /// accumulate over lanes in the same order as `dot_blocked_4way` and reduce with a
+    /// single `sum()`, so results are **bitwise-identical** to the 4-way path.
+    @inlinable
+    internal static func dot_tiled<Vector: SoACompatible>(
+        query: Vector,
+        soa: SoA<Vector>,
+        out: UnsafeMutableBufferPointer<Float>
+    ) {
+        let N = soa.count
+        guard N > 0 else { return }
+
+        #if DEBUG
+        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
+        #endif
+
+        let L = soa.lanes
+        let queryStorage = query.storage
+        let tileWidth = 256
+
+        var tileStart = 0
+        while tileStart < N {
+            let tileLen = Swift.min(tileWidth, N - tileStart)
+
+            withUnsafeTemporaryAllocation(of: SIMD4<Float>.self, capacity: tileLen) { accs in
+                for t in 0..<tileLen {
+                    accs[t] = .zero
+                }
+                for i in 0..<L {
+                    let q_i = queryStorage[i]
+                    let lanePtr = soa.lanePointer(i) + tileStart
+                    for t in 0..<tileLen {
+                        accs[t].addProduct(q_i, lanePtr[t])
+                    }
+                }
+                for t in 0..<tileLen {
+                    out[tileStart + t] = accs[t].sum()
+                }
+            }
+
+            tileStart += tileLen
+        }
+    }
+
     // MARK: - Public API: Standard Dot Product
 
     /// Compute dot products between query and all SoA candidates (512-dim)
@@ -539,7 +685,9 @@ public enum BatchKernels_SoA {
         out: UnsafeMutableBufferPointer<Float>
     ) {
         // Choose blocking strategy based on candidate count
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            dot_tiled(query: query, soa: soa, out: out)
+        } else if soa.count >= 4 {
             dot_blocked_4way(query: query, soa: soa, out: out)
         } else {
             dot_blocked_2way(query: query, soa: soa, out: out)
@@ -554,7 +702,9 @@ public enum BatchKernels_SoA {
         out: UnsafeMutableBufferPointer<Float>
     ) {
         // Choose blocking strategy based on candidate count
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            dot_tiled(query: query, soa: soa, out: out)
+        } else if soa.count >= 4 {
             dot_blocked_4way(query: query, soa: soa, out: out)
         } else {
             dot_blocked_2way(query: query, soa: soa, out: out)
@@ -569,7 +719,9 @@ public enum BatchKernels_SoA {
         out: UnsafeMutableBufferPointer<Float>
     ) {
         // For high dimensions, 4-way blocking provides best cache utilization
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            dot_tiled(query: query, soa: soa, out: out)
+        } else if soa.count >= 4 {
             dot_blocked_4way(query: query, soa: soa, out: out)
         } else {
             dot_blocked_2way(query: query, soa: soa, out: out)
@@ -948,6 +1100,76 @@ public enum BatchKernels_SoA {
         }
     }
 
+    // MARK: - Candidate-Tiled Fused Cosine (Issue 1.2)
+
+    /// Lane-outer / candidate-inner fused cosine distance for very large batches.
+    ///
+    /// Accumulates per-candidate dot and squared-norm SIMD4 partials in two small
+    /// stack-allocated tiles (L1-resident) while streaming each lane's candidate column
+    /// sequentially. Accumulation order over lanes and the final `computeDistance`
+    /// match `cosine_fused_blocked_4way`, so results are **bitwise-identical**.
+    @inlinable
+    internal static func cosine_fused_tiled<Vector: SoACompatible>(
+        query: Vector,
+        queryNorm: Float,
+        soa: SoA<Vector>,
+        out: UnsafeMutableBufferPointer<Float>
+    ) {
+        let N = soa.count
+        guard N > 0 else { return }
+
+        #if DEBUG
+        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
+        #endif
+
+        if queryNorm <= 0 {
+            out.initialize(repeating: 1.0)
+            return
+        }
+
+        let L = soa.lanes
+        let queryStorage = query.storage
+        let tileWidth = 256
+
+        @inline(__always)
+        func computeDistance(dotProd: Float, candNormSq: Float) -> Float {
+            if candNormSq <= 0 { return 1.0 }
+            let similarity = dotProd / (queryNorm * sqrt(candNormSq))
+            return max(0.0, min(2.0, 1.0 - similarity))
+        }
+
+        var tileStart = 0
+        while tileStart < N {
+            let tileLen = Swift.min(tileWidth, N - tileStart)
+
+            withUnsafeTemporaryAllocation(of: SIMD4<Float>.self, capacity: tileLen) { dotAcc in
+                withUnsafeTemporaryAllocation(of: SIMD4<Float>.self, capacity: tileLen) { normAcc in
+                    for t in 0..<tileLen {
+                        dotAcc[t] = .zero
+                        normAcc[t] = .zero
+                    }
+                    for i in 0..<L {
+                        let q_i = queryStorage[i]
+                        let lanePtr = soa.lanePointer(i) + tileStart
+                        for t in 0..<tileLen {
+                            let c = lanePtr[t]
+                            dotAcc[t].addProduct(q_i, c)
+                            normAcc[t].addProduct(c, c)
+                        }
+                    }
+                    for t in 0..<tileLen {
+                        out[tileStart + t] = computeDistance(
+                            dotProd: dotAcc[t].sum(),
+                            candNormSq: normAcc[t].sum()
+                        )
+                    }
+                }
+            }
+
+            tileStart += tileLen
+        }
+    }
+
     // MARK: - Pre-Normalized Fast Path
 
     /// Pre-normalized cosine distance (assumes ||query|| = ||candidates|| = 1)
@@ -960,7 +1182,9 @@ public enum BatchKernels_SoA {
         out: UnsafeMutableBufferPointer<Float>
     ) {
         // Step 1: Compute dot products using optimized kernel
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            dot_tiled(query: query, soa: soa, out: out)
+        } else if soa.count >= 4 {
             dot_blocked_4way(query: query, soa: soa, out: out)
         } else {
             dot_blocked_2way(query: query, soa: soa, out: out)
@@ -980,7 +1204,9 @@ public enum BatchKernels_SoA {
         out: UnsafeMutableBufferPointer<Float>
     ) {
         let queryNorm = computeNorm(query)
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            cosine_fused_tiled(query: query, queryNorm: queryNorm, soa: soa, out: out)
+        } else if soa.count >= 4 {
             cosine_fused_blocked_4way(query: query, queryNorm: queryNorm, soa: soa, out: out)
         } else {
             cosine_fused_blocked_2way(query: query, queryNorm: queryNorm, soa: soa, out: out)
@@ -995,7 +1221,9 @@ public enum BatchKernels_SoA {
         out: UnsafeMutableBufferPointer<Float>
     ) {
         let queryNorm = computeNorm(query)
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            cosine_fused_tiled(query: query, queryNorm: queryNorm, soa: soa, out: out)
+        } else if soa.count >= 4 {
             cosine_fused_blocked_4way(query: query, queryNorm: queryNorm, soa: soa, out: out)
         } else {
             cosine_fused_blocked_2way(query: query, queryNorm: queryNorm, soa: soa, out: out)
@@ -1010,7 +1238,9 @@ public enum BatchKernels_SoA {
         out: UnsafeMutableBufferPointer<Float>
     ) {
         let queryNorm = computeNorm(query)
-        if soa.count >= 4 {
+        if shouldTile(count: soa.count, lanes: soa.lanes) {
+            cosine_fused_tiled(query: query, queryNorm: queryNorm, soa: soa, out: out)
+        } else if soa.count >= 4 {
             cosine_fused_blocked_4way(query: query, queryNorm: queryNorm, soa: soa, out: out)
         } else {
             cosine_fused_blocked_2way(query: query, queryNorm: queryNorm, soa: soa, out: out)

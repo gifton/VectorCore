@@ -327,4 +327,33 @@ struct OptimizedVector512Suite {
         #expect(desc.contains("512 total"))
         #expect(desc.contains("Vector512Optimized"))
     }
+
+    // Regression guard for the scoped `withMemoryRebound` rewrite of the
+    // SIMD4<Float> <-> Float buffer aliasing paths (init, toArray,
+    // withUnsafeBufferPointer, withUnsafeMutableBufferPointer). Behavior must be
+    // an exact element-wise round trip; this also exercises the previously
+    // TBAA-violating bind sites under the new scoped rebinding.
+    @Test
+    func testBufferAccess_RoundTripIsElementwiseExact() {
+        let source = (0..<512).map { Float($0) * 0.5 - 100 }
+        var v = try! Vector512Optimized(source)
+
+        // toArray()
+        let roundTripped = v.toArray()
+        #expect(roundTripped.count == 512)
+        for i in 0..<512 { #expect(approxEqual(roundTripped[i], source[i], tol: 1e-6)) }
+
+        // withUnsafeBufferPointer (read)
+        v.withUnsafeBufferPointer { buf in
+            #expect(buf.count == 512)
+            for i in 0..<512 { #expect(approxEqual(buf[i], source[i], tol: 1e-6)) }
+        }
+
+        // withUnsafeMutableBufferPointer (write-through), then read back.
+        v.withUnsafeMutableBufferPointer { buf in
+            #expect(buf.count == 512)
+            for i in 0..<512 { buf[i] = source[i] * 2 }
+        }
+        for i in 0..<512 { #expect(approxEqual(v[i], source[i] * 2, tol: 1e-6)) }
+    }
 }

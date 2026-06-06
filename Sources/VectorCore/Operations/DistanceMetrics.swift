@@ -124,9 +124,19 @@ public struct CosineDistance: DistanceMetric {
             }
         }
 
-        // Handle zero vectors
-        let magnitudeProduct = sqrt(aMagnitudeSq * bMagnitudeSq)
-        guard magnitudeProduct > Float.ulpOfOne else {
+        // Handle zero vectors.
+        // Compute the product of magnitudes as sqrt(aMagnitudeSq) * sqrt(bMagnitudeSq)
+        // rather than sqrt(aMagnitudeSq * bMagnitudeSq) to avoid intermediate overflow
+        // for large-magnitude vectors.
+        //
+        // The guard threshold must be an *absolute* floor, not the relative precision
+        // around 1.0. Using Float.ulpOfOne (~1.19e-7) wrongly rejects valid micro-vectors:
+        // two unit-direction vectors of magnitude 1e-4 yield a product of ~1e-8, which is
+        // below ulpOfOne yet far above the smallest representable normal magnitude.
+        // Float.leastNormalMagnitude (~1.18e-38) is the correct floor: it excludes only
+        // genuine zero (or subnormal) vectors where the cosine is undefined.
+        let magnitudeProduct = sqrt(aMagnitudeSq) * sqrt(bMagnitudeSq)
+        guard magnitudeProduct > Float.leastNormalMagnitude else {
             return 1.0 // Maximum distance for zero vectors
         }
 

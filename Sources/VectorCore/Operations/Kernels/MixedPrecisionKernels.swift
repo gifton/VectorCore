@@ -186,21 +186,24 @@ public enum MixedPrecisionKernels {
                 return sign
             }
 
-            // Convert to subnormal
-            // Shift mantissa right, adding implicit leading 1
+            // Convert to subnormal: shift the mantissa (with implicit leading 1) right.
             let shift = 1 - exp16
             let mantissa32 = mantissa | 0x00800000  // Add implicit 1
-            let mantissa16Raw = mantissa32 >> (13 + shift)
+            let shiftAmount = 13 + shift
+            let mantissa16Raw = mantissa32 >> shiftAmount
 
-            // Round to nearest even
-            let roundBits = (mantissa32 >> (12 + shift)) & 0x3
-            let mantissa16 = if roundBits > 1 || (roundBits == 1 && (mantissa16Raw & 1) == 1) {
-                UInt16(mantissa16Raw + 1)
-            } else {
-                UInt16(mantissa16Raw)
-            }
+            // Round-to-nearest-even. The round bit is the bit immediately below the kept
+            // bits; the sticky bits are everything below that. (The previous code extracted
+            // a 2-bit field that included the kept LSB, which spuriously rounded exactly
+            // representable subnormals such as 2^-24 (0x0001) up by one ULP to 0x0002.)
+            let roundBit = (mantissa32 >> (shiftAmount - 1)) & 0x1
+            let stickyMask = (UInt32(1) << (shiftAmount - 1)) &- 1
+            let stickyBits = mantissa32 & stickyMask
+            let roundUp = roundBit == 1 && (stickyBits != 0 || (mantissa16Raw & 1) == 1)
+            // A rounding carry (0x3FF -> 0x400) correctly produces the smallest normal.
+            let mantissa16 = UInt16(roundUp ? mantissa16Raw + 1 : mantissa16Raw)
 
-            return sign | (mantissa16 & 0x3FF)
+            return sign | mantissa16
         }
 
         // Normal number conversion with round-to-nearest-even
@@ -311,6 +314,7 @@ public enum MixedPrecisionKernels {
             )
 
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
+            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage)
 
             // Verify conversion produced correct element count
             #if DEBUG
@@ -356,6 +360,7 @@ public enum MixedPrecisionKernels {
             )
 
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
+            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage)
 
             // Verify conversion produced correct element count
             #if DEBUG
@@ -398,6 +403,7 @@ public enum MixedPrecisionKernels {
             )
 
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
+            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage)
 
             // Verify conversion produced correct element count
             #if DEBUG
@@ -497,13 +503,22 @@ public enum MixedPrecisionKernels {
         ///   - blockSize: Ignored (reserved for future chunking optimizations)
         /// - Throws: VectorError if vectors have incompatible dimensions
         public init(vectors: [VectorType], blockSize: Int = 32) throws {
-            // Delegate to specialized creation functions
+            // An empty vector array yields a valid empty SoA (vectorCount == 0); the
+            // specialized builders below already handle that degenerate case without throwing.
+            // Delegate to the specialized creation function for each supported dimension.
             if VectorType.self == Vector512Optimized.self {
                 let soa = MixedPrecisionKernels.createSoA512FP16(from: vectors as! [Vector512Optimized])
                 self = soa as! Self
+            } else if VectorType.self == Vector768Optimized.self {
+                let soa = MixedPrecisionKernels.createSoA768FP16(from: vectors as! [Vector768Optimized])
+                self = soa as! Self
+            } else if VectorType.self == Vector1536Optimized.self {
+                let soa = MixedPrecisionKernels.createSoA1536FP16(from: vectors as! [Vector1536Optimized])
+                self = soa as! Self
             } else {
-                // Fallback: create empty SoA
-                self.init(capacity: vectors.count, dimension: 512)
+                throw VectorError.invalidData(
+                    "Unsupported vector type \(VectorType.self) for SoAFP16; expected Vector512/768/1536Optimized"
+                )
             }
         }
 
@@ -793,6 +808,22 @@ public enum MixedPrecisionKernels {
         #endif
 
         return result
+    }
+
+    /// Record FP32→FP16 conversions with the diagnostics singleton when tracking is enabled.
+    /// A single cheap `isRecording` check makes this a no-op when diagnostics are off, so it is
+    /// safe to call from the per-vector conversion inits.
+    @inline(__always)
+    internal static func recordConversionsIfEnabled(_ values: ContiguousArray<SIMD4<Float>>) {
+        let diagnostics = MixedPrecisionDiagnostics.shared
+        guard diagnostics.isRecording else { return }
+        var floats = [Float]()
+        floats.reserveCapacity(values.count * 4)
+        for simd in values {
+            floats.append(simd[0]); floats.append(simd[1])
+            floats.append(simd[2]); floats.append(simd[3])
+        }
+        diagnostics.recordBatchConversion(floats)
     }
 
     /// SIMD-optimized FP16 to FP32 storage conversion.
@@ -3313,17 +3344,35 @@ public enum MixedPrecisionKernels {
         }
     }
 
-    // MARK: - Test Compatibility Aliases
+    // MARK: - SoA Convenience
 
-    /// Alias for batchEuclidean512 - computes squared Euclidean distances using SoA layout
-    /// - Note: Results are actual distances (not squared), despite the name for backward compatibility
+    /// Batch Euclidean **distance** (FP16 query × FP16 SoA candidates) using SoA layout.
+    ///
+    /// Returns the actual Euclidean distance (i.e. with `sqrt`), identical to `batchEuclidean512`.
+    /// - Parameters:
+    ///   - query: FP16 query vector
+    ///   - candidates: SoA-layout FP16 candidate vectors
+    ///   - results: Output buffer for distances (capacity ≥ candidates.vectorCount)
+    @inlinable
+    public static func batchEuclideanSoA(
+        query: Vector512FP16,
+        candidates: SoA512FP16,
+        results: UnsafeMutableBufferPointer<Float>
+    ) {
+        batchEuclidean512(query: query, candidates: candidates, results: results)
+    }
+
+    /// Deprecated misnomer: despite the name, this returns the **actual** (non-squared)
+    /// Euclidean distance. Use ``batchEuclideanSoA`` instead. (If you need squared distances,
+    /// `BatchKernels_SoA.batchEuclideanSquared512` returns the true squared value.)
+    @available(*, deprecated, renamed: "batchEuclideanSoA", message: "Returns the actual Euclidean distance (not squared) despite the old name; use batchEuclideanSoA.")
     @inlinable
     public static func batchEuclideanSquaredSoA(
         query: Vector512FP16,
         candidates: SoA512FP16,
         results: UnsafeMutableBufferPointer<Float>
     ) {
-        batchEuclidean512(query: query, candidates: candidates, results: results)
+        batchEuclideanSoA(query: query, candidates: candidates, results: results)
     }
 
     /// Adaptive Euclidean distance computation with automatic precision selection
@@ -3351,13 +3400,15 @@ public enum MixedPrecisionKernels {
         let useFP16 = maxAbsValue < 100.0  // Heuristic threshold
 
         if useFP16 {
-            // Use mixed precision pathway
+            // Use mixed precision pathway. Build a proper dimension-major SoA for the single
+            // candidate via createSoA512FP16 — the kernel walks storageIndex over 512×4 = 2048
+            // elements per group, so the flat 512-element Vector512FP16.storage must NOT be
+            // force-wrapped as an SoA (that caused out-of-bounds reads → NaN distances).
             let queryFP16 = Vector512FP16(from: query)
-            let candidateFP16 = Vector512FP16(from: candidate)
-            // Compute distance manually since Vector512FP16 may not have euclideanDistance
+            let candidatesSoA = MixedPrecisionKernels.createSoA512FP16(from: [candidate])
             var result = [Float](repeating: 0, count: 1)
             result.withUnsafeMutableBufferPointer { buffer in
-                batchEuclidean512(query: queryFP16, candidates: SoA512FP16(storage: candidateFP16.storage, vectorCount: 1, dimension: 512), results: buffer)
+                batchEuclidean512(query: queryFP16, candidates: candidatesSoA, results: buffer)
             }
             return result[0]
         } else {
@@ -3511,36 +3562,40 @@ public enum MixedPrecisionKernels {
         // Determine recommended precision based on analysis
         let fp16Max = Float(65504.0)
         let fp16Min = Float(-65504.0)
-        let fp16MinNormal = Float(6.10352e-5)  // Smallest positive normal FP16
 
         var recommendedPrecision: PrecisionProfile.Precision
         var expectedError: Float
 
         // Decision logic for precision recommendation
         if maxVal > fp16Max || minVal < fp16Min {
-            // Values exceed FP16 range
+            // Values exceed FP16 range — must use FP32.
             recommendedPrecision = .fp32
             expectedError = 0.0
-        } else if dynamicRange < 2.0 && abs(meanValue) < 10.0 {
-            // Small dynamic range, suitable for INT8 quantization
-            recommendedPrecision = .int8
-            expectedError = 0.005  // ~0.5% for 8-bit uniform quantization
-        } else if maxVal <= fp16Max && minVal >= fp16Min && minVal > fp16MinNormal {
-            // All values safely in FP16 range
-            // Estimate error based on dimension (sqrt(D) effect) and FP16 precision
+        } else {
+            // All values are within FP16 range. Estimate FP16 error with sqrt(D) statistical
+            // averaging (~0.05% per element scaled by D^(1/4)).
             let dimensionFactor = sqrt(Float(dimension))
             let fp16RelativeError: Float = 0.0005  // ~0.05% per operation
-            expectedError = fp16RelativeError * dimensionFactor / dimensionFactor.squareRoot()  // Statistical averaging
+            let fp16ExpectedError = fp16RelativeError * dimensionFactor / dimensionFactor.squareRoot()
 
-            if expectedError < 0.001 {  // < 0.1% expected error
+            // INT8 is only worthwhile for non-negative, low-dynamic-range data where 8-bit
+            // fixed-point preserves relative precision. Signed near-zero data (e.g. normalized
+            // embeddings, components ~±1/√D) is poorly served by INT8 — prefer FP16/mixed.
+            // (Previously this branch fired for ANY small range including signed embeddings,
+            // shadowing the FP16 path, and the FP16 branch was unreachable for signed data
+            // because of a `minVal > fp16MinNormal` guard.)
+            let int8Suitable = dynamicRange < 2.0 && abs(meanValue) < 10.0 && minVal >= 0.0
+
+            if int8Suitable {
+                recommendedPrecision = .int8
+                expectedError = 0.005  // ~0.5% for 8-bit uniform quantization
+            } else if fp16ExpectedError < 0.001 {  // < 0.1% expected error
                 recommendedPrecision = .fp16
+                expectedError = fp16ExpectedError
             } else {
                 recommendedPrecision = .mixed
+                expectedError = fp16ExpectedError
             }
-        } else {
-            // Mixed precision recommended
-            recommendedPrecision = .mixed
-            expectedError = 0.0008  // ~0.08% for mixed precision
         }
 
         return PrecisionProfile(

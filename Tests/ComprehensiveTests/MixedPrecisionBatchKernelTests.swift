@@ -7,36 +7,37 @@ struct MixedPrecisionBatchKernelTests {
 
     // MARK: - Helper Functions
 
-    func generateRandomVector512() -> Vector512Optimized {
-        return try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+    func generateRandomVector512(using rng: inout SeededGenerator) -> Vector512Optimized {
+        return try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1, using: &rng) })
     }
 
-    func generateRandomVectors512(count: Int) -> [Vector512Optimized] {
-        return (0..<count).map { _ in generateRandomVector512() }
+    func generateRandomVectors512(count: Int, using rng: inout SeededGenerator) -> [Vector512Optimized] {
+        return (0..<count).map { _ in generateRandomVector512(using: &rng) }
     }
 
-    func generateRandomVector768() -> Vector768Optimized {
-        return try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1) })
+    func generateRandomVector768(using rng: inout SeededGenerator) -> Vector768Optimized {
+        return try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })
     }
 
-    func generateRandomVectors768(count: Int) -> [Vector768Optimized] {
-        return (0..<count).map { _ in generateRandomVector768() }
+    func generateRandomVectors768(count: Int, using rng: inout SeededGenerator) -> [Vector768Optimized] {
+        return (0..<count).map { _ in generateRandomVector768(using: &rng) }
     }
 
-    func generateRandomVector1536() -> Vector1536Optimized {
-        return try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1) })
+    func generateRandomVector1536(using rng: inout SeededGenerator) -> Vector1536Optimized {
+        return try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1, using: &rng) })
     }
 
-    func generateRandomVectors1536(count: Int) -> [Vector1536Optimized] {
-        return (0..<count).map { _ in generateRandomVector1536() }
+    func generateRandomVectors1536(count: Int, using rng: inout SeededGenerator) -> [Vector1536Optimized] {
+        return (0..<count).map { _ in generateRandomVector1536(using: &rng) }
     }
 
     // MARK: - Euclidean² Accuracy Tests
 
     @Test("Range Euclidean² 512: Accuracy vs FP32 reference")
     func testRangeEuclidean512Accuracy() throws {
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 100)
+        var rng = SeededGenerator(seed: 0xB2000001)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 100, using: &rng)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
         // Compute FP32 reference
@@ -74,8 +75,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Range Euclidean² 768: Accuracy vs FP32 reference")
     func testRangeEuclidean768Accuracy() throws {
-        let query = generateRandomVector768()
-        let candidates = generateRandomVectors768(count: 100)
+        var rng = SeededGenerator(seed: 0xB2000002)
+        let query = generateRandomVector768(using: &rng)
+        let candidates = generateRandomVectors768(count: 100, using: &rng)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
 
         var referenceFP32 = [Float](repeating: 0, count: 100)
@@ -110,8 +112,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Range Euclidean² 1536: Accuracy vs FP32 reference")
     func testRangeEuclidean1536Accuracy() throws {
-        let query = generateRandomVector1536()
-        let candidates = generateRandomVectors1536(count: 100)
+        var rng = SeededGenerator(seed: 0xB2000003)
+        let query = generateRandomVector1536(using: &rng)
+        let candidates = generateRandomVectors1536(count: 100, using: &rng)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_1536(candidates)
 
         var referenceFP32 = [Float](repeating: 0, count: 100)
@@ -148,8 +151,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Range Cosine 512: Accuracy vs FP32 reference")
     func testRangeCosine512Accuracy() throws {
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 100)
+        var rng = SeededGenerator(seed: 0xB2000004)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 100, using: &rng)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
         var referenceFP32 = [Float](repeating: 0, count: 100)
@@ -184,8 +188,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Range Cosine 768: Accuracy vs FP32 reference")
     func testRangeCosine768Accuracy() throws {
-        let query = generateRandomVector768()
-        let candidates = generateRandomVectors768(count: 100)
+        var rng = SeededGenerator(seed: 0xB2000005)
+        let query = generateRandomVector768(using: &rng)
+        let candidates = generateRandomVectors768(count: 100, using: &rng)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
 
         var referenceFP32 = [Float](repeating: 0, count: 100)
@@ -223,8 +228,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Range Dot Product 512: Internal consistency")
     func testRangeDot512Consistency() throws {
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 100)
+        var rng = SeededGenerator(seed: 0xB2000006)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 100, using: &rng)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
         var resultsFP16 = [Float](repeating: 0, count: 100)
@@ -306,8 +312,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Range processing: Odd candidate count")
     func testOddCandidateCount() throws {
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 101) // Odd count
+        var rng = SeededGenerator(seed: 0xB2000007)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 101, using: &rng) // Odd count
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
         var results = [Float](repeating: 0, count: 101)
@@ -326,8 +333,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Range processing: Partial range")
     func testPartialRange() throws {
-        let query = generateRandomVector512()
-        let candidates = generateRandomVectors512(count: 100)
+        var rng = SeededGenerator(seed: 0xB2000008)
+        let query = generateRandomVector512(using: &rng)
+        let candidates = generateRandomVectors512(count: 100, using: &rng)
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
         // Process only middle 20 candidates
@@ -347,8 +355,9 @@ struct MixedPrecisionBatchKernelTests {
 
     @Test("Zero vector handling")
     func testZeroVectorHandling() throws {
+        var rng = SeededGenerator(seed: 0xB2000009)
         let query = try! Vector512Optimized([Float](repeating: 0, count: 512))
-        let candidate = generateRandomVector512()
+        let candidate = generateRandomVector512(using: &rng)
         let candidateFP16 = MixedPrecisionKernels.Vector512FP16(from: candidate)
 
         var result = [Float](repeating: 0, count: 1)

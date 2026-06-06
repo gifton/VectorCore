@@ -63,14 +63,13 @@ public struct Vector512Optimized: Sendable {
                 return
             }
 
-            // Cast the buffer to SIMD4 chunks for direct copying
-            let simd4Buffer = UnsafeRawPointer(baseAddress).bindMemory(
-                to: SIMD4<Float>.self,
-                capacity: 128
-            )
-
-            // Bulk append using unsafe buffer
-            storage.append(contentsOf: UnsafeBufferPointer(start: simd4Buffer, count: 128))
+            // Cast the buffer to SIMD4 chunks for direct copying.
+            // Scoped rebinding restores the original Float binding on exit,
+            // avoiding a permanent TBAA-violating retype of the source [Float].
+            baseAddress.withMemoryRebound(to: SIMD4<Float>.self, capacity: 128) { simd4Ptr in
+                // Bulk append using unsafe buffer
+                storage.append(contentsOf: UnsafeBufferPointer(start: simd4Ptr, count: 128))
+            }
         }
     }
 
@@ -136,9 +135,11 @@ extension Vector512Optimized: VectorProtocol {
         result.reserveCapacity(512)
 
         storage.withUnsafeBufferPointer { buffer in
-            let floatBuffer = UnsafeRawPointer(buffer.baseAddress!)
-                .bindMemory(to: Float.self, capacity: 512)
-            result.append(contentsOf: UnsafeBufferPointer(start: floatBuffer, count: 512))
+            // Scoped rebinding restores the SIMD4<Float> binding on exit,
+            // avoiding a permanent TBAA-violating retype of the storage.
+            buffer.baseAddress!.withMemoryRebound(to: Float.self, capacity: 512) { floatPtr in
+                result.append(contentsOf: UnsafeBufferPointer(start: floatPtr, count: 512))
+            }
         }
 
         return result
@@ -150,9 +151,10 @@ extension Vector512Optimized: VectorProtocol {
         _ body: (UnsafeBufferPointer<Scalar>) throws -> R
     ) rethrows -> R {
         try storage.withUnsafeBufferPointer { simd4Buffer in
-            let floatBuffer = UnsafeRawPointer(simd4Buffer.baseAddress!)
-                .bindMemory(to: Float.self, capacity: 512)
-            return try body(UnsafeBufferPointer(start: floatBuffer, count: 512))
+            // Scoped rebinding restores the SIMD4<Float> binding on exit (TBAA-safe).
+            try simd4Buffer.baseAddress!.withMemoryRebound(to: Float.self, capacity: 512) { floatPtr in
+                try body(UnsafeBufferPointer(start: floatPtr, count: 512))
+            }
         }
     }
 
@@ -162,9 +164,10 @@ extension Vector512Optimized: VectorProtocol {
         _ body: (UnsafeMutableBufferPointer<Scalar>) throws -> R
     ) rethrows -> R {
         try storage.withUnsafeMutableBufferPointer { simd4Buffer in
-            let floatBuffer = UnsafeMutableRawPointer(simd4Buffer.baseAddress!)
-                .bindMemory(to: Float.self, capacity: 512)
-            return try body(UnsafeMutableBufferPointer(start: floatBuffer, count: 512))
+            // Scoped rebinding restores the SIMD4<Float> binding on exit (TBAA-safe).
+            try simd4Buffer.baseAddress!.withMemoryRebound(to: Float.self, capacity: 512) { floatPtr in
+                try body(UnsafeMutableBufferPointer(start: floatPtr, count: 512))
+            }
         }
     }
 }

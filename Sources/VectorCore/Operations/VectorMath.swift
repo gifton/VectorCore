@@ -6,6 +6,10 @@
 import Foundation
 import simd
 
+#if canImport(Accelerate)
+import Accelerate
+#endif
+
 // MARK: - Element-wise Operations
 
 extension Vector {
@@ -307,7 +311,19 @@ extension Vector {
 
         // Subtract max and exp
         let shifted = array.map { $0 - maxVal }
+        #if canImport(Accelerate)
+        var expValues = [Float](repeating: 0, count: shifted.count)
+        if !shifted.isEmpty {
+            var n = Int32(shifted.count)
+            shifted.withUnsafeBufferPointer { src in
+                expValues.withUnsafeMutableBufferPointer { dst in
+                    vvexpf(dst.baseAddress!, src.baseAddress!, &n)
+                }
+            }
+        }
+        #else
         let expValues = shifted.map { Foundation.exp($0) }
+        #endif
 
         // Sum for normalization
         let sum = expValues.reduce(0, +)

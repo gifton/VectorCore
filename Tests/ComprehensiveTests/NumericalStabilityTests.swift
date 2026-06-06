@@ -154,12 +154,13 @@ internal enum NumericalStabilityHelpers {
     ) throws -> Vector<D> {
         let dim = Vector<D>.zero.scalarCount
         var array = Array<Float>(repeating: 0.0, count: dim)
+        var rng = SeededGenerator(seed: 0x5713_0001)
 
         for i in 0..<dim {
             // Random exponent in range
-            let exponent = Float.random(in: minExponent...maxExponent)
+            let exponent = Float.random(in: minExponent...maxExponent, using: &rng)
             // Random sign
-            let sign: Float = Bool.random() ? 1.0 : -1.0
+            let sign: Float = Bool.random(using: &rng) ? 1.0 : -1.0
             // Value = sign * 10^exponent
             let value = sign * pow(10.0, exponent)
             array[i] = value
@@ -1626,7 +1627,8 @@ struct NumericalStabilityRegressionTests {
 
             // Random unit vector
             (try {
-                let random = try Vector<Dim32>((0..<32).map { _ in Float.random(in: -1...1) })
+                var rng = SeededGenerator(seed: 0x5713_0002)
+                let random = try Vector<Dim32>((0..<32).map { _ in Float.random(in: -1...1, using: &rng) })
                 return random.normalizedFast()
             }(), "Random normalized")
         ]
@@ -1868,6 +1870,118 @@ struct OptimizedVectorStabilityTests {
         )
 
         print("INFO: All optimized implementations consistent with generic")
+    }
+
+    // MARK: - Regression: Subnormal reciprocal → NaN poisoning (Fix 4.4)
+
+    /// A vector whose largest component is subnormal (~1e-40) defeats the
+    /// two-pass scaling algorithm: `scale = 1/maxAbs` overflows to +Inf
+    /// (1/1e-40 = 1e40 > Float.greatestFiniteMagnitude). The old guards
+    /// (`maxAbs > 0`, `isFinite`, `isNaN`) all PASS for a subnormal maxAbs,
+    /// so each `storage[i] * simdScale` produced Inf/NaN, silently poisoning
+    /// the result. The fix detects the non-finite reciprocal and falls back to
+    /// a direct (unscaled) sum of squares, which underflows safely toward 0.
+    @Test("Magnitude of all-subnormal vector is finite, not NaN/Inf")
+    func testMagnitudeSubnormalVectorNotPoisoned() throws {
+        let subnormal: Float = 1e-40  // valid Float subnormal (< leastNormalMagnitude)
+        // Precondition: confirm 1/maxAbs really overflows for this input.
+        #expect((1.0 / subnormal).isInfinite, "Precondition: reciprocal must overflow to +Inf")
+
+        let v = Vector512Optimized(repeating: subnormal)
+
+        let mag = v.magnitude
+        #expect(mag.isFinite, "magnitude must be finite for subnormal input, got \(mag)")
+        #expect(!mag.isNaN, "magnitude must not be NaN")
+        #expect(mag >= 0, "magnitude must be non-negative")
+
+        let magSq = v.magnitudeSquared
+        #expect(magSq.isFinite, "magnitudeSquared must be finite, got \(magSq)")
+        #expect(!magSq.isNaN, "magnitudeSquared must not be NaN")
+        #expect(magSq >= 0, "magnitudeSquared must be non-negative")
+    }
+
+    /// Normalizing an all-subnormal vector must not produce NaN components.
+    /// Because the true magnitude underflows to ~0, normalization correctly
+    /// reports a zero-vector failure rather than emitting NaN/Inf.
+    @Test("Normalizing all-subnormal vector does not produce NaN")
+    func testNormalizeSubnormalVectorNoNaN() throws {
+        let subnormal: Float = 1e-40
+        let v = Vector512Optimized(repeating: subnormal)
+
+        switch v.normalized() {
+        case .success(let unit):
+            // If it normalized, every component must be finite (no NaN poisoning).
+            let arr = unit.toArray()
+            #expect(arr.allSatisfy { $0.isFinite && !$0.isNaN },
+                    "Normalized subnormal vector must have no NaN/Inf components")
+        case .failure:
+            // Acceptable: magnitude underflowed to ~0 → treated as zero vector.
+            // The key invariant is that no NaN escaped; reaching here proves that.
+            #expect(Bool(true))
+        }
+    }
+
+    /// A vector with a subnormal MAX component but slightly larger than the
+    /// flush-to-zero threshold for its square: verifies the fallback path also
+    /// handles the boundary near leastNonzeroMagnitude without NaN.
+    @Test("Magnitude with maximum subnormal component is finite")
+    func testMagnitudeMaxSubnormalComponentFinite() throws {
+        let nearlyNormal: Float = Float.leastNonzeroMagnitude * 8  // deep subnormal
+        // 1/nearlyNormal overflows to +Inf, triggering the fallback.
+        #expect((1.0 / nearlyNormal).isInfinite, "Precondition: reciprocal overflows")
+
+        let v = Vector768Optimized(repeating: nearlyNormal)
+        let mag = v.magnitude
+        #expect(mag.isFinite && !mag.isNaN, "magnitude must be finite, got \(mag)")
+        #expect(mag >= 0, "magnitude must be non-negative")
+    }
+
+    // MARK: - Regression: unchecked normalize paths (Fix 4.4, second pass)
+
+    /// The pointer `normalizeUnchecked` had `scale = 1.0/maxAbs` with no finite
+    /// guard. For a subnormal-dominated buffer the scale (and later 1/mag)
+    /// overflows; before the fix this either zeroed or poisoned the buffer.
+    /// After the fix the buffer is left unmodified (still finite) when it cannot
+    /// be normalized in FP32, and a normal vector still normalizes to unit length.
+    @Test("normalizeUnchecked(pointer) does not poison a subnormal buffer")
+    func testNormalizeUncheckedPointerSubnormalNoPoison() throws {
+        let subnormal = Float.leastNormalMagnitude / 100  // deep subnormal, nonzero
+        #expect((1.0 / subnormal).isInfinite, "Precondition: reciprocal overflows")
+
+        var buf = [Float](repeating: subnormal, count: 512)
+        buf.withUnsafeMutableBufferPointer { p in
+            NormalizeKernels.normalizeUnchecked(p.baseAddress!, dimension: 512)
+        }
+        #expect(buf.allSatisfy { $0.isFinite && !$0.isNaN },
+                "subnormal buffer must remain finite (no Inf/NaN poisoning)")
+
+        // Regression: a small-but-normal vector still normalizes to unit length.
+        var normalBuf = (0..<512).map { Float(($0 % 7) + 1) * 1e-5 }
+        normalBuf.withUnsafeMutableBufferPointer { p in
+            NormalizeKernels.normalizeUnchecked(p.baseAddress!, dimension: 512)
+        }
+        let mag = Foundation.sqrt(normalBuf.reduce(Float(0)) { $0 + $1 * $1 })
+        #expect(approxEqual(mag, 1.0, tol: 1e-4),
+                "normalizeUnchecked must produce unit length for a normal vector, got \(mag)")
+    }
+
+    /// The `normalizedUnchecked512` family computed `inv = 1.0/mag` with no guard.
+    /// After the magnitude fix `mag` is 0 for deep-subnormal input, so the old
+    /// code scaled by +Inf. The fix returns the input unchanged when 1/mag is
+    /// non-finite, while a normal vector still normalizes correctly.
+    @Test("normalizedUnchecked512 does not poison a subnormal vector")
+    func testNormalizedUnchecked512SubnormalNoPoison() throws {
+        let subnormal = Float.leastNormalMagnitude / 100
+        let v = Vector512Optimized(repeating: subnormal)
+        let result = NormalizeKernels.normalizedUnchecked512(v)
+        #expect(result.toArray().allSatisfy { $0.isFinite && !$0.isNaN },
+                "subnormal vector must remain finite through normalizedUnchecked512")
+
+        // Regression: a normal vector normalizes to unit magnitude.
+        let normal = try Vector512Optimized((0..<512).map { Float(($0 % 5) + 1) })
+        let unit = NormalizeKernels.normalizedUnchecked512(normal)
+        #expect(approxEqual(unit.magnitude, 1.0, tol: 1e-4),
+                "normalizedUnchecked512 must produce unit magnitude, got \(unit.magnitude)")
     }
 }
 

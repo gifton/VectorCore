@@ -43,7 +43,10 @@ extension ExecutionOperations {
             return try await context.execute {
                 try vectors.map { vector in
                     let magnitude = vector.magnitude
-                    guard magnitude > Float.ulpOfOne else {
+                    // Use the absolute representable floor, not ulpOfOne (~1.19e-7,
+                    // which is precision around 1.0). Since ‖v‖∞ ≤ ‖v‖₂ = magnitude,
+                    // dividing by any magnitude ≥ leastNormalMagnitude is overflow-safe.
+                    guard magnitude > Float.leastNormalMagnitude else {
                         // Return zero vector for zero magnitude
                         return try V.create(from: Array(repeating: 0, count: vector.scalarCount))
                     }
@@ -58,7 +61,7 @@ extension ExecutionOperations {
                 group.addTask {
                     let magnitude = vector.magnitude
                     let normalized: V
-                    if magnitude > Float.ulpOfOne {
+                    if magnitude > Float.leastNormalMagnitude {
                         normalized = try V.createByTransforming(vector) { $0 / magnitude }
                     } else {
                         normalized = try V.create(from: Array(repeating: 0, count: vector.scalarCount))

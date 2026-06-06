@@ -16,8 +16,9 @@ struct MixedPrecisionPhase3Tests {
 
     @Test("SoA FP16 Cache - Basic caching")
     func testSoACacheBasic() async {
-        let cache = SoAFP16Cache512.shared
-        await cache.clear()
+        // Use a private cache instance (not .shared) to avoid races with other
+        // tests under Swift Testing's parallel execution.
+        let cache = SoAFP16Cache512(maxSize: 100)
 
         let vectors = generateTestVectors(count: 100)
 
@@ -41,8 +42,6 @@ struct MixedPrecisionPhase3Tests {
         #expect(soa1.vectorCount == soa2.vectorCount)
 
         print("✓ SoA cache hit/miss tracking works correctly")
-
-        await cache.clear()
     }
 
     @Test("SoA FP16 Cache - LRU eviction")
@@ -86,8 +85,9 @@ struct MixedPrecisionPhase3Tests {
 
     @Test("SoA FP16 Cache - Hit rate calculation")
     func testSoACacheHitRate() async {
-        let cache = SoAFP16Cache512.shared
-        await cache.clear()
+        // Use a private cache instance (not .shared) to avoid races with other
+        // tests under Swift Testing's parallel execution.
+        let cache = SoAFP16Cache512(maxSize: 100)
 
         let vectors1 = generateTestVectors(count: 50, seed: 1)
         let vectors2 = generateTestVectors(count: 50, seed: 2)
@@ -105,8 +105,6 @@ struct MixedPrecisionPhase3Tests {
         #expect(abs(hitRate - 0.6) < 0.01, "Hit rate should be 3/5 = 0.6, got \(hitRate)")
 
         print("✓ Hit rate: \(String(format: "%.1f%%", hitRate * 100))")
-
-        await cache.clear()
     }
 
     // MARK: - Precision Validator Tests

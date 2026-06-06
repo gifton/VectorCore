@@ -614,9 +614,14 @@ public actor KernelAutoTuner {
     private func generateTestData(for workload: WorkloadCharacteristics) -> TestData? {
         switch workload.dimension {
         case 512:
-            let query = Vector512Optimized(generator: { _ in Float.random(in: -1.0...1.0) })
+            // Deterministic data: reproducible benchmarks + stable accuracy
+            // measurement (unseeded Float.random previously made the accuracy
+            // tests flaky). next() ∈ [0,1] → [-1,1]. The generator closure is
+            // non-escaping and called in order, so threading one rng is safe.
+            var rng = SeededRNG(seed: 0x5EED_0512)
+            let query = Vector512Optimized(generator: { _ in rng.next() * 2 - 1 })
             let candidates = (0..<workload.batchSize).map { _ in
-                Vector512Optimized(generator: { _ in Float.random(in: -1.0...1.0) })
+                Vector512Optimized(generator: { _ in rng.next() * 2 - 1 })
             }
 
             let queryINT8 = Vector512INT8(from: query, params: nil)
@@ -632,9 +637,10 @@ public actor KernelAutoTuner {
             ))
 
         case 768:
-            let query = Vector768Optimized(generator: { _ in Float.random(in: -1.0...1.0) })
+            var rng = SeededRNG(seed: 0x5EED_0768)
+            let query = Vector768Optimized(generator: { _ in rng.next() * 2 - 1 })
             let candidates = (0..<workload.batchSize).map { _ in
-                Vector768Optimized(generator: { _ in Float.random(in: -1.0...1.0) })
+                Vector768Optimized(generator: { _ in rng.next() * 2 - 1 })
             }
 
             let queryINT8 = Vector768INT8(from: query, params: nil)
@@ -650,9 +656,10 @@ public actor KernelAutoTuner {
             ))
 
         case 1536:
-            let query = Vector1536Optimized(generator: { _ in Float.random(in: -1.0...1.0) })
+            var rng = SeededRNG(seed: 0x5EED_1536)
+            let query = Vector1536Optimized(generator: { _ in rng.next() * 2 - 1 })
             let candidates = (0..<workload.batchSize).map { _ in
-                Vector1536Optimized(generator: { _ in Float.random(in: -1.0...1.0) })
+                Vector1536Optimized(generator: { _ in rng.next() * 2 - 1 })
             }
 
             let queryINT8 = Vector1536INT8(from: query, params: nil)

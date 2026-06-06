@@ -3697,9 +3697,10 @@ internal struct MixedPrecisionBenchmark {
         iterations: Int = 1000,
         warmupIterations: Int = 100
     ) -> (fp32: BenchmarkResult, fp16: BenchmarkResult, speedup: Double) {
-        // Create random test vectors
-        let vec1 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
-        let vec2 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+        // Deterministic test vectors (seeded) for reproducible benchmarks.
+        var rng = SeededRNG(seed: 0xB1A5_0512)
+        let vec1 = try! Vector512Optimized((0..<512).map { _ in rng.next() * 2 - 1 })
+        let vec2 = try! Vector512Optimized((0..<512).map { _ in rng.next() * 2 - 1 })
 
         let vec1_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec1)
         let vec2_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec2)
@@ -3742,9 +3743,12 @@ internal struct MixedPrecisionBenchmark {
         var fp32Results: [Float] = []
         var fp16Results: [Float] = []
 
+        // Deterministic data so accuracy measurement is reproducible (unseeded
+        // Float.random made maxRelativeError flake on near-orthogonal draws).
+        var rng = SeededRNG(seed: 0xACC0_0512)
         for _ in 0..<testVectors {
-            let vec1 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
-            let vec2 = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+            let vec1 = try! Vector512Optimized((0..<512).map { _ in rng.next() * 2 - 1 })
+            let vec2 = try! Vector512Optimized((0..<512).map { _ in rng.next() * 2 - 1 })
 
             let vec1_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec1)
             let vec2_fp16 = MixedPrecisionKernels.Vector512FP16(from: vec2)
@@ -3782,10 +3786,11 @@ internal struct MixedPrecisionBenchmark {
         candidateCount: Int = 1000,
         iterations: Int = 100
     ) -> (mixed: BenchmarkResult, fp16: BenchmarkResult) {
-        // Create test data
-        let query = try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+        // Deterministic test data (seeded) for reproducible benchmarks.
+        var rng = SeededRNG(seed: 0xBA7C_0512)
+        let query = try! Vector512Optimized((0..<512).map { _ in rng.next() * 2 - 1 })
         let candidates: [Vector512Optimized] = (0..<candidateCount).map { _ in
-            try! Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
+            try! Vector512Optimized((0..<512).map { _ in rng.next() * 2 - 1 })
         }
 
         let candidatesFP16 = candidates.map { MixedPrecisionKernels.Vector512FP16(from: $0) }

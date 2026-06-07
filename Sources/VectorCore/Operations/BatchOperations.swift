@@ -65,6 +65,17 @@ public enum BatchOperations {
         /// Default batch size for iterative processing
         public var defaultBatchSize: Int = 1024
 
+        /// Route large pairwise distance matrices through the GEMM (`cblas_sgemm` /
+        /// AMX) path for optimized vector types + Euclidean/Cosine. The GEMM result
+        /// agrees with the per-pair kernels within the DOCUMENT-2 tolerance (~1e-3
+        /// rel) but is not bit-identical; disable to force the exact per-pair path.
+        public var enableMatrixRouting: Bool = true
+
+        /// Minimum N (per side) before pairwise routing switches to GEMM. Below this,
+        /// the per-pair kernels win; above it, the matrix multiply amortizes packing.
+        /// Calibratable via `MatrixDistanceBench`.
+        public var matrixRoutingMinN: Int = 256
+
         public init() {}
     }
 
@@ -205,6 +216,15 @@ public enum BatchOperations {
         metric: M = EuclideanDistance()
     ) async -> [[Float]] where V.Scalar == M.Scalar, M.Scalar == Float {
         let n = vectors.count
+        guard n > 0 else { return [] }
+
+        // GEMM fast path (DOCUMENT-2): for optimized types + Euclidean/Cosine above the
+        // crossover threshold, compute the whole N×N matrix with one cblas_sgemm (AMX).
+        let config = await _configuration.get()
+        if config.enableMatrixRouting, n >= config.matrixRoutingMinN,
+           let routed = gemmPairwise(vectors, metric: metric) {
+            return routed
+        }
 
         // Serial for small matrices
         if n < 100 {
@@ -213,6 +233,47 @@ public enum BatchOperations {
 
         // Parallel block-based computation
         return await computePairwiseParallel(vectors, metric: metric)
+    }
+
+    /// GEMM pairwise dispatch: returns the `[[Float]]` distance matrix when `vectors`
+    /// is a known optimized type and `metric` is Euclidean or Cosine; otherwise `nil`
+    /// (caller falls back to the per-pair path).
+    private static func gemmPairwise<V: VectorProtocol, M: DistanceMetric>(
+        _ vectors: [V], metric: M
+    ) -> [[Float]]? {
+        let isEuclid = metric is EuclideanDistance
+        let isCosine = metric is CosineDistance
+        guard isEuclid || isCosine else { return nil }
+
+        if let vs = vectors as? [Vector512Optimized] { return gemmPairwiseTyped(vs, euclid: isEuclid) }
+        if let vs = vectors as? [Vector768Optimized] { return gemmPairwiseTyped(vs, euclid: isEuclid) }
+        if let vs = vectors as? [Vector1536Optimized] { return gemmPairwiseTyped(vs, euclid: isEuclid) }
+        return nil
+    }
+
+    /// Compute the pairwise matrix via `MatrixDistance` and reshape to `[[Float]]`.
+    /// Euclidean returns true distances (the GEMM path yields squared, so we `sqrt`
+    /// the already-clamped values).
+    private static func gemmPairwiseTyped<O: UnifiedVectorBuffer>(
+        _ vs: [O], euclid: Bool
+    ) -> [[Float]] {
+        let n = vs.count
+        let flat = euclid
+            ? MatrixDistance.euclideanSquaredMatrix(queries: vs, candidates: vs)
+            : MatrixDistance.cosineDistanceMatrix(queries: vs, candidates: vs)
+        var rows = [[Float]]()
+        rows.reserveCapacity(n)
+        for i in 0..<n {
+            var row = [Float](repeating: 0, count: n)
+            let base = i * n
+            if euclid {
+                for j in 0..<n { let v = flat[base + j]; row[j] = v > 0 ? sqrt(v) : 0 }
+            } else {
+                for j in 0..<n { row[j] = flat[base + j] }
+            }
+            rows.append(row)
+        }
+        return rows
     }
 
     // MARK: - Convenience Operations

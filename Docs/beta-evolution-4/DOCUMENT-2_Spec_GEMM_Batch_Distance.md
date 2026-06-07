@@ -15,11 +15,20 @@ before any distance is consumed. 7 parity/edge tests (`MatrixDistanceTests.swift
 direct `EuclideanKernels`/double-precision cosine within tolerance, `x==y` clamps to 0, all three
 optimized dims + `DynamicVector`, empty no-op.
 
-**Deferred to follow-ups** (kept out of this slice to stay focused):
-- Internal routing: wiring the GEMM path into `BatchOperations.findNearest` / `pairwiseDistances`
-  behind the crossover heuristic (`AutoTuning`) — the standalone `MatrixDistance` entry is public
-  now so `VectorIndex` can call it directly.
-- Crossover calibration benchmark (`MatrixDistanceBench`) to measure the `q×n×d` threshold.
+**Routing implemented.** `BatchOperations.pairwiseDistances` now routes to the GEMM path for
+optimized types (512/768/1536) + Euclidean/Cosine when `N ≥ matrixRoutingMinN` (default 256),
+gated by `Configuration.enableMatrixRouting` (default on; flip off to force the exact per-pair
+path). 5 parity tests (`BatchGEMMRoutingTests.swift`) confirm routed ≈ per-pair within tolerance,
+non-routable inputs (Manhattan, `DynamicVector`) fall back, and routing on/off agree. Full suite
+(1048 tests) green with routing on by default.
+
+**Crossover calibration implemented.** `MatrixDistanceBench` (opt-in: `--suites matrix`) measures
+GEMM ns/pair across N × dim. Initial dim-512 sweep: 142 ns/pair @ N=64 → 102 @ N=256 → 94 @
+N=1024 — the curve flattens by N≈256, validating the `matrixRoutingMinN = 256` default.
+
+**Still deferred** (further increments):
+- `findNearest` / `findNearestBatch` routing (multi-query GEMM); the public `MatrixDistance`
+  entry already lets `VectorIndex` do this directly today.
 - Allocation gate: the packing temporaries (`X`, `Y`, norms) still allocate; a scratch-buffer
   overload would be needed for `mallocCountTotal == 0`.
 

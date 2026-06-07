@@ -425,7 +425,8 @@ struct App {
             DistanceBench.name: DistanceBench.self,
             NormalizationBench.name: NormalizationBench.self,
             BatchBench.name: BatchBench.self,
-            MemoryBench.name: MemoryBench.self
+            MemoryBench.name: MemoryBench.self,
+            MatrixDistanceBench.name: MatrixDistanceBench.self
         ]
 
         // Create progress reporter based on CLI flag

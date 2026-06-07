@@ -19,14 +19,14 @@ spec below describes the intended surface; this table is the accurate state:
 
 | Seam | Status | Notes |
 |---|---|---|
-| **S1** pointer Top-K | ✅ Already implemented | `TopKSelection.select(k:from:UnsafePointer<Float>,count:,ids:)` exists (`Operations/TopKSelection.swift`), returns `[Int32]` with `ids` remap |
-| **S2** in-place normalize | ✅ Already implemented | `NormalizeKernels.normalizeUnchecked(_:dimension:)` (public, Kahan two-pass, inherits BE3 stability fixes) |
+| **S1** pointer Top-K | ✅ Already implemented + regression-locked | `TopKSelection.select(k:from:UnsafePointer<Float>,count:,ids:)` exists (`Operations/TopKSelection.swift`), returns `[Int32]` with `ids` remap. 6 regression tests pin parity/ids/sorting/edge cases/both paths |
+| **S2** in-place normalize | ✅ Already implemented + regression-locked | `NormalizeKernels.normalizeUnchecked(_:dimension:)` (public, Kahan two-pass, inherits BE3 stability fixes; requires 16-byte-aligned buffer). 5 regression tests pin unit-norm/typed-parity/tails/overflow/subnormal |
 | **S3** tie-breaking | ✅ Implemented this cycle | `TieBreaker` enum (`smallerIndex` default / `insertionOrder` / `smallerValue`) threaded through array, pointer, generic, and optimized paths; array path unified onto `TopKBuffer` so boundary membership *and* result order are deterministic. 7 tests |
 | **S4** provider protocols | ◻️ Open | `ComputeProvider`/`BufferProvider`/`AccelerationProvider` already exist; conformance contract + tests not written |
 | **S5** zero-copy contract | ✅ Implemented this cycle | `UnifiedVectorBuffer` + `PageAlignedBuffer` (`Storage/UnifiedVectorBuffer.swift`): page-aligned/page-length, ownership transfer, optimized + dynamic conformances, 8 tests |
 
-Remaining open work: S4's conformance contract + tests (medium). S1/S2 need only regression tests
-to lock the behavior VectorIndex depends on.
+Remaining open work: **S4's conformance contract + tests** (medium). S1/S2 are now
+regression-locked (11 tests) and S3/S5 are implemented — only S4 remains to complete DOCUMENT-4.
 
 ---
 

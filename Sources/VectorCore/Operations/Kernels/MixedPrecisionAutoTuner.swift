@@ -916,8 +916,13 @@ public actor MixedPrecisionAutoTuner {
 
 // MARK: - Seeded Random Number Generator
 
-/// Simple seeded RNG for reproducible test data generation
-private struct SeededRNG {
+/// Simple seeded RNG for reproducible test data generation.
+///
+/// Shared by the kernel auto-tuners so their synthetic benchmark data is
+/// reproducible — stable timing *and* stable accuracy measurement across runs.
+/// (An unseeded generator in `KernelAutoTuner` made the accuracy-threshold tests
+/// intermittently flaky on unlucky draws.)
+struct SeededRNG {
     private var state: UInt64
 
     init(seed: UInt32) {

@@ -59,3 +59,8 @@ fastlane/test_output
 *.swp
 *.swo
 *~
+
+# Test result artifacts (xunit / swift-testing outputs from `swift test --xunit-output`)
+*-swift-testing.xml
+test-results*.xml
+test-results*.txt

@@ -4,6 +4,25 @@
 **Scope:** CPU-only. The GPU GEMM path already exists in `VectorAccelerate`; this spec is the
 missing *CPU* path that routes to the Apple AMX coprocessor via Accelerate BLAS.
 
+## Implementation status (updated 2026-06-06)
+
+**Core implemented + tested.** `Sources/VectorCore/Operations/MatrixDistance.swift` ships
+`MatrixDistance.euclideanSquaredMatrix` and `cosineDistanceMatrix` (both `into:` hot-path and
+allocating overloads), written **generically over `UnifiedVectorBuffer`** (the S5 protocol) so a
+single implementation serves 512/768/1536 and `DynamicVector`. Uses `cblas_sgemm` (AMX on Apple
+Silicon) for the `−2·X·Yᵀ` cross term, `vDSP_svesq` for norms, and the cancellation **clamp at 0**
+before any distance is consumed. 7 parity/edge tests (`MatrixDistanceTests.swift`): GEMM vs the
+direct `EuclideanKernels`/double-precision cosine within tolerance, `x==y` clamps to 0, all three
+optimized dims + `DynamicVector`, empty no-op.
+
+**Deferred to follow-ups** (kept out of this slice to stay focused):
+- Internal routing: wiring the GEMM path into `BatchOperations.findNearest` / `pairwiseDistances`
+  behind the crossover heuristic (`AutoTuning`) — the standalone `MatrixDistance` entry is public
+  now so `VectorIndex` can call it directly.
+- Crossover calibration benchmark (`MatrixDistanceBench`) to measure the `q×n×d` threshold.
+- Allocation gate: the packing temporaries (`X`, `Y`, norms) still allocate; a scratch-buffer
+  overload would be needed for `mallocCountTotal == 0`.
+
 ---
 
 ## 1. Motivation

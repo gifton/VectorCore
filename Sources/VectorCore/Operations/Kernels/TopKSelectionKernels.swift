@@ -13,10 +13,14 @@ internal struct TopKBuffer: Sendable {
     public var idxs: [Int]
     @usableFromInline var size: Int
     public let isMinHeap: Bool
+    /// Policy for resolving equal-value ties. Default `.smallerIndex` reproduces
+    /// the historical behavior (and matches the array/pointer selection paths).
+    @usableFromInline let tieBreaker: TieBreaker
 
-    public init(k: Int, isMinHeap: Bool) {
+    public init(k: Int, isMinHeap: Bool, tieBreaker: TieBreaker = .smallerIndex) {
         self.k = k
         self.isMinHeap = isMinHeap
+        self.tieBreaker = tieBreaker
         self.vals = Array(repeating: 0, count: k)
         self.idxs = Array(repeating: -1, count: k)
         self.size = 0
@@ -27,8 +31,16 @@ internal struct TopKBuffer: Sendable {
         if v1 != v2 {
             return isMinHeap ? (v1 < v2) : (v1 > v2)
         }
-        // Deterministic tiebreaker: prefer smaller index → larger index is worse
-        return i1 > i2
+        // Equal value → resolve by policy. "Worse" means evicted/ranked last.
+        switch tieBreaker {
+        case .smallerIndex, .insertionOrder:
+            // Prefer smaller index → larger index is worse.
+            // (For a linear index-ordered scan, insertion order == index order.)
+            return i1 > i2
+        case .smallerValue:
+            // No index preference; equal values are treated as equally good.
+            return false
+        }
     }
 
     @inlinable

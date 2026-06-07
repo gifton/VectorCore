@@ -21,12 +21,12 @@ spec below describes the intended surface; this table is the accurate state:
 |---|---|---|
 | **S1** pointer Top-K | ✅ Already implemented | `TopKSelection.select(k:from:UnsafePointer<Float>,count:,ids:)` exists (`Operations/TopKSelection.swift`), returns `[Int32]` with `ids` remap |
 | **S2** in-place normalize | ✅ Already implemented | `NormalizeKernels.normalizeUnchecked(_:dimension:)` (public, Kahan two-pass, inherits BE3 stability fixes) |
-| **S3** tie-breaking | ⚠️ Partial | Kernel path (`TopKBuffer.isWorse`) already deterministic `smallerIndex`; configurable `TieBreaker` enum + array-path parity still open |
+| **S3** tie-breaking | ✅ Implemented this cycle | `TieBreaker` enum (`smallerIndex` default / `insertionOrder` / `smallerValue`) threaded through array, pointer, generic, and optimized paths; array path unified onto `TopKBuffer` so boundary membership *and* result order are deterministic. 7 tests |
 | **S4** provider protocols | ◻️ Open | `ComputeProvider`/`BufferProvider`/`AccelerationProvider` already exist; conformance contract + tests not written |
 | **S5** zero-copy contract | ✅ Implemented this cycle | `UnifiedVectorBuffer` + `PageAlignedBuffer` (`Storage/UnifiedVectorBuffer.swift`): page-aligned/page-length, ownership transfer, optimized + dynamic conformances, 8 tests |
 
-Remaining open work: S3's configurable `TieBreaker` (small) and S4's conformance contract + tests
-(medium). S1/S2 need only regression tests to lock the behavior VectorIndex depends on.
+Remaining open work: S4's conformance contract + tests (medium). S1/S2 need only regression tests
+to lock the behavior VectorIndex depends on.
 
 ---
 

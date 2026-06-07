@@ -52,6 +52,28 @@ public struct TopKResult: Sendable, Equatable {
     }
 }
 
+// MARK: - Tie-Breaking Policy
+
+/// Policy for resolving ties when two candidates compare equal on distance/similarity.
+///
+/// Top-K results are ordered nearest-first; when two candidates are equal on value,
+/// the policy decides both *which* candidates survive at the k boundary and their
+/// relative order in the result.
+///
+/// - Note: For the array/pointer selection APIs a candidate's index equals its
+///   position in the input scan, so `.smallerIndex` and `.insertionOrder` produce
+///   identical, fully-deterministic output. `.smallerValue` applies no index
+///   tie-break (equal values keep value-only ordering).
+public enum TieBreaker: Sendable {
+    /// Prefer the candidate with the smaller index — fully deterministic. Default.
+    case smallerIndex
+    /// Preserve input encounter order among equal values (stable). For an
+    /// index-ordered scan this is identical to `.smallerIndex`.
+    case insertionOrder
+    /// Order by value only; do not break ties by index.
+    case smallerValue
+}
+
 // MARK: - Top-K Selection API
 
 /// Top-K selection algorithms for k-nearest neighbor search.
@@ -101,7 +123,11 @@ public enum TopKSelection {
     /// ## Algorithm Selection
     /// - For k < n/10: Uses max-heap to maintain k smallest (O(n log k))
     /// - For k >= n/10: Uses partial sort (O(n log n) but better constants)
-    public static func select(k: Int, from distances: [Float]) -> TopKResult {
+    public static func select(
+        k: Int,
+        from distances: [Float],
+        tieBreaker: TieBreaker = .smallerIndex
+    ) -> TopKResult {
         guard k > 0 else { return TopKResult() }
         guard !distances.isEmpty else { return TopKResult() }
 
@@ -113,9 +139,9 @@ public enum TopKSelection {
         // Use adaptive algorithm based on k/n ratio
         let selected: [(index: Int, distance: Float)]
         if actualK < distances.count / 10 {
-            selected = heapSelectSmallK(pairs, k: actualK)
+            selected = heapSelectSmallK(pairs, k: actualK, tieBreaker: tieBreaker)
         } else {
-            selected = sortSelectLargeK(pairs, k: actualK)
+            selected = sortSelectLargeK(pairs, k: actualK, tieBreaker: tieBreaker)
         }
 
         return TopKResult(
@@ -142,7 +168,8 @@ public enum TopKSelection {
         k: Int,
         from distances: UnsafePointer<Float>,
         count: Int,
-        ids: UnsafePointer<Int32>? = nil
+        ids: UnsafePointer<Int32>? = nil,
+        tieBreaker: TieBreaker = .smallerIndex
     ) -> (indices: [Int32], distances: [Float]) {
         guard k > 0, count > 0 else {
             return (indices: [], distances: [])
@@ -152,9 +179,9 @@ public enum TopKSelection {
         let actualK = min(k, count)
 
         if actualK < count / 10 {
-            return heapSelectPointer(distances: distances, count: count, k: actualK, ids: ids)
+            return heapSelectPointer(distances: distances, count: count, k: actualK, ids: ids, tieBreaker: tieBreaker)
         } else {
-            return sortSelectPointer(distances: distances, count: count, k: actualK, ids: ids)
+            return sortSelectPointer(distances: distances, count: count, k: actualK, ids: ids, tieBreaker: tieBreaker)
         }
     }
 
@@ -163,21 +190,22 @@ public enum TopKSelection {
         distances: UnsafePointer<Float>,
         count: Int,
         k: Int,
-        ids: UnsafePointer<Int32>?
+        ids: UnsafePointer<Int32>?,
+        tieBreaker: TieBreaker
     ) -> (indices: [Int32], distances: [Float]) {
-        var buffer = TopKBuffer(k: k, isMinHeap: false)
+        var buffer = TopKBuffer(k: k, isMinHeap: false, tieBreaker: tieBreaker)
 
         for i in 0..<count {
             buffer.pushIfBetter(val: distances[i], idx: i)
         }
 
-        // Extract and sort ascending by distance
+        // Extract and sort ascending by distance (ties resolved per policy)
         var pairs: [(Int, Float)] = []
         pairs.reserveCapacity(buffer.size)
         for i in 0..<buffer.size {
             pairs.append((buffer.idxs[i], buffer.vals[i]))
         }
-        pairs.sort { $0.1 < $1.1 }
+        pairs.sort { orderedAscending(($0.0, $0.1), ($1.0, $1.1), tieBreaker) }
 
         if let ids = ids {
             return (
@@ -197,10 +225,11 @@ public enum TopKSelection {
         distances: UnsafePointer<Float>,
         count: Int,
         k: Int,
-        ids: UnsafePointer<Int32>?
+        ids: UnsafePointer<Int32>?,
+        tieBreaker: TieBreaker
     ) -> (indices: [Int32], distances: [Float]) {
         var indexArray = Array(0..<count)
-        indexArray.sort { distances[$0] < distances[$1] }
+        indexArray.sort { orderedAscending(($0, distances[$0]), ($1, distances[$1]), tieBreaker) }
 
         let selected = indexArray.prefix(k)
         if let ids = ids {
@@ -228,7 +257,8 @@ public enum TopKSelection {
     public static func select<T>(
         k: Int,
         from elements: [T],
-        distance: (T) -> Float
+        distance: (T) -> Float,
+        tieBreaker: TieBreaker = .smallerIndex
     ) -> [T] {
         guard k > 0 && !elements.isEmpty else { return [] }
 
@@ -237,9 +267,9 @@ public enum TopKSelection {
 
         let selected: [(index: Int, distance: Float)]
         if actualK < elements.count / 10 {
-            selected = heapSelectSmallK(indexed, k: actualK)
+            selected = heapSelectSmallK(indexed, k: actualK, tieBreaker: tieBreaker)
         } else {
-            selected = sortSelectLargeK(indexed, k: actualK)
+            selected = sortSelectLargeK(indexed, k: actualK, tieBreaker: tieBreaker)
         }
 
         return selected.map { elements[$0.index] }
@@ -471,28 +501,53 @@ public enum TopKSelection {
 
     // MARK: - Private Helpers
 
-    /// Heap-based selection for small k (O(n log k))
+    /// Total order for nearest-first (ascending distance) results, ties resolved
+    /// per `tieBreaker`. Defines a strict weak ordering for `sort(by:)`.
+    @usableFromInline @inline(__always)
+    internal static func orderedAscending(
+        _ a: (Int, Float), _ b: (Int, Float), _ tieBreaker: TieBreaker
+    ) -> Bool {
+        if a.1 != b.1 { return a.1 < b.1 }
+        switch tieBreaker {
+        case .smallerIndex, .insertionOrder: return a.0 < b.0
+        case .smallerValue: return false
+        }
+    }
+
+    /// Heap-based selection for small k (O(n log k)), deterministic per `tieBreaker`.
+    ///
+    /// Routes through `TopKBuffer` (the same primitive the pointer/optimized paths
+    /// use) so that boundary membership and result order honor the tie policy — the
+    /// historical `KNearestHeap` broke ties only by value, leaving order undefined.
     @usableFromInline
     internal static func heapSelectSmallK(
         _ elements: [(index: Int, distance: Float)],
-        k: Int
+        k: Int,
+        tieBreaker: TieBreaker = .smallerIndex
     ) -> [(index: Int, distance: Float)] {
-        var heap = KNearestHeap(k: k)
-
+        var buffer = TopKBuffer(k: k, isMinHeap: false, tieBreaker: tieBreaker)
         for element in elements {
-            heap.insert(index: element.index, distance: element.distance)
+            buffer.pushIfBetter(val: element.distance, idx: element.index)
         }
-
-        return heap.getSorted()
+        var pairs: [(index: Int, distance: Float)] = []
+        pairs.reserveCapacity(buffer.size)
+        for i in 0..<buffer.size {
+            pairs.append((index: buffer.idxs[i], distance: buffer.vals[i]))
+        }
+        pairs.sort { orderedAscending(($0.index, $0.distance), ($1.index, $1.distance), tieBreaker) }
+        return pairs
     }
 
-    /// Sort-based selection for large k (better constants)
+    /// Sort-based selection for large k (better constants), deterministic per `tieBreaker`.
     @usableFromInline
     internal static func sortSelectLargeK(
         _ elements: [(index: Int, distance: Float)],
-        k: Int
+        k: Int,
+        tieBreaker: TieBreaker = .smallerIndex
     ) -> [(index: Int, distance: Float)] {
-        Array(elements.sorted { $0.distance < $1.distance }.prefix(k))
+        Array(elements.sorted {
+            orderedAscending(($0.index, $0.distance), ($1.index, $1.distance), tieBreaker)
+        }.prefix(k))
     }
 
     /// Extract sorted result from TopKBuffer (for distance minimization)
@@ -507,8 +562,9 @@ public enum TopKSelection {
             pairs.append((buffer.idxs[i], dist))
         }
 
-        // Sort by distance ascending
-        pairs.sort { $0.1 < $1.1 }
+        // Sort by distance ascending, ties resolved per the buffer's policy
+        // (sqrt is monotonic, so applying it before the comparison is order-preserving).
+        pairs.sort { orderedAscending(($0.0, $0.1), ($1.0, $1.1), buffer.tieBreaker) }
 
         return TopKResult(
             indices: pairs.map { $0.0 },
@@ -526,8 +582,14 @@ public enum TopKSelection {
             pairs.append((buffer.idxs[i], buffer.vals[i]))
         }
 
-        // Sort by similarity descending (highest first)
-        pairs.sort { $0.1 > $1.1 }
+        // Sort by similarity descending (highest first), ties resolved per policy.
+        pairs.sort { a, b in
+            if a.1 != b.1 { return a.1 > b.1 }
+            switch buffer.tieBreaker {
+            case .smallerIndex, .insertionOrder: return a.0 < b.0
+            case .smallerValue: return false
+            }
+        }
 
         return TopKResult(
             indices: pairs.map { $0.0 },

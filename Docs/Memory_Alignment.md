@@ -421,6 +421,51 @@ A: 16 bytes satisfies SIMD4 alignment, but 64 bytes prevents cache line splits a
 
 ---
 
+## Zero-Copy Buffer Contract (`UnifiedVectorBuffer`)
+
+*(VectorCore v0.3.0+ — beta-evolution-4, DOCUMENT-4 S5)*
+
+For cross-package, zero-copy hand-off (EmbedKit → VectorAccelerate → GPU), VectorCore exposes a
+**CPU-only** memory contract. It imports no Metal or IOSurface; it only guarantees alignment and
+contiguity. The GPU calls live in VectorAccelerate.
+
+### The read contract
+
+`UnifiedVectorBuffer` (`Sources/VectorCore/Storage/UnifiedVectorBuffer.swift`) is a contiguous,
+alignment-guaranteed *read* view over a vector's `Float32` elements:
+
+- `elementCount` — logical element count
+- `alignment` — guaranteed base alignment (power of two ≥ `MemoryLayout<Float>.alignment`)
+- `withUnsafeContiguousBytes { (UnsafeRawBufferPointer) in … }` — scoped raw access to the logical
+  bytes (`elementCount * 4`)
+
+The optimized vector types (`Vector384/512/768/1536Optimized`) conform with `alignment == 16`
+(their `ContiguousArray<SIMD4<Float>>` element region); `DynamicVector` conforms with
+`alignment == 4` (its storage may be inline). 16-byte alignment is enough to **read**, but not
+enough for `makeBuffer(bytesNoCopy:)`.
+
+### The page-aligned path (`makeBuffer(bytesNoCopy:)`)
+
+`makeBuffer(bytesNoCopy:length:options:deallocator:)` requires, on macOS, that **both** the base
+address and the length be page multiples (16 KB on Apple Silicon). `PageAlignedBuffer` satisfies
+both:
+
+- base allocated via `posix_memalign(pageSize)` → page-aligned
+- `allocatedByteCount` = logical bytes **rounded up to a whole page**, with the padding zero-filled
+  so the GPU never imports uninitialized memory
+- `baseAddress` + `allocatedByteCount` are exactly the `bytesNoCopy:` pointer and `length:`
+
+### Ownership handoff
+
+For true zero-copy the `MTLBuffer` outlives the Swift object and frees the memory through Metal's
+`bytesNoCopy` deallocator. To avoid a double free, choose one:
+
+- call `consumeAllocation()` → transfers ownership; `deinit` no longer frees; the caller (the Metal
+  deallocator) must `free()` the returned base (via `AlignedMemory.deallocate(_:)`), **or**
+- keep the `PageAlignedBuffer` alive for the buffer's lifetime and pass a no-op Metal deallocator.
+
+---
+
 ## Further Reading
 
 - [Intel Intrinsics Guide](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html)
@@ -430,6 +475,6 @@ A: 16 bytes satisfies SIMD4 alignment, but 64 bytes prevents cache line splits a
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: October 2025
-**Applies to**: VectorCore v0.1.0+
+**Document Version**: 1.1
+**Last Updated**: June 2026
+**Applies to**: VectorCore v0.1.0+ (Zero-Copy Buffer Contract: v0.3.0+)

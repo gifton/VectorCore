@@ -11,6 +11,23 @@ proposal; all of it is in the downstream repos' own request lists.
 > bypass Core. The win is ecosystem cohesion — the suite converging *onto* Core instead of
 > routing *around* it.
 
+## Implementation status (updated 2026-06-06, during execution)
+
+Reviewing the live `0.2.2` source during implementation revealed that **S1 and S2 were already
+shipped** (the BE3 / API-surface-cleaning cycle landed them) and **S3 is partially present**. The
+spec below describes the intended surface; this table is the accurate state:
+
+| Seam | Status | Notes |
+|---|---|---|
+| **S1** pointer Top-K | ✅ Already implemented | `TopKSelection.select(k:from:UnsafePointer<Float>,count:,ids:)` exists (`Operations/TopKSelection.swift`), returns `[Int32]` with `ids` remap |
+| **S2** in-place normalize | ✅ Already implemented | `NormalizeKernels.normalizeUnchecked(_:dimension:)` (public, Kahan two-pass, inherits BE3 stability fixes) |
+| **S3** tie-breaking | ⚠️ Partial | Kernel path (`TopKBuffer.isWorse`) already deterministic `smallerIndex`; configurable `TieBreaker` enum + array-path parity still open |
+| **S4** provider protocols | ◻️ Open | `ComputeProvider`/`BufferProvider`/`AccelerationProvider` already exist; conformance contract + tests not written |
+| **S5** zero-copy contract | ✅ Implemented this cycle | `UnifiedVectorBuffer` + `PageAlignedBuffer` (`Storage/UnifiedVectorBuffer.swift`): page-aligned/page-length, ownership transfer, optimized + dynamic conformances, 8 tests |
+
+Remaining open work: S3's configurable `TieBreaker` (small) and S4's conformance contract + tests
+(medium). S1/S2 need only regression tests to lock the behavior VectorIndex depends on.
+
 ---
 
 ## S1 — Pointer-level Top-K selection

@@ -26,9 +26,15 @@ non-routable inputs (Manhattan, `DynamicVector`) fall back, and routing on/off a
 GEMM ns/pair across N × dim. Initial dim-512 sweep: 142 ns/pair @ N=64 → 102 @ N=256 → 94 @
 N=1024 — the curve flattens by N≈256, validating the `matrixRoutingMinN = 256` default.
 
+**Batch k-NN routing implemented.** `Operations.findNearestBatch` now routes large multi-query
+searches (q ≥ 8, n ≥ 256, optimized types, Euclidean/Cosine) through one GEMM matrix followed by
+per-row pointer Top-K (S1) with deterministic tie-breaking (S3) — composing DOCUMENT-2 + the S1/S3
+seams. 3 parity tests (`BatchKNNGEMMTests.swift`) confirm it matches the per-query reference
+(nearest index exact, distances within tolerance) and that small batches fall back. Full
+correctness suite (`VECTORCORE_TEST_EXTENDED=0`): 1051 tests green.
+
 **Still deferred** (further increments):
-- `findNearest` / `findNearestBatch` routing (multi-query GEMM); the public `MatrixDistance`
-  entry already lets `VectorIndex` do this directly today.
+- Single-query `findNearest` GEMM (low value: q=1 is gemv; the optimized kernel + heap already wins).
 - Allocation gate: the packing temporaries (`X`, `Y`, norms) still allocate; a scratch-buffer
   overload would be needed for `mallocCountTotal == 0`.
 

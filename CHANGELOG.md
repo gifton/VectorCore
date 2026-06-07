@@ -5,6 +5,85 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-06-06
+
+Outcome of the "beta-evolution-3" (BE3) architectural audit: a sweep for
+correctness, memory-safety, and numerical-rigor defects, plus targeted
+performance work and the elimination of test flakiness. The full failing-test
+suite is green (0 failures), ThreadSanitizer- and AddressSanitizer-clean, and
+deterministic across runs.
+
+### Changed
+
+- **`LinearQuantizationParams.zeroPoint` widened from `Int8` to `Int32`.** The
+  affine zero-point offset overflows a signed 8-bit field for value ranges that
+  do not straddle zero, collapsing INT8-quantized signals; `Int32` fixes the
+  correctness bug. **Source-breaking** for code that reads or constructs
+  `zeroPoint` as `Int8` (the type is `public` and `Codable`). Numeric JSON
+  encoding is unchanged.
+
+### Added
+
+- `BatchKernels_SoA.batchEuclideanSoA` (512/768/1536) — correctly-named
+  replacement for `batchEuclideanSquaredSoA` (it returns the true Euclidean
+  distance, not the squared value).
+
+### Deprecated
+
+- `BatchKernels_SoA.batchEuclideanSquaredSoA` — renamed to `batchEuclideanSoA`;
+  a deprecated shim is retained for source compatibility and emits a rename
+  warning.
+
+### Fixed
+
+Correctness & memory safety:
+- **Heap-buffer-overflow** in `SwiftFloatSIMDProvider` SIMD8 reductions
+  (`maximum`/`minimum`/`maximumMagnitude`) — an off-by-one read past the buffer
+  for any element count that is a multiple of 8 (i.e. all standard dimensions),
+  which was the root cause of intermittent `softmax` NaNs.
+- **Heap out-of-bounds read** in `adaptiveEuclideanDistance` (a flat 512-element
+  buffer was wrapped as a 2048-element SoA).
+- **Strict-aliasing (TBAA) undefined behavior** in the optimized vector types —
+  permanent `bindMemory(to:)` replaced with scoped `withMemoryRebound(to:)`.
+- **Int16 overflow** in the INT8 quantized Euclidean kernel — squared component
+  differences now accumulate without two's-complement wrapping.
+- **Infinity overflow** in the cosine-distance denominator — computed as
+  `sqrt(sumAA) * sqrt(sumBB)` instead of `sqrt(sumAA * sumBB)`.
+- **Memory leak** on asynchronous `MemoryPool` buffer return — `posix_memalign`
+  memory is now released via `free()` even if the pool deallocates first.
+- **Subnormal reciprocal overflow / NaN poisoning** during normalization of
+  all-subnormal vectors.
+- **Epsilon truncation** that rejected valid dense micro-vectors in cosine
+  distance — the zero-vector floor is now `Float.leastNormalMagnitude`.
+- Subnormal FP32→FP16 rounding error; `analyzePrecision` precision selection;
+  and `SoAFP16.init` silently producing empty containers for 768/1536-dim.
+
+### Performance
+
+- **Eliminated heap zero-fill churn** in `DefaultArraySIMDProvider`:
+  arithmetic, element-wise, and transcendental operations now allocate their
+  result via `Array(unsafeUninitializedCapacity:)` instead of paying for a
+  whole-buffer `memset` that the SIMD/vForce primitive immediately overwrites.
+  `Operations.centroid` accumulates in place (N allocations → 1).
+- **Candidate-tiled SoA kernels** for large batches: `euclid2`, `dot`, and
+  fused-cosine kernels switch to a lane-outer / candidate-inner traversal above
+  an ~8 MB (≈ L2) candidate-buffer threshold, streaming one sequential column
+  per lane (prefetcher-optimal) instead of L interleaved strided streams.
+  Register-blocked 4-way kernels are retained below the threshold. Results are
+  **bitwise-identical** to the 4-way path.
+
+### Internal / Tests
+
+- Eliminated test flakiness: ~300 unseeded `random` draws in the numerical test
+  suites and the source-side benchmark/auto-tuner data generators
+  (`KernelAutoTuner`, `MixedPrecisionBenchmark`) are now seeded, making accuracy
+  and timing measurements deterministic.
+- Full failing-test triage; debug-invalid wall-clock performance assertions are
+  gated behind `VECTORCORE_TEST_EXTENDED=1`.
+- Added a SIMD-provider bounds-safety regression sweep (all ops × sizes 1–64),
+  the BE3 architectural audit documents, and `.gitignore` entries for
+  test-result artifacts.
+
 ## [0.2.1] - 2026-04-11
 
 ### Added

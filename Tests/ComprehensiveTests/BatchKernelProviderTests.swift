@@ -62,7 +62,10 @@ struct BatchKernelProviderTests {
             try await Operations.findNearestBatch(queries: qs, in: cs, k: 3)
         }
         #expect(result.count == 5)
-        for row in result { #expect(row.first?.index == 999) }
+        for row in result {
+            #expect(row.count == 1)            // the mock returns exactly one result
+            #expect(row.first?.index == 999)
+        }
     }
 
     @Test("Default provider uses the CPU path (no sentinel)")
@@ -71,6 +74,6 @@ struct BatchKernelProviderTests {
         let cs = (0..<10).map { k in try! Vector512Optimized((0..<512).map { Float($0 + k) }) }
         let result = try await Operations.findNearest(to: q, in: cs, k: 3)
         #expect(result.count == 3)
-        #expect(result[0].index != 999)        // real CPU result, not the sentinel
+        #expect(result[0].index == 0)          // identical vector at index 0 ⇒ nearest; and not the 999 sentinel
     }
 }

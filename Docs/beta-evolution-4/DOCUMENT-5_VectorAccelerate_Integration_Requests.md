@@ -96,3 +96,17 @@ public protocol BatchKernelProvider: ComputeProvider {
 R1+R2 are the blocking pair and the natural completion of the S5 zero-copy contract (which today
 covers vector types and `PageAlignedBuffer` but not `SoA`). R4 is independent and can land alongside
 or immediately after.
+
+## Status (implemented on feature/beta-evo-4)
+
+- **R1 — page-align SoA:** ✅ `SoA.build(from:pageAligned:)` / `init(vectors:…:pageAligned:)` allocate
+  via `AlignedMemory` (page-aligned base, page-rounded length, allocator-correct deinit). Opt-in;
+  default stays 16-byte.
+- **R2 — public accessor:** ✅ `SoA.pageAlignedBytes` (bytesNoCopy base + page-rounded length, lifetime
+  contract documented) and `withUnsafeRawBuffer { (UnsafeRawBufferPointer) in … }`.
+- **R4 — BatchKernelProvider:** ✅ protocol added (`Protocols/BatchKernelProvider.swift`);
+  `Operations.findNearest` / `findNearestBatch` downcast the installed `computeProvider` and delegate
+  (precedence over the CPU fast paths and the CPU GEMM routing).
+- **R3 — version reply (sent):** page alignment was never on `AlignedMemory`/`AlignedDynamicArrayStorage`
+  (those are 64-byte). Page-aligned storage (`PageAlignedBuffer`, and now opt-in `SoA`) ships in the
+  **0.3.0** release that includes beta-evo-4 — **pin your floor to 0.3.0**, not 0.2.2.

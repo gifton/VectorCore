@@ -46,12 +46,30 @@ struct SoAPageAlignTests {
         }
     }
 
-    @Test("withUnsafeRawBuffer exposes the logical data length")
+    @Test("withUnsafeRawBuffer exposes the logical data length (both paths)")
     func rawBufferLength() {
-        let soa = SoA512.build(from: makeCandidates(10), pageAligned: true)
-        soa.withUnsafeRawBuffer { base, byteCount in
-            #expect(byteCount == 10 * 128 * 16)
-            #expect(Int(bitPattern: base) % 16 == 0)
+        for aligned in [true, false] {
+            let soa = SoA512.build(from: makeCandidates(10), pageAligned: aligned)
+            soa.withUnsafeRawBuffer { raw in
+                #expect(raw.count == 10 * 128 * 16)
+                #expect(Int(bitPattern: raw.baseAddress!) % 16 == 0)
+            }
+        }
+    }
+
+    @Test("Already-page-multiple capacity rounds to itself")
+    func exactPageMultiple() {
+        let page = PlatformConfiguration.pageSize
+        // count chosen so logical bytes == one page on the running arch.
+        let count = page / (128 * 16)            // 512-dim: 16384/2048 = 8 on a 16KB page
+        guard count > 0 else { return }          // skip on archs with a tiny page size
+        let soa = SoA512.build(from: makeCandidates(count), pageAligned: true)
+        if let (base, byteCount) = soa.pageAlignedBytes {
+            #expect(Int(bitPattern: base) % page == 0)
+            #expect(byteCount % page == 0)
+            #expect(byteCount == count * 128 * 16)   // already a multiple → no extra padding
+        } else {
+            Issue.record("expected page-aligned bytes")
         }
     }
 

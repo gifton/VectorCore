@@ -57,9 +57,8 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     @usableFromInline internal let buffer: UnsafeMutablePointer<SIMD4<Float>>
     private let bufferCapacity: Int
 
-    /// True when `buffer` was allocated via AlignedMemory (posix_memalign) and so must
-    /// be freed with free(); false for the default Swift allocation.
-    private let ownsViaAlignedMemory: Bool
+    /// True when the buffer was allocated via AlignedMemory (posix_memalign) and so must be freed with free(); false for the default Swift allocation.
+    private let usedAlignedAlloc: Bool
 
     /// Total allocated bytes. Page-rounded when page-aligned (the length to pass to
     /// makeBuffer(bytesNoCopy:)); otherwise bufferCapacity * sizeof(SIMD4<Float>).
@@ -71,7 +70,7 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
         self.bufferCapacity = self.lanes * self.count
         let alloc = SoA.allocateBuffer(capacity: self.bufferCapacity, pageAligned: pageAligned)
         self.buffer = alloc.buffer
-        self.ownsViaAlignedMemory = alloc.ownsViaAligned
+        self.usedAlignedAlloc = alloc.usedAlignedAlloc
         self.allocatedByteCount = alloc.allocatedBytes
     }
 
@@ -80,7 +79,7 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     /// for MTLDevice.makeBuffer(bytesNoCopy:); otherwise the default 16-byte allocation.
     private static func allocateBuffer(
         capacity: Int, pageAligned: Bool
-    ) -> (buffer: UnsafeMutablePointer<SIMD4<Float>>, ownsViaAligned: Bool, allocatedBytes: Int) {
+    ) -> (buffer: UnsafeMutablePointer<SIMD4<Float>>, usedAlignedAlloc: Bool, allocatedBytes: Int) {
         let elemSize = MemoryLayout<SIMD4<Float>>.stride   // 16
         if pageAligned && capacity > 0 {
             let page = PlatformConfiguration.pageSize
@@ -104,7 +103,7 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     }
 
     deinit {
-        if ownsViaAlignedMemory {
+        if usedAlignedAlloc {
             // posix_memalign memory MUST be freed with free(), never .deallocate().
             AlignedMemory.deallocate(buffer)
         } else {
@@ -127,7 +126,7 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
         self.bufferCapacity = self.lanes * self.count
         let alloc = SoA.allocateBuffer(capacity: self.bufferCapacity, pageAligned: pageAligned)
         self.buffer = alloc.buffer
-        self.ownsViaAlignedMemory = alloc.ownsViaAligned
+        self.usedAlignedAlloc = alloc.usedAlignedAlloc
         self.allocatedByteCount = alloc.allocatedBytes
 
         // Populate the SoA structure from vectors
@@ -199,14 +198,15 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     ///   The memory is freed on `SoA` deinit, so hold a strong reference to the `SoA`
     ///   for the buffer's lifetime (or arrange a deallocator handshake).
     public var pageAlignedBytes: (base: UnsafeRawPointer, byteCount: Int)? {
-        guard ownsViaAlignedMemory else { return nil }
+        guard usedAlignedAlloc else { return nil }
         return (UnsafeRawPointer(buffer), allocatedByteCount)
     }
 
     /// Scoped read-only access to the raw SoA data (logical bytes = `count * lanes * 16`).
     /// The pointer is valid only for the duration of `body`.
-    public func withUnsafeRawBuffer<R>(_ body: (UnsafeRawPointer, Int) throws -> R) rethrows -> R {
-        try body(UnsafeRawPointer(buffer), bufferCapacity * MemoryLayout<SIMD4<Float>>.stride)
+    public func withUnsafeRawBuffer<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
+        let byteCount = bufferCapacity * MemoryLayout<SIMD4<Float>>.stride
+        return try body(UnsafeRawBufferPointer(start: UnsafeRawPointer(buffer), count: byteCount))
     }
 
     /// Memory footprint in bytes

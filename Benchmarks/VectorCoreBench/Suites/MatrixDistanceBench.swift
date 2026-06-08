@@ -20,11 +20,17 @@ struct MatrixDistanceBench: BenchmarkSuite {
             for n in candidateNs {
                 switch dim {
                 case 512:
-                    results.append(bench((0..<n).map { try! Vector512Optimized(gen(dim, $0)) }, dim: dim, n: n, minTime: options.minTimeSeconds))
+                    results.append(bench(
+                        (0..<n).map { try! Vector512Optimized(gen(dim, $0)) },
+                        dim: dim, n: n, minTime: options.minTimeSeconds))
                 case 768:
-                    results.append(bench((0..<n).map { try! Vector768Optimized(gen(dim, $0)) }, dim: dim, n: n, minTime: options.minTimeSeconds))
+                    results.append(bench(
+                        (0..<n).map { try! Vector768Optimized(gen(dim, $0)) },
+                        dim: dim, n: n, minTime: options.minTimeSeconds))
                 case 1536:
-                    results.append(bench((0..<n).map { try! Vector1536Optimized(gen(dim, $0)) }, dim: dim, n: n, minTime: options.minTimeSeconds))
+                    results.append(bench(
+                        (0..<n).map { try! Vector1536Optimized(gen(dim, $0)) },
+                        dim: dim, n: n, minTime: options.minTimeSeconds))
                 default:
                     fputs("[matrix] unsupported dimension: \(dim)\n", stderr)
                 }

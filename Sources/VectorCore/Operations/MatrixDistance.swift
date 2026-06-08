@@ -107,7 +107,7 @@ public enum MatrixDistance {
         var xNorm = [Float](repeating: 0, count: q)
         rowSumOfSquares(X, rows: q, d: d, into: &xNorm)
 
-        gemmCrossTerm(X: X, Y: prepared.packed, q: q, n: n, d: d, alpha: -2, into: &out)
+        gemmCrossTerm(X: X, Y: prepared.packed, n: n, d: d, alpha: -2, into: &out)
 
         let yNorm = prepared.norms
         out.withUnsafeMutableBufferPointer { ob in
@@ -162,7 +162,7 @@ public enum MatrixDistance {
         var X = packRows(queries, d: d)
         normalizeRows(&X, rows: q, d: d)
 
-        gemmCrossTerm(X: X, Y: prepared.packed, q: q, n: n, d: d, alpha: 1, into: &out)
+        gemmCrossTerm(X: X, Y: prepared.packed, n: n, d: d, alpha: 1, into: &out)
 
         out.withUnsafeMutableBufferPointer { ob in
             let o = ob.baseAddress!
@@ -227,9 +227,11 @@ public enum MatrixDistance {
     }
 
     /// `out (q × n) = alpha · X (q × d) · Y (n × d)ᵀ` via cblas_sgemm (AMX on Apple Silicon).
+    /// The row count `q` is derived from `X.count / d` (X is row-major `q × d`).
     private static func gemmCrossTerm(
-        X: [Float], Y: [Float], q: Int, n: Int, d: Int, alpha: Float, into out: inout [Float]
+        X: [Float], Y: [Float], n: Int, d: Int, alpha: Float, into out: inout [Float]
     ) {
+        let q = X.count / d
         X.withUnsafeBufferPointer { xb in
             Y.withUnsafeBufferPointer { yb in
                 out.withUnsafeMutableBufferPointer { ob in

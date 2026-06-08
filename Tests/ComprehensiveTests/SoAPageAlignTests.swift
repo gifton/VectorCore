@@ -78,4 +78,26 @@ struct SoAPageAlignTests {
         let soa = SoA512.build(from: [], pageAligned: true)
         #expect(soa.pageAlignedBytes == nil)
     }
+
+    @Test("consumeAllocation transfers ownership of the page-aligned buffer")
+    func consumeTransfersOwnership() {
+        let soa = SoA512.build(from: makeCandidates(128), pageAligned: true)
+        let before = soa.pageAlignedBytes
+        #expect(before != nil)
+        let consumed = soa.consumeAllocation()
+        #expect(consumed != nil)
+        if let (base, byteCount) = consumed, let (beforeBase, beforeCount) = before {
+            #expect(UnsafeRawPointer(base) == beforeBase)   // same pointer identity
+            #expect(byteCount == beforeCount)
+            #expect(soa.pageAlignedBytes == nil)            // ownership relinquished
+            // Caller now owns the memory; SoA deinit must NOT double-free.
+            AlignedMemory.deallocate(base)
+        }
+    }
+
+    @Test("consumeAllocation returns nil for a non-page-aligned SoA")
+    func consumeNonAlignedNil() {
+        let soa = SoA512.build(from: makeCandidates(128))   // default 16-byte
+        #expect(soa.consumeAllocation() == nil)
+    }
 }

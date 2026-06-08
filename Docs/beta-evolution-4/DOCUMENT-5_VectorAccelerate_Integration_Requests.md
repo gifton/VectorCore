@@ -110,3 +110,14 @@ or immediately after.
 - **R3 — version reply (sent):** page alignment was never on `AlignedMemory`/`AlignedDynamicArrayStorage`
   (those are 64-byte). Page-aligned storage (`PageAlignedBuffer`, and now opt-in `SoA`) ships in the
   **0.3.0** release that includes beta-evo-4 — **pin your floor to 0.3.0**, not 0.2.2.
+
+### Post-review refinements (final review findings)
+
+- **F2 — batched GPU dispatch:** `BatchKernelProvider` gained `findNearestBatch(queries:…)` with a
+  default looping implementation, and `Operations.findNearestBatch` dispatches to it — so a Metal
+  conformer can encode the whole query set in one kernel (the real GPU win) instead of per-query.
+- **F3 — ownership handoff:** `SoA.consumeAllocation()` (mirrors `PageAlignedBuffer`) transfers the
+  page-aligned buffer to a Metal `bytesNoCopy` deallocator without a double free; after consuming,
+  the `SoA` no longer frees on deinit and `pageAlignedBytes` returns `nil`.
+- **F1 — `batchDistance` doc:** clarified it's for direct consumer use (reranking), not routed by
+  `Operations`' k-NN entry points.

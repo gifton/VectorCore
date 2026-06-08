@@ -20,12 +20,35 @@ import Foundation
 ///   documented tolerance.
 public protocol BatchKernelProvider: ComputeProvider {
     /// Distance from `query` to each candidate, in candidate order.
+    ///
+    /// Provided for downstream consumers that want raw distances directly (e.g.
+    /// reranking). VectorCore's `Operations` k-NN entry points dispatch through
+    /// `findNearest` / `findNearestBatch`, not this method.
     func batchDistance<V: VectorProtocol>(
         query: V, candidates: [V], metric: any DistanceMetric
     ) async throws -> [Float] where V.Scalar == Float
 
-    /// Up to `k` nearest candidates, sorted ascending by distance.
+    /// Up to `k` nearest candidates for `query`, sorted ascending by distance.
     func findNearest<V: VectorProtocol>(
         query: V, candidates: [V], k: Int, metric: any DistanceMetric
     ) async throws -> [(index: Int, distance: Float)] where V.Scalar == Float
+
+    /// Up to `k` nearest candidates for each query. The default loops `findNearest`
+    /// per query; a conformer with a true batched kernel (one GPU dispatch for the
+    /// whole query set — the actual GPU win) should override this.
+    func findNearestBatch<V: VectorProtocol>(
+        queries: [V], candidates: [V], k: Int, metric: any DistanceMetric
+    ) async throws -> [[(index: Int, distance: Float)]] where V.Scalar == Float
+}
+
+public extension BatchKernelProvider {
+    /// Default: dispatch each query through `findNearest` using the provider's own
+    /// scheduler. Backward-compatible — conformers that don't override get this.
+    func findNearestBatch<V: VectorProtocol>(
+        queries: [V], candidates: [V], k: Int, metric: any DistanceMetric
+    ) async throws -> [[(index: Int, distance: Float)]] where V.Scalar == Float {
+        try await parallelExecute(items: 0..<queries.count) { i in
+            try await self.findNearest(query: queries[i], candidates: candidates, k: k, metric: metric)
+        }
+    }
 }

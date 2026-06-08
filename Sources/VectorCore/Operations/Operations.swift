@@ -159,13 +159,12 @@ public enum Operations {
         guard qDim == vDim else {
             throw VectorError.dimensionMismatch(expected: vDim, actual: qDim)
         }
-        // R4 — transparent GPU dispatch: if a GPU kernel provider is installed, dispatch
-        // each query through it (its findNearest); this takes precedence over CPU GEMM.
+        // R4 — transparent GPU dispatch: an installed BatchKernelProvider services the
+        // whole batch (a conformer may encode all queries in one kernel; the default
+        // loops findNearest). Takes precedence over CPU GEMM.
         if let gpu = computeProvider as? any BatchKernelProvider {
-            return try await gpu.parallelExecute(items: 0..<queries.count) { i in
-                let pairs = try await gpu.findNearest(query: queries[i], candidates: vectors, k: k, metric: metric)
-                return pairs.map { NearestNeighborResult(index: $0.index, distance: $0.distance) }
-            }
+            let batched = try await gpu.findNearestBatch(queries: queries, candidates: vectors, k: k, metric: metric)
+            return batched.map { $0.map { NearestNeighborResult(index: $0.index, distance: $0.distance) } }
         }
         // GEMM fast path (DOCUMENT-2): for large multi-query k-NN over optimized types
         // + Euclidean/Cosine, one cblas_sgemm (AMX) yields the q×n matrix; each row is

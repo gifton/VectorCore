@@ -31,6 +31,32 @@ private struct MockGPUProvider: BatchKernelProvider {
     }
 }
 
+/// A provider that returns `k` results from `findNearest` (to verify k-passthrough)
+/// and OVERRIDES `findNearestBatch` with a distinct sentinel (to verify the batch
+/// override path is used, not the default per-query loop).
+private struct MockBatchGPUProvider: BatchKernelProvider {
+    let device: ComputeDevice = .cpu
+    var maxConcurrency: Int { 1 }
+    var deviceInfo: ComputeDeviceInfo {
+        ComputeDeviceInfo(name: "mock-batch-gpu", availableMemory: nil, maxThreads: 1, preferredChunkSize: 1)
+    }
+    func execute<T: Sendable>(_ work: @Sendable @escaping () async throws -> T) async throws -> T {
+        try await work()
+    }
+    func batchDistance<V: VectorProtocol>(query: V, candidates: [V], metric: any DistanceMetric)
+        async throws -> [Float] where V.Scalar == Float {
+        Array(repeating: Float(-1), count: candidates.count)
+    }
+    func findNearest<V: VectorProtocol>(query: V, candidates: [V], k: Int, metric: any DistanceMetric)
+        async throws -> [(index: Int, distance: Float)] where V.Scalar == Float {
+        (0..<Swift.min(k, candidates.count)).map { (index: 100 + $0, distance: Float(-$0)) }
+    }
+    func findNearestBatch<V: VectorProtocol>(queries: [V], candidates: [V], k: Int, metric: any DistanceMetric)
+        async throws -> [[(index: Int, distance: Float)]] where V.Scalar == Float {
+        queries.map { _ in [(index: 777, distance: Float(-7))] }   // batch-override sentinel
+    }
+}
+
 @Suite("BatchKernelProvider GPU dispatch (R4)")
 struct BatchKernelProviderTests {
 
@@ -39,6 +65,29 @@ struct BatchKernelProviderTests {
         let p: any ComputeProvider = MockGPUProvider()
         let mapped = try await p.parallelExecute(items: 0..<4) { $0 * 2 }
         #expect(mapped == [0, 2, 4, 6])   // inherits the ComputeProvider default
+    }
+
+    @Test("findNearest passes through all k provider results")
+    func findNearestKPassthrough() async throws {
+        let q = try Vector512Optimized(Array(repeating: 1, count: 512))
+        let cs = (0..<10).map { _ in try! Vector512Optimized(Array(repeating: 0, count: 512)) }
+        let result = try await Operations.$computeProvider.withValue(MockBatchGPUProvider()) {
+            try await Operations.findNearest(to: q, in: cs, k: 3)
+        }
+        #expect(result.map { $0.index } == [100, 101, 102])   // all k results flow through
+    }
+
+    @Test("findNearestBatch uses the provider's batch override (not the default loop)")
+    func findNearestBatchUsesOverride() async throws {
+        let qs = (0..<4).map { _ in try! Vector512Optimized(Array(repeating: 1, count: 512)) }
+        let cs = (0..<300).map { _ in try! Vector512Optimized(Array(repeating: 0, count: 512)) }
+        let result = try await Operations.$computeProvider.withValue(MockBatchGPUProvider()) {
+            try await Operations.findNearestBatch(queries: qs, in: cs, k: 3)
+        }
+        #expect(result.count == 4)
+        for row in result {
+            #expect(row.first?.index == 777)   // batch-override sentinel, not 100+rank from the loop
+        }
     }
 
     @Test("Operations.findNearest delegates to an installed BatchKernelProvider")

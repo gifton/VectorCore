@@ -64,6 +64,10 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     /// makeBuffer(bytesNoCopy:)); otherwise bufferCapacity * sizeof(SIMD4<Float>).
     private let allocatedByteCount: Int
 
+    /// Whether this object still owns (and will free) the buffer. Becomes `false`
+    /// after `consumeAllocation()` transfers ownership to the caller.
+    private var ownsBuffer = true
+
     private init(count: Int, pageAligned: Bool = false) {
         self.count = count
         self.lanes = Vector.lanes
@@ -103,6 +107,7 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     }
 
     deinit {
+        guard ownsBuffer else { return }   // ownership transferred via consumeAllocation()
         if usedAlignedAlloc {
             // posix_memalign memory MUST be freed with free(), never .deallocate().
             AlignedMemory.deallocate(buffer)
@@ -198,8 +203,24 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     ///   The memory is freed on `SoA` deinit, so hold a strong reference to the `SoA`
     ///   for the buffer's lifetime (or arrange a deallocator handshake).
     public var pageAlignedBytes: (base: UnsafeRawPointer, byteCount: Int)? {
-        guard usedAlignedAlloc else { return nil }
+        guard usedAlignedAlloc, ownsBuffer else { return nil }
         return (UnsafeRawPointer(buffer), allocatedByteCount)
+    }
+
+    /// Transfer ownership of the page-aligned allocation to the caller — for handing
+    /// the buffer to a Metal `bytesNoCopy` deallocator without a double free. Returns
+    /// the page-aligned base + page-rounded length, or `nil` if this SoA is not
+    /// page-aligned (only the `posix_memalign` buffer can be handed to `free()`).
+    ///
+    /// After this call the `SoA` no longer frees the buffer on `deinit`, and
+    /// `pageAlignedBytes` returns `nil`; the caller becomes responsible for freeing the
+    /// base (via `AlignedMemory.deallocate(_:)` / `free`). Mirrors
+    /// `PageAlignedBuffer.consumeAllocation()`. Do not use the `SoA` for CPU compute
+    /// after consuming.
+    public func consumeAllocation() -> (base: UnsafeMutableRawPointer, byteCount: Int)? {
+        guard usedAlignedAlloc, ownsBuffer else { return nil }
+        ownsBuffer = false
+        return (UnsafeMutableRawPointer(buffer), allocatedByteCount)
     }
 
     /// Scoped read-only access to the raw SoA data (logical bytes = `count * lanes * 16`).

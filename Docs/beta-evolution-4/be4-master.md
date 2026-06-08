@@ -145,3 +145,4 @@ Recorded so they are not silently propagated into implementation:
 | `DOCUMENT-4_Spec_Ecosystem_Seams.md` | Downstream-requested seams (pointer APIs, protocols, zero-copy) |
 | `DOCUMENT-4_S4_Provider_Conformance.md` | Provider conformance contract (ComputeProvider/BufferProvider/AccelerationProvider) |
 | `DOCUMENT-5_VectorAccelerate_Integration_Requests.md` | Gap analysis + plan for VA's R1–R4 (SoA page-align/accessor, version reply, BatchKernelProvider) |
+| `DOCUMENT-6_Page_Alignment_Feasibility.md` | Feasibility of broader `bytesNoCopy`-eligible storage; why batches (SoA/PageAlignedBuffer) not per-vector; `PageBridgeable` sketch |

@@ -143,3 +143,5 @@ Recorded so they are not silently propagated into implementation:
 | `DOCUMENT-2_Spec_GEMM_Batch_Distance.md` | CPU AMX GEMM batch-distance design spec |
 | `DOCUMENT-3_Spec_Block_Quantization.md` | `Q8_0` block-wise quantization design spec |
 | `DOCUMENT-4_Spec_Ecosystem_Seams.md` | Downstream-requested seams (pointer APIs, protocols, zero-copy) |
+| `DOCUMENT-4_S4_Provider_Conformance.md` | Provider conformance contract (ComputeProvider/BufferProvider/AccelerationProvider) |
+| `DOCUMENT-5_VectorAccelerate_Integration_Requests.md` | Gap analysis + plan for VA's R1–R4 (SoA page-align/accessor, version reply, BatchKernelProvider) |

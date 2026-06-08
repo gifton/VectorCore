@@ -41,37 +41,73 @@ VectorCore is designed as part of a modular 4-package ecosystem, each with clear
 
 ## 1. VectorCore (Foundation)
 
-**Purpose**: Pure CPU vector mathematics and core abstractions
+**Purpose**: CPU-first vector mathematics and core abstractions
 
-**Scope** (v0.1.0):
+**Scope** (v0.3.0):
 - Vector data types (fixed & dynamic dimensions)
 - SIMD-optimized operations (512/768/1536 dimensions)
 - Distance metrics (Euclidean, Cosine, Manhattan, Chebyshev, Hamming, Minkowski, DotProduct)
+- CPU GEMM batch distance (`MatrixDistance`: `euclideanSquaredMatrix` / `cosineDistanceMatrix`, `prepare(_:normalized:)` → `PreparedCandidates`) via Accelerate `cblas_sgemm` (AMX on Apple Silicon)
 - Normalization, statistics, centroid computation
-- Top-K selection
+- Top-K selection (deterministic `TieBreaker`: `.smallerIndex` default / `.insertionOrder` / `.smallerValue`)
 - Memory management (aligned allocation, buffer pools)
-- Provider abstractions (SIMDProvider, ComputeProvider, BufferProvider)
+- Provider abstractions (`SIMDProvider`, `ComputeProvider`, `BufferProvider`, `BatchKernelProvider`)
+- Zero-copy GPU-bridge buffer contract (`UnifiedVectorBuffer` / `PageAlignedBuffer`) + frozen SoA layout (`SoALayout`)
 - Basic quantization primitives (INT8)
 - Serialization (Codable, in-memory binary)
+
+### 0.3.0 — "hold the line, sharpen the seams"
+
+The strategy this release is to keep VectorCore the small, CPU-first, allocation-free
+foundation while **redirecting** index / GPU / DB features to the siblings
+VectorIndex / VectorAccelerate / EmbedKit. Core does *not* grow into those domains; instead
+it **owns the seams** they plug into. What Core newly owns in 0.3.0:
+
+- **`MatrixDistance`** — CPU GEMM batch distance (Accelerate `cblas_sgemm` → AMX on Apple
+  Silicon), generic over `UnifiedVectorBuffer`. `euclideanSquaredMatrix` /
+  `cosineDistanceMatrix`; `prepare(_:normalized:)` → `PreparedCandidates`.
+- **Zero-copy GPU-bridge buffer contract** — the `UnifiedVectorBuffer` protocol + the
+  page-aligned `PageAlignedBuffer` class, valid for `MTLDevice.makeBuffer(bytesNoCopy:)`.
+- **Frozen SoA memory-layout contract** — the `SoALayout` descriptor, reachable as
+  `SoA.layoutDescriptor` (live) or `SoALayout.forType` (ahead of allocation). See
+  [SoA Layout Contract](SoA_Layout_Contract.md).
+- **`BatchKernelProvider`** — a `ComputeProvider` sub-protocol. `Operations.findNearest` /
+  `findNearestBatch` downcast the installed `computeProvider` to it and delegate, giving an
+  installed GPU provider precedence over the CPU GEMM path.
+- **`TieBreaker`** — deterministic Top-K ordering (`.smallerIndex` default / `.insertionOrder`
+  / `.smallerValue`).
+- **Pointer-level seams** — `SoA.pageAlignedBytes` / `consumeAllocation()`,
+  `PlatformConfiguration.roundUpToPage(_:)`.
+
+> **Owns the seam, not the kernel.** Core ships **no GPU/Metal kernels**. What it now owns is
+> the GPU *seam*: the `BatchKernelProvider` dispatch hook plus the page-aligned `bytesNoCopy`
+> buffer contract. The kernels themselves live in VectorAccelerate.
 
 **What's NOT in Core**:
 - ❌ Graph algorithms or data structures
 - ❌ Clustering algorithms (K-means, hierarchical, etc.)
-- ❌ GPU/Metal code
+- ❌ GPU/Metal **kernels** (Core owns the seam — `BatchKernelProvider` dispatch + the page-aligned `bytesNoCopy` buffer contract — but not the shaders)
 - ❌ Approximate nearest neighbor (ANN) indexes
 - ❌ Persistent storage formats
 - ❌ Mixed precision auto-tuning (device-specific)
 
-**Dependencies**: None (pure Swift + Foundation + Accelerate)
+**Dependencies**: None third-party (Swift + Foundation + Accelerate, plus an internal `VectorCoreC` C target)
 
 **Public API Surface**:
 - Vector types: `Vector<D>`, `DynamicVector`, `Vector{512,768,1536}Optimized`
-- Protocols: `VectorProtocol`, `VectorFactory`, `SIMDProvider`, `ComputeProvider`
-- Operations: `Operations`, `BatchOperations`
+- Protocols: `VectorProtocol`, `VectorFactory`, `SIMDProvider`, `ComputeProvider`, `BatchKernelProvider`, `UnifiedVectorBuffer`
+- Operations: `Operations`, `BatchOperations`, `MatrixDistance`
 - Distance metrics: `EuclideanDistance`, `CosineDistance`, etc.
+- GPU-bridge: `PageAlignedBuffer`, `SoALayout` (see [SoA Layout Contract](SoA_Layout_Contract.md))
 
-**CPU-Only Philosophy**:
-VectorCore is intentionally CPU-only to maintain simplicity, portability, and zero GPU dependencies. GPU acceleration is provided by VectorAccelerate through provider plugins.
+**CPU-First Philosophy (no GPU kernels, owns the GPU seam)**:
+VectorCore ships **no GPU/Metal kernels** — it stays CPU-first for simplicity, portability, and
+zero GPU *dependencies*. What it does own is the **GPU seam**: the `BatchKernelProvider`
+dispatch hook (`Operations.findNearest` / `findNearestBatch` downcast the installed
+`computeProvider` and delegate, GPU taking precedence over the CPU GEMM path) and the
+zero-copy page-aligned `bytesNoCopy` buffer contract (`UnifiedVectorBuffer` / `PageAlignedBuffer`,
+plus the frozen `SoALayout`). The actual kernels are provided by VectorAccelerate through these
+seams.
 
 ---
 
@@ -139,9 +175,10 @@ let neighbors = try index.search(query, k: 10)
   - FP16 candidate conversion
   - Strategy selection based on device capabilities
   - Performance profiling and adaptive selection
-- **SoA FP16 caching**:
-  - Structure-of-Arrays FP16 layouts
-  - Cache-efficient batch processing
+- **Device-adaptive SoA FP16 strategy**:
+  - Device-specific auto-tuning over FP16 layouts
+  - (Note: the `SoAFP16` cache type itself still ships in Core as an internal type; only the
+    device-adaptive *tuning* over it is Accelerate's concern.)
 - **Neural Engine support** (future):
   - CoreML-based vector operations
 
@@ -209,7 +246,7 @@ let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
 - **I/O complexity**: File I/O and database integration are orthogonal to math
 - **Deployment flexibility**: Some users want in-memory only
 - **Format evolution**: Storage formats need independent versioning
-- **Zero dependencies in Core**: Core remains pure Swift with no I/O
+- **Zero third-party dependencies in Core**: Core stays Swift-first (one internal C target, no third-party deps) with no I/O
 
 **Usage Example**:
 ```swift
@@ -315,10 +352,10 @@ VectorCore has zero third-party dependencies. Other packages only depend on Core
 Users only pay (in binary size and complexity) for what they use. Need just vector math? Use Core. Need GPU? Add Accelerate.
 
 ### 4. **Protocol-Based Integration**
-Packages integrate via protocols (`ComputeProvider`, `SIMDProvider`, `BufferProvider`), enabling loose coupling and extensibility.
+Packages integrate via protocols (`ComputeProvider`, `SIMDProvider`, `BufferProvider`, `BatchKernelProvider`), enabling loose coupling and extensibility.
 
 ### 5. **Platform Portability**
-Core is pure Swift and works everywhere. Platform-specific features (Metal, Neural Engine) live in Accelerate.
+Core is Swift-first (with one internal `VectorCoreC` C target — so not literally 100% Swift, though it carries zero *third-party* dependencies) and works everywhere. Platform-specific features (Metal kernels, Neural Engine) live in Accelerate; Core owns only the seam they plug into.
 
 ---
 
@@ -333,20 +370,27 @@ VectorCore v0.1.0 started as a monolith with graph/clustering code. This was spl
 
 **Moved to VectorAccelerate**:
 - Mixed precision auto-tuning (`MixedPrecisionAutoTuner.swift`)
-- SoA FP16 caching (`SoAFP16Cache.swift`)
+- Device-adaptive SoA FP16 *tuning* (the `SoAFP16Cache` type itself remains an internal Core type)
 
-**Moved to VectorStore** (future):
-- Durable binary format with CRC validation
+**Moved to EmbedKit** (future):
+- Durable storage / embedding-store concerns (CRC-validated binary format, persistence)
+
+### 0.3.0 changes
+
+- **Breaking:** removed the no-op `blockSize:` parameter from `SoA.init(vectors:…)` and
+  `SoAFP16.init(vectors:…)`. It was a no-op and is gone (see the [SoA Layout Contract](SoA_Layout_Contract.md)).
+- **Deferred (specced, not built):** block-wise quantization `Q8_0` is consumer-gated — it is
+  *not* in 0.3.0.
 
 ---
 
 ## Version Compatibility
 
-| VectorCore | VectorIndex | VectorAccelerate | VectorStore |
-|------------|-------------|------------------|-------------|
-| 0.1.0      | -           | -                | -           |
-| 0.2.0      | 0.1.0       | 0.1.0            | 0.1.0       |
-| 0.3.0+     | 0.2.0+      | 0.2.0+           | 0.2.0+      |
+| VectorCore | VectorIndex | VectorAccelerate | EmbedKit |
+|------------|-------------|------------------|----------|
+| 0.1.0      | -           | -                | -        |
+| 0.2.0      | 0.1.0       | 0.1.0            | 0.1.0    |
+| 0.3.0+     | 0.2.0+      | 0.2.0+           | 0.2.0+   |
 
 **Policy**: All packages use SemVer 2.0. Minor version bumps in Core may require minor version bumps in dependent packages.
 
@@ -363,14 +407,14 @@ A: Yes! VectorIndex depends only on VectorCore. GPU acceleration is optional.
 **Q: What if I want CUDA instead of Metal?**
 A: You can implement a `CUDAComputeProvider` that conforms to `ComputeProvider`. VectorCore's protocol-based design supports custom backends.
 
-**Q: Will there be more packages (e.g., VectorML, VectorTransform)?**
-A: Possibly. The 4-package architecture is designed to be extensible. New packages can depend on Core and integrate via protocols.
+**Q: Will there be more packages?**
+A: The store/embed sibling is **EmbedKit** (the real embed package — not a speculative "VectorML"/"VectorTransform"). The architecture is designed to be extensible; new packages depend on Core and integrate via protocols.
 
 **Q: Why is quantization in Core but mixed precision auto-tuning in Accelerate?**
-A: Basic INT8 quantization is CPU-friendly and device-agnostic. Auto-tuning requires device-specific profiling and strategy selection, which is inherently accelerator-specific.
+A: Basic INT8 quantization is CPU-friendly and device-agnostic. Auto-tuning requires device-specific profiling and strategy selection, which is inherently accelerator-specific. Note: block-wise quantization (`Q8_0`) is **specced but deferred** (consumer-gated) — it is not in 0.3.0.
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: October 2025
-**Applies to**: VectorCore v0.1.0+
+**Document Version**: 1.1
+**Last Updated**: 2026-06-07
+**Applies to**: VectorCore v0.3.0+

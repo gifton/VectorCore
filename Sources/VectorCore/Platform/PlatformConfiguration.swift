@@ -75,6 +75,24 @@ internal enum PlatformConfiguration {
         Int(getpagesize())
     }
 
+    /// Rounds a byte count **up** to a whole multiple of ``pageSize``.
+    ///
+    /// This is the single source of truth for the page-rounding used by every
+    /// page-aligned allocation (e.g. ``SoA`` and `PageAlignedBuffer`) so the
+    /// length passed to `MTLDevice.makeBuffer(bytesNoCopy:)` — which on macOS
+    /// must be a page multiple — is computed identically everywhere, including
+    /// in `SoALayout.forType(_:count:)` where it is derived without allocating.
+    ///
+    /// - Parameter byteCount: A non-negative byte count.
+    /// - Returns: `byteCount` rounded up to the next multiple of ``pageSize``
+    ///   (`0` maps to `0`).
+    public static func roundUpToPage(_ byteCount: Int) -> Int {
+        precondition(byteCount >= 0, "byteCount must be non-negative, got \(byteCount)")
+        guard byteCount > 0 else { return 0 }
+        let page = pageSize
+        return ((byteCount + page - 1) / page) * page
+    }
+
     // MARK: - Platform Detection
 
     /// Whether running on Apple Silicon

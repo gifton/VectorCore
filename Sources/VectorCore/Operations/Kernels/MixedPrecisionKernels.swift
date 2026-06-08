@@ -497,12 +497,15 @@ public enum MixedPrecisionKernels {
             self.groupCount = groupCap
         }
 
-        /// Convenience initializer from vectors (for test compatibility)
+        /// Convenience initializer from vectors (for test compatibility).
+        ///
+        /// - Note: `SoAFP16` uses vector-grouping (groups of 4 vectors, dimension-first),
+        ///   not dimension-blocking; there is intentionally no `blockSize` parameter. (A
+        ///   prior no-op `blockSize:` was removed in 0.3.0.)
         /// - Parameters:
         ///   - vectors: Array of optimized vectors to convert
-        ///   - blockSize: Ignored (reserved for future chunking optimizations)
         /// - Throws: VectorError if vectors have incompatible dimensions
-        public init(vectors: [VectorType], blockSize: Int = 32) throws {
+        public init(vectors: [VectorType]) throws {
             // An empty vector array yields a valid empty SoA (vectorCount == 0); the
             // specialized builders below already handle that degenerate case without throwing.
             // Delegate to the specialized creation function for each supported dimension.

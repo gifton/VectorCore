@@ -1,8 +1,53 @@
 # VectorCore Improvement Roadmap
 
-**Current Version:** 0.2.0 (Released March 2026)
-**Last Updated:** March 2026
+**Current Version:** 0.2.2 → **0.3.0 in progress** (releasing 2026-06-07)
+**Last Updated:** 2026-06-07
 **Target Packages:** VectorIndex, VectorAccelerate, VectorIndexAccelerated, EmbedKit
+
+> **Strategy note (0.3.0):** "Hold the line, sharpen the seams." Several items previously
+> listed here as open Core backlog have either **shipped in 0.3.0** (see the "0.3.0 — Done"
+> section immediately below) or been **redirected to a sibling package** (VectorIndex /
+> VectorAccelerate). The authoritative 0.3.0 record of work is
+> `Docs/beta-evolution-4/be4-master.md` (+ `CHANGELOG`).
+
+---
+
+## ✅ 0.3.0 — Done (shipped on `feature/beta-evo-4`)
+
+The following items from the backlog below are **shipped in 0.3.0**. They are marked inline at
+their original locations as well; collected here for quick reference:
+
+- **Matrix / GEMM batch distance (CPU/AMX)** — §9.2 "Matrix Distance Computation" and §2.2
+  "Add `distanceMatrix(a:b:)`". Shipped as `MatrixDistance`
+  (`Sources/VectorCore/Operations/MatrixDistance.swift`): `euclideanSquaredMatrix` /
+  `cosineDistanceMatrix` (with `into:` / allocating / `prepared:` overloads),
+  `prepare(_:normalized:)`, `PreparedCandidates`. Uses Accelerate `cblas_sgemm` → AMX.
+- **Configurable tie-breaking** — §9.3. Shipped as `TieBreaker`
+  (`.smallerIndex` default / `.insertionOrder` / `.smallerValue`) in
+  `Sources/VectorCore/Operations/TopKSelection.swift`.
+- **Batch-distance protocol seam + provider seam** — §2.2 / §11.2. Shipped as
+  `BatchKernelProvider` (a `ComputeProvider` sub-protocol) in
+  `Sources/VectorCore/Protocols/BatchKernelProvider.swift`; enables transparent GPU dispatch
+  from `Operations.findNearest` / `findNearestBatch`.
+- **Zero-copy buffer contract + shared CPU↔GPU types** — §11.2 (ComputeProvider / Metal-buffer
+  compatibility / shared CPU↔GPU types). Shipped as the `UnifiedVectorBuffer` protocol +
+  `PageAlignedBuffer` (`Sources/VectorCore/Storage/UnifiedVectorBuffer.swift`) and the **frozen
+  `SoALayout` contract** (`Sources/VectorCore/Storage/SoALayout.swift`,
+  `Docs/SoA_Layout_Contract.md`), plus SoA page-alignment APIs in
+  `Sources/VectorCore/Storage/SoA.swift` (`build(from:pageAligned:)`,
+  `init(vectors:pageAligned:)`, `pageAlignedBytes`, `consumeAllocation()`,
+  `withUnsafeRawBuffer`) and `PlatformConfiguration.roundUpToPage(_:)`.
+- **Transparent matrix routing** — `BatchOperations.Configuration.enableMatrixRouting`
+  (default `true`) + `matrixRoutingMinN` (default `256`) route `pairwiseDistances` and
+  `Operations.findNearestBatch` through `MatrixDistance`.
+
+> **⚠️ BREAKING (0.3.0):** the no-op `blockSize:` parameter was removed from
+> `SoA.init(vectors:…)` **and** `SoAFP16.init(vectors:…)`.
+
+**Redirected to sibling packages (not open Core backlog):** `mmap` storage → VectorIndex (§10.2),
+prefetching → VectorIndex (§4.4), PQ / ADC → VectorIndex (§5.1), binary-packed + Hamming →
+VectorAccelerate (§5.2), sparse CSR → deferred (no producer). FP16 mixed precision and scalar
+INT8 quantization already shipped in Core pre-0.3.0.
 
 This document tracks identified improvement opportunities for VectorCore, organized by component and priority. Items marked with 🔒 may require API changes.
 
@@ -204,7 +249,7 @@ public protocol DistanceMetric: Sendable {
 
 **Recommendations:**
 - [x] Add optional `batchDistance(query:candidates:)` with default implementation ✅ (v0.2.0 — promoted to protocol requirement)
-- [ ] Add `distanceMatrix(a:b:)` for cross-product computations
+- [x] Add `distanceMatrix(a:b:)` for cross-product computations ✅ **shipped 0.3.0** as `MatrixDistance.euclideanSquaredMatrix` / `cosineDistanceMatrix` (`Sources/VectorCore/Operations/MatrixDistance.swift`, CPU `cblas_sgemm`→AMX)
 - [ ] Document when batch vs single operations should be used
 
 **VectorAccelerate Request:**
@@ -370,14 +415,18 @@ File is extremely large (64k+ tokens) which impacts compile time and maintainabi
 - [ ] Consider using conditional compilation for dimension-specific code
 - [ ] Add compilation time benchmarks to CI
 
-### 4.4 Prefetching for Batch Operations
+### 4.4 Prefetching for Batch Operations → **REDIRECTED to VectorIndex (0.3.0)**
 
-**Priority:** Medium
+**Priority:** Medium → **Redirected (not Core backlog)**
 **Impact:** Performance
 
 Explicit memory prefetching could improve cache utilization in batch loops.
 
-**Recommendations:**
+> **0.3.0 decision:** prefetch intrinsics are owned by VectorIndex
+> (`VectorIndex/Sources/VectorIndex/Operations/Support/Prefetch.swift`, real builtins). Core's
+> `prefetchRead/Write` remain no-ops by design; this is **not** a Core deliverable.
+
+**Recommendations (for the owning package, VectorIndex):**
 - [ ] Add `__builtin_prefetch` wrappers via C interop
 - [ ] Experiment with prefetch distance (1-3 cache lines ahead)
 - [ ] Measure impact on different batch sizes
@@ -398,28 +447,38 @@ Current kernels primarily use SIMD4. Larger SIMD widths might benefit some opera
 
 ## 5. Quantization System
 
-### 5.1 Product Quantization (PQ) Support
+### 5.1 Product Quantization (PQ) Support → **REDIRECTED to VectorIndex (0.3.0)**
 
 **File:** `Sources/VectorCore/Quantization/QuantizationSchemes.swift`
-**Priority:** High
+**Priority:** High → **Redirected (not Core backlog)**
 **Impact:** Memory, Performance (VectorIndex integration)
 
-Currently only INT8 quantization. Product quantization is essential for billion-scale search.
+Currently only scalar INT8 quantization (already shipped in Core). Product quantization is
+essential for billion-scale search.
 
-**Recommendations:**
+> **0.3.0 decision:** PQ and ADC look-up tables are owned by VectorIndex
+> (`VectorIndex/Sources/VectorIndex/Operations/Quantization/{ADCScan,PQLUT}.swift`). PQ/ADC are
+> index-topology-coupled and are **not** Core deliverables. Core keeps the topology-agnostic
+> scalar INT8 path only.
+
+**Recommendations (for the owning package, VectorIndex):**
 - [ ] Implement PQ encoding with configurable subspace count (typically 8-32)
 - [ ] Add PQ codebook training (k-means on subspaces)
 - [ ] Implement asymmetric distance computation (ADC) for PQ
 - [ ] Consider OPQ (Optimized Product Quantization) for better accuracy
 
-### 5.2 Binary Quantization
+### 5.2 Binary Quantization → **REDIRECTED to VectorAccelerate (0.3.0)**
 
-**Priority:** Medium
+**Priority:** Medium → **Redirected (not Core backlog)**
 **Impact:** Memory, Performance
 
 1-bit quantization for extreme memory efficiency.
 
-**Recommendations:**
+> **0.3.0 decision:** binary-packed vectors and Hamming/Jaccard are redirected to
+> VectorAccelerate (GPU versions already exist there); there is **no committed CPU consumer**, so
+> Core does not ship a packed binary type. Confirmed not in Core 0.3.0.
+
+**Recommendations (for the owning package, VectorAccelerate):**
 - [ ] Implement sign-based binary quantization
 - [ ] Add popcount-based Hamming distance
 - [ ] Document accuracy trade-offs
@@ -649,17 +708,24 @@ No native async support for batch operations.
 - [ ] Add progress reporting via `AsyncSequence`
 - [ ] Support cancellation
 
-### 9.2 Matrix Distance Computation
+### 9.2 Matrix Distance Computation → ✅ **SHIPPED 0.3.0**
 
-**Priority:** Medium
+**Priority:** Medium → **IMPLEMENTED**
 **Impact:** Performance (VectorIndex)
 
-Computing pairwise distances requires nested loops.
+Computing pairwise distances previously required nested loops.
 
-**Recommendations:**
-- [ ] Add `distanceMatrix(queries:candidates:)` returning 2D array
-- [ ] Implement using blocked matrix algorithms
-- [ ] Consider Metal acceleration for large matrices (VectorAccelerate hook)
+**Solution Implemented (0.3.0):**
+Shipped `MatrixDistance` (`Sources/VectorCore/Operations/MatrixDistance.swift`) — a CPU GEMM
+batch-distance path using Accelerate `cblas_sgemm` (→ AMX on Apple Silicon):
+`euclideanSquaredMatrix` / `cosineDistanceMatrix` with `into:` / allocating / `prepared:`
+overloads, `prepare(_:normalized:)`, and `PreparedCandidates`. `BatchOperations` routes
+`pairwiseDistances` and `Operations.findNearestBatch` through it via
+`Configuration.enableMatrixRouting` (default `true`) above `matrixRoutingMinN` (default `256`).
+
+- [x] Add `distanceMatrix(queries:candidates:)` ✅ (as `euclideanSquaredMatrix` / `cosineDistanceMatrix`)
+- [x] Implement using blocked matrix algorithms ✅ (`cblas_sgemm` → AMX)
+- [~] Metal acceleration for large matrices — provided via the `BatchKernelProvider` seam (VectorAccelerate hook), not in Core
 
 ### 9.3 ✅ Top-K Selection Kernel
 
@@ -700,9 +766,9 @@ Created public `TopKSelection` API with:
       ids: UnsafePointer<Int32>?  // Optional custom ID array
   ) -> (indices: [Int32], distances: [Float])
   ```
-- [ ] **Configurable tie-breaking** - Deterministic behavior for reproducibility:
+- [x] **Configurable tie-breaking** - Deterministic behavior for reproducibility ✅ **shipped 0.3.0** (`TieBreaker` in `Sources/VectorCore/Operations/TopKSelection.swift`; `.smallerIndex` is the default):
   ```swift
-  public enum TieBreaker { case insertionOrder, smallerIndex, smallerValue }
+  public enum TieBreaker { case smallerIndex /* default */, insertionOrder, smallerValue }
   ```
 
 ### 9.4 Batch Normalization
@@ -735,14 +801,20 @@ Frequent allocations in hot paths can cause memory pressure.
 - [ ] Implement pool size limits and eviction
 - [ ] Profile allocation patterns in VectorIndex workloads
 
-### 10.2 Memory-Mapped Vector Storage
+### 10.2 Memory-Mapped Vector Storage → **REDIRECTED to VectorIndex (0.3.0)**
 
-**Priority:** Medium
+**Priority:** Medium → **Redirected (not Core backlog)**
 **Impact:** Scalability (VectorIndex)
 
 Large vector collections don't fit in RAM.
 
-**Recommendations:**
+> **0.3.0 decision:** `mmap` storage is owned by VectorIndex
+> (`VectorIndex/Sources/VectorIndex/Kernels/VIndexMmap.swift`, real/WIP). It is persistence- and
+> index-coupled, so it is **not** a Core deliverable. Core's contribution is the zero-copy
+> page-aligned buffer contract (`PageAlignedBuffer` / frozen `SoALayout`) that an mmap backend
+> can build on.
+
+**Recommendations (for the owning package, VectorIndex):**
 - [ ] Add `MMapStorage` backend for vectors
 - [ ] Implement lazy loading with LRU cache
 - [ ] Support append-only growth for indexing
@@ -802,18 +874,27 @@ Created Integration module with protocols and types for VectorIndex:
 - VectorCore provides brute-force fallback
 - Clear ownership: VectorCore owns vectors, VectorIndex owns indices
 
-### 11.2 VectorAccelerate Metal Hooks
+### 11.2 VectorAccelerate Metal Hooks → ✅ **SHIPPED 0.3.0**
 
-**Priority:** High
+**Priority:** High → **IMPLEMENTED**
 **Impact:** Performance
 
-Prepare integration points for GPU acceleration.
+Integration points for GPU acceleration.
 
-**Recommendations:**
-- [ ] Add `ComputeProvider` protocol abstraction
-- [ ] Define Metal buffer compatibility requirements
-- [ ] Create shared types for CPU↔GPU data transfer
-- [ ] Add fallback mechanism when Metal unavailable
+**Solution Implemented (0.3.0):**
+- [x] `ComputeProvider` protocol abstraction ✅ — `BatchKernelProvider` (a `ComputeProvider`
+  sub-protocol) in `Sources/VectorCore/Protocols/BatchKernelProvider.swift`; enables transparent
+  GPU dispatch from `Operations.findNearest` / `findNearestBatch`.
+- [x] Define Metal buffer compatibility requirements ✅ — `UnifiedVectorBuffer` protocol +
+  `PageAlignedBuffer` (`Sources/VectorCore/Storage/UnifiedVectorBuffer.swift`): page-aligned
+  storage valid for `MTLDevice.makeBuffer(bytesNoCopy:)`.
+- [x] Create shared types for CPU↔GPU data transfer ✅ — frozen `SoALayout` descriptor + SoA
+  layout contract (`Sources/VectorCore/Storage/SoALayout.swift`, `Docs/SoA_Layout_Contract.md`),
+  plus SoA page-alignment APIs (`SoA.build(from:pageAligned:)`, `init(vectors:pageAligned:)`,
+  `pageAlignedBytes`, `consumeAllocation()`, `withUnsafeRawBuffer`) and
+  `PlatformConfiguration.roundUpToPage(_:)`.
+- [~] Add fallback mechanism when Metal unavailable — routing falls back to the CPU
+  `MatrixDistance` / kernel path when no `BatchKernelProvider` is installed.
 
 ### 11.3 EmbedKit Type Compatibility
 
@@ -931,26 +1012,26 @@ No record of design decisions.
 
 | Priority | Items | Rationale |
 |----------|-------|-----------|
-| **P0 - Critical** | ~~Dim384 Support~~ ✅, 4.1, 5.1, 9.1, ~~9.3~~ ✅, ~~11.1~~ ✅, 11.2 | Direct impact on EmbedKit/VectorIndex/VectorAccelerate |
-| **P1 - High** | ~~2.1~~ ✅, 3.1, ~~8.1~~ ✅, 12.1, Dim1024 Support, **9.3-Pointer API**, **2.2-Batch Protocol** | Performance or API quality |
-| **P2 - Medium** | 1.1, 1.4, 3.2, 4.2, 4.3, 4.4, 5.2, 5.3, 5.4, 7.2, 9.2, 9.4, 10.1, 10.2, 11.3, 12.2, 12.3, 13.1, 13.2, **4.2-Raw Buffer Normalize**, **9.3-TieBreaker** | Important but not blocking |
-| **P3 - Low** | 1.2, 1.3, 2.3, 2.4, 3.3, 3.4, 4.5, 6.1, 6.2, 6.3, 7.1, 7.3, 8.2, 8.3, 8.4, 10.3, 12.4, 13.3 | Nice to have |
+| **P0 - Critical** | ~~Dim384 Support~~ ✅, 4.1, ~~5.1~~ → VectorIndex, 9.1, ~~9.3~~ ✅, ~~11.1~~ ✅, ~~11.2~~ ✅ 0.3.0 | Direct impact on EmbedKit/VectorIndex/VectorAccelerate |
+| **P1 - High** | ~~2.1~~ ✅, 3.1, ~~8.1~~ ✅, 12.1, Dim1024 Support, **~~9.3-Pointer API~~ ✅**, **~~2.2-Batch Protocol~~ ✅ 0.3.0** | Performance or API quality |
+| **P2 - Medium** | ~~1.1~~ deferred (Q8_0), 1.4, 3.2, 4.2, 4.3, ~~4.4~~ → VectorIndex, ~~5.2~~ → VectorAccelerate, 5.3, 5.4, 7.2, ~~9.2~~ ✅ 0.3.0, 9.4, 10.1, ~~10.2~~ → VectorIndex, 11.3, 12.2, 12.3, 13.1, 13.2, **~~4.2-Raw Buffer Normalize~~ ✅ 0.3.0**, **~~9.3-TieBreaker~~ ✅ 0.3.0** | Important but not blocking |
+| **P3 - Low** | 1.2 → VectorAccelerate, ~~1.3~~ → VectorIndex, 2.3, 2.4, 3.3, 3.4, 4.5, 6.1, 6.2, 6.3, 7.1, 7.3, 8.2, 8.3, 8.4, 10.3, 12.4, 13.3 | Nice to have |
 
 ### Downstream Package Requests
 
 **VectorIndex** (documented in `VectorIndex/IMPROVEMENTS.md` Section 9.5):
 
-| Request | Section | Priority | Rationale |
-|---------|---------|----------|-----------|
-| Pointer-based TopK API | 9.3 | P1 | Zero-copy from GPU/mmap buffers |
-| Raw buffer normalization | 4.2 | P2 | Mmap/GPU buffer compatibility |
-| Configurable tie-breaking | 9.3 | P2 | Reproducibility in tests/benchmarks |
+| Request | Section | Priority | Rationale | Status |
+|---------|---------|----------|-----------|--------|
+| Pointer-based TopK API | 9.3 | P1 | Zero-copy from GPU/mmap buffers | ✅ v0.2.0 |
+| Raw buffer normalization | 4.2 | P2 | Mmap/GPU buffer compatibility | ✅ 0.3.0 |
+| Configurable tie-breaking | 9.3 | P2 | Reproducibility in tests/benchmarks | ✅ 0.3.0 (`TieBreaker`) |
 
 **VectorAccelerate** (analysis of integration patterns):
 
-| Request | Section | Priority | Rationale |
-|---------|---------|----------|-----------|
-| Batch distance protocol | 2.2 | P1 | Enables GPU-optimized batch operations via protocol dispatch |
+| Request | Section | Priority | Rationale | Status |
+|---------|---------|----------|-----------|--------|
+| Batch distance protocol | 2.2 | P1 | Enables GPU-optimized batch operations via protocol dispatch | ✅ 0.3.0 (`BatchKernelProvider`) |
 
 **Note:** Other VectorAccelerate suggestions were either already implemented in VectorCore (`withUnsafeBufferPointer`, `StaticDimension.value`, `VectorError`) or belong in VectorAccelerate's layer (GPU buffer protocols, acceleration providers). See analysis in VectorAccelerate agent prompt.
 
@@ -967,18 +1048,31 @@ No record of design decisions.
 
 ### v0.2.0 (API Enhancements)
 - [x] **Pointer-based TopK API** (VectorIndex request) - Zero-copy from GPU/mmap ✅ v0.2.0
-- [ ] **Batch distance protocol** (VectorAccelerate request) - GPU-optimized batch ops
-- [ ] **Raw buffer normalization** (VectorIndex request) - Mmap compatibility
-- [ ] **Configurable tie-breaking** (VectorIndex request) - Reproducibility
+- [x] **Batch distance protocol** (VectorAccelerate request) - GPU-optimized batch ops ✅ **0.3.0** (`BatchKernelProvider`)
+- [x] **Raw buffer normalization** (VectorIndex request) - Mmap compatibility ✅ **0.3.0**
+- [x] **Configurable tie-breaking** (VectorIndex request) - Reproducibility ✅ **0.3.0** (`TieBreaker`)
 - [ ] Resolve all 🔒 marked API changes
-- [ ] Complete remaining P0 items (4.1, 5.1, 9.1, 11.2)
+- [ ] Complete remaining P0 items (4.1, 9.1) — 5.1 redirected to VectorIndex; 11.2 ✅ shipped 0.3.0
 - [ ] Add Dim1024 optimized vector type (E5-large models)
 - [ ] Finalize protocol designs
 
-### v0.3.0 (Performance)
+### v0.3.0 — "Hold the line, sharpen the seams" (released 2026-06-07)
+
+**Shipped:**
+- [x] **CPU/AMX GEMM batch distance** — `MatrixDistance` (§9.2, §2.2)
+- [x] **Configurable tie-breaking** — `TieBreaker` (§9.3)
+- [x] **Provider seam** — `BatchKernelProvider` (§11.2)
+- [x] **Zero-copy buffer contract** — `UnifiedVectorBuffer` / `PageAlignedBuffer` + frozen `SoALayout` (§11.2)
+- [x] **SoA page-alignment APIs** + transparent matrix routing (`BatchOperations.Configuration.enableMatrixRouting` / `matrixRoutingMinN`)
+- [x] **⚠️ BREAKING:** removed no-op `blockSize:` from `SoA.init(vectors:…)` and `SoAFP16.init(vectors:…)`
+
+**Deferred / redirected:**
+- [ ] Block-wise quantization (`Q8_0`) — **deferred** (specced, consumer-gated; see DOCUMENT-3)
+- [→] `mmap` storage, prefetch, PQ/ADC → **VectorIndex**; binary-packed + Hamming → **VectorAccelerate**; sparse CSR → **deferred** (no producer)
+
+**Still open (carried forward):**
 - [ ] P1 kernel optimizations (3.1, 12.1 remaining)
-- [ ] Batch operation improvements
-- [ ] Memory management enhancements
+- [ ] Memory management enhancements (10.1, 10.3)
 
 ### v1.0.0 (Stable Release)
 - [ ] All P0-P2 items resolved
@@ -988,4 +1082,4 @@ No record of design decisions.
 
 ---
 
-*Last updated: November 2025*
+*Last updated: 2026-06-07 (0.3.0 reconciliation)*

@@ -5,6 +5,74 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-07
+
+Outcome of the "beta-evolution-4" (BE4) review: **hold the line, sharpen the
+seams.** Rather than grow VectorCore into a database/index engine, this release
+hardens the CPU-primitive foundation and the integration seams that downstream
+packages (VectorIndex, VectorAccelerate, EmbedKit) were bypassing. Net new
+surface: one CPU math primitive (GEMM batch distance), a zero-copy GPU-bridge
+buffer contract, a transparent GPU-dispatch provider seam, and deterministic
+Top-K — plus the removal of a misleading no-op parameter.
+
+### Added
+
+- **`MatrixDistance` — CPU GEMM batch distance.** `euclideanSquaredMatrix` and
+  `cosineDistanceMatrix` compute a full query×candidate distance matrix via
+  Accelerate `cblas_sgemm` (which routes to the AMX coprocessor on Apple
+  Silicon), using the identity `‖x−Y‖² = ‖x‖² + ‖Y‖² − 2⟨x,Y⟩`. Each metric has
+  an `into:` (zero-allocation), an allocating, and a `prepared:` overload;
+  `prepare(_:normalized:)` packs a candidate set once (`PreparedCandidates`) for
+  reuse across query batches. Generic over `UnifiedVectorBuffer`. Output is
+  row-major (`out[i*n + j]`); the identity can round slightly negative when
+  `q ≈ c`, so results are clamped (Euclidean at 0, cosine to `[0, 2]`) and agree
+  with the per-pair kernels to within ~1e-3 relative, not bit-for-bit.
+- **Zero-copy GPU-bridge buffer contract.** `UnifiedVectorBuffer` protocol
+  (`elementCount`, `alignment`, `withUnsafeContiguousBytes`) + `PageAlignedBuffer`
+  — a page-aligned, page-length-rounded `[Float]` slab valid for
+  `MTLDevice.makeBuffer(bytesNoCopy:)`. The optimized vector types and
+  `DynamicVector` conform. `PageAlignedBuffer.consumeAllocation()` transfers
+  ownership to a Metal deallocator without a double free.
+- **Frozen SoA memory-layout contract.** `SoALayout` descriptor +
+  `SoA.layoutDescriptor` / `SoALayout.forType(_:count:pageAligned:)` publish the
+  SoA layout — `lanes`, `count`, `laneStrideBytes`, `logicalByteCount`,
+  `allocatedByteCount`, and the `lane*count+candidate` index formula — as a
+  stable contract for downstream GPU kernels. Documented at
+  `Docs/SoA_Layout_Contract.md`.
+- **Opt-in page-aligned `SoA`.** `SoA.build(from:pageAligned:)` /
+  `init(vectors:pageAligned:)` allocate a page-aligned, page-rounded buffer;
+  `pageAlignedBytes` exposes the base + length for zero-copy GPU import,
+  `consumeAllocation()` hands ownership to a Metal deallocator, and
+  `withUnsafeRawBuffer` gives scoped read access. Default stays 16-byte aligned.
+- **`BatchKernelProvider` — transparent GPU dispatch.** A `ComputeProvider`
+  sub-protocol (`batchDistance` / `findNearest` / `findNearestBatch`). When an
+  installed `computeProvider` conforms, `Operations.findNearest` and
+  `findNearestBatch` delegate to it (GPU path), taking precedence over the CPU
+  GEMM routing; otherwise the CPU path is used.
+- **Deterministic Top-K tie-breaking.** `TieBreaker` (`.smallerIndex` (default),
+  `.insertionOrder`, `.smallerValue`) makes `TopKSelection` results reproducible
+  when distances tie.
+- **GEMM routing for batch operations.** `BatchOperations.Configuration` gains
+  `enableMatrixRouting` (default `true`) and `matrixRoutingMinN` (default `256`);
+  `pairwiseDistances` and `Operations.findNearestBatch` route large batches
+  through `MatrixDistance`. Tune via `await BatchOperations.updateConfiguration { … }`.
+- **`PlatformConfiguration.roundUpToPage(_:)`** — the single page-rounding helper
+  shared by `SoA` and `PageAlignedBuffer`.
+
+### Removed
+
+- **The no-op `blockSize:` parameter is removed from `SoA.init(vectors:…)` and
+  `SoAFP16.init(vectors:…)`.** It was ignored (neither type pads the candidate
+  axis) and implied a layout guarantee that does not exist. **Source-breaking**
+  only for call sites that passed `blockSize:` explicitly — it had a default, so
+  `SoA(vectors:)` / `SoAFP16(vectors:)` are unaffected.
+
+### Documentation
+
+- New `Docs/SoA_Layout_Contract.md` (the frozen SoA layout). Refreshed the
+  Package Boundaries, Memory Alignment, Performance, API Overview, and roadmap
+  docs for the 0.3.0 surface.
+
 ## [0.2.2] - 2026-06-06
 
 Outcome of the "beta-evolution-3" (BE3) architectural audit: a sweep for

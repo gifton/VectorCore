@@ -65,6 +65,13 @@ public enum Operations {
             throw VectorError.dimensionMismatch(expected: expectedDim, actual: v.scalarCount)
         }
 
+        // R4 — transparent GPU dispatch: an installed BatchKernelProvider supplies real
+        // batch kernels; delegate to it (precedence over the CPU fast paths below).
+        if let gpu = computeProvider as? any BatchKernelProvider {
+            let pairs = try await gpu.findNearest(query: query, candidates: vectors, k: k, metric: metric)
+            return pairs.map { NearestNeighborResult(index: $0.index, distance: $0.distance) }
+        }
+
         // Optimized Top‑K fast paths for Vector*Optimized + supported metrics
         if k < vectors.count { // only worth it when K < N
             // Euclidean distance Top‑K via squared kernels (monotonic → correct indices)
@@ -152,6 +159,20 @@ public enum Operations {
         guard qDim == vDim else {
             throw VectorError.dimensionMismatch(expected: vDim, actual: qDim)
         }
+        // R4 — transparent GPU dispatch: an installed BatchKernelProvider services the
+        // whole batch (a conformer may encode all queries in one kernel; the default
+        // loops findNearest). Takes precedence over CPU GEMM.
+        if let gpu = computeProvider as? any BatchKernelProvider {
+            let batched = try await gpu.findNearestBatch(queries: queries, candidates: vectors, k: k, metric: metric)
+            return batched.map { $0.map { NearestNeighborResult(index: $0.index, distance: $0.distance) } }
+        }
+        // GEMM fast path (DOCUMENT-2): for large multi-query k-NN over optimized types
+        // + Euclidean/Cosine, one cblas_sgemm (AMX) yields the q×n matrix; each row is
+        // then reduced with the pointer Top-K (deterministic smaller-index tie-break).
+        if let routed = gemmFindNearestBatch(queries: queries, in: vectors, k: k, metric: metric) {
+            return routed
+        }
+
         return try await computeProvider.parallelExecute(items: 0..<queries.count) { i in
             try await findNearest(
                 to: queries[i],
@@ -160,6 +181,65 @@ public enum Operations {
                 metric: metric
             )
         }
+    }
+
+    /// GEMM-backed batch k-NN dispatch. Returns one Top-K list per query when
+    /// `queries`/`vectors` are a known optimized type and `metric` is Euclidean or
+    /// Cosine, above the crossover sizes; otherwise `nil` (caller uses the per-query path).
+    private static func gemmFindNearestBatch<V: VectorProtocol, M: DistanceMetric>(
+        queries: [V], in vectors: [V], k: Int, metric: M
+    ) -> [[NearestNeighborResult]]? {
+        // Crossover: GEMM amortizes only when both the query batch and the candidate
+        // set are large enough (mirrors DOCUMENT-2's Q_MIN≈8, N_MIN≈256).
+        guard queries.count >= 8, vectors.count >= 256 else { return nil }
+        let isEuclid = metric is EuclideanDistance
+        let isCosine = metric is CosineDistance
+        guard isEuclid || isCosine else { return nil }
+
+        if let qs = queries as? [Vector512Optimized], let cs = vectors as? [Vector512Optimized] {
+            return gemmBatchRun(qs, cs, k: k, euclid: isEuclid)
+        }
+        if let qs = queries as? [Vector768Optimized], let cs = vectors as? [Vector768Optimized] {
+            return gemmBatchRun(qs, cs, k: k, euclid: isEuclid)
+        }
+        if let qs = queries as? [Vector1536Optimized], let cs = vectors as? [Vector1536Optimized] {
+            return gemmBatchRun(qs, cs, k: k, euclid: isEuclid)
+        }
+        return nil
+    }
+
+    private static func gemmBatchRun<O: UnifiedVectorBuffer>(
+        _ qs: [O], _ cs: [O], k: Int, euclid: Bool
+    ) -> [[NearestNeighborResult]] {
+        let q = qs.count, n = cs.count
+        var flat = [Float](repeating: 0, count: q * n)
+        if euclid {
+            MatrixDistance.euclideanSquaredMatrix(queries: qs, candidates: cs, into: &flat)
+        } else {
+            MatrixDistance.cosineDistanceMatrix(queries: qs, candidates: cs, into: &flat)
+        }
+
+        let kk = min(k, n)
+        var out = [[NearestNeighborResult]]()
+        out.reserveCapacity(q)
+        flat.withUnsafeBufferPointer { fb in
+            let base = fb.baseAddress!
+            for i in 0..<q {
+                // Top-K over this query's row. For Euclidean the row holds *squared*
+                // distances; ordering is monotonic, so we select on squared then sqrt.
+                let sel = TopKSelection.select(k: kk, from: base + i * n, count: n,
+                                               ids: nil, tieBreaker: .smallerIndex)
+                var row = [NearestNeighborResult]()
+                row.reserveCapacity(sel.indices.count)
+                for t in 0..<sel.indices.count {
+                    let raw = sel.distances[t]
+                    let dist = euclid ? (raw > 0 ? raw.squareRoot() : 0) : raw
+                    row.append(NearestNeighborResult(index: Int(sel.indices[t]), distance: dist))
+                }
+                out.append(row)
+            }
+        }
+        return out
     }
 
     // MARK: - Optimized Top‑K helpers

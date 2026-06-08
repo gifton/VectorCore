@@ -43,12 +43,20 @@ extension Vector1536Optimized: SoACompatible {
 
 /// Structure-of-Arrays (SoA) container for optimized batch scoring.
 ///
-/// Memory layout: lanes-major then candidate index.
-/// `buffer[lane * N + j]` stores SIMD4 for candidate j at lane `lane`.
+/// Memory layout: **lane-major, then candidate index.** `buffer[lane * count + j]`
+/// stores the `SIMD4<Float>` for candidate `j` at `lane` (each lane = 4 contiguous
+/// dimensions; `lanes = dimension / 4`). The candidate axis is never padded, so the
+/// stride between lanes is exactly `count` elements.
 ///
 /// This provides superior cache locality when processing multiple candidates
 /// with the same query vector, as all candidates' data for a given lane
 /// are stored contiguously in memory.
+///
+/// - Important: This layout is a **frozen, stable contract as of 0.3.0** — downstream
+///   GPU kernels index into a zero-copy `MTLBuffer` built from ``pageAlignedBytes``,
+///   so the formula, element type, and stride must not change silently. The contract is
+///   documented in `Docs/SoA_Layout_Contract.md` and exposed programmatically via
+///   ``layoutDescriptor`` (a ``SoALayout``); consumers should derive constants from there.
 public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     public let lanes: Int
     public let count: Int
@@ -57,60 +65,98 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     @usableFromInline internal let buffer: UnsafeMutablePointer<SIMD4<Float>>
     private let bufferCapacity: Int
 
-    private init(count: Int) {
+    /// True when the buffer was allocated via AlignedMemory (posix_memalign) and so must be freed with free(); false for the default Swift allocation.
+    private let usedAlignedAlloc: Bool
+
+    /// Total allocated bytes. Page-rounded when page-aligned (the length to pass to
+    /// makeBuffer(bytesNoCopy:)); otherwise bufferCapacity * sizeof(SIMD4<Float>).
+    private let allocatedByteCount: Int
+
+    /// Whether this object still owns (and will free) the buffer. Becomes `false`
+    /// after `consumeAllocation()` transfers ownership to the caller.
+    private var ownsBuffer = true
+
+    private init(count: Int, pageAligned: Bool = false) {
         self.count = count
         self.lanes = Vector.lanes
         self.bufferCapacity = self.lanes * self.count
+        let alloc = SoA.allocateBuffer(capacity: self.bufferCapacity, pageAligned: pageAligned)
+        self.buffer = alloc.buffer
+        self.usedAlignedAlloc = alloc.usedAlignedAlloc
+        self.allocatedByteCount = alloc.allocatedBytes
+    }
 
-        if bufferCapacity > 0 {
-            // Allocate memory with proper alignment for SIMD4<Float> (16 bytes)
-            self.buffer = UnsafeMutablePointer<SIMD4<Float>>.allocate(capacity: bufferCapacity)
-            // Initialize to zero
-            self.buffer.initialize(repeating: .zero, count: bufferCapacity)
+    /// Allocate (and zero) the SoA buffer. When `pageAligned` and non-empty, uses
+    /// AlignedMemory (page-aligned base + page-rounded length) so the region is valid
+    /// for MTLDevice.makeBuffer(bytesNoCopy:); otherwise the default 16-byte allocation.
+    private static func allocateBuffer(
+        capacity: Int, pageAligned: Bool
+    ) -> (buffer: UnsafeMutablePointer<SIMD4<Float>>, usedAlignedAlloc: Bool, allocatedBytes: Int) {
+        let elemSize = MemoryLayout<SIMD4<Float>>.stride   // 16
+        if pageAligned && capacity > 0 {
+            // Round the *whole* allocation up to a page so the length is valid for
+            // makeBuffer(bytesNoCopy:). pageSize is a multiple of elemSize (16), so the
+            // padded byte count divides evenly back into SIMD4<Float> slots.
+            let padded = PlatformConfiguration.roundUpToPage(capacity * elemSize)
+            let paddedCapacity = padded / elemSize
+            let ptr: UnsafeMutablePointer<SIMD4<Float>>
+            do {
+                ptr = try AlignedMemory.allocateAligned(type: SIMD4<Float>.self,
+                                                        count: paddedCapacity,
+                                                        alignment: PlatformConfiguration.pageSize)
+            } catch {
+                fatalError("SoA: page-aligned allocation of \(padded) bytes failed: \(error)")
+            }
+            ptr.initialize(repeating: .zero, count: paddedCapacity)   // zero logical + padding
+            return (ptr, true, padded)
         } else {
-            // Handle empty case
-            self.buffer = UnsafeMutablePointer<SIMD4<Float>>.allocate(capacity: 0)
+            let ptr = UnsafeMutablePointer<SIMD4<Float>>.allocate(capacity: max(0, capacity))
+            if capacity > 0 { ptr.initialize(repeating: .zero, count: capacity) }
+            return (ptr, false, max(0, capacity) * elemSize)
         }
     }
 
     deinit {
-        if bufferCapacity > 0 {
-            buffer.deinitialize(count: bufferCapacity)
+        guard ownsBuffer else { return }   // ownership transferred via consumeAllocation()
+        if usedAlignedAlloc {
+            // posix_memalign memory MUST be freed with free(), never .deallocate().
+            AlignedMemory.deallocate(buffer)
+        } else {
+            if bufferCapacity > 0 { buffer.deinitialize(count: bufferCapacity) }
+            buffer.deallocate()
         }
-        buffer.deallocate()
     }
 
-    /// Public initializer for test compatibility: creates SoA from vectors
+    /// Creates an SoA from an array of vectors.
     ///
     /// - Parameters:
-    ///   - vectors: Array of vectors to convert to SoA layout
-    ///   - blockSize: Ignored parameter for API compatibility (reserved for future chunking optimizations)
-    public init(vectors: [Vector], blockSize: Int = 32) {
+    ///   - vectors: Array of vectors to convert to SoA layout.
+    ///   - pageAligned: When true, allocates via posix_memalign with page-aligned base and
+    ///     page-rounded length, making the region usable with MTLDevice.makeBuffer(bytesNoCopy:).
+    ///
+    /// - Note: The frozen in-memory layout is documented in `Docs/SoA_Layout_Contract.md`
+    ///   and exposed programmatically via ``layoutDescriptor``. There is intentionally **no**
+    ///   `blockSize` parameter: the buffer is never padded along the candidate axis, so the
+    ///   lane stride is exactly `count` elements. (A prior `blockSize:` parameter was a no-op
+    ///   and was removed in 0.3.0 to avoid implying candidate-axis padding.)
+    public init(vectors: [Vector], pageAligned: Bool = false) {
         let count = vectors.count
         self.count = count
         self.lanes = Vector.lanes
         self.bufferCapacity = self.lanes * self.count
-
-        if bufferCapacity > 0 {
-            self.buffer = UnsafeMutablePointer<SIMD4<Float>>.allocate(capacity: bufferCapacity)
-            self.buffer.initialize(repeating: .zero, count: bufferCapacity)
-        } else {
-            self.buffer = UnsafeMutablePointer<SIMD4<Float>>.allocate(capacity: 0)
-        }
+        let alloc = SoA.allocateBuffer(capacity: self.bufferCapacity, pageAligned: pageAligned)
+        self.buffer = alloc.buffer
+        self.usedAlignedAlloc = alloc.usedAlignedAlloc
+        self.allocatedByteCount = alloc.allocatedBytes
 
         // Populate the SoA structure from vectors
         guard count > 0 else { return }
-
         let lanes = Vector.lanes
         let bufferPtr = self.buffer
-
         for j in 0..<count {
-            let vector = vectors[j]
-            let vectorStorage = vector.storage
-
+            let vectorStorage = vectors[j].storage
             for i in 0..<lanes {
-                let destinationIndex = i * count + j
-                bufferPtr[destinationIndex] = vectorStorage[i]
+                bufferPtr[i * count + j] = vectorStorage[i]
             }
         }
     }
@@ -119,9 +165,15 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     ///
     /// Transforms the memory layout from [Candidate][Lane] to [Lane][Candidate]
     /// for optimal cache performance during batch scoring operations.
-    public static func build(from candidates: [Vector]) -> SoA<Vector> {
+    ///
+    /// - Parameters:
+    ///   - candidates: Source vectors in AoS layout.
+    ///   - pageAligned: When true, allocates via posix_memalign with page-aligned base and
+    ///     page-rounded length, enabling zero-copy GPU import via
+    ///     `MTLDevice.makeBuffer(bytesNoCopy:)`. Access the pointer pair via `pageAlignedBytes`.
+    public static func build(from candidates: [Vector], pageAligned: Bool = false) -> SoA<Vector> {
         let N = candidates.count
-        let soa = SoA<Vector>(count: N)
+        let soa = SoA<Vector>(count: N, pageAligned: pageAligned)
 
         guard N > 0 else { return soa }
 
@@ -156,6 +208,56 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     public func lanePointer(_ lane: Int) -> UnsafePointer<SIMD4<Float>> {
         assert(lane >= 0 && lane < self.lanes, "Lane index \(lane) out of bounds [0..<\(lanes)]")
         return UnsafePointer(buffer + (lane * count))
+    }
+
+    /// Page-aligned base pointer + page-rounded byte length for zero-copy GPU import
+    /// via `MTLDevice.makeBuffer(bytesNoCopy:)`, or `nil` if this SoA was not built
+    /// page-aligned (`build(from:pageAligned: true)` / `init(..., pageAligned: true)`).
+    ///
+    /// - Important: The `SoA` MUST outlive any `MTLBuffer` created from this pointer.
+    ///   The memory is freed on `SoA` deinit, so hold a strong reference to the `SoA`
+    ///   for the buffer's lifetime (or arrange a deallocator handshake).
+    public var pageAlignedBytes: (base: UnsafeRawPointer, byteCount: Int)? {
+        guard usedAlignedAlloc, ownsBuffer else { return nil }
+        return (UnsafeRawPointer(buffer), allocatedByteCount)
+    }
+
+    /// Transfer ownership of the page-aligned allocation to the caller — for handing
+    /// the buffer to a Metal `bytesNoCopy` deallocator without a double free. Returns
+    /// the page-aligned base + page-rounded length, or `nil` if this SoA is not
+    /// page-aligned (only the `posix_memalign` buffer can be handed to `free()`).
+    ///
+    /// After this call the `SoA` no longer frees the buffer on `deinit`, and
+    /// `pageAlignedBytes` returns `nil`; the caller becomes responsible for freeing the
+    /// base (via `AlignedMemory.deallocate(_:)` / `free`). Mirrors
+    /// `PageAlignedBuffer.consumeAllocation()`. Do not use the `SoA` for CPU compute
+    /// after consuming.
+    public func consumeAllocation() -> (base: UnsafeMutableRawPointer, byteCount: Int)? {
+        guard usedAlignedAlloc, ownsBuffer else { return nil }
+        ownsBuffer = false
+        return (UnsafeMutableRawPointer(buffer), allocatedByteCount)
+    }
+
+    /// The frozen layout descriptor for this SoA — the authoritative, machine-readable
+    /// description of the in-memory layout (lane stride, logical vs. allocated byte counts,
+    /// and the element-index formula `lane * count + candidate`).
+    ///
+    /// Downstream GPU kernels (e.g. VectorAccelerate Metal shaders that index a zero-copy
+    /// `MTLBuffer` wrapping ``pageAlignedBytes``) should derive their indexing constants
+    /// from this single source of truth rather than hardcoding magic numbers — in
+    /// particular, take the candidate count `N` from ``SoALayout/count`` and **never**
+    /// reverse-engineer it from the page-rounded ``SoALayout/allocatedByteCount``.
+    ///
+    /// See `Docs/SoA_Layout_Contract.md` for the full frozen contract.
+    public var layoutDescriptor: SoALayout {
+        SoALayout(lanes: lanes, count: count, allocatedByteCount: allocatedByteCount)
+    }
+
+    /// Scoped read-only access to the raw SoA data (logical bytes = `count * lanes * 16`).
+    /// The pointer is valid only for the duration of `body`.
+    public func withUnsafeRawBuffer<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
+        let byteCount = bufferCapacity * MemoryLayout<SIMD4<Float>>.stride
+        return try body(UnsafeRawBufferPointer(start: UnsafeRawPointer(buffer), count: byteCount))
     }
 
     /// Memory footprint in bytes

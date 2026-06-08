@@ -21,7 +21,57 @@ import Accelerate
 /// Results are written row-major: `out[i*n + j]` is the distance from `queries[i]`
 /// to `candidates[j]`. The `into:` forms are the hot path (caller owns `out`); the
 /// returning forms are convenience wrappers that allocate.
+///
+/// For **repeated** search against a fixed candidate set, pack the candidates once
+/// with ``prepare(_:normalized:)`` and reuse the ``PreparedCandidates`` across many
+/// query batches — this avoids re-packing and re-norming the (large) candidate side
+/// on every call.
 public enum MatrixDistance {
+
+    // MARK: - Prepared (reusable) candidates
+
+    /// Candidates packed into a contiguous row-major matrix with their norms
+    /// precomputed, ready to be reused across many query batches.
+    ///
+    /// Build with ``MatrixDistance/prepare(_:normalized:)``. Use `normalized: false`
+    /// for Euclidean (stores raw rows + ‖·‖²) and `normalized: true` for Cosine
+    /// (stores unit-normalized rows).
+    public struct PreparedCandidates: Sendable {
+        @usableFromInline let packed: [Float]   // n × d, row-major
+        @usableFromInline let norms: [Float]    // ‖row‖² per candidate (empty when normalized)
+        @usableFromInline let n: Int
+        @usableFromInline let d: Int
+        @usableFromInline let normalized: Bool
+
+        @usableFromInline
+        init(packed: [Float], norms: [Float], n: Int, d: Int, normalized: Bool) {
+            self.packed = packed; self.norms = norms; self.n = n; self.d = d; self.normalized = normalized
+        }
+
+        /// Number of candidates.
+        public var count: Int { n }
+        /// Vector dimension.
+        public var dimension: Int { d }
+    }
+
+    /// Pack candidates once for reuse. `normalized: false` prepares for Euclidean
+    /// (raw rows + squared norms); `normalized: true` prepares for Cosine
+    /// (L2-normalized rows).
+    public static func prepare<V: UnifiedVectorBuffer>(
+        _ candidates: [V], normalized: Bool = false
+    ) -> PreparedCandidates {
+        let n = candidates.count
+        let d = n > 0 ? candidates[0].elementCount : 0
+        var packed = packRows(candidates, d: d)
+        if normalized {
+            normalizeRows(&packed, rows: n, d: d)
+            return PreparedCandidates(packed: packed, norms: [], n: n, d: d, normalized: true)
+        } else {
+            var norms = [Float](repeating: 0, count: n)
+            rowSumOfSquares(packed, rows: n, d: d, into: &norms)
+            return PreparedCandidates(packed: packed, norms: norms, n: n, d: d, normalized: false)
+        }
+    }
 
     // MARK: - Euclidean (squared)
 
@@ -35,27 +85,31 @@ public enum MatrixDistance {
         candidates: [V],
         into out: inout [Float]
     ) {
+        guard !queries.isEmpty, !candidates.isEmpty else { return }
+        euclideanSquaredMatrix(queries: queries, prepared: prepare(candidates, normalized: false), into: &out)
+    }
+
+    /// Squared-Euclidean distance matrix against pre-packed candidates (reusable path).
+    public static func euclideanSquaredMatrix<V: UnifiedVectorBuffer>(
+        queries: [V],
+        prepared: PreparedCandidates,
+        into out: inout [Float]
+    ) {
         let q = queries.count
-        let n = candidates.count
+        let n = prepared.n
         guard q > 0, n > 0 else { return }
+        precondition(!prepared.normalized, "PreparedCandidates for Euclidean must be built with normalized: false")
         let d = queries[0].elementCount
-        precondition(candidates[0].elementCount == d,
-                     "queries and candidates must share a dimension (\(d) vs \(candidates[0].elementCount))")
-        precondition(out.count == q * n,
-                     "out must have q*n elements (got \(out.count), expected \(q * n))")
+        precondition(prepared.d == d, "queries and candidates must share a dimension (\(d) vs \(prepared.d))")
+        precondition(out.count == q * n, "out must have q*n elements (got \(out.count), expected \(q * n))")
 
         let X = packRows(queries, d: d)
-        let Y = packRows(candidates, d: d)
-
         var xNorm = [Float](repeating: 0, count: q)
-        var yNorm = [Float](repeating: 0, count: n)
         rowSumOfSquares(X, rows: q, d: d, into: &xNorm)
-        rowSumOfSquares(Y, rows: n, d: d, into: &yNorm)
 
-        // out = -2 · X · Yᵀ
-        gemmCrossTerm(X: X, Y: Y, q: q, n: n, d: d, alpha: -2, into: &out)
+        gemmCrossTerm(X: X, Y: prepared.packed, q: q, n: n, d: d, alpha: -2, into: &out)
 
-        // out[i,j] += ‖x_i‖² + ‖y_j‖² ; clamp ≥ 0 (cancellation guard before any sqrt).
+        let yNorm = prepared.norms
         out.withUnsafeMutableBufferPointer { ob in
             let o = ob.baseAddress!
             for i in 0..<q {
@@ -87,24 +141,29 @@ public enum MatrixDistance {
         candidates: [V],
         into out: inout [Float]
     ) {
+        guard !queries.isEmpty, !candidates.isEmpty else { return }
+        cosineDistanceMatrix(queries: queries, prepared: prepare(candidates, normalized: true), into: &out)
+    }
+
+    /// Cosine distance matrix against pre-normalized candidates (reusable path).
+    public static func cosineDistanceMatrix<V: UnifiedVectorBuffer>(
+        queries: [V],
+        prepared: PreparedCandidates,
+        into out: inout [Float]
+    ) {
         let q = queries.count
-        let n = candidates.count
+        let n = prepared.n
         guard q > 0, n > 0 else { return }
+        precondition(prepared.normalized, "PreparedCandidates for Cosine must be built with normalized: true")
         let d = queries[0].elementCount
-        precondition(candidates[0].elementCount == d,
-                     "queries and candidates must share a dimension (\(d) vs \(candidates[0].elementCount))")
-        precondition(out.count == q * n,
-                     "out must have q*n elements (got \(out.count), expected \(q * n))")
+        precondition(prepared.d == d, "queries and candidates must share a dimension (\(d) vs \(prepared.d))")
+        precondition(out.count == q * n, "out must have q*n elements (got \(out.count), expected \(q * n))")
 
         var X = packRows(queries, d: d)
-        var Y = packRows(candidates, d: d)
         normalizeRows(&X, rows: q, d: d)
-        normalizeRows(&Y, rows: n, d: d)
 
-        // out = X · Yᵀ  (cosine similarities, since rows are unit-norm)
-        gemmCrossTerm(X: X, Y: Y, q: q, n: n, d: d, alpha: 1, into: &out)
+        gemmCrossTerm(X: X, Y: prepared.packed, q: q, n: n, d: d, alpha: 1, into: &out)
 
-        // distance = 1 − similarity, clamped to [0, 2].
         out.withUnsafeMutableBufferPointer { ob in
             let o = ob.baseAddress!
             for k in 0..<(q * n) {

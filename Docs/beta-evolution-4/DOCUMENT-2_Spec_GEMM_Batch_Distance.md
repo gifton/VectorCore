@@ -33,10 +33,18 @@ seams. 3 parity tests (`BatchKNNGEMMTests.swift`) confirm it matches the per-que
 (nearest index exact, distances within tolerance) and that small batches fall back. Full
 correctness suite (`VECTORCORE_TEST_EXTENDED=0`): 1051 tests green.
 
+**Reusable candidate packing implemented.** `MatrixDistance.prepare(candidates:normalized:)`
+returns a `PreparedCandidates` (packed rows + precomputed norms / normalized rows) that the
+`euclideanSquaredMatrix(queries:prepared:into:)` and `cosineDistanceMatrix(queries:prepared:into:)`
+overloads reuse across many query batches — eliminating the repeated re-packing/re-norming of the
+large candidate side in repeated search (the VectorIndex hot loop). The one-shot
+`queries:candidates:` overloads now delegate to this path (bit-identical; verified). 3 parity/reuse
+tests. Full correctness suite: 1054 tests green.
+
 **Still deferred** (further increments):
 - Single-query `findNearest` GEMM (low value: q=1 is gemv; the optimized kernel + heap already wins).
-- Allocation gate: the packing temporaries (`X`, `Y`, norms) still allocate; a scratch-buffer
-  overload would be needed for `mallocCountTotal == 0`.
+- Full zero-alloc: the per-call query packing (`X`, query norms) and `out` reshape still allocate;
+  a query-side scratch overload would be needed for `mallocCountTotal == 0` on the steady state.
 
 ---
 

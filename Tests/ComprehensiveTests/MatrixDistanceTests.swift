@@ -132,4 +132,43 @@ struct MatrixDistanceTests {
             #expect(abs(Double(out[j]) - ref) <= 1e-2 + 1e-3 * abs(ref))
         }
     }
+
+    // MARK: - Prepared (reusable) candidates
+
+    @Test("Prepared Euclidean matches the one-shot path exactly")
+    func preparedEuclidParity() {
+        let qs = makeVecs512(5, seed: 0x11)
+        let cs = makeVecs512(12, seed: 0x22)
+        let oneShot = MatrixDistance.euclideanSquaredMatrix(queries: qs, candidates: cs)
+        let prep = MatrixDistance.prepare(cs, normalized: false)
+        var prepared = [Float](repeating: 0, count: 5 * 12)
+        MatrixDistance.euclideanSquaredMatrix(queries: qs, prepared: prep, into: &prepared)
+        // Same packing/norms/GEMM → bit-identical.
+        #expect(prepared == oneShot)
+        #expect(prep.count == 12 && prep.dimension == 512)
+    }
+
+    @Test("Prepared Cosine matches the one-shot path exactly")
+    func preparedCosineParity() {
+        let qs = makeVecs512(4, seed: 0x33)
+        let cs = makeVecs512(9, seed: 0x44)
+        let oneShot = MatrixDistance.cosineDistanceMatrix(queries: qs, candidates: cs)
+        let prep = MatrixDistance.prepare(cs, normalized: true)
+        var prepared = [Float](repeating: 0, count: 4 * 9)
+        MatrixDistance.cosineDistanceMatrix(queries: qs, prepared: prep, into: &prepared)
+        #expect(prepared == oneShot)
+    }
+
+    @Test("One PreparedCandidates serves multiple query batches")
+    func preparedReuse() {
+        let cs = makeVecs512(20, seed: 0x55)
+        let prep = MatrixDistance.prepare(cs, normalized: false)
+        for seed in [UInt64(0x60), 0x61, 0x62] {
+            let qs = makeVecs512(3, seed: seed)
+            var got = [Float](repeating: 0, count: 3 * 20)
+            MatrixDistance.euclideanSquaredMatrix(queries: qs, prepared: prep, into: &got)
+            let ref = MatrixDistance.euclideanSquaredMatrix(queries: qs, candidates: cs)
+            #expect(got == ref, "reuse batch seed \(seed) diverged")
+        }
+    }
 }

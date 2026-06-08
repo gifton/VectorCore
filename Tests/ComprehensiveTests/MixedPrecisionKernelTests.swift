@@ -1392,7 +1392,7 @@ struct MixedPrecisionKernelTests {
                 return try! Vector512Optimized(values)
             }
 
-            let soa512 = try SoAFP16(vectors: vectors512, blockSize: 64)
+            let soa512 = try SoAFP16(vectors: vectors512)
             #expect(soa512.dimension == 512)
             #expect(soa512.vectorCount == 10)
             // Note: blockSize parameter is accepted but ignored (reserved for future use)
@@ -1414,7 +1414,7 @@ struct MixedPrecisionKernelTests {
                 return try! Vector768Optimized(values)
             }
 
-            let soa768 = try SoAFP16(vectors: vectors768, blockSize: 128)
+            let soa768 = try SoAFP16(vectors: vectors768)
             #expect(soa768.dimension == 768)
             #expect(soa768.vectorCount == 5)
 
@@ -1424,12 +1424,12 @@ struct MixedPrecisionKernelTests {
                 return try! Vector1536Optimized(values)
             }
 
-            let soa1536 = try SoAFP16(vectors: vectors1536, blockSize: 256)
+            let soa1536 = try SoAFP16(vectors: vectors1536)
             #expect(soa1536.dimension == 1536)
             #expect(soa1536.vectorCount == 3)
 
             // Test empty vector handling - should create empty SoA without throwing
-            let emptySOA = try SoAFP16<Vector512Optimized>(vectors: [], blockSize: 64)
+            let emptySOA = try SoAFP16<Vector512Optimized>(vectors: [])
             #expect(emptySOA.vectorCount == 0)
             #expect(emptySOA.dimension == 512)
 
@@ -1437,7 +1437,7 @@ struct MixedPrecisionKernelTests {
             var mismatchedVectors = vectors512
             mismatchedVectors.append(try Vector512Optimized(Array(repeating: Float(1.0), count: 512)))
             // This should work as all have same dimension
-            let soaMismatched = try SoAFP16(vectors: mismatchedVectors, blockSize: 64)
+            let soaMismatched = try SoAFP16(vectors: mismatchedVectors)
             #expect(soaMismatched.vectorCount == 11)
         }
 
@@ -1454,7 +1454,7 @@ struct MixedPrecisionKernelTests {
                 return try! Vector512Optimized(values)
             }
 
-            let soa = try SoAFP16(vectors: vectors, blockSize: 64)
+            let soa = try SoAFP16(vectors: vectors)
 
             // Verify SoA metadata
             #expect(soa.vectorCount == vectorCount)
@@ -1536,7 +1536,7 @@ struct MixedPrecisionKernelTests {
                 return try! Vector768Optimized(values)
             }
 
-            let soa = try SoAFP16(vectors: testVectors, blockSize: 96)
+            let soa = try SoAFP16(vectors: testVectors)
 
             // Test extracting individual vectors
             for i in 0..<vectorCount {
@@ -1580,7 +1580,7 @@ struct MixedPrecisionKernelTests {
 
             // Test round-trip: original → SoA → extracted
             let simpleVector = try Vector768Optimized(Array(repeating: Float(3.14159), count: 768))
-            let soaSimple = try SoAFP16(vectors: [simpleVector], blockSize: 64)
+            let soaSimple = try SoAFP16(vectors: [simpleVector])
             let extractedSimple = try soaSimple.getVector(at: 0)
 
             for i in 0..<768 {
@@ -1607,7 +1607,7 @@ struct MixedPrecisionKernelTests {
 
             // Note: blockSize parameter is accepted but currently unused (reserved for future optimizations)
             // The implementation uses a fixed group size of 4 vectors
-            let soa = try SoAFP16(vectors: vectors, blockSize: 64)
+            let soa = try SoAFP16(vectors: vectors)
 
             // Verify storage efficiency: SoA should use groups of 4 vectors
             let expectedGroups = (vectorCount + 3) / 4
@@ -1682,7 +1682,7 @@ struct MixedPrecisionKernelTests {
             }
 
             // Create SoA layout
-            let soaCandidates = try SoAFP16(vectors: candidates, blockSize: 64)
+            let soaCandidates = try SoAFP16(vectors: candidates)
 
             // Test SoA batch Euclidean distance
             let soaResults = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
@@ -1728,25 +1728,6 @@ struct MixedPrecisionKernelTests {
             let reference = sqrt(query.euclideanDistanceSquared(to: candidates[0]))
             let soaFirst = soaResults[0]
             #expect(abs(soaFirst - reference) / reference < 0.01)
-
-            // Test with different block sizes
-            let blockSizes = [32, 128]
-            for blockSize in blockSizes {
-                let soaAlt = try SoAFP16(vectors: candidates, blockSize: blockSize)
-                let altResults = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
-                defer { altResults.deallocate() }
-
-                MixedPrecisionKernels.batchEuclideanSoA(
-                    query: queryFP16,
-                    candidates: soaAlt,
-                    results: altResults
-                )
-
-                // Results should be consistent regardless of block size
-                for i in 0..<vectorCount {
-                    #expect(abs(altResults[i] - soaResults[i]) < 0.001)
-                }
-            }
         }
 
         @Test("Batch dot product SoA processing")
@@ -1783,7 +1764,7 @@ struct MixedPrecisionKernelTests {
             }
 
             // Test SoA batch dot product
-            let soaCandidates = try SoAFP16(vectors: candidates, blockSize: 96)
+            let soaCandidates = try SoAFP16(vectors: candidates)
             let dotResults = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
             defer { dotResults.deallocate() }
 
@@ -1822,215 +1803,8 @@ struct MixedPrecisionKernelTests {
                 let error = abs(soaDot - refDot)
                 #expect(error < 0.01, "Index \(i): SoA=\(soaDot), ref=\(refDot), error=\(error)")
             }
-
-            // Test with various block sizes
-            let blockSizes = [48, 192, 384]
-            for blockSize in blockSizes {
-                let soaAlt = try SoAFP16(vectors: candidates, blockSize: blockSize)
-                let altDotResults = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
-                defer { altDotResults.deallocate() }
-
-                MixedPrecisionKernels.batchDotProductSoA(
-                    query: normalizedQuery,
-                    candidates: soaAlt,
-                    results: altDotResults
-                )
-
-                // Results should be consistent across block sizes
-                for i in 0..<vectorCount {
-                    #expect(abs(altDotResults[i] - dotResults[i]) < 0.001,
-                           "Block size \(blockSize), index \(i): inconsistent results")
-                }
-            }
         }
 
-        // TODO: Restore when SoAFP16 implements dimensional blocking
-        // Currently commented because SoAFP16 uses vector-grouping (groups of 4 vectors)
-        // not dimension-blocking. The blockSize parameter is reserved but unused.
-        // To restore this test, SoAFP16 would need:
-        // 1. Store blockSize as a property
-        // 2. Add blocksPerVector computed property
-        // 3. Add blockPointer(blockIndex:) method
-        // See: https://github.com/anthropics/claude-code/issues/XXX
-        /*
-        @Test("SoA block processing correctness")
-        func testSoABlockProcessingCorrectness() async throws {
-            // Create small test case for detailed verification
-            let vectorCount = 5
-            let dimension = 100  // Not divisible by common block sizes
-            let blockSize = 32
-
-            // Create vectors with predictable patterns
-            var vectors: [Vector512Optimized] = []
-            for i in 0..<vectorCount {
-                var values = Array(repeating: Float(0), count: 512)
-                for j in 0..<dimension {
-                    values[j] = Float(i * 1000 + j)  // Unique value per element
-                }
-                vectors.append(try Vector512Optimized(values))
-            }
-
-            let soa = try SoAFP16(vectors: vectors, blockSize: blockSize)
-
-            // Test individual block processing
-            let blocksPerVector = (dimension + blockSize - 1) / blockSize
-            #expect(blocksPerVector == 4)  // ceil(100/32) = 4
-
-            // Verify dimension/vector indexing within blocks
-            for blockIdx in 0..<blocksPerVector {
-                let blockStart = blockIdx * blockSize
-                let blockEnd = min(blockStart + blockSize, dimension)
-                let blockPtr = soa.blockPointer(blockIndex: blockIdx)
-
-                // Manually verify some values
-                for dimOffset in 0..<min(3, blockEnd - blockStart) {
-                    for vecIdx in 0..<min(2, vectorCount) {
-                        let elementIdx = dimOffset * vectorCount + vecIdx
-                        let simd4Idx = elementIdx / 4
-                        let laneIdx = elementIdx % 4
-
-                        let fp16Value = blockPtr[simd4Idx][laneIdx]
-                        let fp32Value = Float(fp16Value)
-
-                        let expectedValue = Float(vecIdx * 1000 + blockStart + dimOffset)
-                        let error = abs(fp32Value - expectedValue)
-
-                        #expect(error < 1.0,
-                               "Block \(blockIdx), dim \(dimOffset), vec \(vecIdx): expected \(expectedValue), got \(fp32Value)")
-                    }
-                }
-            }
-
-            // Test padding handling in last block
-            let lastBlockIdx = blocksPerVector - 1
-            let lastBlockStart = lastBlockIdx * blockSize
-            let remainingDims = dimension - lastBlockStart
-            #expect(remainingDims == 4)  // 100 - 96 = 4
-
-            // Elements beyond dimension should be padded with zeros
-            _ = soa.blockPointer(blockIndex: lastBlockIdx)
-            let totalElementsInBlock = blockSize * vectorCount
-            let actualElementsInBlock = remainingDims * vectorCount
-            let paddingElements = totalElementsInBlock - actualElementsInBlock
-
-            // Check that padding exists
-            #expect(paddingElements > 0)
-
-            // Verify extracted vectors match original (despite padding)
-            for i in 0..<vectorCount {
-                let extracted = try soa.getVector(at: i)
-                for j in 0..<dimension {
-                    let original = vectors[i][j]
-                    let recovered = extracted[j]
-                    #expect(abs(original - recovered) < 1.0)
-                }
-                // Elements beyond dimension should be zero
-                for j in dimension..<512 {
-                    #expect(extracted[j] == 0.0)
-                }
-            }
-        }
-        */
-
-        // TODO: Restore when SoAFP16 implements dimensional blocking
-        // Currently commented because SoAFP16 uses vector-grouping (groups of 4 vectors)
-        // not dimension-blocking. The blockSize parameter is reserved but unused.
-        // See note above testSoABlockProcessingCorrectness for requirements.
-        /*
-        @Test("SoA memory layout optimization")
-        func testSoAMemoryLayoutOptimization() async throws {
-            // Create large dataset to test memory patterns
-            let vectorCount = 50
-            let dimension = 512
-            let blockSize = 128  // Optimized for cache line size
-
-            let vectors: [Vector512Optimized] = (0..<vectorCount).map { i in
-                let values = (0..<dimension).map { j in
-                    Float(sin(Double(i * j) * 0.0001))
-                }
-                return try! Vector512Optimized(values)
-            }
-
-            let soa = try SoAFP16(vectors: vectors, blockSize: blockSize)
-
-            // Test memory access patterns
-            // Sequential access within blocks should be efficient
-            var sequentialSum: Float = 0
-            for blockIdx in 0..<soa.blocksPerVector {
-                let blockPtr = soa.blockPointer(blockIndex: blockIdx)
-                let blockStart = blockIdx * blockSize
-                let blockEnd = min(blockStart + blockSize, dimension)
-                let elementsInBlock = (blockEnd - blockStart) * vectorCount
-                let simd4Groups = (elementsInBlock + 3) / 4
-
-                // Sequential SIMD4 access
-                for simd4Idx in 0..<simd4Groups {
-                    let simd4 = blockPtr[simd4Idx]
-                    for lane in 0..<4 {
-                        sequentialSum += Float(simd4[lane])
-                    }
-                }
-            }
-
-            #expect(sequentialSum != 0, "Should have processed values")
-
-            // Verify sequential access within blocks
-            // Each block stores dimensions contiguously for all vectors
-            // This means accessing all vectors for a dimension range is efficient
-            let testBlockIdx = 2
-            let testBlockStart = testBlockIdx * blockSize
-            let testBlockEnd = min(testBlockStart + blockSize, dimension)
-
-            // Simulate efficient access pattern
-            var blockValues: [Float] = []
-            let testBlockPtr = soa.blockPointer(blockIndex: testBlockIdx)
-
-            for dimOffset in 0..<(testBlockEnd - testBlockStart) {
-                for vecIdx in 0..<vectorCount {
-                    let elementIdx = dimOffset * vectorCount + vecIdx
-                    let simd4Idx = elementIdx / 4
-                    let laneIdx = elementIdx % 4
-
-                    blockValues.append(Float(testBlockPtr[simd4Idx][laneIdx]))
-                }
-            }
-
-            // Values should be accessed sequentially
-            #expect(blockValues.count == (testBlockEnd - testBlockStart) * vectorCount)
-
-            // Test that block size aligns with cache lines
-            // Modern CPUs have 64-byte cache lines
-            let cacheLineSize = 64
-            let fp16Size = MemoryLayout<Float16>.size
-            _ = cacheLineSize / fp16Size  // 32 elements per cache line
-
-            // Ideal block size should be multiple of cache line
-            let idealBlockElements = blockSize * vectorCount
-            let cacheLinesPerBlock = (idealBlockElements * fp16Size) / cacheLineSize
-
-            // Verify reasonable cache alignment
-            #expect(cacheLinesPerBlock > 0)
-
-            // Test prefetching benefits by accessing predictable pattern
-            let query = vectors[0]  // Use first vector as query
-            let prefetchResults = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
-            defer { prefetchResults.deallocate() }
-
-            // This access pattern benefits from prefetching
-            // Convert query to FP16 for mixed precision computation
-            let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
-            MixedPrecisionKernels.batchEuclideanSoA(
-                query: queryFP16,
-                candidates: soa,
-                results: prefetchResults
-            )
-
-            // Verify all results computed
-            for i in 0..<vectorCount {
-                #expect(prefetchResults[i] >= 0, "Distance should be non-negative")
-            }
-        }
-        */
     }
 
     // MARK: - Numerical Stability Tests
@@ -3083,39 +2857,8 @@ struct MixedPrecisionKernelTests {
 
             let query = vectors[0]
 
-            // Test different block sizes for cache efficiency
-            let blockSizes = [32, 64, 128, 256]
-            var timings: [Int: Double] = [:]
-
-            for blockSize in blockSizes {
-                let soa = try SoAFP16(vectors: vectors, blockSize: blockSize)
-                let results = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
-                defer { results.deallocate() }
-
-                let start = CFAbsoluteTimeGetCurrent()
-                // Convert query to FP16 for mixed precision computation
-                let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
-                for _ in 0..<10 {  // Multiple iterations to measure
-                    MixedPrecisionKernels.batchEuclideanSoA(
-                        query: queryFP16,
-                        candidates: soa,
-                        results: results
-                    )
-                }
-                let elapsed = CFAbsoluteTimeGetCurrent() - start
-                timings[blockSize] = elapsed
-            }
-
-            // Smaller block sizes should generally be faster for this size
-            // (better cache locality)
-            if let time32 = timings[32], let time256 = timings[256] {
-                // Smaller blocks might be faster, but not necessarily
-                // Just verify both complete successfully
-                #expect(time32 > 0 && time256 > 0, "Both block sizes should work")
-            }
-
             // Compare SoA with regular layout
-            let soaOpt = try SoAFP16(vectors: vectors, blockSize: 64)
+            let soaOpt = try SoAFP16(vectors: vectors)
             let regularFP16 = MixedPrecisionKernels.convertToFP16_512(vectors)
 
             let soaResults = UnsafeMutableBufferPointer<Float>.allocate(capacity: vectorCount)
@@ -3791,7 +3534,7 @@ struct MixedPrecisionKernelTests {
             }
 
             // Test with SoA layout for better memory efficiency
-            let soaDataset = try SoAFP16(vectors: Array(largeDataset.prefix(100)), blockSize: 64)
+            let soaDataset = try SoAFP16(vectors: Array(largeDataset.prefix(100)))
             let soaOutput = UnsafeMutableBufferPointer<Float>.allocate(capacity: 100)
             defer { soaOutput.deallocate() }
 
@@ -3850,7 +3593,7 @@ struct MixedPrecisionKernelTests {
 
             // Test with empty SoA: empty input yields a valid empty SoA (no throw),
             // consistent with the graceful empty-handling above and testSoAFP16Initialization.
-            let emptySoA = try SoAFP16<Vector512Optimized>(vectors: [], blockSize: 64)
+            let emptySoA = try SoAFP16<Vector512Optimized>(vectors: [])
             #expect(emptySoA.vectorCount == 0, "Empty vectors should yield an empty SoA")
             #expect(emptySoA.dimension == 512)
 
@@ -3903,7 +3646,7 @@ struct MixedPrecisionKernelTests {
             #expect(abs(output[0] - expectedCosine) < 0.01)
 
             // Test SoA with single vector
-            let soaSingle = try SoAFP16(vectors: [singleCandidate], blockSize: 64)
+            let soaSingle = try SoAFP16(vectors: [singleCandidate])
             #expect(soaSingle.vectorCount == 1)
 
             // Convert query to FP16 for mixed precision computation
@@ -4162,7 +3905,7 @@ struct MixedPrecisionKernelTests {
             // 1536-dimensional SoA batch operations not yet implemented
             // TODO: Add SoA batch support for 1536-dimensional vectors
             /*
-            let soaCandidates = try SoAFP16(vectors: candidates, blockSize: 128)
+            let soaCandidates = try SoAFP16(vectors: candidates)
             let soaBuffer = UnsafeMutableBufferPointer<Float>.allocate(capacity: candidateCount)
             defer { soaBuffer.deallocate() }
 
@@ -4293,7 +4036,7 @@ struct MixedPrecisionKernelTests {
             #expect(batchFP16.count == batchSize)
 
             // Test SoA layout (good for ANE)
-            let soaBatch = try SoAFP16(vectors: batch, blockSize: 64)
+            let soaBatch = try SoAFP16(vectors: batch)
             #expect(soaBatch.vectorCount == batchSize)
             #expect(soaBatch.dimension == dimension)
 
@@ -4389,7 +4132,7 @@ struct MixedPrecisionKernelTests {
             #expect(alignedTime < 0.01, "Aligned access should be fast")
 
             // Test SoA alignment
-            let soaVectors = try SoAFP16(vectors: alignedVectors, blockSize: 64)
+            let soaVectors = try SoAFP16(vectors: alignedVectors)
 
             // Note: blocksPerVector and blockPointer are internal implementation details
             // not exposed in the public API

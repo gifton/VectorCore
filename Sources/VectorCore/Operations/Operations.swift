@@ -65,6 +65,13 @@ public enum Operations {
             throw VectorError.dimensionMismatch(expected: expectedDim, actual: v.scalarCount)
         }
 
+        // R4 — transparent GPU dispatch: an installed BatchKernelProvider supplies real
+        // batch kernels; delegate to it (precedence over the CPU fast paths below).
+        if let gpu = computeProvider as? any BatchKernelProvider {
+            let pairs = try await gpu.findNearest(query: query, candidates: vectors, k: k, metric: metric)
+            return pairs.map { NearestNeighborResult(index: $0.index, distance: $0.distance) }
+        }
+
         // Optimized Top‑K fast paths for Vector*Optimized + supported metrics
         if k < vectors.count { // only worth it when K < N
             // Euclidean distance Top‑K via squared kernels (monotonic → correct indices)
@@ -151,6 +158,13 @@ public enum Operations {
         // Queries dim must match vectors dim
         guard qDim == vDim else {
             throw VectorError.dimensionMismatch(expected: vDim, actual: qDim)
+        }
+        // R4 — transparent GPU dispatch: if a GPU kernel provider is installed, dispatch
+        // each query through it (its findNearest); this takes precedence over CPU GEMM.
+        if computeProvider as? any BatchKernelProvider != nil {
+            return try await computeProvider.parallelExecute(items: 0..<queries.count) { i in
+                try await findNearest(to: queries[i], in: vectors, k: k, metric: metric)
+            }
         }
         // GEMM fast path (DOCUMENT-2): for large multi-query k-NN over optimized types
         // + Euclidean/Cosine, one cblas_sgemm (AMX) yields the q×n matrix; each row is

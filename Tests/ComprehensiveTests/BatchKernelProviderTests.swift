@@ -40,4 +40,37 @@ struct BatchKernelProviderTests {
         let mapped = try await p.parallelExecute(items: 0..<4) { $0 * 2 }
         #expect(mapped == [0, 2, 4, 6])   // inherits the ComputeProvider default
     }
+
+    @Test("Operations.findNearest delegates to an installed BatchKernelProvider")
+    func findNearestDelegates() async throws {
+        let q = try Vector512Optimized(Array(repeating: 1, count: 512))
+        let cs = (0..<10).map { _ in try! Vector512Optimized(Array(repeating: 0, count: 512)) }
+        let result = try await Operations.$computeProvider.withValue(MockGPUProvider()) {
+            try await Operations.findNearest(to: q, in: cs, k: 3)
+        }
+        #expect(result.count == 1)
+        #expect(result[0].index == 999)        // the sentinel ⇒ delegation happened
+        #expect(result[0].distance == -42)
+    }
+
+    @Test("findNearestBatch delegates per query (GPU precedence over CPU GEMM)")
+    func findNearestBatchDelegates() async throws {
+        // n = 300 ≥ 256 would normally hit the CPU GEMM path; the GPU provider must win.
+        let qs = (0..<5).map { _ in try! Vector512Optimized(Array(repeating: 1, count: 512)) }
+        let cs = (0..<300).map { _ in try! Vector512Optimized(Array(repeating: 0, count: 512)) }
+        let result = try await Operations.$computeProvider.withValue(MockGPUProvider()) {
+            try await Operations.findNearestBatch(queries: qs, in: cs, k: 3)
+        }
+        #expect(result.count == 5)
+        for row in result { #expect(row.first?.index == 999) }
+    }
+
+    @Test("Default provider uses the CPU path (no sentinel)")
+    func defaultUsesCPU() async throws {
+        let q = try Vector512Optimized((0..<512).map { Float($0) })
+        let cs = (0..<10).map { k in try! Vector512Optimized((0..<512).map { Float($0 + k) }) }
+        let result = try await Operations.findNearest(to: q, in: cs, k: 3)
+        #expect(result.count == 3)
+        #expect(result[0].index != 999)        // real CPU result, not the sentinel
+    }
 }

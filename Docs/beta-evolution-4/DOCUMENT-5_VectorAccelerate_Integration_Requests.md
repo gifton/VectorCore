@@ -121,3 +121,24 @@ or immediately after.
   the `SoA` no longer frees on deinit and `pageAlignedBytes` returns `nil`.
 - **F1 — `batchDistance` doc:** clarified it's for direct consumer use (reranking), not routed by
   `Operations`' k-NN entry points.
+
+### Follow-up: layout-freeze (post-0.3.0-preview, VA review round 2)
+
+After previewing 0.3.0, VA committed to making the page-aligned `SoA` candidate DB their
+zero-copy bridge target and asked us to **freeze and publish the SoA memory layout** their
+Metal kernel now indexes directly. Delivered:
+
+- **`SoALayout` descriptor** (`Storage/SoALayout.swift`) + `SoA.layoutDescriptor` and
+  `SoALayout.forType(_:count:)` — the machine-readable single source of truth for `lanes`,
+  `count`, `laneStrideBytes`, `logicalByteCount`, `allocatedByteCount`, and the
+  `lane * count + candidate` index formula. Replaces hardcoded shader constants.
+- **`Docs/SoA_Layout_Contract.md`** — the permanent frozen contract (index formula, packing,
+  the page-rounded-`allocatedByteCount` caveat, SoACompatible coverage incl. 768/1536,
+  borrow-vs-transfer free contract, and a golden parity fixture).
+- **`blockSize` removed** from `SoA.init` — it was a no-op that implied (non-existent)
+  candidate-axis padding; a hazard for a frozen contract.
+- **Regression lock:** `Tests/ComprehensiveTests/SoALayoutContractTests.swift` (descriptor +
+  golden parity fixture). The free/lifetime answers (`AlignedMemory.deallocate ≡ free`,
+  thread-safe, borrow mode = object-lifetime validity) are confirmed there and in the doc.
+- **R4 pointer (their §7):** `Protocols/BatchKernelProvider.swift` + the
+  `Operations.findNearest`/`findNearestBatch` dispatch sites — orthogonal to the layout.

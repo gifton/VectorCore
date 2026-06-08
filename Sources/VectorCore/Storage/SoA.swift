@@ -43,12 +43,20 @@ extension Vector1536Optimized: SoACompatible {
 
 /// Structure-of-Arrays (SoA) container for optimized batch scoring.
 ///
-/// Memory layout: lanes-major then candidate index.
-/// `buffer[lane * N + j]` stores SIMD4 for candidate j at lane `lane`.
+/// Memory layout: **lane-major, then candidate index.** `buffer[lane * count + j]`
+/// stores the `SIMD4<Float>` for candidate `j` at `lane` (each lane = 4 contiguous
+/// dimensions; `lanes = dimension / 4`). The candidate axis is never padded, so the
+/// stride between lanes is exactly `count` elements.
 ///
 /// This provides superior cache locality when processing multiple candidates
 /// with the same query vector, as all candidates' data for a given lane
 /// are stored contiguously in memory.
+///
+/// - Important: This layout is a **frozen, stable contract as of 0.3.0** — downstream
+///   GPU kernels index into a zero-copy `MTLBuffer` built from ``pageAlignedBytes``,
+///   so the formula, element type, and stride must not change silently. The contract is
+///   documented in `Docs/SoA_Layout_Contract.md` and exposed programmatically via
+///   ``layoutDescriptor`` (a ``SoALayout``); consumers should derive constants from there.
 public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     public let lanes: Int
     public let count: Int
@@ -86,14 +94,16 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     ) -> (buffer: UnsafeMutablePointer<SIMD4<Float>>, usedAlignedAlloc: Bool, allocatedBytes: Int) {
         let elemSize = MemoryLayout<SIMD4<Float>>.stride   // 16
         if pageAligned && capacity > 0 {
-            let page = PlatformConfiguration.pageSize
-            let logical = capacity * elemSize
-            let padded = ((logical + page - 1) / page) * page   // round up to a whole page
+            // Round the *whole* allocation up to a page so the length is valid for
+            // makeBuffer(bytesNoCopy:). pageSize is a multiple of elemSize (16), so the
+            // padded byte count divides evenly back into SIMD4<Float> slots.
+            let padded = PlatformConfiguration.roundUpToPage(capacity * elemSize)
             let paddedCapacity = padded / elemSize
             let ptr: UnsafeMutablePointer<SIMD4<Float>>
             do {
                 ptr = try AlignedMemory.allocateAligned(type: SIMD4<Float>.self,
-                                                        count: paddedCapacity, alignment: page)
+                                                        count: paddedCapacity,
+                                                        alignment: PlatformConfiguration.pageSize)
             } catch {
                 fatalError("SoA: page-aligned allocation of \(padded) bytes failed: \(error)")
             }
@@ -117,14 +127,19 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
         }
     }
 
-    /// Public initializer for test compatibility: creates SoA from vectors
+    /// Creates an SoA from an array of vectors.
     ///
     /// - Parameters:
-    ///   - vectors: Array of vectors to convert to SoA layout
-    ///   - blockSize: Ignored parameter for API compatibility (reserved for future chunking optimizations)
+    ///   - vectors: Array of vectors to convert to SoA layout.
     ///   - pageAligned: When true, allocates via posix_memalign with page-aligned base and
     ///     page-rounded length, making the region usable with MTLDevice.makeBuffer(bytesNoCopy:).
-    public init(vectors: [Vector], blockSize: Int = 32, pageAligned: Bool = false) {
+    ///
+    /// - Note: The frozen in-memory layout is documented in `Docs/SoA_Layout_Contract.md`
+    ///   and exposed programmatically via ``layoutDescriptor``. There is intentionally **no**
+    ///   `blockSize` parameter: the buffer is never padded along the candidate axis, so the
+    ///   lane stride is exactly `count` elements. (A prior `blockSize:` parameter was a no-op
+    ///   and was removed in 0.3.0 to avoid implying candidate-axis padding.)
+    public init(vectors: [Vector], pageAligned: Bool = false) {
         let count = vectors.count
         self.count = count
         self.lanes = Vector.lanes
@@ -221,6 +236,21 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
         guard usedAlignedAlloc, ownsBuffer else { return nil }
         ownsBuffer = false
         return (UnsafeMutableRawPointer(buffer), allocatedByteCount)
+    }
+
+    /// The frozen layout descriptor for this SoA — the authoritative, machine-readable
+    /// description of the in-memory layout (lane stride, logical vs. allocated byte counts,
+    /// and the element-index formula `lane * count + candidate`).
+    ///
+    /// Downstream GPU kernels (e.g. VectorAccelerate Metal shaders that index a zero-copy
+    /// `MTLBuffer` wrapping ``pageAlignedBytes``) should derive their indexing constants
+    /// from this single source of truth rather than hardcoding magic numbers — in
+    /// particular, take the candidate count `N` from ``SoALayout/count`` and **never**
+    /// reverse-engineer it from the page-rounded ``SoALayout/allocatedByteCount``.
+    ///
+    /// See `Docs/SoA_Layout_Contract.md` for the full frozen contract.
+    public var layoutDescriptor: SoALayout {
+        SoALayout(lanes: lanes, count: count, allocatedByteCount: allocatedByteCount)
     }
 
     /// Scoped read-only access to the raw SoA data (logical bytes = `count * lanes * 16`).

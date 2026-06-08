@@ -142,6 +142,25 @@ Batch sizes and auto‑parallelization
   - Batch operations: arrays ≥ ~1,000 elements tend to parallelize.
   - Pairwise (O(n²)) operations parallelize at smaller thresholds (≈100) due to quadratic work.
 
+GEMM/AMX auto‑routing (0.3.0)
+- For large batches, `BatchOperations.pairwiseDistances` and `Operations.findNearestBatch` automatically route through a CPU GEMM path (`MatrixDistance` via Accelerate `cblas_sgemm` → AMX on Apple Silicon) once the batch clears the crossover.
+- Controlled by `BatchOperations.Configuration.enableMatrixRouting` (default `true`) and `matrixRoutingMinN` (default `256`). The GEMM path agrees with the per‑pair kernels to ~1e‑3 relative (clamped identity), not bit‑identical.
+- Tune or disable it:
+
+```swift
+await BatchOperations.updateConfiguration { config in
+    config.enableMatrixRouting = false
+}
+```
+
+- Reuse recipe: for a fixed candidate database queried by many query batches, pack the database once and reuse it across calls:
+
+```swift
+// normalized: true for cosine geometry
+let prepared = MatrixDistance.prepare(candidates, normalized: false)
+MatrixDistance.euclideanSquaredMatrix(queries: queries, prepared: prepared, into: &out)
+```
+
 Provider overrides (advanced)
 
 ```swift
@@ -153,6 +172,15 @@ await Operations.$simdProvider.withValue(DefaultArraySIMDProvider()) {
 // Hint parallel CPU execution
 await Operations.$computeProvider.withValue(CPUComputeProvider.parallel) {
     let _ = try await Operations.distanceMatrix(between: [query], and: database)
+}
+```
+
+Scaling up to the GPU (0.3.0)
+- Installing a `BatchKernelProvider` (e.g. VectorAccelerate's Metal provider) transparently moves `Operations.findNearest` / `findNearestBatch` to the GPU. `Operations` downcasts the installed `computeProvider` to `BatchKernelProvider` and delegates, taking precedence over the CPU GEMM routing.
+
+```swift
+await Operations.$computeProvider.withValue(yourGPUProvider) {
+    let _ = try await Operations.findNearestBatch(queries: queries, in: database, k: 10)
 }
 ```
 
@@ -171,6 +199,9 @@ Zero vectors and cosine
 Dot product distances
 - `DotProductDistance` reports “distance = −dot”; distances are negative, so the “closest” item has the most negative (largest magnitude) dot.
 - If you need similarity scores, compute the dot directly or negate the distance returned.
+
+Reproducible ties (0.3.0)
+- Top‑K ties now resolve deterministically via `TieBreaker` in `TopKSelection` (default `.smallerIndex`; also `.insertionOrder`, `.smallerValue`), so equal‑distance results are reproducible run‑to‑run.
 
 Mixed vector types in an array
 - Use a single vector type per array (`[Vector<Dim512>]` or `[Vector512Optimized]`), not mixed, to prevent type/dispatch overhead and ensure kernel fast paths are available.

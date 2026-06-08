@@ -10,9 +10,10 @@ This guide explains how to maximize performance in VectorCore, covering optimize
 2. [Optimized Vectors Deep Dive](#optimized-vectors-deep-dive)
 3. [Provider Configuration](#provider-configuration)
 4. [Batch Operations](#batch-operations)
-5. [Memory Management](#memory-management)
-6. [Benchmarking](#benchmarking)
-7. [Performance Pitfalls](#performance-pitfalls)
+5. [GEMM / Matrix Batch-Distance](#gemm--matrix-batch-distance)
+6. [Memory Management](#memory-management)
+7. [Benchmarking](#benchmarking)
+8. [Performance Pitfalls](#performance-pitfalls)
 
 ---
 
@@ -107,10 +108,12 @@ public func dotProduct(_ other: Vector512Optimized) -> Float {
 - **Contiguous storage**: `ContiguousArray` ensures no ARC metadata in the middle
 - **Sequential access**: Prefetcher-friendly memory patterns
 
-**Typical Performance** (Apple Silicon M-series):
-- **Dot product**: ~100ns for 512 dimensions
-- **Euclidean distance**: ~120ns
-- **Normalization**: ~150ns
+**Typical Performance** (Apple Silicon M-series) — *indicative only; these are
+order-of-magnitude figures, not 0.3.0 measurements. Profile your own hardware with
+`vectorcore-bench` (the numbers below are flagged for re-measurement):*
+- **Dot product**: ~100ns for 512 dimensions *(indicative)*
+- **Euclidean distance**: ~120ns *(indicative)*
+- **Normalization**: ~150ns *(indicative)*
 
 ---
 
@@ -157,24 +160,59 @@ Controls batch operations and parallelization strategy
 **Available Implementations**:
 - `CPUComputeProvider.automatic`: Auto-parallelizes based on batch size
 - `CPUComputeProvider.sequential`: Single-threaded (for debugging)
-- `MetalComputeProvider` (VectorAccelerate): GPU-accelerated
+- `CPUComputeProvider.parallel`: Force multi-threaded execution
+- `CPUComputeProvider.performance` / `.efficiency`: Bias toward P- or E-cores
+- A `BatchKernelProvider` conformer (e.g. a GPU/Metal provider in VectorAccelerate):
+  supplies real hardware batch kernels (see below)
 
 **When to override**:
-- GPU-enabled devices: Use Metal for batches >1000
-- Debugging: Use sequential for reproducibility
-- Low latency: Use automatic for adaptive parallelization
+- GPU-enabled devices: Install a `BatchKernelProvider` for large brute-force search
+- Debugging: Use `.sequential` for reproducibility
+- Low latency: Use `.automatic` for adaptive parallelization
 
-**Example**:
+**Transparent GPU dispatch via `BatchKernelProvider`**
+
+`Operations.findNearest` / `findNearestBatch` *downcast* the installed `computeProvider`
+to the `BatchKernelProvider` protocol. When a conformer is present, they delegate the
+k-NN query to its kernel — and this path takes **precedence over the CPU GEMM routing**
+and the optimized Top-K fast paths. This makes GPU acceleration transparent through
+VectorCore's own entry points: no separate API, just a different provider.
+
 ```swift
-await Operations.$computeProvider.withValue(MetalComputeProvider()) {
+public protocol BatchKernelProvider: ComputeProvider {
+    func batchDistance<V: VectorProtocol>(
+        query: V, candidates: [V], metric: any DistanceMetric
+    ) async throws -> [Float] where V.Scalar == Float
+
+    func findNearest<V: VectorProtocol>(
+        query: V, candidates: [V], k: Int, metric: any DistanceMetric
+    ) async throws -> [(index: Int, distance: Float)] where V.Scalar == Float
+
+    // Default loops `findNearest`; a true batched GPU kernel should override this
+    // (one dispatch for the whole query set is the actual GPU win).
+    func findNearestBatch<V: VectorProtocol>(
+        queries: [V], candidates: [V], k: Int, metric: any DistanceMetric
+    ) async throws -> [[(index: Int, distance: Float)]] where V.Scalar == Float
+}
+```
+
+**Example** — install a GPU provider; existing `Operations` calls route to it:
+```swift
+await Operations.$computeProvider.withValue(yourGPUProvider) {
     let results = try await Operations.findNearest(
         to: query,
         in: database,  // 100K vectors
         k: 100
     )
-    // GPU-accelerated brute-force search
+    // Delegates to yourGPUProvider.findNearest (GPU brute-force search),
+    // ahead of the CPU GEMM / Top-K paths.
 }
 ```
+
+> `yourGPUProvider` is any type conforming to `BatchKernelProvider`. VectorCore defines
+> the protocol; the GPU-backed conformance ships in VectorAccelerate. To feed the GPU
+> efficiently, build candidate buffers with the zero-copy SoA layout described in
+> [Zero-Copy GPU Batches](#zero-copy-gpu-batches).
 
 #### 3. **BufferProvider**
 
@@ -220,15 +258,119 @@ let results = await BatchOperations.findNearest(to: query, in: vectors, k: 10)
 
 ### Manual Parallelization Control
 
+`BatchOperations` exposes a thread-safe global `Configuration` updated via a mutating
+closure. The tunable fields are `parallelThreshold` (default `1000`), `minimumChunkSize`
+(default `256`), `enableMatrixRouting` (default `true`), and `matrixRoutingMinN`
+(default `256`).
+
 ```swift
 // Override automatic tuning
-await BatchOperations.configure(
-    minBatchSizeForParallel: 500,
-    preferredChunkSize: 100
-)
+await BatchOperations.updateConfiguration { config in
+    config.parallelThreshold = 500   // Parallelize sooner
+    config.minimumChunkSize = 128    // Smaller chunks
+}
 
 let results = await BatchOperations.findNearest(to: query, in: vectors, k: 10)
 // Uses your configuration
+```
+
+> The `enableMatrixRouting` / `matrixRoutingMinN` fields control the GEMM batch-distance
+> fast path covered in [GEMM / Matrix Batch-Distance](#gemm--matrix-batch-distance).
+
+---
+
+## GEMM / Matrix Batch-Distance
+
+For large query × candidate matrices, computing each pair with a per-pair SIMD kernel
+leaves throughput on the table. VectorCore instead computes the **whole distance matrix
+with a single matrix multiply**, using the identity:
+
+```
+‖x − y‖² = ‖x‖² + ‖y‖² − 2⟨x, y⟩
+```
+
+The cross-term `⟨x, y⟩` is one `cblas_sgemm` call, which **routes to the AMX coprocessor
+on Apple Silicon**. This is the high-throughput path; the per-pair kernels remain the
+small-batch path.
+
+### `MatrixDistance` API
+
+`MatrixDistance` is generic over any `UnifiedVectorBuffer` — the optimized
+`Vector384/512/768/1536Optimized` types and `DynamicVector` all conform, so one
+implementation serves every dimension. Results are written **row-major**: `out[i*n + j]`
+is the distance from `queries[i]` to `candidates[j]`.
+
+```swift
+// Allocating convenience overloads (Euclidean SQUARED, clamped ≥ 0):
+let flat: [Float] = MatrixDistance.euclideanSquaredMatrix(
+    queries: queries, candidates: candidates
+)
+
+// Hot path — caller owns `out`; count MUST equal queries.count * candidates.count:
+var out = [Float](repeating: 0, count: queries.count * candidates.count)
+MatrixDistance.euclideanSquaredMatrix(queries: queries, candidates: candidates, into: &out)
+
+// Cosine has the same three overloads (result = 1 − cos, clamped to [0, 2]):
+MatrixDistance.cosineDistanceMatrix(queries: queries, candidates: candidates, into: &out)
+```
+
+### Reusing candidates with `PreparedCandidates`
+
+For **repeated** search against a fixed candidate set, pack the candidates **once** with
+`prepare` and reuse the `PreparedCandidates` across many query batches. This avoids
+re-packing and re-norming the (large) candidate side on every call. Pass
+`normalized: false` for Euclidean (raw rows + squared norms) and `normalized: true` for
+Cosine (L2-normalized rows). `PreparedCandidates` exposes `.count` and `.dimension`.
+
+```swift
+// Pack once (normalized: false → Euclidean; true → Cosine).
+let prepared = MatrixDistance.prepare(candidates, normalized: false)
+
+// Reuse across many query batches:
+var out = [Float](repeating: 0, count: queries.count * prepared.count)
+MatrixDistance.euclideanSquaredMatrix(queries: queries, prepared: prepared, into: &out)
+```
+
+### Automatic routing (crossover)
+
+You usually don't call `MatrixDistance` directly. `BatchOperations.pairwiseDistances` and
+`Operations.findNearestBatch` **auto-route** through it when both:
+
+- `enableMatrixRouting` is `true` (the default), **and**
+- the per-side count clears `matrixRoutingMinN` (default **256**),
+
+for optimized vector types with the Euclidean or Cosine metric. Below the threshold the
+per-pair kernels win; above it the matrix multiply amortizes the packing cost. This is the
+same auto-tuning machinery as the parallelization heuristics above — tune it the same way:
+
+```swift
+await BatchOperations.updateConfiguration { config in
+    config.matrixRoutingMinN = 512   // Raise the GEMM crossover
+    // config.enableMatrixRouting = false  // Force the exact per-pair path
+}
+```
+
+> An installed `BatchKernelProvider` (GPU) takes **precedence** over this CPU GEMM
+> routing in `Operations.findNearest` / `findNearestBatch` — see
+> [Transparent GPU dispatch](#2-computeprovider).
+
+### Accuracy caveat
+
+The GEMM result agrees with the per-pair kernels to **~1e-3 relative**, **not
+bit-identical**. The difference comes from evaluating distance through the
+`‖x‖² + ‖y‖² − 2⟨x, y⟩` identity (rather than summing `(xᵢ − yᵢ)²` directly) plus the final
+clamp: Euclidean is **squared** and clamped `≥ 0` (the identity can round slightly negative
+when `x ≈ y`); cosine is `1 − cos` clamped to `[0, 2]`. If you need exact per-pair values,
+set `enableMatrixRouting = false`.
+
+### Calibrating the crossover
+
+The ideal `matrixRoutingMinN` depends on dimension and hardware. The `vectorcore-bench`
+**`matrix`** suite (`MatrixDistanceBench`) measures GEMM vs per-pair kernels across N and
+dimension so you can pick the crossover for your target:
+
+```bash
+.build/release/vectorcore-bench --suites matrix
 ```
 
 ---
@@ -244,9 +386,12 @@ VectorCore uses 64-byte aligned allocations for SIMD operations:
 let vector = Vector512Optimized(repeating: 1.0)
 // storage is 64-byte aligned
 
-// Manual alignment (advanced)
-let ptr = try AlignedMemory.allocateAligned(Float.self, count: 512, alignment: 64)
+// Manual alignment (advanced) — Float convenience overload
+let ptr = try AlignedMemory.allocateAligned(count: 512, alignment: 64)
 defer { AlignedMemory.deallocate(ptr) }
+
+// For other element types, pass the type via the `type:` label:
+// let ptr = try AlignedMemory.allocateAligned(type: Float.self, count: 512, alignment: 64)
 ```
 
 **Why alignment matters**:
@@ -316,6 +461,13 @@ swift build --product vectorcore-bench -c release
 | `batch` | Batch operation throughput | Parallelization efficiency |
 | `normalize` | Normalization performance | vDSP integration |
 | `memory` | Allocation overhead | Buffer pool efficiency |
+| `matrix` | GEMM batch-distance vs per-pair kernels | Calibrate `matrixRoutingMinN` crossover |
+
+Run the GEMM calibration suite with:
+
+```bash
+.build/release/vectorcore-bench --suites matrix
+```
 
 ### Performance Regression Detection
 
@@ -432,7 +584,8 @@ for normalized in normalizedQueries {
 }
 ```
 
-**Impact**: Normalization is ~150ns per 512-dim vector; pre-normalize to save ~10% overhead
+**Impact**: Normalization costs roughly ~150ns per 512-dim vector (*indicative — profile
+your hardware*); pre-normalizing avoids repeating that work on every comparison.
 
 ---
 
@@ -452,35 +605,62 @@ Before deploying performance-critical code, verify:
 
 ## Advanced: Custom Providers
 
-Implement custom providers for specialized hardware:
+To plug in specialized hardware (GPU, accelerator), conform to `BatchKernelProvider`.
+Because it refines `ComputeProvider`, `Operations.findNearest` / `findNearestBatch`
+downcast to it and delegate — your kernel runs ahead of the CPU GEMM and Top-K paths.
+
+A conformer must honor the kernel contract:
+- `batchDistance` returns one distance per candidate, in candidate order.
+- `findNearest` returns up to `k` `(index, distance)` pairs sorted ascending by distance,
+  indexing into `candidates`, matching the CPU reference within a documented tolerance.
+- `findNearestBatch` has a default that loops `findNearest`; override it with a single
+  batched dispatch over the whole query set — that one-dispatch form is the real GPU win.
 
 ```swift
-struct CUDAComputeProvider: ComputeProvider {
+struct GPUKernelProvider: BatchKernelProvider {
+    func batchDistance<V: VectorProtocol>(
+        query: V, candidates: [V], metric: any DistanceMetric
+    ) async throws -> [Float] where V.Scalar == Float {
+        // Upload, run the distance kernel, read back one distance per candidate.
+        return try await gpuBatchDistance(query, candidates, metric)
+    }
+
     func findNearest<V: VectorProtocol>(
-        to query: V,
-        in vectors: [V],
-        k: Int
-    ) async throws -> [(index: Int, distance: Float)] {
-        // Transfer to GPU
-        let gpuQuery = cudaAllocate(query)
-        let gpuVectors = cudaAllocate(vectors)
+        query: V, candidates: [V], k: Int, metric: any DistanceMetric
+    ) async throws -> [(index: Int, distance: Float)] where V.Scalar == Float {
+        let distances = try await gpuBatchDistance(query, candidates, metric)
+        return gpuTopK(distances, k)  // (index, distance) sorted ascending by distance
+    }
 
-        // Compute distances on GPU
-        let gpuDistances = cudaDistances(gpuQuery, gpuVectors)
-
-        // Top-K selection on GPU
-        let gpuResults = cudaTopK(gpuDistances, k)
-
-        // Transfer back to CPU
-        return cudaCopyToHost(gpuResults)
+    func findNearestBatch<V: VectorProtocol>(
+        queries: [V], candidates: [V], k: Int, metric: any DistanceMetric
+    ) async throws -> [[(index: Int, distance: Float)]] where V.Scalar == Float {
+        // Override the default: one GPU dispatch for the whole query set.
+        return try await gpuFindNearestBatch(queries, candidates, k, metric)
     }
 }
 
-// Use it
-await Operations.$computeProvider.withValue(CUDAComputeProvider()) {
+// Install it — existing Operations calls now route through the GPU kernel.
+await Operations.$computeProvider.withValue(GPUKernelProvider()) {
     let results = try await Operations.findNearest(to: query, in: database, k: 100)
 }
 ```
+
+### Zero-Copy GPU Batches
+
+Feeding a GPU kernel is bandwidth-bound, so the buffer layout is itself a throughput
+lever. Build the candidate set with the page-aligned SoA layout to obtain
+`MTLDevice.makeBuffer(bytesNoCopy:)`-eligible storage (no host→device staging copy):
+
+```swift
+// Page-aligned SoA → bytesNoCopy-eligible backing for the Metal path.
+let soa = SoA.build(from: candidates, pageAligned: true)
+```
+
+`PageAlignedBuffer` / `SoA.build(from:pageAligned: true)` allocate page-aligned, page-
+rounded storage so the GPU can map the bytes directly. See
+[SoA_Layout_Contract.md](SoA_Layout_Contract.md) for the exact byte-count contract that
+`SoALayout` and `makeBuffer(bytesNoCopy:)` must agree on.
 
 ---
 
@@ -544,6 +724,6 @@ xcrun xctrace record --template 'Allocations' --launch .build/release/YourApp
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: October 2025
-**Applies to**: VectorCore v0.1.0+
+**Document Version**: 0.3.0
+**Last Updated**: 2026-06-07
+**Applies to**: VectorCore v0.3.0+

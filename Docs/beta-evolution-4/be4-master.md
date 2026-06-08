@@ -1,8 +1,8 @@
 # Beta-Evolution-4 — Master Decision Review
 
-**Status:** Strategic review + design specs (no source changes in this phase)
+**Status:** Strategic review + design specs — **implemented on `feature/beta-evo-4`, targeting 0.3.0** (released 2026-06-07)
 **Target release:** VectorCore `0.3.0`
-**Date:** 2026-06-06
+**Date:** 2026-06-06 (implementation reconciled 2026-06-07)
 **Inputs reviewed:** External "Documents 0–4" strategy (Gemini); VectorCore `0.2.2` source;
 downstream packages `VectorIndex` `0.1.5`, `VectorAccelerate` `0.5.0`, `EmbedKit` `0.1.0`.
 
@@ -64,29 +64,41 @@ Two downstream signals dominate this review:
 
 Legend: **Accept** = design spec in this suite, slated for `0.3.0`. **Defer** = sound but no
 ready producer/consumer; documented for later. **Redirect** = already owned by a sibling; Core
-duplicating it would fork live code.
+duplicating it would fork live code. ✅ **shipped 0.3.0** marks rows whose accepted spec is now
+implemented on `feature/beta-evo-4`; **⏸ Deferred** marks accepted specs that remain unbuilt
+(consumer-gated).
 
 | # | Proposal task | In Core `0.2.2`? | Verdict | Evidence / owner (file pointer) |
 |---|---|---|---|---|
-| 1.1 | Block-wise quant (`Q8_0`) | Per-vector INT8 only | **Accept** | Gap: `Quantization/QuantizationSchemes.swift` is whole-vector. Spec → DOCUMENT-3 |
-| 1.2 | Binary vectors + Hamming/Jaccard | Hamming-on-float only; no packed type | **Defer** | GPU versions exist in `VectorAccelerate`; no committed CPU consumer. DOCUMENT-1 |
-| 1.3 | Prefetch intrinsics | `prefetchRead/Write` are no-ops | **Redirect** | `VectorIndex/Sources/VectorIndex/Operations/Support/Prefetch.swift` (real builtins) |
-| 2.1 | GEMM batch distance (GPU) | None | **Redirect** | `VectorAccelerate` tiled GPU GEMM (`Metal/Shaders/OptimizedMatrixOps.metal`) |
-| 2.1 | GEMM batch distance (**CPU/AMX**) | None | **Accept** | Gap: nobody has the CPU `cblas_sgemm` path. Spec → DOCUMENT-2 |
-| 2.2 | Sparse CSR + SparseBLAS | None | **Defer** | No producer (EmbedKit dense-only; hybrid is a P2 roadmap item). DOCUMENT-1 |
-| 3.1 | `mmap` storage | None | **Redirect** | `VectorIndex/Sources/VectorIndex/Kernels/VIndexMmap.swift` (real, WIP) |
-| 3.2 | Pinned Metal arena | `MemoryPool` (not pinned) | **Redirect** | `VectorAccelerate/Sources/VectorAccelerate/Core/BufferPool.swift` |
-| 4.1 | ADC look-up tables | None; PQ deferred | **Redirect** | `VectorIndex/Sources/VectorIndex/Operations/Quantization/{ADCScan,PQLUT}.swift` |
-| 4.2 | Generation visited-list | None | **Redirect** | `VectorIndex/Sources/VectorIndex/Kernels/HNSWTraversal.swift` (bitset) |
-| 4.3 | Concurrent priority queue | Single-thread `TopKBuffer` | **Redirect** | `VectorIndex/Sources/VectorIndex/Operations/Selection/TopK.swift` (`TopKHeap`) |
-| — | Pointer-level Top-K API | None | **Accept** | Requested: `VectorIndex/IMPROVEMENTS.md` §9.5. Spec → DOCUMENT-4 |
-| — | Raw-buffer in-place normalize | Typed only | **Accept** | Requested: `VectorIndex/IMPROVEMENTS.md` §9.5. Spec → DOCUMENT-4 |
-| — | Configurable tie-breaking | Insertion-order only | **Accept** | Requested: `VectorIndex/IMPROVEMENTS.md` §9.5. Spec → DOCUMENT-4 |
-| — | Provider protocols | Partial | **Accept** | Requested: `VectorAccelerate/docs/ADD/VECTORCORE_ALIGNMENT_ROADMAP.md`. DOCUMENT-4 |
-| — | Zero-copy buffer contract | `AlignedMemory` exists | **Accept** | EmbedKit P1 zero-copy (`EmbedKit/dev_EKRefactor/Future_Improvements.md`). DOCUMENT-4 |
+| 1.1 | Block-wise quant (`Q8_0`) | Per-vector INT8 only | **⏸ Deferred** (specced, **not built** — consumer-gated) | Gap: `Quantization/QuantizationSchemes.swift` is whole-vector. Spec → DOCUMENT-3; held until a consumer (EmbedKit storage / VectorIndex codes) commits |
+| 1.2 | Binary vectors + Hamming/Jaccard | Hamming-on-float only; no packed type | **Defer** → **Redirect** (VectorAccelerate) | GPU versions exist in `VectorAccelerate`; binary-packed + Hamming/Jaccard redirected there, no committed CPU consumer (confirmed not in Core 0.3.0). DOCUMENT-1 |
+| 1.3 | Prefetch intrinsics | `prefetchRead/Write` are no-ops | **Redirect** (confirmed not in Core 0.3.0) | `VectorIndex/Sources/VectorIndex/Operations/Support/Prefetch.swift` (real builtins) |
+| 2.1 | GEMM batch distance (GPU) | None | **Redirect** (confirmed not in Core 0.3.0) | `VectorAccelerate` tiled GPU GEMM (`Metal/Shaders/OptimizedMatrixOps.metal`) |
+| 2.1 | GEMM batch distance (**CPU/AMX**) | None | **Accept** ✅ **shipped 0.3.0** | Gap closed: CPU `cblas_sgemm`→AMX path → `Sources/VectorCore/Operations/MatrixDistance.swift` (`euclideanSquaredMatrix` / `cosineDistanceMatrix`, `prepare(_:normalized:)`, `PreparedCandidates`). Spec → DOCUMENT-2 |
+| 2.2 | Sparse CSR + SparseBLAS | None | **Defer** (no producer) | No producer (EmbedKit dense-only; hybrid is a P2 roadmap item); deferred — confirmed not in Core 0.3.0. DOCUMENT-1 |
+| 3.1 | `mmap` storage | None | **Redirect** (confirmed not in Core 0.3.0) | `VectorIndex/Sources/VectorIndex/Kernels/VIndexMmap.swift` (real, WIP) |
+| 3.2 | Pinned Metal arena | `MemoryPool` (not pinned) | **Redirect** (confirmed not in Core 0.3.0) | `VectorAccelerate/Sources/VectorAccelerate/Core/BufferPool.swift` |
+| 4.1 | ADC look-up tables | None; PQ deferred | **Redirect** (confirmed not in Core 0.3.0) | `VectorIndex/Sources/VectorIndex/Operations/Quantization/{ADCScan,PQLUT}.swift` |
+| 4.2 | Generation visited-list | None | **Redirect** (confirmed not in Core 0.3.0) | `VectorIndex/Sources/VectorIndex/Kernels/HNSWTraversal.swift` (bitset) |
+| 4.3 | Concurrent priority queue | Single-thread `TopKBuffer` | **Redirect** (confirmed not in Core 0.3.0) | `VectorIndex/Sources/VectorIndex/Operations/Selection/TopK.swift` (`TopKHeap`) |
+| — | Pointer-level Top-K API | None | **Accept** ✅ **shipped 0.3.0** | Requested: `VectorIndex/IMPROVEMENTS.md` §9.5 → `Sources/VectorCore/Operations/TopKSelection.swift`. Spec → DOCUMENT-4 |
+| — | Raw-buffer in-place normalize | Typed only | **Accept** ✅ **shipped 0.3.0** | Requested: `VectorIndex/IMPROVEMENTS.md` §9.5. Spec → DOCUMENT-4 |
+| — | Configurable tie-breaking | Insertion-order only | **Accept** ✅ **shipped 0.3.0** | Requested: `VectorIndex/IMPROVEMENTS.md` §9.5 → `TieBreaker` (`.smallerIndex` default / `.insertionOrder` / `.smallerValue`) in `Operations/TopKSelection.swift`. Spec → DOCUMENT-4 |
+| — | Provider protocols | Partial | **Accept** ✅ **shipped 0.3.0** | Requested: `VectorAccelerate/docs/ADD/VECTORCORE_ALIGNMENT_ROADMAP.md` → `BatchKernelProvider` (`Sources/VectorCore/Protocols/BatchKernelProvider.swift`). DOCUMENT-4 |
+| — | Zero-copy buffer contract | `AlignedMemory` exists | **Accept** ✅ **shipped 0.3.0** | EmbedKit P1 zero-copy (`EmbedKit/dev_EKRefactor/Future_Improvements.md`) → `UnifiedVectorBuffer` + `PageAlignedBuffer` (`Storage/UnifiedVectorBuffer.swift`) and frozen `SoALayout` contract (`Storage/SoALayout.swift`). DOCUMENT-4 |
 
-**Net `0.3.0` Core work:** two CPU math/format primitives (DOCUMENT-2, DOCUMENT-3) and one
-seam-hardening track (DOCUMENT-4). Everything else is redirected or deferred with rationale.
+**Net `0.3.0` Core work (as shipped):** the seam-hardening track (DOCUMENT-4) and the CPU GEMM
+batch-distance primitive (DOCUMENT-2) shipped on `feature/beta-evo-4`; the block-quant format
+(DOCUMENT-3) was **deferred** (specced, not built — consumer-gated). Everything else is
+redirected or deferred with rationale.
+
+Additionally shipped under the DOCUMENT-4 / SoA-layout track in `0.3.0`: the frozen `SoALayout`
+descriptor and SoA layout contract (`SoALayout.forType(_:count:pageAligned:)`, `SoA.layoutDescriptor`),
+SoA page-alignment APIs (`SoA.build(from:pageAligned:)`, `init(vectors:pageAligned:)`,
+`pageAlignedBytes`, `consumeAllocation()`, `withUnsafeRawBuffer`), `BatchOperations.Configuration`
+matrix routing (`enableMatrixRouting` default `true`, `matrixRoutingMinN` default `256`),
+`PlatformConfiguration.roundUpToPage(_:)`, and the **breaking** removal of the no-op `blockSize:`
+parameter from `SoA.init(vectors:…)` and `SoAFP16.init(vectors:…)`.
 
 ---
 
@@ -97,13 +109,18 @@ The proposal's Document 0 sequences GEMM → quant → numerical-rigor → mmap,
 actually matters is **layouts before the math that consumes them**, and **seams before the
 primitives that ride on them** (so downstream can adopt incrementally):
 
-1. **Seams first (DOCUMENT-4).** Pointer APIs, tie-breaking, and provider protocols are
-   additive, low-risk, and immediately unblock `VectorIndex`/`VectorAccelerate` — they stop
-   bypassing Core. Ship these early in `0.3.0`.
-2. **GEMM batch-distance (DOCUMENT-2).** Pure CPU, reuses existing optimized storage, highest
-   throughput ROI, no new public types beyond an entry point.
-3. **Block quant (DOCUMENT-3) — gated.** Only proceed once a consumer (EmbedKit storage or
-   VectorIndex codes) commits; otherwise it is an unexercised format.
+1. **Seams first (DOCUMENT-4) — ✅ done in `0.3.0`.** Pointer APIs, tie-breaking (`TieBreaker`),
+   the provider protocol (`BatchKernelProvider`), the zero-copy buffer contract
+   (`UnifiedVectorBuffer`/`PageAlignedBuffer`), and the frozen `SoALayout` contract shipped first
+   — they were additive, low-risk, and immediately unblocked `VectorIndex`/`VectorAccelerate` so
+   they stop bypassing Core.
+2. **GEMM batch-distance (DOCUMENT-2) — ✅ done in `0.3.0`.** Pure CPU (`cblas_sgemm`→AMX),
+   reused the existing optimized storage, highest throughput ROI; landed as `MatrixDistance`
+   with no new public types beyond the entry point (and transparent routing via
+   `BatchOperations.Configuration.enableMatrixRouting`).
+3. **Block quant (DOCUMENT-3) — still gated (deferred, not built in `0.3.0`).** Will only
+   proceed once a consumer (EmbedKit storage or VectorIndex codes) commits; otherwise it is an
+   unexercised format.
 
 This inverts the proposal's "GEMM first" because the seams are what the ecosystem is blocked on
 *today*, and they cost the least.

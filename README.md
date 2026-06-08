@@ -27,7 +27,7 @@ Note: Kernel helpers, storage backends, and buffer pools are internal implementa
 
 ## ⚡️ GPU Acceleration
 
-VectorCore is CPU-only and contains no GPU/Metal code. If you need GPU acceleration, use the separate VectorAccelerate package, which implements GPU-backed compute while integrating seamlessly with VectorCore types and protocols.
+VectorCore ships **no GPU/Metal code** — it stays CPU-only. What it provides (as of 0.3.0) is the *seam* for GPU acceleration: a zero-copy buffer contract (`UnifiedVectorBuffer` / `PageAlignedBuffer`, and opt-in page-aligned `SoA`) whose memory is valid for `MTLDevice.makeBuffer(bytesNoCopy:)`, plus a `BatchKernelProvider` hook so an installed GPU provider transparently services `Operations.findNearest` / `findNearestBatch`. The GPU implementation lives in the separate VectorAccelerate package, which plugs into these seams. See [Package Boundaries](Docs/Package_Boundaries.md) and [SoA Layout Contract](Docs/SoA_Layout_Contract.md).
 
 ## 📦 Installation
 
@@ -35,7 +35,7 @@ Add VectorCore to your Swift Package Manager dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gifton/VectorCore.git", from: "0.2.2")
+    .package(url: "https://github.com/gifton/VectorCore.git", from: "0.3.0")
 ]
 ```
 
@@ -230,6 +230,13 @@ let distances = await BatchOperations.pairwiseDistances(vectors)
 // Centroid and statistics
 let centroid: Vector<Dim512> = Operations.centroid(of: vectors)
 let stats = await BatchOperations.statistics(for: vectors)
+
+// Large batches auto-route through a CPU GEMM path (Accelerate cblas_sgemm →
+// AMX on Apple Silicon) above `matrixRoutingMinN` (default 256). For direct
+// control, MatrixDistance computes a full query×candidate matrix over the
+// optimized vector types (any UnifiedVectorBuffer):
+let dmat = MatrixDistance.euclideanSquaredMatrix(queries: queryVecs, candidates: dbVecs)
+// row-major: dmat[i * dbVecs.count + j] = ‖queryVecs[i] − dbVecs[j]‖²
 ```
 
 ### Provider Configuration
@@ -337,9 +344,10 @@ See [Swift Evolution SE-0337](https://github.com/apple/swift-evolution/blob/main
 ### API Documentation
 
 - **Vector Types**: `Vector<D>`, `DynamicVector`, `Vector{512,768,1536}Optimized`
-- **Operations**: `Operations` (primary API), `BatchOperations` (auto-parallelized batches)
+- **Operations**: `Operations` (primary API), `BatchOperations` (auto-parallelized batches), `MatrixDistance` (GEMM batch-distance matrices)
 - **Distance Metrics**: `EuclideanDistance`, `CosineDistance`, `ManhattanDistance`, `ChebyshevDistance`, `HammingDistance`, `MinkowskiDistance`, `DotProductDistance`
-- **Providers**: `SIMDProvider`, `ComputeProvider`, `BufferProvider` (plug-in architecture via `@TaskLocal`)
+- **Providers**: `SIMDProvider`, `ComputeProvider`, `BufferProvider`, `BatchKernelProvider` (transparent GPU dispatch) — plug-in architecture via `@TaskLocal`
+- **Buffers**: `UnifiedVectorBuffer` / `PageAlignedBuffer` (zero-copy GPU-bridge contract), `SoALayout` (frozen SoA layout descriptor)
 
 ## 🤝 Contributing
 

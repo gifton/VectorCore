@@ -66,59 +66,88 @@ Result: Two cache line fetches for one SIMD load (2x memory bandwidth)
 
 ## VectorCore's Alignment Policy
 
-### Default Alignment: 64 Bytes
+### Default Alignment: 64 Bytes (arm64 SIMD) — but not universal
 
-VectorCore uses **64-byte alignment** for all SIMD storage:
+VectorCore has **two distinct alignment constants** for two distinct purposes. Do not
+conflate them:
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `AlignedMemory.optimalAlignment` | **64** (arm64 & x86_64); 16 otherwise | Default alignment for `allocateAligned`; cache-line / SIMD storage |
+| `AlignedMemory.minimumAlignment` | **16** | Floor enforced by a `precondition` (SIMD4<Float>) |
+| `PlatformConfiguration.l1CacheLineSize` | **64** (arm64 & x86_64) | L1 cache line size |
+| `PlatformConfiguration.optimalAlignment` | **128** on Apple Silicon (AMX); 64 on x86_64 | AMX / matrix-extension data alignment |
+| `PlatformConfiguration.pageSize` | `getpagesize()` at runtime (16 KB Apple Silicon, 4 KB x86) | Page alignment for `bytesNoCopy` |
+
+So "64 bytes" is the default for `AlignedMemory.allocateAligned` (good for SIMD storage and
+the L1 cache line), but it is **not** a universal alignment for VectorCore. Apple Silicon's
+AMX (Apple Matrix Extensions) path prefers **128-byte** alignment
+(`PlatformConfiguration.optimalAlignment`), and the zero-copy GPU path needs **page**
+alignment (see [The Page-Aligned Path](#the-page-aligned-path)). Always pick the alignment
+that matches the consumer.
+
+The optimized vector types back their storage with `ContiguousArray<SIMD4<Float>>`:
 
 ```swift
 public struct Vector512Optimized {
-    // storage is 64-byte aligned
+    // SIMD4<Float> element region; 16-byte element alignment.
     public var storage: ContiguousArray<SIMD4<Float>>
 }
 ```
 
-**Why 64 bytes?**
-- Matches cache line size on Apple Silicon and modern Intel
+**Why 64 bytes as the `allocateAligned` default?**
+- Matches the L1 cache line size on Apple Silicon and modern Intel (`l1CacheLineSize == 64`)
 - Satisfies SIMD4 alignment (16 bytes) with margin
 - Prevents cache line splits
-- Future-proof for wider SIMD (AVX-512 requires 64-byte alignment)
+- Covers AVX-512 (which requires 64-byte alignment) on x86_64
 
 ### Allocation Methods
 
-VectorCore provides centralized aligned allocation:
+VectorCore provides centralized aligned allocation in
+`Sources/VectorCore/Storage/AlignedMemory.swift`. These are the **real public signatures**
+(the implementation uses `posix_memalign` and validates the alignment with `precondition`s):
 
 ```swift
-// Sources/VectorCore/Storage/AlignedMemory.swift
-
 public enum AlignedMemory {
-    /// Allocate aligned memory using posix_memalign
-    public static func allocateAligned<T>(
-        _ type: T.Type,
+    /// Platform-specific optimal alignment (64 on arm64 / x86_64, 16 otherwise).
+    public static var optimalAlignment: Int { get }
+
+    /// Minimum alignment enforced by allocateAligned (16 bytes; SIMD4<Float>).
+    public static let minimumAlignment: Int
+
+    /// Check whether a pointer is aligned to `alignment`.
+    public static func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool
+    public static func isAligned<T>(_ pointer: UnsafeMutablePointer<T>, to alignment: Int) -> Bool
+
+    /// Allocate aligned memory for `Float` (the common case).
+    /// - Precondition: `alignment` is a power of two and ≥ `minimumAlignment`.
+    /// - Throws: `VectorError.allocationFailed(size:reason:)` if `posix_memalign` fails.
+    public static func allocateAligned(
         count: Int,
-        alignment: Int = 64
-    ) throws -> UnsafeMutablePointer<T> {
-        var ptr: UnsafeMutableRawPointer?
-        let size = MemoryLayout<T>.stride * count
-        let result = posix_memalign(&ptr, alignment, size)
+        alignment: Int = optimalAlignment
+    ) throws -> UnsafeMutablePointer<Float>
 
-        guard result == 0, let allocatedPtr = ptr else {
-            throw VectorError.allocationFailed(size: size)
-        }
+    /// Allocate aligned memory for any type `T`.
+    /// - Precondition: `alignment` is a power of two and ≥ `minimumAlignment`.
+    /// - Throws: `VectorError.allocationFailed(size:reason:)` if `posix_memalign` fails.
+    public static func allocateAligned<T>(
+        type: T.Type,
+        count: Int,
+        alignment: Int = optimalAlignment
+    ) throws -> UnsafeMutablePointer<T>
 
-        return allocatedPtr.bindMemory(to: T.self, capacity: count)
-    }
+    /// Deallocate (typed pointer). Calls `free()` internally — never `.deallocate()`.
+    public static func deallocate<T>(_ ptr: UnsafeMutablePointer<T>)
 
-    /// Deallocate memory allocated with allocateAligned
-    public static func deallocate<T>(_ ptr: UnsafeMutablePointer<T>) {
-        free(UnsafeMutableRawPointer(ptr))
-    }
-
-    /// Deallocate raw pointer
-    public static func deallocate(_ ptr: UnsafeMutableRawPointer) {
-        free(ptr)
-    }
+    /// Deallocate (raw pointer). Calls `free()` internally.
+    public static func deallocate(_ ptr: UnsafeMutableRawPointer)
 }
 ```
+
+> **API note.** There is **no** positional `allocateAligned(_ type:count:alignment:)`. Use
+> either the `Float` overload `allocateAligned(count:)` or the labeled generic
+> `allocateAligned(type:count:)`. The default `alignment` is `optimalAlignment` (64 on
+> arm64), so you rarely pass it explicitly.
 
 ---
 
@@ -136,15 +165,12 @@ let vector = Vector512Optimized(repeating: 1.0)
 
 ### Manual Alignment (Advanced)
 
-For custom data structures:
+For custom data structures, use the `Float` overload (default alignment is
+`optimalAlignment`, 64 on arm64):
 
 ```swift
-// Allocate aligned memory
-let ptr = try AlignedMemory.allocateAligned(
-    Float.self,
-    count: 512,
-    alignment: 64
-)
+// Allocate aligned Float memory (alignment defaults to optimalAlignment == 64 on arm64)
+let ptr = try AlignedMemory.allocateAligned(count: 512)
 
 // Use the memory
 for i in 0..<512 {
@@ -155,6 +181,14 @@ for i in 0..<512 {
 AlignedMemory.deallocate(ptr)
 ```
 
+For a non-`Float` element type, use the labeled generic overload:
+
+```swift
+// Generic overload: pass the type with the `type:` label.
+let simdPtr = try AlignedMemory.allocateAligned(type: SIMD4<Float>.self, count: 128)
+defer { AlignedMemory.deallocate(simdPtr) }
+```
+
 ### Buffer Pool with Alignment
 
 VectorCore's buffer pool maintains alignment:
@@ -162,12 +196,8 @@ VectorCore's buffer pool maintains alignment:
 ```swift
 actor SwiftBufferPool {
     func acquire(count: Int) -> UnsafeMutableBufferPointer<Float> {
-        // Allocates 64-byte aligned buffer
-        let ptr = try! AlignedMemory.allocateAligned(
-            Float.self,
-            count: count,
-            alignment: 64
-        )
+        // Allocates optimalAlignment (64-byte on arm64) aligned buffer
+        let ptr = try! AlignedMemory.allocateAligned(count: count)
         return UnsafeMutableBufferPointer(start: ptr, count: count)
     }
 
@@ -187,7 +217,7 @@ actor SwiftBufferPool {
 **The Bug**:
 ```swift
 // ❌ WRONG: Causes undefined behavior
-let ptr = try AlignedMemory.allocateAligned(Float.self, count: 512)
+let ptr = try AlignedMemory.allocateAligned(count: 512)
 // ... use ptr ...
 ptr.deallocate()  // ❌ WRONG! posix_memalign memory MUST use free()
 ```
@@ -200,7 +230,7 @@ ptr.deallocate()  // ❌ WRONG! posix_memalign memory MUST use free()
 **The Fix**:
 ```swift
 // ✅ CORRECT: Use AlignedMemory.deallocate
-let ptr = try AlignedMemory.allocateAligned(Float.self, count: 512)
+let ptr = try AlignedMemory.allocateAligned(count: 512)
 // ... use ptr ...
 AlignedMemory.deallocate(ptr)  // ✅ Calls free() internally
 ```
@@ -223,10 +253,10 @@ array.withUnsafeMutableBufferPointer { buffer in
 
 **The Fix**:
 ```swift
-// ✅ Use aligned allocation
-let ptr = try AlignedMemory.allocateAligned(Float.self, count: 512, alignment: 64)
+// ✅ Use aligned allocation (defaults to optimalAlignment == 64 on arm64)
+let ptr = try AlignedMemory.allocateAligned(count: 512)
 let buffer = UnsafeMutableBufferPointer(start: ptr, count: 512)
-// buffer.baseAddress is guaranteed 64-byte aligned
+// buffer.baseAddress is guaranteed 64-byte aligned on arm64
 // ... use buffer ...
 AlignedMemory.deallocate(ptr)
 ```
@@ -263,42 +293,44 @@ alignedStorage.append(contentsOf: slice)
 ### Apple Silicon (ARM64)
 
 **Hardware characteristics**:
-- Cache line size: 64 bytes (M1/M2), 128 bytes (M3+)
+- Cache line size: 64 bytes (`PlatformConfiguration.l1CacheLineSize`)
+- Page size: `getpagesize()` — **16 KB** on Apple Silicon
 - SIMD width: 128-bit (NEON)
 - Required alignment: 16 bytes (SIMD4<Float>)
-- Recommended alignment: 64 bytes (cache line)
+- Recommended SIMD/cache alignment: 64 bytes (`AlignedMemory.optimalAlignment`)
+- AMX (matrix-extension) alignment: 128 bytes (`PlatformConfiguration.optimalAlignment`)
 
 **Performance notes**:
 - Unaligned SIMD loads: ~2x slower
 - Cache line split: ~1.5x slower
 - `posix_memalign` overhead: ~50ns per allocation
 
-**Optimal alignment strategy**:
+**Optimal alignment strategy** — use the constant for the consumer, not a hardcoded literal:
 ```swift
-// Use 64-byte alignment for M1/M2
-#if arch(arm64)
-let alignment = 64
-#endif
+// SIMD / cache-line storage: 64 on arm64.
+let simdAlignment = AlignedMemory.optimalAlignment        // 64 (arm64)
+
+// AMX / matrix-extension data: 128 on Apple Silicon.
+let amxAlignment = PlatformConfiguration.optimalAlignment // 128 (Apple Silicon)
 ```
 
 ### Intel (x86_64)
 
 **Hardware characteristics**:
-- Cache line size: 64 bytes
+- Cache line size: 64 bytes (`PlatformConfiguration.l1CacheLineSize`)
+- Page size: `getpagesize()` — **4 KB** on x86_64
 - SIMD width: 128-bit (SSE), 256-bit (AVX2), 512-bit (AVX-512)
 - Required alignment: 16 bytes (SSE), 32 bytes (AVX2), 64 bytes (AVX-512)
-- Recommended alignment: 64 bytes
+- Recommended alignment: 64 bytes (`AlignedMemory.optimalAlignment` == 64 on x86_64)
 
 **Performance notes**:
 - Unaligned AVX loads: ~5x slower than aligned
 - AVX-512 unaligned: May cause #GP fault (crash) on older CPUs
 - `_mm_malloc` overhead: ~100ns per allocation
 
-**Optimal alignment strategy**:
+**Optimal alignment strategy** — use the constant (64 on x86_64), don't hardcode:
 ```swift
-#if arch(x86_64)
-let alignment = 64  // Safe for all Intel SIMD
-#endif
+let alignment = AlignedMemory.optimalAlignment  // 64 — safe for all Intel SIMD
 ```
 
 ---
@@ -376,28 +408,62 @@ xcrun xctrace record --template 'Memory' --launch .build/debug/YourApp
 
 ```swift
 public enum AlignedMemory {
-    /// Allocate aligned memory
-    public static func allocateAligned<T>(
-        _ type: T.Type,
+    /// 64 on arm64 / x86_64, 16 otherwise.
+    public static var optimalAlignment: Int { get }
+
+    /// 16 (SIMD4<Float>); the floor enforced by allocateAligned.
+    public static let minimumAlignment: Int
+
+    public static func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool
+    public static func isAligned<T>(_ pointer: UnsafeMutablePointer<T>, to alignment: Int) -> Bool
+
+    /// Float overload. Default alignment = optimalAlignment.
+    public static func allocateAligned(
         count: Int,
-        alignment: Int = 64
+        alignment: Int = optimalAlignment
+    ) throws -> UnsafeMutablePointer<Float>
+
+    /// Generic overload (note the `type:` label). Default alignment = optimalAlignment.
+    public static func allocateAligned<T>(
+        type: T.Type,
+        count: Int,
+        alignment: Int = optimalAlignment
     ) throws -> UnsafeMutablePointer<T>
 
-    /// Deallocate aligned memory (typed pointer)
+    /// Deallocate aligned memory (typed pointer); calls free().
     public static func deallocate<T>(_ ptr: UnsafeMutablePointer<T>)
 
-    /// Deallocate aligned memory (raw pointer)
+    /// Deallocate aligned memory (raw pointer); calls free().
     public static func deallocate(_ ptr: UnsafeMutableRawPointer)
 }
 ```
 
+> The implementation `precondition`s that `alignment` is a power of two and
+> `≥ minimumAlignment`, then calls `posix_memalign`.
+
 ### VectorError
 
+`AlignedMemory` throws via the `allocationFailed(size:reason:)` factory (the
+`reason` argument carries the `posix_memalign` error code):
+
 ```swift
-public enum VectorError: Error {
-    case allocationFailed(size: Int)
-    // ... other cases
+extension VectorError {
+    static func allocationFailed(
+        size: Int,
+        reason: String? = nil,
+        // … source-location parameters with defaults …
+    ) -> VectorError
 }
+```
+
+### PlatformConfiguration (page / AMX constants)
+
+```swift
+// internal enum PlatformConfiguration
+static var l1CacheLineSize: Int   // 64 (arm64 / x86_64)
+static var optimalAlignment: Int  // 128 on Apple Silicon (AMX); 64 on x86_64
+static var pageSize: Int           // getpagesize() — 16 KB Apple Silicon, 4 KB x86
+static func roundUpToPage(_ byteCount: Int) -> Int  // the single page-rounding helper
 ```
 
 ---
@@ -416,8 +482,12 @@ A: On ARM (Apple Silicon): 2-5x slowdown. On Intel: 5-10x slowdown or crash (AVX
 **Q: Can I use `aligned_alloc` instead of `posix_memalign`?**
 A: Yes, but `posix_memalign` is more portable (C99 vs C11) and has identical performance.
 
-**Q: Why 64 bytes instead of 16 bytes?**
-A: 16 bytes satisfies SIMD4 alignment, but 64 bytes prevents cache line splits and is future-proof for AVX-512.
+**Q: Why is `AlignedMemory.optimalAlignment` 64 bytes instead of 16?**
+A: 16 bytes satisfies SIMD4 alignment, but 64 bytes matches the L1 cache line
+(`PlatformConfiguration.l1CacheLineSize`), prevents cache line splits, and covers AVX-512 on
+x86_64. Note 64 is **not** universal: AMX data prefers 128 bytes
+(`PlatformConfiguration.optimalAlignment` on Apple Silicon) and GPU `bytesNoCopy` import
+needs page alignment (`PlatformConfiguration.pageSize`).
 
 ---
 
@@ -434,40 +504,118 @@ contiguity. The GPU calls live in VectorAccelerate.
 `UnifiedVectorBuffer` (`Sources/VectorCore/Storage/UnifiedVectorBuffer.swift`) is a contiguous,
 alignment-guaranteed *read* view over a vector's `Float32` elements:
 
-- `elementCount` — logical element count
-- `alignment` — guaranteed base alignment (power of two ≥ `MemoryLayout<Float>.alignment`)
-- `withUnsafeContiguousBytes { (UnsafeRawBufferPointer) in … }` — scoped raw access to the logical
-  bytes (`elementCount * 4`)
+```swift
+public protocol UnifiedVectorBuffer {
+    var elementCount: Int { get }
+    var alignment: Int { get }   // power of two ≥ MemoryLayout<Float>.alignment
+    func withUnsafeContiguousBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R
+}
+```
 
-The optimized vector types (`Vector384/512/768/1536Optimized`) conform with `alignment == 16`
-(their `ContiguousArray<SIMD4<Float>>` element region); `DynamicVector` conforms with
-`alignment == 4` (its storage may be inline). 16-byte alignment is enough to **read**, but not
-enough for `makeBuffer(bytesNoCopy:)`.
+- `elementCount` — logical element count
+- `alignment` — guaranteed base alignment of the yielded pointer
+- `withUnsafeContiguousBytes { (UnsafeRawBufferPointer) in … }` — scoped raw access to the logical
+  bytes (`elementCount * MemoryLayout<Float>.stride`)
+
+Conformers: `Vector384/512/768/1536Optimized` (alignment == `MemoryLayout<SIMD4<Float>>.alignment`,
+i.e. **16**, their `ContiguousArray<SIMD4<Float>>` element region) and `DynamicVector`
+(alignment == `MemoryLayout<Float>.alignment`, i.e. **4**, since storage may be inline). 16-byte
+alignment is enough to **read**, but not enough for `makeBuffer(bytesNoCopy:)`.
 
 ### The page-aligned path (`makeBuffer(bytesNoCopy:)`)
 
 `makeBuffer(bytesNoCopy:length:options:deallocator:)` requires, on macOS, that **both** the base
-address and the length be page multiples (16 KB on Apple Silicon). `PageAlignedBuffer` satisfies
-both:
+address and the length be multiples of the OS page size. The page size is **not** a fixed literal:
+it is `PlatformConfiguration.pageSize` (`getpagesize()` at runtime — **16 KB** on Apple Silicon,
+**4 KB** on x86_64). The single page-rounding helper is `PlatformConfiguration.roundUpToPage(_:)`,
+the authoritative source of truth used by every page-aligned allocation in the package (so the
+`length:` is computed identically everywhere).
 
-- base allocated via `posix_memalign(pageSize)` → page-aligned
-- `allocatedByteCount` = logical bytes **rounded up to a whole page**, with the padding zero-filled
-  so the GPU never imports uninitialized memory
-- `baseAddress` + `allocatedByteCount` are exactly the `bytesNoCopy:` pointer and `length:`
+There are two page-aligned producers. Both round their byte length up with `roundUpToPage(_:)`,
+zero-fill the padding so the GPU never imports uninitialized memory, and back the allocation with
+`posix_memalign` (freed with `free()` via `AlignedMemory.deallocate(_:)`).
 
-### Ownership handoff
+#### Producer 1 — `PageAlignedBuffer` (single embedding)
 
-For true zero-copy the `MTLBuffer` outlives the Swift object and frees the memory through Metal's
-`bytesNoCopy` deallocator. To avoid a double free, choose one:
+`PageAlignedBuffer` (`public final class : UnifiedVectorBuffer`) is the right producer when you
+have **one** vector to hand to the GPU (the canonical EmbedKit case: write a freshly produced
+embedding into page-aligned memory once, then hand the pointer downstream). Real surface:
 
-- call `consumeAllocation()` → transfers ownership; `deinit` no longer frees; the caller (the Metal
-  deallocator) must `free()` the returned base (via `AlignedMemory.deallocate(_:)`), **or**
-- keep the `PageAlignedBuffer` alive for the buffer's lifetime and pass a no-op Metal deallocator.
+```swift
+public final class PageAlignedBuffer: UnifiedVectorBuffer, @unchecked Sendable {
+    public init(elementCount: Int)                  // zero-initialized, page-aligned
+    public convenience init(copying source: [Float]) // allocate + copy once
+
+    public let pageSize: Int                         // captured PlatformConfiguration.pageSize
+    public let allocatedByteCount: Int               // logical bytes rounded up to a page multiple
+    public private(set) var ownsAllocation: Bool
+
+    public var baseAddress: UnsafeMutableRawPointer  // the bytesNoCopy: pointer (traps if consumed)
+    public var alignment: Int { pageSize }
+    public var elementCount: Int
+
+    public func withUnsafeContiguousBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R
+    public func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R
+
+    /// Transfer ownership to a Metal bytesNoCopy deallocator.
+    public func consumeAllocation() -> (baseAddress: UnsafeMutableRawPointer, allocatedByteCount: Int)
+}
+```
+
+`baseAddress` and `allocatedByteCount` are exactly the `bytesNoCopy:` pointer and the `length:`.
+
+#### Producer 2 — SoA page-aligned (the primary 0.3.0 batch source)
+
+For a **batch** of candidates — the primary zero-copy source in 0.3.0 — build the
+Structure-of-Arrays buffer page-aligned. The in-memory layout is **frozen** as of 0.3.0; see
+[`Docs/SoA_Layout_Contract.md`](./SoA_Layout_Contract.md) for the authoritative contract (and
+`SoA.layoutDescriptor` for the machine-readable form). Relevant surface:
+
+```swift
+// Build page-aligned (otherwise the default 16-byte allocation):
+let soa = SoA<Vector768Optimized>.build(from: candidates, pageAligned: true)
+// or:        SoA<Vector768Optimized>(vectors: candidates, pageAligned: true)
+
+/// Page-aligned base + page-ROUNDED byte length (≥ logical), or nil if not page-aligned.
+var pageAlignedBytes: (base: UnsafeRawPointer, byteCount: Int)? { get }
+
+/// Transfer ownership of the page-aligned allocation (nil if not page-aligned).
+func consumeAllocation() -> (base: UnsafeMutableRawPointer, byteCount: Int)?
+
+/// Scoped read access to the logical bytes (count * lanes * 16).
+func withUnsafeRawBuffer<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R
+```
+
+`pageAlignedBytes.byteCount` is the **page-rounded** length (the `length:` for `bytesNoCopy`), not
+the logical byte count. When deriving the candidate count `N` downstream, take it from
+`SoALayout.count` (via `layoutDescriptor`) — never reverse-engineer `N` from the page-rounded
+length.
+
+### Free / lifetime contract — borrow vs. transfer
+
+Both producers' page-aligned memory comes from `posix_memalign`, so it **must** be freed with
+`free()` — exactly what `AlignedMemory.deallocate(base)` does, which is thread-safe and therefore
+valid from a Metal `bytesNoCopy` deallocator running on an arbitrary thread. For a true zero-copy
+hand-off the `MTLBuffer` outlives the Swift object; pick **one** of two modes and never mix them
+(mixing double-frees):
+
+- **BORROW** — hold a strong reference to the producer (`PageAlignedBuffer` or `SoA`) and read
+  `baseAddress` / `pageAlignedBytes` **without** consuming. The producer still frees on `deinit`,
+  so pass a **no-op** Metal deallocator. The producer's object lifetime is the **sole** validity
+  guarantee: it MUST outlive the `MTLBuffer`.
+- **TRANSFER** — call `consumeAllocation()`. The producer stops owning the allocation (no free on
+  `deinit`; further access to `baseAddress` / `pageAlignedBytes` traps or returns `nil`), and the
+  caller — typically the Metal `bytesNoCopy` deallocator — becomes responsible for freeing the
+  returned base via `AlignedMemory.deallocate(_:)` (== `free`).
+
+VectorCore performs none of the Metal calls; it only provides the page-aligned memory and the
+ownership primitive.
 
 ---
 
 ## Further Reading
 
+- [SoA Layout Contract](./SoA_Layout_Contract.md) — the frozen 0.3.0 SoA in-memory layout
 - [Intel Intrinsics Guide](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html)
 - [ARM NEON Programming Guide](https://developer.arm.com/architectures/instruction-sets/simd-isas/neon)
 - [POSIX memalign documentation](https://man7.org/linux/man-pages/man3/posix_memalign.3.html)
@@ -475,6 +623,6 @@ For true zero-copy the `MTLBuffer` outlives the Swift object and frees the memor
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: June 2026
-**Applies to**: VectorCore v0.1.0+ (Zero-Copy Buffer Contract: v0.3.0+)
+**Document Version**: 0.3.0
+**Last Updated**: 2026-06-07
+**Applies to**: VectorCore v0.1.0+ (Zero-Copy Buffer Contract & page-aligned producers: v0.3.0+)

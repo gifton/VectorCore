@@ -13,7 +13,7 @@ VectorCore is a CPU‑first, high‑performance vector math core for Swift. Use 
 - Create vectors (fixed/dynamic/optimized),
 - Compute distances/metrics,
 - Run nearest‑neighbor operations via `Operations` (async) or `BatchOperations` (async bulk),
-- Plug in Accelerate or Swift SIMD under the hood — no GPU code here.
+- Plug in Accelerate or Swift SIMD under the hood — **no GPU kernels here** (0.3.0 adds the GPU *seam*: a zero-copy buffer contract + a `BatchKernelProvider` dispatch hook, implemented by VectorAccelerate).
 
 Everything else (ANN/graphs, GPU kernels, durable stores) lives in sibling packages.
 
@@ -36,7 +36,7 @@ flowchart LR
     Dot, Minkowski, Hamming]
     C4[Providers (Public)
     SIMDProvider, ArraySIMDProvider,
-    ComputeProvider]
+    ComputeProvider, BatchKernelProvider]
     C5[Utilities (Internal)
     Kernels, Buffer Pools,
     Aligned Storage, Heuristics]
@@ -164,9 +164,9 @@ Key points
 flowchart LR
   subgraph Public
     A[Vectors: Vector<D>, DynamicVector,
-       Vector512/768/1536Optimized]
+       Vector384/512/768/1536Optimized]
     B[Operations: findNearest,
-       distanceMatrix,
+       distanceMatrix, MatrixDistance (GEMM),
        normalize, statistics]
     C[BatchOperations: auto-parallel bulk]
     D[DistanceMetrics: Euclidean,
@@ -174,16 +174,20 @@ flowchart LR
        Chebyshev, Dot,
        Minkowski, Hamming]
     E[Providers: SIMDProvider,
-       ArraySIMDProvider,
-       ComputeProvider]
+       ArraySIMDProvider, ComputeProvider,
+       BatchKernelProvider]
+    F[Buffers: UnifiedVectorBuffer,
+       PageAlignedBuffer, SoALayout]
   end
 ```
 
 Quick reference
-- Vectors: fixed‑dim (compile‑time safety), dynamic (runtime), optimized (SIMD4 layout for 512/768/1536).
+- Vectors: fixed‑dim (compile‑time safety), dynamic (runtime), optimized (SIMD4 layout for 384/512/768/1536).
 - Operations: async APIs for NN search, pairwise computations, normalization, and stats.
+- MatrixDistance: CPU GEMM batch-distance matrices (`cblas_sgemm` → AMX on Apple Silicon); `euclideanSquaredMatrix` / `cosineDistanceMatrix` with a `prepare(_:normalized:)` reuse path. Generic over `UnifiedVectorBuffer`.
 - DistanceMetrics: portable metric implementations (zero‑alloc); plug into Operations.
-- Providers: protocol surface to bind Accelerate/Swift SIMD and execution strategy.
+- Providers: protocol surface to bind Accelerate/Swift SIMD and execution strategy; `BatchKernelProvider` lets an installed GPU provider transparently service `findNearest`/`findNearestBatch`.
+- Buffers: `UnifiedVectorBuffer` / `PageAlignedBuffer` (zero-copy GPU bridge) and the frozen `SoALayout` descriptor (see `Docs/SoA_Layout_Contract.md`).
 
 ---
 
@@ -236,14 +240,15 @@ let nn = try await Operations.findNearest(to: q, in: xs, k: 10)
 
 - Parallelization kicks in based on a heuristic of dimension × items vs overhead.
 - BatchOperations auto‑parallelizes for large inputs; Operations uses ComputeProvider heuristics.
-- Optimized vectors (512/768/1536) unlock fused kernels and Top‑K fast paths internally.
+- Large batches route through the CPU GEMM path (`MatrixDistance`) above `matrixRoutingMinN` (default 256; `BatchOperations.Configuration`).
+- Optimized vectors (384/512/768/1536) unlock fused kernels and Top‑K fast paths internally.
 
 ---
 
 ## Public vs Internal (Cheat Sheet)
 
-- Public: `Vectors`, `Operations`, `BatchOperations`, `DistanceMetrics`, `SIMDProvider`/`ArraySIMDProvider`/`ComputeProvider`.
-- Internal: `Kernels`, `Top‑K selection`, `Buffer pools`, `Aligned storage`, `Heuristics`, many low‑level helpers.
+- Public: `Vectors`, `Operations`, `BatchOperations`, `MatrixDistance`, `DistanceMetrics`, `SIMDProvider`/`ArraySIMDProvider`/`ComputeProvider`/`BatchKernelProvider`, `UnifiedVectorBuffer`/`PageAlignedBuffer`, `SoALayout`, `TieBreaker`.
+- Internal: `Kernels`, `Buffer pools`, `Aligned storage`, `Heuristics`, many low‑level helpers. (Top‑K selection is internal, but its `TieBreaker` policy is public.)
 - Out of scope (in sibling packages): ANN/graphs/clustering (VectorIndex), GPU providers/kernels (VectorAccelerate), durable formats (VectorStore).
 
 ---

@@ -536,3 +536,284 @@ public struct SwiftSIMDProvider: ArraySIMDProvider, Sendable {
         provider.maxIndex(a)
     }
 }
+
+// MARK: - Accelerate-backed ArraySIMDProvider
+
+#if canImport(Accelerate)
+/// `ArraySIMDProvider` whose hot arithmetic and reductions run on Accelerate's
+/// vDSP via ``AccelerateFloatProvider``, with the handful of vDSP-uncovered
+/// operations (`elementWiseMin`/`elementWiseMax`, `abs`/`sqrt`/`log`,
+/// `minIndex`/`maxIndex`) delegated to ``DefaultArraySIMDProvider`` (already
+/// vForce-backed or trivial index scans).
+///
+/// This is the Accelerate analog of ``DefaultArraySIMDProvider``: the bodies are
+/// structurally identical, only the backing static-provider type changes from
+/// `SwiftFloatSIMDProvider` to `AccelerateFloatProvider`. Install it for the
+/// `Operations` API (and `Vector<D>` array math that flows through it) via the
+/// scoped `Operations.$simdProvider.withValue(_:operation:)` API.
+///
+/// - Note: vDSP reductions (`vDSP_sve`, `vDSP_dotpr`, `vDSP_svesq`, …) use a
+///   pairwise/tree summation, so results agree with the sequential Swift
+///   provider only to within floating-point rounding — never bit-for-bit.
+public struct AccelerateArraySIMDProvider: ArraySIMDProvider, Sendable {
+
+    /// Backing provider for the operations vDSP does not cover. These are either
+    /// vForce-backed (`abs`/`sqrt`/`log`) or trivial scalar scans
+    /// (`elementWiseMin`/`elementWiseMax`/`minIndex`/`maxIndex`), so delegating
+    /// them introduces no "fake Accelerate" dishonesty.
+    private let fallback = DefaultArraySIMDProvider()
+
+    public init() {}
+
+    /// Allocate an output array of `count` floats **without** the redundant zero-fill.
+    ///
+    /// Mirrors ``DefaultArraySIMDProvider``'s allocation idiom so allocation
+    /// behavior is identical across the two providers: every arithmetic /
+    /// element-wise op below fully overwrites its result buffer via the
+    /// underlying vDSP primitive, so `Array`'s `unsafeUninitializedCapacity:`
+    /// initializer hands us raw storage and skips the zero-fill entirely.
+    ///
+    /// - Important: `body` MUST initialize all `count` elements of the buffer.
+    ///   Empty requests short-circuit to `[]` so the vDSP primitives never see a
+    ///   nil base pointer.
+    @inline(__always)
+    private func uninitializedResult(
+        count: Int,
+        _ body: (UnsafeMutableBufferPointer<Float>) -> Void
+    ) -> [Float] {
+        guard count > 0 else { return [] }
+        return [Float](unsafeUninitializedCapacity: count) { buffer, initializedCount in
+            body(buffer)
+            initializedCount = count
+        }
+    }
+
+    public func add(_ a: [Float], _ b: [Float]) -> [Float] {
+        precondition(a.count == b.count, "Arrays must have same length")
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
+                    AccelerateFloatProvider.add(
+                        aBuffer.baseAddress!,
+                        bBuffer.baseAddress!,
+                        result: resultBuffer.baseAddress!,
+                        count: count
+                    )
+                }
+            }
+        }
+    }
+
+    public func subtract(_ a: [Float], _ b: [Float]) -> [Float] {
+        precondition(a.count == b.count, "Arrays must have same length")
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
+                    AccelerateFloatProvider.subtract(
+                        aBuffer.baseAddress!,
+                        bBuffer.baseAddress!,
+                        result: resultBuffer.baseAddress!,
+                        count: count
+                    )
+                }
+            }
+        }
+    }
+
+    public func multiply(_ a: [Float], by scalar: Float) -> [Float] {
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                AccelerateFloatProvider.multiplyScalar(
+                    aBuffer.baseAddress!,
+                    scalar: scalar,
+                    result: resultBuffer.baseAddress!,
+                    count: count
+                )
+            }
+        }
+    }
+
+    public func divide(_ a: [Float], by scalar: Float) -> [Float] {
+        multiply(a, by: 1.0 / scalar)
+    }
+
+    public func dot(_ a: [Float], _ b: [Float]) -> Float {
+        precondition(a.count == b.count, "Arrays must have same length")
+
+        return a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
+                AccelerateFloatProvider.dot(
+                    aBuffer.baseAddress!,
+                    bBuffer.baseAddress!,
+                    count: a.count
+                )
+            }
+        }
+    }
+
+    public func sum(_ a: [Float]) -> Float {
+        a.withUnsafeBufferPointer { aBuffer in
+            AccelerateFloatProvider.sum(
+                aBuffer.baseAddress!,
+                count: a.count
+            )
+        }
+    }
+
+    public func max(_ a: [Float]) -> Float {
+        guard !a.isEmpty else { return -.infinity }
+
+        return a.withUnsafeBufferPointer { aBuffer in
+            AccelerateFloatProvider.maximum(
+                aBuffer.baseAddress!,
+                count: a.count
+            )
+        }
+    }
+
+    public func min(_ a: [Float]) -> Float {
+        guard !a.isEmpty else { return .infinity }
+
+        return a.withUnsafeBufferPointer { aBuffer in
+            AccelerateFloatProvider.minimum(
+                aBuffer.baseAddress!,
+                count: a.count
+            )
+        }
+    }
+
+    public func mean(_ a: [Float]) -> Float {
+        guard !a.isEmpty else { return 0 }
+        return sum(a) / Float(a.count)
+    }
+
+    public func magnitude(_ a: [Float]) -> Float {
+        Foundation.sqrt(magnitudeSquared(a))
+    }
+
+    public func magnitudeSquared(_ a: [Float]) -> Float {
+        a.withUnsafeBufferPointer { aBuffer in
+            AccelerateFloatProvider.sumOfSquares(
+                aBuffer.baseAddress!,
+                count: a.count
+            )
+        }
+    }
+
+    public func normalize(_ a: [Float]) -> [Float] {
+        let mag = magnitude(a)
+        guard mag > 0 else { return a }
+        return multiply(a, by: 1.0 / mag)
+    }
+
+    public func euclideanDistanceSquared(_ a: [Float], _ b: [Float]) -> Float {
+        precondition(a.count == b.count, "Arrays must have same length")
+
+        return a.withUnsafeBufferPointer { aBuffer in
+            b.withUnsafeBufferPointer { bBuffer in
+                AccelerateFloatProvider.distanceSquared(
+                    aBuffer.baseAddress!,
+                    bBuffer.baseAddress!,
+                    count: a.count
+                )
+            }
+        }
+    }
+
+    public func cosineSimilarity(_ a: [Float], _ b: [Float]) -> Float {
+        let dotProduct = dot(a, b)
+        let magA = magnitude(a)
+        let magB = magnitude(b)
+
+        guard magA > 0 && magB > 0 else { return 0 }
+        return dotProduct / (magA * magB)
+    }
+
+    public func elementWiseMin(_ a: [Float], _ b: [Float]) -> [Float] {
+        // vDSP has no element-wise min; delegate to the trivial scalar-scan impl.
+        fallback.elementWiseMin(a, b)
+    }
+
+    public func elementWiseMax(_ a: [Float], _ b: [Float]) -> [Float] {
+        // vDSP has no element-wise max; delegate to the trivial scalar-scan impl.
+        fallback.elementWiseMax(a, b)
+    }
+
+    public func elementWiseMultiply(_ a: [Float], _ b: [Float]) -> [Float] {
+        precondition(a.count == b.count, "Arrays must have same length")
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
+                    AccelerateFloatProvider.multiply(
+                        aBuffer.baseAddress!,
+                        bBuffer.baseAddress!,
+                        result: resultBuffer.baseAddress!,
+                        count: count
+                    )
+                }
+            }
+        }
+    }
+
+    public func elementWiseDivide(_ a: [Float], _ b: [Float]) -> [Float] {
+        precondition(a.count == b.count, "Arrays must have same length")
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                b.withUnsafeBufferPointer { bBuffer in
+                    AccelerateFloatProvider.divide(
+                        aBuffer.baseAddress!,
+                        bBuffer.baseAddress!,
+                        result: resultBuffer.baseAddress!,
+                        count: count
+                    )
+                }
+            }
+        }
+    }
+
+    public func abs(_ a: [Float]) -> [Float] {
+        // vForce-backed (vvfabsf) inside DefaultArraySIMDProvider.
+        fallback.abs(a)
+    }
+
+    public func sqrt(_ a: [Float]) -> [Float] {
+        // vForce-backed (vvsqrtf) inside DefaultArraySIMDProvider.
+        fallback.sqrt(a)
+    }
+
+    public func log(_ a: [Float]) -> [Float] {
+        // vForce-backed (vvlogf) inside DefaultArraySIMDProvider.
+        fallback.log(a)
+    }
+
+    public func clip(_ a: [Float], min minVal: Float, max maxVal: Float) -> [Float] {
+        let count = a.count
+        return uninitializedResult(count: count) { resultBuffer in
+            a.withUnsafeBufferPointer { aBuffer in
+                AccelerateFloatProvider.clip(
+                    aBuffer.baseAddress!,
+                    low: minVal,
+                    high: maxVal,
+                    result: resultBuffer.baseAddress!,
+                    count: count
+                )
+            }
+        }
+    }
+
+    public func minIndex(_ a: [Float]) -> Int {
+        // Trivial scalar scan; delegate to the shared implementation.
+        fallback.minIndex(a)
+    }
+
+    public func maxIndex(_ a: [Float]) -> Int {
+        // Trivial scalar scan; delegate to the shared implementation.
+        fallback.maxIndex(a)
+    }
+}
+#endif // canImport(Accelerate)

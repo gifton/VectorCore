@@ -41,7 +41,17 @@ let package = Package(
         .target(
             name: "VectorCoreC",
             path: "Sources/VectorCoreC",
-            publicHeadersPath: "include"
+            publicHeadersPath: "include",
+            linkerSettings: [
+                // LAPACK shim (vc_lapack.c) calls Accelerate's modern LAPACK
+                // interface (ACCELERATE_NEW_LAPACK) on Apple platforms.
+                // Explicit link keeps VectorCoreC self-contained rather than
+                // relying on Swift-side autolinking of Accelerate.
+                .linkedFramework(
+                    "Accelerate",
+                    .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .visionOS])
+                )
+            ]
         ),
 
         // Benchmarking library - models and utilities for benchmark tools

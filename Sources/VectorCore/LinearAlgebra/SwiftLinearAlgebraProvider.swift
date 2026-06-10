@@ -91,6 +91,7 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
 
     // MARK: - Symmetric eigen (cyclic Jacobi)
 
+    // swiftlint:disable:next cyclomatic_complexity
     public func symmetricEigen(
         _ a: [Float],
         dimension n: Int,
@@ -191,6 +192,7 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
 
     // MARK: - SVD (Hestenes one-sided Jacobi)
 
+    // swiftlint:disable:next cyclomatic_complexity
     public func svdThin(_ a: [Float], rows m: Int, columns n: Int) throws -> SingularValueDecomposition {
         try LinearAlgebraValidation.validateRect(count: a.count, rows: m, columns: n)
 

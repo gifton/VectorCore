@@ -42,6 +42,16 @@ let package = Package(
             name: "VectorCoreC",
             path: "Sources/VectorCoreC",
             publicHeadersPath: "include",
+            cSettings: [
+                // SPM compiles C targets with clang modules, so an in-source
+                // `#define ACCELERATE_NEW_LAPACK` before the include is ignored
+                // for the module import — the macro must come from the command
+                // line. `.define` is a safe (non-unsafeFlags) setting.
+                // ACCELERATE_LAPACK_ILP64 intentionally NOT defined — see
+                // vc_lapack.h (32-bit LAPACK indices by design).
+                .define("ACCELERATE_NEW_LAPACK", to: "1",
+                        .when(platforms: [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .visionOS]))
+            ],
             linkerSettings: [
                 // LAPACK shim (vc_lapack.c) calls Accelerate's modern LAPACK
                 // interface (ACCELERATE_NEW_LAPACK) on Apple platforms.
@@ -73,7 +83,7 @@ let package = Package(
             dependencies: ["VectorCore"],
             swiftSettings: [ .enableExperimentalFeature("StrictConcurrency") ]
         ),
-        
+
         // New comprehensive test suite (skeleton only)
         .testTarget(
             name: "ComprehensiveTests",

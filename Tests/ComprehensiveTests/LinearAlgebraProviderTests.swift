@@ -277,7 +277,10 @@ struct SVDThinSuite {
     @Test("Known diagonal: σ(diag(3,2)) padded = {3, 2}")
     func knownSingularValues() throws {
         // 4×2 column-major: columns [3,0,0,0], [0,2,0,0]
-        let a: [Float] = [3, 0, 0, 0,   0, 2, 0, 0]
+        let a: [Float] = [
+            3, 0, 0, 0, // column 0
+            0, 2, 0, 0  // column 1
+        ]
         for (name, p) in LA.providers {
             let d = try p.svdThin(a, rows: 4, columns: 2)
             #expect(abs(d.singularValues[0] - 3) < 1e-5, "\(name): σ₀")

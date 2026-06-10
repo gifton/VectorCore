@@ -15,8 +15,14 @@
 #include <stdlib.h>
 
 #if defined(__APPLE__)
-  #define ACCELERATE_NEW_LAPACK 1
+  // ACCELERATE_NEW_LAPACK is defined via cSettings in Package.swift: under
+  // clang modules (SPM default for C targets) the include below is a module
+  // import, so an in-source #define would not reach Accelerate's headers.
+  // The guarded define keeps plain textual inclusion working too.
   // ACCELERATE_LAPACK_ILP64 intentionally NOT defined — see vc_lapack.h.
+  #if !defined(ACCELERATE_NEW_LAPACK)
+    #define ACCELERATE_NEW_LAPACK 1
+  #endif
   #include <Accelerate/Accelerate.h>
   #define VC_HAS_LAPACK 1
 #endif

@@ -47,9 +47,12 @@ let package = Package(
                 // interface (ACCELERATE_NEW_LAPACK) on Apple platforms.
                 // Explicit link keeps VectorCoreC self-contained rather than
                 // relying on Swift-side autolinking of Accelerate.
+                // .macCatalyst is a distinct SPM platform (iOS conditions do
+                // not cover it) and __APPLE__ is defined there, so the shim
+                // references LAPACK symbols — it must link Accelerate too.
                 .linkedFramework(
                     "Accelerate",
-                    .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .visionOS])
+                    .when(platforms: [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .visionOS])
                 )
             ]
         ),

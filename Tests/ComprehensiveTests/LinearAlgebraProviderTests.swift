@@ -66,6 +66,19 @@ private enum LA {
         zip(a, b).reduce(0) { Swift.max($0, abs($1.0 - $1.1)) }
     }
 
+    /// Runs `body`, returning the thrown VectorError kind (nil = didn't
+    /// throw / wrong error type) — lets tests pin the exact error contract.
+    static func thrownKind(_ body: () throws -> Void) -> VectorError.ErrorKind? {
+        do {
+            try body()
+            return nil
+        } catch let error as VectorError {
+            return error.kind
+        } catch {
+            return nil
+        }
+    }
+
     /// max |GᵀG − I| over a column-major m×n G — orthonormality defect.
     static func orthoDefect(_ g: [Float], rows m: Int, columns n: Int) -> Float {
         var worst: Float = 0
@@ -133,21 +146,19 @@ struct QRThinSuite {
         }
     }
 
-    @Test("Wide matrix (m < n) throws invalidOperation")
+    @Test("Wide matrix (m < n) throws .invalidOperation")
     func qrWideThrows() {
-        for (_, p) in LA.providers {
-            #expect(throws: VectorError.self) {
-                _ = try p.qrThin(LA.matrix(seed: 1, 3, 5), rows: 3, columns: 5)
-            }
+        for (name, p) in LA.providers {
+            #expect(LA.thrownKind { _ = try p.qrThin(LA.matrix(seed: 1, 3, 5), rows: 3, columns: 5) }
+                == .invalidOperation, "\(name)")
         }
     }
 
-    @Test("Element-count mismatch throws")
+    @Test("Element-count mismatch throws .dimensionMismatch")
     func qrShapeMismatchThrows() {
-        for (_, p) in LA.providers {
-            #expect(throws: VectorError.self) {
-                _ = try p.qrThin([1, 2, 3], rows: 4, columns: 2)
-            }
+        for (name, p) in LA.providers {
+            #expect(LA.thrownKind { _ = try p.qrThin([1, 2, 3], rows: 4, columns: 2) }
+                == .dimensionMismatch, "\(name)")
         }
     }
 }
@@ -273,6 +284,22 @@ struct SVDThinSuite {
             #expect(abs(d.singularValues[1] - 2) < 1e-5, "\(name): σ₁")
         }
     }
+
+    @Test("Error contract: shape mismatch and bad dimensions")
+    func svdErrorPaths() {
+        for (name, p) in LA.providers {
+            #expect(LA.thrownKind { _ = try p.svdThin([1, 2, 3], rows: 2, columns: 2) }
+                == .dimensionMismatch, "\(name): count mismatch")
+            #expect(LA.thrownKind { _ = try p.svdThin([], rows: 0, columns: 3) }
+                == .invalidDimension, "\(name): zero rows")
+            #expect(LA.thrownKind {
+                _ = try p.symmetricEigen([1, 2, 3], dimension: 2, computeEigenvectors: false)
+            } == .dimensionMismatch, "\(name): eigen count mismatch")
+            #expect(LA.thrownKind {
+                _ = try p.symmetricEigen([], dimension: -1, computeEigenvectors: false)
+            } == .invalidDimension, "\(name): eigen bad dimension")
+        }
+    }
 }
 
 // MARK: - Cross-provider parity + integration
@@ -280,9 +307,9 @@ struct SVDThinSuite {
 @Suite("LinearAlgebra - Parity & Integration")
 struct LinearAlgebraParitySuite {
 
-    @Test("LAPACK and Swift fallback agree on spectra (sign-free quantities)")
+    @Test("LAPACK and Swift fallback agree on spectra (sign-free quantities)",
+          .enabled(if: LAPACKLinearAlgebraProvider.isAvailable))
     func parity() throws {
-        guard LAPACKLinearAlgebraProvider.isAvailable else { return }
         let lapack = LAPACKLinearAlgebraProvider()
         let swift = SwiftLinearAlgebraProvider()
 
@@ -300,6 +327,13 @@ struct LinearAlgebraParitySuite {
 
     @Test("Operations.linearAlgebraProvider default works and is overridable")
     func taskLocalSeam() async throws {
+        // Platform-expected default (so the override below is non-vacuous).
+        #if canImport(Accelerate)
+        #expect(Operations.linearAlgebraProvider is LAPACKLinearAlgebraProvider)
+        #else
+        #expect(Operations.linearAlgebraProvider is SwiftLinearAlgebraProvider)
+        #endif
+
         // Default provider resolves and factors.
         let a = LA.matrix(seed: 5, 6, 3)
         let f = try Operations.linearAlgebraProvider.qrThin(a, rows: 6, columns: 3)

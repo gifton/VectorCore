@@ -26,8 +26,6 @@
 //  level above, in the GEMM passes that build the panels.
 //
 
-import Foundation
-
 // MARK: - Result types
 
 /// Thin QR factorization: `A (m×n, m ≥ n) = Q (m×n) · R (n×n)`.
@@ -53,6 +51,10 @@ public struct QRFactorization: Sendable {
 /// with `k = min(m, n)`.
 public struct SingularValueDecomposition: Sendable {
     /// Left singular vectors, m×k, column-major, orthonormal columns.
+    ///
+    /// Caveat: for exactly rank-deficient inputs, the pure-Swift fallback
+    /// does not complete U columns paired with zero singular values to an
+    /// orthonormal basis (LAPACK does). See SwiftLinearAlgebraProvider.
     public let u: [Float]
     /// Singular values, length k, in DESCENDING order (LAPACK convention).
     public let singularValues: [Float]
@@ -62,9 +64,6 @@ public struct SingularValueDecomposition: Sendable {
     public let rows: Int
     /// Column count of A.
     public let columns: Int
-
-    /// k = min(rows, columns).
-    public var rank: Int { Swift.min(rows, columns) }
 
     public init(u: [Float], singularValues: [Float], vt: [Float], rows: Int, columns: Int) {
         self.u = u
@@ -109,9 +108,11 @@ public protocol LinearAlgebraProvider: Sendable {
     ///
     /// - Parameters:
     ///   - a: m×n matrix, column-major, `a.count == rows * columns`.
-    ///   - rows: m. - columns: n. Requires `rows >= columns >= 1`.
-    /// - Throws: `VectorError` (.invalidDimension on bad shape,
-    ///   .operationFailed on backend failure).
+    ///   - rows: m.
+    ///   - columns: n. Requires `rows >= columns >= 1`.
+    /// - Throws: `VectorError` — `.invalidOperation` for wide matrices,
+    ///   `.dimensionMismatch`/`.invalidDimension` on bad shape,
+    ///   `.operationFailed` on backend failure.
     func qrThin(_ a: [Float], rows: Int, columns: Int) throws -> QRFactorization
 
     /// Thin SVD of an arbitrary m×n matrix.
@@ -150,10 +151,24 @@ extension Operations {
 // MARK: - Shared validation
 
 internal enum LinearAlgebraValidation {
-    static func validateQR(count: Int, rows: Int, columns: Int) throws {
+    /// Both backends use 32-bit LAPACK indices (see vc_lapack.h's integer
+    /// model note); reject out-of-range dims with a typed error rather than
+    /// letting `Int32(_:)` trap in the provider.
+    private static let maxLAPACKDimension = Int(Int32.max)
+
+    private static func validatePositiveAndRepresentable(_ rows: Int, _ columns: Int) throws {
         guard rows >= 1, columns >= 1 else {
             throw VectorError.invalidDimension(rows <= 0 ? rows : columns, reason: "matrix dimensions must be positive")
         }
+        guard rows <= maxLAPACKDimension, columns <= maxLAPACKDimension else {
+            throw VectorError.invalidDimension(
+                Swift.max(rows, columns),
+                reason: "exceeds the 32-bit LAPACK index model (see vc_lapack.h)")
+        }
+    }
+
+    static func validateQR(count: Int, rows: Int, columns: Int) throws {
+        try validatePositiveAndRepresentable(rows, columns)
         guard rows >= columns else {
             throw VectorError.invalidOperation(
                 "qrThin", reason: "thin QR requires rows (\(rows)) >= columns (\(columns)); transpose or use svdThin")
@@ -164,18 +179,14 @@ internal enum LinearAlgebraValidation {
     }
 
     static func validateRect(count: Int, rows: Int, columns: Int) throws {
-        guard rows >= 1, columns >= 1 else {
-            throw VectorError.invalidDimension(rows <= 0 ? rows : columns, reason: "matrix dimensions must be positive")
-        }
+        try validatePositiveAndRepresentable(rows, columns)
         guard count == rows * columns else {
             throw VectorError.dimensionMismatch(expected: rows * columns, actual: count)
         }
     }
 
     static func validateSquare(count: Int, dimension: Int) throws {
-        guard dimension >= 1 else {
-            throw VectorError.invalidDimension(dimension, reason: "matrix dimension must be positive")
-        }
+        try validatePositiveAndRepresentable(dimension, dimension)
         guard count == dimension * dimension else {
             throw VectorError.dimensionMismatch(expected: dimension * dimension, actual: count)
         }

@@ -11,6 +11,7 @@
 
 #include "../include/vc_lapack.h"
 
+#include <math.h>
 #include <stdlib.h>
 
 #if defined(__APPLE__)
@@ -30,11 +31,18 @@ int32_t vc_lapack_available(void) {
 
 #if defined(VC_HAS_LAPACK)
 
-// Helper: round a float workspace-size query result up to an int element
-// count. LAPACK returns optimal lwork in work[0] as a float; add a small
-// epsilon before truncation to guard against representational round-down.
+// Helper: convert a float workspace-size query result (work[0]) to an int
+// element count. Must round UP with margin: above 2^24, Float spacing
+// exceeds 1 and the reported value may sit below the true integer, and
+// Accelerate's LAPACK (3.9.x) predates the SROUNDUP_LWORK round-up
+// guarantee introduced in LAPACK 3.10. Undershooting lwork yields a clean
+// info=-N argument error, but only at panel sizes tests never reach —
+// so over-allocate slightly (1/64th) instead.
 static int32_t vc__lwork_from_query(float q) {
-    return (int32_t)(q + 0.5f);
+    int64_t r = (int64_t)ceilf(q);
+    r += r / 64 + 1;
+    if (r > INT32_MAX) { r = INT32_MAX; }
+    return (int32_t)r;
 }
 
 int32_t vc_lapack_sgeqrf(int32_t m, int32_t n, float *a, int32_t lda, float *tau) {

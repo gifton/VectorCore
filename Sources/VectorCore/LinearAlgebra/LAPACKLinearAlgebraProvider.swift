@@ -15,7 +15,6 @@
 //  `LAPACKLinearAlgebraProvider.isAvailable` to branch ahead of time.
 //
 
-import Foundation
 import VectorCoreC
 
 public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {

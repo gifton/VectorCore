@@ -23,8 +23,6 @@
 //  All matrices column-major; see LinearAlgebraProvider layout contract.
 //
 
-import Foundation
-
 public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
 
     /// Hard cap on Jacobi sweeps (eigen and SVD). Jacobi converges
@@ -114,6 +112,12 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
 
         var frobSq: Float = 0
         for v in mat { frobSq += v * v }
+        // Overflow here would make `negligible` infinite and silently return
+        // the unrotated diagonal as the spectrum — fail loudly instead.
+        guard frobSq.isFinite else {
+            throw VectorError.invalidData(
+                "symmetricEigen input overflows Float32 Frobenius norm; rescale the matrix")
+        }
         let negligible = Float.ulpOfOne * frobSq.squareRoot()
 
         var converged = (n == 1)
@@ -195,10 +199,11 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
         if m < n {
             let t = Self.transpose(a, rows: m, columns: n)        // n×m
             let tDec = try svdThin(t, rows: n, columns: m)
+            let k = tDec.singularValues.count                     // = min(m, n)
             return SingularValueDecomposition(
-                u: Self.transpose(tDec.vt, rows: tDec.rank, columns: m),   // (k×m)ᵀ = m×k
+                u: Self.transpose(tDec.vt, rows: k, columns: m),   // (k×m)ᵀ = m×k
                 singularValues: tDec.singularValues,
-                vt: Self.transpose(tDec.u, rows: n, columns: tDec.rank),   // (n×k)ᵀ = k×n
+                vt: Self.transpose(tDec.u, rows: n, columns: k),   // (n×k)ᵀ = k×n
                 rows: m, columns: n
             )
         }
@@ -208,7 +213,11 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
         for j in 0..<n { v[j * n + j] = 1 }
 
         // Rotate while any column pair has |⟨u_p,u_q⟩| > ε‖u_p‖‖u_q‖.
-        let eps: Float = 1e-6                        // relative orthogonality target (Float32)
+        // The floor scales with √m: a naive Float32 dot of two exactly
+        // orthogonal m-vectors carries ~√m·ulp relative noise, so a fixed
+        // 1e-6 target becomes unreachable (spurious non-convergence) once
+        // m exceeds a few hundred rows.
+        let eps = Swift.max(1e-6, 4 * Float.ulpOfOne * Float(m).squareRoot())
         var converged = (n == 1)
         var sweep = 0
         while !converged && sweep < Self.maxSweeps {

@@ -295,7 +295,8 @@ public struct PCAModel: Sendable {
     /// every vector has dimension d. Writes for consecutive vectors land on
     /// adjacent addresses within each of the d column panels, so the pass
     /// stays cache-resident for embedding-sized d.
-    private static func flattenColumnMajor<V: VectorProtocol>(
+    /// Internal: also the flatten used by `KNNGraph.bruteForce`.
+    internal static func flattenColumnMajor<V: VectorProtocol>(
         _ vectors: [V], count n: Int, dimension d: Int
     ) throws -> [Float] where V.Scalar == Float {
         guard d >= 1 else {

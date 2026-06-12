@@ -43,11 +43,12 @@ VectorCore is designed as part of a modular 4-package ecosystem, each with clear
 
 **Purpose**: CPU-first vector mathematics and core abstractions
 
-**Scope** (v0.3.0):
+**Scope** (v0.3.1):
 - Vector data types (fixed & dynamic dimensions)
 - SIMD-optimized operations (512/768/1536 dimensions)
 - Distance metrics (Euclidean, Cosine, Manhattan, Chebyshev, Hamming, Minkowski, DotProduct)
 - CPU GEMM batch distance (`MatrixDistance`: `euclideanSquaredMatrix` / `cosineDistanceMatrix`, `prepare(_:normalized:)` → `PreparedCandidates`) via Accelerate `cblas_sgemm` (AMX on Apple Silicon)
+- Dense linear algebra seam (`LinearAlgebraProvider`: thin QR / thin SVD / symmetric eigen — LAPACK-backed with a pure-Swift fallback) and projection math: PCA (`PCAModel`, randomized SVD) and UMAP layout (`Operations.umap`), consuming the Core-owned `KNNGraph` CSR interchange
 - Normalization, statistics, centroid computation
 - Top-K selection (deterministic `TieBreaker`: `.smallerIndex` default / `.insertionOrder` / `.smallerValue`)
 - Memory management (aligned allocation, buffer pools)
@@ -83,8 +84,32 @@ it **owns the seams** they plug into. What Core newly owns in 0.3.0:
 > the GPU *seam*: the `BatchKernelProvider` dispatch hook plus the page-aligned `bytesNoCopy`
 > buffer contract. The kernels themselves live in VectorAccelerate.
 
+### 0.3.1 — the projection stack
+
+The P0 band of the HN semantic-search gap analysis. Same philosophy as 0.3.0:
+Core owns the *math* and the *contracts*; corpus-scale graph construction stays
+in VectorIndex. What Core newly owns in 0.3.1:
+
+- **`LinearAlgebraProvider`** — thin QR / thin SVD / symmetric eigen over column-major
+  `[Float]`, task-local-selectable (`Operations.$linearAlgebraProvider`): Accelerate LAPACK
+  on Apple platforms, a pure-Swift fallback (Householder QR / cyclic Jacobi / Hestenes SVD)
+  elsewhere.
+- **PCA** — `PCAModel` / `Operations.pca`, randomized SVD (Halko); fit on a sample,
+  stream the corpus through `transform`.
+- **UMAP layout** — `Operations.umap`: fuzzy simplicial set + seeded single-threaded SGD.
+  Initialization via PCA (default), random, or caller-provided coordinates.
+- **`KNNGraph`** — the **ratified CSR interchange contract** (per the gap analysis §3.2
+  boundary note): a dumb, validated sparse kNN container that lives in Core so that
+  graph *producers* (VectorIndex's ANN indexes) can hand graphs TO Core's UMAP without
+  Core ever depending on an index package. **Data flows Index → Core; code never does.**
+  Producers must emit the raw directed graph with Euclidean distances and no self-loops —
+  Core's fuzzy-set stage owns symmetrization. `KNNGraph.bruteForce` (exact, O(n²·d)) is
+  the in-Core reference builder for samples and tests, not the corpus path.
+
 **What's NOT in Core**:
-- ❌ Graph algorithms or data structures
+- ❌ Graph algorithms or graph *construction* at scale (the `KNNGraph` CSR *container* is the
+  one deliberate exception — a Core-owned data-interchange contract that VectorIndex populates;
+  see the 0.3.1 note above)
 - ❌ Clustering algorithms (K-means, hierarchical, etc.)
 - ❌ GPU/Metal **kernels** (Core owns the seam — `BatchKernelProvider` dispatch + the page-aligned `bytesNoCopy` buffer contract — but not the shaders)
 - ❌ Approximate nearest neighbor (ANN) indexes
@@ -95,8 +120,9 @@ it **owns the seams** they plug into. What Core newly owns in 0.3.0:
 
 **Public API Surface**:
 - Vector types: `Vector<D>`, `DynamicVector`, `Vector{512,768,1536}Optimized`
-- Protocols: `VectorProtocol`, `VectorFactory`, `SIMDProvider`, `ComputeProvider`, `BatchKernelProvider`, `UnifiedVectorBuffer`
+- Protocols: `VectorProtocol`, `VectorFactory`, `SIMDProvider`, `ComputeProvider`, `BatchKernelProvider`, `UnifiedVectorBuffer`, `LinearAlgebraProvider`
 - Operations: `Operations`, `BatchOperations`, `MatrixDistance`
+- Projection stack: `PCAConfig`/`PCAModel`, `UMAPConfig`/`UMAPInitialization`/`UMAPResult`, `KNNGraph`
 - Distance metrics: `EuclideanDistance`, `CosineDistance`, etc.
 - GPU-bridge: `PageAlignedBuffer`, `SoALayout` (see [SoA Layout Contract](SoA_Layout_Contract.md))
 
@@ -121,6 +147,7 @@ seams.
   - NSW (Navigable Small World)
   - Graph primitives (adjacency lists, edge management)
   - Graph algorithms (traversal, connectivity, centrality)
+  - kNN-graph construction at corpus scale (batch ANN over an index → Core's `KNNGraph` CSR interchange, feeding Core's UMAP)
 - **Clustering**:
   - K-means (MiniBatch, Streaming, Distributed)
   - Hierarchical clustering
@@ -415,6 +442,6 @@ A: Basic INT8 quantization is CPU-friendly and device-agnostic. Auto-tuning requ
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: 2026-06-07
-**Applies to**: VectorCore v0.3.0+
+**Document Version**: 1.2
+**Last Updated**: 2026-06-11
+**Applies to**: VectorCore v0.3.1+

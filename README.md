@@ -35,7 +35,7 @@ Add VectorCore to your Swift Package Manager dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gifton/VectorCore.git", from: "0.3.0")
+    .package(url: "https://github.com/gifton/VectorCore.git", from: "0.3.1")
 ]
 ```
 

@@ -28,7 +28,7 @@ public struct VectorCoreVersion {
     /// Current version string of VectorCore.
     ///
     /// This matches the version in Package.swift.
-    public static let version = "0.2.2"
+    public static let version = "0.3.1"
 
     /// Major version number.
     ///
@@ -38,12 +38,12 @@ public struct VectorCoreVersion {
     /// Minor version number.
     ///
     /// Incremented when adding functionality in a backwards-compatible manner.
-    public static let minor = 2
+    public static let minor = 3
 
     /// Patch version number.
     ///
     /// Incremented when making backwards-compatible bug fixes.
-    public static let patch = 2
+    public static let patch = 1
 
     /// Pre-release version identifier.
     ///

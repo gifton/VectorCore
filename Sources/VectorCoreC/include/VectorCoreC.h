@@ -1,8 +1,14 @@
 // VectorCoreC.h — Public C API for VectorCore kernels (scaffold)
+//
+// This header shares the target's name, so SPM treats it as the module's
+// umbrella header: every public header must be included here to be visible
+// to Swift.
 #pragma once
 
 #include <stddef.h>
 #include <stdint.h>
+
+#include "vc_lapack.h"
 
 // --- Portability & visibility macros ---
 #if !defined(VC_EXPORT)

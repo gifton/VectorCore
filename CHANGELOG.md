@@ -5,6 +5,59 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-06-11
+
+The projection stack from the HN semantic-search gap analysis (the P0 band):
+dense linear algebra, PCA, and UMAP land in Core, plus the Core-owned
+kNN-graph interchange contract that VectorIndex populates at corpus scale.
+Zero new dependencies; everything stochastic is seeded and deterministic.
+
+### Added
+
+- **`LinearAlgebraProvider` seam — thin QR / thin SVD / symmetric eigen.**
+  Column-major `[Float]` factorizations behind a task-local provider
+  (`Operations.$linearAlgebraProvider`): `LAPACKLinearAlgebraProvider` routes
+  through Accelerate's modern LAPACK (`ACCELERATE_NEW_LAPACK` via `cSettings`,
+  32-bit indices, a `VectorCoreC` shim with lwork negotiation), and
+  `SwiftLinearAlgebraProvider` (Householder QR, cyclic Jacobi eigen, Hestenes
+  SVD) keeps non-Apple platforms working. Parity-tested against each other.
+- **`PCAModel` / `Operations.pca` — PCA via randomized SVD**
+  (Halko–Martinsson–Tropp): Gaussian sketch plus QR-stabilized power
+  iterations; fit on a sample, then stream the corpus through `transform` in
+  caller-sized batches (one GEMM per batch). Seeded deterministic sketch,
+  pinned sign convention (largest-|coordinate| positive), exact thin-SVD
+  fallback when the sketch cannot be thinner than the data;
+  `explainedVariance` / `explainedVarianceRatio` reported.
+- **`Operations.umap` — UMAP layout.** Fuzzy simplicial set (smooth-kNN ρ/σ
+  bisection against the log₂(k+1) target, probabilistic t-conorm union),
+  output-kernel curve fit by Levenberg–Marquardt (reproduces umap-learn's
+  a≈1.577, b≈0.895 defaults), and SGD with epoch-cadence edge sampling,
+  negative sampling, ±4 gradient clipping, and linear annealing.
+  Single-threaded and fully seeded: identical inputs give a bit-for-bit
+  identical layout. PCA initialization by default (per the gap report's scale
+  correction); random and caller-provided coordinates supported.
+- **`KNNGraph` — the Core-owned CSR interchange contract.** A validated
+  sparse k-nearest-neighbor graph (no self-loops, finite non-negative
+  distances, monotone offsets, variable row degree) that graph producers —
+  VectorIndex's ANN indexes at corpus scale — hand TO Core: data flows
+  Index → Core, code never does. `KNNGraph.bruteForce` (blocked Gram-trick
+  GEMM, O(n²·d)) is the exact in-Core builder for samples and tests.
+- **`LAMatMul`** (internal) — column-major GEMM utility (`cblas_sgemm` on
+  Apple platforms; a parity-tested pure-Swift kernel elsewhere) shared by
+  PCA, UMAP, and the brute-force kNN builder.
+
+### Fixed
+
+- **`VectorCoreVersion` drift.** The constants still reported 0.2.2 in the
+  0.3.0 release; they now match the package version again.
+
+### Documentation
+
+- `Docs/Package_Boundaries.md` records the ratified projection-stack
+  placement: dense linear algebra / PCA / UMAP *math* in Core; the `KNNGraph`
+  CSR container Core-owned as a data-interchange contract; graph
+  *construction* and clustering remain VectorIndex territory.
+
 ## [0.3.0] - 2026-06-07
 
 Outcome of the "beta-evolution-4" (BE4) review: **hold the line, sharpen the

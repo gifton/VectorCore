@@ -16,10 +16,18 @@ import Foundation
 /// // Default: Pure Swift implementation
 /// let results = try await Operations.findNearest(to: query, in: database, k: 10)
 ///
-/// // With custom providers (e.g., from VectorAccelerate)
-/// Operations.computeProvider = MetalComputeProvider()
-/// Operations.simdProvider = AccelerateSIMDProvider()
+/// // Opt into Accelerate-backed SIMD for a scoped region. The providers are
+/// // `@TaskLocal`, so they are installed via `$provider.withValue(_:operation:)`
+/// // rather than assigned directly:
+/// try await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
+///     let normalized = try await Operations.normalize(vectors)
+///     // ...further Operations calls here also see the Accelerate provider...
+/// }
 /// ```
+///
+/// Downstream packages (e.g. VectorAccelerate) can swap the compute strategy the
+/// same way — bind a concrete `ComputeProvider` for the scope, e.g.
+/// `Operations.$computeProvider.withValue(someMetalComputeProvider) { ... }`.
 public enum Operations {
 
     // MARK: - Provider Configuration

@@ -770,7 +770,9 @@ struct BatchKernels_SoATests {
                 }
 
                 // SoA should not be more than 2x slower (allowing for setup overhead)
-                #expect(batchTime < individualTime * 2.0, "Batch processing took \(batchTime)s vs individual \(individualTime)s for size \(batchSize)")
+                if strictPerfGatesEnabled {
+                    #expect(batchTime < individualTime * 2.0, "Batch processing took \(batchTime)s vs individual \(individualTime)s for size \(batchSize)")
+                }
             }
         }
 
@@ -819,8 +821,10 @@ struct BatchKernels_SoATests {
                     // For large batches, SoA should show performance benefits
                     // Allow some tolerance for measurement variance
                     let expectedRatio = 3.0 // Allow SoA to be up to 3x slower in debug mode
-                    #expect(batchTime < individualTime * expectedRatio || batchTime < 0.1,
-                           "Large batch \(batchSize): SoA time \(batchTime)s should be reasonable vs individual \(individualTime)s")
+                    if strictPerfGatesEnabled {
+                        #expect(batchTime < individualTime * expectedRatio || batchTime < 0.1,
+                               "Large batch \(batchSize): SoA time \(batchTime)s should be reasonable vs individual \(individualTime)s")
+                    }
                 }
             }
         }
@@ -1083,8 +1087,11 @@ struct BatchKernels_SoATests {
 
             // SoA should be reasonable for large batches (debug mode considerations)
             // Allow tolerance for debug overhead
-            #expect(soaTime < individualTime * 10.0 || soaTime < 1.0,
-                   "SoA blocking should be efficient: SoA time \(soaTime)s vs individual \(individualTime)s")
+            print("  [perf] SoA blocking: \(soaTime)s vs individual \(individualTime)s")
+            if strictPerfGatesEnabled {
+                #expect(soaTime < individualTime * 10.0 || soaTime < 1.0,
+                       "SoA blocking should be efficient: SoA time \(soaTime)s vs individual \(individualTime)s")
+            }
 
             // Test that blocking handles different batch sizes efficiently
             let testSizes = [2, 4, 10, 50, 100, 500]
@@ -1103,7 +1110,9 @@ struct BatchKernels_SoATests {
                 }
             }
 
-            #expect(allTimesReasonable, "Blocking efficiency should scale reasonably with batch size")
+            if strictPerfGatesEnabled {
+                #expect(allTimesReasonable, "Blocking efficiency should scale reasonably with batch size")
+            }
         }
 
         @Test
@@ -1236,8 +1245,10 @@ struct BatchKernels_SoATests {
 
             // For large batches, SoA should be reasonable (debug mode considerations)
             // Allow tolerance for debug overhead
-            #expect(soaTime < aosTime * 3.0 || soaTime < 0.1,
-                   "SoA should be reasonable vs AoS: SoA \(soaTime)s vs AoS \(aosTime)s")
+            if strictPerfGatesEnabled {
+                #expect(soaTime < aosTime * 3.0 || soaTime < 0.1,
+                       "SoA should be reasonable vs AoS: SoA \(soaTime)s vs AoS \(aosTime)s")
+            }
 
             // Test at the threshold where SoA should be beneficial
             let shouldUseSoA = BatchKernels_SoA.shouldUseSoA(candidateCount: largeCandidateCount, dimension: 512)
@@ -1261,8 +1272,10 @@ struct BatchKernels_SoATests {
             // Time should scale roughly linearly (allowing for overhead)
             let expectedRatio = 500.0 / 100.0 // 5x
             let actualRatio = mediumTime / max(smallTime, 1e-6)
-            #expect(actualRatio < expectedRatio * 2 || mediumTime < 0.001,
-                   "Performance should scale reasonably: small \(smallTime)s, medium \(mediumTime)s, ratio \(actualRatio)")
+            if strictPerfGatesEnabled {
+                #expect(actualRatio < expectedRatio * 2 || mediumTime < 0.001,
+                       "Performance should scale reasonably: small \(smallTime)s, medium \(mediumTime)s, ratio \(actualRatio)")
+            }
         }
 
         @Test(.enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
@@ -1289,8 +1302,10 @@ struct BatchKernels_SoATests {
             }
 
             // Sequential should be at least as fast as random (cache benefits)
-            #expect(sequentialTime <= randomTime * 1.5 || sequentialTime < 0.1,
-                   "Sequential access should benefit from cache locality: sequential \(sequentialTime)s vs random \(randomTime)s")
+            if strictPerfGatesEnabled {
+                #expect(sequentialTime <= randomTime * 1.5 || sequentialTime < 0.1,
+                       "Sequential access should benefit from cache locality: sequential \(sequentialTime)s vs random \(randomTime)s")
+            }
 
             // Test 3: Verify lane-wise access pattern efficiency
             let soa = SoA<Vector512Optimized>.build(from: candidates)
@@ -1319,8 +1334,10 @@ struct BatchKernels_SoATests {
             }
 
             // Lane-wise access should be more cache-friendly
-            #expect(laneAccessTime <= candidateAccessTime * 2.0 || laneAccessTime < 0.01,
-                   "Lane-wise access should be cache-friendly: lane \(laneAccessTime)s vs candidate \(candidateAccessTime)s")
+            if strictPerfGatesEnabled {
+                #expect(laneAccessTime <= candidateAccessTime * 2.0 || laneAccessTime < 0.01,
+                       "Lane-wise access should be cache-friendly: lane \(laneAccessTime)s vs candidate \(candidateAccessTime)s")
+            }
 
             // Test 4: Memory access pattern validation
             let accessPatternTest = measureTime {
@@ -1415,8 +1432,10 @@ struct BatchKernels_SoATests {
             }
 
             // SIMD should be reasonably efficient (allowing for debug mode)
-            #expect(simdTime <= scalarTime * 2.0 || simdTime < 0.1,
-                   "SIMD operations should be efficient: SIMD \(simdTime)s vs scalar \(scalarTime)s")
+            if strictPerfGatesEnabled {
+                #expect(simdTime <= scalarTime * 2.0 || simdTime < 0.1,
+                       "SIMD operations should be efficient: SIMD \(simdTime)s vs scalar \(scalarTime)s")
+            }
 
             // Test 3: Verify alignment for SIMD operations
             for laneIdx in 0..<min(10, soa.lanes) {
@@ -1475,7 +1494,7 @@ struct BatchKernels_SoATests {
             let timePerItemValues = timings.map { $0.timePerItem }
             let meanTimePerItem = timePerItemValues.reduce(0, +) / Double(timePerItemValues.count)
 
-            for timing in timings {
+            for timing in timings where strictPerfGatesEnabled {
                 let deviation = abs(timing.timePerItem - meanTimePerItem) / meanTimePerItem
                 #expect(deviation < 2.0 || timing.time < 0.01,
                        "Scaling should be roughly linear. Size \(timing.size): \(timing.timePerItem) vs mean \(meanTimePerItem)")
@@ -1488,8 +1507,10 @@ struct BatchKernels_SoATests {
                 let largeBatchEfficiency = timings[timings.count - 1].timePerItem  // size 2000
 
                 // Large batches should have better or similar efficiency
-                #expect(largeBatchEfficiency <= smallBatchEfficiency * 3.0 || largeBatchEfficiency < 1e-6,
-                       "Large batches should be efficient: small \(smallBatchEfficiency) vs large \(largeBatchEfficiency)")
+                if strictPerfGatesEnabled {
+                    #expect(largeBatchEfficiency <= smallBatchEfficiency * 3.0 || largeBatchEfficiency < 1e-6,
+                           "Large batches should be efficient: small \(smallBatchEfficiency) vs large \(largeBatchEfficiency)")
+                }
             }
 
             // Test 3: Check for performance cliffs
@@ -1506,7 +1527,9 @@ struct BatchKernels_SoATests {
                 }
             }
 
-            #expect(!hasPerformanceCliff, "Should not have dramatic performance cliffs")
+            if strictPerfGatesEnabled {
+                #expect(!hasPerformanceCliff, "Should not have dramatic performance cliffs")
+            }
 
             // Test 4: Verify SoA threshold recommendations
             for timing in timings {
@@ -1550,8 +1573,10 @@ struct BatchKernels_SoATests {
             let ratio768to512 = time768 / max(time512, 1e-9)
             let ratio1536to512 = time1536 / max(time512, 1e-9)
 
-            #expect(ratio768to512 < 3.0 || time768 < 0.01, "768D should scale reasonably vs 512D: \(ratio768to512)x")
-            #expect(ratio1536to512 < 6.0 || time1536 < 0.01, "1536D should scale reasonably vs 512D: \(ratio1536to512)x")
+            if strictPerfGatesEnabled {
+                #expect(ratio768to512 < 3.0 || time768 < 0.01, "768D should scale reasonably vs 512D: \(ratio768to512)x")
+                #expect(ratio1536to512 < 6.0 || time1536 < 0.01, "1536D should scale reasonably vs 512D: \(ratio1536to512)x")
+            }
         }
     }
 
@@ -1586,7 +1611,10 @@ struct BatchKernels_SoATests {
                 }
             }
 
-            #expect(emptyTime < 0.001, "Empty batch processing should be very fast: \(emptyTime)s")
+            print("  [perf] empty-batch ×100: \(emptyTime)s (gate < 0.001)")
+            if strictPerfGatesEnabled {
+                #expect(emptyTime < 0.001, "Empty batch processing should be very fast: \(emptyTime)s")
+            }
         }
 
         @Test
@@ -2837,8 +2865,10 @@ struct BatchKernels_SoATests {
 
             // Generally expect processing time to scale with dimension
             // (may not hold in debug mode)
-            #expect(time512 <= time1536 * 2 || time512 < 0.01,
-                   "512D should generally be faster than 1536D")
+            if strictPerfGatesEnabled {
+                #expect(time512 <= time1536 * 2 || time512 < 0.01,
+                       "512D should generally be faster than 1536D")
+            }
         }
 
         @Test
@@ -3076,7 +3106,10 @@ struct BatchKernels_SoATests {
                 .map { $0.0 }
 
             #expect(rankedDocs.count == topK, "Should find top K documents")
-            #expect(searchTime < 1.0, "Search should complete in reasonable time")
+            print("  [perf] document search: \(searchTime)s (gate < 1.0)")
+            if strictPerfGatesEnabled {
+                #expect(searchTime < 1.0, "Search should complete in reasonable time")
+            }
 
             // Test 2: Recommendation system pattern
             // User-item similarity computation

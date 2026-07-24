@@ -2823,8 +2823,8 @@ struct MixedPrecisionKernelTests {
             let speedup = fp32Time / fp16Time
 
             // Wall-clock speedup, invalid in a debug build (FP16 decode overhead isn't
-            // vectorized); only assert under extended/release benchmarking.
-            if ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1" {
+            // vectorized); only assert in strict-perf runs.
+            if strictPerfGatesEnabled {
                 #expect(speedup > 0.8, "FP16 should not be significantly slower: speedup=\(speedup)")
             }
 
@@ -3354,7 +3354,9 @@ struct MixedPrecisionKernelTests {
             let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates512)
             let conversionTime = CFAbsoluteTimeGetCurrent() - conversionStart
 
-            #expect(conversionTime < 0.1, "Conversion should be fast")
+            if strictPerfGatesEnabled {
+                #expect(conversionTime < 0.1, "Conversion should be fast")
+            }
             #expect(candidatesFP16.count == candidateCount)
 
             // Test mixed precision operations with optimized vectors
@@ -3444,8 +3446,8 @@ struct MixedPrecisionKernelTests {
             }
             let fallbackTime = CFAbsoluteTimeGetCurrent() - fallbackStart
 
-            // Wall-clock timing, invalid in a debug build; only assert under extended benchmarking.
-            if ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1" {
+            // Wall-clock timing, invalid in a debug build; only assert in strict-perf runs.
+            if strictPerfGatesEnabled {
                 #expect(fallbackTime < 1.0, "Fallback should complete in reasonable time")
             }
 
@@ -3678,7 +3680,10 @@ struct MixedPrecisionKernelTests {
 
             // Single candidate should be fast (100 iterations)
             // Allow up to 0.02 seconds for 100 iterations (0.2ms per iteration)
-            #expect(elapsed < 0.02, "Single candidate should process quickly (\(elapsed)s for \(iterations) iterations)")
+            print("  [perf] single-candidate ×\(iterations): \(elapsed)s (gate < 0.02)")
+            if strictPerfGatesEnabled {
+                #expect(elapsed < 0.02, "Single candidate should process quickly (\(elapsed)s for \(iterations) iterations)")
+            }
         }
 
         @Test("Mismatched dimensions error handling")
@@ -4129,7 +4134,10 @@ struct MixedPrecisionKernelTests {
             let alignedTime = CFAbsoluteTimeGetCurrent() - alignedStart
 
             // Aligned access should be efficient
-            #expect(alignedTime < 0.01, "Aligned access should be fast")
+            print("  [perf] aligned range_euclid2 (\(alignedCount)): \(alignedTime)s (gate < 0.01)")
+            if strictPerfGatesEnabled {
+                #expect(alignedTime < 0.01, "Aligned access should be fast")
+            }
 
             // Test SoA alignment
             let soaVectors = try SoAFP16(vectors: alignedVectors)

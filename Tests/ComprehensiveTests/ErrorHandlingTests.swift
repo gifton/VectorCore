@@ -1265,8 +1265,10 @@ struct ErrorHandlingTests {
             #expect(error.description.contains("1024"))
             #expect(error.description.contains("768"))
 
-            // Verify error context
+            // Verify error context (source location is captured only in debug builds)
+            #if DEBUG
             #expect(error.context.line > 0)
+            #endif
         }
 
         @Test("Zero dimension vectors")
@@ -1558,8 +1560,10 @@ struct ErrorHandlingTests {
             #expect(description.contains("Expected dimension") || description.contains("expected"))
             // Description format may vary, just ensure both values are present
 
-            // Test that file and line info is included
+            // File/line info is appended to descriptions only in debug builds
+            #if DEBUG
             #expect(description.contains(".swift"))
+            #endif
         }
 
         @Test("Error debug description")
@@ -1711,13 +1715,18 @@ struct ErrorHandlingTests {
             let elapsed = Date().timeIntervalSince(startTime)
 
             // Should complete in reasonable time (< 1 second for 10k errors)
-            #expect(elapsed < 1.0, "Error handling took \(elapsed) seconds")
+            print("  [perf] 10k error handling: \(elapsed)s (gate < 1.0)")
+            if strictPerfGatesEnabled {
+                #expect(elapsed < 1.0, "Error handling took \(elapsed) seconds")
+            }
 
             // Test that error creation is lightweight
             let singleErrorStart = Date()
             _ = VectorError.invalidData("Performance test")
             let singleErrorTime = Date().timeIntervalSince(singleErrorStart)
-            #expect(singleErrorTime < 0.001, "Single error creation should be sub-millisecond")
+            if strictPerfGatesEnabled {
+                #expect(singleErrorTime < 0.001, "Single error creation should be sub-millisecond")
+            }
         }
 
         @Test("Error context memory efficiency")

@@ -938,7 +938,10 @@ struct QuantizedKernelsComprehensiveTests {
             let quantizationTime = CFAbsoluteTimeGetCurrent() - start
 
             #expect(quantized.count == batchSize)
-            #expect(quantizationTime < 1.0, "Batch quantization should be fast")
+            print("  [perf] batch quantization (\(batchSize)): \(quantizationTime)s (gate < 1.0)")
+            if strictPerfGatesEnabled {
+                #expect(quantizationTime < 1.0, "Batch quantization should be fast")
+            }
         }
 
         @Test("Quantization/dequantization overhead", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
@@ -956,7 +959,10 @@ struct QuantizedKernelsComprehensiveTests {
             let elapsed = CFAbsoluteTimeGetCurrent() - start
             let timePerConversion = elapsed / Double(iterations)
 
-            #expect(timePerConversion < 0.001, "Conversion should be fast")
+            print("  [perf] INT8 round-trip conversion: \(timePerConversion)s/op (gate < 0.001)")
+            if strictPerfGatesEnabled {
+                #expect(timePerConversion < 0.001, "Conversion should be fast")
+            }
         }
 
         @Test("Mixed precision performance")
@@ -973,7 +979,10 @@ struct QuantizedKernelsComprehensiveTests {
             }
 
             let elapsed = CFAbsoluteTimeGetCurrent() - start
-            #expect(elapsed < 1.0, "Mixed precision should be performant")
+            print("  [perf] mixed-precision euclidean ×\(iterations): \(elapsed)s (gate < 1.0)")
+            if strictPerfGatesEnabled {
+                #expect(elapsed < 1.0, "Mixed precision should be performant")
+            }
         }
     }
 

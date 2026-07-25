@@ -32,4 +32,6 @@ Supersedes the 2026-06-05 baseline (`rng-verify-full.log`, 996 tests), which pre
 
 Convert the class-B and class-C wall-clock assertions into non-blocking benchmarks (report, don't `#expect`) so future sweeps can be strictly green, and apply the two class-A `#if DEBUG` gates. Until then, a sweep is "green" iff its only failures are in the lists above.
 
+**Status (2026-07-24, shipped in 0.3.2):** implemented via PR #38 — the class-A `#if DEBUG` gates are applied, and all wall-clock assertions (the lists above, plus additional derived-ratio sites found in a wider sweep; 47 total) now assert only under `VECTORCORE_STRICT_PERF=1` (`Tests/ComprehensiveTests/PerfGate.swift`). Sweeps are strictly green by construction.
+
 Raw logs (not committed): `baseline-0.3.1-release-tests.log`, `baseline-0.3.1-asan.log`, `baseline-0.3.1-tsan-batch-gemm.log` in the session job dir.

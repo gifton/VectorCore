@@ -27,8 +27,9 @@
 public struct VectorCoreVersion {
     /// Current version string of VectorCore.
     ///
-    /// This matches the version in Package.swift.
-    public static let version = "0.3.1"
+    /// This matches the package's release tag (SwiftPM versions are git tags;
+    /// Package.swift carries no version field).
+    public static let version = "0.3.2"
 
     /// Major version number.
     ///
@@ -43,7 +44,7 @@ public struct VectorCoreVersion {
     /// Patch version number.
     ///
     /// Incremented when making backwards-compatible bug fixes.
-    public static let patch = 1
+    public static let patch = 2
 
     /// Pre-release version identifier.
     ///

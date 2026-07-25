@@ -35,7 +35,7 @@ Add VectorCore to your Swift Package Manager dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gifton/VectorCore.git", from: "0.3.1")
+    .package(url: "https://github.com/gifton/VectorCore.git", from: "0.3.2")
 ]
 ```
 
@@ -244,20 +244,20 @@ let dmat = MatrixDistance.euclideanSquaredMatrix(queries: queryVecs, candidates:
 VectorCore uses `@TaskLocal` for zero-cost provider abstraction:
 
 ```swift
-// Override SIMD provider (e.g., for custom Accelerate integration)
-await Operations.$simdProvider.withValue(AccelerateSIMDProvider()) {
+// Override SIMD provider (Accelerate-backed vDSP on Apple platforms, 0.3.2+)
+await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
     let centroid = Operations.centroid(of: vectors)
     // All operations in this scope use Accelerate vDSP
 }
 
-// Override compute provider (e.g., for GPU via VectorAccelerate)
-await Operations.$computeProvider.withValue(MetalComputeProvider()) {
+// Override compute provider (e.g., bind a GPU provider from VectorAccelerate)
+await Operations.$computeProvider.withValue(someGPUComputeProvider) {
     let results = try await Operations.findNearest(to: query, in: database, k: 100)
     // GPU-accelerated search
 }
 
 // Multiple provider overrides
-await Operations.$simdProvider.withValue(AccelerateSIMDProvider()) {
+await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
     await Operations.$computeProvider.withValue(CPUComputeProvider.automatic) {
         // Fully customized execution environment
         let normalized = try await Operations.normalize(vectors)

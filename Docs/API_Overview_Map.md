@@ -215,8 +215,8 @@ let d = Lp3Metric().distance(v1, v2)
 - Provider Override (Accelerate vs Swift SIMD)
 
 ```swift
-await Operations.$simdProvider.withValue(DefaultArraySIMDProvider()) {
-    // Calls inside use this array-SIMD provider
+await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
+    // Calls inside use the Accelerate-backed array-SIMD provider (0.3.2+)
     let nn = try await Operations.findNearest(to: q, in: xs, k: 10)
 }
 

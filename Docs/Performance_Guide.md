@@ -138,8 +138,9 @@ Operations.$simdProvider.withValue(SwiftFloatSIMDProvider()) {
 Controls low-level SIMD operations (add, multiply, reduce, etc.)
 
 **Available Implementations**:
-- `SwiftFloatSIMDProvider` (default): Pure Swift SIMD
-- `AccelerateSIMDProvider` (VectorAccelerate): vDSP-backed operations
+- `SwiftSIMDProvider` (default): Pure Swift SIMD
+- `DefaultArraySIMDProvider`: delegates to the `SwiftFloatSIMDProvider` kernels
+- `AccelerateArraySIMDProvider` (0.3.2+): vDSP/vForce-backed operations on Apple platforms
 
 **When to override**:
 - Large vectors (>1000 dimensions): Use Accelerate for vDSP
@@ -147,7 +148,7 @@ Controls low-level SIMD operations (add, multiply, reduce, etc.)
 
 **Example**:
 ```swift
-await Operations.$simdProvider.withValue(AccelerateSIMDProvider()) {
+await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
     let centroid = Operations.centroid(of: largeVectors)
     // Uses vDSP for aggregation
 }

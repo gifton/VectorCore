@@ -5,6 +5,53 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-07-24
+
+Maintenance release: an Accelerate-backed `ArraySIMDProvider`, a fresh
+sanitizer-verified baseline, and deterministic (non-flaky) test sweeps.
+
+### Added
+
+- **`AccelerateArraySIMDProvider`** — an `ArraySIMDProvider` for Apple
+  platforms that routes every operation vDSP covers (arithmetic, reductions,
+  dot/distance, element-wise combine) through Accelerate, and delegates the
+  rest (the vForce-backed `abs`/`sqrt`/`log` and trivial index scans) to
+  `DefaultArraySIMDProvider`. Parity-tested against `DefaultArraySIMDProvider`
+  at lengths 1–513, including non-multiple-of-SIMD-width inputs. Installed the
+  standard way:
+  `Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) { ... }`.
+
+### Fixed
+
+- **`Operations` provider docs showed a non-compiling pattern.** The header
+  example assigned providers directly (`Operations.simdProvider = ...`); the
+  providers are `@TaskLocal`, so the docs now show scoped
+  `$provider.withValue(_:operation:)` binding.
+- **Two tests asserted debug-only `VectorError` behavior in all
+  configurations.** Source-location context capture is `#if DEBUG`-gated in
+  `VectorError`; the assertions now carry the same gate, fixing spurious
+  failures in Release test runs.
+
+### Tests
+
+- **Wall-clock performance assertions are now opt-in.** 47 timing/speedup
+  `#expect`s across the comprehensive suites only assert when
+  `VECTORCORE_STRICT_PERF=1` is set (see `Tests/ComprehensiveTests/PerfGate.swift`);
+  otherwise measurements are printed but never fail the suite. This makes
+  Debug/Release/ASan/TSan sweeps deterministic — sanitizer slowdowns and CI
+  load no longer produce noise failures. Accuracy and layout assertions are
+  unaffected.
+
+### Documentation
+
+- `Docs/verification-baseline-0.3.1.md` — full verification baseline on
+  `main` @ 0.3.1: Debug and Release suites, an ASan pass (0 reports,
+  including the LAPACK shim and `PageAlignedBuffer` allocation-consumption
+  paths), and a TSan pass over the batch/GEMM/SoA kernels (0 reports), with
+  every failure classified (test bugs and timing noise; no code regressions).
+- `Docs/gap-analysis-hn-semantic-search.md` (+ its execution plan) added;
+  ecosystem strategy doc renumbered.
+
 ## [0.3.1] - 2026-06-11
 
 The projection stack from the HN semantic-search gap analysis (the P0 band):

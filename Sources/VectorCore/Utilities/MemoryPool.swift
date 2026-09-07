@@ -2,13 +2,15 @@
 //  MemoryPool.swift
 //  VectorCore
 //
-//  Thread-safe memory pool for reusing temporary buffers to reduce allocation overhead
+//  Memory pool for reusing temporary buffers to reduce allocation overhead
 //
 
 import Foundation
 
-/// Thread-safe memory pool that reduces allocation overhead by reusing memory buffers
-/// for temporary calculations in vector operations.
+/// Reuses memory buffers for temporary calculations in vector operations.
+/// State changes run synchronously under a lock; callers never wait for queued
+/// pool bookkeeping. `Scripts/ci/check_memory_pool.py` exercises concurrent
+/// acquire/return/quiesce calls with an external process timeout.
 public final class MemoryPool: @unchecked Sendable {
     // MARK: - Singleton
 
@@ -62,7 +64,11 @@ public final class MemoryPool: @unchecked Sendable {
 
         deinit {
             // Return buffer to pool
-            pool?.returnBuffer(buffer, sizeKey: sizeKey, alignment: alignment)
+            if let pool {
+                pool.returnBuffer(buffer, sizeKey: sizeKey, alignment: alignment)
+            } else if let pointer = buffer.baseAddress {
+                AlignedMemory.deallocate(pointer)
+            }
         }
     }
 
@@ -81,8 +87,8 @@ public final class MemoryPool: @unchecked Sendable {
     /// Configuration
     private var configuration: Configuration
 
-    /// Thread-safe access queue
-    private let queue = DispatchQueue(label: "com.vectorcore.memorypool", attributes: .concurrent)
+    /// Protects pools and statistics; no asynchronous work runs inside this lock.
+    private let stateLock = NSLock()
 
     /// Pool storage: [TypeID: [SizeKey: [BufferEntry]]]
     private var pools: [ObjectIdentifier: [Int: [BufferEntry]]] = [:]
@@ -98,6 +104,7 @@ public final class MemoryPool: @unchecked Sendable {
     private struct BufferEntry {
         let pointer: UnsafeMutableRawPointer
         let capacity: Int
+        let byteCount: Int
         let alignment: Int
         var lastAccessed: Date
     }
@@ -131,7 +138,7 @@ public final class MemoryPool: @unchecked Sendable {
         // Try to get from pool
         var buffer: UnsafeMutableBufferPointer<T>?
 
-        queue.sync(flags: .barrier) {
+        stateLock.withLock {
             if let typePool = pools[typeID],
                let sizePool = typePool[sizeKey],
                let index = sizePool.firstIndex(where: { $0.alignment >= alignment }) {
@@ -158,7 +165,7 @@ public final class MemoryPool: @unchecked Sendable {
             // Try aligned allocation; if it fails, return nil (caller will handle)
             if let pointer = try? AlignedMemory.allocateAligned(type: T.self, count: capacity, alignment: alignment) {
                 buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
-                queue.async(flags: .barrier) {
+                stateLock.withLock {
                     self.stats.totalAllocated += capacity * MemoryLayout<T>.stride
                     self.stats.totalInUse += 1
                 }
@@ -205,7 +212,7 @@ public final class MemoryPool: @unchecked Sendable {
 
     /// Get current statistics
     internal var statistics: PoolStatistics {
-        queue.sync {
+        stateLock.withLock {
             let hitRate = stats.hits + stats.misses > 0
                 ? Double(stats.hits) / Double(stats.hits + stats.misses)
                 : 0.0
@@ -225,18 +232,18 @@ public final class MemoryPool: @unchecked Sendable {
         }
     }
 
-    /// Synchronize with the internal queue to ensure all pending
-    /// pool operations (returns, stats updates, cleanups) have completed.
-    /// Useful for tests to avoid arbitrary sleeps.
+    /// Wait for the current state mutation to finish.
+    /// Returns, statistics updates, and explicit cleanup now finish synchronously;
+    /// this method remains available for callers that previously drained the queue.
     public func quiesce() {
-        queue.sync(flags: .barrier) { }
+        stateLock.withLock { }
     }
 
     /// Manually trigger cleanup
     public func cleanup() {
         let cutoffDate = Date().addingTimeInterval(-configuration.cleanupInterval)
 
-        queue.async(flags: .barrier) {
+        stateLock.withLock {
             var totalFreed = 0
 
             for (typeID, var typePool) in self.pools {
@@ -246,7 +253,7 @@ public final class MemoryPool: @unchecked Sendable {
                         if entry.lastAccessed < cutoffDate {
                             // Pooled entries originate from posix_memalign-backed allocations
                             AlignedMemory.deallocate(entry.pointer)
-                            totalFreed += entry.capacity
+                            totalFreed += entry.byteCount
                             return true
                         }
                         return false
@@ -284,22 +291,9 @@ public final class MemoryPool: @unchecked Sendable {
 
         let typeID = ObjectIdentifier(T.self)
         let rawPointer = UnsafeMutableRawPointer(pointer)
+        let byteCount = sizeKey * MemoryLayout<T>.stride
 
-        // Capture pointer address as Int to make it Sendable
-        let pointerAddress = Int(bitPattern: rawPointer)
-
-        queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else {
-                // Pool was deallocated before this barrier task ran. The buffer is
-                // backed by posix_memalign (ARC-invisible), so dropping it here would
-                // leak. Reconstruct and free it directly.
-                if let leaked = UnsafeMutableRawPointer(bitPattern: pointerAddress) {
-                    AlignedMemory.deallocate(leaked)
-                }
-                return
-            }
-            // Reconstruct pointer from address
-            let rawPointer = UnsafeMutableRawPointer(bitPattern: pointerAddress)!
+        stateLock.withLock {
             // Initialize type pool if needed
             if self.pools[typeID] == nil {
                 self.pools[typeID] = [:]
@@ -312,14 +306,16 @@ public final class MemoryPool: @unchecked Sendable {
 
             // Check pool limits
             let currentCount = self.pools[typeID]![sizeKey]!.count
-            let totalMemory = self.pools.values.flatMap { $0.values }.flatMap { $0 }.reduce(0) { $0 + $1.capacity }
+            let totalMemory = self.pools.values.flatMap { $0.values }.flatMap { $0 }.reduce(0) { $0 + $1.byteCount }
 
             if currentCount < self.configuration.maxBuffersPerSize &&
-                totalMemory < self.configuration.maxTotalMemory {
+                totalMemory <= self.configuration.maxTotalMemory &&
+                byteCount <= self.configuration.maxTotalMemory - totalMemory {
                 // Add to pool
                 let entry = BufferEntry(
                     pointer: rawPointer,
                     capacity: sizeKey,
+                    byteCount: byteCount,
                     alignment: alignment,
                     lastAccessed: Date()
                 )
@@ -327,7 +323,7 @@ public final class MemoryPool: @unchecked Sendable {
             } else {
                 // Pool full, deallocate (posix_memalign-backed pointer)
                 AlignedMemory.deallocate(rawPointer)
-                self.stats.totalAllocated -= sizeKey * MemoryLayout<T>.stride
+                self.stats.totalAllocated -= byteCount
             }
 
             self.stats.totalInUse -= 1
@@ -352,7 +348,7 @@ public final class MemoryPool: @unchecked Sendable {
             return
         }
 
-        let timer = DispatchSource.makeTimerSource(queue: queue)
+        let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
         timer.schedule(
             deadline: .now() + configuration.cleanupInterval,
             repeating: configuration.cleanupInterval

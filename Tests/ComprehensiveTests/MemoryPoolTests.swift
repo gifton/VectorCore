@@ -2,10 +2,8 @@ import Foundation
 import Testing
 @testable import VectorCore
 
-// MARK: - Timeout Helpers (file-scoped to avoid capturing self)
-private func withTimeout(_ seconds: Double = 10, _ body: @escaping @Sendable () async throws -> Void) async {
-    // Simplified approach - just run the body directly for now
-    // The individual test timeouts and CI timeout should be sufficient
+// MARK: - Error reporting (file-scoped to avoid capturing self)
+private func recordTestErrors(_ body: @escaping @Sendable () async throws -> Void) async {
     do {
         try await body()
     } catch {
@@ -25,13 +23,37 @@ private func testConfig() -> MemoryPool.Configuration {
     return config
 }
 
+private func checkRetainedByteLimit<T>(type: T.Type, count: Int, oversizedCount: Int) {
+    var configuration = testConfig()
+    configuration.maxBuffersPerSize = 10
+    configuration.maxTotalMemory = 128
+    let pool = MemoryPool(configuration: configuration)
+    var first = pool.acquire(type: type, count: count)
+    var second = pool.acquire(type: type, count: count)
+    #expect(first != nil && second != nil)
+    withExtendedLifetime((first, second)) {
+        #expect(pool.statistics.totalAllocated == 256)
+        #expect(pool.statistics.totalInUse == 2)
+    }
+    first = nil
+    second = nil
+    #expect(pool.statistics.totalAllocated == 128)
+    #expect(pool.statistics.totalInUse == 0)
+    #expect(pool.statistics.bufferCountByType.values.reduce(0, +) == 1)
+
+    let oversizedPool = MemoryPool(configuration: configuration)
+    oversizedPool.withBuffer(type: type, count: oversizedCount) { _ in }
+    #expect(oversizedPool.statistics.totalAllocated == 0)
+    #expect(oversizedPool.statistics.bufferCountByType.values.reduce(0, +) == 0)
+}
+
 @Suite("Memory Pool Tests", .serialized)
 struct MemoryPoolTests {
 
     // Acquire basic behavior
     @Test
     func testAcquire_ReturnsBufferWithCountAndAlignment() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             // Scope the handle so it returns to the pool deterministically.
             do {
@@ -45,14 +67,14 @@ struct MemoryPoolTests {
                 handle.pointer.initialize(to: 0)
                 _ = handle // returned on scope exit
             }
-            // Ensure asynchronous return bookkeeping has completed.
+            // Returned buffers are available before the handle release completes.
             pool.quiesce()
         }
     }
 
     @Test
     func testAcquire_ReusesReturnedBuffer_IncreasesHitRate() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             var firstPtrAddr: Int = 0
             do {
@@ -76,7 +98,7 @@ struct MemoryPoolTests {
 
     @Test
     func testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             var addr1: Int = 0
             do {
@@ -96,7 +118,7 @@ struct MemoryPoolTests {
 
     @Test
     func testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             var lowAlignedAddr: Int = 0
             do {
@@ -105,7 +127,6 @@ struct MemoryPoolTests {
                 lowAlignedAddr = Int(bitPattern: UnsafeMutableRawPointer(h.pointer))
                 _ = h
             }
-            await sleepMs(50)
             do {
                 let h = pool.acquire(type: UInt8.self, count: 64, alignment: 64)!
                 #expect(AlignedMemory.isAligned(h.pointer, to: 64))
@@ -119,7 +140,7 @@ struct MemoryPoolTests {
     // Limits and cleanup
     @Test
     func testReturn_RespectsMaxBuffersPerSizeLimit() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             var config = testConfig()
             config.maxBuffersPerSize = 1
             config.maxTotalMemory = 1_000_000
@@ -139,7 +160,7 @@ struct MemoryPoolTests {
 
     @Test
     func testReturn_RespectsMaxTotalMemoryLimit() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             var config = testConfig()
             config.maxBuffersPerSize = 100
             // Limit to roughly one 1024-float buffer
@@ -156,8 +177,33 @@ struct MemoryPoolTests {
     }
 
     @Test
+    func testRetentionLimitUsesBytesAcrossElementTypes() {
+        // Each ordinary buffer rounds to 128 bytes; each oversized one to 256.
+        checkRetainedByteLimit(type: Float.self, count: 17, oversizedCount: 33)
+        checkRetainedByteLimit(type: Double.self, count: 9, oversizedCount: 17)
+        checkRetainedByteLimit(type: UInt8.self, count: 65, oversizedCount: 129)
+    }
+
+    @Test
+    func testCleanupSubtractsBytesAcrossElementTypes() {
+        var configuration = testConfig()
+        // Nonpositive intervals disable the timer. The explicit cutoff lies one
+        // second in the future, so all returned entries qualify without a sleep.
+        configuration.cleanupInterval = -1
+        let pool = MemoryPool(configuration: configuration)
+        pool.withBuffer(type: Float.self, count: 17) { _ in }
+        pool.withBuffer(type: Double.self, count: 9) { _ in }
+        pool.withBuffer(type: UInt8.self, count: 65) { _ in }
+        #expect(pool.statistics.totalAllocated == 384)
+        #expect(pool.statistics.totalInUse == 0)
+        pool.cleanup()
+        #expect(pool.statistics.totalAllocated == 0)
+        #expect(pool.statistics.bufferCountByType.isEmpty)
+    }
+
+    @Test
     func testCleanup_RemovesStaleEntries_UpdatesStats() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             var config = MemoryPool.Configuration()
             config.cleanupInterval = 0.05  // This test specifically tests cleanup
             let pool = MemoryPool(configuration: config)
@@ -175,7 +221,7 @@ struct MemoryPoolTests {
     // withBuffer behavior
     @Test
     func testWithBuffer_ProvidesWritableAlignedBuffer() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             let sum = pool.withBuffer(type: Float.self, count: 64, alignment: 32) { buf in
                 #expect(AlignedMemory.isAligned(buf.baseAddress!, to: 32))
@@ -188,7 +234,7 @@ struct MemoryPoolTests {
 
     @Test
     func testWithBuffer_FallbackPathWorksWhenAcquireNil() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             let first = pool.withBuffer(type: UInt8.self, count: 0, alignment: 16) { buf in buf.count }
             #expect(first == 0)
@@ -203,7 +249,7 @@ struct MemoryPoolTests {
     // Statistics correctness
     @Test
     func testStatistics_TotalInUseTracksAcquireAndReturn() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             let h1 = pool.acquire(type: Float.self, count: 10)!
             let h2 = pool.acquire(type: Float.self, count: 10)!
@@ -220,7 +266,7 @@ struct MemoryPoolTests {
 
     @Test
     func testStatistics_BufferCountByTypeReflectsPools() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             do { let h = pool.acquire(type: Float.self, count: 20)!; _ = h }
             do { let h = pool.acquire(type: Double.self, count: 20)!; _ = h }
@@ -233,7 +279,7 @@ struct MemoryPoolTests {
     // Concurrency and multi-type separation
     @Test
     func testConcurrentAcquireAndReturn_NoLeaksNoCrashes() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             // Minimize external factors (cleanup timer disabled).
             let pool = MemoryPool(configuration: testConfig())
             await withTaskGroup(of: Void.self) { group in
@@ -248,8 +294,6 @@ struct MemoryPoolTests {
                     }
                 }
             }
-            // Brief settle period for async stats updates
-            await sleepMs(50)
             let stats = pool.statistics
             #expect(stats.totalInUse == 0)
             // hitRate and totalAllocated are opportunistic; just ensure they are within sane bounds
@@ -259,7 +303,7 @@ struct MemoryPoolTests {
 
     @Test
     func testSeparateTypePools_DoNotInterfere() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             var floatAddr: Int = 0
             do {
@@ -285,7 +329,7 @@ struct MemoryPoolTests {
     // Edge cases
     @Test
     func testAcquire_CountZero_ReturnsZeroLengthHandle() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             let h = pool.acquire(type: Int32.self, count: 0)!
             #expect(h.count == 0)
@@ -296,7 +340,7 @@ struct MemoryPoolTests {
 
     @Test
     func testAcquire_SmallCounts_AlignmentDefaultIsApplied() async {
-        await withTimeout(5) {
+        await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             let h = pool.acquire(type: UInt16.self, count: 1)! // default alignment 16
             #expect(AlignedMemory.isAligned(h.pointer, to: 16))
@@ -304,46 +348,32 @@ struct MemoryPoolTests {
         }
     }
 
-    // Regression: buffer must be freed even when the pool is deallocated before
-    // the asynchronous (barrier) return task runs. `BufferHandle.pool` is `weak`,
-    // so a handle can outlive its pool; its deinit then enqueues a return task on
-    // a queue whose owning pool is already gone. With `[weak self]`, `self` is nil
-    // and the posix_memalign-backed buffer (ARC-invisible) would leak unless the
-    // nil-self path frees the pointer explicitly.
-    //
-    // Note: this asserts the teardown path executes without crashing (use-after-free
-    // or double-free would trap, especially under ASan). A precise byte-level leak
-    // assertion is not possible here because freed posix_memalign memory is not
-    // observable through the pool's public statistics once the pool is gone; the
-    // guarantee is enforced structurally by the fix and validated by ASan/leaks in CI.
+    // The standalone MemoryPoolRegression probe counts real allocations and frees
+    // to verify this lifetime path does not leak; this case checks live handle use.
     @Test
     func testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash() async {
-        await withTimeout(5) {
-            // Acquire several handles, then drop the pool's strong reference while
-            // the handles still own their buffers. Dropping the handles afterward
-            // forces the nil-self return path for each buffer.
+        await recordTestErrors {
             var handles: [MemoryPool.BufferHandle<Float>] = []
+            weak var retiredPool: MemoryPool?
             do {
                 let pool = MemoryPool(configuration: testConfig())
+                retiredPool = pool
                 for _ in 0..<8 {
-                    guard let h = pool.acquire(type: Float.self, count: 64, alignment: 64) else {
+                    guard let handle = pool.acquire(type: Float.self, count: 64, alignment: 64) else {
                         Issue.record("Expected non-nil buffer handle")
                         return
                     }
-                    h.pointer.initialize(repeating: 0, count: h.count)
-                    handles.append(h)
+                    handle.pointer.initialize(repeating: 0, count: handle.count)
+                    handles.append(handle)
                 }
-                // `pool` goes out of scope here; the only remaining references to
-                // its buffers are the (weakly-pool-referencing) handles.
             }
-            // Drop all handles -> each deinit enqueues a return task with nil `self`,
-            // which must free the buffer instead of dropping the pointer.
+            #expect(retiredPool == nil)
+            #expect(handles.count == 8)
+            for handle in handles {
+                handle.pointer[0] = 42
+                #expect(approxEqual(handle.pointer[0], 42))
+            }
             handles.removeAll()
-            // Give any in-flight barrier tasks time to run and free the buffers.
-            await sleepMs(100)
-            // Reaching here without a trap means the nil-self deallocation path ran
-            // cleanly (no use-after-free, no double-free).
-            #expect(true)
         }
     }
 }

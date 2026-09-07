@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/gifton/VectorCore/security/advisories/new
+    about: Use private reporting for suspected vulnerabilities; do not post sensitive details in a public issue.

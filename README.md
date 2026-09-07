@@ -6,30 +6,12 @@
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/)
 [![CI](https://github.com/gifton/VectorCore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/VectorCore/actions/workflows/ci.yml)
 
-High-performance, type-safe vector operations for Swift with zero third‑party dependencies. VectorCore provides fast vector math optimized for machine learning, scientific computing, and real-time applications.
+VectorCore provides CPU vector math for Swift on Apple platforms, with generic
+fixed dimensions, specialized SIMD vector types, distance metrics, and batch
+operations. It has no third-party package dependencies; its implementation uses
+Swift, a `VectorCoreC` target, and Apple's Accelerate framework.
 
-## 🚀 Why VectorCore?
-
-VectorCore is designed from the ground up for performance and ease of use:
-
-- **Blazing Fast SIMD** - Optimized implementations for 512/768/1536 dimensions with unrolled loops
-- **Hardware-optimized** - Leverages SIMD4<Float>, Accelerate-backed primitives, and cache-aware memory
-- **Type-safe dimensions** - Compile-time dimension checking prevents runtime errors
-- **Specialized Vectors** - Dedicated Vector512Optimized, Vector768Optimized, Vector1536Optimized types
-- **Zero third‑party dependencies** - Pure Swift with no external packages
-- **Unified Protocol** - Clean VectorProtocol for consistent API across all vector types
-
-Indicative performance (Apple Silicon M‑series): optimized 512/768/1536‑dimensional operations are significantly faster than generic fixed‑dimension vectors due to SIMD storage and loop unrolling.
-
-Whether you're building ML pipelines, processing embeddings, or need fast numerical computing, VectorCore delivers the performance you need with an API you'll love.
-
-Note: Kernel helpers, storage backends, and buffer pools are internal implementation details and not part of the public API surface; see Docs/API_Overview_Map.md for the high-level map.
-
-## ⚡️ GPU Acceleration
-
-VectorCore ships **no GPU/Metal code** — it stays CPU-only. What it provides (as of 0.3.0) is the *seam* for GPU acceleration: a zero-copy buffer contract (`UnifiedVectorBuffer` / `PageAlignedBuffer`, and opt-in page-aligned `SoA`) whose memory is valid for `MTLDevice.makeBuffer(bytesNoCopy:)`, plus a `BatchKernelProvider` hook so an installed GPU provider transparently services `Operations.findNearest` / `findNearestBatch`. The GPU implementation lives in the separate VectorAccelerate package, which plugs into these seams. See [Package Boundaries](Docs/Package_Boundaries.md) and [SoA Layout Contract](Docs/SoA_Layout_Contract.md).
-
-## 📦 Installation
+## Installation
 
 Add VectorCore to your Swift Package Manager dependencies:
 
@@ -48,311 +30,121 @@ Then add it to your target:
 )
 ```
 
-## 🏃 Quick Start
+## Quick Start
+
+This complete program can be used as an executable target's `main.swift`:
 
 ```swift
 import VectorCore
 
-// Use optimized vectors for best performance
-let v1 = Vector512Optimized(repeating: 1.0)
-let v2 = Vector512Optimized(repeating: 2.0)
+let first = Vector512Optimized(repeating: 1.0)
+let second = Vector512Optimized(repeating: 2.0)
 
-// Fast operations with SIMD
-let dotProduct = v1.dotProduct(v2)
-let distance = v1.euclideanDistance(to: v2)
-let normalized = try v1.normalized().get()
+let dot: Float = first.dotProduct(second)
+let distance: Float = first.euclideanDistance(to: second)
+let unit = try first.normalized().get()
 
-// Or use generic vectors with compile-time safety
-let bert = Vector<Dim768>(repeating: 0.5)
-let gpt = Vector<Dim1536>(repeating: 0.5)
+// Generic vectors encode their dimension in the type.
+let embedding = Vector<Dim768>(repeating: 0.5)
 
-// Distance metrics work with all vector types
-let metric = EuclideanDistance()
-let dist = metric.distance(v1, v2)
+print("Dot product: \(dot), distance: \(distance)")
+print("Unit magnitude: \(unit.magnitude), embedding magnitude: \(embedding.magnitude)")
 ```
 
-## ✨ Key Features
-
-### 1. **Type-Safe Dimensions**
-Prevent dimension mismatch errors at compile time:
-
-```swift
-let bert = Vector768.randomUnit()           // BERT embeddings
-let gpt = Vector1536.random(in: -1...1)     // GPT embeddings  
-// let invalid = bert + gpt  // Compile error! Dimensions don't match
-```
-
-### 2. **Zero-Allocation Math**
-All core operations avoid heap allocations:
-
-```swift
-let v1 = Vector256.random(in: -1...1)
-let v2 = Vector256.random(in: -1...1)
-
-// These operations allocate nothing on the heap
-let sum = v1 + v2
-let product = v1 * 2.5
-let dotProduct = v1.dotProduct(v2)
-```
-
-### 3. **Hardware Acceleration**
-Optimized for Apple Silicon and Intel processors:
-
-```swift
-// SIMD-optimized operations
-let magnitude = vector.magnitude
-let normalized = vector.normalized()
-let distance = v1.euclideanDistance(to: v2)
-```
-
-### 4. **Automatic Parallelization**
-Large batch operations scale across cores:
-
-```swift
-// Automatically parallelizes for datasets >= 1000 vectors (configurable)
-let neighbors = await BatchOperations.findNearest(
-    to: query,
-    in: vectors,
-    k: 10
-)
-
-// Batch processing with transformation
-let normalized: [Vector<Dim512>] = try await BatchOperations.process(vectors) { batch in
-    try batch.map { try $0.normalized().get() }
-}
-
-// Pairwise distances (parallelized for large inputs)
-let distances = await BatchOperations.pairwiseDistances(vectors)
-```
-
-### 5. **Flexible Distance Metrics**
-Multiple distance metrics for different use cases:
-
-```swift
-// Built-in metrics
-let euclidean = v1.euclideanDistance(to: v2)
-let cosine = v1.cosineSimilarity(to: v2)
-let dot = v1.dotProduct(v2)
-
-// Use built-in metrics
-let manhattan = ManhattanDistance()
-let dist = manhattan.distance(v1, v2)
-
-// Or create custom metrics
-struct CustomMetric: DistanceMetric {
-    typealias Scalar = Float
-    func distance<V: VectorProtocol>(_ a: V, _ b: V) -> Float where V.Scalar == Float {
-        // Your implementation
-        return customCalculation(a, b)
-    }
-}
-```
-
-## 🛡️ Error Handling Philosophy
-
-VectorCore follows Swift conventions: **fast by default, safe by opt-in**.
-
-### Fast Path (Default)
-```swift
-// Standard operations use preconditions for maximum performance
-let value = vector[10]                    // Fast subscript access
-let v = try Vector<Dim128>(array)        // Fast, throwing initialization on mismatch
-let result = v1 / scalar                  // Fast scalar division
-let elementwise = v1 ./ v2               // Fast element-wise division (no zero check)
-```
-
-### Safe Path (Opt-in)
-```swift
-// Safe variants available when you need graceful error handling
-let normalized = try v.normalized().get()       // Returns Result; throws on zero magnitude when unwrapped
-let result = try Vector.safeDivide(v1, by: v2)  // Throws on division by zero
-```
-
-Choose the right tool for your use case - performance in hot paths, safety when handling untrusted input.
-
-## 📖 API Overview
-
-### Core Types
-
-```swift
-// Optimized vectors for common dimensions (fastest)
-Vector512Optimized   // 512-dim with SIMD4 storage
-Vector768Optimized   // 768-dim (BERT embeddings)
-Vector1536Optimized  // 1536-dim (GPT embeddings)
-
-// Generic fixed-dimension vectors (compile-time safe)
-Vector<Dim128>   // 128-dimensional vector
-Vector<Dim256>   // 256-dimensional vector
-Vector<Dim512>   // 512-dimensional vector
-Vector<Dim768>   // 768-dimensional vector
-Vector<Dim1024>  // 1024-dimensional vector
-Vector<Dim1536>  // 1536-dimensional vector
-
-// Convenience type aliases
-typealias Vector512 = Vector<Dim512>
-typealias Vector768 = Vector<Dim768>
-// ... and more
-
-// Dynamic vectors (runtime dimensions)
-DynamicVector([1.0, 2.0, 3.0, 4.0])
-```
-
-### Basic Operations
-
-```swift
-// Arithmetic
-let sum = v1 + v2                        // Vector addition
-let diff = v1 - v2                       // Vector subtraction
-let scaled = v1 * 2.5                    // Scalar multiplication
-let divided = v1 / 2.0                   // Scalar division
-
-// Element-wise operations
-let product = v1 .* v2                   // Element-wise multiplication
-let quotient = v1 ./ v2                  // Element-wise division
-
-// Vector operations
-let magnitude = vector.magnitude
-let normalized = vector.normalized()
-let dotProduct = v1.dotProduct(v2)
-
-// Distance metrics
-let euclidean = v1.euclideanDistance(to: v2)
-let cosine = v1.cosineSimilarity(to: v2)
-```
-
-### Batch Operations
-
-```swift
-// Auto-parallelized batch operations for large datasets
-let nearest = await BatchOperations.findNearest(to: query, in: vectors, k: 10)
-let distances = await BatchOperations.pairwiseDistances(vectors)
-
-// Centroid and statistics
-let centroid: Vector<Dim512> = Operations.centroid(of: vectors)
-let stats = await BatchOperations.statistics(for: vectors)
-
-// Large batches auto-route through a CPU GEMM path (Accelerate cblas_sgemm →
-// AMX on Apple Silicon) above `matrixRoutingMinN` (default 256). For direct
-// control, MatrixDistance computes a full query×candidate matrix over the
-// optimized vector types (any UnifiedVectorBuffer):
-let dmat = MatrixDistance.euclideanSquaredMatrix(queries: queryVecs, candidates: dbVecs)
-// row-major: dmat[i * dbVecs.count + j] = ‖queryVecs[i] − dbVecs[j]‖²
-```
-
-### Provider Configuration
-
-VectorCore uses `@TaskLocal` for zero-cost provider abstraction:
-
-```swift
-// Override SIMD provider (Accelerate-backed vDSP on Apple platforms, 0.3.2+)
-await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
-    let centroid = Operations.centroid(of: vectors)
-    // All operations in this scope use Accelerate vDSP
-}
-
-// Override compute provider (e.g., bind a GPU provider from VectorAccelerate)
-await Operations.$computeProvider.withValue(someGPUComputeProvider) {
-    let results = try await Operations.findNearest(to: query, in: database, k: 100)
-    // GPU-accelerated search
-}
-
-// Multiple provider overrides
-await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
-    await Operations.$computeProvider.withValue(CPUComputeProvider.automatic) {
-        // Fully customized execution environment
-        let normalized = try await Operations.normalize(vectors)
-    }
-}
-```
-
-### Error Handling
-
-```swift
-// Safe operations with error handling
-do {
-    let normalized = try vector.normalized().get()
-} catch let error as VectorError {
-    print("Error: \(error.localizedDescription)")
-}
-```
-
-## ⚡ Performance Characteristics
-
-VectorCore's optimized implementations deliver exceptional performance:
-
-### Performance Optimization
-
-The optimized vector types (`Vector512Optimized`, `Vector768Optimized`, `Vector1536Optimized`) provide significant performance improvements over generic vectors thanks to:
-- SIMD4<Float> storage layout for optimal vectorization
-- 4x loop unrolling with multiple accumulators to maximize instruction-level parallelism
-- Cache-line optimized memory access patterns
-- Specialized implementations for common dimensions (512, 768, 1536)
-- Zero-copy operations where possible
-- Accelerate framework integration for large operations
-
-### Performance Notes
-
-- Optimized vectors can be **5-10x faster** than generic implementations for core operations
-- Performance varies based on hardware (Apple Silicon vs Intel) and dimension size
-- The repository includes comprehensive test suites that validate performance characteristics
-- For detailed benchmarks, profile your specific use case with Instruments
-
-## 📱 Requirements
-
-- **Swift:** 6.0+
-- **Swift Language Mode**: Swift 6 with **StrictConcurrency** enabled
-- **Concurrency**: Full `Sendable` conformance for all public types
-- **Platforms:**
-  - macOS 14.0+
-  - iOS 17.0+
-  - tvOS 17.0+
-  - watchOS 10.0+
-  - visionOS 1.0+
-
-### Concurrency Safety
-
-VectorCore is built with **Swift 6 Strict Concurrency** from the ground up:
-
-- ✅ All public types conform to `Sendable` (data race safety)
-- ✅ Async operations use structured concurrency (`async`/`await`)
-- ✅ Provider configuration via `@TaskLocal` (zero-cost, thread-safe)
-- ✅ Buffer pooling via `actor` (isolation guarantees)
-- ✅ No global mutable state (except thread-safe caches)
-
-**Migration from Swift 5**:
-If your project uses Swift 5.x, you may see warnings about `Sendable` conformance. To migrate:
-
-```swift
-// Enable strict concurrency in your Package.swift
-swiftSettings: [
-    .enableExperimentalFeature("StrictConcurrency")
-]
-
-// Or in Xcode: Build Settings → Swift Compiler → Strict Concurrency Checking → Complete
-```
-
-See [Swift Evolution SE-0337](https://github.com/apple/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md) for details.
-
-## 📚 Documentation
-
-### Guides
-
-- **[Package Boundaries](Docs/Package_Boundaries.md)** - Understanding the 4-package architecture (Core, Index, Accelerate, Store) and when to use each
-- **[Performance Guide](Docs/Performance_Guide.md)** - Optimized vector types, provider tuning, benchmarking, and performance best practices
-- **[Memory Alignment](Docs/Memory_Alignment.md)** - Aligned allocation/deallocation, SIMD requirements, and avoiding common pitfalls
-
-### API Documentation
-
-- **Vector Types**: `Vector<D>`, `DynamicVector`, `Vector{512,768,1536}Optimized`
-- **Operations**: `Operations` (primary API), `BatchOperations` (auto-parallelized batches), `MatrixDistance` (GEMM batch-distance matrices)
-- **Distance Metrics**: `EuclideanDistance`, `CosineDistance`, `ManhattanDistance`, `ChebyshevDistance`, `HammingDistance`, `MinkowskiDistance`, `DotProductDistance`
-- **Providers**: `SIMDProvider`, `ComputeProvider`, `BufferProvider`, `BatchKernelProvider` (transparent GPU dispatch) — plug-in architecture via `@TaskLocal`
-- **Buffers**: `UnifiedVectorBuffer` / `PageAlignedBuffer` (zero-copy GPU-bridge contract), `SoALayout` (frozen SoA layout descriptor)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please open an issue or pull request with a clear description and minimal reproduction where applicable. Coding style aims for clarity, performance, and Swift 6 concurrency safety.
-
-## 📄 License
+## API and performance
+
+- `Vector<D>` encodes fixed dimensions in its type; `DynamicVector` accepts
+  runtime dimensions. Runtime input and buffer validation still matter.
+- `Vector512Optimized`, `Vector768Optimized`, and `Vector1536Optimized` provide
+  specialized SIMD storage and kernels for common embedding dimensions.
+- `Operations`, `BatchOperations`, and `MatrixDistance` expose vector, batch,
+  and query-by-candidate matrix operations. Routing depends on operation,
+  input size, configuration, and provider availability.
+- Built-in metrics include Euclidean, cosine, Manhattan, Chebyshev, Hamming,
+  Minkowski, and dot-product distance.
+- Provider overrides use `@TaskLocal`; see the
+  [API overview](Docs/API_Overview_Map.md) for the public surface.
+
+Allocation behavior depends on the type and operation. Generic
+[`DimensionStorage`](Sources/VectorCore/Storage/DimensionStorage.swift) defaults
+to managed heap storage above 16 elements. Results, copies, and batch scratch
+storage may allocate. There is no package-wide allocation-free guarantee.
+
+Measure performance in Release on your workload. The
+[Top-K benchmark record](Benchmarks/TopKNaNContract/RESULTS.md) gives a specific
+before/after comparison with hardware, samples, and limitations; it does not
+measure allocations or establish a universal speedup. See
+[contribution benchmark instructions](CONTRIBUTING.md#performance-changes).
+
+## Numerical behavior and unsafe buffers
+
+Floating-point operations can overflow, propagate non-finite values, and produce
+slightly different results across kernels. Validation and error behavior are
+API-specific: check the selected API's contract when handling zero norms,
+NaNs, infinities, or untrusted dimensions. A throwing initializer or checked
+operation does not imply that every subsequent operation validates its inputs.
+
+`TopKSelection` orders numeric scores, including infinities, before NaNs.
+Its default tie policy prefers smaller original indices; exact ties include
+signed zeros and pairs of NaNs. For positive `k`, selection retains NaNs when
+needed to return `min(k, count)` candidates. These contracts are exercised by
+[TopKNaNContractTests](Tests/ComprehensiveTests/TopKNaNContractTests.swift).
+Metric computation can round differently before selection; this ordering rule
+does not promise identical results for different computed scores.
+
+For unsafe APIs, callers must provide valid counts, initialized elements,
+required alignment, and sufficient storage; respect aliasing and exclusivity
+rules. Pointers borrowed by a closure must not escape that closure. Keep owned
+allocations alive until all consumers finish, and coordinate mutation and
+ownership transfer across tasks. See
+[Memory Alignment](Docs/Memory_Alignment.md) and
+[UnifiedVectorBuffer](Sources/VectorCore/Storage/UnifiedVectorBuffer.swift).
+
+The package enables Swift 6 strict concurrency checking, but some buffer and
+pool types use `@unchecked Sendable`, which relies on manually maintained
+invariants. `MemoryPool` is a class with explicit synchronization. Neither
+conformance nor compiler checking makes arbitrary shared pointer mutation safe.
+
+## GPU integration
+
+VectorCore contains CPU implementations and buffer/provider interfaces for
+integration with the separate VectorAccelerate package. `UnifiedVectorBuffer`
+provides a scoped contiguous read view; it does **not** imply page alignment.
+`PageAlignedBuffer` and opt-in page-aligned SoA storage provide additional
+allocation contracts. GPU import, ownership, and synchronization require the
+consumer to follow those contracts. See
+[Package Boundaries](Docs/Package_Boundaries.md) and
+[SoA Layout Contract](Docs/SoA_Layout_Contract.md).
+
+## Requirements and compatibility
+
+The manifest requires Swift tools 6.0 and declares these minimum deployment
+targets: macOS 14, iOS 17, tvOS 17, watchOS 10, and visionOS 1.
+
+Deployment targets are distinct from tested configurations. The
+[September 6 verification record](Docs/verification-topk-nan-contract-2026-09-05.md)
+records full Debug and Release tests on Apple M3 Max, macOS 26.5.2, Swift 6.3.3.
+The [CI workflow](.github/workflows/ci.yml) defines the current macOS test and
+Apple platform compile matrix; consult its run results for coverage on a given
+commit. Simulator compilation does not establish runtime behavior on devices.
+Linux is not a supported or tested platform for this package.
+
+VectorCore is pre-1.0. Minor releases may change APIs or numerical behavior;
+patch releases aim to preserve source compatibility but may correct documented
+bugs. Read release notes and test updates against your workload. See
+[Contributing](CONTRIBUTING.md#compatibility-and-support) for support policy.
+
+## Documentation and contributing
+
+- [API Overview](Docs/API_Overview_Map.md)
+- [Package Boundaries](Docs/Package_Boundaries.md)
+- [Performance Guide](Docs/Performance_Guide.md)
+- [Memory Alignment](Docs/Memory_Alignment.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security reporting](SECURITY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Maintainer and fork guidance](Docs/Maintaining.md)
+
+## License
 
 VectorCore is released under the MIT License. See [LICENSE](LICENSE) for details.

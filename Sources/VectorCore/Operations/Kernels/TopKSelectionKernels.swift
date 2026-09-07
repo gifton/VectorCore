@@ -13,8 +13,7 @@ internal struct TopKBuffer: Sendable {
     public var idxs: [Int]
     @usableFromInline var size: Int
     public let isMinHeap: Bool
-    /// Policy for resolving equal-value ties. Default `.smallerIndex` reproduces
-    /// the historical behavior (and matches the array/pointer selection paths).
+    /// Policy for resolving equal numeric scores and two-NaN ties.
     @usableFromInline let tieBreaker: TieBreaker
 
     public init(k: Int, isMinHeap: Bool, tieBreaker: TieBreaker = .smallerIndex) {
@@ -28,19 +27,9 @@ internal struct TopKBuffer: Sendable {
 
     @usableFromInline @inline(__always)
     internal func isWorse(v1: Float, i1: Int, v2: Float, i2: Int) -> Bool {
-        if v1 != v2 {
-            return isMinHeap ? (v1 < v2) : (v1 > v2)
-        }
-        // Equal value → resolve by policy. "Worse" means evicted/ranked last.
-        switch tieBreaker {
-        case .smallerIndex, .insertionOrder:
-            // Prefer smaller index → larger index is worse.
-            // (For a linear index-ordered scan, insertion order == index order.)
-            return i1 > i2
-        case .smallerValue:
-            // No index preference; equal values are treated as equally good.
-            return false
-        }
+        TopKSelection.orderedBefore(
+            (i2, v2), (i1, v1), descending: isMinHeap, tieBreaker: tieBreaker
+        )
     }
 
     @inlinable
@@ -90,11 +79,14 @@ internal struct TopKBuffer: Sendable {
 @usableFromInline
 internal enum TopKSelectionKernels {
 
-    // Merge two partial Top‑Ks into out (deterministic)
+    // Contract: partials carry disjoint global indices and use the same policy.
+    // Index-policy merge order is exercised by
+    // TopKNaNContractTests.disjointMergesKeepGlobalIndicesAndDestinationPolicy.
     public static func mergeTopK(_ a: TopKBuffer, _ b: TopKBuffer, into out: inout TopKBuffer) {
         precondition(a.isMinHeap == b.isMinHeap && a.isMinHeap == out.isMinHeap, "Heap types must match")
+        precondition(a.tieBreaker == b.tieBreaker && a.tieBreaker == out.tieBreaker, "Tie policies must match")
         precondition(out.k >= a.k && out.k >= b.k, "Output capacity too small")
-        var merged = TopKBuffer(k: out.k, isMinHeap: out.isMinHeap)
+        var merged = TopKBuffer(k: out.k, isMinHeap: out.isMinHeap, tieBreaker: out.tieBreaker)
         for i in 0..<a.size { merged.pushIfBetter(val: a.vals[i], idx: a.idxs[i]) }
         for i in 0..<b.size { merged.pushIfBetter(val: b.vals[i], idx: b.idxs[i]) }
         out = merged

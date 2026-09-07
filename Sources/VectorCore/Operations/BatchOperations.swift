@@ -108,6 +108,12 @@ public enum BatchOperations {
     /// For large datasets (>1000 vectors), automatically uses parallel processing for
     /// up to 6x speedup on multi-core systems.
     ///
+    /// Computed NaN distances rank after numeric distances. Exact ties, including
+    /// signed zeros and NaN pairs, use original input indices. Results contain
+    /// `min(k, vectors.count)` entries for positive k, retaining NaNs when needed.
+    /// See `TopKNaNWrapperTests.batchSerialHeapAndSortKeepNaNsLast` and
+    /// `TopKNaNWrapperTests.batchParallelHeapAndSortPreserveGlobalIndices`.
+    ///
     /// - Parameters:
     ///   - query: The query vector
     ///   - vectors: Array of vectors to search
@@ -932,30 +938,12 @@ public enum BatchOperations {
         _ elements: [(index: Int, distance: Float)],
         k: Int
     ) -> [(index: Int, distance: Float)] {
-        // For small k relative to n, use a max-heap
-        if k < elements.count / 10 {
-            var heap = [(index: Int, distance: Float)]()
-            heap.reserveCapacity(k)
-
-            for element in elements {
-                if heap.count < k {
-                    heap.append(element)
-                    if heap.count == k {
-                        // Heapify
-                        heap.sort { $0.distance > $1.distance }
-                    }
-                } else if element.distance < heap[0].distance {
-                    heap[0] = element
-                    // Restore heap property
-                    heap.sort { $0.distance > $1.distance }
-                }
-            }
-
-            return heap.sorted { $0.distance < $1.distance }
-        } else {
-            // For larger k, just sort
-            return Array(elements.sorted { $0.distance < $1.distance }.prefix(k))
+        let actualK = min(k, elements.count)
+        guard actualK > 0 else { return [] }
+        if actualK < elements.count / 10 {
+            return TopKSelection.heapSelectSmallK(elements, k: actualK, tieBreaker: .smallerIndex)
         }
+        return TopKSelection.sortSelectLargeK(elements, k: actualK, tieBreaker: .smallerIndex)
     }
 }
 

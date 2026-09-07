@@ -5,6 +5,20 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-09-06
+
+### Fixed
+
+- Top-K selection now ranks NaN scores after all numeric scores in both
+  minimization and maximization. The default smaller-index policy resolves exact
+  numeric ties (including signed zeros) and NaN ties consistently for membership
+  and output ordering. NaNs remain in results when needed to satisfy the requested
+  count. Pointer IDs remain output labels; ties use original input positions.
+- CPU `Operations.findNearest` and `BatchOperations.findNearest` use the same
+  selection contract, including parallel partial merges. Euclidean GEMM batch
+  output preserves selected NaNs. Metric computation, squared-distance selection,
+  and third-party provider delegation retain their existing behavior.
+
 ## [0.3.2] - 2026-07-24
 
 Maintenance release: an Accelerate-backed `ArraySIMDProvider`, a fresh

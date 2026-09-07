@@ -13,13 +13,13 @@ import simd
 
 /// Result of a top-k selection operation.
 ///
-/// Contains the indices and distances of the k nearest vectors,
-/// sorted by distance in ascending order (nearest first).
+/// Selection APIs return best-first scores: ascending distances, or descending
+/// similarities for `nearestDotProduct512`. NaNs follow all numeric scores.
 public struct TopKResult: Sendable, Equatable {
-    /// Indices of the k nearest vectors (sorted by distance, ascending)
+    /// Original candidate indices in best-first order.
     public let indices: [Int]
 
-    /// Distances corresponding to each index
+    /// Scores corresponding to each index (similarities for `nearestDotProduct512`).
     public let distances: [Float]
 
     /// Number of results (may be less than k if fewer candidates available)
@@ -56,21 +56,22 @@ public struct TopKResult: Sendable, Equatable {
 
 /// Policy for resolving ties when two candidates compare equal on distance/similarity.
 ///
-/// Top-K results are ordered nearest-first; when two candidates are equal on value,
+/// Top-K results are ordered best-first; when two candidates are equal on value,
 /// the policy decides both *which* candidates survive at the k boundary and their
 /// relative order in the result.
 ///
 /// - Note: For the array/pointer selection APIs a candidate's index equals its
 ///   position in the input scan, so `.smallerIndex` and `.insertionOrder` produce
-///   identical, fully-deterministic output. `.smallerValue` applies no index
-///   tie-break (equal values keep value-only ordering).
+///   identical output. Ties use exact Float equality (including signed zeros),
+///   or two NaNs. `.smallerValue` applies no index tie-break; identities and order
+///   within equal-value or NaN groups are unspecified.
 public enum TieBreaker: Sendable {
     /// Prefer the candidate with the smaller index — fully deterministic. Default.
     case smallerIndex
-    /// Preserve input encounter order among equal values (stable). For an
-    /// index-ordered scan this is identical to `.smallerIndex`.
+    /// Prefer original input order among ties, equivalent to `.smallerIndex`
+    /// for public array/pointer scans. This does not mean parallel merge order.
     case insertionOrder
-    /// Order by value only; do not break ties by index.
+    /// Order by value only; equal numeric scores and two NaNs are equivalent.
     case smallerValue
 }
 
@@ -80,6 +81,17 @@ public enum TieBreaker: Sendable {
 ///
 /// Provides efficient selection of the k smallest distances from a set of candidates.
 /// Uses heap-based algorithms for O(n log k) complexity when k << n.
+///
+/// Selection contract: numeric scores (including infinities) precede NaNs in
+/// both directions. Exact ties, including +0/-0 and two NaNs, use `TieBreaker`.
+/// For positive k, select min(k, n) candidates, retaining NaNs when needed to
+/// fill the count. Precomputed selection preserves original scores and zero signs.
+/// `TopKNaNContractTests` exercises membership, output order, and comparator laws.
+///
+/// Optimized Euclidean paths select squared scores and then return square roots.
+/// Distinct squared scores that round to equal roots need not tie at admission.
+/// Ordering agrees across implementations only for identical computed scores;
+/// this contract does not change metric rounding or non-finite metric policies.
 ///
 /// ## Usage Examples
 ///
@@ -113,6 +125,9 @@ public enum TopKSelection {
     // MARK: - Selection from Pre-computed Distances
 
     /// Select the k smallest values from a distance array.
+    ///
+    /// NaNs rank last and remain candidates. Exact ties use the original input
+    /// position by default. Nonpositive k or empty input returns an empty result.
     ///
     /// - Parameters:
     ///   - k: Number of nearest neighbors to select
@@ -156,6 +171,12 @@ public enum TopKSelection {
     ///
     /// Zero-copy API for GPU/IOSurface interop. Accepts raw pointers and returns
     /// Int32 indices suitable for direct upload to GPU buffers.
+    ///
+    /// NaNs rank last; positive k returns min(k, count) entries. Ties use exact
+    /// equality (+0 and -0 tie), with original buffer positions as the default
+    /// tie-break. IDs are output labels mapped after selection, even when
+    /// duplicate or nonmonotonic; they never affect admission or ordering.
+    /// Original values, including signed zero, are copied into the result.
     ///
     /// - Parameters:
     ///   - k: Number of nearest neighbors to select
@@ -456,7 +477,8 @@ public enum TopKSelection {
 
     /// Optimized k-nearest for dot product similarity (maximize).
     ///
-    /// Returns results sorted by similarity (highest first).
+    /// Returns results sorted by similarity (highest numeric first, NaNs last).
+    /// Exact ties, including two NaNs, prefer smaller original indices.
     /// Use this when you want to maximize dot product rather than minimize distance.
     @inlinable
     public static func nearestDotProduct512(
@@ -501,20 +523,35 @@ public enum TopKSelection {
 
     // MARK: - Private Helpers
 
-    /// Total order for nearest-first (ascending distance) results, ties resolved
-    /// per `tieBreaker`. Defines a strict weak ordering for `sort(by:)`.
+    /// Best-first candidate order. With unique indices, index policies give a
+    /// strict total order; `.smallerValue` gives a strict weak order.
+    /// Exercised by `TopKNaNContractTests.comparatorLaws` and literal fixtures.
     @usableFromInline @inline(__always)
-    internal static func orderedAscending(
-        _ a: (Int, Float), _ b: (Int, Float), _ tieBreaker: TieBreaker
+    internal static func orderedBefore(
+        _ a: (Int, Float), _ b: (Int, Float),
+        descending: Bool, tieBreaker: TieBreaker
     ) -> Bool {
-        if a.1 != b.1 { return a.1 < b.1 }
+        let aNaN: Bool = a.1.isNaN
+        let bNaN: Bool = b.1.isNaN
+        if aNaN != bNaN { return !aNaN }
+        if !aNaN && a.1 != b.1 {
+            return descending ? a.1 > b.1 : a.1 < b.1
+        }
         switch tieBreaker {
         case .smallerIndex, .insertionOrder: return a.0 < b.0
         case .smallerValue: return false
         }
     }
 
-    /// Heap-based selection for small k (O(n log k)), deterministic per `tieBreaker`.
+    /// Ascending-distance specialization of the shared candidate order.
+    @usableFromInline @inline(__always)
+    internal static func orderedAscending(
+        _ a: (Int, Float), _ b: (Int, Float), _ tieBreaker: TieBreaker
+    ) -> Bool {
+        orderedBefore(a, b, descending: false, tieBreaker: tieBreaker)
+    }
+
+    /// Heap-based selection for small k (O(n log k)), using `tieBreaker`.
     ///
     /// Routes through `TopKBuffer` (the same primitive the pointer/optimized paths
     /// use) so that boundary membership and result order honor the tie policy — the
@@ -538,7 +575,7 @@ public enum TopKSelection {
         return pairs
     }
 
-    /// Sort-based selection for large k (better constants), deterministic per `tieBreaker`.
+    /// Sort-based selection for large k (better constants), using `tieBreaker`.
     @usableFromInline
     internal static func sortSelectLargeK(
         _ elements: [(index: Int, distance: Float)],
@@ -562,8 +599,7 @@ public enum TopKSelection {
             pairs.append((buffer.idxs[i], dist))
         }
 
-        // Sort by distance ascending, ties resolved per the buffer's policy
-        // (sqrt is monotonic, so applying it before the comparison is order-preserving).
+        // Output ties use transformed values; membership was selected on raw scores.
         pairs.sort { orderedAscending(($0.0, $0.1), ($1.0, $1.1), buffer.tieBreaker) }
 
         return TopKResult(
@@ -583,13 +619,7 @@ public enum TopKSelection {
         }
 
         // Sort by similarity descending (highest first), ties resolved per policy.
-        pairs.sort { a, b in
-            if a.1 != b.1 { return a.1 > b.1 }
-            switch buffer.tieBreaker {
-            case .smallerIndex, .insertionOrder: return a.0 < b.0
-            case .smallerValue: return false
-            }
-        }
+        pairs.sort { orderedBefore($0, $1, descending: true, tieBreaker: buffer.tieBreaker) }
 
         return TopKResult(
             indices: pairs.map { $0.0 },

@@ -45,6 +45,14 @@ public enum Operations {
 
     /// Find k nearest neighbors to a query vector
     ///
+    /// CPU selection ranks computed NaN scores after numeric scores and resolves
+    /// exact score ties (including signed zeros and NaN pairs) by original input index.
+    /// NaNs fill any remaining slots up to `min(k, vectors.count)`.
+    /// Optimized Euclidean membership uses squared scores; equal rounded square
+    /// roots do not introduce ties at the selection boundary.
+    /// See `TopKNaNWrapperTests` for generic and optimized CPU coverage.
+    /// An installed `BatchKernelProvider` supplies its own result ordering.
+    ///
     /// - Parameters:
     ///   - query: Query vector
     ///   - vectors: Search space
@@ -119,17 +127,18 @@ public enum Operations {
             metric: metric
         )
 
-        // Find k smallest distances
-        let results = distances
-            .enumerated()
-            .map { NearestNeighborResult(index: $0.offset, distance: $0.element) }
-            .sorted { $0.distance < $1.distance }
-            .prefix(min(k, vectors.count))
-
-        return Array(results)
+        let selection = TopKSelection.select(k: k, from: distances)
+        return selection.toTuples().map {
+            NearestNeighborResult(index: $0.index, distance: $0.distance)
+        }
     }
 
     /// Find k nearest neighbors for multiple queries
+    ///
+    /// CPU selection uses the NaN-last, smaller-input-index tie policy documented
+    /// by `findNearest`. Euclidean GEMM selection uses squared scores, then takes
+    /// their square roots; selected NaNs remain NaN, as exercised by
+    /// `TopKNaNWrapperTests.gemmBatchEuclideanFormattingPreservesSelectedNaNs`.
     ///
     /// - Parameters:
     ///   - queries: Query vectors
@@ -241,7 +250,7 @@ public enum Operations {
                 row.reserveCapacity(sel.indices.count)
                 for t in 0..<sel.indices.count {
                     let raw = sel.distances[t]
-                    let dist = euclid ? (raw > 0 ? raw.squareRoot() : 0) : raw
+                    let dist = euclid ? (raw.isNaN ? raw : (raw > 0 ? raw.squareRoot() : 0)) : raw
                     row.append(NearestNeighborResult(index: Int(sel.indices[t]), distance: dist))
                 }
                 out.append(row)
@@ -270,7 +279,8 @@ public enum Operations {
             if negateValues { v = -v }
             pairs.append((buf.idxs[i], v))
         }
-        return pairs.sorted { $0.1 < $1.1 }.map { NearestNeighborResult(index: $0.0, distance: $0.1) }
+        return pairs.sorted { TopKSelection.orderedAscending($0, $1, buf.tieBreaker) }
+            .map { NearestNeighborResult(index: $0.0, distance: $0.1) }
     }
 
     // Euclidean Top‑K using squared distance kernels for selection, sqrt at the end for distances

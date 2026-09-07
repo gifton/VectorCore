@@ -68,11 +68,11 @@ Scripts/ci/*; remove redundant SwiftLint workflow and obsolete workflow archive.
 - [x] Protect version tags against updates and deletion; allow new version creation.
 - [x] Restrict Actions to the exact action repositories in use and require full SHAs.
 - [x] Verify effective rules, CODEOWNERS, reporting, scanning and Actions settings.
-- [ ] Exercise a documentation-only PR and verify pending/failing gate rejection without
+- [x] Exercise a documentation-only PR and verify pending/failing gate rejection without
   merging a deliberately failing change. Record proof in a final verification document.
 
 ## 5. Acceptance record
 
 - [x] Independent review of workflow, script and policy changes.
 - [x] Document actual test/analysis/platform results and any bounded limitations.
-- [ ] Verify final tree, effective remote state and required-check enforcement.
+- [x] Verify final tree, effective remote state and required-check enforcement.

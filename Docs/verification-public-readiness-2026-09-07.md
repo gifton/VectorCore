@@ -1,8 +1,10 @@
 # Public-readiness verification — September 7, 2026
 
 [PR #41](https://github.com/gifton/VectorCore/pull/41) was reviewed, tested, and
-merged. GitHub protections have been applied and read back. The final
-pending-check enforcement exercise is in progress at this revision.
+merged. GitHub protections have been applied, read back, and verified to reject
+a merge with pending required checks. [PR #45](https://github.com/gifton/VectorCore/pull/45)
+records the final acceptance evidence; its checks provide the documentation
+integration result.
 
 Scope: [approved review](GitHub_Readiness_Review_2026-09-06.md) and
 [implementation plan](GitHub_Hardening_Implementation_Plan.md), excluding release
@@ -120,8 +122,9 @@ API application and fresh readbacks on September 7 confirmed:
 Allowed Action patterns are `actions/checkout@*`, `actions/upload-artifact@*`,
 `maxim-lobanov/setup-xcode@*`, `github/codeql-action/init@*`, and
 `github/codeql-action/analyze@*`. Workflow references use verified full SHAs;
-SwiftLint installation verifies a fixed archive SHA-256. Execution under the
-new allowlist is part of the final documentation PR exercise.
+SwiftLint installation verifies a fixed archive SHA-256. Under the new allowlist,
+[CodeQL Actions job 101843555118](https://github.com/gifton/VectorCore/actions/runs/34154551922/job/101843555118)
+successfully completed checkout, initialization, and analysis on PR #45.
 
 Snapshots and enforcement precondition proof are stored locally under
 `/private/tmp/vectorcore-github-hardening-20260907/`; downloaded hosted job logs
@@ -134,9 +137,23 @@ provide the public record, subject to GitHub retention settings.
 The initial implementation's failed aggregate
 [job 101669910994](https://github.com/gifton/VectorCore/actions/runs/34094838213/job/101669910994)
 reported `required jobs did not succeed: test, platforms`. This established
-fail-closed workflow aggregation. A documentation-only PR will verify GitHub
-rejects an early merge while required CI is pending; its PR, exact head, API
-response, and final required-check result will be recorded here.
+fail-closed workflow aggregation.
+
+At **2026-09-07 19:10:46 UTC**, a server-side merge request for documentation-only
+[PR #45](https://github.com/gifton/VectorCore/pull/45), explicitly pinned to head
+`44fac3170890deb49aec0d8336c19d789ad81d35`, returned **HTTP 405**:
+
+> Required status check "CI Required" is expected.
+
+The PR's CI jobs were queued or running and GitHub reported `BLOCKED`. The
+request came from the repository admin, who could bypass only the separate
+review rule. GitHub rejected the merge specifically for required CI; no failing
+change was merged. This verifies server-side enforcement in addition to the
+API configuration readback and fail-closed aggregate tests.
+
+The subsequent documentation commit records this result. Its required CI must
+succeed before integration; the [PR checks](https://github.com/gifton/VectorCore/pull/45/checks)
+are the authoritative final run record. No bypass is added to finish this PR.
 
 ## Boundaries
 

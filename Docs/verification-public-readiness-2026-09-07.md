@@ -1,181 +1,147 @@
 # Public-readiness verification — September 7, 2026
 
-**Status: implementation and rollout verification in progress.** This record
-separates completed checks from pending acceptance. It does not establish that
-hardening is complete or that the source is vulnerability-free.
+[PR #41](https://github.com/gifton/VectorCore/pull/41) was reviewed, tested, and
+merged. GitHub protections have been applied and read back. The final
+pending-check enforcement exercise is in progress at this revision.
 
-Scope: [approved review](GitHub_Readiness_Review_2026-09-06.md),
-[implementation plan](GitHub_Hardening_Implementation_Plan.md), and
-[PR #41](https://github.com/gifton/VectorCore/pull/41). Release naming was already
-corrected by the owner; this work does not move tags or change the version or
-license. Final accepted commit and post-merge run links: **pending**.
+Scope: [approved review](GitHub_Readiness_Review_2026-09-06.md) and
+[implementation plan](GitHub_Hardening_Implementation_Plan.md), excluding release
+naming, which the owner already corrected. Existing tags, releases, package
+version, and license were not changed.
 
-## Local tests and repository checks
+## Accepted implementation and hosted validation
 
-Local platform validation used Apple M3 Max, macOS 26.5.2, Swift 6.3.3,
-Xcode 26.6 (17F113), and 26.5 SDKs. Hosted Xcode 16.2/26.3 results are separate
-from this local evidence.
+Reviewed head: `dd7de41029328b5615d996ad4151d9ee8e092032`.
+Merged main: `f4d5b494cd0d3d8697c0ea928b03c828ce864789`.
+Both have Git tree `35a451501788e9cf2c0c915cd27c4f074690a0ef`, verified
+locally and through GitHub's Git commits API. This exact-tree match and the
+successful GitHub Actions `CI Required` on the reviewed head established the
+precondition for enabling required checks after integration.
 
-| Check | Observed result | Evidence |
-| --- | --- | --- |
-| Prior full Debug and Release baseline | Each reported 1,138 Swift Testing tests in 167 suites, including 18 skips, plus 91 XCTest cases, including 27 skips; zero failures | [September 6 verification](verification-topk-nan-contract-2026-09-05.md) |
-| FP16 tests after portability fix, Debug | 221 Swift Testing tests in 51 suites, including nine skips, plus two XCTest cases; zero failures; Swift Testing took 376.081 s | `/private/tmp/vectorcore-fp16-debug-green.log` |
-| FP16 tests after portability fix, Release | Same counts and skips; zero failures; Swift Testing took 22.792 s | `/private/tmp/vectorcore-fp16-release-green.log` |
-| CI gate, YAML policy, and hook tests | 20 tests passed using `python3 -B -m unittest discover -s Scripts/ci/tests -v` | [Test sources](../Scripts/ci/tests) |
-| Repository YAML/policy validation | `ruby Scripts/ci/validate_github.rb` passed; nine GitHub YAML/template files validated | [Validator](../Scripts/ci/validate_github.rb) |
-| Initial pinned lint baseline | SwiftLint 0.65.1: 293 warnings, zero errors | `/private/tmp/vectorcore-swiftlint-hardening.json` |
-| README consumer | Extracted Quick Start built and ran as a downstream Release consumer; initial hosted consumer job also succeeded | [Consumer fixture](../Scripts/ci/consumer_smoke.py), initial CI below |
+All checks on the reviewed head completed successfully:
 
-Counts include reported skips; the prior full baseline executed 1,120 Swift
-Testing tests and 64 XCTest cases. It predates the new portability tests and is
-not evidence of a full run on the final hardening commit. Latest full-suite and
-lint results on the final revision: **pending**.
+| Check | Observed result |
+| --- | --- |
+| [Full CI](https://github.com/gifton/VectorCore/actions/runs/34149720311) | All required jobs and `CI Required` passed |
+| Xcode 16.2 Debug / Release | Each reported 1,144 Swift Testing tests and 91 XCTest cases; zero failures |
+| Xcode 26.3 Debug / Release | Each reported 1,144 Swift Testing tests in 168 suites and 91 XCTest cases; zero failures |
+| Repository policy, lint, downstream consumer | Passed, including compilation and execution of README Quick Start |
+| Apple platform compilation | Four simulators, Mac Catalyst, and Intel macOS library/test targets passed |
+| Advisory performance smoke | Passed |
+| [CodeQL](https://github.com/gifton/VectorCore/actions/runs/34149720298) | Actions, Swift, and C/C++ passed |
+| [AddressSanitizer](https://github.com/gifton/VectorCore/actions/runs/34149720456) | 92 tests in 14 suites passed |
+| [ThreadSanitizer](https://github.com/gifton/VectorCore/actions/runs/34149720456) | 34 tests in three suites passed |
 
-Active workflow Actions use full commit SHA references with version comments.
-The validator checks pin format, explicit token permissions, checkout credential
-persistence, and gate wiring. SwiftLint installation checks a fixed archive
-SHA-256. Final Action inventory/provenance and live repository SHA enforcement:
-**pending final acceptance readback**. Passing local gate tests demonstrates
-aggregation behavior, not GitHub branch-protection enforcement.
+Each full configuration includes 18 Swift Testing skips and 27 XCTest skips:
+1,126 Swift Testing tests and 64 XCTest cases executed. Existing opt-in skips
+were retained; no failing tests were quarantined. Hosted Swift Testing durations
+were 1,181.926 s / 28.535 s on Xcode 16.2 Debug / Release and 594.216 s /
+33.793 s on Xcode 26.3 Debug / Release.
 
-## Apple platform compilation and portability
+CodeQL analyses for PR merge commit
+`061e251087c1283cec58abb24c7f05b2ed6408ce` recorded 17 Actions rules,
+27 Swift rules, and 58 C/C++ rules, each with zero results and empty error and
+warning fields. The open-alert API returned an empty list. Swift and C/C++ used
+successful manual build extraction. GitHub omitted PR file-coverage metadata;
+recorded rule counts and successful extraction are the available evidence.
 
-The following commands exited zero locally. These are compilation checks, not
-simulator or device runtime tests.
+Post-merge runs: [CI](https://github.com/gifton/VectorCore/actions/runs/34152432291),
+[CodeQL](https://github.com/gifton/VectorCore/actions/runs/34152432299), and
+[sanitizers](https://github.com/gifton/VectorCore/actions/runs/34152432322).
+Their completion is separate from the reviewed-head results above.
 
-| Destination | Configuration / output | Log under `/private/tmp/` |
-| --- | --- | --- |
-| iOS Simulator | Release, arm64 and x86_64 modules | `vectorcore-platform-ios-simulator.log` |
-| tvOS Simulator | Release, arm64 and x86_64 modules | `vectorcore-platform-tvos-simulator.log` |
-| watchOS Simulator | Release, arm64 and x86_64 modules | `vectorcore-platform-watchos-simulator.log` |
-| visionOS Simulator | Release, arm64 and x86_64 modules | `vectorcore-platform-visionos-simulator.log` |
-| Mac Catalyst, after fix | Release, arm64 and x86_64 modules | `vectorcore-platform-mac-catalyst.log` |
-| Intel macOS, after fix | Library and all test targets built; test executable verified as Mach-O x86_64 | `vectorcore-intel-tests-build.log` |
+## Local validation and defects corrected
 
-Simulator and Catalyst builds used `xcodebuild -scheme VectorCore
--configuration Release -destination 'generic/platform=<destination>'
--derivedDataPath /private/tmp/vectorcore-platform-audit/<name>
-CODE_SIGNING_ALLOWED=NO build -quiet`. Catalyst's destination was
-`generic/platform=macOS,variant=Mac Catalyst`. The Intel macOS command was
-`swift build --build-tests --triple x86_64-apple-macosx14.0 --scratch-path
-/private/tmp/vectorcore-intel-tests-build`.
+Local checks used Apple M3 Max, macOS 26.5.2, Swift 6.3.3, and Xcode 26.6
+(17F113) with 26.5 SDKs. Final full Release passed 1,144 Swift Testing tests
+in 168 suites (22.698 s). Focused Debug passed 22 tests in two suites.
+Final ASan passed 92 tests in 14 suites; final TSan passed 34 in three suites.
+Python CI policy, gate, hook, and watchdog tests passed 20/20. The Ruby validator
+accepted nine GitHub YAML/template files. Pinned SwiftLint 0.65.1 exited
+successfully with 293 existing warnings and zero errors.
 
-The first Catalyst build failed because the Intel desktop SDK marks `Float16`
-and its `Sendable` conformance unavailable. Unconditional uses in
-`MixedPrecisionKernels.swift` caused the root error and follow-on initializer
-and concurrency diagnostics. A minimal SDK typecheck proved that an unavailable
-annotation alone does not make `Float16(value)` compile in the method body.
+Simulator and Catalyst compilation covered arm64 and x86_64. Intel macOS built
+the library and all test targets. Compilation checks do not establish Intel,
+simulator, or physical-device runtime coverage. Accelerate deprecation and
+unused-result warnings remain. No Linux support is inferred.
 
-The narrow fix stores the finite maximum as `Float`, classifies FP16 exponent
-bits for all three `validateRange` methods, and excludes native-only
-`detectOverflow(value:) -> Float16?` on Intel macOS and Intel Mac Catalyst.
-Portable `UInt16` storage, `canRepresent`, and `validateBatch` remain available.
-The native conversion compiler flag remains opt-in; no dormant conversion route
-was enabled. Existing tests use portable storage sizes and guard native-only
-operations. [Range validation tests](../Tests/ComprehensiveTests/MixedPrecisionRangeValidationTests.swift)
-cover all widths, signed finite boundaries, infinities, NaN encodings, and native
-conversion endpoints on supported targets. An Intel iOS Simulator compile probe
-confirmed that the guard retains native APIs there.
+Expanded testing exposed two areas needing source corrections:
 
-The four simulator builds preceded this narrow source fix; Catalyst and Intel
-macOS builds followed it. Final hosted platform coverage remains pending.
-Existing Accelerate `cblas_sgemm` deprecation and unused-result warnings remain.
-No Linux support or device-runtime coverage is inferred from these checks.
+- Intel macOS and Catalyst SDKs reject native `Float16`. Portable `UInt16` FP16
+  storage and exponent classification now work across all widths, with native-only
+  APIs excluded on Intel desktop targets. The native conversion flag remains
+  opt-in. `MixedPrecisionRangeValidationTests` covers signed finite boundaries,
+  infinities, NaNs, and supported native endpoints.
+- MemoryPool's asynchronous bookkeeping followed by synchronous queue waits
+  starved cooperative tasks. State operations now complete under `NSLock`.
+  Regression checks also exposed late-handle allocation leaks, retention beyond
+  the byte budget, and cleanup subtracting element counts from byte statistics.
+  Handle teardown and byte accounting were corrected.
 
-## Initial hosted evidence and exposed failures
+`Scripts/ci/check_memory_pool.py` compiles the production pool with a tracked
+real-allocation boundary. Debug and Release pass all five modes: late-handle
+lifetime, byte retention, exact cleanup accounting, ordinary saturation, and
+strict saturation. Saturation uses 256 tasks × 1,000 iterations. Compiler/probe
+process groups have external timeouts; watchdog tests cover child termination.
+The original ordinary probe timed out and sampled stacks showed cooperative
+workers blocked in `DispatchQueue.sync`. Strict mode did not reproduce on every
+run and is not claimed as deterministic failure evidence.
 
-[Initial CI run 34094838213](https://github.com/gifton/VectorCore/actions/runs/34094838213)
-completed repository checks, lint, README consumer, and advisory performance
-smoke successfully. Platform compilation exposed the same Intel Catalyst
-`Float16` failure reproduced locally. The initial full-test matrix did not
-establish a complete green run: jobs stalled or were cancelled during
-investigation. A standalone MemoryPool saturation probe reproduced executor starvation;
-the correction is described below. Latest full matrix results: **pending**.
+Independent review found no actionable introduced defects in the source,
+workflow, policy, or watchdog changes. Targeted sanitizers and zero scanner
+findings do not establish general memory safety or absence of vulnerabilities.
 
-[Initial sanitizer run 34094838416](https://github.com/gifton/VectorCore/actions/runs/34094838416)
-passed targeted AddressSanitizer coverage: 74 Swift Testing tests in 13 suites,
-6.785 s. The initial thread-sanitizer job was cancelled and provides no passing
-result. [Initial CodeQL run 34094838331](https://github.com/gifton/VectorCore/actions/runs/34094838331)
-completed Actions analysis successfully; both Swift and C/C++ analysis builds exposed the
-Intel desktop `Float16` issue. Latest Swift/C/C++ analysis, alert triage, and
-thread-sanitizer acceptance: **pending**.
+## Live GitHub settings
 
-Downloaded initial jobs/logs are in
-`/private/tmp/vectorcore-hosted-hardening/`; the ASan success is recorded in
-`101656000110.log`. These observations apply to those initial runs, not the
-latest PR revision. A passing targeted sanitizer or scanner is not a general
-memory-safety or security audit.
+API application and fresh readbacks on September 7 confirmed:
 
-## Memory-pool regression evidence
+- [Baseline ruleset 10525559](https://github.com/gifton/VectorCore/rules/10525559):
+  active on the default branch; PRs and resolved conversations required;
+  deletion and force pushes blocked; strict, up-to-date `CI Required` from
+  GitHub Actions app **15368** required. No bypass actors; current admin cannot bypass.
+- [Review ruleset 22475449](https://github.com/gifton/VectorCore/rules/22475449):
+  active on the default branch; one approval and code-owner review required;
+  stale approvals dismissed and conversations resolved. Repository admins have
+  a **pull-request-only** review exception for solo maintenance. This exception
+  does not bypass the separate baseline required-check ruleset.
+- [Tag ruleset 22475450](https://github.com/gifton/VectorCore/rules/22475450):
+  active for all tags; updates and deletion blocked, no bypass actors, and no
+  restriction on creating new tags. Existing tag names and contents were untouched.
+- Actions restricted to an explicit allowlist, with full commit SHA pinning
+  required. GitHub-owned and verified actions are not globally allowed.
+- Private vulnerability reporting, Dependabot alerts, and automated security
+  fixes enabled; security fixes read back `paused: false`.
+- Secret scanning and push protection enabled. Immutable releases enabled for
+  future publications; existing releases are not retroactively immutable.
+- Workflow approval required for all external contributors; default workflow
+  token permissions remain read-only and Actions cannot approve pull requests.
+- Merged branches automatically deleted. CODEOWNERS API returned zero errors.
 
-The original pool queued asynchronous bookkeeping and synchronously waited for
-that queue from cooperative tasks. A standalone executable compiling the actual
-production source timed out under 256 tasks × 1,000 acquire/return/quiesce
-iterations. A stack sample showed cooperative workers blocked in
-`DispatchQueue.sync` from `acquire` or `quiesce`. Strict executor mode did not
-reproduce on every run; the ordinary saturation failure and sampled stacks are
-the diagnostic evidence.
+Allowed Action patterns are `actions/checkout@*`, `actions/upload-artifact@*`,
+`maxim-lobanov/setup-xcode@*`, `github/codeql-action/init@*`, and
+`github/codeql-action/analyze@*`. Workflow references use verified full SHAs;
+SwiftLint installation verifies a fixed archive SHA-256. Execution under the
+new allowlist is part of the final documentation PR exercise.
 
-State operations now finish synchronously under one `NSLock`. The same harness
-also caught allocations leaked by handles released after their weak pool had
-expired, retention exceeding its byte budget, and cleanup subtracting element
-counts from byte statistics. Handle teardown now frees directly when its pool
-has expired, and retention/cleanup use stored byte counts.
+Snapshots and enforcement precondition proof are stored locally under
+`/private/tmp/vectorcore-github-hardening-20260907/`; downloaded hosted job logs
+are under `/private/tmp/vectorcore-hosted-hardening/`. Temporary local evidence
+is not a durable public artifact; linked GitHub runs and repository fixtures
+provide the public record, subject to GitHub retention settings.
 
-`python3 Scripts/ci/check_memory_pool.py --configuration debug` and its Release
-variant pass all five modes: late-handle lifetime, byte retention, exact cleanup
-accounting, ordinary saturation, and strict saturation. The harness compiles the
-production pool source with a tracked real-allocation boundary; it does not copy
-the pool implementation. Compiler and probe timeouts terminate their private
-process groups. Watchdog tests detect a child process escaping the former timeout
-implementation. These checks run automatically in each CI test configuration.
+## Required-check enforcement exercise
 
-The full local Debug run after synchronization/lifetime fixes passed 1,142 Swift
-Testing tests in 168 suites (930.197 s under local contention). That run predates
-the two additional byte-accounting tests. Address Sanitizer passed 90 tests in
-14 suites and Thread Sanitizer passed 32 tests in three suites on that revision.
-Final focused Debug tests passed 22 tests in two suites, including the two
-byte-accounting regressions. Final Release and sanitizer results: **pending
-final recording**. Independent review found no actionable introduced defects in
-the portability, synchronization, accounting, or watchdog changes.
+The initial implementation's failed aggregate
+[job 101669910994](https://github.com/gifton/VectorCore/actions/runs/34094838213/job/101669910994)
+reported `required jobs did not succeed: test, platforms`. This established
+fail-closed workflow aggregation. A documentation-only PR will verify GitHub
+rejects an early merge while required CI is pending; its PR, exact head, API
+response, and final required-check result will be recorded here.
 
-The initial hosted `CI Required` job
-[101669910994](https://github.com/gifton/VectorCore/actions/runs/34094838213/job/101669910994)
-failed with `required jobs did not succeed: test, platforms`, verifying that
-unsuccessful dependencies do not produce a green aggregate. Live merge-rule
-enforcement still requires the separate post-integration readback below.
-
-## Live settings and remaining rollout
-
-Initial before/after snapshots are stored outside the repository at
-`/private/tmp/vectorcore-github-hardening-20260907/`. The initial application and
-readback recorded:
-
-- Private vulnerability reporting enabled.
-- Dependabot vulnerability alerts and automated security fixes enabled.
-  The initial fixes snapshot reported `paused: true`; the later
-  `automated-security-fixes-latest.json` readback confirms `enabled: true` and
-  `paused: false`. The initial inactivity pause has cleared.
-- Workflow approval required for all external contributors.
-- Immutable releases enabled for future publications; this is not retroactive.
-- Automatic deletion of merged branches enabled.
-- Secret scanning and secret push protection remained enabled.
-
-The following acceptance evidence is still **pending** in this record:
-
-- Latest passing hosted full matrix, consumer/platform checks, and `CI Required`;
-  reviewed scanner/sanitizer findings and any narrowly documented limitations.
-- Integration of verified workflows into `main`, final commit identity, and
-  post-merge verification.
-- Effective baseline rules requiring an up-to-date PR, resolved conversations,
-  and `CI Required` from GitHub Actions, without baseline bypass actors.
-- Separate owner-review rules with the approved PR-only solo-maintainer bypass.
-- Version-tag update/deletion protection, allowed Actions restriction, full-SHA
-  enforcement, and final CODEOWNERS/API/settings readbacks.
-- A documentation-only PR and proof that pending or failing required checks
-  prevent merge without merging a deliberately failing change.
+## Boundaries
 
 This work does not audit all runtime source, historical commits, account 2FA or
-recovery, GitHub App grants, credentials, or private application data. Local
-checks and initial settings do not establish those controls. Unrelated
-`.antigravitycli/` and `GEMINI.md` remain outside this work.
+recovery, GitHub App grants, credentials, or private application data. New
+Dependabot updates remain ordinary reviewable PRs. Contributor and maintainer
+guides document support limits without guaranteeing a response SLA. Unrelated
+local `.antigravitycli/` and `GEMINI.md` were preserved.

@@ -42,15 +42,15 @@ temporary Git repositories and linked worktrees for hook installation/execution.
 
 ## 3. Workflows
 
-- [ ] Replace suite allowlists with full Debug/Release testing on supported Xcode versions.
-- [ ] Consolidate lint into CI with a fixed SwiftLint binary and checked SHA-256.
-- [ ] Use clean builds instead of broadly restored compiled-artifact caches.
-- [ ] Pin every Action to an upstream-verified full SHA; disable checkout credentials.
-- [ ] Add always-running `CI Required` aggregate with no workflow path filters.
-- [ ] Add consumer Quick Start and Apple platform compile checks.
-- [ ] Add advisory CodeQL Actions/Swift/C scans and focused address/thread sanitizer jobs.
-- [ ] Preserve bounded manual Release benchmarks and advisory PR benchmark artifacts.
-- [ ] Validate YAML/policy, run local checks, then exercise actual GitHub workflows.
+- [x] Replace suite allowlists with full Debug/Release testing on supported Xcode versions.
+- [x] Consolidate lint into CI with a fixed SwiftLint binary and checked SHA-256.
+- [x] Use clean builds instead of broadly restored compiled-artifact caches.
+- [x] Pin every Action to an upstream-verified full SHA; disable checkout credentials.
+- [x] Add always-running `CI Required` aggregate with no workflow path filters.
+- [x] Add consumer Quick Start and Apple platform compile checks.
+- [x] Add advisory CodeQL Actions/Swift/C scans and focused address/thread sanitizer jobs.
+- [x] Preserve bounded manual Release benchmarks and advisory PR benchmark artifacts.
+- [x] Validate YAML/policy, run local checks, then exercise actual GitHub workflows.
 
 Files: .github/workflows/ci.yml, benchmarks.yml, codeql.yml, sanitizers.yml,
 Scripts/ci/*; remove redundant SwiftLint workflow and obsolete workflow archive.
@@ -60,19 +60,19 @@ Scripts/ci/*; remove redundant SwiftLint workflow and obsolete workflow archive.
 - [x] Save before-state snapshots outside the repository.
 - [x] Enable private reporting, Dependabot alerts and updates, all-outside-contributor
   workflow approval, future immutable releases, and branch cleanup; read back results.
-- [ ] Review and open the implementation PR; resolve CI/scanner/sanitizer findings.
-- [ ] Merge verified workflows before enabling required checks or Action SHA enforcement.
-- [ ] Update baseline ruleset: PR, resolved conversations, deletion/force-push blocks,
+- [x] Review and open the implementation PR; resolve CI/scanner/sanitizer findings.
+- [x] Merge verified workflows before enabling required checks or Action SHA enforcement.
+- [x] Update baseline ruleset: PR, resolved conversations, deletion/force-push blocks,
   strict `CI Required` from GitHub Actions, no bypass.
-- [ ] Add separate owner-review ruleset with PR-only admin bypass for solo maintenance.
-- [ ] Protect version tags against updates and deletion; allow new version creation.
-- [ ] Restrict Actions to the exact action repositories in use and require full SHAs.
-- [ ] Verify effective rules, CODEOWNERS, reporting, scanning and Actions settings.
+- [x] Add separate owner-review ruleset with PR-only admin bypass for solo maintenance.
+- [x] Protect version tags against updates and deletion; allow new version creation.
+- [x] Restrict Actions to the exact action repositories in use and require full SHAs.
+- [x] Verify effective rules, CODEOWNERS, reporting, scanning and Actions settings.
 - [ ] Exercise a documentation-only PR and verify pending/failing gate rejection without
   merging a deliberately failing change. Record proof in a final verification document.
 
 ## 5. Acceptance record
 
 - [x] Independent review of workflow, script and policy changes.
-- [ ] Document actual test/analysis/platform results and any bounded limitations.
+- [x] Document actual test/analysis/platform results and any bounded limitations.
 - [ ] Verify final tree, effective remote state and required-check enforcement.

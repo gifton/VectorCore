@@ -54,6 +54,10 @@ jobs:
           xcodebuild -version
           sw_vers
           uname -m
+      - name: Check memory pool under executor saturation
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+        run: python3 Scripts/ci/check_memory_pool.py --configuration "$CONFIGURATION"
       - name: Run all normally enabled tests
         env:
           CONFIGURATION: ${{ matrix.configuration }}
@@ -118,6 +122,10 @@ jobs:
               -derivedDataPath "$RUNNER_TEMP/platform-builds/$platform" \
               CODE_SIGNING_ALLOWED=NO build -quiet
           done
+      - name: Compile library and tests for Intel macOS
+        run: |
+          swift build --build-tests --triple x86_64-apple-macosx14.0 \
+            --scratch-path "$RUNNER_TEMP/intel-test-build"
 
   perf-smoke:
     name: Perf Smoke (artifact only)

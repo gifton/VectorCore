@@ -28,7 +28,7 @@ jobs:
       matrix:
         include:
           - sanitizer: address
-            filter: 'SIMDProviderBoundsTests|SerializationEdgeCaseTests|SoAPageAlignTests|UnifiedVectorBufferTests|TopKNaNContractTests|QuantizedEuclideanOverflowRegressionTests'
+            filter: 'MemoryPoolTests|SIMDProviderBoundsTests|SerializationEdgeCaseTests|SoAPageAlignTests|UnifiedVectorBufferTests|TopKNaNContractTests|QuantizedEuclideanOverflowRegressionTests'
           - sanitizer: thread
             filter: 'MemoryPoolTests|ProviderConformanceTests|TopKNaNWrapperTests'
     steps:

@@ -6,6 +6,8 @@ labels: 'bug'
 assignees: ''
 ---
 
+For suspected vulnerabilities, use [private security reporting](https://github.com/gifton/VectorCore/security/advisories/new).
+
 ## Bug Description
 <!-- A clear and concise description of what the bug is -->
 
@@ -30,7 +32,7 @@ Steps to reproduce the behavior:
 ## Environment
 - VectorCore Version:
 - Swift Version:
-- Platform (macOS/iOS/Linux):
+- Platform (macOS/iOS/tvOS/watchOS/visionOS; device or simulator):
 - OS Version:
 - Xcode Version (if applicable):
 

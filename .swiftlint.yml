@@ -102,7 +102,10 @@ cyclomatic_complexity:
 
 # NOTE: identifier_name rule is disabled above, so no configuration needed
 
+# Precision parameters use notation such as V_FP32 and V_INT8.
+generic_type_name:
+  allowed_symbols: ["_"]
+
 # Allow if statements in for loops for complex conditions
 for_where:
   allow_for_as_filter: true
-

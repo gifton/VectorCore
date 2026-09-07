@@ -12,9 +12,9 @@ import Glibc
 
 // MARK: - Platform Configuration
 
-// Check for native Float16 support (Swift 5.3+ on major platforms).
-// Swift conditional compilation - native Float16 available on arm64/x86_64
-#if compiler(>=5.3) && (arch(arm64) || arch(x86_64))
+// Intel macOS and Mac Catalyst SDKs mark native Float16 unavailable.
+// NATIVE_FLOAT16_SUPPORTED remains a separate opt-in compiler flag.
+#if compiler(>=5.3) && (arch(arm64) || arch(x86_64)) && !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
 private let nativeFloat16Supported = true
 #else
 private let nativeFloat16Supported = false
@@ -86,7 +86,7 @@ public enum MixedPrecisionKernels {
 
     // These helpers manage the conversion between UInt16 bit patterns and Float32 values.
 
-    #if NATIVE_FLOAT16_SUPPORTED
+    #if NATIVE_FLOAT16_SUPPORTED && !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
 
     // Use native hardware conversion if available (fastest and most accurate).
 
@@ -3917,7 +3917,7 @@ internal struct MixedPrecisionBenchmark {
 // MARK: - Utility Extensions
 
 /// Maximum representable finite value in IEEE 754 half-precision (Float16).
-private let MaxFloat16Value: Float16 = 65504.0
+private let MaxFloat16Value: Float = 65504.0
 
 // MARK: - Range Validation
 
@@ -3925,16 +3925,15 @@ public extension MixedPrecisionKernels.Vector512FP16 {
     /// Validates that all components are finite and within the representable range of FP16.
     ///
     /// Returns `true` if all values are finite and within ±65504.
-    /// Use this to detect potential overflow before FP32→FP16 conversion.
+    /// Use `canRepresent(_:)` to validate FP32 inputs before conversion.
     func validateRange() -> Bool {
         return storage.withUnsafeBufferPointer { buffer in
             guard let ptr = buffer.baseAddress else { return false }
 
             for i in 0..<storage.count {
-                let fp16 = ptr[i]
-                let f0 = Float(Float16(bitPattern: UInt16(fp16) >> 0 & 0xFFFF))
-
-                guard f0.isFinite && abs(f0) <= Float(MaxFloat16Value) else {
+                // An all-ones binary16 exponent denotes infinity or NaN.
+                // MixedPrecisionRangeValidationTests covers both signs and all widths.
+                guard ptr[i] & 0x7C00 != 0x7C00 else {
                     return false
                 }
             }
@@ -3948,7 +3947,7 @@ public extension MixedPrecisionKernels.Vector512FP16 {
     /// - Returns: `true` if all values fit in FP16 range
     static func canRepresent(_ values: [Float]) -> Bool {
         return values.allSatisfy { value in
-            value.isFinite && abs(value) <= Float(MaxFloat16Value)
+            value.isFinite && abs(value) <= MaxFloat16Value
         }
     }
 }
@@ -3959,10 +3958,9 @@ public extension MixedPrecisionKernels.Vector768FP16 {
             guard let ptr = buffer.baseAddress else { return false }
 
             for i in 0..<storage.count {
-                let fp16 = ptr[i]
-                let f0 = Float(Float16(bitPattern: UInt16(fp16) >> 0 & 0xFFFF))
-
-                guard f0.isFinite && abs(f0) <= Float(MaxFloat16Value) else {
+                // An all-ones binary16 exponent denotes infinity or NaN.
+                // MixedPrecisionRangeValidationTests covers both signs and all widths.
+                guard ptr[i] & 0x7C00 != 0x7C00 else {
                     return false
                 }
             }
@@ -3972,7 +3970,7 @@ public extension MixedPrecisionKernels.Vector768FP16 {
 
     static func canRepresent(_ values: [Float]) -> Bool {
         return values.allSatisfy { value in
-            value.isFinite && abs(value) <= Float(MaxFloat16Value)
+            value.isFinite && abs(value) <= MaxFloat16Value
         }
     }
 }
@@ -3983,10 +3981,9 @@ public extension MixedPrecisionKernels.Vector1536FP16 {
             guard let ptr = buffer.baseAddress else { return false }
 
             for i in 0..<storage.count {
-                let fp16 = ptr[i]
-                let f0 = Float(Float16(bitPattern: UInt16(fp16) >> 0 & 0xFFFF))
-
-                guard f0.isFinite && abs(f0) <= Float(MaxFloat16Value) else {
+                // An all-ones binary16 exponent denotes infinity or NaN.
+                // MixedPrecisionRangeValidationTests covers both signs and all widths.
+                guard ptr[i] & 0x7C00 != 0x7C00 else {
                     return false
                 }
             }
@@ -3996,7 +3993,7 @@ public extension MixedPrecisionKernels.Vector1536FP16 {
 
     static func canRepresent(_ values: [Float]) -> Bool {
         return values.allSatisfy { value in
-            value.isFinite && abs(value) <= Float(MaxFloat16Value)
+            value.isFinite && abs(value) <= MaxFloat16Value
         }
     }
 }
@@ -4077,7 +4074,11 @@ public enum MixedPrecisionFactory {
 // MARK: - Overflow Detection
 
 extension MixedPrecisionKernels {
+    #if !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
     /// Utility function to check if an FP32 value can be safely converted to FP16.
+    ///
+    /// Available where the SDK provides native Float16; excluded on Intel macOS
+    /// and Mac Catalyst. `validateBatch(values:)` remains available there.
     ///
     /// - Parameter value: FP32 value to validate
     /// - Returns: Float16 value if conversion is safe, nil if overflow would occur
@@ -4092,9 +4093,10 @@ extension MixedPrecisionKernels {
     /// ```
     public static func detectOverflow(value: Float) -> Float16? {
         guard value.isFinite else { return nil }
-        guard abs(value) <= Float(MaxFloat16Value) else { return nil }
+        guard abs(value) <= MaxFloat16Value else { return nil }
         return Float16(value)
     }
+    #endif
 
     /// Batch validate FP32 values for FP16 conversion.
     ///
@@ -4105,7 +4107,7 @@ extension MixedPrecisionKernels {
         var firstOverflowIndex: Int?
 
         for (index, value) in values.enumerated() {
-            if !value.isFinite || abs(value) > Float(MaxFloat16Value) {
+            if !value.isFinite || abs(value) > MaxFloat16Value {
                 overflowCount += 1
                 if firstOverflowIndex == nil {
                     firstOverflowIndex = index

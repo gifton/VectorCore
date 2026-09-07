@@ -2,227 +2,166 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  VECTORCORE_TEST_EXTENDED: '0'
+  VECTORCORE_STRICT_PERF: '0'
+
 jobs:
-  build:
-    name: Build (Debug)
-    runs-on: macos-14
+  repository-checks:
+    name: Repository checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Test CI guards and hooks
+        run: python3 -B -m unittest discover -s Scripts/ci/tests -v
+      - name: Validate GitHub configuration
+        run: ruby Scripts/ci/validate_github.rb
+
+  test:
+    name: Tests (Xcode ${{ matrix.xcode }}, ${{ matrix.configuration }})
+    runs-on: macos-15
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ['16.2', '26.3']
+        configuration: [debug, release]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+      - name: Record toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+          sw_vers
+          uname -m
+      - name: Check memory pool under executor saturation
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+        run: python3 Scripts/ci/check_memory_pool.py --configuration "$CONFIGURATION"
+      - name: Run all normally enabled tests
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+        run: |
+          set -o pipefail
+          mkdir -p test-results
+          swift test -c "$CONFIGURATION" --xunit-output test-results/results.xml 2>&1 | tee test-results/output.log
+      - name: Upload test summaries
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: tests-xcode-${{ matrix.xcode }}-${{ matrix.configuration }}
+          path: test-results/
+          retention-days: 14
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+        with:
+          xcode-version: '26.3'
+      - name: Install verified SwiftLint 0.65.1
+        run: bash Scripts/ci/install_swiftlint.sh "$RUNNER_TEMP/swiftlint"
+      - name: Lint
+        run: '"$RUNNER_TEMP/swiftlint/swiftlint" lint --config .swiftlint.yml --reporter github-actions-logging'
+
+  consumer:
+    name: README consumer
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+        with:
+          xcode-version: '16.2'
+      - name: Build and execute the documented Quick Start
+        run: python3 Scripts/ci/consumer_smoke.py
+
+  platforms:
+    name: Apple platform compilation
+    runs-on: macos-15
     timeout-minutes: 30
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          xcode-version: '16'
-
-      - name: System Info
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+        with:
+          xcode-version: '26.3'
+      - name: Build library for simulator and Catalyst destinations
         run: |
-          echo "## System Info" >> $GITHUB_STEP_SUMMARY
-          echo "Swift: $(swift --version | head -1)" >> $GITHUB_STEP_SUMMARY
-          echo "CPU: $(sysctl -n machdep.cpu.brand_string)" >> $GITHUB_STEP_SUMMARY
-          echo "OS: $(sw_vers -productName) $(sw_vers -productVersion)" >> $GITHUB_STEP_SUMMARY
-
-      - name: Cache SPM (commit-specific)
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-            ${{ runner.os }}-spm-
-
-      - name: Build (Debug)
-        run: swift build -v
-
-      - name: Install SwiftLint
-        run: brew install swiftlint
-
-      - name: Run SwiftLint
+          for platform in 'iOS Simulator' 'tvOS Simulator' 'watchOS Simulator' 'visionOS Simulator' 'macOS,variant=Mac Catalyst'; do
+            xcodebuild -scheme VectorCore -configuration Release \
+              -destination "generic/platform=$platform" \
+              -derivedDataPath "$RUNNER_TEMP/platform-builds/$platform" \
+              CODE_SIGNING_ALLOWED=NO build -quiet
+          done
+      - name: Compile library and tests for Intel macOS
         run: |
-          echo "Running SwiftLint $(swiftlint --version)"
-          swiftlint lint --reporter github-actions-logging
-
-          # Generate summary
-          WARNINGS=$(swiftlint --quiet 2>/dev/null | grep -c "warning:" || true)
-          ERRORS=$(swiftlint --quiet 2>/dev/null | grep -c "error:" || true)
-
-          echo "## SwiftLint Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Warnings: $WARNINGS" >> $GITHUB_STEP_SUMMARY
-          echo "- Errors: $ERRORS" >> $GITHUB_STEP_SUMMARY
-
-          # Fail if there are errors
-          if [ "$ERRORS" -gt 0 ]; then
-            echo "❌ SwiftLint found $ERRORS error(s)" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-  test-minimal:
-    name: Test Minimal
-    runs-on: macos-14
-    needs: build
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16'
-
-      - name: Restore SPM cache (from build)
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-            ${{ runner.os }}-spm-
-
-      - name: Run MinimalTests
-        env:
-          VECTORCORE_TEST_EXTENDED: 0
-        run: swift test --parallel --filter '^MinimalTests\.'
-
-  test-comprehensive:
-    name: Test Comprehensive
-    runs-on: macos-14
-    needs: build
-    timeout-minutes: 45
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16'
-
-      - name: Restore SPM cache (from build)
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-            ${{ runner.os }}-spm-
-
-      - name: Run Comprehensive Tests (Part 1)
-        env:
-          VECTORCORE_TEST_EXTENDED: 0
-        run: |
-          echo "Running ComprehensiveTests Part 1..."
-          swift test --filter "^ComprehensiveTests\.(DynamicVectorTests|StorageAlignment|OperationsTests|OperationsBatchTests|VectorConstructionSuite|VectorEntropySuite|OptimizedVector512Suite)"
-
-      - name: Run Comprehensive Tests (Part 2)
-        env:
-          VECTORCORE_TEST_EXTENDED: 0
-        run: |
-          echo "Running ComprehensiveTests Part 2..."
-          swift test --filter "^ComprehensiveTests\.(SerializationSuite|VectorTypeFactorySuite|OptimizedVector768Suite|DistanceMetricsSuite|VectorArithmeticSuite|OptimizedVector1536Suite)"
-
-      - name: Run Comprehensive Tests (Part 3)
-        env:
-          VECTORCORE_TEST_EXTENDED: 0
-        run: |
-          echo "Running ComprehensiveTests Part 3..."
-          swift test --filter "^ComprehensiveTests\.(VectorNormalizationSuite|OperationsValidationTests|ConvenienceAPIsThrowingTests|TopKSelectionSuite|IntegrationProtocolsSuite)"
-
-      - name: Note about MemoryPool Tests
-        run: |
-          echo "✅ All comprehensive tests (except MemoryPool) completed successfully!"
-          echo ""
-          echo "⚠️ MemoryPool tests are skipped in CI due to Swift Testing framework hanging issue."
-          echo "  These tests pass locally but prevent CI from completing."
-          echo "  Run locally with: swift test --filter '^ComprehensiveTests\.MemoryPoolTests'"
-
-  test-release-smoke:
-    name: Test (Release, smoke)
-    runs-on: macos-14
-    needs: build
-    timeout-minutes: 20
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16'
-
-      - name: Restore SPM cache (from build)
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-            ${{ runner.os }}-spm-
-
-      - name: Run MinimalTests (Release, smoke)
-        env:
-          VECTORCORE_TEST_EXTENDED: 0
-        run: swift test -c release --parallel --filter '^MinimalTests\.'
+          swift build --build-tests --triple x86_64-apple-macosx14.0 \
+            --scratch-path "$RUNNER_TEMP/intel-test-build"
 
   perf-smoke:
     name: Perf Smoke (artifact only)
-    runs-on: macos-14
-    needs: build
-    timeout-minutes: 30
+    runs-on: macos-15
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          xcode-version: '16'
-
-      - name: Restore SPM cache (from build)
-        uses: actions/cache@v4
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
         with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-            ${{ runner.os }}-spm-
-
-      - name: Build (Release)
-        run: swift build -c release
-
-      - name: Run Perf Smoke (dot/dist/normalize @512 only)
-        env:
-          VC_BATCH_AB: 0
+          xcode-version: '26.3'
+      - name: Release benchmark smoke
         run: |
           swift run -c release vectorcore-bench \
-            --suites dot,distance,normalize \
-            --dims 512 \
-            --min-time 0.05 \
-            --samples 1 \
-            --format json \
-            --out .bench/pr_smoke.json
-
-      - name: Upload Perf Smoke Artifacts
+            --suites dot,distance,normalize --dims 512 --min-time 0.05 \
+            --samples 3 --run-seed 1 --format json --out .bench/pr_smoke.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: pr-bench-${{ github.sha }}
-          path: .bench
+          path: .bench/
+          include-hidden-files: true
           retention-days: 14
+
+  required:
+    name: CI Required
+    if: always()
+    needs: [test, lint, repository-checks, consumer, platforms]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Reject unsuccessful or absent required jobs
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 Scripts/ci/check_required.py test lint repository-checks consumer platforms

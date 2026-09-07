@@ -130,7 +130,7 @@ struct MixedPrecisionKernelsTests {
             #expect(fp16MemorySize == fp32MemorySize / 2)
 
             // Test alignment - SIMD4 should be 8-byte aligned for Float16
-            let alignment = MemoryLayout<SIMD4<Float16>>.alignment
+            let alignment = MemoryLayout<SIMD4<UInt16>>.alignment
             #expect(alignment == 8)
 
             // Verify values are correctly packed
@@ -231,7 +231,7 @@ struct MixedPrecisionKernelsTests {
 
             // Verify memory savings
             let fp32MemorySize = MemoryLayout<SIMD4<Float>>.size * 128 * vectorCount
-            let fp16MemorySize = MemoryLayout<SIMD4<Float16>>.size * 128 * vectorCount
+            let fp16MemorySize = MemoryLayout<SIMD4<UInt16>>.size * 128 * vectorCount
             #expect(fp16MemorySize == fp32MemorySize / 2)
 
             print("FP32→FP16 conversion: \(fp32ToFP16Time * 1000)ms for \(vectorCount) vectors")
@@ -787,7 +787,7 @@ struct MixedPrecisionKernelsTests {
 
             // Calculate memory sizes
             let fp32ElementSize = MemoryLayout<Float>.size
-            let fp16ElementSize = MemoryLayout<Float16>.size
+            let fp16ElementSize = MemoryLayout<UInt16>.size
 
             let fp32TotalSize = fp32ElementSize * 512 * vectorCount
             let fp16TotalSize = fp16ElementSize * 512 * vectorCount
@@ -1001,7 +1001,7 @@ struct MixedPrecisionKernelsTests {
                 print("  8-byte aligned: \(alignment8 == 0)")
                 print("  4-byte aligned: \(alignment4 == 0)")
                 print("  Storage count: \(buffer.count) SIMD4<Float16> elements")
-                print("  Total bytes: \(buffer.count * MemoryLayout<SIMD4<Float16>>.size)")
+                print("  Total bytes: \(buffer.count * MemoryLayout<SIMD4<UInt16>>.size)")
 
                 // Verify alignment for SIMD operations
                 #expect(alignment8 == 0, "FP16 storage should be at least 8-byte aligned")

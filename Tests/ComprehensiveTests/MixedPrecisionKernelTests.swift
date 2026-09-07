@@ -211,9 +211,9 @@ struct MixedPrecisionKernelTests {
                     #expect(backVector[0] == value)
                 } else if value == 0.0 || value == -0.0 {
                     #expect(backVector[0] == 0.0 || backVector[0] == -0.0)
-                } else if abs(value) < Float(Float16.leastNormalMagnitude) {
+                } else if abs(value) < Float(0x1p-14) {
                     // Values smaller than FP16's smallest normal may flush to zero
-                    #expect(abs(backVector[0]) <= Float(Float16.leastNormalMagnitude) * 2,
+                    #expect(abs(backVector[0]) <= Float(0x1p-14) * 2,
                            "Very small value should flush to zero or stay small")
                 } else if abs(value) > 65504.0 {  // FP16 max value
                     // Values beyond FP16 range become infinity
@@ -353,7 +353,7 @@ struct MixedPrecisionKernelTests {
                 let fp32TotalBytes = dim * fp32BytesPerElement
 
                 // FP16 storage size
-                let fp16BytesPerElement = MemoryLayout<Float16>.size  // 2 bytes
+                let fp16BytesPerElement = MemoryLayout<UInt16>.size  // 2 bytes
                 let fp16TotalBytes = dim * fp16BytesPerElement
 
                 // Verify 50% memory reduction
@@ -1114,7 +1114,7 @@ struct MixedPrecisionKernelTests {
 
             _ = MixedPrecisionKernels.convertToFP16_512(largeBatch)
             let fp32Memory = largeBatchSize * 512 * MemoryLayout<Float>.size
-            let fp16Memory = largeBatchSize * 512 * MemoryLayout<Float16>.size
+            let fp16Memory = largeBatchSize * 512 * MemoryLayout<UInt16>.size
             let memorySavings = Float(fp32Memory - fp16Memory) / Float(fp32Memory)
             #expect(abs(memorySavings - 0.5) < 0.01)  // Should save ~50% memory
 
@@ -1321,7 +1321,7 @@ struct MixedPrecisionKernelTests {
 
             // Calculate memory footprint
             let fp32MemoryMB = Float(largeBatchSize * dimension * MemoryLayout<Float>.size) / (1024 * 1024)
-            let fp16MemoryMB = Float(largeBatchSize * dimension * MemoryLayout<Float16>.size) / (1024 * 1024)
+            let fp16MemoryMB = Float(largeBatchSize * dimension * MemoryLayout<UInt16>.size) / (1024 * 1024)
 
             #expect(fp16MemoryMB < fp32MemoryMB * 0.51, "FP16 should use ~50% memory")
 
@@ -2813,7 +2813,7 @@ struct MixedPrecisionKernelTests {
 
             // Calculate bandwidth utilization
             let bytesProcessedFP32 = vectorCount * dimension * MemoryLayout<Float>.size
-            let bytesProcessedFP16 = vectorCount * dimension * MemoryLayout<Float16>.size
+            let bytesProcessedFP16 = vectorCount * dimension * MemoryLayout<UInt16>.size
 
             _ = Double(bytesProcessedFP32) / fp32Time / (1024 * 1024)  // MB/s - fp32
             _ = Double(bytesProcessedFP16) / fp16Time / (1024 * 1024)  // MB/s - fp16
@@ -3503,7 +3503,7 @@ struct MixedPrecisionKernelTests {
 
             // Calculate memory savings
             let fp32Memory = largeVectorCount * dimension * MemoryLayout<Float>.size
-            let fp16Memory = largeVectorCount * dimension * MemoryLayout<Float16>.size
+            let fp16Memory = largeVectorCount * dimension * MemoryLayout<UInt16>.size
             let memorySaved = fp32Memory - fp16Memory
 
             #expect(memorySaved == fp32Memory / 2, "Should save 50% memory")
@@ -3703,7 +3703,7 @@ struct MixedPrecisionKernelTests {
             // is prevented by type system
 
             // Test with wrong storage size
-            _ = ContiguousArray<SIMD4<Float16>>(repeating: SIMD4<Float16>(), count: 100)
+            _ = ContiguousArray<SIMD4<UInt16>>(repeating: SIMD4<UInt16>(), count: 100)
             // This would fatal error in init due to guard
             // We can't test it without crashing
 
@@ -3964,7 +3964,8 @@ struct MixedPrecisionKernelTests {
                 }
             }
 
-            // Test SIMD4 operations which use NEON
+            #if !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
+            // Test native half-precision SIMD operations where the SDK provides them.
             let simd4Values = SIMD4<Float>(1.0, 2.0, 3.0, 4.0)
             let simd4FP16 = SIMD4<Float16>(simd4Values)
             let simd4Back = SIMD4<Float>(simd4FP16)
@@ -3972,6 +3973,7 @@ struct MixedPrecisionKernelTests {
             for i in 0..<4 {
                 #expect(simd4Back[i] == simd4Values[i])
             }
+            #endif
 
             // Test performance on Apple Silicon
             // NEON should provide good throughput
@@ -4014,7 +4016,7 @@ struct MixedPrecisionKernelTests {
             let simd4Size = MemoryLayout<SIMD4<Float>>.size
             #expect(simd4Size == 16, "SIMD4<Float> should be 16 bytes")
 
-            let simd4FP16Size = MemoryLayout<SIMD4<Float16>>.size
+            let simd4FP16Size = MemoryLayout<SIMD4<UInt16>>.size
             #expect(simd4FP16Size == 8, "SIMD4<Float16> should be 8 bytes")
         }
 
@@ -4201,7 +4203,8 @@ extension MixedPrecisionKernelTests {
         return result
     }
 
-    /// Verify FP16 conversion accuracy
+    #if !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
+    /// Verify native FP16 conversion accuracy.
     func verifyFP16Accuracy(original: [Float], converted: [Float16], tolerance: Float) -> Bool {
         guard original.count == converted.count else { return false }
 
@@ -4213,7 +4216,7 @@ extension MixedPrecisionKernelTests {
                 continue  // Both NaN is OK
             } else if orig.isInfinite && conv.isInfinite && orig.sign == conv.sign {
                 continue  // Same infinity is OK
-            } else if abs(orig) < Float(Float16.leastNormalMagnitude) {
+            } else if abs(orig) < Float(0x1p-14) {
                 // May flush to zero
                 if conv == 0 { continue }
             }
@@ -4228,6 +4231,7 @@ extension MixedPrecisionKernelTests {
 
         return true
     }
+    #endif
 
     /// Measure memory bandwidth utilization
     func measureMemoryBandwidth(operation: () throws -> Void) rethrows -> Double {

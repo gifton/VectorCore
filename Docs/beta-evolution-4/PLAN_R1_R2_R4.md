@@ -1,5 +1,9 @@
 # VectorAccelerate Integration (R1, R2, R4) Implementation Plan
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Unblock VectorAccelerate's zero-copy batch GPU search and transparent GPU dispatch by page-aligning the `SoA` candidate buffer (R1), exposing it publicly with a lifetime contract (R2), and adding a `BatchKernelProvider` hook so an installed GPU provider transparently services `Operations.findNearest`/`findNearestBatch` (R4).

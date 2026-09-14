@@ -1,5 +1,9 @@
 # DOCUMENT-4 — Design Spec: Ecosystem Seams
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Verdict:** Accept for `0.3.0`. **Highest leverage, lowest cost** of the entire suite.
 **Scope:** Thin, additive API seams that the downstream packages have *explicitly requested* and
 that `VectorIndex` is currently working around by bypassing Core. None of this is in the external

@@ -51,6 +51,10 @@ bash .github/hooks/install-hooks.sh
 Review the installer before running it. Hooks provide early feedback; CI and
 maintainer review remain necessary.
 
+For documentation-only changes, also follow the focused checks in
+[Documentation changes](#documentation-changes) below. CI still runs the full
+required matrix; report which checks you actually ran locally.
+
 ## Numerical and systems changes
 
 Document formulas, complexity, failure modes, and stability tradeoffs where they
@@ -70,7 +74,7 @@ For pointers and buffers, review bounds, initialization, alignment, integer
 arithmetic, aliasing, lifetime, ownership transfer, and concurrent access. Unsafe
 closures must not leak borrowed pointers. Changes to `@unchecked Sendable`
 types need an explicit account of synchronization and ownership. Use the
-[alignment guide](Docs/Memory_Alignment.md) and the affected API's contract.
+[memory reference](Docs/Memory_Alignment.md) and the affected API's contract.
 
 When a defect has occurred more than once, add a mechanical test covering the
 class of failure. When changing a routing or configuration gate, inspect and
@@ -94,6 +98,40 @@ profiler when making memory claims; elapsed time is not allocation evidence.
 Shared-runner timing results are advisory. The
 [Top-K benchmark](Benchmarks/TopKNaNContract/README.md) shows a targeted comparison
 workflow.
+
+## Documentation changes
+
+Start with the [documentation index](Docs/README.md). Keep current references,
+tutorials, historical proposals, and dated verification evidence distinct.
+Do not silently rewrite old measurement results or treat a design sketch as
+an available API. Link exact source files or named tests for numerical and
+ownership claims.
+
+The complete Swift blocks in the refreshed references must be independent
+consumer programs using `import VectorCore`, not `@testable import`. The
+README consumer includes only its Quick Start section; installation fragments
+are not standalone programs. When adding a reference with runnable examples,
+include it in `REFERENCE_DOCS` in the existing check.
+
+```sh
+python3 Scripts/ci/consumer_smoke.py --list-examples
+python3 Scripts/ci/consumer_smoke.py
+python3 -B -m unittest discover -s Scripts/ci/tests -v
+ruby Scripts/ci/validate_github.rb
+git diff --check
+```
+
+The consumer check builds in Release, runs each program, and propagates
+compilation/runtime failures. Keep examples small and deterministic enough
+for CI; use `precondition` for checks that must execute in Release.
+This is API-usage coverage, not a substitute for numerical regression tests.
+Verify relative file links and heading anchors when reorganizing docs.
+
+The tutorials listed as pending in the index are excluded until their
+coordinated guide refresh. Do not infer that those older examples have passed
+the current consumer check. Pure prose/example edits do not require a local
+full runtime-suite rerun, but changes to library behavior still require the
+Debug and Release checks above.
 
 ## Compatibility and support
 

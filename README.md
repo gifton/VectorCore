@@ -7,9 +7,15 @@
 [![CI](https://github.com/gifton/VectorCore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/VectorCore/actions/workflows/ci.yml)
 
 VectorCore provides CPU vector math for Swift on Apple platforms, with generic
-fixed dimensions, specialized SIMD vector types, distance metrics, and batch
-operations. It has no third-party package dependencies; its implementation uses
-Swift, a `VectorCoreC` target, and Apple's Accelerate framework.
+fixed dimensions, specialized SIMD vector types, distance metrics, batch
+search, and projection primitives (PCA and UMAP). It has no third-party package
+dependencies; its implementation uses Swift, a `VectorCoreC` target, and Apple's
+Accelerate framework.
+
+Use it for the numerical work underneath semantic search, clustering, and
+on-device analysis. It does not generate embeddings or maintain a persistent
+vector index. See [Package Boundaries](Docs/Package_Boundaries.md) for its role
+alongside VectorIndex, VectorAccelerate, EmbedKit, and SwiftTopics.
 
 ## Installation
 
@@ -49,19 +55,32 @@ let embedding = Vector<Dim768>(repeating: 0.5)
 
 print("Dot product: \(dot), distance: \(distance)")
 print("Unit magnitude: \(unit.magnitude), embedding magnitude: \(embedding.magnitude)")
+
+// Search a supplied collection. Results refer to its original indices.
+let neighbors = try await Operations.findNearest(
+    to: first, in: [second, first], k: 1, metric: EuclideanDistance())
+precondition(neighbors.count == 1 && neighbors[0].index == 1)
+print("Nearest candidate: \(neighbors[0].index)")
 ```
+
+This example is compiled and executed as a separate downstream package by
+the [documentation consumer check](Scripts/ci/consumer_smoke.py).
 
 ## API and performance
 
 - `Vector<D>` encodes fixed dimensions in its type; `DynamicVector` accepts
   runtime dimensions. Runtime input and buffer validation still matter.
-- `Vector512Optimized`, `Vector768Optimized`, and `Vector1536Optimized` provide
+- `Vector384Optimized`, `Vector512Optimized`, `Vector768Optimized`, and `Vector1536Optimized` provide
   specialized SIMD storage and kernels for common embedding dimensions.
 - `Operations`, `BatchOperations`, and `MatrixDistance` expose vector, batch,
   and query-by-candidate matrix operations. Routing depends on operation,
   input size, configuration, and provider availability.
 - Built-in metrics include Euclidean, cosine, Manhattan, Chebyshev, Hamming,
   Minkowski, and dot-product distance.
+- `PCAModel` supports fitting and reusing a linear projection.
+  `Operations.umap` produces a nonlinear layout from vectors or a supplied
+  `KNNGraph`. See [Linear Algebra and Projection](Docs/Linear_Algebra_and_Projection.md)
+  for scope and scale limits.
 - Provider overrides use `@TaskLocal`; see the
   [API overview](Docs/API_Overview_Map.md) for the public surface.
 
@@ -91,6 +110,8 @@ needed to return `min(k, count)` candidates. These contracts are exercised by
 [TopKNaNContractTests](Tests/ComprehensiveTests/TopKNaNContractTests.swift).
 Metric computation can round differently before selection; this ordering rule
 does not promise identical results for different computed scores.
+See [Numerical Behavior](Docs/Numerical_Behavior.md) for score conventions,
+matrix precision tradeoffs, and API-specific non-finite handling.
 
 For unsafe APIs, callers must provide valid counts, initialized elements,
 required alignment, and sufficient storage; respect aliasing and exclusivity
@@ -136,10 +157,18 @@ bugs. Read release notes and test updates against your workload. See
 
 ## Documentation and contributing
 
+Start with the [documentation index](Docs/README.md), which separates current
+references, dated verification evidence, historical plans, and tutorials
+awaiting a separate guide refresh. Documentation describes its checkout;
+for a pinned release, read the docs at that tag and its [release notes](CHANGELOG.md).
+
 - [API Overview](Docs/API_Overview_Map.md)
 - [Package Boundaries](Docs/Package_Boundaries.md)
-- [Performance Guide](Docs/Performance_Guide.md)
+- [Numerical Behavior](Docs/Numerical_Behavior.md)
 - [Memory Alignment](Docs/Memory_Alignment.md)
+- [SoA Layout Contract](Docs/SoA_Layout_Contract.md)
+- [Linear Algebra and Projection](Docs/Linear_Algebra_and_Projection.md)
+- [Roadmap](Docs/ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security reporting](SECURITY.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)

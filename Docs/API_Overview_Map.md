@@ -1,289 +1,128 @@
-# VectorCore API Overview Map
+# VectorCore API overview
 
-This guide provides an intuitive, visual map of VectorCore and its role in the broader suite (VectorIndex, VectorAccelerate, VectorIndexAccelerated, VectorStore). It highlights public APIs vs internal layers, typical data flows, and how components fit together.
+This is a map of the public surface in this checkout, not an exhaustive symbol
+reference or a release compatibility matrix. Start with the
+[README](../README.md); see [Package Boundaries](Package_Boundaries.md) for the
+surrounding libraries and [Numerical Behavior](Numerical_Behavior.md) for limits.
 
-- Audience: engineers integrating VectorCore for on‑device vector compute on Apple Silicon.
-- Focus: mental model first, details second. Multiple visuals are included, with Mermaid and ASCII fallbacks.
+## Vector types
 
----
+| Type | Dimension | Relevant distinction |
+|---|---|---|
+| `Vector<D>` | Encoded by a `Dimension` type | Generic fixed-dimension vector; dimension safety does not remove runtime validation requirements |
+| `DynamicVector` | Runtime | Useful when the dimension is not known at compilation |
+| `Vector384Optimized` | 384 | Specialized SIMD4 storage |
+| `Vector512Optimized` | 512 | Specialized SIMD4 storage and additional fused search kernels |
+| `Vector768Optimized` | 768 | Specialized SIMD4 storage |
+| `Vector1536Optimized` | 1536 | Specialized SIMD4 storage |
 
-## TL;DR Mental Model
+The optimized types and `DynamicVector` conform to `UnifiedVectorBuffer`.
+The four optimized types also conform to `SoACompatible`; `DynamicVector` does
+not. These conformances are separate from `VectorProtocol` and do not imply
+that every type participates in every optimized route.
 
-VectorCore is a CPU‑first, high‑performance vector math core for Swift. Use it to:
-- Create vectors (fixed/dynamic/optimized),
-- Compute distances/metrics,
-- Run nearest‑neighbor operations via `Operations` (async) or `BatchOperations` (async bulk),
-- Plug in Accelerate or Swift SIMD under the hood — **no GPU kernels here** (0.3.0 adds the GPU *seam*: a zero-copy buffer contract + a `BatchKernelProvider` dispatch hook, implemented by VectorAccelerate).
+Storage and copying depend on the type. Generic `DimensionStorage` defaults to
+managed heap storage above 16 elements. There is no universal stack-only,
+allocation-free, or fastest-type guarantee. See
+[vector implementations](../Sources/VectorCore/Vectors/) and
+[memory contracts](Memory_Alignment.md).
 
-Everything else (ANN/graphs, GPU kernels, durable stores) lives in sibling packages.
+## Operations by purpose
 
----
+| Need | Entry point | Result or boundary |
+|---|---|---|
+| Arithmetic, dot product, norms | Vector methods | Check the concrete type's checked and unchecked forms |
+| Distance policy | `DistanceMetric` and built-in metrics | Euclidean, cosine, Manhattan, Chebyshev, Hamming, Minkowski, negative dot product |
+| Search a supplied collection | `Operations.findNearest`, `findNearestBatch` | Async, throwing; candidate indices and scores, not a persistent index |
+| Select existing scores | `TopKSelection.select` | Best-first indices/scores with an explicit tie policy |
+| Bulk work | `BatchOperations` | Includes processing, pairwise distances, map, filter, and statistics |
+| Query-by-candidate distances | `MatrixDistance` | Flat row-major squared-Euclidean or cosine distances; reusable candidate packing |
+| Aggregation and transforms | `Operations.centroid`, `normalize`, `statistics` | Requirements differ by vector protocol and scalar type |
+| Dense factorizations | `LinearAlgebraProvider` | Thin QR, thin SVD, symmetric eigendecomposition; column-major buffers |
+| Linear projection | `PCAModel.fit`, `transform`; `Operations.pca` | Reusable model or one-shot fit-and-transform |
+| Nonlinear layout | `Operations.umap` | Coordinates from vectors or a `KNNGraph`; not a fitted out-of-sample transform |
+| Graph interchange | `KNNGraph` | Validated CSR neighbor graph, including a reference brute-force builder |
+| Quantized representation | [Quantization primitives](../Sources/VectorCore/Quantization/QuantizationSchemes.swift) | Representation/conversion support, not a compressed ANN index |
+| Serialization | [Vector serialization](../Sources/VectorCore/Vectors/VectorSerialization.swift) and [binary protocols](../Sources/VectorCore/Serialization/BinaryProtocols.swift) | Vector encoding, not a database durability or migration contract |
 
-## Ecosystem Map (Packages)
+See [projection and linear algebra](Linear_Algebra_and_Projection.md) for shape
+conventions, scale limits, and complete examples. For distance/search details,
+the implementations are [Operations](../Sources/VectorCore/Operations/Operations.swift),
+[BatchOperations](../Sources/VectorCore/Operations/BatchOperations.swift), and
+[MatrixDistance](../Sources/VectorCore/Operations/MatrixDistance.swift).
 
-```mermaid
-flowchart LR
-  subgraph Core[VectorCore]
-    C1[Vectors
-    (Vector<D>, DynamicVector,
-    Vector512/768/1536Optimized)]
-    C2[Operations (Public)
-    findNearest, distanceMatrix,
-    normalize, statistics]
-    C3[DistanceMetrics (Public)
-    Euclidean, Cosine,
-    Manhattan, Chebyshev,
-    Dot, Minkowski, Hamming]
-    C4[Providers (Public)
-    SIMDProvider, ArraySIMDProvider,
-    ComputeProvider, BatchKernelProvider]
-    C5[Utilities (Internal)
-    Kernels, Buffer Pools,
-    Aligned Storage, Heuristics]
-    C1 --> C2
-    C3 --> C2
-    C2 --> C4
-    C4 --> C5
-  end
+## Provider boundaries
 
-  subgraph Index[VectorIndex]
-    I1[ANN structures (HNSW/NSW)]
-    I2[Graph primitives/algorithms]
-    I3[Clustering (KMeans, etc.)]
-  end
+Provider values on `Operations` are task-local bindings, not mutable global
+settings. Bind them with the corresponding `$provider.withValue` method around
+the work that should observe them.
 
-  subgraph Accel[VectorAccelerate]
-    A1[GPU/Metal providers]
-    A2[Device‑specific fused kernels]
-  end
+| Binding | Accepted protocol | Default in this checkout |
+|---|---|---|
+| `Operations.computeProvider` | `ComputeProvider` | `CPUComputeProvider.automatic` |
+| `Operations.simdProvider` | `ArraySIMDProvider` | `SwiftSIMDProvider()` |
+| `Operations.bufferProvider` | `BufferProvider` | `SwiftBufferPool.shared` |
+| `Operations.linearAlgebraProvider` | `LinearAlgebraProvider` | `LAPACKLinearAlgebraProvider()` on Apple platforms |
 
-  subgraph IndexAccel[VectorIndexAccelerated]
-    IA1[Hybrid CPU/GPU ANN/Graph]
-  end
+`SIMDProvider` is a separate typed, low-level protocol. A
+`SwiftFloatSIMDProvider` is not the value expected by
+`Operations.$simdProvider`. The default provider names also do not mean that
+all computation goes through them: some vector methods and matrix operations
+call their own kernels or Accelerate directly.
 
-  subgraph Store[VectorStore]
-    S1[Durable binary formats]
-    S2[Stores/adapters (e.g., SQLite)]
-  end
-
-  Core -.->|Public types/protocols| Index
-  Core -.->|Public types/protocols| Accel
-  Accel -.->|GPU providers| Core
-  Index -.->|ANN/Graph uses Core types| Core
-  IndexAccel -.->|Uses Index + Accel| Index
-  Store -.->|Binary formats (durable)| Core
-```
-
-ASCII fallback (condensed):
-
-```
-VectorCore
-  ├─ Vectors (public)
-  ├─ Operations (public)
-  ├─ DistanceMetrics (public)
-  ├─ Providers (public)
-  └─ Utilities/Kernels (internal)
-
-VectorIndex            VectorAccelerate       VectorIndexAccelerated       VectorStore
-  ├─ ANN/Graph           ├─ GPU providers       ├─ Hybrid CPU/GPU ANN         ├─ Durable formats
-  └─ Clustering          └─ Fused GPU kernels   └─ Uses Core + Accel          └─ Adapters
-```
-
-Note
-- VectorCore includes minimal in‑memory binary helpers for testing/interop. Durable, on‑disk formats and adapters live in VectorStore.
-
----
-
-## VectorCore Architecture (Layers)
-
-```mermaid
-flowchart TB
-  L1[Public API Surface]
-  L1a[Operations]
-  L1b[BatchOperations]
-  L1c[DistanceMetrics]
-  L1d[Vectors]
-
-  L2[Providers]
-  L2a[SIMDProvider (AccelerateFloat/Double)]
-  L2b[SIMDProvider (SwiftFloat/Double)]
-  L2c[ArraySIMDProvider (Default/Swift)]
-  L2d[ComputeProvider (CPU)]
-
-  L3[Internal Utilities]
-  L3a[Kernels (Dot/Euclid/Cosine, Top‑K)]
-  L3b[Heuristics (Parallel)]
-  L3c[Memory & Storage (Aligned, Tiered)]
-  L3d[Buffer Pools]
-
-  L1a --> L2
-  L1b --> L2
-  L1c --> L2
-  L1d -.-> L3c
-  L2 --> L3
-```
-
-Notes
-- Public code calls `Operations/BatchOperations` + `DistanceMetrics`.
-- Providers abstract away implementation details (Accelerate vs Swift SIMD; CPU execution plan).
-- Utilities (kernels/memory/pools/heuristics) are internal to keep API lean and stable.
-
----
-
-## Typical Data Flow (k‑NN)
-
-```mermaid
-sequenceDiagram
-  participant U as Your App
-  participant V as Vector(s)
-  participant O as Operations
-  participant M as DistanceMetrics
-  participant P as Providers
-  participant K as Internal Kernels
-
-  U->>V: Create vectors (Vector<Dim512> or Vector512Optimized)
-  U->>O: findNearest(query, in: vectors, k)
-  O->>M: metric.distance(query, candidate)
-  M->>P: SIMD reductions (dot/sumOfSquares)
-  O->>P: ComputeProvider (parallel heuristic)
-  P->>K: Batch/Top‑K selection kernels (internal)
-  K-->>O: k nearest indices + distances
-  O-->>U: [(index, distance)]
-```
-
-Key points
-- Dimension checks happen at public API boundaries; metric hot paths avoid redundant checks.
-- Providers decide SIMD implementation (Accelerate or Swift) and parallel strategy.
-- Selection/Top‑K kernels are internal, ensuring room to optimize without API churn.
-
----
-
-## Public API Map
-
-```mermaid
-flowchart LR
-  subgraph Public
-    A[Vectors: Vector<D>, DynamicVector,
-       Vector384/512/768/1536Optimized]
-    B[Operations: findNearest,
-       distanceMatrix, MatrixDistance (GEMM),
-       normalize, statistics]
-    C[BatchOperations: auto-parallel bulk]
-    D[DistanceMetrics: Euclidean,
-       Cosine, Manhattan,
-       Chebyshev, Dot,
-       Minkowski, Hamming]
-    E[Providers: SIMDProvider,
-       ArraySIMDProvider, ComputeProvider,
-       BatchKernelProvider]
-    F[Buffers: UnifiedVectorBuffer,
-       PageAlignedBuffer, SoALayout]
-  end
-```
-
-Quick reference
-- Vectors: fixed‑dim (compile‑time safety), dynamic (runtime), optimized (SIMD4 layout for 384/512/768/1536).
-- Operations: async APIs for NN search, pairwise computations, normalization, and stats.
-- MatrixDistance: CPU GEMM batch-distance matrices (`cblas_sgemm` → AMX on Apple Silicon); `euclideanSquaredMatrix` / `cosineDistanceMatrix` with a `prepare(_:normalized:)` reuse path. Generic over `UnifiedVectorBuffer`.
-- DistanceMetrics: portable metric implementations (zero‑alloc); plug into Operations.
-- Providers: protocol surface to bind Accelerate/Swift SIMD and execution strategy; `BatchKernelProvider` lets an installed GPU provider transparently service `findNearest`/`findNearestBatch`.
-- Buffers: `UnifiedVectorBuffer` / `PageAlignedBuffer` (zero-copy GPU bridge) and the frozen `SoALayout` descriptor (see `Docs/SoA_Layout_Contract.md`).
-
----
-
-## Extending VectorCore (Examples)
-
-- Custom Distance Metric
+This complete example scopes the CPU execution provider to one search:
 
 ```swift
-struct Lp3Metric: DistanceMetric {
-    typealias Scalar = Float
-    func distance<V: VectorProtocol>(_ a: V, _ b: V) -> Float where V.Scalar == Float {
-        var sum: Float = 0
-        a.withUnsafeBufferPointer { ap in
-            b.withUnsafeBufferPointer { bp in
-                for i in 0..<ap.count { sum += pow(abs(ap[i] - bp[i]), 3) }
-            }
-        }
-        return pow(sum, 1.0/3.0)
-    }
+import VectorCore
+
+let query = Vector512Optimized(repeating: 1)
+let candidates = [query, Vector512Optimized(repeating: 2)]
+let results = try await Operations.$computeProvider.withValue(CPUComputeProvider.sequential) {
+    try await Operations.findNearest(to: query, in: candidates, k: 1)
 }
-// Usage
-let d = Lp3Metric().distance(v1, v2)
+precondition(results.count == 1 && results[0].index == 0)
+print("Nearest candidate: \(results[0].index)")
 ```
 
-- Provider Override (Accelerate vs Swift SIMD)
+[`BatchKernelProvider`](../Sources/VectorCore/Protocols/BatchKernelProvider.swift)
+extends `ComputeProvider`. `findNearest` and `findNearestBatch` delegate to an
+installed conformer before the built-in CPU search routes. Core supplies the
+protocol; an external provider owns its implementation, capability checks,
+allocation behavior, and synchronization. The protocol's default batch search
+performs per-query calls; conformance alone does not imply one fused GPU batch.
 
-```swift
-await Operations.$simdProvider.withValue(AccelerateArraySIMDProvider()) {
-    // Calls inside use the Accelerate-backed array-SIMD provider (0.3.2+)
-    let nn = try await Operations.findNearest(to: q, in: xs, k: 10)
-}
+## Search and matrix routing
 
-// You can also override the compute provider (e.g., force parallel CPU mode):
-await Operations.$computeProvider.withValue(CPUComputeProvider.parallel) {
-    let dists = try await Operations.distanceMatrix(between: xs, and: xs)
-}
-```
+These are current implementation choices, not stable crossover guarantees:
 
-- Choosing Optimized Vectors
+| Entry point | Built-in matrix route |
+|---|---|
+| `Operations.findNearestBatch` | At least 8 queries and 256 candidates; Euclidean/cosine; optimized 512, 768, or 1536 types; after external provider delegation |
+| `BatchOperations.pairwiseDistances` | `Configuration.enableMatrixRouting` and `matrixRoutingMinN` (defaults: `true`, `256`); Euclidean/cosine; optimized 512, 768, or 1536 types |
+| `MatrixDistance` | Explicit matrix operation over `UnifiedVectorBuffer`; no automatic crossover gate |
 
-```swift
-let q = try Vector512Optimized((0..<512).map { _ in Float.random(in: -1...1) })
-let xs: [Vector512Optimized] = ... // Enables fast fused kernels
-let nn = try await Operations.findNearest(to: q, in: xs, k: 10)
-```
+`BatchOperations.updateConfiguration` affects the pairwise gate above. It does
+**not** control the separate gate in `Operations.findNearestBatch`.
+Single-query fused Top-K paths also differ by dimension and metric; do not
+extrapolate 512-dimensional coverage to every optimized type.
 
----
+Matrix computation materializes the query-by-candidate score matrix. An
+`into:` output or prepared candidates can reuse particular storage, but does
+not make the operation allocation-free. Callers of `MatrixDistance` must
+validate every input dimension and provide representable sizes and correctly
+sized output buffers; it is not a checked replacement for the throwing search
+entry points. See [Numerical Behavior](Numerical_Behavior.md).
 
-## Performance Heuristics (At a Glance)
+## Memory and implementation details
 
-- Parallelization kicks in based on a heuristic of dimension × items vs overhead.
-- BatchOperations auto‑parallelizes for large inputs; Operations uses ComputeProvider heuristics.
-- Large batches route through the CPU GEMM path (`MatrixDistance`) above `matrixRoutingMinN` (default 256; `BatchOperations.Configuration`).
-- Optimized vectors (384/512/768/1536) unlock fused kernels and Top‑K fast paths internally.
+`UnifiedVectorBuffer`, `PageAlignedBuffer`, `SoA`, `SoALayout`, `AlignedMemory`,
+and `MemoryPool` expose public contracts; they are not all private utilities.
+Borrowed contiguous storage is not automatically page-aligned or suitable for
+retention by an asynchronous consumer. Read
+[Memory Alignment](Memory_Alignment.md) and the
+[frozen SoA layout](SoA_Layout_Contract.md) before using raw pointers.
 
----
-
-## Public vs Internal (Cheat Sheet)
-
-- Public: `Vectors`, `Operations`, `BatchOperations`, `MatrixDistance`, `DistanceMetrics`, `SIMDProvider`/`ArraySIMDProvider`/`ComputeProvider`/`BatchKernelProvider`, `UnifiedVectorBuffer`/`PageAlignedBuffer`, `SoALayout`, `TieBreaker`.
-- Internal: `Kernels`, `Buffer pools`, `Aligned storage`, `Heuristics`, many low‑level helpers. (Top‑K selection is internal, but its `TieBreaker` policy is public.)
-- Out of scope (in sibling packages): ANN/graphs/clustering (VectorIndex), GPU providers/kernels (VectorAccelerate), durable formats (VectorStore).
-
----
-
-## Glossary
-
-- SIMD: Single Instruction, Multiple Data (vectorized CPU operations).
-- Accelerate: Apple’s high‑performance DSP/BLAS framework.
-- Optimized vectors: Storage layout as `ContiguousArray<SIMD4<Float>>` for tailwind on Apple Silicon.
-- Heuristic: A simple model to choose parallel execution when it pays off.
-
----
-
-## Appendix: ASCII Diagrams (Fallback)
-
-Architecture:
-```
-[Public]  Vectors ──► Operations/BatchOperations ──► Providers
-                                   │                     │
-                                   ▼                     ▼
-                             DistanceMetrics       Internal Utilities
-                                                   (kernels/memory)
-```
-
-Ecosystem:
-```
-VectorCore (CPU math)  ◀──────── VectorAccelerate (GPU)
-        │                             ▲
-        ▼                             │
-   VectorIndex (ANN/Graph)   VectorIndexAccelerated (hybrid)
-        │
-        ▼
-   VectorStore (durable formats)
-```
-
----
-
-This map should help you—and future contributors—navigate the framework quickly, understand where to extend functionality, and avoid depending on internal details.
+Kernel dispatch heuristics, mixed-precision caches, and C shims are
+implementation details unless a public contract explicitly says otherwise.
+An implementation symbol appearing in source or a historical design document
+is not sufficient evidence of a supported consumer API.

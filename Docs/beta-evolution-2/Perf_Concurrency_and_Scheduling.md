@@ -1,5 +1,9 @@
 # VectorCore 0.2.0 — Concurrency & Scheduling
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 Focus: improve parallel efficiency, cache locality, and predictability under CPU concurrency. This doc is the source for scheduling strategies and their instrumentation.
 
 ## Goals

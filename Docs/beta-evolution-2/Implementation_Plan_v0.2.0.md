@@ -1,5 +1,9 @@
 # VectorCore v0.2.0 — Implementation Plan
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 This document sequences analyze → design → implement/improve → test work for the v0.2.0 beta focused on performance, benchmarking, and API stability. It references authoritative topic docs rather than duplicating details.
 
 Authoritative references:
@@ -269,4 +273,3 @@ Rollback policy: any change failing correctness or breaching thresholds reverts 
 - [ ] Gated features adopted only where thresholds met (or deferred)
 - [ ] Selected public types frozen with documented rationale
 - [ ] Docs updated to reflect fast paths, buffers, and presets
-

@@ -1,5 +1,9 @@
 # VectorCore v0.2.0: Agent Implementation Plan
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](README.md) instead.
+
 **Context for the Agent:**
 This codebase is a high-performance vector mathematics library for Apple Silicon and Intel. It relies heavily on `SIMD4<Float>` data packing, Structure-of-Arrays (SoA) memory layouts, and strict Swift 6 concurrency. 
 

@@ -1,5 +1,9 @@
 # VectorCore 0.2.0 — Build & Compilation
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 Focus: produce faster release binaries without sacrificing maintainability.
 
 This document is the authoritative source for build flags, presets, and size/perf trade‑offs. Other docs should reference this to avoid drift.

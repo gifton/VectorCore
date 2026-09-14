@@ -1,5 +1,9 @@
 # Beta-Evolution-4 — Master Decision Review
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Status:** Strategic review + design specs — **implemented on `feature/beta-evo-4`, targeting 0.3.0** (released 2026-06-07)
 **Target release:** VectorCore `0.3.0`
 **Date:** 2026-06-06 (implementation reconciled 2026-06-07)

@@ -1,5 +1,9 @@
 # VectorCore 0.2.0 — Benchmarking
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 Focus: broaden coverage, add realism, and wire A/B comparisons to guide changes. This doc is the source of truth for bench matrix, toggles, correctness checks, and environment guidance.
 
 ## Goals

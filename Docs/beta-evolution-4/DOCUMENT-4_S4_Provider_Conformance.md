@@ -1,5 +1,9 @@
 # DOCUMENT-4 / S4 — Provider Conformance Contract
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Status:** Implemented (contract + conformance tests) for `0.3.0`.
 **Audience:** Anyone conforming a type to VectorCore's provider protocols — primarily
 `VectorAccelerate` (`ComputeEngine: ComputeProvider`, `BufferPool: BufferProvider`,

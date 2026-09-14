@@ -1,5 +1,9 @@
 # Plan: Scoped Gap Analysis for VectorCore + VectorIndex (HN semantic-search lens)
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](README.md) instead.
+
 > This is the **planning document** for producing a gap-analysis report. It is not the report itself.
 > The report it specifies will be written to `Docs/gap-analysis-hn-semantic-search.md`.
 

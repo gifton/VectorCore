@@ -1,4 +1,8 @@
 Issue 1.1: Strict Aliasing (TBAA) Violations via Permanent Memory Rebinding
+
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
 File Name & Line Context: Vector1536Optimized.swift, Vector768Optimized.swift, Vector512Optimized.swift (inside toArray(), withUnsafeBufferPointer, and withUnsafeMutableBufferPointer).
 Technical Vulnerability / Bottleneck: The code retrieves an UnsafeRawPointer from ContiguousArray<SIMD4<Float>> and permanently rebinds the memory using .bindMemory(to: Float.self, capacity: ...).
 The Hardware/Compiler Mechanic: Swift relies on Type-Based Alias Analysis (TBAA) for aggressive memory optimizations. bindMemory(to:capacity:) permanently changes the dynamic type of the memory location. Because the ContiguousArray still assumes it owns memory bound to SIMD4<Float>.self, altering this binding mid-flight and leaving it that way when the closure returns triggers undefined behavior (UB). The LLVM optimizer will assume pointers of mismatched types do not alias, resulting in silent memory corruption or trap instruction generation in release builds. Temporary punning must use withMemoryRebound(to:capacity:).

@@ -35,6 +35,26 @@ changes, read back effective rules, required check names/app identity,
 CODEOWNERS errors, reporting availability, dependency alerts/updates, and
 Actions restrictions. Keep the allowlist aligned with Actions actually used.
 
+## Documentation maintenance
+
+Use the [documentation index](README.md) to distinguish active references
+from tutorials and historical records. Keep reference examples in the
+[downstream consumer check](../Scripts/ci/consumer_smoke.py), and verify the
+actual public signatures rather than reproducing internal-only test usage.
+The [contributor instructions](../CONTRIBUTING.md#documentation-changes)
+describe the local checks.
+
+When a design document becomes historical, label it and preserve its path
+when source or external links depend on it. Prefer a current reference over
+editing an old proposal into an ambiguous mixture of plan and implementation.
+Keep dated verification records tied to their original revision and
+environment; append a new record for new evidence.
+
+Do not publish a sibling compatibility matrix without testing the named
+revisions together. The Core consumer job does not exercise the whole
+ecosystem. Repository setting claims likewise need dated live readback,
+not just a local workflow diff.
+
 ## Releases
 
 Do not move or delete published version tags. For each new release, use a

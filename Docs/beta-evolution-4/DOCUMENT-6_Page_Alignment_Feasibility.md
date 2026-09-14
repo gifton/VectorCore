@@ -1,5 +1,9 @@
 # DOCUMENT-6 — Page-Alignment Feasibility: making more storage `bytesNoCopy`-eligible
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Question (from VA, follow-up to DOCUMENT-5 R3):** VectorAccelerate observed that
 `AlignedMemory` / `AlignedDynamicArrayStorage` are not `MTLDevice.makeBuffer(bytesNoCopy:)`-eligible.
 What's the complexity/viability of supporting page-aligned storage more broadly?

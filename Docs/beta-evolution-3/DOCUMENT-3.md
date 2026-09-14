@@ -1,4 +1,8 @@
 Metal Compute Pipeline & Bridging Integrity
+
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
 Issue 3.1: GPU Zero-Copy Page Alignment Violation
 Target Files: Sources/VectorCore/Storage/AlignedMemory.swift, Sources/VectorCore/Platform/PlatformConfiguration.swift
 Target Variable: optimalAlignment

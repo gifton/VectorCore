@@ -1,4 +1,8 @@
 Project: VectorCore Refactoring (High-Performance Vector Mathematics)
+
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
 Goal: Resolve critical memory semantics, numerical instability, and performance bottlenecks identified during a principal-level architectural audit.
 Global Constraints & Mechanics
 Zero-Regression Mandate: VectorCore is a foundational compute library. Do not alter public API signatures or break downstream consumers.

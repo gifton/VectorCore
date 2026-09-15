@@ -1,5 +1,9 @@
 # VectorCore 0.2.0 Performance Opportunities
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 Focus areas: Build & Compilation, Concurrency & Scheduling, API Ergonomics, and Benchmarking (CPU‑only; GPU lives elsewhere).
 
 Authoritative sources:

@@ -1,5 +1,9 @@
 # BE3 Failing-Test Triage
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Source run:** `swift test --xunit-output test-results.xml 2>&1 | tee test-run-full.log`
 **Run date:** 2026-05-29 13:17 · Swift 6.3.2 · swift-testing 1501 · arm64e-apple-macos
 **Totals:** 993 tests / 138 suites · **76 failing test functions** · 3380 issues · 391.8 s

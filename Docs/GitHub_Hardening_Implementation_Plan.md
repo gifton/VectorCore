@@ -1,5 +1,10 @@
 # GitHub hardening implementation plan
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](README.md) instead.
+> For the later verified outcome, see [public-readiness acceptance](verification-public-readiness-2026-09-07.md).
+
 > Execute the approved readiness review in independent tasks; review and verify before integration.
 
 **Objective:** Apply all recommendations in `GitHub_Readiness_Review_2026-09-06.md`

@@ -50,15 +50,22 @@ public struct QRFactorization: Sendable {
 /// Thin singular value decomposition: `A (m×n) = U (m×k) · diag(s) · Vᵀ (k×n)`
 /// with `k = min(m, n)`.
 public struct SingularValueDecomposition: Sendable {
-    /// Left singular vectors, m×k, column-major, orthonormal columns.
+    /// Left singular vectors, m×k, column-major.
     ///
-    /// Caveat: for exactly rank-deficient inputs, the pure-Swift fallback
-    /// does not complete U columns paired with zero singular values to an
-    /// orthonormal basis (LAPACK does). See SwiftLinearAlgebraProvider.
+    /// The SVD contract calls for orthonormal columns. For tall or square
+    /// inputs (m ≥ n), `SwiftLinearAlgebraProvider.svdThin` skips normalization
+    /// of zero columns and does not complete the zero-singular-value basis;
+    /// those U columns can remain zero. LAPACK completes the basis.
+    /// For wide input the fallback swaps factors; see `vt` for that caveat.
     public let u: [Float]
     /// Singular values, length k, in DESCENDING order (LAPACK convention).
     public let singularValues: [Float]
-    /// Right singular vectors transposed, k×n, column-major, orthonormal rows.
+    /// Right singular vectors transposed, k×n, column-major.
+    ///
+    /// The SVD contract calls for orthonormal rows. For wide inputs (m < n),
+    /// `SwiftLinearAlgebraProvider.svdThin` decomposes the transpose and uses
+    /// its U columns here. Rows paired with zero singular values can therefore
+    /// remain zero rather than complete an orthonormal basis (LAPACK does).
     public let vt: [Float]
     /// Row count of A.
     public let rows: Int

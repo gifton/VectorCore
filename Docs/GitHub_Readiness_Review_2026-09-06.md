@@ -1,5 +1,10 @@
 # GitHub and public-readiness review
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](README.md) instead.
+> For the later verified outcome, see [public-readiness acceptance](verification-public-readiness-2026-09-07.md).
+
 Reviewed September 6, 2026 (America/Los_Angeles), September 7 UTC.
 Repository: [gifton/VectorCore](https://github.com/gifton/VectorCore).
 

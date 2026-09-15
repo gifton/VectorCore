@@ -1,5 +1,9 @@
 # NSW: Select Neighbors Heuristic (Prune to M)
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../../Docs/README.md) instead.
+
 Status: Draft spec for kernel generation
 
 Owner: VectorIndex team

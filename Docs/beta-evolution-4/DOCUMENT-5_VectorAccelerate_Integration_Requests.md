@@ -1,5 +1,9 @@
 # DOCUMENT-5 — VectorAccelerate Integration Requests (gap analysis + plan)
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Source:** `future/VectorAccelerate/docs/VECTORCORE_INTEGRATION_REQUESTS.md` (filed vs VectorCore ≥ 0.2.2).
 **Status:** Verified against the live source + the `v0.2.2` tag during the beta-evo-4 branch.
 **Verdict:** None of R1/R2/R4 are supported yet; R3 rests on an incorrect premise. Adding the

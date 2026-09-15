@@ -1,5 +1,9 @@
 # VectorCore Kernel Audit — C Rewrite Priorities
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 This document identifies VectorCore kernels that can benefit from C (and arch-specific intrinsics) implementations, outlines expected performance gains, and proposes an interop and validation plan.
 
 ## Summary

@@ -1,4 +1,8 @@
 Numerical Rigor & Edge Cases
+
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
 Issue 4.1: Int16 Arithmetic Overflow in Quantized Euclidean
 Target File: Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift
 Target Method: accumulateEuclidDiffSq (Around line 167)

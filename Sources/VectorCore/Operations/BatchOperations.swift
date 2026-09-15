@@ -65,10 +65,12 @@ public enum BatchOperations {
         /// Default batch size for iterative processing
         public var defaultBatchSize: Int = 1024
 
-        /// Route large pairwise distance matrices through the GEMM (`cblas_sgemm` /
-        /// AMX) path for optimized vector types + Euclidean/Cosine. The GEMM result
-        /// agrees with the per-pair kernels within the DOCUMENT-2 tolerance (~1e-3
-        /// rel) but is not bit-identical; disable to force the exact per-pair path.
+        /// Route large pairwise distance matrices through GEMM (`cblas_sgemm`)
+        /// for supported optimized vector types and Euclidean/cosine metrics.
+        /// GEMM and per-pair kernels can differ, especially for nearby vectors;
+        /// no universal relative-error bound is guaranteed. Disabling this flag
+        /// keeps `pairwiseDistances` on its per-pair path; it does not control
+        /// the separate routing gate in `Operations.findNearestBatch`.
         public var enableMatrixRouting: Bool = true
 
         /// Minimum N (per side) before pairwise routing switches to GEMM. Below this,

@@ -1,5 +1,9 @@
 # DOCUMENT-3 — Design Spec: Block-Wise Quantization (`Q8_0`)
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Verdict:** Accept for `0.3.0` — **gated on a committed consumer** (see §6).
 **Scope:** A new CPU storage *format* and its dot-product kernel. Sits alongside the existing
 whole-vector quantization in `Sources/VectorCore/Quantization/QuantizationSchemes.swift` and

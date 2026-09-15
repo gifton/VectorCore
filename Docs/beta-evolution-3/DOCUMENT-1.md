@@ -1,4 +1,8 @@
 Low-Level Swift & SIMD Optimization
+
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
 Issue 1.1: Strict Aliasing (TBAA) Violations
 Target Files:
 Sources/VectorCore/Vectors/Vector1536Optimized.swift

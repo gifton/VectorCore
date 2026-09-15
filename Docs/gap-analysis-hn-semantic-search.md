@@ -1,5 +1,9 @@
 # Gap Analysis: VectorCore + VectorIndex for HN Semantic Search
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](README.md) instead.
+
 **Date:** 2026-06-09
 **Lens:** Semantic search + 2-D projected visualization of the full HackerNews story corpus (~5M stories, 384-dim embeddings from EmbedKit).
 **Scope:** Capability gaps in VectorCore and VectorIndex only. The HN app, EmbedKit, and all implementation work are out of scope. Each recommended primitive becomes its own follow-up plan.

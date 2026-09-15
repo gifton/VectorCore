@@ -1,5 +1,9 @@
 # DOCUMENT-2 — Design Spec: CPU GEMM Batch-Distance (AMX)
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 **Verdict:** Accept for `0.3.0`. Highest throughput ROI of the accepted set.
 **Scope:** CPU-only. The GPU GEMM path already exists in `VectorAccelerate`; this spec is the
 missing *CPU* path that routes to the Apple AMX coprocessor via Accelerate BLAS.

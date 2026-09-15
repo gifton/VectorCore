@@ -90,7 +90,7 @@ jobs:
         run: '"$RUNNER_TEMP/swiftlint/swiftlint" lint --config .swiftlint.yml --reporter github-actions-logging'
 
   consumer:
-    name: README consumer
+    name: Documentation consumers
     runs-on: macos-15
     timeout-minutes: 15
     steps:
@@ -100,7 +100,7 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
         with:
           xcode-version: '16.2'
-      - name: Build and execute the documented Quick Start
+      - name: Build and execute documentation examples
         run: python3 Scripts/ci/consumer_smoke.py
 
   platforms:

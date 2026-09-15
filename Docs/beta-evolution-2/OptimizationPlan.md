@@ -1,5 +1,9 @@
 # VectorCore Performance Optimization Plan
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 This document captures a phased plan to improve API performance and ergonomics using Swift’s optimization attributes and related techniques.
 
 Applies to: VectorCore package (Sources/VectorCore/*) and Benchmarks/VectorCoreBench.

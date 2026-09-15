@@ -1,5 +1,9 @@
 # Ecosystem Master Strategy: The Apple-Native Vector Stack
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](README.md) instead.
+
 **Scope:** Ecosystem Orchestration, CI/CD, and Inter-Package Memory Boundaries.
 **Governing Packages:** `VectorCore`, `VectorAccelerate`, and `EmbedKit`.
 

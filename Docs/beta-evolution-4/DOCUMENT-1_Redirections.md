@@ -1,5 +1,9 @@
 # DOCUMENT-1 — Redirections & Deferrals
 
+> Historical design / review record, retained at its original path for context.
+> Its proposals, API examples, dates, and status claims are not current contracts
+> or an active backlog. Use the [current documentation index](../README.md) instead.
+
 This document records, for every proposal item that VectorCore will **not** implement, *why*
 and *where it lives instead*. The goal is that a future contributor (or the external agent) can
 see exactly which package owns each capability and what — if anything — Core exposes to support

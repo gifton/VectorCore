@@ -15,10 +15,11 @@
 //           norms. Avoids forming AᵀA (which would square the condition
 //           number — significant in Float32).
 //
-//  Caveat (documented, deliberate): for exactly rank-deficient inputs the
-//  SVD's U columns paired with zero singular values are not completed to an
-//  orthonormal basis (LAPACK completes them). Downstream PCA/randomized-SVD
-//  consumers truncate at k ≪ rank, so this is unobservable there.
+//  Rank-deficiency caveat: svdThin skips normalization of zero columns rather
+//  than completing an orthonormal basis. For tall/square input this affects U;
+//  the wide-input transpose branch swaps factors, so it affects Vᵀ instead.
+//  PCA copies Vᵀ rows, so requested zero-singular-value directions can yield
+//  zero component rows. Its component-count bound does not measure data rank.
 //
 //  All matrices column-major; see LinearAlgebraProvider layout contract.
 //

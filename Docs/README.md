@@ -3,6 +3,10 @@
 The references below describe the code in this checkout. For an installed
 release, read the files at its tag and consult the [changelog](../CHANGELOG.md).
 A feature on `main` is not necessarily in the latest published release.
+In particular, `v0.3.3` does not include the subsequent MemoryPool and Intel
+macOS/Mac Catalyst FP16 fixes listed under [Unreleased](../CHANGELOG.md#unreleased).
+The installation example's version requirement does not itself include
+unreleased commits.
 
 ## Current references
 

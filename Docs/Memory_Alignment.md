@@ -123,6 +123,11 @@ preconditions can trap before allocation.
 
 ## Pools, copying, and concurrency
 
+**Version scope:** The explicit-lock implementation and pool lifetime/byte-accounting
+fixes described here are post-`v0.3.3` changes. That tag uses the earlier
+dispatch-queue bookkeeping and does not contain these fixes. See
+[Unreleased changes](../CHANGELOG.md#unreleased) for details.
+
 [`MemoryPool`](../Sources/VectorCore/Utilities/MemoryPool.swift) is a class,
 not an actor. It synchronizes pool bookkeeping with an explicit lock. That
 does not serialize reads or writes to a checked-out raw allocation. Do not

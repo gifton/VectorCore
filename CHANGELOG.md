@@ -5,6 +5,42 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+The changes below are present after `v0.3.3`; they are not included in that
+published tag. A dependency resolved to `0.3.3` does not receive them.
+
+### Fixed
+
+- **MemoryPool bookkeeping and lifetime.** Replace asynchronous queue updates
+  and synchronous queue waits with synchronous `NSLock`-protected state
+  changes, addressing cooperative-task starvation. Free allocations when their
+  handles outlive the pool; enforce retained-memory limits and cleanup accounting
+  in bytes. Regression coverage: [MemoryPoolTests](Tests/ComprehensiveTests/MemoryPoolTests.swift)
+  and the [externally timed pool probe](Scripts/ci/check_memory_pool.py).
+  This does not synchronize caller access to checked-out raw buffers.
+- **FP16 portability on Intel macOS and Mac Catalyst.** Remove unconditional
+  uses of native `Float16`, which these Intel SDK targets mark unavailable.
+  The 512/768/1536 FP16 buffers retain portable `UInt16` storage and classify
+  finite values from their exponent bits. Native conversion remains opt-in;
+  `detectOverflow(value:)`, whose return type is `Float16?`, is excluded on
+  those Intel targets. Use `canRepresent(_:)` or `validateBatch(values:)` for
+  FP32 range checks there. Regression coverage:
+  [MixedPrecisionRangeValidationTests](Tests/ComprehensiveTests/MixedPrecisionRangeValidationTests.swift).
+
+### Documentation
+
+- Refresh the README and core references, distinguish current contracts from
+  historical evidence, and compile/run the complete reference examples as
+  downstream consumers. Tutorials remain pending a separate guide pass.
+- Correct historical matrix allocation, accuracy, and routing claims below;
+  clarify Swift SVD/PCA rank-deficiency limits and release availability. These
+  are documentation corrections, not changes to the numerical algorithms.
+
+See the [September 7 verification record](Docs/verification-public-readiness-2026-09-07.md)
+for the post-`0.3.3` fixes and the configurations actually checked. Compile
+coverage is not a claim of runtime coverage on every declared platform.
+
 ## [0.3.3] - 2026-09-06
 
 ### Fixed
@@ -120,6 +156,17 @@ Zero new dependencies; everything stochastic is seeded and deterministic.
   *construction* and clustering remain VectorIndex territory.
 
 ## [0.3.0] - 2026-06-07
+
+> **Documentation correction — 2026-09-14:** The original entry below
+> overstated three contracts; it is retained as release history, not as an
+> allocation or accuracy guarantee. `into:` reuses caller-owned output but
+> still allocates intermediate storage, including packed queries and norms.
+> GEMM distances have no universal `~1e-3` relative-error bound, especially
+> near zero. `BatchOperations.updateConfiguration` controls the pairwise
+> matrix gate, not the separate gate in `Operations.findNearestBatch`.
+> These clarifications also apply to the `v0.3.0` implementation; they do not
+> describe newly changed behavior. See [Numerical Behavior](Docs/Numerical_Behavior.md#matrix-distances-shape-memory-and-precision)
+> and [Search and matrix routing](Docs/API_Overview_Map.md#search-and-matrix-routing).
 
 Outcome of the "beta-evolution-4" (BE4) review: **hold the line, sharpen the
 seams.** Rather than grow VectorCore into a database/index engine, this release

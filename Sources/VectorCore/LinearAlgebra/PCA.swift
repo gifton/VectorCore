@@ -69,7 +69,9 @@ public struct PCAConfig: Sendable {
 
 // MARK: - Model
 
-/// A fitted PCA projection: `y = W · (x − μ)` with orthonormal rows `W`.
+/// A fitted PCA projection: `y = W · (x − μ)`.
+///
+/// See `components` for the Swift provider's zero-singular-value basis limitation.
 ///
 /// Fit on a sample with `fit`, then apply with `transform` — see the header
 /// note on corpus-scale batching.
@@ -78,9 +80,12 @@ public struct PCAModel: Sendable {
     public let mean: [Float]
 
     /// Principal axes `W`, k×d ROW-MAJOR: `components[r*d + j]` is
-    /// coordinate j of axis r. Rows are orthonormal and ordered by
-    /// decreasing explained variance. Sign convention: each row's
-    /// largest-magnitude coordinate is positive (first index on ties).
+    /// coordinate j of axis r. Rows are ordered by decreasing explained variance.
+    /// The PCA contract calls for orthonormal rows, but this buffer copies the
+    /// SVD's Vᵀ rows: with the Swift provider, wide rank-deficient panels can
+    /// yield zero rows for zero singular values. See `SingularValueDecomposition.vt`.
+    /// Sign convention: each nonzero row's largest-magnitude coordinate is
+    /// positive (first index on ties).
     public let components: [Float]
 
     /// Variance captured per axis, descending: σᵣ² / (n − 1).
@@ -100,8 +105,10 @@ public struct PCAModel: Sendable {
     /// Fits a k-component PCA on `vectors` (the sample) via randomized SVD.
     ///
     /// - Throws: `VectorError.invalidDimension` for k outside
-    ///   `1...min(n − 1, d)` (n − 1: centering loses one rank) or invalid
-    ///   config; `.dimensionMismatch` for ragged input;
+    ///   `1...min(n − 1, d)` when centered, or `1...min(n, d)` when
+    ///   `config.center == false`; also for invalid config.
+    ///   These are structural bounds, not a measurement of the data's rank.
+    ///   `.dimensionMismatch` for ragged input;
     ///   `.invalidOperation` for n < 2; plus anything the active
     ///   `Operations.linearAlgebraProvider` throws.
     public static func fit<V: VectorProtocol>(

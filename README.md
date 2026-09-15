@@ -36,6 +36,13 @@ Then add it to your target:
 )
 ```
 
+If this dependency resolves to `0.3.3`, it does **not** include the later
+MemoryPool lifetime/bookkeeping fixes or the Intel macOS/Mac Catalyst FP16
+compile fixes described in this checkout. See [Unreleased changes](CHANGELOG.md#unreleased)
+before relying on those fixes; consult documentation at the resolved tag for
+a released dependency's behavior. This documentation refresh does not publish
+a new package version.
+
 ## Quick Start
 
 This complete program can be used as an executable target's `main.swift`:

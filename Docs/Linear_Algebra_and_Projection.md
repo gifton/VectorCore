@@ -24,9 +24,22 @@ evidence that the allocation or factorization is practical.
 `Operations.linearAlgebraProvider` defaults to
 `LAPACKLinearAlgebraProvider()` on Apple platforms. A task-local override can
 select `SwiftLinearAlgebraProvider()`. The fallback does not make the package
-as a whole Linux-supported. For exactly rank-deficient SVD, the Swift fallback
-does not complete U columns corresponding to zero singular values to an
-orthonormal basis; LAPACK does. See
+as a whole Linux-supported.
+
+For exactly rank-deficient SVD, the Swift fallback does not complete directions
+corresponding to zero singular values to an orthonormal basis:
+
+- For tall or square input (m ≥ n), the affected directions are U columns.
+- For wide input (m < n), the fallback decomposes the transpose and swaps
+  factors, so the affected directions are Vᵀ rows instead.
+
+Those directions can be zero vectors. This does not affect their contribution
+to `U * diag(s) * Vᵀ`, but callers must not assume both factors provide an
+orthonormal basis for zero-singular-value directions. LAPACK completes those
+bases. The shape-dependent behavior follows from the transpose branch and
+zero-column normalization in
+[`SwiftLinearAlgebraProvider.svdThin`](../Sources/VectorCore/LinearAlgebra/SwiftLinearAlgebraProvider.swift).
+See
 [LinearAlgebraProviderTests](../Tests/ComprehensiveTests/LinearAlgebraProviderTests.swift)
 for reconstruction, shape, ordering, and provider comparisons.
 
@@ -49,6 +62,15 @@ Fitting requires at least two equal-dimension, nonempty vectors. The component
 count must be in `1...min(n - 1, d)` when centered, or
 `1...min(n, d)` when uncentered. Configuration and shape checks are not a
 comprehensive finite-input or allocation-safety validator.
+
+These component-count limits are structural, not a measurement of the data's
+rank. PCA copies rows of the SVD's Vᵀ into `components`. With the Swift
+provider, a wide, rank-deficient SVD panel can therefore yield zero component
+rows for zero singular values rather than an orthonormal null-space basis.
+This can occur in either the exact or randomized path. For example, two
+identical 3D samples become a zero 2-by-3 matrix after centering; fitting one
+component with the Swift provider can return a zero axis. Do not treat every
+returned component as a unit direction under this fallback limitation.
 
 ```swift
 import VectorCore

@@ -67,7 +67,7 @@ jobs:
           swift test -c "$CONFIGURATION" --xunit-output test-results/results.xml 2>&1 | tee test-results/output.log
       - name: Upload test summaries
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: tests-xcode-${{ matrix.xcode }}-${{ matrix.configuration }}
           path: test-results/
@@ -143,7 +143,7 @@ jobs:
           swift run -c release vectorcore-bench \
             --suites dot,distance,normalize --dims 512 --min-time 0.05 \
             --samples 3 --run-seed 1 --format json --out .bench/pr_smoke.json
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: pr-bench-${{ github.sha }}

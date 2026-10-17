@@ -120,6 +120,24 @@ def in_log(path, log):
     return str(path) in log or str(path.resolve()) in log
 
 
+# Swift Testing's run summary differs by toolchain (both pinned by test_test_output_counts):
+#   Swift 6.0 (Xcode 16.2): `Test run with 1 test passed after 0.1 seconds.`
+#   Swift 6.2+ (Xcode 26.3, 27): `Test run with 1 test in 1 suite passed after 0.1 seconds.`
+# A substring check written against one rendering misread the other on PR #56 (T20 round 3).
+_SWIFT_TESTING_RUN = re.compile(r'Test run with (\d+) tests?(?: in (\d+) suites?)? (passed|failed)\b')
+_XCTEST_EXECUTED = re.compile(r'Executed (\d+) tests?, with ')
+
+
+def swift_testing_runs(log):
+    """(tests, outcome) for every Swift Testing run summary in the log, in either rendering."""
+    return [(int(m[1]), m[3]) for m in _SWIFT_TESTING_RUN.finditer(log)]
+
+
+def xctest_executed(log):
+    """Largest XCTest `Executed N test(s)` count in the log; 0 when XCTest ran nothing or did not report."""
+    return max((int(n) for n in _XCTEST_EXECUTED.findall(log)), default=0)
+
+
 def detect_layout(bin_path):
     """'native' or 'swiftbuild'; anything else (or both at once) is an error.
 

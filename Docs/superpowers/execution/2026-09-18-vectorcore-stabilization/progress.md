@@ -2235,3 +2235,14 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - Review: CHANGES (the D02 site), then APPROVE.
   - Closure closures/T20.json updated for both rounds.
 - NEXT: re-sync the PR branch and push for CI run 3. It is the first run expected to compile everything on 16.2 and 26.3, so toolchain-specific test failures may still appear.
+- PR #56 CI RUN 3 (head 10e6006): 17 pass, 3 fail (both Xcode 16.2 test cells, plus the CI Required roll-up).
+  - Every target compiled on 16.2 and 26.3. Both 16.2 cells passed every test (Swift Testing 1703; XCTest 185, 0 failures).
+  - Each then failed in check_performance_gates.py: "Representative test did not execute: measured-profile".
+  - Cause: after XCTest ran the representative, Swift 6.0's Swift Testing runner printed `Test run with 0 tests passed`, which the gate's `'0 tests passed' in log` misread. Swift 6.2+ prints `... in 0 suites passed`.
+  - Class: a parser written against one toolchain's rendering. Latent second instance: check_sanitizers.verify_body required the `in N suites` form.
+- T20 ROUND 3 MERGED as 6749bb4: 5 Scripts/ci files via import_task (preimage vs 0ab068c and composition OK).
+  - Both checks now use swiftpm_products.swift_testing_runs / xctest_executed.
+  - New test_test_output_counts (both renderings, the failing log shape, and a control keeping the former check); test_sanitizer_log gains 6.0 cases.
+  - Validation: new tests GREEN, and RED on the base; git-less 531 OK; ledger 0; check_performance_gates debug 22 and check_sanitizers address 77, both on Swift 6.4.
+  - Review: APPROVE, with two comment nits applied. The reviewer found no other summary parsers in Scripts/ci.
+- NEXT: re-sync the PR branch and push for CI run 4. Also update the PR body's Verification section (policy tests are now 531, plus the CI rounds).

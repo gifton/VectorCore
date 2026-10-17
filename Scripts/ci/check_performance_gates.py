@@ -6,10 +6,21 @@ import re
 import shutil
 
 from swiftpm_products import (BUILD_SYSTEMS, build_system_flags, check_no_rebuild, find_swift,
-                              find_test_bundles, in_log, resolve_bin_path)
+                              find_test_bundles, in_log, resolve_bin_path, swift_testing_runs, xctest_executed)
 from v03_process import retain_artifacts, run, sha, test_environment, write_json
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def representative_executed(log):
+    """True when XCTest or Swift Testing reports at least one executed test.
+
+    `swift test` runs both frameworks, so an XCTest representative is followed by a Swift Testing
+    summary of 0 tests (and the reverse). Swift 6.0 renders that as `Test run with 0 tests passed`,
+    which the former `'0 tests passed' in log` check misread as "not executed" on Xcode 16.2.
+    Pinned by test_test_output_counts.RepresentativeExecuted.
+    """
+    return xctest_executed(log) >= 1 or any(count >= 1 for count, _ in swift_testing_runs(log))
 
 
 def main():
@@ -109,7 +120,7 @@ def main():
     for name, selector in representatives:
         _, log = run(base + ['--filter', selector], output, name, cwd=ROOT,
                      environment=dict(env, VECTORCORE_TEST_EXTENDED='1', VECTORCORE_STRICT_PERF='0'))
-        if not ('Test Case ' in log or 'Test run with 1 test' in log) or '0 tests passed' in log:
+        if not representative_executed(log):
             raise ValueError('Representative test did not execute: ' + name)
         if not in_log(bundles['ComprehensiveTests'], log):
             raise ValueError('Representative loaded-bundle image evidence missing: ' + name)

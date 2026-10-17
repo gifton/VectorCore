@@ -2,30 +2,33 @@
   "task": "T20",
   "status": "accepted",
   "task_base": "e713d90",
-  "integration_revision": "80bfba2 (round 1), e0cc335 (round 2)",
+  "integration_revision": "80bfba2 (round 1), e0cc335 (round 2), 6749bb4 (round 3)",
   "closed_records": [
     "T20-CI-TOOLCHAIN-TYPECHECK",
     "T20-REPOSITORY-CHECKS-TIMEOUT",
     "T20-R2-TYPECHECK-FIXTURES",
-    "T20-R2-SENDABLE-OPERATOR-REFS"
+    "T20-R2-SENDABLE-OPERATOR-REFS",
+    "T20-R3-SUMMARY-RENDERING-PARSERS"
   ],
   "disposition_records": {
     "T20-CI-TOOLCHAIN-TYPECHECK": "PR #56 CI run 1: Swift 6.0 (Xcode 16.2) and 6.2 (Xcode 26.3) reported 'unable to type-check this expression in reasonable time' at Benchmarks/VectorCoreBench/Formatters/CSVWriter.swift:71 (every build job; introduced by d2d579a) and Tests/ComprehensiveTests/BatchConfigurationContractTests.swift:397 (Xcode 16.2 Release). Both expressions are now built from typed parts with the same element expressions, order and Double operations. Swift 6.4 accepted both originals, and its -warn-long-expression-type-checking=100 scan flagged neither; the four slowest expressions it did flag (237-468 ms) are from main, where CI passes. So the local compiler cannot predict this class, and CI's toolchain matrix is its closure.",
     "T20-REPOSITORY-CHECKS-TIMEOUT": "The Repository checks job (ubuntu-24.04) was cancelled at timeout-minutes 5 with 15 of 38 Python test modules started (the reviewer counted 254 of 523 tests). Raised to 20; the suite took 205.8 s locally in milestone 18.",
     "T20-R2-TYPECHECK-FIXTURES": "PR #56 CI run 2 compiled the test targets on CI's toolchains for the first time. Swift 6.0 and 6.2 timed out on the SplitMix unit() one-liner `Float(Double(next() >> 11) / Double(1 << 53) * 2 - 1)` in P01OperationsFixtures.swift:133 and P02BatchFixtures.swift:25, and Swift 6.0 on the #expect at D02WitnessDispatchMatrixTests.swift:488. unit() now uses typed steps with 0x1p53 (== Double(1 << 53)); a root harness compared old and new forms over 1,400,004 values (7 seeds x 200,000, plus edge values): 0 bit mismatches. The #expect compares a typed count; the assertion is unchanged.",
-    "T20-R2-SENDABLE-OPERATOR-REFS": "Swift 6.0 rejected 8 bare `+` operator references passed to parallelReduce's `@Sendable` combine (ExecutionSchedulingContractTests 194/198/273/685/686/745, ExecutionBoundaryTests 236/238); Swift 6.2+ infers them Sendable. Each is now `{ $0 + $1 }`, the same operator per site ([Int] concatenation, Int addition, String concatenation). ComputeProvider.parallelReduce's combine was already `@Sendable` on main, so this is test-only and has no consumer impact."
+    "T20-R2-SENDABLE-OPERATOR-REFS": "Swift 6.0 rejected 8 bare `+` operator references passed to parallelReduce's `@Sendable` combine (ExecutionSchedulingContractTests 194/198/273/685/686/745, ExecutionBoundaryTests 236/238); Swift 6.2+ infers them Sendable. Each is now `{ $0 + $1 }`, the same operator per site ([Int] concatenation, Int addition, String concatenation). ComputeProvider.parallelReduce's combine was already `@Sendable` on main, so this is test-only and has no consumer impact.",
+    "T20-R3-SUMMARY-RENDERING-PARSERS": "PR #56 CI run 3 compiled everything on Xcode 16.2 and 26.3; 17/20 checks passed. Both Xcode 16.2 test cells passed every test (1703 Swift Testing, 185 XCTest), then check_performance_gates.py raised 'Representative test did not execute: measured-profile'. XCTest had run the test, and Swift 6.0's Swift Testing runner then printed `Test run with 0 tests passed`, which the gate's `'0 tests passed' in log` check misread; Swift 6.2+ prints `... 0 tests in 0 suites passed`. The class (parsers written against one toolchain's summary rendering) had a second, latent instance: check_sanitizers.verify_body required the 6.2+ `in N suites` rendering. Both now use swiftpm_products.swift_testing_runs / xctest_executed. Mechanical closure: test_test_output_counts pins both renderings, the failing log shape, and a control that keeps the former check; test_sanitizer_log gains Swift 6.0 cases. The independent review swept Scripts/ci for other summary parsers and found none."
   },
   "validation": {
     "suite": "Workspace: full Debug (EXTENDED=0) 1701 tests / 252 suites plus XCTest 75, 0 failures; Release vectorcore-bench plus test_benchmark_contracts.py PASS (10 invalid threshold configurations, JSON/CSV write failures, finite strict real benchmark, 28 provider calls / 14 case boundaries); SwiftLint 0.65.1 on both Swift files: 0 serious, warning counts unchanged (22 and 259).",
     "policy": "git-less unittest 523 OK (skipped 6); check_claim_ledger 0 problems.",
     "review": "Independent Sonnet review APPROVE (T20/review-report.md): CSV row byte-identical (21 expressions, same order and types); ranking formula bit-identical; ci.yml timeout not pinned by any policy test; one wording nit (205 s to 205.8 s) applied.",
     "round2": "Workspace T20b: full Debug 1701/252, 0 issues (run after the final edit); git-less unittest 523 OK (skipped 6); check_claim_ledger 0 problems; SwiftLint unchanged on the 4 linted files (0 serious). Independent Sonnet review: CHANGES (it found the D02:488 macro-expansion error that root's grep missed), then APPROVE after the fix.",
-    "ci_error_extraction": "Root's first run-2 summary grepped only `<file>.swift:L:C: error:` lines and missed the D02 error, which swift reports as `macro expansion #expect:1:1: error:` with the source location only in a later 'expanded code originates here' note. Closed with R/pr/ci_errors.py: it resolves both forms, reports unpaired macro errors and any other `error:` line as UNRESOLVED (rc 1), and was negative-control tested. On run 2 it finds exactly 11 sites, 0 unresolved."
+    "ci_error_extraction": "Root's first run-2 summary grepped only `<file>.swift:L:C: error:` lines and missed the D02 error, which swift reports as `macro expansion #expect:1:1: error:` with the source location only in a later 'expanded code originates here' note. Closed with R/pr/ci_errors.py: it resolves both forms, reports unpaired macro errors and any other `error:` line as UNRESOLVED (rc 1), and was negative-control tested. On run 2 it finds exactly 11 sites, 0 unresolved.",
+    "round3": "Workspace T20c: the new and extended policy tests GREEN (12) and RED against the base scripts (sanitizer 6.0 case ValueError; output-counts import error); git-less unittest 531 OK (skipped 6) on the final state; check_claim_ledger 0 problems; check_performance_gates.py debug on Swift 6.4: V03_PERFORMANCE_GATES_COMPLETE debug 22; check_sanitizers.py address on Swift 6.4: V03_SANITIZERS_COMPLETE address 77. Independent Sonnet review: APPROVE; two comment-wording nits applied."
   },
   "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T20",
-  "reviewed_tree": "manifests T20/freeze-sha256.txt (6333 files) and T20b/freeze-sha256.txt (6334 files)",
+  "reviewed_tree": "manifests T20/freeze-sha256.txt (6333 files), T20b/freeze-sha256.txt (6334) and T20c/freeze-sha256.txt (6335)",
   "limitations": [
-    "Swift 6.0 and 6.2 are not installed locally (only Xcode 27 / Swift 6.4). Compatibility is proven only by CI on the PR. CI run 3 is the first run expected to compile every target on both toolchains; it may still surface runtime or test failures specific to those toolchains."
+    "Swift 6.0 and 6.2 are not installed locally (only Xcode 27 / Swift 6.4). Compatibility is proven only by CI on the PR; CI run 4 is the check for round 3."
   ],
   "routed": []
 }

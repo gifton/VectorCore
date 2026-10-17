@@ -13,7 +13,7 @@ import shutil
 
 from check_ci_contracts import sanitizer_manifest
 from swiftpm_products import (BUILD_SYSTEMS, build_system_flags, check_no_rebuild, find_swift,
-                              find_test_bundles, in_log, resolve_bin_path, target_of_filter)
+                              find_test_bundles, in_log, resolve_bin_path, swift_testing_runs, target_of_filter)
 from v03_process import retain_artifacts, run, sha, test_environment, write_json
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,7 +30,8 @@ def verify_body(row, log):
     body = 'Test ' + re.escape(rendered) + aka
     if not re.search(body + ' started\\.', log) or not re.search(body + ' passed', log):
         raise ValueError('Missing actual started/passed body: ' + row['id'])
-    if not re.search(r'Test run with 1 test in \d+ suites? passed', log) or ' skipped' in log:
+    # Either Swift Testing rendering (swiftpm_products.swift_testing_runs; Swift 6.0 omits "in N suites").
+    if (1, 'passed') not in swift_testing_runs(log) or ' skipped' in log:
         raise ValueError('Expected one executed, unskipped body: ' + row['id'])
 
 

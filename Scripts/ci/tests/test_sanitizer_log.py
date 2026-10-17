@@ -29,6 +29,16 @@ class VerifyBodyTests(unittest.TestCase):
             with self.subTest(log=log), self.assertRaises(ValueError):
                 verify_body(self.custom, log)
 
+    def test_swift_6_0_run_summary(self):
+        # Swift 6.0 (Xcode 16.2) omits "in N suites"; run summaries in the PR #56 CI run 3 rendering.
+        body = 'Test testF() started.\nTest testF() passed after 1s\n'
+        verify_body(self.function, body + '✔ Test run with 1 test passed after 7.797 seconds.\n')
+        for tail in ['✔ Test run with 0 tests passed after 0.006 seconds.\n',
+                     '✔ Test run with 2 tests passed after 0.1 seconds.\n',
+                     '✘ Test run with 1 test failed after 0.013 seconds with 1 issue.\n']:
+            with self.subTest(tail=tail), self.assertRaises(ValueError):
+                verify_body(self.function, body + tail)
+
     def test_cancelled_body_is_rejected_even_when_started(self):
         # Swift Testing 6.4 reports a self-cancelling test as "was cancelled"; that is never a pass.
         cancelled = ('Test "custom name" (aka \'testF()\') started.\n'

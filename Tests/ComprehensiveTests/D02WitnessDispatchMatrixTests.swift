@@ -485,7 +485,9 @@ struct D02WitnessDispatchMatrixTests {
         }
         print("D02_DISPATCH_MATRIX rows=\(d02DispatchRows.count) existential=\(existentialForms.sorted { $0.key < $1.key })")
         #expect(d02DispatchRows.count == 58 + 13 + 6)
-        #expect(d02DispatchRows.filter { $0.dispatch == .dynamic }.count == 10 + 4 + 1 + 2)
+        // A typed count: inline, this #expect exceeded the Swift 6.0 type checker's limits in CI (Xcode 16.2).
+        let dynamicRows: Int = d02DispatchRows.filter { $0.dispatch == .dynamic }.count
+        #expect(dynamicRows == 10 + 4 + 1 + 2)
     }
 }
 

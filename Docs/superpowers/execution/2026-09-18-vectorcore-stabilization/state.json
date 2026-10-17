@@ -1014,7 +1014,7 @@
       "id": "T20",
       "title": "CI toolchain compatibility after PR #56 CI run 1 (root-created)",
       "status": "accepted",
-      "integration_revision": "80bfba2",
+      "integration_revision": "80bfba2, e0cc335",
       "closure": "closures/T20.json",
       "depends_on": [
         "T18"

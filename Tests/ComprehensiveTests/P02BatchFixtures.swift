@@ -22,7 +22,13 @@ struct P02SplitMix {
         return z ^ (z >> 31)
     }
     /// Uniform in [-1, 1) from the top 53 bits, rounded to Float.
-    mutating func unit() -> Float { Float(Double(next() >> 11) / Double(1 << 53) * 2 - 1) }
+    mutating func unit() -> Float {
+        // Typed steps: the one-line form exceeded the Swift 6.0/6.2 type checkers' limits in CI (Xcode 16.2, 26.3).
+        // 0x1p53 == Double(1 << 53); the Double operations and their order are unchanged.
+        let top53: UInt64 = next() >> 11
+        let scaled: Double = Double(top53) / 0x1p53 * 2 - 1
+        return Float(scaled)
+    }
 }
 
 enum P02Fixture: String, CaseIterable, Sendable {

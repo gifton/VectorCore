@@ -2220,3 +2220,18 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - Independent Sonnet review: APPROVE; one wording nit applied (T20/review-report.md).
   - Closure: closures/T20.json.
 - NEXT: re-sync the PR branch to the integration tree minus the drop list, then push for CI run 2. More old-toolchain errors in test files may surface now that builds get past the benchmark target.
+- PR #56 CI RUN 2 (head 583feb5): 10 pass, 10 fail.
+  - Now passing: Repository checks (3m39s), SDK type-name collisions, documentation consumers, SwiftLint, benchmark contracts, Perf Smoke, CodeQL.
+  - Every failure was a compile error in Tests/: 11 distinct sites (R/pr/ci_errors.py over R/pr/ci-run2/).
+    - Type-checker timeouts: P01OperationsFixtures:133 and P02BatchFixtures:25 (6.0 and 6.2); D02WitnessDispatchMatrixTests:488 inside #expect (6.0).
+    - 8 bare `+` passed as parallelReduce's @Sendable combine (6.0).
+    - The xcodebuild platform builds (iOS/tvOS/watchOS/visionOS/Catalyst) had 0 errors; the Intel build-tests failed only on the two fixtures.
+  - Root slip (P-R2): my first summary grepped only file-located errors and missed the D02 #expect error; the round-2 reviewer caught it. Closed mechanically with R/pr/ci_errors.py (both diagnostic forms, UNRESOLVED on anything else, negative-control tested).
+- T20 ROUND 2 MERGED as e0cc335: 5 test files via import_task (preimage vs 19ed36d and composition OK).
+  - unit(): typed steps with 0x1p53; bit-identical over 1,400,004 values.
+  - D02: a typed count in the #expect.
+  - `{ $0 + $1 }` at 8 sites; no public API change (combine was already @Sendable on main).
+  - Validation: Debug 1701/252, 0 issues; git-less 523; ledger 0; SwiftLint unchanged.
+  - Review: CHANGES (the D02 site), then APPROVE.
+  - Closure closures/T20.json updated for both rounds.
+- NEXT: re-sync the PR branch and push for CI run 3. It is the first run expected to compile everything on 16.2 and 26.3, so toolchain-specific test failures may still appear.

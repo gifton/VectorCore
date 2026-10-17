@@ -233,9 +233,9 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
             ]
             for p in boundedProviders {
                 for range in [0..<Int.max, Int.min ..< -1] {
-                    let count = try await p.parallelReduce(items: range, initial: 0, { $0.count }, +)
+                    let count = try await p.parallelReduce(items: range, initial: 0, { $0.count }, { $0 + $1 })
                     XCTAssertEqual(count, Int.max)
-                    let hinted = try await p.parallelReduce(items: range, initial: 0, minChunk: Int.max, { $0.count }, +)
+                    let hinted = try await p.parallelReduce(items: range, initial: 0, minChunk: Int.max, { $0.count }, { $0 + $1 })
                     XCTAssertEqual(hinted, Int.max)
                 }
             }

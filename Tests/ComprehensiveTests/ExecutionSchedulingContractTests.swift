@@ -191,11 +191,11 @@ private func e02Invoke(_ provider: any ComputeProvider, method: Int, range: Rang
             // Reverse completion pressure without changing the required merge order.
             if range.lowerBound % 2 == 0 { for _ in 0..<20 { await Task.yield() } }
             return Array(range)
-        }, +)
+        }, { $0 + $1 })
     default:
         return try await provider.parallelReduce(items: range, initial: [Int](), minChunk: hint, { range in
             for i in range { calls.append(i) }; await Task.yield(); return Array(range)
-        }, +)
+        }, { $0 + $1 })
     }
 }
 
@@ -270,7 +270,7 @@ extension ExecutionSchedulingContractTests {
                 #expect(combines.snapshot().count == calls.snapshot().count)
                 if count == 0 { #expect(calls.snapshot().isEmpty && combines.snapshot().isEmpty) }
                 let sum = try await provider.parallelReduce(items: 0..<count, initial: 0, minChunk: 3,
-                    { $0.reduce(0,+) }, +)
+                    { $0.reduce(0,+) }, { $0 + $1 })
                 #expect(sum == count * (count - 1) / 2)
             }
         }
@@ -682,8 +682,8 @@ extension ExecutionSchedulingContractTests {
                         case 0: _ = try await provider.parallelExecute(items: 0..<2048) { index in try await body(index); return index }
                         case 1: try await provider.parallelForEach(items: 0..<2048, body)
                         case 2: try await provider.parallelForEach(items: 0..<2048, minChunk: 1, body)
-                        case 3: _ = try await provider.parallelReduce(items: 0..<2048, initial: 0, { range in try await body(range.lowerBound); return range.count }, +)
-                        default: _ = try await provider.parallelReduce(items: 0..<2048, initial: 0, minChunk: 1, { range in try await body(range.lowerBound); return range.count }, +)
+                        case 3: _ = try await provider.parallelReduce(items: 0..<2048, initial: 0, { range in try await body(range.lowerBound); return range.count }, { $0 + $1 })
+                        default: _ = try await provider.parallelReduce(items: 0..<2048, initial: 0, minChunk: 1, { range in try await body(range.lowerBound); return range.count }, { $0 + $1 })
                         }
                         Issue.record("missing post-body cancellation check")
                     } catch { #expect(error is CancellationError) }
@@ -742,7 +742,7 @@ extension ExecutionSchedulingContractTests {
             try await E02Defaults(maxConcurrency: 2).parallelReduce(items: 0..<4, initial: "", { range in
                 if range.lowerBound == 0 { await signal.suspendUntilReleased() }
                 return range.map(String.init).joined()
-            }, +)
+            }, { $0 + $1 })
         }
         signal.release()
         #expect(value == "0123")

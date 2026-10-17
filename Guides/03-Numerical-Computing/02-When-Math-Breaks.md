@@ -266,10 +266,17 @@ func processVector(_ v: Vector512Optimized) throws -> Float {
 ```swift
 func cosineSimilarity(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
     let similarity = a.cosineSimilarity(to: b)
-    // Clamp to valid range (floating-point drift might push slightly outside)
+    // A NaN or infinite input gives a NaN similarity. Keep it NaN: `min(1.0, .nan)` is 1.0 in Swift,
+    // so clamping a NaN would report a perfect match.
+    guard similarity.isFinite else { return .nan }
+    // Clamp finite drift to the valid range (floating-point rounding might push slightly outside)
     return max(-1.0, min(1.0, similarity))
 }
 ```
+
+Clamp only finite values. Swift's `min(1.0, x)` and `max(-1.0, x)` return the bound when `x` is NaN, so an
+unguarded clamp turns NaN into a valid-looking value. VectorCore's cosine distances also clamp only a finite
+similarity and return NaN otherwise (pinned by `T15CosineExceptionalTableTests`).
 
 ### Pattern 3: Use Stable Formulations
 

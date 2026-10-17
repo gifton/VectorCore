@@ -33,9 +33,14 @@ full: `lanes = dimension / 4`.
 | `Vector768Optimized` | 768 | 192 |
 | `Vector1536Optimized` | 1536 | 384 |
 
-`DynamicVector` is not `SoACompatible`. The internal `SoAFP16` cache is
+`DynamicVector` is not `SoACompatible`. `MixedPrecisionKernels.SoAFP16` uses a separate FP16 layout and is
 not covered by this public FP32 layout contract. Custom `SoACompatible`
-conformers are responsible for consistent dimension, lane count, and storage.
+conformers are responsible for consistent dimension, lane count, and storage. For example,
+a dimension-8, lanes-2 conformer must supply exactly two SIMD4<Float> storage
+lanes for every value. The external-style conformer in
+[StorageBorrowContractTests](../Tests/ComprehensiveTests/StorageBorrowContractTests.swift)
+asserts those obligations and checks ordinary/page-aligned layout for N=0/1/5.
+This does not add runtime validation of arbitrary conformers.
 
 ## Descriptor
 
@@ -94,6 +99,16 @@ where required; a kernel must restrict indexing to the logical region.
 For ordinary storage `allocatedByteCount == logicalByteCount` and
 `pageAlignedBytes == nil`. Empty SoA storage does not provide a page-aligned
 allocation, even when the flag is set.
+
+## FP16 scoped buffers are a different lifetime contract
+
+The three fixed FP16 vector wrappers replace the removed `fp16Storage` pointer
+getter with synchronous `withUnsafeFP16BufferPointer`. Its UInt16 buffer and base
+pointer must remain inside the callback; generic return values do not enforce
+nonescape. Copy to an owned Array inside the callback for retained/asynchronous
+data, as shown in [the migration example](Memory_Alignment.md#scoped-fp16-migration).
+`SoAFP16.storage` remains an owned ContiguousArray value. Neither of these
+interfaces changes the persistent FP32 SoA allocation or transfer rules below.
 
 ## Lifetime and transfer
 

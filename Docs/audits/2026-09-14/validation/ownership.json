@@ -1,0 +1,826 @@
+[
+  {
+    "id": "OWN-01",
+    "original_refs": [
+      "A1",
+      "V1"
+    ],
+    "claim": "Public DynamicVector and optimized FP32 storage mutations break shape invariants.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P1",
+    "category": "architecture",
+    "exposure": "public default representations",
+    "sources": [
+      "Sources/VectorCore/Vectors/DynamicVector.swift:17",
+      "Sources/VectorCore/Vectors/DynamicVector.swift:139",
+      "Sources/VectorCore/Vectors/Vector384Optimized.swift:156",
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift:150",
+      "Sources/VectorCore/Vectors/Vector768Optimized.swift:150",
+      "Sources/VectorCore/Vectors/Vector1536Optimized.swift:150",
+      "Sources/VectorCore/Protocols/VectorProtocol.swift:38"
+    ],
+    "evidence": "Fresh Ownership Release reports all four optimized views advertising 384/512/768/1536 values over four actual scalars. Original valid DynamicVector replacement probe is independently source-checked; its first-pass reproduction is preserved: dimension remains 2 with three storage elements; equality inspects dimension while hash traverses storage.",
+    "correction": "Do not say every vector or every check fails: generic Vector<D> uses a count-constrained DimensionStorage; FP16 conversions explicitly check malformed FP32 storage. No out-of-bounds write was executed. Different hash values are an observed consequence, not a mathematical guarantee against incidental hash collisions.",
+    "improvement": "Enforce shape at owners: dynamic dimension derives from storage or a checked setter keeps it synchronized; fixed storage must preserve exact lane count through replacement and collection mutation. Reconsider protocol-wide settable storage.",
+    "acceptance": "Mechanical matrix for all families and wrappers: short/equal/long replacement and direct collection edits; dimension/count/buffer/serialization agree; equal values hash equally; invalid shapes are rejected before memory access. Test generic protocol mutation as well.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "correctness / memory safety",
+    "priority_detail": "P1",
+    "canonical_ids": [
+      "A1"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-02",
+    "original_refs": [
+      "A1",
+      "RP additional: public invariant gap"
+    ],
+    "claim": "INT8 raw constructors, mutable storage, and synthesized Codable permit malformed fixed storage.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P1",
+    "category": "architecture",
+    "exposure": "public opt-in INT8 APIs",
+    "sources": [
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:140",
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:164",
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:177",
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:190",
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:461"
+    ],
+    "evidence": "Ownership Release accepts one SIMD lane for a reported 512-dimensional vector. ShapeRoutes Release decodes storage:[] for 512/768/1536. Fixed-lane toFP32 reads follow directly from source. All four optimized FP32 decoders reject empty arrays as controls.",
+    "correction": "FP16 vectors are immutable and exact-length validated; they are not part of this shape defect. Invalid INT8 storage is observed; resulting unsafe reads are source-derived, not an executed memory fault. Synthesized decoding bypasses any future initializer-only fix.",
+    "improvement": "Validate raw init and custom decoding; restrict storage mutation to shape-preserving operations, validate parameters separately.",
+    "acceptance": "Each INT8 width rejects short/long raw storage and JSON storage; valid round trips preserve dimension, payload and parameters. Exercise post-construction collection mutation and all unsafe conversion/kernel entry points.",
+    "dependencies": [
+      "OWN-01"
+    ],
+    "review_group": "ownership",
+    "category_detail": "correctness / memory safety",
+    "priority_detail": "P1",
+    "canonical_ids": [
+      "A1"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-03",
+    "original_refs": [
+      "A2",
+      "IF5"
+    ],
+    "claim": "NormalizationHint retains metadata after direct wrapped mutation or a throwing mutable-buffer closure.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P1",
+    "category": "architecture",
+    "exposure": "public wrapper; inspected downstream consumers",
+    "sources": [
+      "Sources/VectorCore/Integration/IndexableVector.swift:107",
+      "Sources/VectorCore/Integration/IndexableVector.swift:203",
+      "../VectorIndex/Sources/VectorIndex/TypedOverloads.swift:102",
+      "../VectorIndex/Sources/VectorIndex/TypedOverloads.swift:119",
+      "../future/VectorAccelerate/Sources/VectorAccelerate/Integration/KernelDistanceProviders.swift:189"
+    ],
+    "evidence": "Fresh Release: initially valid [1,0] auto-hint changes to [2,0] through vector and reports normalized=true/magnitude1 while underlying magnitude2; buffer writes3 then throws and metadata remains1. Read downstream consumers using flags and cached inverse norms.",
+    "correction": "The initial hint is true, so this is not caller supplying a false assertion. GPU/downstream end-to-end behavior was not executed; existing contaminated indexes needing rebuild is conditional, not established deployment state.",
+    "improvement": "Observe/restrict wrapped-value mutation and invalidate before mutable access or with defer. Explicitly define trust and value-semantics requirements for external conformers and decoded hints.",
+    "acceptance": "Test direct vector replacement/subscript/storage, wrapper storage, successful and throwing buffer mutation on every built-in representation; after changes metadata must be cleared or recomputed. Downstream insertion/query tests compare fresh normalized reference.",
+    "dependencies": [
+      "OWN-01"
+    ],
+    "review_group": "ownership",
+    "category_detail": "correctness",
+    "priority_detail": "P1",
+    "canonical_ids": [
+      "A2"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-04",
+    "original_refs": [
+      "A3",
+      "RP1"
+    ],
+    "claim": "SoAFP16Cache512 treats vector hash digests as exact candidate identity.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P1",
+    "category": "architecture",
+    "exposure": "public opt-in cache; no default or sibling caller found",
+    "sources": [
+      "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift:16",
+      "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift:94",
+      "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift:181",
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift:334"
+    ],
+    "evidence": "Fresh ShapeRoutes Release caches zero then independently changes each coordinate: 496 of512 changed inputs falsely hit; first/last eight miss. The first-pass returned-value corruption fixture is preserved separately.",
+    "correction": "Only the512 cache exists; 384/768/1536 key initializers are currently unused future surface. Full-coordinate hashing alone cannot turn a digest into an equality proof.",
+    "improvement": "Use immutable candidate snapshot identity/version or compare complete contents on digest hits; retain order and candidate count in identity.",
+    "acceptance": "For every coordinate, reorder, count change and retained snapshot mutation, getOrCreate must match uncached conversion. Inject deliberate hash collisions to prove equality checking; repeated identical content still hits.",
+    "dependencies": [
+      "OWN-07"
+    ],
+    "review_group": "ownership",
+    "category_detail": "correctness",
+    "priority_detail": "P1",
+    "canonical_ids": [
+      "A3"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-05",
+    "original_refs": [
+      "C1",
+      "MS-1"
+    ],
+    "claim": "Compact-tier triangular matrix copies share later mutations.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P1",
+    "category": "code quality",
+    "exposure": "public TriangularMatrix default sizes4...32; internal compact counts5...512",
+    "sources": [
+      "Sources/VectorCore/Utilities/TieredStorage.swift:175",
+      "Sources/VectorCore/Utilities/TieredStorage.swift:450",
+      "Sources/VectorCore/Utilities/TriangularMatrix.swift:94",
+      "Sources/VectorCore/Utilities/TriangularMatrix.swift:157"
+    ],
+    "evidence": "Fresh actual-library Release verifies all508 compact element counts5...512 alias after copy/subscript write; public matrix n4,16,32 originals change99, controls3,33,64,65 stay1. CompactBuffer reference is shared while uniqueness inspects its nested ManagedBuffer.",
+    "correction": "Range is derived from m=n(n-1)/2; no claim for an arbitrary configured tier. Iterator snapshot and setAt exposure follow their same stored-copy/setter paths, not independent runtime reproduction.",
+    "improvement": "Check uniqueness of the actual stored shared reference, not an inner property. Coordinate compact destruction repair.",
+    "acceptance": "COW tests across tier counts0,1,4,5,512,513,2048,2049 and matrix n3,4,32,33,64,65 for subscript,setAt,bulk and preexisting iterators; original unchanged and first mutation detaches once.",
+    "dependencies": [
+      "OWN-10",
+      "OWN-11"
+    ],
+    "review_group": "ownership",
+    "category_detail": "value semantics",
+    "priority_detail": "P1",
+    "canonical_ids": [
+      "C1"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-06",
+    "original_refs": [
+      "C5",
+      "V3"
+    ],
+    "claim": "Binary in-place DynamicVector routes omit dimension checks.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "public direct defaults and generic VectorProtocol operator dispatch",
+    "sources": [
+      "Sources/VectorCore/Protocols/VectorProtocol.swift:181",
+      "Sources/VectorCore/Protocols/VectorProtocol.swift:194",
+      "Sources/VectorCore/Protocols/VectorProtocol.swift:230",
+      "Sources/VectorCore/Protocols/VectorProtocol.swift:241"
+    ],
+    "evidence": "Fresh Release longer RHS yields add[5,7],subtract[-3,-3],Hadamard[4,10],generic +=[5,7],generic -=[-3,-3]. Source loops over lhs scalarCount with no check. Original Debug short-RHS fixture inspected; its original evidence is retained; no fresh short-buffer Release overread was executed.",
+    "correction": "Do not extend unchecked dispatch claim to concrete VectorFactory +=, which checks through +. Short RHS optimized overread is static reasoning; no Release overread was intentionally executed.",
+    "improvement": "Shared dimension precondition before mutation on all three binary mutators; retain direct/generic consistency.",
+    "acceptance": "Equal/short/long RHS, empty combinations and direct/generic +=/-= plus all three methods. Invalid dimensions fail before any write; subprocess tests for trapping API or recoverable errors for checked API.",
+    "dependencies": [
+      "OWN-01"
+    ],
+    "review_group": "ownership",
+    "category_detail": "correctness / memory safety",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "C5"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-07",
+    "original_refs": [
+      "PERF3",
+      "V5"
+    ],
+    "claim": "Optimized-vector hashes omit all but first and last eight scalar values.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "performance",
+    "exposure": "all four public optimized vector types; no vector-keyed downstream table found",
+    "sources": [
+      "Sources/VectorCore/Vectors/Vector384Optimized.swift:334",
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift:334",
+      "Sources/VectorCore/Vectors/Vector768Optimized.swift:334",
+      "Sources/VectorCore/Vectors/Vector1536Optimized.swift:334"
+    ],
+    "evidence": "Fresh Release across all four widths: interior-distinct values have identical hashes; signed-zero equality and hash both agree. Source combines exactly four SIMD4 values, giving deterministic same hash for all interior-only variation.",
+    "correction": "Legal Hashable collisions are a scaling issue, not equal-values-have-equal-hash violation. O(N^2*d) is worst-case equality work for sufficiently late differences, not measured universal cost. SIMD signed zero is not an additional bug.",
+    "improvement": "Hash all equality-significant coordinates or choose explicit identity keys for consumers; repair cache exact identity separately.",
+    "acceptance": "Large structured/sparse interior-varying corpus must not deterministically collapse; equal values including signed zeros retain equal hashes. Coordinate Release insertion/lookup scaling measurement before speed claims.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "hash-table scaling",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "PERF3"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-08",
+    "original_refs": [
+      "C4",
+      "SIMD finding2"
+    ],
+    "claim": "Pointer normalization documents16-byte alignment as preferred but SIMD loads require it.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "public NormalizeKernels.normalizeUnchecked pointer overload",
+    "sources": [
+      "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift:419",
+      "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift:439"
+    ],
+    "evidence": "Actual-library fresh Debug offset+4 from64-byte allocation traps at dimensions4,5,16,17: load from misaligned raw pointer. Dimension3 succeeds. Same actual Release fixtures all succeed on this ARM host.",
+    "correction": "Report Debug trap and source alignment precondition violation, not a reproduced Release failure. Dimension<4 does not enter SIMD loads. Caller meets documented Float capacity/nonzero magnitude obligations.",
+    "improvement": "Use loadUnaligned or scalar/gather loads, or explicitly enforce and document mandatory SIMD alignment. A documentation-only compatibility tightening must be deliberate.",
+    "acceptance": "Offsets0,4,8,12 and dimensions0...5,15...17 in Debug/Release either compute correct finite unit values under supported inputs or reject consistently at a documented boundary; retain numerical reviewer coverage.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "unsafe API contract",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "C4"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-09",
+    "original_refs": [
+      "C17",
+      "V4"
+    ],
+    "claim": "Vector384Optimized permanently rebinds typed-owner memory where other widths restore binding.",
+    "verdict": "qualified",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "normal public construction/toArray/buffer access",
+    "sources": [
+      "Sources/VectorCore/Vectors/Vector384Optimized.swift:69",
+      "Sources/VectorCore/Vectors/Vector384Optimized.swift:143",
+      "Sources/VectorCore/Vectors/Vector384Optimized.swift:156",
+      "Sources/VectorCore/Vectors/Vector384Optimized.swift:168"
+    ],
+    "evidence": "Source comparison finds four permanent bindMemory sites versus scoped withMemoryRebound in512/768/1536. Swift UnsafeRawPointer migration guide and SE-0107 require later typed accesses to agree with current binding and describe restoring temporary bindings. No optimizer miscompile is reproduced.",
+    "correction": "Keep as binding-lifetime maintenance/contract finding. Layout compatibility is not a blanket strict-aliasing exemption; conversely merely seeing different spellings does not prove an observed miscompile. Alignment of Float-array source must be audited separately across all widths.",
+    "improvement": "Use one reviewed conversion/borrow strategy across widths, restoring ownership binding; do not treat replacing the spelling alone as an alignment proof.",
+    "acceptance": "Mechanical audit of typed-owner rebinding, scoped nonescape and alignment obligations plus constructor/read/write/COW Release round trips for all widths. Document the permitted type/layout model.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "memory binding contract",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "C17"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-10",
+    "original_refs": [
+      "MS-4"
+    ],
+    "claim": "Compact generic storage does not destroy manually initialized ManagedBuffer tail elements.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "public TriangularMatrix<T>, default compact sizes4...32",
+    "sources": [
+      "Sources/VectorCore/Utilities/TieredStorage.swift:380",
+      "Sources/VectorCore/Utilities/TieredStorage.swift:406",
+      "Sources/VectorCore/Utilities/TieredStorage.swift:418"
+    ],
+    "evidence": "Fresh Release weak sentinel retained after matrices n4/32 leave scope; controls n3/33/65 release. CompactBuffer has no tail deinit; constructor and copy initialize count tail elements.",
+    "correction": "Reference-bearing arrays/strings follow missing generic destruction by source; only class sentinel was executed. A ManagedBuffer frees allocation but does not implicitly destroy manually initialized elements.",
+    "improvement": "Destroy exactly initialized tail count at actual owner lifetime end; fix ownership sharing before choosing where deinit belongs.",
+    "acceptance": "Deinit/weak sentinel tests for all tiers, compact copy/detach/replacement/destruction and thrown access; each logical initialized reference released exactly once, no early destruction.",
+    "dependencies": [
+      "OWN-05"
+    ],
+    "review_group": "ownership",
+    "category_detail": "memory lifetime",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-11",
+    "original_refs": [
+      "C17",
+      "MS-5"
+    ],
+    "claim": "alignedCopy has incompatible initialize versus update semantics across alignment branches.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "public generic utility; no production caller found",
+    "sources": [
+      "Sources/VectorCore/Utilities/MemoryUtilities.swift:135"
+    ],
+    "evidence": "Original exact-source Token fixture inspected and replayed: old initialized destination leaks at offset0, releases at naturally aligned offset1. Code initialize(from:) vs destination[i]=source[i] admits no single destination-state contract for nontrivial T.",
+    "correction": "This is an unsafe API contract gap, not proof of a fault under a clearly documented supported destination state (none is supplied). Uninitialized-destination crash was not executed. Alignment here means preferred64-byte alignment, not natural-type misalignment.",
+    "improvement": "Specify initialize or update semantics uniformly, preferably separate explicitly named APIs; separately document overlap.",
+    "acceptance": "Class/deinit and nontrivial-value tests at preferred and natural-only alignment, using only the chosen destination state. Identical lifetime behavior in both branches; overlap behavior explicitly tested if supported.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "unsafe API lifetime",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "C17"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-12",
+    "original_refs": [
+      "PERF1",
+      "MS-2"
+    ],
+    "claim": "HybridStorage repeating construction/fill performs quadratic buffer traffic.",
+    "verdict": "confirmed-source",
+    "priority": "P2",
+    "category": "performance",
+    "exposure": "DynamicVector repeating/fill/resize above16 Float elements; explicit hybrid heap storage",
+    "sources": [
+      "Sources/VectorCore/Storage/HybridStorage.swift:125",
+      "Sources/VectorCore/Storage/HybridStorage.swift:173",
+      "Sources/VectorCore/Storage/HybridStorage.swift:224",
+      "Sources/VectorCore/Vectors/DynamicVector.swift:38",
+      "Sources/VectorCore/Vectors/DynamicVector.swift:139"
+    ],
+    "evidence": "Removed only integer counters from original COW fixture and verified full current source bodies occur byte-for-byte for UnifiedStorage,HybridStorage,DimensionStorage,VectorStorage. Replayed -O counter results: repeating512 514 normal+512 copy allocations=1026. Actual linked Release specialized ensureUnique and setter each retain before checking uniqueness, then allocate/copy; actual fill loops these paths. Excerpts retained.",
+    "correction": "Exact count1026 belongs to the instrumented fixture; actual Release instruction path independently proves duplicated ownership/copying and quadratic element traffic. Pointer addresses staying unchanged after writes do not refute copying: two replacement allocations can reuse prior address. SIMD stubs are not used to claim numerical results. Generic DimensionStorage default heap mutation does not inherit this finding.",
+    "improvement": "Remove redundant outer COW ownership, mutate via exclusive ownership and fill once through a buffer. Preserve value semantics. Audit explicit DimensionStorage(.hybrid) as a dependency, separately from default heap.",
+    "acceptance": "Optimized allocation-scaling checks at Float16/17 and representative384/512/768/1536; unique scalar writes/fill stay bounded, shared first mutation detaches once, subsequent unique writes do not copy. No wall-clock speedup asserted until coordinated measurement.",
+    "dependencies": [
+      "OWN-05",
+      "OWN-14"
+    ],
+    "review_group": "ownership",
+    "category_detail": "allocation scaling",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "PERF1"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-13",
+    "original_refs": [
+      "PERF1",
+      "MS-3"
+    ],
+    "claim": "TriangularMatrix scalar writes copy complete standard/aligned allocations even when uniquely owned.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "performance",
+    "exposure": "public default matrix n>=33; original emphasized aligned n>=65",
+    "sources": [
+      "Sources/VectorCore/Utilities/TieredStorage.swift:160",
+      "Sources/VectorCore/Utilities/TieredStorage.swift:181",
+      "Sources/VectorCore/Utilities/TieredStorage.swift:581",
+      "Sources/VectorCore/Utilities/TriangularMatrix.swift:225",
+      "Sources/VectorCore/Utilities/TriangularMatrix.swift:258"
+    ],
+    "evidence": "Fresh actual Release:10 unique writes cause10 allocation-address changes at n33,64,65. Original exact-source aligned-copy counter replay gives10 copies at65. Standard setter extracts ContiguousArray and mutates while enum still owns it; aligned uniqueness method retains self. Full m-element copy per scalar gives O(m^2)=O(n^4) construction traffic.",
+    "correction": "Extend original exposure: standard tier513...2048 also detaches on scalar mutation, so repairing only AlignedBuffer.isUniquelyReferenced is insufficient. Address-change evidence uses integer addresses outside borrow scopes, not retained storage copies.",
+    "improvement": "Fix compact/aligned ownership checks and standard enum extraction; add bulk construction after dormant bulk correctness is repaired.",
+    "acceptance": "Across all tier boundaries unique writes perform no full-buffer detaches; retained copy produces exactly one detach and remains unchanged. Construction traffic scales linearly with number of stored elements. Benchmark only after allocation and value-semantic checks.",
+    "dependencies": [
+      "OWN-05",
+      "OWN-14"
+    ],
+    "review_group": "ownership",
+    "category_detail": "allocation scaling",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "PERF1"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-14",
+    "original_refs": [
+      "MS-6 standard/throwing bulk"
+    ],
+    "claim": "Dormant TieredStorage bulk access loses standard writes and inline writes on thrown closure exit.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "internal dormant mutable-buffer route; no production caller found",
+    "sources": [
+      "Sources/VectorCore/Utilities/TieredStorage.swift:218",
+      "Sources/VectorCore/Utilities/TieredStorage.swift:224",
+      "Sources/VectorCore/Utilities/TieredStorage.swift:365"
+    ],
+    "evidence": "Fresh actual Release throwing closure writes19 then throws: counts1,4,513,2048 remain1; compact5/512 and aligned2049 retain19. Original ordinary-closure exact-source replay confirms standard513/2048 lose writes even without throw.",
+    "correction": "No current public matrix method routes through this bulk method. It becomes a required dependency if the proposed matrix bulk-fill optimization is introduced.",
+    "improvement": "Persist modified standard payload with defer; make inline inner and outer copyback consistent on throws, or define a uniform rollback contract across every tier.",
+    "acceptance": "Normal and throwing closure tests at0,1,4,5,512,513,2048,2049 with retained original copies, consistent mutation policy and independent value semantics.",
+    "dependencies": [
+      "OWN-05"
+    ],
+    "review_group": "ownership",
+    "category_detail": "latent correctness",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-15",
+    "original_refs": [
+      "MS-6 StorageSlice"
+    ],
+    "claim": "Internal StorageSlice returns scoped pointer without keeping its owner alive.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "internal dormant APIs; no production call found",
+    "sources": [
+      "Sources/VectorCore/Storage/UnifiedStorage.swift:280",
+      "Sources/VectorCore/Storage/DimensionStorage.swift:298",
+      "Sources/VectorCore/Storage/UnifiedStorage.swift:259"
+    ],
+    "evidence": "Slice only stores pointer/count returned from withUnsafeBufferPointer. Managed slice has no owner reference; inline DimensionStorage borrows a local tuple temporary. Current source call search finds declarations and forwarding only.",
+    "correction": "No supported-use UAF executed. This is distinct from DynamicVector.slice, which returns an owned vector.",
+    "improvement": "Remove unused API or use scoped slice closures; an owning slice must hold storage and define snapshot/COW behavior, including inline storage promotion.",
+    "acceptance": "Compile-time nonescape design or scoped lifetime tests for inline/heap slices; no pointer survives its borrow. If retaining owner, prove owner retention and copy isolation.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "latent lifetime",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-16",
+    "original_refs": [
+      "MS-6 MoveOnlyStorage"
+    ],
+    "claim": "Experimental consuming into() returns memory still freed by deinit.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "internal compile gate MOVE_ONLY_EXPERIMENTAL absent from package settings",
+    "sources": [
+      "Sources/VectorCore/Storage/UnifiedStorage.swift:10",
+      "Sources/VectorCore/Storage/UnifiedStorage.swift:36",
+      "Sources/VectorCore/Storage/UnifiedStorage.swift:66"
+    ],
+    "evidence": "into returns the stored pointer, while unconditional deinit deallocates it; no transferred-state guard or deinit suppression is present.",
+    "correction": "Not compiled in ordinary builds and not runtime-reproduced. Do not enable this gate as an optimization without rederiving all lifetime paths.",
+    "improvement": "Remove dormant experimental route or implement a real consuming transfer with exactly-once ownership handoff.",
+    "acceptance": "Gate-enabled separate fixture proves pointer survives consumed wrapper, is freed once by recipient, and nontransferred wrapper still frees correctly; audit every newly compiled branch.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "latent ownership transfer",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-17",
+    "original_refs": [
+      "RP additional: ownership contract gap"
+    ],
+    "claim": "Public FP16 pointer getters escape ContiguousArray borrow scopes.",
+    "verdict": "qualified",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "public opt-in fp16Storage getters; kernels use scoped borrows",
+    "sources": [
+      "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift:344",
+      "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift:387",
+      "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift:430"
+    ],
+    "evidence": "All three getters return baseAddress from withUnsafeBufferPointer. Returned UnsafePointer has no lifetime token; temporary owner expressions can end storage lifetime. Source traced; no UAF executed.",
+    "correction": "The getter is explicitly unsafe; do not equate pointer return with a demonstrated supported-use corruption. Retaining the array owner alone does not change the documented nonescape condition of withUnsafeBufferPointer.",
+    "improvement": "Provide scoped FP16 storage access; deprecate or precisely document any persistent pointer API with owned allocation design.",
+    "acceptance": "All direct kernels and callers use scoped borrows or explicit owned allocation lifetime. Temporary-expression use cannot silently escape through new safe API. Test512/768/1536 content and owner lifetime.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "unsafe API lifetime",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-18",
+    "original_refs": [
+      "RP additional: cache capacity"
+    ],
+    "claim": "SoAFP16Cache512 accepts nonpositive maxSize then evicts from an empty list.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "public explicit cache configuration; default100 unaffected",
+    "sources": [
+      "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift:85",
+      "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift:133"
+    ],
+    "evidence": "With size0 and empty cache, cache.count>=maxSize is true and accessOrder.removeFirst traps. Same proof holds negative capacity; original zero subprocess reproduced by root/reduced-precision reviewer.",
+    "correction": "Lower priority configuration boundary. Choose whether zero intentionally disables caching before testing desired policy.",
+    "improvement": "Precondition positive capacity or implement zero retention policy; reject negative.",
+    "acceptance": "Fresh empty/nonempty stores at negative,zero,one capacities have documented behavior, repeated eviction and statistics remain consistent.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "boundary validation",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-19",
+    "original_refs": [
+      "PERF8 FP16 cache",
+      "RP additional: retention"
+    ],
+    "claim": "FP16 cache caps entry count while payload bytes scale with candidates per entry.",
+    "verdict": "confirmed-source",
+    "priority": "P2",
+    "category": "performance",
+    "exposure": "public opt-in512 cache",
+    "sources": [
+      "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift:49",
+      "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift:75",
+      "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift:468"
+    ],
+    "evidence": "512*2*N=1024N logical payload bytes per entry;100 million-candidate entries yield102400000000 bytes before padding/keys. Comment1KB per100 vectors understates logical100KiB by100x. Key map is O(N); accessOrder firstIndex/remove O(entry count).",
+    "correction": "Sizing derivation, not attempted allocation/RSS measurement; immutable COW cache values are not themselves an actor data race.",
+    "improvement": "Byte admission/eviction budget and byte statistics; correct size docs and account for metadata/padding.",
+    "acceptance": "Tests with small byte budget cap retained payload; oversized entries follow explicit policy; statistics and eviction accounting agree with logical/allocated sizes. No claim of measured RSS.",
+    "dependencies": [
+      "OWN-04"
+    ],
+    "review_group": "ownership",
+    "category_detail": "memory scaling",
+    "priority_detail": "P2 opportunity",
+    "canonical_ids": [
+      "PERF8"
+    ],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-20",
+    "original_refs": [
+      "vectors architecture: StaticDimension.Storage"
+    ],
+    "claim": "StaticDimension.Storage customization is unused by Vector<D> storage yet controls extension availability.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "public custom dimensions",
+    "sources": [
+      "Sources/VectorCore/Core/Dimension.swift:14",
+      "Sources/VectorCore/Vectors/Vector.swift:15",
+      "Sources/VectorCore/Operations/VectorCoreOperations.swift:10"
+    ],
+    "evidence": "Vector<D>.Storage explicitly aliases DimensionStorage<D,Float>; D.Storage is independently constrained by operation extensions.",
+    "correction": "Confusing customization/API gating, not demonstrated numerical failure.",
+    "improvement": "Document/remove dead customization or deliberately wire it through with compatibility review.",
+    "acceptance": "Custom dimension conformance fixtures demonstrate actual storage and intended available operations; no advertised customization point has no effect.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "API design",
+    "priority_detail": "P3 opportunity",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-21",
+    "original_refs": [
+      "vectors architecture: factory routing"
+    ],
+    "claim": "VectorTypeFactory optimized wording describes generic fixed-vector selection, not specialized concrete types.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "public factory",
+    "sources": [
+      "Sources/VectorCore/Factory/VectorTypeFactory.swift:28",
+      "Sources/VectorCore/Factory/VectorTypeFactory.swift:51"
+    ],
+    "evidence": "Factory switch constructs Vector<Dim*> for supported sizes; existing tests intentionally require these concrete outputs.",
+    "correction": "No measured performance regression. Changing the output type can alter casts, provider routing and generic overload behavior.",
+    "improvement": "Document actual outputs and benchmark target workloads before deciding strategy; preserve compatibility or explicitly version change.",
+    "acceptance": "Concrete-output and routing tests remain deliberate; any strategy change reruns all reachable kernels and consumer casts at every supported dimension.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "API clarity",
+    "priority_detail": "P3 opportunity",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-22",
+    "original_refs": [
+      "vectors architecture: allocations"
+    ],
+    "claim": "VectorCoreOperations creates redundant arrays and temporary results.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "performance",
+    "exposure": "public min/max/clamp operations",
+    "sources": [
+      "Sources/VectorCore/Operations/VectorCoreOperations.swift:17",
+      "Sources/VectorCore/Operations/VectorCoreOperations.swift:196",
+      "Sources/VectorCore/Operations/VectorCoreOperations.swift:215",
+      "Sources/VectorCore/Operations/VectorCoreOperations.swift:233"
+    ],
+    "evidence": "Source constructs input arrays, provider result and owned vector; Dynamic min/max/clamp initially allocate zero result then replace storage.",
+    "correction": "Source-visible allocation opportunities; no measured regression or speedup. Constructor cost can additionally be affected by HybridStorage finding.",
+    "improvement": "Eliminate unnecessary initial result allocation, then consider scoped provider APIs with shape guarantees.",
+    "acceptance": "Allocation records for representative dimensions show fewer temporaries without changing provider call counts, shape checks or outputs.",
+    "dependencies": [
+      "OWN-12"
+    ],
+    "review_group": "ownership",
+    "category_detail": "allocation reduction",
+    "priority_detail": "P3 opportunity",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-23",
+    "original_refs": [
+      "vectors architecture: claims",
+      "memory strengths: ownership layers"
+    ],
+    "claim": "Performance/robustness comments exceed evidence and overlapping storage layers obscure actual ownership.",
+    "verdict": "qualified",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "public docs and maintainers",
+    "sources": [
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift:15",
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift:180",
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift:213",
+      "Sources/VectorCore/Storage/COWDynamicStorage.swift:1",
+      "Sources/VectorCore/Vectors/DynamicVector.swift:15"
+    ],
+    "evidence": "Fixed nanosecond/speedup assertions have no nearby hardware/revision measurements; stable magnitude squared still cannot represent a mathematically overflowing square. DynamicVector uses HybridStorage, despite older COWDynamicStorage descriptions.",
+    "correction": "General consolidation is an opportunity, not authorization for a wholesale rewrite or proof of universal slowness. Norm arithmetic validation belongs numerical reviewer.",
+    "improvement": "Tie retained claims to tests or dated measurements, correct backend docs, consolidate after ownership and compatibility contracts are pinned.",
+    "acceptance": "Mechanical claim inventory names evidence for each retained correctness/performance assertion; docs reflect actual call graph; no unsupported universal assertion remains.",
+    "dependencies": [
+      "OWN-12",
+      "OWN-13"
+    ],
+    "review_group": "ownership",
+    "category_detail": "documentation / architecture",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-24",
+    "original_refs": [
+      "MS documented: SoA transfer",
+      "MS documented: unchecked Sendable",
+      "MS documented: arithmetic/alignment obligations",
+      "MS documented: custom conformers"
+    ],
+    "claim": "SoA/page/raw ownership, size and custom-conformer obligations are already documented.",
+    "verdict": "qualified",
+    "priority": "Context",
+    "category": "code quality",
+    "exposure": "unsafe borrowed/transfer/custom conformer surfaces",
+    "sources": [
+      "Docs/Memory_Alignment.md:63",
+      "Docs/Memory_Alignment.md:94",
+      "Docs/Memory_Alignment.md:132",
+      "Docs/SoA_Layout_Contract.md:105",
+      "Sources/VectorCore/Storage/SoA.swift:1"
+    ],
+    "evidence": "Re-read ownership docs: consuming invalidates CPU access, retaining owner does not prohibit another consume, callers synchronize, counts/type alignment must be valid. Built-ins use full SIMD4 lanes; custom layout consistency belongs conformers.",
+    "correction": "No additional supported-use corruption established from missing post-transfer checks, @unchecked Sendable, or ordinary checked arithmetic trapping on invalid/oversized shapes. Four built-in layouts do not prove arbitrary custom conformers.",
+    "improvement": "Preserve explicit contracts; optional checked wrappers and immutable ownership APIs can reduce misuse.",
+    "acceptance": "Transfer identity, logical vs allocated length and frozen layout tests remain; external conformance examples assert required lane/dimension/storage consistency. New checked wrappers validate before arithmetic.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "documented contracts",
+    "priority_detail": "not a new defect",
+    "canonical_ids": [],
+    "kind": "context",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-25",
+    "original_refs": [
+      "MS documented: fallback alignment"
+    ],
+    "claim": "AlignedDynamicArrayStorage fallback can weaken alignment while guaranteedAlignment reports the request.",
+    "verdict": "unverified",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "public allocation-failure fallback",
+    "sources": [
+      "Sources/VectorCore/Storage/AlignedDynamicArrayStorage.swift:85",
+      "Sources/VectorCore/Storage/AlignedDynamicArrayStorage.swift:180"
+    ],
+    "evidence": "Catch/fallback allocates with MemoryLayout<Float>.alignment while property returns requested alignment. No realistic allocation failure was induced; natural-alignment request does not force an actually misaligned pointer.",
+    "correction": "Keep a potential guarantee gap, not reproduced misalignment or corruption.",
+    "improvement": "Preserve requested alignment or report verified actual guarantee; define whether allocation failure should propagate.",
+    "acceptance": "Inject allocator failure and validate reported guarantee against returned pointer for several requested alignments; callers never rely on stronger alignment than provided.",
+    "dependencies": [],
+    "review_group": "ownership",
+    "category_detail": "failure-path contract",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "investigation",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-26",
+    "original_refs": [
+      "MS-2 rejected DimensionStorage extrapolation",
+      "vectors architecture: convenience factories"
+    ],
+    "claim": "Reject extending HybridStorage quadratic-copy behavior to default generic DimensionStorage without evidence.",
+    "verdict": "rejected",
+    "priority": "Context",
+    "category": "code quality",
+    "exposure": "generic Vector<D> default storage; explicit .hybrid separately exposed",
+    "sources": [
+      "Sources/VectorCore/Storage/DimensionStorage.swift:36",
+      "Sources/VectorCore/Storage/DimensionStorage.swift:127",
+      "Sources/VectorCore/Storage/DimensionStorage.swift:256"
+    ],
+    "evidence": "Replayed optimized source fixture shows DimensionStorage<D512>10 writes0 allocations/copies and buffer mutation0; uniqueness reporting getter nonetheless returns false for unique heap instance. Default mode uses managed heap above16.",
+    "correction": "Reject blanket claim that linspace/range/generate/geometric/sparse necessarily become quadratic for every generic fixed vector. Explicit .hybrid mode and Double inline threshold deserve dedicated coverage.",
+    "improvement": "Keep truthful uniqueness reporting if public diagnostic is intended; include factories in class-wide optimized allocation tests rather than assume costs.",
+    "acceptance": "Default and explicit modes at Float16/17 and Double8/9/16/17; constructor,factory,scalar and buffer mutation counts measured in Release with retained-copy controls.",
+    "dependencies": [
+      "OWN-12"
+    ],
+    "review_group": "ownership",
+    "category_detail": "rejected extrapolation / coverage",
+    "priority_detail": "not a new defect",
+    "canonical_ids": [],
+    "kind": "context",
+    "evidence_directory": "evidence/validate_ownership/"
+  },
+  {
+    "id": "OWN-27",
+    "original_refs": [
+      "vectors architecture: extension dispatch",
+      "A10 vector portion"
+    ],
+    "claim": "Extension-only protocol methods select static defaults in generic code.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "architecture",
+    "exposure": "public generic VectorProtocol consumers",
+    "sources": [
+      "Sources/VectorCore/Protocols/VectorProtocol.swift:181",
+      "Sources/VectorCore/Protocols/VectorProtocol.swift:402",
+      "Sources/VectorCore/Protocols/VectorFactory.swift:1"
+    ],
+    "evidence": "Fresh ShapeRoutes generic +=/-= uses unchecked default; numerical reviewer owns normalized direct/generic discrepancy. Methods not protocol requirements cannot supply dynamic witnesses.",
+    "correction": "This alone is not a measured performance defect and does not mean all extensions are wrong. Split narrow read-only protocols only where consumer needs justify change.",
+    "improvement": "Make intended override points requirements and explicitly document remaining static helpers; test route matrix before consolidation.",
+    "acceptance": "Concrete/generic/existential compatible calls obey same documented contract; spy/conformance fixtures identify selected customization points.",
+    "dependencies": [
+      "OWN-06"
+    ],
+    "review_group": "ownership",
+    "category_detail": "API dispatch",
+    "priority_detail": "P3 opportunity",
+    "canonical_ids": [
+      "A10"
+    ],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/validate_ownership/"
+  }
+]

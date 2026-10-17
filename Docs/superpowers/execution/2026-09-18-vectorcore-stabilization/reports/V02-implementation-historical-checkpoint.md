@@ -1,0 +1,45 @@
+# V02 implementation and evidence
+
+Status: source accepted independently through frozen v5; frozen v6 fixture delta and final four-build checks pending. ASan controls passed. No performance, production accuracy envelope, hosted CI or downstream claim.
+
+## Source identity and scope
+
+Base 813255cb389891590db172480667bb47d83fbdd1, complete dispatch archive SHA256 7dbe2e5acd59cdd3ac64a28cd2943a19474ee74480bf996e87bae6715a158325. Code inventory 346 base / 356 final entries; 31 owned changed/new paths. Numerical Swift/C kernels are unchanged. Minimal Core diagnostics and target-local Package configuration defines are the only Core/package changes. All source writes used the exclusive canonical V02 archive.
+
+Original approved brief SHA256 8a9b0ba02f81240c0198f188b43861f205ae200c094259104742d0b793c14cdf remains unchanged in that archive. Frozen v1/v2 bind the matrix addendum 0530631ae39d0a13be3fac5f03f1dd6683932a342723a26cc16fa8cf6c363989. Frozen v3 onward bind comparator clarification 5a1ca34f5a51833f177288d1a3054fda602bf1568ac2a80747413a1502af90e1. Full patches, owned before/after bytes, complete code inventories and canonical tar backups are retained separately for every frozen version.
+
+## Implemented contract
+
+One immutable validated option value controls execution, strict CLI/environment domains and checked setup/harness arithmetic. Seven suite catalogs perform selection before allocation or measurement. Filters are invocation-local; empty plans fail. Actual V01 provider observation and error bodies remain intact. Matrix controls use real seeded inputs, requested N/repeats/samples and independent Double coordinate-difference statistics. Memory setup is lazy, uses matched allocation/deallocation and tracks initialized prefixes/partial cleanup.
+
+Compiled Core/support configuration and optional C-dispatch diagnostics replace requested-feature guesses. Runtime checkout/toolchain discovery remains explicitly observational and bounded. Metadata/schema/fixture/boundary identity, unified A/B pairing, strict comparator integrity and escaped multi-section CSV are implemented. The checked-in four-build driver uses real products and a forwarding shim into the unchanged real INT8 dispatcher; no production instrumentation or C arithmetic replacement.
+
+## Behavioral RED and retained failures
+
+Unchanged-production baseline artifacts and bounded commands demonstrate optimized-only empty success, excluded-case provider execution, ignored matrix controls, missing cosine comparisons, false release/C metadata, incompatible comparator acceptance and malformed CSV escaping. EX08/EX09 are source-established ownership/blocking defects, not claimed reproduced pointer corruption or an actual hang.
+
+Development 01 contains a setup failure before compilation and a distinct real compile failure with a transport-truncated log explicitly marked partial. Development 02 retains a complete compiler failure for a test/helper type spelling. Development 03 compiled and ran; only the new unsupported dense-matrix always-pass assertions failed. All versioned source/compiled artifacts and available full logs remain retained; no failure is relabeled a pass.
+
+Root-approved matrix disposition preserves dense seeded inputs, all sampled diagonals, V01 thresholds and numerical kernels. Retained raw diagnostic covers all 27 entries and nine input hashes across N=3, seed=0, all widths. Float-Gram diagonal residuals are a numerical limitation, not repaired here. The internal observation seam captures the actual final measured output once after timing, so tests independently recompute statistics from that exact array. A separate binary-lattice full-matrix control passes. Finite correctness status means a valid measurement, not tolerance success. Actual CLI strict exits are checked against their emitted failure records rather than hardcoded platform-specific residuals.
+
+Frozen v1 public consumer contained a source-established invalid symmetric/nonzero-zero-point tuple; it was not executed, so no consumer runtime failure is claimed. v2 replaces it with a supported asymmetric nonzero-zero-point tuple, preserving decoder invariants. Frozen v3 adds comparator shape/status/integral-count guards. An actual retained v1-equivalent comparator executable ran 86 bounded table rows before repair; 20 malformed rows falsely accepted, while 66 existing guards/controls matched expectations. v3 repairs all 20 without changing absent/null correctness semantics or metadata-only override scope.
+
+The first four-build v3 attempt built Debug C-off successfully, then failed product discovery because the same name also appeared inside a dSYM. No benchmark or consumer ran in that attempt. All 294 compiled artifacts are retained. v4 narrows discovery; v5 extracts and independently tests missing, valid product plus same-name DWARF, and ambiguous-product cases, including a mutation check proving the old name-only selection finds both files.
+
+## Verification completed before final seal
+
+Frozen v1 Debug and v3 Release benchmark test runs both exited 0: 20 XCTest methods and one Swift Testing entry. The XCTest process-entry method and Swift Testing entry are parent no-ops, not additional behavioral cases. The remaining 19 XCTest methods include three dispatchers executing 41 actual inherited V01 children per configuration: 17 process scenarios, two output-directory write failures, one provider failure CSV, five actual provider return scenarios and 16 observation phase/value scenarios.
+
+Per-run UUID capture directories, JSON/CSV artifacts, object/module bytes, full bundle files and actual xctest/SwiftPM helper host bytes are canonical. The two inherited directory-write failure logs live outside the printed UUID folder. Release copies are retained separately; Debug versions were overwritten before copying and are not claimed as retained. Debug parent assertions/full log remain, and independent final Debug/Release CLI drivers each retain their actual JSON/CSV write-failure captures. No redundant source change or rerun is represented.
+
+Final Debug and Release real CLI selection drivers each passed 51 bounded scenarios, including all widths and actual optional SoA/FP16 eligibility controls. Both V01 CLI drivers passed their 13 actual commands and unchanged mechanical 28 provider-call / 14 measurement-boundary inventory (mechanical source counts are not invocation counts). Six actual failure-bearing matrix comparison commands exited 2, with and without the metadata override.
+
+Reporting v3 passed 131 cases; reporting v5 passed 132, adding the pure discovery control. Each has 130 actual comparator commands plus one compiler invocation; CSV parsing and discovery checks are Python tests. Independent Python csv parsing checks comma/quote/LF/CR in metadata/data/failure cells and finite numeric cells. Comparator count/schema fixtures cover both override settings. No no-op driver import is credited as execution.
+
+Swift production/unit-test bytes are identical across v1 through v5. The later deltas are the public consumer fixture, comparator and Python drivers; Debug v1 / Release v3 map exactly to final Swift sources. Final four-build binaries and ASan evidence will be recorded separately below.
+
+The v5 four-build attempt passed the first real product build and its absent/matching/opposite C-request checks, then failed compiling the external consumer: an internal kernel namespace was used instead of its public wrappers, and an untyped map expression exceeded compiler type-check complexity. No public route executed in that failed attempt. Frozen v6 uses the existing public vector methods and an explicit typed loop with the same coordinate formula. A separate preflight compiled/runs that exact source against retained actual v5 Debug C-off library/shim objects: 36 route rows and 10 tail rows pass, with source/object/executable mappings. No production API or numerical change.
+
+ASan valid controls compiled and ran exit 0: two XCTest methods, zero Swift Testing cases. Two additional explicit xctest-host/loaded-bundle executions each used the 15-second file-capture driver and passed with no sanitizer finding. Actual ASan runtime bytes/hash, host bytes and bundle bytes are retained. An initial offline assertion inspected only stdout, while xctest emitted the passing result to captured stderr; this parser setup error is retained and corrected by inspecting both existing streams, without rerunning the first child.
+
+The fresh v6 four-build run completed the entire Debug C-off cell (36 public routes, 10 direct tails, absent/matching/opposite request controls). Debug C-on compilation then failed because unchanged `@inlinable` functions in QuantizedKernels.swift reference internal pointer/CKernels helpers. All 16 unique source diagnostics, full verbose output, exact argv and 230 partial artifacts are retained. No C-on routes or Release cells ran in this attempt. This newly exposed production visibility defect is outside the dispatched ownership; numerical/interop source remains frozen pending root disposition.

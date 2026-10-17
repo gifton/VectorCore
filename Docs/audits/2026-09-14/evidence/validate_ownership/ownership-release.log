@@ -1,0 +1,45 @@
+hash 384 interiorDistinct true collision true signedZeroEqual true signedZeroHash true
+shape 384 384 4 384
+hash 512 interiorDistinct true collision true signedZeroEqual true signedZeroHash true
+shape 512 512 4 512
+hash 768 interiorDistinct true collision true signedZeroEqual true signedZeroHash true
+shape 768 768 4 768
+hash 1536 interiorDistinct true collision true signedZeroEqual true signedZeroHash true
+shape 1536 1536 4 1536
+actual DynamicVector address changes 16 0
+actual DynamicVector address changes 17 0
+actual DynamicVector address changes 384 0
+actual DynamicVector address changes 512 0
+actual DynamicVector address changes 768 0
+actual DynamicVector address changes 1536 0
+matrix copy 3 1.0 99.0
+actual matrix address changes 3 0
+matrix copy 4 99.0 99.0
+actual matrix address changes 4 0
+matrix copy 16 99.0 99.0
+actual matrix address changes 16 0
+matrix copy 32 99.0 99.0
+actual matrix address changes 32 0
+matrix copy 33 1.0 99.0
+actual matrix address changes 33 10
+matrix copy 64 1.0 99.0
+actual matrix address changes 64 10
+matrix copy 65 1.0 99.0
+actual matrix address changes 65 10
+compact counts aliasing 508 of 508
+throwing bulk 0 0
+throwing bulk 1 1.0
+throwing bulk 4 1.0
+throwing bulk 5 19.0
+throwing bulk 512 19.0
+throwing bulk 513 1.0
+throwing bulk 2048 1.0
+throwing bulk 2049 19.0
+token retained after matrix dies 3 false
+token retained after matrix dies 4 true
+token retained after matrix dies 32 true
+token retained after matrix dies 33 false
+token retained after matrix dies 65 false
+direct stale hint true 1.0 2.0
+throw stale hint true 1.0 3.0
+INT8 short accepted 512 4

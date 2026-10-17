@@ -10,16 +10,6 @@ import Darwin
 import Glibc
 #endif
 
-// MARK: - Platform Configuration
-
-// Intel macOS and Mac Catalyst SDKs mark native Float16 unavailable.
-// NATIVE_FLOAT16_SUPPORTED remains a separate opt-in compiler flag.
-#if compiler(>=5.3) && (arch(arm64) || arch(x86_64)) && !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
-private let nativeFloat16Supported = true
-#else
-private let nativeFloat16Supported = false
-#endif
-
 // MARK: - VectorCore Context Assumptions
 
 /*
@@ -38,7 +28,7 @@ private let nativeFloat16Supported = false
  extension SIMD4 where Scalar == Float {
  // Assumes addProduct is implemented elsewhere, e.g.:
  // mutating func addProduct(_ a: SIMD4<Float>, _ b: SIMD4<Float>) {
- //     self = self + (a * b) // Relies on compiler FMA optimization
+ //     self = self + (a * b) // illustrative only; the package uses SIMD's fused addProduct
  // }
  // func sum() -> Float { return self[0] + self[1] + self[2] + self[3] }
  }
@@ -48,32 +38,37 @@ private let nativeFloat16Supported = false
 ///
 /// # Error Analysis
 ///
-/// The mixed-precision approach maintains high numerical accuracy through careful error management:
+/// Scope: the facts below hold for finite inputs in the FP16 normal range under round-to-nearest-even. They do not
+/// hold through FP16 overflow (finite values from 65520 upward round to infinity), underflow (subnormal or zero
+/// results), zero, or cancellation, and they are not an accuracy guarantee for any workload.
 ///
-/// **Conversion Error Bounds**:
-/// - FP16 representation error: ε₁₆ ≈ 2⁻¹¹ ≈ 0.0488% (relative)
-/// - FP32 accumulation error: ε₃₂ ≈ 2⁻²⁴ ≈ 0.00001% (relative)
+/// **Unit roundoff**:
+/// - FP16 storage: u₁₆ = 2⁻¹¹, the bound on the relative rounding error of one conversion in that domain
+///   (FP32→FP16 rounding is pinned against oracle rows by FP16DiagnosticsBoundaryTests.isolatedConstructors)
+/// - FP32 arithmetic: u₃₂ = 2⁻²⁴
 ///
-/// **Dot Product Error Propagation**:
-/// For a dot product of dimension D:
-/// - Individual term error: |xᵢyᵢ - fl(xᵢ)fl(yᵢ)| ≤ ε₁₆(|xᵢyᵢ|)
-/// - Accumulated error bound: |∑xᵢyᵢ - result| ≤ ε₁₆√D·||x||₂||y||₂ + Dε₃₂·max|xᵢyᵢ|
-///
-/// **Empirical Error Rates** (normalized embeddings, ||x||₂ ≈ 1):
-/// - 512-dim:  max relative error ≈ 0.08% (√512 × 0.05% = 1.13%, empirically better)
-/// - 768-dim:  max relative error ≈ 0.10% (√768 × 0.05% = 1.39%, empirically better)
-/// - 1536-dim: max relative error ≈ 0.15% (√1536 × 0.05% = 1.96%, empirically better)
-///
-/// **Numerical Stability Guarantees**:
-/// - FP32 accumulation prevents catastrophic cancellation
-/// - Maintains monotonicity: distance ordering preserved for ranking
-/// - No systematic bias: errors are symmetric around true value
-/// - Special values: ±∞, NaN propagate correctly through conversion
-///
-/// **Accuracy Validation**:
-/// - Relative error < 0.1% for typical normalized embedding vectors
-/// - Absolute error bounded by machine epsilon for FP32 operations
-/// - Complies with IEEE 754 rounding semantics
+/// **What does not follow** (no bound or property is promised here):
+/// - No deterministic relative-error bound for a dot product or distance. Classical worst-case bounds for a
+///   length-D sum grow like D·u; √D growth is only a probabilistic estimate; and near-cancelling sums have
+///   unbounded relative error.
+/// - FP32 accumulation does not prevent catastrophic cancellation.
+/// - Rankings are not preserved: distinct FP32 values can round to the same FP16 value and merge ranks.
+/// - Conversion maps ±∞ to ±∞ and NaN to a NaN (testFP16SpecialValues; the Q03 oracle rows in
+///   FP16DiagnosticsBoundaryTests.isolatedConstructors check ±∞ bit for bit and accept any FP16 NaN for a NaN row). The
+///   cosine kernels return `Float.nan` when either side has a NaN or infinite coordinate after conversion
+///   (T15CosineExceptionalTableTests.everyImplementationFollowsThePolicy); the other distance kernels do not promise
+///   NaN propagation.
+/// - NaN policy, encode (FP32→FP16): every NaN becomes the quiet NaN sign | 0x7E00, keeping the sign and dropping the
+///   payload, in `fp32ToFp16_scalar`, `convertToFP16`, the `Vector*FP16(from:)` initializers and `convertToFP16_*`,
+///   `MixedPrecisionFactory.createVector*FP16(from:)`, the SoA creators, and both the SIMD4 chunks and the tail of
+///   `platformOptimizedConvertBatch`
+///   (FP16ConverterExhaustiveTests: nanEncodeScalar, nanEncodeConvertToFP16, nanEncodeVectorInitializers,
+///   nanEncodeSoACreators, nanEncodePlatformBatchChunks, nanEncodePlatformBatchTail; the batch tests run the loop of
+///   the host architecture).
+/// - NaN policy, decode (FP16→FP32): every NaN pattern becomes 0x7FC00000 (`Float.nan`), dropping the sign and the
+///   payload, in `fp16ToFp32_scalar`, `fp16ToFp32_simd8`, `convertToFP32` and `toFP32()`, and `SoAFP16.getVector(at:)`
+///   (FP16ConverterExhaustiveTests: nanDecodeScalar, nanDecodeSIMD8, nanDecodeConvertToFP32, nanDecodeSoAGetVector).
+/// - No empirical error rate is published here; the mixed-precision tests check fixture tolerances only.
 public enum MixedPrecisionKernels {
 
     // MARK: - Internal FP16 Conversion Helpers (Scalar)
@@ -86,30 +81,9 @@ public enum MixedPrecisionKernels {
 
     // These helpers manage the conversion between UInt16 bit patterns and Float32 values.
 
-    #if NATIVE_FLOAT16_SUPPORTED && !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
-
-    // Use native hardware conversion if available (fastest and most accurate).
-
-    @inline(__always)
-    @usableFromInline
-    internal static func fp16ToFp32_scalar(_ fp16: UInt16) -> Float {
-        // Convert UInt16 bit pattern to Float16, then cast to Float32.
-        // On ARM64, this compiles to vcvt.f32.f16 instruction.
-        // On x86_64, uses hardware F16C extension if available.
-        return Float(Float16(bitPattern: fp16))
-    }
-
-    @inline(__always)
-    @usableFromInline
-    internal static func fp32ToFp16_scalar(_ fp32: Float) -> UInt16 {
-        // Convert Float32 to Float16 (handles IEEE 754 rounding/clamping), then get the bit pattern.
-        // Uses round-to-nearest-even (banker's rounding) automatically.
-        return Float16(fp32).bitPattern
-    }
-
-    #else
-
-    // Software fallback implementations (IEEE 754 compliant decoding with round-to-nearest-even).
+    // Software conversions: decoding of every FP16 class, and FP32→FP16 encoding with round-to-nearest-even
+    // (FP16ConverterExhaustiveTests: decodeAllPatterns, roundTripAllNonNaNPatterns, encodeRoundToNearestEvenNeighbours;
+    // oracle rows: FP16DiagnosticsBoundaryTests.isolatedConstructors, Q03). NaN follows the policy in the type doc.
 
     @inline(__always)
     @usableFromInline
@@ -146,7 +120,8 @@ public enum MixedPrecisionKernels {
         }
     }
 
-    /// Software FP32 to FP16 conversion with proper IEEE 754 round-to-nearest-even
+    /// Software FP32 to FP16 conversion with IEEE 754 round-to-nearest-even
+    /// (oracle rows: FP16DiagnosticsBoundaryTests.isolatedConstructors, Q03).
     @inline(__always)
     @usableFromInline
     internal static func fp32ToFp16_scalar(_ fp32: Float) -> UInt16 {
@@ -232,14 +207,11 @@ public enum MixedPrecisionKernels {
         return sign | (UInt16(exp16) << 10) | mantissa16
     }
 
-    #endif
-
     // MARK: - SIMD Conversion Helpers
 
-    /// Platform-optimized FP16 (UInt16) to FP32 conversion for SIMD8.
+    /// FP16 (UInt16) to FP32 conversion for SIMD8: eight `fp16ToFp32_scalar` calls.
     ///
-    /// On ARM64 with NEON, this compiles to efficient vcvt instructions.
-    /// On x86_64, relies on LLVM auto-vectorization of scalar conversions.
+    /// Whether the compiler vectorizes them or emits vcvt instructions is not verified.
     @inline(__always)
     @usableFromInline
     internal static func fp16ToFp32_simd8(_ fp16: SIMD8<UInt16>) -> SIMD8<Float> {
@@ -251,52 +223,12 @@ public enum MixedPrecisionKernels {
         )
     }
 
-    /// Optimized bulk FP16 to FP32 conversion using aligned SIMD loads
-    @inline(__always)
-    private static func fp16ToFp32_bulk(_ ptr: UnsafePointer<UInt16>, count: Int) -> [SIMD4<Float>] {
-        var result: [SIMD4<Float>] = []
-        result.reserveCapacity(count / 4)
-
-        // Process 8 elements at a time for better SIMD utilization
-        var i = 0
-        while i + 8 <= count {
-            // Use loadUnaligned for guaranteed SIMD load instruction
-            let fp16_simd8 = UnsafeRawPointer(ptr.advanced(by: i))
-                .loadUnaligned(as: SIMD8<UInt16>.self)
-
-            let fp32_simd8 = fp16ToFp32_simd8(fp16_simd8)
-            result.append(fp32_simd8.lowHalf)
-            result.append(fp32_simd8.highHalf)
-            i += 8
-        }
-
-        // Handle remaining elements
-        if i < count {
-            var remaining: [Float] = []
-            while i < count {
-                remaining.append(fp16ToFp32_scalar(ptr[i]))
-                i += 1
-            }
-
-            // Pad to SIMD4 alignment
-            while remaining.count % 4 != 0 {
-                remaining.append(0)
-            }
-
-            for j in stride(from: 0, to: remaining.count, by: 4) {
-                result.append(SIMD4<Float>(remaining[j], remaining[j+1], remaining[j+2], remaining[j+3]))
-            }
-        }
-
-        return result
-    }
-
     // MARK: - FP16 Vector Storage Types
 
     /// 512-dimensional vector with FP16 storage (stored as UInt16 bit patterns).
     ///
-    /// Memory layout: 512 × 2 bytes = 1024 bytes (50% reduction vs FP32)
-    /// Conversion overhead: ~5% of dot product time on Apple Silicon
+    /// Scalar payload: 512 × 2 bytes = 1024 bytes of FP16 bit patterns, versus 2048 bytes of FP32 scalars. This is a
+    /// payload model only: it excludes the ContiguousArray header and capacity and the handle, and it is not process memory.
     public struct Vector512FP16: Sendable {
         @usableFromInline
         internal let storage: ContiguousArray<UInt16>
@@ -305,7 +237,9 @@ public enum MixedPrecisionKernels {
         /// Initialize from FP32 vector with conversion
         ///
         /// Performs FP32→FP16 conversion with round-to-nearest-even rounding.
-        /// Values exceeding FP16 range (±65504) are clamped to ±infinity.
+        /// Values just above 65504 may round to finite 65504; sufficiently large
+        /// finite values round to infinity, and tiny nonzero values may round to zero
+        /// (oracle rows: FP16DiagnosticsBoundaryTests.isolatedConstructors, Q03).
         public init(from vector: Vector512Optimized) {
             // Validate input vector has correct storage size
             precondition(
@@ -314,7 +248,7 @@ public enum MixedPrecisionKernels {
             )
 
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
-            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage)
+            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage, rounded: self.storage)
 
             // Verify conversion produced correct element count
             #if DEBUG
@@ -339,10 +273,16 @@ public enum MixedPrecisionKernels {
             return Vector512Optimized(fromSIMDStorage: fp32Storage)
         }
 
-        /// Direct FP16 storage access for zero-copy operations
+        /// Borrow the fixed-dimension UInt16 bit patterns for a synchronous callback.
+        /// The buffer and its base pointer must not escape through a return value,
+        /// capture, task, foreign callback, or stored pointer. Generic R does not
+        /// enforce this unsafe caller obligation. For retained or asynchronous data,
+        /// return an owned Array created inside the callback instead.
         @inlinable
-        public var fp16Storage: UnsafePointer<UInt16>? {
-            storage.withUnsafeBufferPointer { $0.baseAddress }
+        public func withUnsafeFP16BufferPointer<R>(
+            _ body: (UnsafeBufferPointer<UInt16>) throws -> R
+        ) rethrows -> R {
+            try storage.withUnsafeBufferPointer(body)
         }
     }
 
@@ -360,7 +300,7 @@ public enum MixedPrecisionKernels {
             )
 
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
-            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage)
+            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage, rounded: self.storage)
 
             // Verify conversion produced correct element count
             #if DEBUG
@@ -383,9 +323,16 @@ public enum MixedPrecisionKernels {
             return Vector768Optimized(fromSIMDStorage: fp32Storage)
         }
 
+        /// Borrow the fixed-dimension UInt16 bit patterns for a synchronous callback.
+        /// The buffer and its base pointer must not escape through a return value,
+        /// capture, task, foreign callback, or stored pointer. Generic R does not
+        /// enforce this unsafe caller obligation. For retained or asynchronous data,
+        /// return an owned Array created inside the callback instead.
         @inlinable
-        public var fp16Storage: UnsafePointer<UInt16>? {
-            storage.withUnsafeBufferPointer { $0.baseAddress }
+        public func withUnsafeFP16BufferPointer<R>(
+            _ body: (UnsafeBufferPointer<UInt16>) throws -> R
+        ) rethrows -> R {
+            try storage.withUnsafeBufferPointer(body)
         }
     }
 
@@ -403,7 +350,7 @@ public enum MixedPrecisionKernels {
             )
 
             self.storage = MixedPrecisionKernels.convertToFP16(vector.storage)
-            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage)
+            MixedPrecisionKernels.recordConversionsIfEnabled(vector.storage, rounded: self.storage)
 
             // Verify conversion produced correct element count
             #if DEBUG
@@ -426,9 +373,16 @@ public enum MixedPrecisionKernels {
             return Vector1536Optimized(fromSIMDStorage: fp32Storage)
         }
 
+        /// Borrow the fixed-dimension UInt16 bit patterns for a synchronous callback.
+        /// The buffer and its base pointer must not escape through a return value,
+        /// capture, task, foreign callback, or stored pointer. Generic R does not
+        /// enforce this unsafe caller obligation. For retained or asynchronous data,
+        /// return an owned Array created inside the callback instead.
         @inlinable
-        public var fp16Storage: UnsafePointer<UInt16>? {
-            storage.withUnsafeBufferPointer { $0.baseAddress }
+        public func withUnsafeFP16BufferPointer<R>(
+            _ body: (UnsafeBufferPointer<UInt16>) throws -> R
+        ) rethrows -> R {
+            try storage.withUnsafeBufferPointer(body)
         }
     }
 
@@ -444,11 +398,6 @@ public enum MixedPrecisionKernels {
     ///  group1: d0(v4,v5,v6,v7), d1(v4,v5,v6,v7), ..., dD(v4,v5,v6,v7),
     ///  ...]
     /// ```
-    ///
-    /// **Benefits:**
-    /// - 2-4× throughput improvement for batch operations
-    /// - SIMD-friendly memory access patterns
-    /// - Cache-efficient for modern CPUs
     ///
     /// **Usage:**
     /// ```swift
@@ -510,13 +459,13 @@ public enum MixedPrecisionKernels {
             // specialized builders below already handle that degenerate case without throwing.
             // Delegate to the specialized creation function for each supported dimension.
             if VectorType.self == Vector512Optimized.self {
-                let soa = MixedPrecisionKernels.createSoA512FP16(from: vectors as! [Vector512Optimized])
+                let soa = MixedPrecisionKernels.createSoA512FP16(from: exactArray(vectors, as: Vector512Optimized.self)!)
                 self = soa as! Self
             } else if VectorType.self == Vector768Optimized.self {
-                let soa = MixedPrecisionKernels.createSoA768FP16(from: vectors as! [Vector768Optimized])
+                let soa = MixedPrecisionKernels.createSoA768FP16(from: exactArray(vectors, as: Vector768Optimized.self)!)
                 self = soa as! Self
             } else if VectorType.self == Vector1536Optimized.self {
-                let soa = MixedPrecisionKernels.createSoA1536FP16(from: vectors as! [Vector1536Optimized])
+                let soa = MixedPrecisionKernels.createSoA1536FP16(from: exactArray(vectors, as: Vector1536Optimized.self)!)
                 self = soa as! Self
             } else {
                 throw VectorError.invalidData(
@@ -577,8 +526,6 @@ public enum MixedPrecisionKernels {
     // MARK: - SoA Initialization Helpers
 
     /// Helper function to initialize SoA512FP16 from FP32 vectors with 4×4 block transposition
-    ///
-    /// **Performance:** ~1-2 μs for 100 vectors on Apple M1
     @inlinable
     public static func createSoA512FP16(from vectors: [Vector512Optimized]) -> SoA512FP16 {
         let vectorCount = vectors.count
@@ -590,7 +537,7 @@ public enum MixedPrecisionKernels {
         let groupCount = (vectorCount + 3) / 4
         let storageSize = groupCount * dimension * 4
 
-        // Efficient initialization using unsafe buffer
+        // Initialize in place through ContiguousArray(unsafeUninitializedCapacity:)
         let storage = ContiguousArray<UInt16>(unsafeUninitializedCapacity: storageSize) { buffer, initializedCount in
             guard let storagePtr = buffer.baseAddress else {
                 initializedCount = 0
@@ -645,8 +592,6 @@ public enum MixedPrecisionKernels {
     }
 
     /// Helper function to initialize SoA768FP16 from FP32 vectors with 4×4 block transposition
-    ///
-    /// **Performance:** ~1-2 μs for 100 vectors on Apple M1
     @inlinable
     public static func createSoA768FP16(from vectors: [Vector768Optimized]) -> SoA768FP16 {
         let vectorCount = vectors.count
@@ -658,7 +603,7 @@ public enum MixedPrecisionKernels {
         let groupCount = (vectorCount + 3) / 4
         let storageSize = groupCount * dimension * 4
 
-        // Efficient initialization using unsafe buffer
+        // Initialize in place through ContiguousArray(unsafeUninitializedCapacity:)
         let storage = ContiguousArray<UInt16>(unsafeUninitializedCapacity: storageSize) { buffer, initializedCount in
             guard let storagePtr = buffer.baseAddress else {
                 initializedCount = 0
@@ -713,8 +658,6 @@ public enum MixedPrecisionKernels {
     }
 
     /// Helper function to initialize SoA1536FP16 from FP32 vectors with 4×4 block transposition
-    ///
-    /// **Performance:** ~1-2 μs for 100 vectors on Apple M1
     @inlinable
     public static func createSoA1536FP16(from vectors: [Vector1536Optimized]) -> SoA1536FP16 {
         let vectorCount = vectors.count
@@ -726,7 +669,7 @@ public enum MixedPrecisionKernels {
         let groupCount = (vectorCount + 3) / 4
         let storageSize = groupCount * dimension * 4
 
-        // Efficient initialization using unsafe buffer
+        // Initialize in place through ContiguousArray(unsafeUninitializedCapacity:)
         let storage = ContiguousArray<UInt16>(unsafeUninitializedCapacity: storageSize) { buffer, initializedCount in
             guard let storagePtr = buffer.baseAddress else {
                 initializedCount = 0
@@ -782,9 +725,9 @@ public enum MixedPrecisionKernels {
 
     // MARK: - Conversion Utilities (Public Bulk Conversion)
 
-    /// SIMD-optimized FP32 storage to FP16 conversion.
+    /// FP32 storage to FP16 conversion: one `fp32ToFp16_scalar` call per element.
     ///
-    /// Uses improved round-to-nearest-even algorithm for IEEE 754 compliance.
+    /// Rounds to nearest, ties to even (oracle rows: FP16DiagnosticsBoundaryTests.isolatedConstructors, Q03).
     @inlinable
     public static func convertToFP16(
         _ values: ContiguousArray<SIMD4<Float>>
@@ -795,7 +738,7 @@ public enum MixedPrecisionKernels {
 
         // Process 1 SIMD4<Float> at a time.
         for simd in values {
-            // Convert using the optimized scalar function with proper rounding
+            // Convert with the scalar round-to-nearest-even helper
             result.append(fp32ToFp16_scalar(simd[0]))
             result.append(fp32ToFp16_scalar(simd[1]))
             result.append(fp32ToFp16_scalar(simd[2]))
@@ -813,25 +756,18 @@ public enum MixedPrecisionKernels {
         return result
     }
 
-    /// Record FP32→FP16 conversions with the diagnostics singleton when tracking is enabled.
-    /// A single cheap `isRecording` check makes this a no-op when diagnostics are off, so it is
-    /// safe to call from the per-vector conversion inits.
+    /// Record original inputs and actual rounded output bits at the diagnostic
+    /// recorder's locked commit. Its synchronized disabled hint may skip preparation;
+    /// concurrent toggles do not promise to count every physical conversion
+    /// (FP16DiagnosticsBoundaryTests.suppliedRoundedBitsDriveClassification, isolatedConcurrency).
     @inline(__always)
-    internal static func recordConversionsIfEnabled(_ values: ContiguousArray<SIMD4<Float>>) {
-        let diagnostics = MixedPrecisionDiagnostics.shared
-        guard diagnostics.isRecording else { return }
-        var floats = [Float]()
-        floats.reserveCapacity(values.count * 4)
-        for simd in values {
-            floats.append(simd[0]); floats.append(simd[1])
-            floats.append(simd[2]); floats.append(simd[3])
-        }
-        diagnostics.recordBatchConversion(floats)
+    internal static func recordConversionsIfEnabled(
+        _ values: ContiguousArray<SIMD4<Float>>, rounded: ContiguousArray<UInt16>
+    ) {
+        MixedPrecisionDiagnostics.shared.recordBatchConversion(values, rounded: rounded)
     }
 
-    /// SIMD-optimized FP16 to FP32 storage conversion.
-    ///
-    /// Uses optimized SIMD loads for maximum throughput.
+    /// FP16 to FP32 storage conversion: SIMD8 loads, each converted by eight scalar conversions.
     @inlinable
     public static func convertToFP32(
         _ fp16Values: ContiguousArray<UInt16>,
@@ -854,11 +790,11 @@ public enum MixedPrecisionKernels {
 
             var i = 0
             while i + 8 <= fp16Values.count {
-                // Optimized SIMD load using loadUnaligned
+                // One SIMD8<UInt16> load via loadUnaligned
                 let simd8_u16 = UnsafeRawPointer(basePtr.advanced(by: i))
                     .loadUnaligned(as: SIMD8<UInt16>.self)
 
-                // Convert to FP32 using the optimized SIMD helper
+                // Convert with fp16ToFp32_simd8 (eight scalar conversions)
                 let simd8_f32 = fp16ToFp32_simd8(simd8_u16)
 
                 result.append(simd8_f32.lowHalf)
@@ -892,13 +828,7 @@ public enum MixedPrecisionKernels {
 
     /// Core FP16 dot product with FP32 accumulation.
     ///
-    /// Optimized by processing 32 elements (64 bytes, typical cache line size) per iteration.
-    /// Uses 4 independent FP32 accumulators for instruction-level parallelism.
-    ///
-    /// Performance characteristics:
-    /// - Memory bandwidth: 2 bytes/element (FP16)
-    /// - Compute intensity: 2 FLOPS/element (multiply + accumulate in FP32)
-    /// - Expected latency: ~120ns on M1 for 512-dim vectors
+    /// Processes 32 FP16 elements (64 bytes per operand) per iteration with 4 independent FP32 accumulators.
     @inline(__always)
     @usableFromInline
     internal static func dotFP16Core(
@@ -906,7 +836,7 @@ public enum MixedPrecisionKernels {
         bPtr: UnsafePointer<UInt16>,
         count: Int
     ) -> Float {
-        // Four independent accumulators for Instruction Level Parallelism (ILP).
+        // Four independent accumulators.
         var acc0 = SIMD4<Float>.zero
         var acc1 = SIMD4<Float>.zero
         var acc2 = SIMD4<Float>.zero
@@ -916,7 +846,7 @@ public enum MixedPrecisionKernels {
         var i = 0
         while i + 32 <= count {
             // --- Batch 0: elements 0-7 ---
-            // Load 8 FP16 values using optimized SIMD load
+            // Load 8 FP16 values with one SIMD8 load
             let a0_fp16 = UnsafeRawPointer(aPtr.advanced(by: i))
                 .loadUnaligned(as: SIMD8<UInt16>.self)
             let b0_fp16 = UnsafeRawPointer(bPtr.advanced(by: i))
@@ -951,7 +881,7 @@ public enum MixedPrecisionKernels {
             let a2_fp32 = fp16ToFp32_simd8(a2_fp16)
             let b2_fp32 = fp16ToFp32_simd8(b2_fp16)
 
-            // Optimization: Interleave by reusing accumulators to maximize pipeline utilization.
+            // Batches 2 and 3 reuse acc0...acc3, so each accumulator receives two products per iteration.
             acc0.addProduct(a2_fp32.lowHalf, b2_fp32.lowHalf)
             acc1.addProduct(a2_fp32.highHalf, b2_fp32.highHalf)
 
@@ -985,8 +915,8 @@ public enum MixedPrecisionKernels {
 
     /// Core Mixed Precision Dot Product (FP32 Query, FP16 Candidate).
     ///
-    /// Fuses FP16→FP32 conversion with multiplication for optimal performance.
-    /// This variant preserves full FP32 precision in the query vector.
+    /// Converts each FP16 candidate block to FP32 immediately before the multiply-add. The FP32 query is used
+    /// without conversion, so query values are not rounded to FP16.
     @inline(__always)
     @usableFromInline
     internal static func dotMixedCore(
@@ -1003,7 +933,7 @@ public enum MixedPrecisionKernels {
         // Lanes (128, 192, 384) are multiples of 4.
         var i = 0
         while i + 4 <= lanes {
-            // Load query (FP32) - already in optimal format
+            // Load query (FP32; no conversion)
             let q0 = queryStorage[i]
             let q1 = queryStorage[i+1]
             let q2 = queryStorage[i+2]
@@ -1012,7 +942,7 @@ public enum MixedPrecisionKernels {
             // Load candidate (FP16) - 16 elements starting at index i*4
             let offset = i * 4
 
-            // Batch 0: elements 0-7 using optimized SIMD load
+            // Batch 0: elements 0-7 (one SIMD8 load)
             let c0_fp16 = UnsafeRawPointer(candidatePtr.advanced(by: offset))
                 .loadUnaligned(as: SIMD8<UInt16>.self)
             let c0_fp32 = fp16ToFp32_simd8(c0_fp16)
@@ -1054,10 +984,8 @@ public enum MixedPrecisionKernels {
 
     /// Compute dot product with both vectors in FP16 storage, FP32 accumulation.
     ///
-    /// Use this when both query and candidates are stored in FP16 format.
-    /// For maximum memory bandwidth efficiency when accuracy requirements allow.
-    ///
-    /// Expected performance: ~120ns on Apple M1 for 512-dimensional vectors
+    /// Use this when both query and candidates are stored in FP16 format. Both operands
+    /// then carry FP16 rounding; no bandwidth or latency figure is measured.
     @inlinable
     public static func dotFP16_512(_ a: Vector512FP16, _ b: Vector512FP16) -> Float {
         return a.storage.withUnsafeBufferPointer { aBuffer in
@@ -1104,13 +1032,10 @@ public enum MixedPrecisionKernels {
 
     /// Mixed precision dot product: FP32 query × FP16 candidate.
     ///
-    /// **Recommended for similarity search**: Preserves full query precision
-    /// while benefiting from FP16 candidate storage. Best of both worlds:
-    /// - Query: Full FP32 precision (no conversion cost if reused)
-    /// - Candidates: 50% memory savings with FP16 storage
-    /// - Computation: FP32 throughout, minimal accuracy loss
-    ///
-    /// Expected performance: ~130ns on Apple M1 for 512-dimensional vectors
+    /// Preserves full query precision (the FP32 query is not converted) with FP16 candidate storage:
+    /// - Query: FP32, not converted
+    /// - Candidates: FP16 bit patterns (half the scalar payload of FP32; payload model only)
+    /// - Computation: FP32 multiply-add after converting each candidate value
     @inlinable
     public static func dotMixed512(
         query: Vector512Optimized,
@@ -1160,8 +1085,7 @@ public enum MixedPrecisionKernels {
 
     /// Core FP16 Euclidean distance with FP32 accumulation.
     ///
-    /// Optimized with 4-accumulator pattern for maximum ILP.
-    /// Processes 32 elements (64 bytes) per iteration for cache efficiency.
+    /// Uses 4 independent accumulators and processes 32 FP16 elements (64 bytes per operand) per iteration.
     @inline(__always)
     @usableFromInline
     internal static func euclideanFP16Core(
@@ -1361,8 +1285,7 @@ public enum MixedPrecisionKernels {
 
     /// Mixed precision Euclidean distance: FP32 query × FP16 candidate.
     ///
-    /// **Recommended for similarity search**: Preserves full query precision
-    /// while benefiting from FP16 candidate storage.
+    /// Preserves full query precision (the FP32 query is not converted) with FP16 candidate storage.
     @inlinable
     public static func euclidean512(
         query: Vector512Optimized,
@@ -1414,7 +1337,8 @@ public enum MixedPrecisionKernels {
         query: Vector512FP16,
         candidate: Vector512Optimized
     ) -> Float {
-        // Convert query to FP32 once for efficiency
+        // No conversion here: Euclidean distance is symmetric, so the FP32 candidate is passed as the FP32 operand
+        // and the FP16 query is converted block by block inside euclideanMixedCore.
         return query.storage.withUnsafeBufferPointer { qBuffer in
             guard let qPtr = qBuffer.baseAddress else { return 0.0 }
             return euclideanMixedCore(
@@ -1459,8 +1383,15 @@ public enum MixedPrecisionKernels {
 
     /// Core FP16 Cosine distance with FP32 accumulation.
     ///
-    /// Computes 1 - (dot product / (||a|| * ||b||))
-    /// Returns 0.0 for identical vectors, 2.0 for opposite vectors.
+    /// Computes 1 - (dot product / (||a|| * ||b||)), with the similarity clamped to [-1, 1], when the
+    /// denominator sqrt(||a||² * ||b||²) is finite and greater than 1e-9. In exact arithmetic identical
+    /// vectors then give 0 and opposite vectors give 2; with rounding an identical pair can give a small
+    /// positive distance.
+    ///
+    /// Otherwise (the branch at the end of the body) it returns `Float.nan` when either squared norm is not
+    /// finite (an FP16 infinity or NaN, or a sum that overflows) and 1 in every other case: two zero vectors, one
+    /// zero vector, and identical nonzero vectors with ||a|| at or below about 3.2e-5 (||a||² ≤ 1e-9)
+    /// (T15CosineExceptionalTableTests.everyImplementationFollowsThePolicy, fp16 rows).
     @inline(__always)
     @usableFromInline
     internal static func cosineFP16Core(
@@ -1514,11 +1445,23 @@ public enum MixedPrecisionKernels {
             let similarity = dotProduct / magnitude
             return 1.0 - max(-1.0, min(1.0, similarity))
         } else {
-            return (aMagSq == 0 && bMagSq == 0) ? 0.0 : 1.0
+            guard aMagSq.isFinite && bMagSq.isFinite else { return .nan }
+            return 1.0
         }
     }
 
     /// Core Mixed Precision Cosine Distance (FP32 Query, FP16 Candidate).
+    ///
+    /// The branch at the end of the body follows `cosineFP16Core`: `Float.nan` when either squared norm is not
+    /// finite, otherwise 1 (T15CosineExceptionalTableTests.everyImplementationFollowsThePolicy, fp16.q32c16 and
+    /// fp16.q16c32 rows).
+    ///
+    /// Domain: ‖q‖² · ‖c‖² < Float.greatestFiniteMagnitude, narrower than the documented cosine domain
+    /// ‖v‖² < Float.greatestFiniteMagnitude (Docs/Numerical_Behavior.md). The denominator is sqrt(‖q‖² · ‖c‖²), so
+    /// when that product overflows the call takes the end branch and returns 1 for finite inputs in any direction,
+    /// parallel ones included (adjacent code; not in the T15 table). FP16 × FP16 (`cosineFP16Core`) cannot reach
+    /// this at widths up to 1536: each finite squared norm is at most 1536 · 65504² up to Float rounding, so their
+    /// product stays far below Float.greatestFiniteMagnitude.
     @inline(__always)
     @usableFromInline
     internal static func cosineMixedCore(
@@ -1582,7 +1525,8 @@ public enum MixedPrecisionKernels {
             let similarity = dotProduct / magnitude
             return 1.0 - max(-1.0, min(1.0, similarity))
         } else {
-            return (qMagSq == 0 && cMagSq == 0) ? 0.0 : 1.0
+            guard qMagSq.isFinite && cMagSq.isFinite else { return .nan }
+            return 1.0
         }
     }
 
@@ -1725,12 +1669,12 @@ public enum MixedPrecisionKernels {
         }
     }
 
-    // MARK: - Batch Operations (Cache Blocked)
+    // MARK: - Batch Operations (Blocked)
 
-    /// Helper function implementing the cache-blocked batch strategy for FP16×FP16.
+    /// Helper for the blocked FP16×FP16 batch loop (blocks of 64 candidates).
     ///
-    /// Strategy: Convert the FP32 query to FP16 once, then use the optimized FP16 vs FP16 kernel.
-    /// Use this when query precision can be reduced without impacting results (e.g., for re-ranking).
+    /// Strategy: convert the FP32 query to FP16 once, then use the FP16 × FP16 kernel. The query then carries
+    /// FP16 rounding as well; whether that changes a caller's results is not verified here.
     @inline(__always)
     @usableFromInline
     internal static func batchDotFP16_blocked<V_FP32, V_FP16>(
@@ -1747,15 +1691,15 @@ public enum MixedPrecisionKernels {
         assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
         #endif
 
-        let blockSize = 64  // Tuned block size for L1/L2 cache efficiency (16KB per block)
+        let blockSize = 64  // 64 candidates per block (64 x D x 2 bytes of FP16 payload); not tuned by a measurement
 
-        // Optimization: Convert the FP32 query to FP16 once (amortized cost).
+        // Convert the FP32 query to FP16 once, outside the candidate loop.
         let queryFP16 = fp16Converter(query)
 
         for blockStart in stride(from: 0, to: N, by: blockSize) {
             let blockEnd = min(blockStart + blockSize, N)
 
-            // Software prefetch hint for next block (modern hardware prefetchers often sufficient)
+            // Discarded read of the next block's first candidate handle; not a prefetch of its payload or instruction
             if blockEnd < N {
                 _ = candidates[blockEnd]
             }
@@ -1787,12 +1731,12 @@ public enum MixedPrecisionKernels {
         assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
         #endif
 
-        let blockSize = 64  // Cache-friendly block size
+        let blockSize = 64  // 64 candidates per block; not tuned by a measurement
 
         for blockStart in stride(from: 0, to: N, by: blockSize) {
             let blockEnd = min(blockStart + blockSize, N)
 
-            // Software prefetch hint
+            // Discarded read of the next block's first candidate handle; not a prefetch
             if blockEnd < N {
                 _ = candidates[blockEnd]
             }
@@ -1855,12 +1799,9 @@ public enum MixedPrecisionKernels {
 
     /// Batch dot product with FP32 query and FP16 candidates (preserves query precision).
     ///
-    /// **Recommended for production similarity search**:
-    /// - Query remains in FP32 (computed once, used many times)
-    /// - Candidates in FP16 (50% memory savings, 1.5-1.8× throughput improvement)
-    /// - Best accuracy/performance tradeoff for embedding retrieval
-    ///
-    /// Performance: ~8.3μs for 64 candidates @ 512-dim on Apple M1 (~130ns per dot product)
+    /// Structure:
+    /// - Query remains in FP32 (not converted)
+    /// - Candidates in FP16 (half the scalar payload; payload model only)
     @inlinable
     public static func batchDotMixed512(
         query: Vector512Optimized,
@@ -1907,12 +1848,8 @@ public enum MixedPrecisionKernels {
 
     /// Batch Euclidean Distance using SoA layout (FP16 query × FP16 SoA candidates).
     ///
-    /// **Performance:** 2-4× faster than array-based batch processing due to:
-    /// - Cache-friendly SoA memory layout
-    /// - Reduced memory bandwidth (FP16 storage)
-    /// - SIMD-optimized dimension-major access
-    ///
-    /// **Expected throughput:** ~20-30 M comparisons/sec on Apple M1 (512-dim)
+    /// Walks groups of 4 candidates dimension by dimension, converting each FP16 value with the scalar
+    /// software conversion. No speed or throughput figure is measured.
     ///
     /// - Parameters:
     ///   - query: FP16 query vector
@@ -1941,10 +1878,10 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // SIMD4 accumulator for better performance
+                    // One SIMD4 accumulator holds the 4 candidates of the group
                     var accumulators = SIMD4<Float>.zero
 
-                    // Process dimensions in blocks of 4 for better cache behavior
+                    // Process dimensions in blocks of 4
                     var d = 0
                     while d + 3 < 512 {
                         // Process 4 dimensions at once
@@ -1995,12 +1932,8 @@ public enum MixedPrecisionKernels {
 
     /// Batch Euclidean Distance using SoA layout (FP16 query × FP16 SoA candidates).
     ///
-    /// **Performance:** 2-4× faster than array-based batch processing due to:
-    /// - Cache-friendly SoA memory layout
-    /// - Reduced memory bandwidth (FP16 storage)
-    /// - SIMD-optimized dimension-major access
-    ///
-    /// **Expected throughput:** ~20-30 M comparisons/sec on Apple M1 (768-dim)
+    /// Walks groups of 4 candidates dimension by dimension, converting each FP16 value with the scalar
+    /// software conversion. No speed or throughput figure is measured.
     ///
     /// - Parameters:
     ///   - query: FP16 query vector
@@ -2029,10 +1962,10 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // SIMD4 accumulator for better performance
+                    // One SIMD4 accumulator holds the 4 candidates of the group
                     var accumulators = SIMD4<Float>.zero
 
-                    // Process dimensions in blocks of 4 for better cache behavior
+                    // Process dimensions in blocks of 4
                     var d = 0
                     while d + 3 < 768 {
                         // Process 4 dimensions at once
@@ -2083,12 +2016,12 @@ public enum MixedPrecisionKernels {
 
     /// Batch Euclidean Distance (FP32 query × FP16 SoA candidates).
     ///
-    /// **Recommended for similarity search:** Preserves full query precision.
+    /// Preserves full query precision (the FP32 query is not converted).
     ///
-    /// **Performance Optimizations:**
-    /// - SIMD4 accumulators for better instruction-level parallelism
-    /// - Manual 2× loop unrolling for reduced loop overhead
-    /// - Optimized FP16→FP32 conversion with SIMD-friendly access patterns
+    /// **Structure:**
+    /// - One SIMD4 accumulator per group of 4 candidates
+    /// - The lane loop is unrolled by 2
+    /// - Candidate values are converted with the scalar software conversion
     ///
     /// - Parameters:
     ///   - query: FP32 query vector
@@ -2116,7 +2049,7 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // Use SIMD4 accumulators for better ILP
+                    // One SIMD4 accumulator per group of 4 candidates
                     var accumulators = SIMD4<Float>.zero
 
                     // Process 128 SIMD4 lanes with 2× unrolling
@@ -2191,12 +2124,12 @@ public enum MixedPrecisionKernels {
 
     /// Batch Euclidean Distance (FP32 query × FP16 SoA candidates).
     ///
-    /// **Recommended for similarity search:** Preserves full query precision.
+    /// Preserves full query precision (the FP32 query is not converted).
     ///
-    /// **Performance Optimizations:**
-    /// - SIMD4 accumulators for better instruction-level parallelism
-    /// - Manual 2× loop unrolling for reduced loop overhead
-    /// - Optimized FP16→FP32 conversion with SIMD-friendly access patterns
+    /// **Structure:**
+    /// - One SIMD4 accumulator per group of 4 candidates
+    /// - The lane loop is unrolled by 2
+    /// - Candidate values are converted with the scalar software conversion
     ///
     /// - Parameters:
     ///   - query: FP32 query vector
@@ -2224,7 +2157,7 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // Use SIMD4 accumulators for better ILP
+                    // One SIMD4 accumulator per group of 4 candidates
                     var accumulators = SIMD4<Float>.zero
 
                     // Process 192 SIMD4 lanes with 2× unrolling
@@ -2299,12 +2232,8 @@ public enum MixedPrecisionKernels {
 
     /// Batch Euclidean Distance using SoA layout (FP16 query × FP16 SoA candidates).
     ///
-    /// **Performance:** 2-4× faster than array-based batch processing due to:
-    /// - Cache-friendly SoA memory layout
-    /// - Reduced memory bandwidth (FP16 storage)
-    /// - SIMD-optimized dimension-major access
-    ///
-    /// **Expected throughput:** ~20-30 M comparisons/sec on Apple M1 (1536-dim)
+    /// Walks groups of 4 candidates dimension by dimension, converting each FP16 value with the scalar
+    /// software conversion. No speed or throughput figure is measured.
     ///
     /// - Parameters:
     ///   - query: FP16 query vector
@@ -2333,10 +2262,10 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // SIMD4 accumulator for better performance
+                    // One SIMD4 accumulator holds the 4 candidates of the group
                     var accumulators = SIMD4<Float>.zero
 
-                    // Process dimensions in blocks of 4 for better cache behavior
+                    // Process dimensions in blocks of 4
                     var d = 0
                     while d + 3 < 1536 {
                         // Process 4 dimensions at once
@@ -2387,12 +2316,12 @@ public enum MixedPrecisionKernels {
 
     /// Batch Euclidean Distance (FP32 query × FP16 SoA candidates).
     ///
-    /// **Recommended for similarity search:** Preserves full query precision.
+    /// Preserves full query precision (the FP32 query is not converted).
     ///
-    /// **Performance Optimizations:**
-    /// - SIMD4 accumulators for better instruction-level parallelism
-    /// - Manual 2× loop unrolling for reduced loop overhead
-    /// - Optimized FP16→FP32 conversion with SIMD-friendly access patterns
+    /// **Structure:**
+    /// - One SIMD4 accumulator per group of 4 candidates
+    /// - The lane loop is unrolled by 2
+    /// - Candidate values are converted with the scalar software conversion
     ///
     /// - Parameters:
     ///   - query: FP32 query vector
@@ -2420,7 +2349,7 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // Use SIMD4 accumulators for better ILP
+                    // One SIMD4 accumulator per group of 4 candidates
                     var accumulators = SIMD4<Float>.zero
 
                     // Process 384 SIMD4 lanes with 2× unrolling
@@ -2498,17 +2427,15 @@ public enum MixedPrecisionKernels {
     /// Batch Dot Product with FP32 query and FP16 SoA candidates (512D).
     ///
     /// Computes dot products between a single FP32 query vector and multiple FP16 candidates
-    /// stored in Structure-of-Arrays (SoA) layout for cache efficiency.
+    /// stored in Structure-of-Arrays (SoA) layout.
     ///
     /// **Algorithm**:
     /// For each candidate i: result[i] = Σ(query[j] * candidate[i][j]) for all dimensions j
     ///
-    /// **Performance**: ~1.5-2× faster than array-based batch dot product due to:
-    /// - SoA memory layout improves cache locality
-    /// - FP16 storage reduces memory bandwidth by 2×
-    /// - SIMD operations process 4 vectors simultaneously
+    /// **Structure**: one SIMD4 accumulator processes the 4 candidates of a group together. No speed figure is measured.
     ///
-    /// **Accuracy**: FP16 storage introduces <0.1% relative error vs full FP32
+    /// **Accuracy**: candidates carry FP16 rounding; no relative-error bound is promised (see the type's
+    /// error-analysis notes: cancellation makes the relative error unbounded).
     ///
     /// - Parameters:
     ///   - query: FP32 query vector (512 dimensions)
@@ -2538,7 +2465,7 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // Use SIMD4 accumulators for better ILP
+                    // One SIMD4 accumulator per group of 4 candidates
                     var accumulators = SIMD4<Float>.zero
 
                     // Process 128 SIMD4 lanes with 2× unrolling
@@ -2614,17 +2541,15 @@ public enum MixedPrecisionKernels {
     /// Batch Dot Product with FP32 query and FP16 SoA candidates (768D).
     ///
     /// Computes dot products between a single FP32 query vector and multiple FP16 candidates
-    /// stored in Structure-of-Arrays (SoA) layout for cache efficiency.
+    /// stored in Structure-of-Arrays (SoA) layout.
     ///
     /// **Algorithm**:
     /// For each candidate i: result[i] = Σ(query[j] * candidate[i][j]) for all dimensions j
     ///
-    /// **Performance**: ~1.5-2× faster than array-based batch dot product due to:
-    /// - SoA memory layout improves cache locality
-    /// - FP16 storage reduces memory bandwidth by 2×
-    /// - SIMD operations process 4 vectors simultaneously
+    /// **Structure**: one SIMD4 accumulator processes the 4 candidates of a group together. No speed figure is measured.
     ///
-    /// **Accuracy**: FP16 storage introduces <0.1% relative error vs full FP32
+    /// **Accuracy**: candidates carry FP16 rounding; no relative-error bound is promised (see the type's
+    /// error-analysis notes: cancellation makes the relative error unbounded).
     ///
     /// - Parameters:
     ///   - query: FP32 query vector (768 dimensions)
@@ -2655,7 +2580,7 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // SIMD4 accumulator for better performance
+                    // One SIMD4 accumulator holds the 4 candidates of the group
                     var accumulators = SIMD4<Float>.zero
 
                     // Process 192 SIMD4 lanes (768 / 4 = 192)
@@ -2690,17 +2615,15 @@ public enum MixedPrecisionKernels {
     /// Batch Dot Product with FP32 query and FP16 SoA candidates (1536D).
     ///
     /// Computes dot products between a single FP32 query vector and multiple FP16 candidates
-    /// stored in Structure-of-Arrays (SoA) layout for cache efficiency.
+    /// stored in Structure-of-Arrays (SoA) layout.
     ///
     /// **Algorithm**:
     /// For each candidate i: result[i] = Σ(query[j] * candidate[i][j]) for all dimensions j
     ///
-    /// **Performance**: ~1.5-2× faster than array-based batch dot product due to:
-    /// - SoA memory layout improves cache locality
-    /// - FP16 storage reduces memory bandwidth by 2×
-    /// - SIMD operations process 4 vectors simultaneously
+    /// **Structure**: one SIMD4 accumulator processes the 4 candidates of a group together. No speed figure is measured.
     ///
-    /// **Accuracy**: FP16 storage introduces <0.1% relative error vs full FP32
+    /// **Accuracy**: candidates carry FP16 rounding; no relative-error bound is promised (see the type's
+    /// error-analysis notes: cancellation makes the relative error unbounded).
     ///
     /// - Parameters:
     ///   - query: FP32 query vector (1536 dimensions)
@@ -2731,7 +2654,7 @@ public enum MixedPrecisionKernels {
                 for candidateGroup in stride(from: 0, to: vectorCount, by: 4) {
                     let actualCount = min(4, vectorCount - candidateGroup)
 
-                    // SIMD4 accumulator for better performance
+                    // One SIMD4 accumulator holds the 4 candidates of the group
                     var accumulators = SIMD4<Float>.zero
 
                     // Process 384 SIMD4 lanes (1536 / 4 = 384)
@@ -2767,14 +2690,11 @@ public enum MixedPrecisionKernels {
 
     /// Register-blocked Batch Euclidean Distance (processes 8 candidates simultaneously).
     ///
-    /// **Advanced Performance Optimization:**
-    /// - Processes 2 SoA groups (8 candidates) per iteration for maximum register utilization
-    /// - Reduces loop overhead by 50% compared to standard batch processing
-    /// - Optimized for Apple Silicon with 32 NEON registers
+    /// **Structure:**
+    /// - Processes 2 SoA groups (8 candidates) per iteration, halving the outer-loop iterations of the
+    ///   one-group loop
     ///
-    /// **Performance:** ~1.3-1.5× faster than standard batchEuclidean512 for N ≥ 16
-    ///
-    /// **Use Case:** Large candidate sets (N ≥ 100) where register blocking overhead is amortized
+    /// No speed ratio versus batchEuclidean is measured, and no candidate-count threshold is derived here.
     ///
     /// - Parameters:
     ///   - query: FP16 query vector
@@ -2864,12 +2784,10 @@ public enum MixedPrecisionKernels {
 
     /// Register-blocked Batch Euclidean Distance (FP32 query × FP16 candidates).
     ///
-    /// **Hybrid Precision + Register Blocking:**
-    /// - FP32 query for maximum precision
-    /// - FP16 candidates for 2× memory bandwidth
-    /// - 8-candidate register blocking for optimal throughput
-    ///
-    /// **Recommended for production similarity search** with large candidate sets.
+    /// **FP32 query + register blocking:**
+    /// - The FP32 query is not converted
+    /// - FP16 candidates (half the scalar payload; payload model only)
+    /// - 8 candidates per iteration
     ///
     /// - Parameters:
     ///   - query: FP32 query vector
@@ -2961,14 +2879,11 @@ public enum MixedPrecisionKernels {
 
     /// Register-blocked Batch Euclidean Distance (processes 8 candidates simultaneously) - 768D.
     ///
-    /// **Advanced Performance Optimization:**
-    /// - Processes 2 SoA groups (8 candidates) per iteration for maximum register utilization
-    /// - Reduces loop overhead by 50% compared to standard batch processing
-    /// - Optimized for Apple Silicon with 32 NEON registers
+    /// **Structure:**
+    /// - Processes 2 SoA groups (8 candidates) per iteration, halving the outer-loop iterations of the
+    ///   one-group loop
     ///
-    /// **Performance:** ~1.3-1.5× faster than standard batchEuclidean768 for N ≥ 16
-    ///
-    /// **Use Case:** Large candidate sets (N ≥ 100) where register blocking overhead is amortized
+    /// No speed ratio versus batchEuclidean is measured, and no candidate-count threshold is derived here.
     ///
     /// - Parameters:
     ///   - query: FP16 query vector
@@ -3058,12 +2973,10 @@ public enum MixedPrecisionKernels {
 
     /// Register-blocked Batch Euclidean Distance (FP32 query × FP16 candidates) - 768D.
     ///
-    /// **Hybrid Precision + Register Blocking:**
-    /// - FP32 query for maximum precision
-    /// - FP16 candidates for 2× memory bandwidth
-    /// - 8-candidate register blocking for optimal throughput
-    ///
-    /// **Recommended for production similarity search** with large candidate sets.
+    /// **FP32 query + register blocking:**
+    /// - The FP32 query is not converted
+    /// - FP16 candidates (half the scalar payload; payload model only)
+    /// - 8 candidates per iteration
     ///
     /// - Parameters:
     ///   - query: FP32 query vector
@@ -3155,14 +3068,11 @@ public enum MixedPrecisionKernels {
 
     /// Register-blocked Batch Euclidean Distance (processes 8 candidates simultaneously) - 1536D.
     ///
-    /// **Advanced Performance Optimization:**
-    /// - Processes 2 SoA groups (8 candidates) per iteration for maximum register utilization
-    /// - Reduces loop overhead by 50% compared to standard batch processing
-    /// - Optimized for Apple Silicon with 32 NEON registers
+    /// **Structure:**
+    /// - Processes 2 SoA groups (8 candidates) per iteration, halving the outer-loop iterations of the
+    ///   one-group loop
     ///
-    /// **Performance:** ~1.3-1.5× faster than standard batchEuclidean1536 for N ≥ 16
-    ///
-    /// **Use Case:** Large candidate sets (N ≥ 100) where register blocking overhead is amortized
+    /// No speed ratio versus batchEuclidean is measured, and no candidate-count threshold is derived here.
     ///
     /// - Parameters:
     ///   - query: FP16 query vector
@@ -3252,12 +3162,10 @@ public enum MixedPrecisionKernels {
 
     /// Register-blocked Batch Euclidean Distance (FP32 query × FP16 candidates) - 1536D.
     ///
-    /// **Hybrid Precision + Register Blocking:**
-    /// - FP32 query for maximum precision
-    /// - FP16 candidates for 2× memory bandwidth
-    /// - 8-candidate register blocking for optimal throughput
-    ///
-    /// **Recommended for production similarity search** with large candidate sets.
+    /// **FP32 query + register blocking:**
+    /// - The FP32 query is not converted
+    /// - FP16 candidates (half the scalar payload; payload model only)
+    /// - 8 candidates per iteration
     ///
     /// - Parameters:
     ///   - query: FP32 query vector
@@ -3378,53 +3286,57 @@ public enum MixedPrecisionKernels {
         batchEuclideanSoA(query: query, candidates: candidates, results: results)
     }
 
-    /// Adaptive Euclidean distance computation with automatic precision selection
-    /// - Parameters:
-    ///   - query: Query vector
-    ///   - candidate: Candidate vector
-    ///   - threshold: Error threshold for precision selection
-    /// - Returns: Euclidean distance
+    /// Computes a direct FP32 baseline once and accepts a reduced result only
+    /// when its actual relative error is within `threshold`, compared in Double
+    /// (PrecisionSelectionContractTests.adaptiveBoundAgainstActualBaseline).
+    /// Invalid/nonpositive thresholds and zero/nonfinite baselines return the
+    /// baseline unchanged. Both operands must fit finite FP16 before conversion.
+    /// This verification incurs baseline plus conversion/kernel work; it is not
+    /// an acceleration guarantee. Complexity is O(512).
     @inlinable
     public static func adaptiveEuclideanDistance(
         query: Vector512Optimized,
         candidate: Vector512Optimized,
         threshold: Float = 0.001
     ) -> Float {
-        // Use FP16 for most cases, FP32 if high precision needed
-        // Calculate magnitude as heuristic for precision selection
-        var maxAbsValue: Float = 0.0
-        query.storage.withUnsafeBufferPointer { ptr in
-            for i in 0..<ptr.count {
-                let simd = ptr[i]
-                maxAbsValue = max(maxAbsValue, max(abs(simd[0]), abs(simd[1]), abs(simd[2]), abs(simd[3])))
+        let reference = query.euclideanDistance(to: candidate)
+        guard threshold.isFinite, threshold > 0,
+              reference.isFinite, reference > 0 else { return reference }
+        for index in 0..<512 {
+            let q = query[index]
+            let c = candidate[index]
+            guard q.isFinite, c.isFinite, abs(q) <= 65504, abs(c) <= 65504 else {
+                return reference
             }
         }
-
-        let useFP16 = maxAbsValue < 100.0  // Heuristic threshold
-
-        if useFP16 {
-            // Use mixed precision pathway. Build a proper dimension-major SoA for the single
-            // candidate via createSoA512FP16 — the kernel walks storageIndex over 512×4 = 2048
-            // elements per group, so the flat 512-element Vector512FP16.storage must NOT be
-            // force-wrapped as an SoA (that caused out-of-bounds reads → NaN distances).
-            let queryFP16 = Vector512FP16(from: query)
-            let candidatesSoA = MixedPrecisionKernels.createSoA512FP16(from: [candidate])
-            var result = [Float](repeating: 0, count: 1)
-            result.withUnsafeMutableBufferPointer { buffer in
-                batchEuclidean512(query: queryFP16, candidates: candidatesSoA, results: buffer)
-            }
-            return result[0]
-        } else {
-            return query.euclideanDistance(to: candidate)
+        let queryFP16 = Vector512FP16(from: query)
+        let candidatesSoA = createSoA512FP16(from: [candidate])
+        var results: [Float] = [0]
+        // The result is read through the buffer inside the closure, not as `results[0]` after it: Swift 6.4.0 at -O
+        // can forward the literal 0 across an out-of-line `withUnsafeMutableBufferPointer` closure (SIL
+        // RedundantLoadElimination; swiftlang/swift#92562; PR #92580 and its 6.4.x backports are believed to fix this
+        // mechanism (unverified for this form; see T15/lost-store-investigation), the shape that
+        // LostStoreCanaryTests.literalArrayStoreIsObservedAfterOutOfLineClosure reproduces. A stale 0 here would be
+        // replaced by the reference for a threshold below 1 and returned for a threshold of 1 or larger (for a positive
+        // reference, abs(0 - reference) <= threshold * reference holds iff threshold >= 1); the reduced result is pinned
+        // at threshold 0.001 by AdaptiveReducedResultTests.acceptedReducedResultIsReturned.
+        let reduced: Float = results.withUnsafeMutableBufferPointer {
+            batchEuclidean512(query: queryFP16, candidates: candidatesSoA, results: $0)
+            return $0[0]
         }
+        guard reduced.isFinite,
+              abs(Double(reduced) - Double(reference)) <= Double(threshold) * Double(reference)
+        else { return reference }
+        return reduced
     }
 
-    /// Estimate memory improvement from using FP16 vs FP32
-    /// - Parameter vectorCount: Number of vectors in dataset
-    /// - Returns: Memory savings factor (e.g., 2.0 means 50% savings)
+    /// Returns the constant 2.0, the FP32:FP16 scalar-width ratio (4 bytes / 2 bytes).
+    /// - Parameter vectorCount: Ignored.
+    /// - Returns: The scalar payload ratio. It excludes headers, capacity, handles and sharing, so it is
+    ///   not a measured memory saving.
     @inlinable
     public static func estimateMemoryImprovement(vectorCount: Int) -> Float {
-        // FP16 uses 2 bytes vs FP32's 4 bytes = 2x improvement
+        // Scalar width ratio 4 / 2 (payload model only)
         return 2.0
     }
 
@@ -3449,7 +3361,9 @@ public enum MixedPrecisionKernels {
             case mixed      // Use mixed strategies
         }
 
-        /// Human-readable summary of the precision analysis
+        /// Human-readable summary of the precision analysis. The expected-error figure and the reasoning
+        /// text come from analyzePrecision's heuristic model and are not verified (Q11 runtime text); the
+        /// reasoning's storage lines are scalar payload sizes (see `precisionReasoning`).
         public var summary: String {
             """
             Precision Analysis Results:
@@ -3468,16 +3382,19 @@ public enum MixedPrecisionKernels {
             """
         }
 
+        /// Fixed reasoning text per recommendation. Not verified: the FP16 error percentage is not derived from a
+        /// measurement (Q11 runtime text). The storage lines are scalar payload sizes (FP16 2 bytes, INT8 1 byte,
+        /// FP32 4 bytes per scalar), not a measured process-memory figure (D02 RD-R2).
         private var precisionReasoning: String {
             switch recommendedPrecision {
             case .fp32:
                 return "• Values exceed FP16 range or require full precision\n• Dynamic range too large for safe quantization"
             case .fp16:
-                return "• All values fit in FP16 range (±65504)\n• Expected error < 0.1% for typical operations\n• 50% memory savings with minimal accuracy loss"
+                return "• All values fit in FP16 range (±65504)\n• Expected error < 0.1% for typical operations\n• FP16: 2 bytes per scalar, FP32: 4 (scalar payload)"
             case .int8:
-                return "• Small dynamic range suitable for 8-bit quantization\n• Significant memory savings (75%) possible"
+                return "• Small dynamic range suitable for 8-bit quantization\n• INT8: 1 byte per scalar, FP32: 4 (scalar payload)"
             case .mixed:
-                return "• Use FP16 for candidates, FP32 for queries\n• Optimal balance of memory efficiency and accuracy"
+                return "• Use FP16 for candidates, FP32 for queries\n• Candidates: 2 bytes per scalar, queries: 4 (scalar payload)"
             }
         }
     }
@@ -3489,10 +3406,10 @@ public enum MixedPrecisionKernels {
     }
     // Assume VectorXXXOptimized conform to this protocol in the actual project context.
 
-    /// Profile vectors for precision requirements with comprehensive statistical analysis.
+    /// Heuristic precision recommendation from simple statistics (range, mean, standard deviation and 3σ outliers).
     ///
-    /// Analyzes value distribution, dynamic range, and outliers to recommend optimal precision.
-    /// Uses statistical methods appropriate for embedding vectors (typically Gaussian-distributed).
+    /// The expected-error figures are a fixed heuristic model (0.05% × D^(1/4) for FP16, 0.5% for INT8),
+    /// not verified against measured error for any dataset.
     public static func analyzePrecision<V: AnalyzableVector>(
         _ vectors: [V]
     ) -> PrecisionProfile {
@@ -3575,10 +3492,10 @@ public enum MixedPrecisionKernels {
             recommendedPrecision = .fp32
             expectedError = 0.0
         } else {
-            // All values are within FP16 range. Estimate FP16 error with sqrt(D) statistical
-            // averaging (~0.05% per element scaled by D^(1/4)).
+            // All values are within FP16 range. Heuristic model (not verified): 0.05% per element scaled by
+            // D^(1/4).
             let dimensionFactor = sqrt(Float(dimension))
-            let fp16RelativeError: Float = 0.0005  // ~0.05% per operation
+            let fp16RelativeError: Float = 0.0005  // assumed per-element error (heuristic constant; not verified)
             let fp16ExpectedError = fp16RelativeError * dimensionFactor / dimensionFactor.squareRoot()
 
             // INT8 is only worthwhile for non-negative, low-dynamic-range data where 8-bit
@@ -3586,13 +3503,13 @@ public enum MixedPrecisionKernels {
             // embeddings, components ~±1/√D) is poorly served by INT8 — prefer FP16/mixed.
             // (Previously this branch fired for ANY small range including signed embeddings,
             // shadowing the FP16 path, and the FP16 branch was unreachable for signed data
-            // because of a `minVal > fp16MinNormal` guard.)
+            // because of a `minVal > fp16MinNormal` guard.) This rationale is a heuristic, not verified.
             let int8Suitable = dynamicRange < 2.0 && abs(meanValue) < 10.0 && minVal >= 0.0
 
             if int8Suitable {
                 recommendedPrecision = .int8
-                expectedError = 0.005  // ~0.5% for 8-bit uniform quantization
-            } else if fp16ExpectedError < 0.001 {  // < 0.1% expected error
+                expectedError = 0.005  // assumed INT8 error (heuristic constant; not verified)
+            } else if fp16ExpectedError < 0.001 {  // model threshold: modelled FP16 error below 0.001
                 recommendedPrecision = .fp16
                 expectedError = fp16ExpectedError
             } else {
@@ -3614,7 +3531,8 @@ public enum MixedPrecisionKernels {
         )
     }
 
-    /// Automatically select precision based on data characteristics and error tolerance.
+    /// Selects a precision from analyzePrecision's heuristic profile, escalating one step when its modelled
+    /// error exceeds `errorTolerance` (the model is not verified).
     ///
     /// - Parameters:
     ///   - vectors: Sample vectors to analyze
@@ -3884,7 +3802,8 @@ internal struct MixedPrecisionBenchmark {
         let xRanks = computeRanks(x)
         let yRanks = computeRanks(y)
 
-        // Compute correlation of ranks (Pearson on ranks = Spearman)
+        // Compute correlation of ranks (Pearson on ranks = Spearman only without ties: computeRanks gives tied
+        // values distinct sequential ranks, not averaged ranks)
         let n = Float(x.count)
         let xMean = xRanks.reduce(0, +) / n
         let yMean = yRanks.reduce(0, +) / n
@@ -3932,7 +3851,7 @@ public extension MixedPrecisionKernels.Vector512FP16 {
 
             for i in 0..<storage.count {
                 // An all-ones binary16 exponent denotes infinity or NaN.
-                // MixedPrecisionRangeValidationTests covers both signs and all widths.
+                // MixedPrecisionRangeValidationTests (rejectsNonFinitePatterns) covers both signs and all widths.
                 guard ptr[i] & 0x7C00 != 0x7C00 else {
                     return false
                 }
@@ -3941,7 +3860,8 @@ public extension MixedPrecisionKernels.Vector512FP16 {
         }
     }
 
-    /// Check if any values would overflow when converting from FP32.
+    /// Returns true when every value is finite and |value| <= 65504. This is stricter than overflow:
+    /// values in (65504, 65520) still round to finite 65504.
     ///
     /// - Parameter values: Array of FP32 values to validate
     /// - Returns: `true` if all values fit in FP16 range
@@ -3959,7 +3879,7 @@ public extension MixedPrecisionKernels.Vector768FP16 {
 
             for i in 0..<storage.count {
                 // An all-ones binary16 exponent denotes infinity or NaN.
-                // MixedPrecisionRangeValidationTests covers both signs and all widths.
+                // MixedPrecisionRangeValidationTests (rejectsNonFinitePatterns) covers both signs and all widths.
                 guard ptr[i] & 0x7C00 != 0x7C00 else {
                     return false
                 }
@@ -3982,7 +3902,7 @@ public extension MixedPrecisionKernels.Vector1536FP16 {
 
             for i in 0..<storage.count {
                 // An all-ones binary16 exponent denotes infinity or NaN.
-                // MixedPrecisionRangeValidationTests covers both signs and all widths.
+                // MixedPrecisionRangeValidationTests (rejectsNonFinitePatterns) covers both signs and all widths.
                 guard ptr[i] & 0x7C00 != 0x7C00 else {
                     return false
                 }
@@ -4083,7 +4003,8 @@ extension MixedPrecisionKernels {
     /// - Parameter value: FP32 value to validate
     /// - Returns: Float16 value if conversion is safe, nil if overflow would occur
     ///
-    /// Use this before conversion to detect potential precision loss or overflow:
+    /// Use this before conversion to detect overflow (non-finite input or |value| > 65504); it does not
+    /// detect rounding loss or underflow:
     /// ```swift
     /// if let fp16 = MixedPrecisionKernels.detectOverflow(value: largeFloat) {
     ///     // Safe to use fp16
@@ -4124,13 +4045,12 @@ extension MixedPrecisionKernels {
 
     /// Core batch Euclidean² kernel with 2-way register blocking
     ///
-    /// **Algorithm**: Process 2 candidates simultaneously to maximize query vector reuse
+    /// **Algorithm**: process 2 candidates per iteration, loading each query lane once for both
     /// - FP16 candidates stored as UInt16 bit patterns
-    /// - Loaded as SIMD8<UInt16>, converted to SIMD8<Float> via hardware vcvt
-    /// - Query (FP32) loaded once, reused for both candidates
-    /// - 8 accumulators (4 per candidate) for ILP optimization
+    /// - Loaded as SIMD8<UInt16> and converted by `fp16ToFp32_simd8` (scalar software conversions)
+    /// - 8 accumulators (4 per candidate)
     ///
-    /// **Complexity**: O(lanes × candidates) with 2× throughput vs sequential
+    /// **Complexity**: O(lanes × candidates); no throughput ratio is measured
     @inline(__always)
     @usableFromInline
     internal static func range_euclid2_mixed_core(
@@ -4332,7 +4252,8 @@ extension MixedPrecisionKernels {
     /// **Algorithm**: Fused dot product + magnitude computation
     /// - Computes: distance = 1 - (dot(q,c) / (||q|| × ||c||))
     /// - Single pass through vectors for all three metrics
-    /// - Numerical stability via FP32 accumulation and epsilon checks
+    /// - Distance is `Float.nan` when the query or candidate magnitude is not finite; otherwise similarity is zero
+    ///   when the denominator is not finite or is at most epsilon, then clamped to [-1, 1]
     ///
     /// **Complexity**: O(lanes × candidates) with compute-bound characteristics
     @inline(__always)
@@ -4427,18 +4348,19 @@ extension MixedPrecisionKernels {
                         i += 1
                     }
 
-                    // Compute cosine distances with numerical stability
+                    // Cosine distances: NaN for a non-finite magnitude; zero similarity for a tiny or non-finite
+                    // denominator, then clamp to [-1, 1]
                     let dp0 = dot0.sum()
                     let mag0_val = sqrt(mag0.sum())
                     let denom0 = queryMag * mag0_val
                     let similarity0 = (denom0 > epsilon && denom0.isFinite) ? (dp0 / denom0) : 0.0
-                    out[outIdx] = 1.0 - max(-1.0, min(1.0, similarity0))
+                    out[outIdx] = (queryMag.isFinite && mag0_val.isFinite) ? 1.0 - max(-1.0, min(1.0, similarity0)) : .nan
 
                     let dp1 = dot1.sum()
                     let mag1_val = sqrt(mag1.sum())
                     let denom1 = queryMag * mag1_val
                     let similarity1 = (denom1 > epsilon && denom1.isFinite) ? (dp1 / denom1) : 0.0
-                    out[outIdx + 1] = 1.0 - max(-1.0, min(1.0, similarity1))
+                    out[outIdx + 1] = (queryMag.isFinite && mag1_val.isFinite) ? 1.0 - max(-1.0, min(1.0, similarity1)) : .nan
                 }
             }
 
@@ -4496,7 +4418,7 @@ extension MixedPrecisionKernels {
                 let mag_val = sqrt(mag.sum())
                 let denom = queryMag * mag_val
                 let similarity = (denom > epsilon && denom.isFinite) ? (dp / denom) : 0.0
-                out[outIdx] = 1.0 - max(-1.0, min(1.0, similarity))
+                out[outIdx] = (queryMag.isFinite && mag_val.isFinite) ? 1.0 - max(-1.0, min(1.0, similarity)) : .nan
             }
         }
     }
@@ -4504,7 +4426,8 @@ extension MixedPrecisionKernels {
     /// Core batch Dot Product kernel with 2-way register blocking
     ///
     /// **Formula**: dot(q, c) = Σᵢ qᵢ × cᵢ
-    /// **Numerical Precision**: FP32 accumulation ensures < 0.01% error
+    /// **Numerical precision**: FP32 accumulation of FP16-rounded candidates; no relative-error bound is
+    /// promised (near-cancelling sums have unbounded relative error)
     @inline(__always)
     @usableFromInline
     internal static func range_dot_mixed_core(
@@ -4635,27 +4558,33 @@ extension MixedPrecisionKernels {
         }
     }
 
-    // MARK: - Public Range-Based API (Euclidean² Distance)
+    /// Validates public wrapper endpoints before count arithmetic or any output write.
+    /// Unsafe pointer initialization and aliasing remain the caller's responsibility.
+    @usableFromInline
+    internal static func validateMixedCandidateRange(
+        _ range: Range<Int>, candidateCount: Int, outputCount: Int
+    ) -> Int {
+        guard range.lowerBound >= 0 && range.upperBound <= candidateCount else {
+            fatalError("MixedPrecision candidate range violation")
+        }
+        let count = range.upperBound - range.lowerBound
+        guard outputCount >= count else {
+            fatalError("MixedPrecision range output capacity violation")
+        }
+        return count
+    }
 
-    /// Compute Euclidean squared distances using mixed precision (512-dim)
-    ///
-    /// **Memory Bandwidth**: 2× improvement vs FP32 (reads half the candidate data)
-    /// **Algorithm**: d²(q, c) = Σᵢ (qᵢ - cᵢ)²
-    /// - Query (q): FP32 [512 floats = 2KB, cache-hot]
-    /// - Candidates (c): FP16 [512 halfs = 1KB each, bandwidth-optimized]
-    /// - Computation: FP32 accumulation with 8-way register blocking
-    ///
-    /// **Performance** (Apple Silicon M2/M3):
-    /// - Small batches (N<100): ~1.1× speedup (conversion overhead)
-    /// - Large batches (N≥1000): 1.5-2× speedup (memory-bound)
-    ///
-    /// **Accuracy**: <0.1% relative error vs FP32 reference
-    ///
-    /// - Parameters:
-    ///   - query: FP32 query vector (high precision)
-    ///   - candidatesFP16: Pre-converted FP16 candidate vectors
-    ///   - range: Candidate indices to process [enables parallel chunking]
-    ///   - out: Pre-allocated output buffer (capacity ≥ range.count)
+    // MARK: - Public Range-Based API (Euclidean squared distance)
+
+    /// Computes 512-dimensional Euclidean squared distance: Σᵢ (qᵢ - cᵢ)².
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
     @inlinable
     public static func range_euclid2_mixed_512(
         query: Vector512Optimized,
@@ -4663,17 +4592,27 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_euclid2_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector512Optimized.lanes
         )
     }
 
-    /// 768-dimensional variant
+    /// Computes 768-dimensional Euclidean squared distance: Σᵢ (qᵢ - cᵢ)².
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
     @inlinable
     public static func range_euclid2_mixed_768(
         query: Vector768Optimized,
@@ -4681,17 +4620,27 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_euclid2_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector768Optimized.lanes
         )
     }
 
-    /// 1536-dimensional variant
+    /// Computes 1536-dimensional Euclidean squared distance: Σᵢ (qᵢ - cᵢ)².
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
     @inlinable
     public static func range_euclid2_mixed_1536(
         query: Vector1536Optimized,
@@ -4699,33 +4648,34 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_euclid2_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector1536Optimized.lanes
         )
     }
 
-    // MARK: - Public Range-Based API (Cosine Distance)
+    // MARK: - Public Range-Based API (cosine distance)
 
-    /// Compute cosine distances using mixed precision (512-dim)
-    ///
-    /// **Formula**: cosine_distance = 1 - cos(θ) = 1 - (q·c)/(||q||×||c||)
-    /// **Numerical Stability**:
-    /// - Pre-computed query magnitude (reused across batch)
-    /// - Epsilon-based zero-division protection (ε = 10⁻⁹)
-    /// - Clamped similarity ∈ [-1, 1] to prevent domain errors
-    ///
-    /// **Performance**: 1.5-1.8× speedup for N≥1000 (compute-bound, less bandwidth-sensitive than Euclidean)
-    ///
-    /// - Parameters:
-    ///   - query: FP32 query vector
-    ///   - candidatesFP16: Pre-converted FP16 candidates
-    ///   - range: Candidate range to process
-    ///   - out: Output buffer for distances
+    /// Computes 512-dimensional cosine distance: 1 - (q·c)/(||q|| × ||c||).
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
+    ///   The core returns `Float.nan` when the query or candidate magnitude is not finite;
+    ///   otherwise it uses similarity zero when the denominator is not finite or is at most
+    ///   1e-9, then clamps similarity to [-1, 1] (exceptional inputs pinned against the core
+    ///   by exceptionalSameCoreParity; the class by
+    ///   T15CosineExceptionalTableTests.everyImplementationFollowsThePolicy).
     @inlinable
     public static func range_cosine_mixed_512(
         query: Vector512Optimized,
@@ -4733,17 +4683,32 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_cosine_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector512Optimized.lanes
         )
     }
 
-    /// 768-dimensional variant
+    /// Computes 768-dimensional cosine distance: 1 - (q·c)/(||q|| × ||c||).
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
+    ///   The core returns `Float.nan` when the query or candidate magnitude is not finite;
+    ///   otherwise it uses similarity zero when the denominator is not finite or is at most
+    ///   1e-9, then clamps similarity to [-1, 1] (exceptional inputs pinned against the core
+    ///   by exceptionalSameCoreParity; the class by
+    ///   T15CosineExceptionalTableTests.everyImplementationFollowsThePolicy).
     @inlinable
     public static func range_cosine_mixed_768(
         query: Vector768Optimized,
@@ -4751,17 +4716,32 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_cosine_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector768Optimized.lanes
         )
     }
 
-    /// 1536-dimensional variant
+    /// Computes 1536-dimensional cosine distance: 1 - (q·c)/(||q|| × ||c||).
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
+    ///   The core returns `Float.nan` when the query or candidate magnitude is not finite;
+    ///   otherwise it uses similarity zero when the denominator is not finite or is at most
+    ///   1e-9, then clamps similarity to [-1, 1] (exceptional inputs pinned against the core
+    ///   by exceptionalSameCoreParity; the class by
+    ///   T15CosineExceptionalTableTests.everyImplementationFollowsThePolicy).
     @inlinable
     public static func range_cosine_mixed_1536(
         query: Vector1536Optimized,
@@ -4769,29 +4749,29 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_cosine_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector1536Optimized.lanes
         )
     }
 
-    // MARK: - Public Range-Based API (Dot Product)
+    // MARK: - Public Range-Based API (positive dot product)
 
-    /// Compute dot products using mixed precision (512-dim)
-    ///
-    /// **Formula**: dot(q, c) = Σᵢ qᵢ × cᵢ
-    /// **Use Cases**: Similarity scoring, attention mechanisms, retrieval scoring
-    /// **Performance**: 1.8-2× speedup for N≥1000 (memory-bound like Euclidean)
-    ///
-    /// - Parameters:
-    ///   - query: FP32 query vector
-    ///   - candidatesFP16: Pre-converted FP16 candidates
-    ///   - range: Candidate range to process
-    ///   - out: Output buffer for dot products
+    /// Computes 512-dimensional positive dot product: Σᵢ qᵢ × cᵢ.
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
     @inlinable
     public static func range_dot_mixed_512(
         query: Vector512Optimized,
@@ -4799,17 +4779,27 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_dot_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector512Optimized.lanes
         )
     }
 
-    /// 768-dimensional variant
+    /// Computes 768-dimensional positive dot product: Σᵢ qᵢ × cᵢ.
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
     @inlinable
     public static func range_dot_mixed_768(
         query: Vector768Optimized,
@@ -4817,17 +4807,27 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_dot_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector768Optimized.lanes
         )
     }
 
-    /// 1536-dimensional variant
+    /// Computes 1536-dimensional positive dot product: Σᵢ qᵢ × cᵢ.
+    /// Writes compact results: out[j] corresponds to candidatesFP16[range.lowerBound + j].
+    /// The remaining output suffix is untouched. MixedPrecisionRangeWorkTests covers
+    /// compact output, offset views, empty ranges, and named precondition diagnostics.
+    /// - Complexity: O(range.count) temporary metadata; selected FP16 payloads stay shared.
+    /// - Precondition: Range endpoints lie in 0...candidatesFP16.count and out.count
+    ///   is at least range.count. Violations terminate before output writes. A valid
+    ///   empty range returns without accessing query elements, candidates, or output.
+    /// - Note: The caller must provide initialized, correctly aliased output storage.
     @inlinable
     public static func range_dot_mixed_1536(
         query: Vector1536Optimized,
@@ -4835,11 +4835,13 @@ extension MixedPrecisionKernels {
         range: Range<Int>,
         out: UnsafeMutableBufferPointer<Float>
     ) {
-        let candidatesArray = candidatesFP16.map { $0.storage }
+        let count = validateMixedCandidateRange(range, candidateCount: candidatesFP16.count, outputCount: out.count)
+        guard count > 0 else { return }
+        let candidatesArray = candidatesFP16[range].map { $0.storage }
         range_dot_mixed_core(
             queryStorage: query.storage,
             candidatesArray: candidatesArray,
-            range: range,
+            range: 0..<count,
             out: out,
             lanes: Vector1536Optimized.lanes
         )
@@ -4847,11 +4849,11 @@ extension MixedPrecisionKernels {
 
     // MARK: - Batch Conversion Helpers
 
-    /// Convert array of FP32 vectors to FP16 for memory savings
+    /// Convert an array of FP32 vectors to FP16 (half the scalar payload)
     ///
     /// **Use Case**: Pre-convert candidate sets once, reuse for multiple queries
-    /// **Performance**: ~50 ns/vector on Apple Silicon (hardware vcvt)
-    /// **Memory**: 50% reduction (512-dim: 2KB → 1KB per vector)
+    /// **Payload**: 512-dim scalars 2048 B → 1024 B per vector (excludes array headers and handles;
+    /// payload model only, not process memory)
     @inlinable
     public static func convertToFP16_512(_ vectors: [Vector512Optimized]) -> [Vector512FP16] {
         return vectors.map { Vector512FP16(from: $0) }
@@ -4869,25 +4871,19 @@ extension MixedPrecisionKernels {
 
     // MARK: - Decision Heuristics
 
-    /// Platform-specific performance characteristics for mixed precision
+    /// Platform hints for `shouldUseMixedPrecision(candidateCount:dimension:platformHint:)`. The cache sizes
+    /// in the case comments are unverified hardware assumptions.
     public enum PlatformHint: Sendable {
-        case appleM1, appleM2  // 8-12MB L3 cache
-        case appleM3, appleM4  // 16-24MB L3 cache
-        case intel, amd        // Variable cache, conservative thresholds
+        case appleM1, appleM2  // assumed 8-12 MB last-level cache (unverified)
+        case appleM3, appleM4  // assumed 16-24 MB last-level cache (unverified)
+        case intel, amd        // cache varies; thresholds chosen without a measurement (unverified)
         case automatic         // Auto-detect based on generic heuristic
     }
 
-    /// Determine if mixed precision provides benefit for given workload
+    /// Heuristic: returns true when the FP32 candidate payload (candidateCount × dimension × 4 bytes) exceeds
+    /// an assumed 12 MiB last-level cache and candidateCount >= 100.
     ///
-    /// **Decision Logic**:
-    /// - Memory bandwidth-bound: Enable FP16 when dataset > L3 cache
-    /// - Small batches (<100): FP32 conversion overhead dominates
-    /// - Large batches (≥1000): 1.5-2× speedup from bandwidth savings
-    ///
-    /// **Calibration** (Apple M2/M3):
-    /// - L3 cache: 12-16MB
-    /// - Threshold: candidateCount × dimension × 4 bytes > L3
-    /// - Minimum batch: 100 candidates (amortize conversion cost)
+    /// The cache size and both thresholds are unverified assumptions; no speedup is measured in this repository.
     ///
     /// - Parameters:
     ///   - candidateCount: Number of candidate vectors
@@ -4898,32 +4894,29 @@ extension MixedPrecisionKernels {
         candidateCount: Int,
         dimension: Int
     ) -> Bool {
-        // Memory footprint in bytes (FP32). Use Int64 to prevent overflow
+        // FP32 scalar payload in bytes, as an Int64 product (a product beyond Int64 traps rather than wrapping)
         let fp32Footprint = Int64(candidateCount) * Int64(dimension) * Int64(MemoryLayout<Float>.size)
 
-        // Estimate L3 cache size (conservative: 12MB for M2, 16MB for M3)
+        // Assumed last-level cache size (unverified hardware assumption)
         let l3CacheSize: Int64 = 12 * 1024 * 1024  // 12 MB
 
         // Enable FP16 when:
-        // 1. Dataset exceeds L3 cache (memory bandwidth-bound)
-        // 2. Batch size ≥ 100 (amortize conversion overhead)
+        // 1. The FP32 payload exceeds the assumed cache size
+        // 2. candidateCount >= 100
         let isMemoryBound = fp32Footprint > l3CacheSize
         let isBatchLargeEnough = candidateCount >= 100
 
         return isMemoryBound && isBatchLargeEnough
     }
 
-    /// Platform-specific threshold adjustment
-    ///
-    /// **Platform Characteristics**:
-    /// - **M1/M2**: 8-12MB L3, aggressive FP16 usage
-    /// - **M3/M4**: 16-24MB L3, higher threshold
-    /// - **x86**: Variable cache, conservative approach
+    /// Per-hint thresholds: payload above 8 MiB (M1/M2), 16 MiB (M3/M4) or 16 MiB with candidateCount >= 200
+    /// (Intel/AMD), and candidateCount >= 100 otherwise; `.automatic` uses the 12 MiB heuristic. The cache
+    /// sizes behind these numbers are unverified hardware assumptions.
     ///
     /// - Parameters:
     ///   - candidateCount: Number of candidates
     ///   - dimension: Vector dimension
-    ///   - platformHint: Platform-specific optimization hint
+    ///   - platformHint: Selects the threshold pair
     /// - Returns: true if FP16 should be used for this platform
     @inlinable
     public static func shouldUseMixedPrecision(
@@ -4935,16 +4928,15 @@ extension MixedPrecisionKernels {
 
         switch platformHint {
         case .appleM1, .appleM2:
-            // M1/M2: 8-12MB L3 cache, lower threshold
+            // Assumed 8-12 MB last-level cache (unverified)
             return fp32Footprint > (8 * 1024 * 1024) && candidateCount >= 100
 
         case .appleM3, .appleM4:
-            // M3/M4: 16-24MB L3 cache, higher threshold
+            // Assumed 16-24 MB last-level cache (unverified)
             return fp32Footprint > (16 * 1024 * 1024) && candidateCount >= 100
 
         case .intel, .amd:
-            // x86: Cache sizes vary widely, use conservative threshold
-            // Higher minimum batch size due to potentially different conversion overhead
+            // x86: cache sizes vary; threshold and minimum batch chosen without a measurement (unverified)
             return fp32Footprint > (16 * 1024 * 1024) && candidateCount >= 200
 
         case .automatic:
@@ -4958,28 +4950,15 @@ extension MixedPrecisionKernels {
 import Darwin.Mach
 #endif
 
-// MARK: - Phase 4: Advanced Memory Management & Platform Optimizations
+// MARK: - FP16 Vector Pool and Platform Capabilities
 
 // MARK: FP16 Vector Pool
 
-/// High-performance object pool for Vector512FP16 to eliminate allocation overhead
-///
-/// # Performance Benefits
-/// - Eliminates 80-90% of allocation overhead in tight loops
-/// - Reduces GC pressure by reusing FP16 storage buffers
-/// - Thread-safe with minimal lock contention (lock-free acquire/release on fast path)
-///
-/// # Usage Pattern
-/// ```swift
-/// let pool = FP16VectorPool(capacity: 100, dimension: 512)
-/// if let fp16Vec = pool.acquire() {
-///     // Use fp16Vec for computation
-///     pool.release(fp16Vec)
-/// }
-/// ```
-///
-/// - Complexity: O(1) for acquire/release operations
-/// - Thread-Safety: Lock-protected, safe for concurrent access
+/// A bounded cache of immutable FP16 vector values protected by an NSLock.
+/// Acquire/release use the reserved array in O(1); this does not provide mutable
+/// conversion-buffer reuse or eliminate the allocations of new conversions.
+/// A released value can be acquired later with its existing contents
+/// (MixedPrecisionPhase4Tests.testVectorPool_BasicOperations, testVectorPool_ConcurrentAccess).
 public final class FP16VectorPool: @unchecked Sendable {
     private let capacity: Int
     private var available: [MixedPrecisionKernels.Vector512FP16]
@@ -5016,7 +4995,8 @@ public final class FP16VectorPool: @unchecked Sendable {
 
     /// Release a vector back to the pool
     /// - Parameter vector: Vector to return to pool
-    /// - Note: If pool is at capacity, vector is discarded (auto-deallocated)
+    /// - Note: If the pool is at capacity, this reference to `vector` is dropped; its payload is freed only when no
+    ///   other copy of the value remains.
     /// - Complexity: O(1)
     public func release(_ vector: MixedPrecisionKernels.Vector512FP16) {
         lock.lock()
@@ -5024,7 +5004,7 @@ public final class FP16VectorPool: @unchecked Sendable {
         if available.count < capacity {
             available.append(vector)
         }
-        // Otherwise discard (vector will be deallocated)
+        // Otherwise drop this reference (the payload is freed only when no other copy remains)
     }
 
     /// Current number of available vectors in pool
@@ -5034,7 +5014,8 @@ public final class FP16VectorPool: @unchecked Sendable {
         return available.count
     }
 
-    /// Clear all pooled vectors (forces deallocation)
+    /// Remove all pooled vectors (testVectorPool_Drain). `removeAll(keepingCapacity: true)` keeps the array's capacity,
+    /// and each payload is freed only when no other copy of it remains.
     public func drain() {
         lock.lock()
         defer { lock.unlock() }
@@ -5044,12 +5025,11 @@ public final class FP16VectorPool: @unchecked Sendable {
 
 // MARK: - Platform Capabilities & Runtime Detection
 
-/// Platform-specific CPU capabilities detection for optimal SIMD path selection
+/// Compile-time platform facts (by `#if arch`), not runtime CPU detection. No caller in Sources/ or Benchmarks/ uses
+/// them for dispatch.
 ///
-/// # Architecture-Specific Optimizations
-/// - **ARM NEON**: Native FP16 arithmetic on Apple Silicon (M1+)
-/// - **x86 AVX2**: 256-bit SIMD registers (2× wider than NEON)
-/// - **x86 AVX-512**: 512-bit SIMD registers (not common on consumer hardware)
+/// Architecture notes (cited, not verified here): arm64 has 128-bit NEON registers; AVX2 registers are 256-bit;
+/// AVX-512 is not assumed.
 ///
 /// # Usage
 /// ```swift
@@ -5061,11 +5041,8 @@ public final class FP16VectorPool: @unchecked Sendable {
 /// ```
 public enum PlatformCapabilities {
 
-    /// True if platform has native hardware FP16 arithmetic support
-    ///
-    /// - Apple Silicon (M1/M2/M3/M4): true (NEON with FP16)
-    /// - Intel x86_64: false (no native FP16 until Sapphire Rapids)
-    /// - AMD x86_64: false (no native FP16 in consumer chips)
+    /// Compile-time answer: true on arm64 builds, false otherwise. That arm64 Apple silicon has FP16 arithmetic and
+    /// common x86_64 chips do not is a cited hardware fact, not verified here.
     public static let hasNativeHardwareFP16: Bool = {
         #if arch(arm64)
         // All Apple Silicon has NEON with FP16 support
@@ -5076,7 +5053,7 @@ public enum PlatformCapabilities {
         #endif
     }()
 
-    /// True if platform has ARM NEON SIMD instructions
+    /// Compile-time answer: true on arm64 builds (AArch64 includes Advanced SIMD), false otherwise.
     public static let hasNEON: Bool = {
         #if arch(arm64)
         return true
@@ -5085,35 +5062,28 @@ public enum PlatformCapabilities {
         #endif
     }()
 
-    /// True if platform has x86 AVX2 SIMD instructions
-    ///
-    /// - Note: Runtime detection would be more accurate, but requires CPUID intrinsics
-    /// - Current implementation: Compile-time detection (assumes AVX2 on modern x86_64)
+    /// Compile-time answer: true on every x86_64 build, false otherwise. It assumes AVX2 without runtime detection,
+    /// so it can be wrong on x86_64 CPUs without AVX2 (not verified).
     public static let hasAVX2: Bool = {
         #if arch(x86_64)
-        // Conservative: assume AVX2 available on x86_64 (2013+)
-        // For runtime detection, would need CPUID instruction (requires assembly/intrinsics)
+        // Assumed, not detected (unverified on the running CPU)
         return true
         #else
         return false
         #endif
     }()
 
-    /// True if platform has x86 AVX-512 SIMD instructions
-    ///
-    /// - Note: AVX-512 rare on consumer hardware (mainly Xeon/EPYC server chips)
-    /// - Apple Silicon does NOT have AVX-512
+    /// Always false: no AVX-512 detection is performed.
     public static let hasAVX512: Bool = {
         #if arch(x86_64)
-        // Requires runtime CPUID detection - disabled by default for safety
-        // AVX-512 causes thermal throttling on many Intel chips
+        // Not detected; always false. (AVX-512 frequency and thermal behaviour is a cited concern, not verified here.)
         return false
         #else
         return false
         #endif
     }()
 
-    /// Optimal SIMD register width in Float elements
+    /// SIMD register width in Float elements by architecture (compile-time; "optimal" is not measured)
     ///
     /// - ARM NEON: 4 elements (128-bit registers)
     /// - x86 AVX2: 8 elements (256-bit registers)
@@ -5139,18 +5109,15 @@ public enum PlatformCapabilities {
         #endif
     }()
 
-    /// Estimated L3 cache size for the platform (in bytes)
-    ///
-    /// Used for autotuning decisions about when to use SoA layouts
-    /// - Apple M1/M2: 8-12 MB
-    /// - Apple M3/M4: 16-24 MB
-    /// - Intel/AMD: Highly variable (8-64 MB), use conservative estimate
+    /// Assumed last-level cache size in bytes by architecture (compile-time constant: 8 MiB on arm64, 16 MiB on
+    /// x86_64, 4 MiB otherwise). These are unverified hardware assumptions, not detected sizes, and no caller in
+    /// Sources/ or Benchmarks/ uses them.
     public static let estimatedL3CacheSize: Int = {
         #if arch(arm64)
         // Apple Silicon: conservative estimate for M1/M2
         return 8 * 1024 * 1024  // 8 MB
         #elseif arch(x86_64)
-        // x86: very conservative (desktop chips typically have 16-32 MB)
+        // x86: assumed (unverified)
         return 16 * 1024 * 1024  // 16 MB
         #else
         return 4 * 1024 * 1024   // 4 MB fallback
@@ -5160,13 +5127,12 @@ public enum PlatformCapabilities {
 
 // MARK: - Mixed Precision Provider Integration
 
-/// High-level provider implementing DistanceProvider protocol with automatic mixed-precision optimization
+/// Internal DistanceProvider that routes 512-dim Euclidean batches of at least `minBatchSizeForMixedPrecision`
+/// candidates through the FP16 SoA kernels; every other case uses FP32 kernels.
 ///
-/// # Automatic Precision Selection
-/// This provider automatically selects FP16 or FP32 based on:
-/// 1. Batch size (larger batches benefit more from FP16 bandwidth)
-/// 2. Platform capabilities (Apple Silicon has hardware FP16)
-/// 3. AutoTuner calibration data (if available)
+/// # Precision Selection
+/// The only inputs are the candidate count (against the threshold, whose default differs by architecture),
+/// the vector type and the metric. The stored `autoTuner` is not consulted.
 ///
 /// # Example Usage
 /// ```swift
@@ -5178,20 +5144,19 @@ public enum PlatformCapabilities {
 /// )
 /// ```
 ///
-/// - Note: Requires Phase 2 MixedPrecisionAutoTuner to be initialized for optimal performance
+/// - Note: The optional MixedPrecisionAutoTuner is stored but not used by `distance` or `batchDistance`.
 internal struct MixedPrecisionProvider: DistanceProvider {
 
-    /// Threshold for batch size to enable mixed precision
-    /// Below this threshold, FP32 is used (conversion overhead dominates)
+    /// Batch-size threshold: below it, FP32 is used. The conversion-overhead rationale is not verified.
     private let minBatchSizeForMixedPrecision: Int
 
-    /// AutoTuner reference (optional, enables dynamic optimization)
+    /// AutoTuner reference (stored; not consulted by distance or batchDistance)
     private let autoTuner: MixedPrecisionAutoTuner?
 
     /// Initialize provider with custom thresholds
     /// - Parameters:
     ///   - minBatchSize: Minimum batch size to enable FP16 (default: 32 on ARM, 64 on x86)
-    ///   - autoTuner: Optional AutoTuner for dynamic optimization
+    ///   - autoTuner: Optional AutoTuner (stored, currently unused)
     public init(
         minBatchSize: Int? = nil,
         autoTuner: MixedPrecisionAutoTuner? = nil
@@ -5201,10 +5166,10 @@ internal struct MixedPrecisionProvider: DistanceProvider {
             self.minBatchSizeForMixedPrecision = minBatchSize
         } else {
             #if arch(arm64)
-            // Apple Silicon: lower threshold due to hardware FP16
+            // arm64 default 32 (rationale not verified; package builds use the software FP16 conversion)
             self.minBatchSizeForMixedPrecision = 32
             #else
-            // x86: higher threshold due to software FP16 conversion
+            // other architectures: default 64 (rationale not verified)
             self.minBatchSizeForMixedPrecision = 64
             #endif
         }
@@ -5223,8 +5188,7 @@ internal struct MixedPrecisionProvider: DistanceProvider {
         metric: SupportedDistanceMetric
     ) async throws -> Float where T.Scalar == Float {
 
-        // For single distances, mixed precision rarely beneficial (conversion overhead)
-        // Delegate to standard implementation
+        // Single distances always use the FP32 kernels (no FP16 path); no cost comparison is measured
         switch metric {
         case .euclidean:
             if let v1 = vector1 as? Vector512Optimized, let v2 = vector2 as? Vector512Optimized {
@@ -5246,11 +5210,11 @@ internal struct MixedPrecisionProvider: DistanceProvider {
         }
     }
 
-    /// Compute batch distances from query to multiple candidates with automatic precision selection
+    /// Compute batch distances; FP16 is used only for 512-dim Euclidean batches at or above the threshold
     /// - Parameters:
     ///   - query: Query vector
     ///   - candidates: Array of candidate vectors
-    ///   - metric: Distance metric (euclidean and cosine have FP16 fast paths)
+    ///   - metric: Distance metric (only euclidean has an FP16 path; cosine and the rest use FP32)
     /// - Returns: Array of distances
     public func batchDistance<T: VectorProtocol>(
         from query: T,
@@ -5261,9 +5225,9 @@ internal struct MixedPrecisionProvider: DistanceProvider {
         // Check if we should use mixed precision
         let useMixedPrecision = candidates.count >= minBatchSizeForMixedPrecision
 
-        // Only Vector512Optimized has FP16 fast paths currently
+        // Only Vector512Optimized has an FP16 path
         guard let query512 = query as? Vector512Optimized,
-              let candidates512 = candidates as? [Vector512Optimized],
+              let candidates512 = exactArray(candidates, as: Vector512Optimized.self),
               useMixedPrecision else {
             // Fallback to standard per-vector computation
             return candidates.map { query.distance(to: $0, metric: metric) }
@@ -5301,7 +5265,7 @@ internal struct MixedPrecisionProvider: DistanceProvider {
 
         results.withUnsafeMutableBufferPointer { buffer in
             if useBlockedKernel {
-                // Use register-blocked kernel for large batches (30-50% faster)
+                // Register-blocked kernel for 16 or more candidates (no speed comparison is measured)
                 MixedPrecisionKernels.batchEuclideanBlocked512(
                     query: query,
                     candidates: candidatesSoA,
@@ -5321,16 +5285,21 @@ internal struct MixedPrecisionProvider: DistanceProvider {
     }
 }
 
-// MARK: - Platform-Specific SIMD Optimizations
+// MARK: - Platform-Specific Conversion Paths
 
 extension MixedPrecisionKernels {
 
-    /// Platform-optimized FP32→FP16 batch conversion
+    /// FP32→FP16 batch conversion with a per-architecture loop
     ///
-    /// # Platform Optimizations
-    /// - **ARM NEON**: Uses vcvt_f16_f32 hardware instruction (1 cycle latency)
-    /// - **x86 AVX2**: Uses software conversion with AVX2 vectorization
-    /// - **Fallback**: Scalar conversion with IEEE 754 bit manipulation
+    /// arm64 converts the non-NaN lanes of SIMD4-sized chunks through `Float16(_:)`, and NaN lanes and the tail through
+    /// `fp32ToFp16_scalar`; x86_64 uses the software `fp32ToFp16_scalar` in SIMD4-sized chunks; other architectures use
+    /// the scalar loop. Which instructions the compiler emits, and their latency, are not verified.
+    ///
+    /// NaN policy: every NaN input becomes sign | 0x7E00, in chunks and tail alike; no payload is kept
+    /// (FP16ConverterExhaustiveTests.nanEncodePlatformBatchChunks, nanEncodePlatformBatchTail). On the round-trip and
+    /// rounding inputs of roundTripAllNonNaNPatterns and encodeRoundToNearestEvenNeighbours, chunk and tail lanes equal
+    /// `fp32ToFp16_scalar`. Those tests run the loop of the host architecture in the default floating-point
+    /// environment; agreement of the arm64 chunk lanes under another rounding or flush-to-zero mode is not verified.
     ///
     /// - Parameters:
     ///   - source: FP32 source buffer
@@ -5344,10 +5313,11 @@ extension MixedPrecisionKernels {
         precondition(source.count == destination.count, "Source and destination buffers must have same count")
 
         #if arch(arm64)
-        // ARM NEON path: hardware FP16 conversion
+        // arm64 path: Float16(_:) for non-NaN chunk lanes, fp32ToFp16_scalar for NaN lanes and the tail (instruction
+        // selection not verified)
         convertBatchNEON(source: source, destination: destination)
         #elseif arch(x86_64)
-        // x86 AVX2 path: vectorized software conversion
+        // x86_64 path: software conversion in SIMD4-sized chunks (vectorization not verified)
         convertBatchAVX2(source: source, destination: destination)
         #else
         // Fallback: scalar conversion
@@ -5358,8 +5328,9 @@ extension MixedPrecisionKernels {
     }
 
     #if arch(arm64)
-    /// ARM NEON hardware FP16 conversion
-    /// - Note: Uses vcvt_f16_f32 instruction (1-cycle latency, 2-element throughput)
+    /// arm64 FP16 conversion: `Float16(_:)` for the non-NaN lanes of each SIMD4 chunk, and `fp32ToFp16_scalar` for NaN
+    /// lanes (sign | 0x7E00, the NaN policy in the type doc) and for the tail
+    /// - Note: The emitted instruction is not verified.
     @inlinable
     static func convertBatchNEON(
         source: UnsafeBufferPointer<Float>,
@@ -5378,17 +5349,12 @@ extension MixedPrecisionKernels {
                 source[i + 3]
             )
 
-            // Hardware FP16 conversion via Float16 type
-            // Swift compiler emits vcvt_f16_f32 NEON instruction
-            let fp16_0 = Float16(fp32Vec[0])
-            let fp16_1 = Float16(fp32Vec[1])
-            let fp16_2 = Float16(fp32Vec[2])
-            let fp16_3 = Float16(fp32Vec[3])
-
-            destination[i + 0] = fp16_0.bitPattern
-            destination[i + 1] = fp16_1.bitPattern
-            destination[i + 2] = fp16_2.bitPattern
-            destination[i + 3] = fp16_3.bitPattern
+            // A NaN lane takes fp32ToFp16_scalar, which returns sign | 0x7E00 (the NaN policy in the type doc); any
+            // other lane converts through Float16(_:) (instruction selection not verified)
+            destination[i + 0] = fp32Vec[0].isNaN ? fp32ToFp16_scalar(fp32Vec[0]) : Float16(fp32Vec[0]).bitPattern
+            destination[i + 1] = fp32Vec[1].isNaN ? fp32ToFp16_scalar(fp32Vec[1]) : Float16(fp32Vec[1]).bitPattern
+            destination[i + 2] = fp32Vec[2].isNaN ? fp32ToFp16_scalar(fp32Vec[2]) : Float16(fp32Vec[2]).bitPattern
+            destination[i + 3] = fp32Vec[3].isNaN ? fp32ToFp16_scalar(fp32Vec[3]) : Float16(fp32Vec[3]).bitPattern
 
             i += 4
         }
@@ -5402,8 +5368,8 @@ extension MixedPrecisionKernels {
     #endif
 
     #if arch(x86_64)
-    /// x86 AVX2 vectorized FP16 conversion (software conversion with SIMD acceleration)
-    /// - Note: No native FP16 on most x86 chips, but AVX2 can vectorize the bit manipulation
+    /// x86_64 software FP16 conversion in SIMD4-sized chunks. No AVX2-specific code is used; whether the compiler
+    /// vectorizes the loop is not verified.
     @inlinable
     static func convertBatchAVX2(
         source: UnsafeBufferPointer<Float>,
@@ -5414,7 +5380,7 @@ extension MixedPrecisionKernels {
         let count = source.count
         var i = 0
 
-        // Process in SIMD4 chunks (compiler may auto-vectorize to AVX)
+        // Process in SIMD4-sized chunks (auto-vectorization not verified)
         while i + 3 < count {
             let fp32Vec = SIMD4<Float>(
                 source[i + 0],
@@ -5423,7 +5389,7 @@ extension MixedPrecisionKernels {
                 source[i + 3]
             )
 
-            // Software conversion (compiler vectorizes)
+            // Software conversion (vectorization not verified)
             destination[i + 0] = fp32ToFp16_scalar(fp32Vec[0])
             destination[i + 1] = fp32ToFp16_scalar(fp32Vec[1])
             destination[i + 2] = fp32ToFp16_scalar(fp32Vec[2])

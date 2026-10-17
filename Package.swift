@@ -33,6 +33,8 @@ let package = Package(
             name: "VectorCore",
             dependencies: ["VectorCoreC"],
             swiftSettings: [
+                .define("VC_SWIFTPM_DEBUG", .when(configuration: .debug)),
+                .define("VC_SWIFTPM_RELEASE", .when(configuration: .release)),
                 .enableExperimentalFeature("StrictConcurrency"),
                 .enableUpcomingFeature("ExistentialAny")
             ]
@@ -90,11 +92,21 @@ let package = Package(
             dependencies: ["VectorCore"],
             swiftSettings: [ .enableExperimentalFeature("StrictConcurrency") ]
         ),
+        .testTarget(name: "BenchmarkContractTests", dependencies: ["VectorCoreBenchSupport", "VectorCoreBenchmarking"]),
         // Benchmark executable target (Phase 1 scaffold)
+        .target(
+            name: "VectorCoreBenchSupport",
+            dependencies: ["VectorCore", "VectorCoreBenchmarking"],
+            path: "Benchmarks/VectorCoreBench",
+            swiftSettings: [
+                .define("VC_SWIFTPM_DEBUG", .when(configuration: .debug)),
+                .define("VC_SWIFTPM_RELEASE", .when(configuration: .release))
+            ]
+        ),
         .executableTarget(
             name: "VectorCoreBench",
-            dependencies: ["VectorCore", "VectorCoreBenchmarking"],
-            path: "Benchmarks/VectorCoreBench"
+            dependencies: ["VectorCoreBenchSupport"],
+            path: "Benchmarks/VectorCoreBenchCLI"
         )
     ]
 )

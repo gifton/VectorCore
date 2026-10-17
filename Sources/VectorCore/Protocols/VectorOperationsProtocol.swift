@@ -13,10 +13,12 @@ public protocol VectorCoreOperations: VectorProtocol {
     /// Element-wise maximum
     func max(_ other: Self) -> Self
 
-    /// Find minimum element and index
+    /// Find minimum element and index. Requires a nonempty vector; `Vector` stops with a precondition failure at
+    /// width 0 (D02DegenerateWidthTests).
     func minElement() -> (value: Float, index: Int)
 
-    /// Find maximum element and index
+    /// Find maximum element and index. Requires a nonempty vector; `Vector` stops with a precondition failure at
+    /// width 0 (D02DegenerateWidthTests).
     func maxElement() -> (value: Float, index: Int)
 
     /// Clamp values to range
@@ -38,8 +40,8 @@ public protocol VectorCoreOperations: VectorProtocol {
     func squareRoot() -> Self
 }
 
-// Make Vector conform when storage supports operations
-extension Vector: VectorCoreOperations where D.Storage: VectorStorageOperations {}
+// Every Vector<D> conforms, for every static dimension (D02 removed the storage gate).
+extension Vector: VectorCoreOperations {}
 
 // Convenience operators
 infix operator .< : ComparisonPrecedence

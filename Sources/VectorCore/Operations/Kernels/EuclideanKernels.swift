@@ -2,8 +2,8 @@
 //  EuclideanKernels.swift
 //  VectorCore
 //
-//  CPU-only, SIMD-optimized Euclidean distance kernels for optimized vectors.
-//  Uses 4 accumulators and stride-16 over SIMD4<Float> lanes for high ILP.
+//  CPU-only Euclidean distance kernels for the optimized vector types.
+//  Uses 4 accumulators and stride-16 over SIMD4<Float> lanes.
 //
 
 import Foundation

@@ -1,0 +1,67 @@
+{
+  "worker_index_sha256": "7009a6beff5877d2b63d8931f0ae0f061a930fe5476ab1e717b5f1702b45ab82",
+  "sealed_entries": 10312,
+  "source_files": 356,
+  "owned_paths": 33,
+  "stages": [
+    {
+      "source": "v1",
+      "xctest_methods": 20,
+      "swift_testing_functions": 1,
+      "retained_entries": 431,
+      "q01_children": null
+    },
+    {
+      "source": "v3",
+      "xctest_methods": 20,
+      "swift_testing_functions": 1,
+      "retained_entries": 430,
+      "q01_children": null
+    },
+    {
+      "source": "v6",
+      "xctest_methods": 2,
+      "swift_testing_functions": 0,
+      "retained_entries": 352,
+      "q01_children": null
+    },
+    {
+      "source": "v7",
+      "xctest_methods": 10,
+      "swift_testing_functions": 3,
+      "retained_entries": 352,
+      "q01_children": {
+        "total": 100,
+        "fatal": 99,
+        "valid": 1
+      }
+    },
+    {
+      "source": "v7",
+      "xctest_methods": 10,
+      "swift_testing_functions": 3,
+      "retained_entries": 351,
+      "q01_children": {
+        "total": 100,
+        "fatal": 99,
+        "valid": 1
+      }
+    }
+  ],
+  "command_records": {
+    "selection-debug-v3": 51,
+    "selection-release-v3": 51,
+    "v01-cli-debug-v3": 13,
+    "v01-cli-release-v3": 13,
+    "reporting-final-v5": 131,
+    "actual-matrix-comparator-v3": 6,
+    "validation-asan-v6/bounded-runtime": 2
+  },
+  "version_bridge": "Exact inventory deltas checked; v7 adds only the independently approved Interop annotations to earlier Swift bodies.",
+  "qualifications": [
+    "No new runtime; prior-version binaries remain labeled by actual freeze.",
+    "Two inherited Debug write-failure captures were overwritten; parent assertions and separate final CLI captures remain.",
+    "Q01 child outcomes use retained logs and source-associated successful parent assertions; no independent child PID/status claim.",
+    "Four-cell arithmetic/provenance and comparator RED/CSV independent verification are separate root records."
+  ]
+}

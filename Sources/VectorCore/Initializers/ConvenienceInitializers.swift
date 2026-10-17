@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - Vector Convenience Initializers
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
     // MARK: Basis Vectors
 
@@ -63,8 +63,10 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// Create a vector with linearly spaced values
     /// - Parameters:
     ///   - from: Starting value
-    ///   - to: Ending value (inclusive)
-    /// - Returns: Vector with values linearly interpolated from start to end
+    ///   - to: Ending value (inclusive when the width is at least 2)
+    /// - Returns: Vector with values linearly interpolated from start to end. Below width 2 there is no room for
+    ///   both ends: width 1 returns `[from]` and width 0 an empty vector (D02DegenerateWidthTests; behaviour
+    ///   unchanged by D02, now documented).
     @inlinable
     static func linspace(from: Float, to: Float) -> Vector<D> {
         let n = D.value
@@ -348,7 +350,7 @@ public extension DynamicVector {
 
 // MARK: - Type Aliases for Common Patterns
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
     /// Standard unit vector along X axis (first component)
     static var unitX: Vector<D> { basis(axis: 0) }
 

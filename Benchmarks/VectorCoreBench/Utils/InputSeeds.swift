@@ -58,5 +58,8 @@ public enum InputSeeds {
         let baseSeed = mix(cBase &+ UInt64(n), with: runSeed)
         return (querySeed, baseSeed)
     }
+    public static func matrix(dim: Int, row: Int, runSeed: UInt64) -> UInt64 {
+        mix(UInt64(dim) &* 1_000_003 &+ UInt64(row) &* 0xD6E8FEB86659FD93, with: runSeed)
+    }
 }
 

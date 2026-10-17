@@ -1,0 +1,8 @@
+Revision: 8b02e75bca7055ae11170873d15c06f1538709b7
+Original probes reviewed: la_probe.swift, umap_probe.swift, batch_probe.swift, reduced-probes/Probe.swift, build_probe.py under /private/tmp/vectorcore-review-2026-09-14.
+Fresh full-library Release link command:
+python3 /private/tmp/vectorcore-review-2026-09-14/build_probe.py /private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/NumericProbe.swift release > /private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/compile.log 2>&1
+First sandbox attempt failed on module-cache write; same command retried with approved escalation and exited 0.
+Execute:
+/private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/NumericProbe > /private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/results.log 2>&1
+Exited 0. Uses current repository Release objects, no source extraction/stubs; @testable access only for internal calibration/validator methods. Aligned allocation explicitly supplies pointer precondition. No package rebuild by this agent.

@@ -63,7 +63,8 @@ private enum LA {
     }
 
     static func maxAbsDiff(_ a: [Float], _ b: [Float]) -> Float {
-        zip(a, b).reduce(0) { Swift.max($0, abs($1.0 - $1.1)) }
+        guard a.count == b.count, a.allSatisfy(\.isFinite), b.allSatisfy(\.isFinite) else { return .infinity }
+        return zip(a, b).reduce(0) { Swift.max($0, abs($1.0 - $1.1)) }
     }
 
     /// Runs `body`, returning the thrown VectorError kind (nil = didn't
@@ -81,11 +82,13 @@ private enum LA {
 
     /// max |GᵀG − I| over a column-major m×n G — orthonormality defect.
     static func orthoDefect(_ g: [Float], rows m: Int, columns n: Int) -> Float {
+        guard g.count == m * n, g.allSatisfy(\.isFinite) else { return .infinity }
         var worst: Float = 0
         for j1 in 0..<n {
             for j2 in j1..<n {
                 var dot: Float = 0
                 for i in 0..<m { dot += g[j1 * m + i] * g[j2 * m + i] }
+                guard dot.isFinite else { return .infinity }
                 let target: Float = j1 == j2 ? 1 : 0
                 worst = Swift.max(worst, abs(dot - target))
             }
@@ -198,7 +201,8 @@ struct SymmetricEigenSuite {
                 var worst: Float = 0
                 for j in 0..<n {
                     for i in 0..<n {
-                        worst = max(worst, abs(av[j * n + i] - v[j * n + i] * e.eigenvalues[j]))
+                        let residual = abs(av[j * n + i] - v[j * n + i] * e.eigenvalues[j])
+                        worst = residual.isFinite ? max(worst, residual) : .infinity
                     }
                 }
                 #expect(worst < 1e-3, "\(name) n=\(n): |AV − VΛ| = \(worst)")

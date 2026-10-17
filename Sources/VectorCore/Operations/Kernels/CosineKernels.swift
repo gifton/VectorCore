@@ -2,7 +2,7 @@
 //  CosineKernels.swift
 //  VectorCore
 //
-//  CPU-only, SIMD-optimized cosine distance kernels.
+//  CPU-only cosine distance kernels over `SIMD4<Float>` lanes.
 //  Provides fused one-pass variants and pre-normalized fast paths.
 //
 
@@ -12,7 +12,13 @@ import simd
 @usableFromInline
 internal enum CosineKernels {
 
-    // Helper for safe division/clamping and zero-magnitude guards
+    // Helper for safe division/clamping and zero-magnitude guards.
+    //
+    // Exceptional values (T15 policy; T15CosineExceptionalTableTests.sharedHelperScalarTable and the helper rows of
+    // everyImplementationFollowsThePolicy): a NaN or infinite squared norm on either side gives NaN, even when the
+    // other side is zero; a squared norm at or below the floor below is a zero vector, and a zero vector on either
+    // side (or both) gives distance 1; a non-finite similarity gives NaN (`Float.nan`). The [-1, 1] clamp applies
+    // only to a finite similarity, so a NaN can no longer become distance 0 through `min(1, NaN) == 1`.
     @inline(__always)
     public static func calculateCosineDistance(dot: Float, sumAA: Float, sumBB: Float) -> Float {
         // Absolute floor on the squared magnitudes. `Float.leastNormalMagnitude`
@@ -20,16 +26,19 @@ internal enum CosineKernels {
         // the previous hardcoded 1e-9 floor corresponds to a magnitude of ~3.16e-5
         // and wrongly classified small-but-valid vectors as zero (distance 1.0).
         let epsilon = Float.leastNormalMagnitude
-        // Guard each factor independently. Forming the product sumAA * sumBB can
-        // overflow to +Inf for large unnormalized vectors (e.g. ~9e38 each), which
-        // would make dot/Inf collapse to 0 and yield a spurious distance of 1.0.
+        // Guard each factor independently. Forming the product sumAA * sumBB overflows
+        // to +Inf once it exceeds Float.greatestFiniteMagnitude (~3.4e38), for example
+        // sumAA = sumBB = 3e38, which would make dot/Inf collapse to 0 and yield a spurious
+        // distance of 1.0 (CosineKernelsTests.testCosineDistanceNoOverflowForHugeIdenticalDirection).
         if sumAA <= epsilon || sumBB <= epsilon {
-            // Both near-zero → distance 0; else one is zero → distance 1
-            return (sumAA <= epsilon && sumBB <= epsilon) ? 0.0 : 1.0
+            // A NaN or infinite squared norm dominates the zero rule; otherwise one or both zero → distance 1
+            guard sumAA.isFinite && sumBB.isFinite else { return .nan }
+            return 1.0
         }
         // denom = sqrt(sumAA * sumBB) computed as sqrt(sumAA) * sqrt(sumBB) to avoid overflow.
         let denom = sqrt(sumAA) * sqrt(sumBB)
         let similarity = dot / denom
+        guard similarity.isFinite else { return .nan }
         let clamped = max(-1.0, min(1.0, similarity))
         return 1.0 - clamped
     }
@@ -95,6 +104,90 @@ internal enum CosineKernels {
         return calculateCosineDistance(dot: dot, sumAA: sumAA, sumBB: sumBB)
     }
 
+    // MARK: - The fused arithmetic for range and Top-K loops (T14 phase 3)
+    //
+    // `fusedSquaredNorm`, `fusedCandidate` and `fusedPair` perform `fused`'s operations: lane group g of each 16-group
+    // stride accumulates into accumulator g % 4 with `addProduct`, strides in increasing order, and each quantity
+    // reduces as `((x0 + x1) + (x2 + x3)).sum()`. A query's squared norm does not depend on the candidate, so computing it
+    // once gives the value `fused` computes in each call, and `fusedPair` keeps two candidates' accumulators apart in one
+    // pass. Each result therefore equals `fused(storageA: query, storageB: candidate)` bit for bit; checked by
+    // BatchKernelsRangeClosureTests.pairSlotsEqualTheOddTail (pair slots against the odd tail) and
+    // MetricWitnessEquivalenceTests (witness against the Top-K and range routes). The search pair loops' arithmetic is
+    // checked by MetricSearchWitnessConsistencyTests (search equals witness, k-independence, candidate-count
+    // independence) and BatchKernelsRangeClosureTests (the closure and chunk-size tests); the T15 bit groups
+    // (T15CosineExceptionalTableTests) do not exercise the pair loops.
+
+    /// The squared norm of `x` in `fused`'s accumulator layout (its `sumAA` for `storageA = x`).
+    @inline(__always)
+    @usableFromInline
+    static func fusedSquaredNorm(_ x: ContiguousArray<SIMD4<Float>>, laneCount: Int) -> Float {
+        #if DEBUG
+        assert(x.count == laneCount && laneCount % 16 == 0, "Lane count must match and be a multiple of 16.")
+        #endif
+        var n0 = SIMD4<Float>(), n1 = SIMD4<Float>(), n2 = SIMD4<Float>(), n3 = SIMD4<Float>()
+        for i in stride(from: 0, to: laneCount, by: 16) {
+            for g in stride(from: i, to: i + 16, by: 4) {
+                n0.addProduct(x[g], x[g]); n1.addProduct(x[g + 1], x[g + 1])
+                n2.addProduct(x[g + 2], x[g + 2]); n3.addProduct(x[g + 3], x[g + 3])
+            }
+        }
+        return ((n0 + n1) + (n2 + n3)).sum()
+    }
+
+    /// `fused(storageA: query, storageB: candidate)` with the query's `fusedSquaredNorm` given (the Top-K kernel).
+    @inline(__always)
+    @usableFromInline
+    static func fusedCandidate(query q: ContiguousArray<SIMD4<Float>>, queryNorm: Float,
+                               _ c: ContiguousArray<SIMD4<Float>>, laneCount: Int) -> Float {
+        #if DEBUG
+        assert(q.count == laneCount && c.count == laneCount && laneCount % 16 == 0, "Storage count mismatch")
+        #endif
+        var d0 = SIMD4<Float>(), d1 = SIMD4<Float>(), d2 = SIMD4<Float>(), d3 = SIMD4<Float>()
+        var n0 = SIMD4<Float>(), n1 = SIMD4<Float>(), n2 = SIMD4<Float>(), n3 = SIMD4<Float>()
+        for i in stride(from: 0, to: laneCount, by: 16) {
+            for g in stride(from: i, to: i + 16, by: 4) {
+                d0.addProduct(q[g], c[g]); n0.addProduct(c[g], c[g])
+                d1.addProduct(q[g + 1], c[g + 1]); n1.addProduct(c[g + 1], c[g + 1])
+                d2.addProduct(q[g + 2], c[g + 2]); n2.addProduct(c[g + 2], c[g + 2])
+                d3.addProduct(q[g + 3], c[g + 3]); n3.addProduct(c[g + 3], c[g + 3])
+            }
+        }
+        let dot = ((d0 + d1) + (d2 + d3)).sum()
+        return calculateCosineDistance(dot: dot, sumAA: queryNorm, sumBB: ((n0 + n1) + (n2 + n3)).sum())
+    }
+
+    /// `fusedCandidate` for two candidates in one pass, with separate accumulators (the `BatchKernels` fused cosine pair
+    /// loops).
+    @inline(__always)
+    static func fusedPair(query q: ContiguousArray<SIMD4<Float>>, queryNorm: Float,
+                          _ c0: ContiguousArray<SIMD4<Float>>, _ c1: ContiguousArray<SIMD4<Float>>,
+                          laneCount: Int) -> (Float, Float) {
+        #if DEBUG
+        assert(q.count == laneCount && c0.count == laneCount && c1.count == laneCount && laneCount % 16 == 0,
+               "Storage count mismatch")
+        #endif
+        var d00 = SIMD4<Float>(), d01 = SIMD4<Float>(), d02 = SIMD4<Float>(), d03 = SIMD4<Float>()
+        var n00 = SIMD4<Float>(), n01 = SIMD4<Float>(), n02 = SIMD4<Float>(), n03 = SIMD4<Float>()
+        var d10 = SIMD4<Float>(), d11 = SIMD4<Float>(), d12 = SIMD4<Float>(), d13 = SIMD4<Float>()
+        var n10 = SIMD4<Float>(), n11 = SIMD4<Float>(), n12 = SIMD4<Float>(), n13 = SIMD4<Float>()
+        for i in stride(from: 0, to: laneCount, by: 16) {
+            for g in stride(from: i, to: i + 16, by: 4) {
+                let q0 = q[g], q1 = q[g + 1], q2 = q[g + 2], q3 = q[g + 3]
+                let x0 = c0[g], x1 = c0[g + 1], x2 = c0[g + 2], x3 = c0[g + 3]
+                let y0 = c1[g], y1 = c1[g + 1], y2 = c1[g + 2], y3 = c1[g + 3]
+                d00.addProduct(q0, x0); n00.addProduct(x0, x0); d10.addProduct(q0, y0); n10.addProduct(y0, y0)
+                d01.addProduct(q1, x1); n01.addProduct(x1, x1); d11.addProduct(q1, y1); n11.addProduct(y1, y1)
+                d02.addProduct(q2, x2); n02.addProduct(x2, x2); d12.addProduct(q2, y2); n12.addProduct(y2, y2)
+                d03.addProduct(q3, x3); n03.addProduct(x3, x3); d13.addProduct(q3, y3); n13.addProduct(y3, y3)
+            }
+        }
+        let first = calculateCosineDistance(dot: ((d00 + d01) + (d02 + d03)).sum(), sumAA: queryNorm,
+                                            sumBB: ((n00 + n01) + (n02 + n03)).sum())
+        let second = calculateCosineDistance(dot: ((d10 + d11) + (d12 + d13)).sum(), sumAA: queryNorm,
+                                             sumBB: ((n10 + n11) + (n12 + n13)).sum())
+        return (first, second)
+    }
+
     // MARK: - Public fused per-dimension
 
     public static func distance384_fused(_ a: Vector384Optimized, _ b: Vector384Optimized) -> Float {
@@ -111,25 +204,27 @@ internal enum CosineKernels {
     }
 
     // MARK: - Pre-normalized fast paths (1 − dot)
+    // A non-finite dot (any NaN or infinite coordinate) gives NaN; the clamp applies only to a finite dot
+    // (T15CosineExceptionalTableTests, CK.pre rows).
 
     @inline(__always)
     public static func distance384_preNormalized(_ a: Vector384Optimized, _ b: Vector384Optimized) -> Float {
         let dot = DotKernels.dot384(a, b)
-        return 1.0 - max(-1.0, min(1.0, dot))
+        return dot.isFinite ? 1.0 - max(-1.0, min(1.0, dot)) : .nan
     }
     @inline(__always)
     public static func distance512_preNormalized(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
         let dot = DotKernels.dot512(a, b)
-        return 1.0 - max(-1.0, min(1.0, dot))
+        return dot.isFinite ? 1.0 - max(-1.0, min(1.0, dot)) : .nan
     }
     @inline(__always)
     public static func distance768_preNormalized(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
         let dot = DotKernels.dot768(a, b)
-        return 1.0 - max(-1.0, min(1.0, dot))
+        return dot.isFinite ? 1.0 - max(-1.0, min(1.0, dot)) : .nan
     }
     @inline(__always)
     public static func distance1536_preNormalized(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
         let dot = DotKernels.dot1536(a, b)
-        return 1.0 - max(-1.0, min(1.0, dot))
+        return dot.isFinite ? 1.0 - max(-1.0, min(1.0, dot)) : .nan
     }
 }

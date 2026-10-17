@@ -1,0 +1,68 @@
+{
+  "task": "N01",
+  "status": "accepted-staged",
+  "task_base": "028b4aacc80249b745a89454008c7d2b9e5da154",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "NUM-01",
+    "NUM-02"
+  ],
+  "closed_execution_findings": [],
+  "partial_records": {
+    "API-39": "Core typed/generic/pointer/provider normalization and false-hint repair accepted; actual VectorAccelerate CPU paths and optionalGPU parity remain unexecuted/downstream deferred"
+  },
+  "validation": {
+    "red": "Separate scalar division6issues and extreme normalization8issues; isolated AccelerateFloat/Double binary division RED; normalRelease named-diagnostic RED retained",
+    "debug": "Frozen source exit0,100reported functions/10suites including parentchildentry;24deliberate childcases pass intended diagnostics",
+    "release": "Same frozen source exit0,100reported functions/10suites;24deliberate childcases pass intended diagnostics",
+    "asan": "Frozen source exit0,35reported functions/4suites=33actuallyexercised+2explicitguardnoops;zero deliberatechildren/zero findings",
+    "matrix": "Float/Double operators/providers/forwarders/tails/exactaliases/signedzeroIEEE; checked/unchecked/permissive/tolerance normalization; Float16widening; naturalpointeroffsets; all32safeNormalizedflags; actualhints/cache/MatrixGEMM/batch/providerwitnesses",
+    "oracles": "Independent Decimal at2500/3000digits agrees onall4Double normalization and4quotientfixtures; closed-form Floatbasis/four-equal/Pythagorean; idempotentfixturegenerator",
+    "provenance": "22matching frozen hashes, completepatch,271base/276archivecodefiles only22assignedchanges; all3finalloghashes verified; 169 retained evidence hashes incl144childcaptures"
+  },
+  "review": "reports/N01-implementation-review.md",
+  "evidence": "reports/N01-implementation.md",
+  "commands": "reports/N01-validation.json",
+  "root_verification": "reports/N01-root-verification.json",
+  "frozen_sha256": {
+    "Scripts/N01-reference-generator.py": "c8553d3ae4325d16d425dbd77e06e548a19d84efd287045c46e4fdc5e49b08ee",
+    "Sources/VectorCore/Integration/IndexableVector.swift": "c569c3333a01d1fa1395e58a87a6262309a55492d5326233ec31ec188a7f68e2",
+    "Sources/VectorCore/Operations/Kernels/NormCache.swift": "1d8502ae88833e6c1585e141ff2dd94f4c25a3f0963eb64c9e07052ff378bf7a",
+    "Sources/VectorCore/Operations/Kernels/NormalizationCore.swift": "96090efcae43162da52eb56f20f572f94c91d7c0f3fcc3b7585e87012f821590",
+    "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift": "8166172710571411748dc8f83a23706a7bf56c14e2a140bf2b703ee045409d2e",
+    "Sources/VectorCore/Operations/MatrixDistance.swift": "41b44d7735dc4a9a3341a057b6be3a08b2fab629e1f73cd5e7fa696fb6f4ef71",
+    "Sources/VectorCore/Operations/NaNInfinityHandling.swift": "1147a9c285398816a6088a72ef149e4df409100184ae4fbd0a4f3a389f3bc29c",
+    "Sources/VectorCore/Operations/TransformOperations.swift": "c0ba1d716ca5111a25de6e340b6fb4a45939be8044649ec835e89dc3eee4f938",
+    "Sources/VectorCore/Operations/VectorNormalization.swift": "3d4d23c82062ef94e5ddea2200a9c81d4dc01d15a214fd2f6a33a1643fc16b74",
+    "Sources/VectorCore/Platform/AccelerateSIMDProvider.swift": "0b01a3a179207338c55ffd782539071ea2d0fedeb9cb0cb727900ff999db0128",
+    "Sources/VectorCore/Platform/ArraySIMDProvider.swift": "bab1ec5f187ace38d13fe8c675b569d3428a3d11e3594097ad98d53e21aace70",
+    "Sources/VectorCore/Platform/SIMDProvider.swift": "84248991e5e51e546748be5eb2d106849322ab326d05d07b16939cf12fc9de1c",
+    "Sources/VectorCore/Platform/SwiftFloatSIMDProvider.swift": "1ec36989b56e9a1b49a3d72a9fbf045d22ace574cc828a00e55a2e4e89c88d78",
+    "Sources/VectorCore/Protocols/VectorFactory.swift": "17613252eeee311c70d1a97b63ff9583608c5b13a62bc61f09a2bcefb104336c",
+    "Sources/VectorCore/Protocols/VectorProtocol.swift": "2ad1ad2175ed9c53e5993d7c7f5bf624a6d9f7e5cc945d39aefc248151752dfe",
+    "Sources/VectorCore/Vectors/Vector1536Optimized.swift": "37f8ea53340794d320e9519c2b9768bf9be957625475f839aa279d74f3e68909",
+    "Sources/VectorCore/Vectors/Vector384Optimized.swift": "be7677467ae3ff650390cdb30e382c3c2e4fbe42f83ab4f1a9058d2df72f0f4f",
+    "Sources/VectorCore/Vectors/Vector512Optimized.swift": "96f8b02f662ec96c7933b394e068930c6e2b78959340c173129a9972403cc9d8",
+    "Sources/VectorCore/Vectors/Vector768Optimized.swift": "6dd4adec6d358da5b90a99d8dd0cedc4cac7cba89bdf7e306752930635a42b02",
+    "Tests/ComprehensiveTests/DivisionRangeContractTests.swift": "c8abf9b3743b9c7072d4b004d03f873af0ff85ec577efb4cfd158575650d19f9",
+    "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift": "de1ca764aefe6c14d64db4578e1806c44b8d8da8a5e0a0b17f0354c6c2031d10",
+    "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift": "c9f64f73ed1d479444f56d906d37dbdabba36775e34cc54073921fd742f58c1c"
+  },
+  "migrations": [
+    "Unchecked typed normalization rejects invalid nonempty input with named fatal guards inDebug/normalRelease; pointerzero dimension remains noaccess",
+    "Checked empty/nonfinite/zero normalization returns normalize invalidOperation and preserves input; finite extrema cannormalize even when scalar norm cannotfit",
+    "Permissivearray/fast/tolerance/batch invalidinputs preservebits; finite nonnegativetolerance validatedfirst andlarge tolerance mayreturnnonunitinput",
+    "safeNormalized preprocesses original nonfinite values underexistingflagprecedence beforestable normalization; zero strict/propagate/preserve policy explicit",
+    "Automatic normalized hints verify actualreturnedFloatcoordinates; lossywritebackmayyieldnil/false andnocachedunitmagnitude",
+    "Scalar/vector division nowuses native division, vectorzero divisorsstillreject; raw/array IEEE policy andexactaliases retained; Acceleratebinary same-classrepair approved",
+    "Noexistingtestexpectationschanged"
+  ],
+  "limitations": [
+    "ActualVectorAccelerateCPU/GPU paths remainunverified; API-39staged",
+    "Ordinary genericmagnitude/normcache/FP32cosine fullrange contracts remainoutside scope",
+    "Float80 unavailable onarm64; no exotic scalar/universal floatingpointerrortheorem",
+    "Generic normalization outputfidelity stillrequiresfaithfulconformerstorage; quantizedfidelity notpromised",
+    "No -Ounchecked, partialpointeroverlap, timing/throughput oroperating-envelope claim",
+    "Guardtimeoutcleanup source-reviewed, normalchildtrapcompletionexecuted"
+  ]
+}

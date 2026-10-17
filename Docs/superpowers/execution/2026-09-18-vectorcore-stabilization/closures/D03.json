@@ -1,0 +1,40 @@
+{
+  "task": "D03",
+  "status": "accepted",
+  "task_base": "596774c",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-31"
+  ],
+  "disposition_records": {
+    "API-31": "Logger reads minimumLevel once per call under the existing lock, then releases it. A gated call evaluates no message autoclosure and builds no location/format strings; an admitted call evaluates once, outside the lock, and reuses the string for OSLog and Debug console. All five wrappers and the VectorError overload are lazy (fallback error.description deferred until admitted; proven by a public-API SpyError test). PerformanceTimer uses ContinuousClock with one start Instant and cumulative elapsed; negative/NaN/±Inf thresholds and negative injected elapsed suppress the call without formatting. Public signatures and the default threshold are unchanged. RED: 10 gated cases evaluated their message on unchanged production."
+  },
+  "validation": {
+    "toolchain": "macOS 27 / Xcode 27.0 / Swift 6.4, swiftbuild",
+    "focused": "Logging(Contract|PublicConsumer)Tests|FP16DiagnosticsBoundaryTests: 23 tests/3 suites, Debug and Release (fix round 1)",
+    "public_child": "25-case public consumer child, mismatches 0",
+    "mutations": "message evaluated before the gate is caught by the 25-case matrix; lock held around the message is caught by the bounded reentrancy child at its 15 s deadline; eager fallback is caught by vectorErrorFallbackDescriptionIsLazy",
+    "reviewer_independent": "public-API spy on pristine 596774c: gated=2 (baseline) vs 0 (D03)",
+    "lint": "0"
+  },
+  "review": "reports/D03-review.md",
+  "rereview": "reports/D03-rereview-1.md",
+  "evidence": "reports/D03-implementation.md",
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/D03",
+  "patch_sha256": "f6a1a3f30f2480c519becddf2051e0011f87b41ae44546963ed40e84f1145381",
+  "frozen_sha256": {
+    "Sources/VectorCore/Errors/VectorError.swift": "708c2b3a368503cf05829b0251bc749b3605276f4d0b574c2a18cb151ef73664",
+    "Sources/VectorCore/Logging/Logger.swift": "e15df9204c20e6be4964ecd483386350461b81bb1de69fd00a850d4aef2a7fc2",
+    "Tests/ComprehensiveTests/LoggingContractTests.swift": "a311da6e1f762ead492b6397589e8dbee38d0b3270f3af30e82dc3302e133378",
+    "Tests/ComprehensiveTests/LoggingPublicConsumerTests.swift": "a8b34f4f9cbfa1a8cf25956d73ca1d98a8b6f1c63f8258e45eb79578d79525ca"
+  },
+  "migrations": [
+    "No public signature change. VectorError.swift:92 doc example now uses the real error.log(to:) API."
+  ],
+  "limitations": [
+    "No measured logging-overhead or latency claim; no blanket thread-safety claim.",
+    "OSLog persistence/filtering of admitted records not promised.",
+    "Timer no-formatting on rejection rests on adjacent code composed with matrix-proven debug laziness (no spy possible without a new seam).",
+    "Logger/os.Logger name collision is owned by D02."
+  ]
+}

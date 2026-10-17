@@ -8,7 +8,8 @@ struct MixedPrecisionPerformanceBenchmark {
 
     // MARK: - Benchmark Utilities
 
-    /// Precise timing using mach_absolute_time
+    /// Timing with mach_absolute_time (host timebase ticks). The timed bodies discard their results (`_ = ...`), so the
+    /// printed figures are observations, not performance evidence (claim ledger recordedSites, Q17).
     struct PrecisionTimer {
         private static let timebaseInfo: mach_timebase_info_data_t = {
             var info = mach_timebase_info_data_t()
@@ -97,8 +98,8 @@ struct MixedPrecisionPerformanceBenchmark {
         print("FP16×FP32:  \(String(format: "%.2f", fp16x32.median)) ns (speedup: \(String(format: "%.2fx", speedup16x32)))")
 
         // Validate speedup expectations
-        #expect(speedup16x16 > 1.0, "FP16×FP16 should be faster than FP32×FP32")
-        #expect(speedup32x16 > 1.0, "FP32×FP16 should show some speedup")
+        expectPerformance("MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.1", speedup16x16 > 1.0, "FP16×FP16 should be faster than FP32×FP32")
+        expectPerformance("MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.2", speedup32x16 > 1.0, "FP32×FP16 should show some speedup")
     }
 
     @Test("Latency: Cosine 512-dim (all precision combinations)", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
@@ -131,7 +132,7 @@ struct MixedPrecisionPerformanceBenchmark {
         let speedup32x16 = fp32x32.median / fp32x16.median
         print("FP32×FP16:  \(String(format: "%.2f", fp32x16.median)) ns (speedup: \(String(format: "%.2fx", speedup32x16)))")
 
-        #expect(speedup16x16 > 1.0, "FP16×FP16 should be faster")
+        expectPerformance("MixedPrecisionPerformanceBenchmark.benchmarkCosineLatency512.3", speedup16x16 > 1.0, "FP16×FP16 should be faster")
     }
 
     // MARK: - Batch Throughput Benchmarks
@@ -141,7 +142,7 @@ struct MixedPrecisionPerformanceBenchmark {
         let batchSizes = [10, 100, 1000]
 
         print("\n=== Euclidean Batch Throughput (512-dim) ===")
-        print("Batch Size | FP32 (M/sec)    | FP16 (M/sec)    | Speedup    | Memory Saved   ")
+        print("Batch Size | FP32 (M/sec)    | FP16 (M/sec)    | Speedup    | Logical payload difference (model)")
         print(String(repeating: "-", count: 80))
 
         for n in batchSizes {
@@ -166,9 +167,10 @@ struct MixedPrecisionPerformanceBenchmark {
             let fp16Throughput = (Double(n) / fp16Time.median) * 1000.0  // M/sec
 
             let speedup = fp16Throughput / fp32Throughput
-            let memorySaved = n * 1024  // bytes
+            // Logical payload model: n x 512 x (4 - 2) bytes of scalars; not a measured saving.
+            let payloadDifference = n * 1024  // bytes
 
-            let memStr = "\(memorySaved / 1024) KB"
+            let memStr = "\(payloadDifference / 1024) KB"
             print(String(format: "%-10d | %-15.2f | %-15.2f | %-10.2fx | ", n, fp32Throughput, fp16Throughput, speedup) + memStr.padding(toLength: 15, withPad: " ", startingAt: 0))
         }
     }
@@ -224,7 +226,7 @@ struct MixedPrecisionPerformanceBenchmark {
             1536, fp32Time1536.median, fp16Time1536.median, fp32Time1536.median / fp16Time1536.median))
 
         // Higher dimensions should show higher speedup
-        #expect(fp32Time1536.median / fp16Time1536.median >= fp32Time512.median / fp16Time512.median,
+        expectPerformance("MixedPrecisionPerformanceBenchmark.benchmarkDimensionScaling.4", fp32Time1536.median / fp16Time1536.median >= fp32Time512.median / fp16Time512.median,
                 "Higher dimensions should show equal or better FP16 speedup")
     }
 
@@ -283,49 +285,134 @@ struct MixedPrecisionPerformanceBenchmark {
         #expect(avgCosError32x16 < 0.01, "Cosine FP32×FP16 error should be < 1%")
     }
 
-    // MARK: - Memory Footprint Analysis
+    // MARK: - Representation Memory Model
 
-    @Test("Memory footprint comparison")
-    func analyzeMemoryFootprint() throws {
-        print("\n=== Memory Footprint Analysis ===")
+    /// Logical scalar payload bytes for `dimension` scalars of `scalarStride` bytes each:
+    /// $P = D \cdot s$ with $s$ = `MemoryLayout<Scalar>.stride`. Checked arithmetic; `nil` on overflow.
+    ///
+    /// This is a model of the scalar payload only. The 2:1 FP32:FP16 scalar-width ratio excludes
+    /// array headers, spare capacity, allocation rounding, conversion temporaries and sharing
+    /// (the stride itself includes per-element padding).
+    static func logicalScalarPayloadBytes(dimension: Int, scalarStride: Int) -> Int? {
+        let (product, overflow) = dimension.multipliedReportingOverflow(by: scalarStride)
+        return overflow ? nil : product
+    }
+
+    /// Stored scalar payload bytes of REAL vector storage: `storage.count * MemoryLayout<E>.stride`.
+    /// `E` is inferred from the storage itself, so the result is the real storage's count x element
+    /// stride and changes whenever that product changes (a change that preserves it, such as a
+    /// same-stride element type, does not); that is what makes assertions built on it capable of
+    /// failing. Per-element padding is included in the stride. Not allocation size: excludes the array
+    /// header, spare capacity and allocation rounding. Plain `*` traps on overflow.
+    static func storedScalarPayloadBytes<E>(_ storage: ContiguousArray<E>) -> Int {
+        storage.count * MemoryLayout<E>.stride
+    }
+
+    @Test("Representation memory model: independent payload constants and overflow")
+    func representationPayloadConstants() throws {
+        // Literal expected values, deliberately not recomputed with the production formula.
+        let expected: [(dimension: Int, fp32: Int, fp16: Int)] = [
+            (512, 2048, 1024),
+            (768, 3072, 1536),
+            (1536, 6144, 3072)
+        ]
+        for row in expected {
+            #expect(Self.logicalScalarPayloadBytes(dimension: row.dimension, scalarStride: MemoryLayout<Float>.stride) == row.fp32)
+            #expect(Self.logicalScalarPayloadBytes(dimension: row.dimension, scalarStride: MemoryLayout<UInt16>.stride) == row.fp16)
+        }
+        // Overflow is reported, not wrapped.
+        #expect(Self.logicalScalarPayloadBytes(dimension: Int.max, scalarStride: 4) == nil)
+        #expect(Self.logicalScalarPayloadBytes(dimension: Int.max / 2 + 1, scalarStride: 2) == nil)
+        #expect(Self.logicalScalarPayloadBytes(dimension: Int.max / 2, scalarStride: 2) == Int.max - 1)
+    }
+
+    @Test("Representation memory model: handle stride vs logical payload")
+    func analyzeRepresentationMemoryModel() throws {
+        print("\n=== Representation Memory Model: handle stride vs logical payload ===")
+        print("Handle stride is the size of the owning handle struct, not the memory it owns.")
+        print("Logical scalar payload is D x scalar stride; it excludes array headers, spare capacity,")
+        print("allocation rounding, conversion temporaries and sharing.")
+
+        let columns = [
+            "Dimension",
+            "Handle stride FP32 (MemoryLayout<VectorDOptimized>.stride)",
+            "Handle stride FP16",
+            "Logical scalar payload FP32 (D·MemoryLayout<Float>.stride)",
+            "Logical scalar payload FP16 (D·MemoryLayout<UInt16>.stride)",
+            "Measured records: not measured here"
+        ]
+        print(columns.joined(separator: " | "))
+        print(String(repeating: "-", count: 80))
 
         let dimensions = [512, 768, 1536]
-        print("Dimension  | FP32 (bytes)    | FP16 (bytes)    | Savings %      ")
-        print(String(repeating: "-", count: 60))
-
         for dim in dimensions {
-            let fp32Size: Int
-            let fp16Size: Int
+            let fp32Handle: Int
+            let fp16Handle: Int
 
             switch dim {
             case 512:
-                fp32Size = MemoryLayout<Vector512Optimized>.stride
-                fp16Size = MemoryLayout<MixedPrecisionKernels.Vector512FP16>.stride
+                fp32Handle = MemoryLayout<Vector512Optimized>.stride
+                fp16Handle = MemoryLayout<MixedPrecisionKernels.Vector512FP16>.stride
             case 768:
-                fp32Size = MemoryLayout<Vector768Optimized>.stride
-                fp16Size = MemoryLayout<MixedPrecisionKernels.Vector768FP16>.stride
+                fp32Handle = MemoryLayout<Vector768Optimized>.stride
+                fp16Handle = MemoryLayout<MixedPrecisionKernels.Vector768FP16>.stride
             case 1536:
-                fp32Size = MemoryLayout<Vector1536Optimized>.stride
-                fp16Size = MemoryLayout<MixedPrecisionKernels.Vector1536FP16>.stride
+                fp32Handle = MemoryLayout<Vector1536Optimized>.stride
+                fp16Handle = MemoryLayout<MixedPrecisionKernels.Vector1536FP16>.stride
             default:
                 continue
             }
 
-            let savings = ((fp32Size - fp16Size) * 100) / fp32Size
+            let fp32Payload = try #require(Self.logicalScalarPayloadBytes(dimension: dim, scalarStride: MemoryLayout<Float>.stride))
+            let fp16Payload = try #require(Self.logicalScalarPayloadBytes(dimension: dim, scalarStride: MemoryLayout<UInt16>.stride))
 
-            print(String(format: "%-10d | %-15d | %-15d | %-15d%%",
-                dim, fp32Size, fp16Size, savings))
+            print(String(format: "%-10d | %-12d | %-12d | %-12d | %-12d | not measured",
+                dim, fp32Handle, fp16Handle, fp32Payload, fp16Payload))
         }
 
-        print("\n--- Large-Scale Example ---")
+        print("\n--- 100,000-vector example (512-dim), two labelled models ---")
         let numVectors = 100_000
-        let fp32Total = numVectors * MemoryLayout<Vector512Optimized>.stride
-        let fp16Total = numVectors * MemoryLayout<MixedPrecisionKernels.Vector512FP16>.stride
+        let fp32Stride = MemoryLayout<Float>.stride
+        let fp16Stride = MemoryLayout<UInt16>.stride
+        let perVectorFP32 = try #require(Self.logicalScalarPayloadBytes(dimension: 512, scalarStride: fp32Stride))
+        let perVectorFP16 = try #require(Self.logicalScalarPayloadBytes(dimension: 512, scalarStride: fp16Stride))
+        let (payloadFP32, o1) = numVectors.multipliedReportingOverflow(by: perVectorFP32)
+        let (payloadFP16, o2) = numVectors.multipliedReportingOverflow(by: perVectorFP16)
+        #expect(!o1 && !o2)
+        let (handlesFP32, o3) = numVectors.multipliedReportingOverflow(by: MemoryLayout<Vector512Optimized>.stride)
+        let (handlesFP16, o4) = numVectors.multipliedReportingOverflow(by: MemoryLayout<MixedPrecisionKernels.Vector512FP16>.stride)
+        #expect(!o3 && !o4)
 
-        print("100,000 vectors (512-dim):")
-        print("  FP32: \(fp32Total / (1024 * 1024)) MB")
-        print("  FP16: \(fp16Total / (1024 * 1024)) MB")
-        print("  Saved: \((fp32Total - fp16Total) / (1024 * 1024)) MB (\((fp32Total - fp16Total) * 100 / fp32Total)%)")
+        print("Logical payload model (numVectors x D x scalar stride; scalars only):")
+        print("  FP32 scalars: \(payloadFP32 / (1024 * 1024)) MiB")
+        print("  FP16 scalars: \(payloadFP16 / (1024 * 1024)) MiB")
+        print("Handle-array model (numVectors x handle stride; handles only, excludes owned storage):")
+        print("  FP32 handles: \(handlesFP32 / 1024) KiB")
+        print("  FP16 handles: \(handlesFP16 / 1024) KiB")
+        print("Neither model is a total footprint or a measured saving.")
+    }
+
+    @Test("Representation memory model: columns equal stored payload of real vectors")
+    func representationModelMatchesRealStorage() throws {
+        // Zero-filled vectors; only the storage shape matters. Expected values are the model's
+        // columns (independent literals live in representationPayloadConstants).
+        let v512 = try Vector512Optimized(Array(repeating: 0, count: 512))
+        let v768 = try Vector768Optimized(Array(repeating: 0, count: 768))
+        let v1536 = try Vector1536Optimized(Array(repeating: 0, count: 1536))
+        let real: [(dimension: Int, fp32: Int, fp16: Int)] = [
+            (512, Self.storedScalarPayloadBytes(v512.storage),
+             Self.storedScalarPayloadBytes(MixedPrecisionKernels.Vector512FP16(from: v512).storage)),
+            (768, Self.storedScalarPayloadBytes(v768.storage),
+             Self.storedScalarPayloadBytes(MixedPrecisionKernels.Vector768FP16(from: v768).storage)),
+            (1536, Self.storedScalarPayloadBytes(v1536.storage),
+             Self.storedScalarPayloadBytes(MixedPrecisionKernels.Vector1536FP16(from: v1536).storage))
+        ]
+        for row in real {
+            let model32 = try #require(Self.logicalScalarPayloadBytes(dimension: row.dimension, scalarStride: MemoryLayout<Float>.stride))
+            let model16 = try #require(Self.logicalScalarPayloadBytes(dimension: row.dimension, scalarStride: MemoryLayout<UInt16>.stride))
+            #expect(row.fp32 == model32, "FP32 stored payload vs model at D=\(row.dimension)")
+            #expect(row.fp16 == model16, "FP16 stored payload vs model at D=\(row.dimension)")
+        }
     }
 
     // MARK: - Heuristic Validation
@@ -359,6 +446,6 @@ struct MixedPrecisionPerformanceBenchmark {
         #expect(MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: 10, dimension: 512) == false,
                 "Small batches should use FP32")
         #expect(MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: 500, dimension: 512) == false,
-                "Medium batch within cache should use FP32 (memory-bound heuristic)")
+                "500 x 512 should stay below the FP16 heuristic threshold (heuristic output only; no cache effect is measured)")
     }
 }

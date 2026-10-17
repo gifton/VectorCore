@@ -1,0 +1,58 @@
+{
+  "raw_pairs_verified": 27,
+  "input_hashes_verified": 9,
+  "linked_objects_verified": 160,
+  "unchanged_kernel_sha256": "41b44d7735dc4a9a3341a057b6be3a08b2fab629e1f73cd5e7fa696fb6f4ef71",
+  "result_sha256": "fc2a93c7983e746158d1f3546c57e032654b047707c2b459a87fdca592705563",
+  "rows": [
+    {
+      "dimension": 512,
+      "input_sha256": [
+        "0049bb01e33d10b57dbd538786bdd34f16de46f666e09756b03cf2752c400f35",
+        "e3fd7f942eb452e301577e2ea789e17c83852b8825a7a266d373f724f6d0cd9c",
+        "53702be55dd979704cad74f1f69b5e8e217f88dc650e8c9d009f6b9b2cd3dab7"
+      ],
+      "diagonalMaxima": {
+        "absoluteError": 3.0517578125e-05,
+        "relativeError": 30517578.125
+      },
+      "offDiagonalMaxima": {
+        "absoluteError": 1.766985559470413e-05,
+        "relativeError": 5.450386170404632e-08
+      }
+    },
+    {
+      "dimension": 768,
+      "input_sha256": [
+        "fd67aae4047825291c021328d889275dd21717dfa5bad3f9547ae0ea82683077",
+        "c0b362885e5750a9bb0b2ad65c50e768e436614c64bc3a805197f041a097db8e",
+        "22bb96dd25d7b92827f48eba3fb7916c8440c3b1af4d11473259282106b9c610"
+      ],
+      "diagonalMaxima": {
+        "absoluteError": 6.103515625e-05,
+        "relativeError": 61035156.25
+      },
+      "offDiagonalMaxima": {
+        "absoluteError": 2.174832030732432e-05,
+        "relativeError": 4.32274156911875e-08
+      }
+    },
+    {
+      "dimension": 1536,
+      "input_sha256": [
+        "5b4ab15474e42dba363ff154d4ec2f9b566b378868a3aae244d9f3af6face345",
+        "9489f9e858dae7133eb7d0d4fdade4784933998348fa3068d9b4e7b16f6b3b55",
+        "ca40606985246a47bfb3b41a23f8264b02fc1f11f0ec34918d050cdbd5186829"
+      ],
+      "diagonalMaxima": {
+        "absoluteError": 6.103515625e-05,
+        "relativeError": 61035156.25
+      },
+      "offDiagonalMaxima": {
+        "absoluteError": 8.906918287721055e-05,
+        "relativeError": 8.625817642311714e-08
+      }
+    }
+  ],
+  "qualification": "This retained diagnostic confirms positive self-distance residuals. It is separate from development03 measured outputs; observed768 difference is not a portable fixed residual promise. Python Double and exact rational coordinate differences independently check references; no kernel change, strict pass or numerical closure claimed."
+}

@@ -1,0 +1,33 @@
+{
+  "argv": [
+    "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-02/toolchain/swiftlint-0.65.1/swiftlint",
+    "lint",
+    "--config",
+    ".swiftlint.yml",
+    "--reporter",
+    "json",
+    "--quiet",
+    "--no-cache",
+    "Sources/VectorCore/ManifoldLearning/FuzzySimplicialSet.swift",
+    "Sources/VectorCore/ManifoldLearning/KNNGraph.swift",
+    "Sources/VectorCore/ManifoldLearning/UMAP.swift",
+    "Tests/ComprehensiveTests/L03Reference.swift",
+    "Tests/ComprehensiveTests/UMAPRangeContractTests.swift",
+    "Tests/ComprehensiveTests/UMAPTests.swift"
+  ],
+  "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-02/workspaces/L03",
+  "returncode": 0,
+  "input_sha256": {
+    "Sources/VectorCore/ManifoldLearning/FuzzySimplicialSet.swift": "eda6f27583215f785c3d684cc0b33e5b74f39a5d12e7d6133d605f4e8cdf55cc",
+    "Sources/VectorCore/ManifoldLearning/KNNGraph.swift": "aac866d70c007ddfe3b42ce87962472443b574aa9fbd14d5a59b587447eb6528",
+    "Sources/VectorCore/ManifoldLearning/UMAP.swift": "46b979e669f0d59475057b2ec860be883a6c9d278a7707cc59394417d71ad154",
+    "Tests/ComprehensiveTests/L03Reference.swift": "870acf9d79ae08f8b89716df5606b2e7ecba828a4458121d9ed063525f444f01",
+    "Tests/ComprehensiveTests/UMAPRangeContractTests.swift": "7e04fad9011879c84fcb444a944f670a538a0806cf327331caf707479b472c62",
+    "Tests/ComprehensiveTests/UMAPTests.swift": "f19c18671d6c9bc4b2e06acf644314ec1e99df61aa23cedf05380c0b91b145a3"
+  },
+  "stdout_sha256": "99fc56d7ad1f314c65ed8b5c747696f0035711336337c267d0de3ac9ebef07f5",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "warnings": 30,
+  "errors": 0,
+  "scope": "Pinned0.65.1 lint of six owned Swift source/test files under existing configuration; warnings are permitted by unchanged project settings. No source edits."
+}

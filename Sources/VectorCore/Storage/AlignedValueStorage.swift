@@ -3,29 +3,29 @@
 // Value-type storage with proper alignment and Copy-on-Write semantics
 //
 // This type provides a value-semantic wrapper around aligned memory allocations,
-// implementing Copy-on-Write (COW) for efficient value semantics. It's designed
-// to replace the reference-type AlignedStorage while maintaining the same
-// performance characteristics and alignment guarantees.
+// implementing Copy-on-Write (COW): copies share one allocation until a mutation.
+// It replaces the reference-type AlignedStorage.
 //
 
 import Foundation
 
 /// Value-type storage with guaranteed memory alignment and COW semantics.
 ///
-/// `AlignedValueStorage` provides efficient storage for floating-point vectors with
-/// guaranteed memory alignment for SIMD operations. It implements Copy-on-Write (COW)
-/// semantics to provide value-type behavior while avoiding unnecessary copies.
+/// `AlignedValueStorage` stores floating-point vectors in memory aligned with
+/// `posix_memalign`. It implements Copy-on-Write (COW) semantics: a copy shares the
+/// allocation until either copy is mutated.
 ///
 /// ## Key Features
 /// - Guaranteed memory alignment (16-byte minimum, configurable up to 64-byte)
-/// - Copy-on-Write optimization for efficient value semantics
-/// - Thread-safe through value semantics (each instance is independent)
+/// - Copy-on-Write: copies share storage until a mutation
+/// - Value semantics: each copy behaves as an independent value (concurrent use of copies is
+///   not verified by a test)
 /// - Compatible with Accelerate framework operations
 ///
 /// ## Performance Characteristics
 /// - O(1) copy operations (until mutation)
 /// - O(n) copy on first mutation after sharing
-/// - Zero overhead for unique instances
+/// - A mutation of a uniquely referenced instance does not copy (`isKnownUniquelyReferenced`)
 ///
 /// ## Example Usage
 /// ```swift
@@ -60,7 +60,7 @@ internal struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
         /// Alignment in bytes for this storage.
         /// Common values:
         /// - 16: Minimum for SIMD operations
-        /// - 64: Optimal for cache line alignment
+        /// - 64: A larger alignment (the example above uses it)
         /// Must be a power of 2.
         @usableFromInline
         let alignment: Int
@@ -140,7 +140,7 @@ internal struct AlignedValueStorage: VectorStorage, VectorStorageOperations {
     }
 
     /// Reference to internal storage.
-    /// This is the only stored property, making the struct lightweight.
+    /// This is the only stored property, so the struct is one reference wide.
     /// The 'var' declaration is essential for COW - it allows reassignment
     /// when creating a unique copy.
     @usableFromInline

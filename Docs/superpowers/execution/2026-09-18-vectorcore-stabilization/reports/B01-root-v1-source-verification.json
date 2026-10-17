@@ -1,0 +1,38 @@
+{
+  "version": "v1",
+  "base_revision": "1d6b3b3ee3ae5e3fa24c90768ef805125969c41f",
+  "base_archive_files": 5934,
+  "final_archive_files": 5943,
+  "base_code_files": 321,
+  "final_code_files": 329,
+  "changed": [
+    "Docs/Serialization.md",
+    "Scripts/ci/fixtures/B01BareConformanceNegative.swift",
+    "Scripts/ci/fixtures/B01PublicConsumer.swift",
+    "Scripts/ci/fixtures/B01_generate_goldens.py",
+    "Scripts/ci/fixtures/B01_inventory_guard.py",
+    "Scripts/ci/fixtures/B01_public_driver.py",
+    "Scripts/ci/tests/test_b01_serialization_inventory.py",
+    "Sources/VectorCore/Protocols/CoreProtocols.swift",
+    "Sources/VectorCore/Serialization/BinaryProtocols.swift",
+    "Sources/VectorCore/Utilities/BinaryFormat.swift",
+    "Sources/VectorCore/Vectors/VectorSerialization.swift",
+    "Tests/ComprehensiveTests/B01BinaryContractTests.swift",
+    "Tests/ComprehensiveTests/B01Golden.swift",
+    "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+    "Tests/ComprehensiveTests/VectorSerializationTests.swift",
+    "Tests/ComprehensiveTests/VectorShapeContractTests.swift"
+  ],
+  "patch_sha256": "fa091f10be7c25c3c9252fa32523d9f405331bbc7b238f4ed7e1a5abd1a51b82",
+  "source_manifest_sha256": "570568042aa421d51910ca3ef5fb18d687201a87fa1b5542b1dc8c78fdef61d6",
+  "checks": [
+    "anchored base archive and original brief",
+    "complete base/final source tar inventories",
+    "complete byte-exact diff reconstruction including new files",
+    "owned source subset",
+    "all frozen manifest entries and no missing owned records",
+    "complete worker tree matches frozen tar",
+    "owned integration files unchanged before import"
+  ],
+  "scope": "Source reconstruction only; independent source review and runtime acceptance remain separate."
+}

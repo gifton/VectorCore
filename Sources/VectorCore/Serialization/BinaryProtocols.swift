@@ -21,16 +21,21 @@ public protocol BinaryDecodable {
 ///
 /// `BinaryCodable` is a convenience type alias that combines `BinaryEncodable`
 /// and `BinaryDecodable` protocols, similar to Swift's standard `Codable`.
-/// Types conforming to this protocol can be serialized to and from efficient
-/// binary formats.
+/// Built-in vector methods do not declare these protocol conformances. Use a
+/// consumer-owned adapter with explicit witnesses (B01PublicConsumer exercises
+/// concrete, generic and existential calls):
 ///
-/// ## Example Usage
 /// ```swift
-/// extension Vector: BinaryCodable {
-///     func encodeBinary() throws -> Data { /* ... */ }
-///     static func decodeBinary(from data: Data) throws -> Self { /* ... */ }
+/// struct StoredVector: BinaryCodable {
+///     let value: DynamicVector
+///     func encodeBinary() throws -> Data { value.encodeBinary() }
+///     static func decodeBinary(from data: Data) throws -> StoredVector {
+///         StoredVector(value: try DynamicVector.decodeBinary(from: data))
+///     }
 /// }
 /// ```
+/// The delegated nonthrowing encoder accepts empty values. This is distinct
+/// from the positive-domain checked default on VectorType & BinaryEncodable.
 public typealias BinaryCodable = BinaryEncodable & BinaryDecodable
 
 // MARK: - Binary Format Header
@@ -43,12 +48,18 @@ public typealias BinaryCodable = BinaryEncodable & BinaryDecodable
 /// metadata for safe deserialization.
 ///
 /// ## Binary Layout
-/// - Bytes 0-3: Magic number (0x56454354 = "VECT")
+/// - Bytes 0-3: Numeric magic 0x56454354; little-endian bytes 54 43 45 56
 /// - Bytes 4-5: Version number
 /// - Bytes 6-9: Vector dimension
-/// - Bytes 10-11: Flags (reserved for future use)
+/// - Bytes 10-11: Reserved flags; encoders emit zero, version1 decoders ignore them
+/// - Bytes 12..<(12+4N): N little-endian Float bit-pattern words
+/// - Final 4 bytes: little-endian CRC32 of header and payload
+///
+/// Total size is 16+4N. CRC uses reflected polynomial 0xEDB88320 and initial/final
+/// xor 0xffffffff; it detects corruption, not malicious modification. Complete
+/// independent frames are exercised by B01BinaryContractTests.
 public struct BinaryHeader {
-    /// Magic number identifying VectorCore binary format ("VECT" in ASCII).
+    /// Numeric magic 0x56454354; encoded little-endian as 54 43 45 56.
     public static let magic: UInt32 = 0x56454354
 
     /// Current binary format version.

@@ -6,6 +6,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import Mock, patch
 
 SPEC = importlib.util.spec_from_file_location(
     "memory_pool_check", Path(__file__).resolve().parents[1] / "check_memory_pool.py")
@@ -14,6 +15,30 @@ SPEC.loader.exec_module(CHECK)
 
 
 class MemoryPoolWatchdogTests(unittest.TestCase):
+    def test_cleanup_has_a_deadline_even_if_killed_process_cannot_be_reaped(self):
+        command = ["unreapable-test-process"]
+        execution_timeout = subprocess.TimeoutExpired(command, 0.1)
+        cleanup_timeout = subprocess.TimeoutExpired(command, 2)
+        process = Mock(pid=12345)
+
+        def wait(*, timeout=None):
+            self.assertIsNotNone(timeout, "cleanup must not wait indefinitely")
+            self.assertGreater(timeout, 0)
+            if process.wait.call_count == 1:
+                raise execution_timeout
+            self.assertLessEqual(timeout, 2)
+            raise cleanup_timeout
+
+        process.wait.side_effect = wait
+        with patch.object(CHECK.subprocess, "Popen", return_value=process), \
+                patch.object(CHECK.os, "killpg") as kill_group:
+            with self.assertRaises(subprocess.TimeoutExpired) as failure:
+                CHECK.bounded_run(command, timeout=0.1)
+        self.assertIs(failure.exception, execution_timeout)
+        self.assertIs(failure.exception.__cause__, cleanup_timeout)
+        self.assertEqual(process.wait.call_count, 2)
+        kill_group.assert_called_once_with(process.pid, CHECK.signal.SIGKILL)
+
     def test_timeout_stops_descendants_before_cleanup(self):
         with tempfile.TemporaryDirectory(prefix="memory-pool-watchdog-") as directory:
             root = Path(directory)

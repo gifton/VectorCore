@@ -1,0 +1,16 @@
+/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06/Scripts/ci/tests/E03ConfigurationConsumer.swift:10:43: error: capture of 'state' with non-Sendable type 'MutableState' in a '@Sendable' closure [#SendableClosureCaptures]
+ 2 | 
+ 3 | #if E03_NEGATIVE_CAPTURE
+ 4 | final class MutableState {
+   |             `- note: class 'MutableState' does not conform to the 'Sendable' protocol
+ 5 |     var threshold = 7
+ 6 | }
+   :
+ 8 | func rejectedCapture(_ state: MutableState) async throws {
+ 9 |     try await BatchOperations.updateConfiguration { configuration in
+10 |         configuration.parallelThreshold = state.threshold
+   |                                           `- error: capture of 'state' with non-Sendable type 'MutableState' in a '@Sendable' closure [#SendableClosureCaptures]
+11 |     }
+12 | }
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>

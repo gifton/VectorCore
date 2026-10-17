@@ -224,14 +224,19 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
 
     // MARK: - Statistical Operations
 
+    /// Largest element: NaN when any element is NaN, and -infinity for `count == 0` (as `vDSP_maxvD`). The sign of a
+    /// zero result is unspecified. T16 reduction NaN contract: `Swift.max` and `SIMD8.max()` alone drop a NaN after
+    /// element 0, so a NaN flag selects NaN over the unchanged fold, which keeps every NaN-free result's bits.
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        guard count != 0 else { return 0 }
+        guard count != 0 else { return -.infinity }
 
         var result = a[0]
+        var nanSeen = a[0].isNaN
         var i = 1
 
         // Process SIMD8 chunks
@@ -240,27 +245,34 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
             )
+            nanSeen = nanSeen || any(va .!= va)
             result = Swift.max(result, va.max())
             i += 8
         }
 
         // Process remaining scalars
         while i < count {
+            nanSeen = nanSeen || a[i].isNaN
             result = Swift.max(result, a[i])
             i += 1
         }
 
-        return result
+        return nanSeen ? .nan : result
     }
 
+    /// Smallest element: NaN when any element is NaN, and +infinity for `count == 0` (as `vDSP_minvD`). The sign of a
+    /// zero result is unspecified. T16 reduction NaN contract: `Swift.min` and `SIMD8.min()` alone drop a NaN after
+    /// element 0, so a NaN flag selects NaN over the unchanged fold, which keeps every NaN-free result's bits.
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
-        guard count != 0 else { return 0 }
+        guard count != 0 else { return .infinity }
 
         var result = a[0]
+        var nanSeen = a[0].isNaN
         var i = 1
 
         // Process SIMD8 chunks
@@ -269,19 +281,24 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
             )
+            nanSeen = nanSeen || any(va .!= va)
             result = Swift.min(result, va.min())
             i += 8
         }
 
         // Process remaining scalars
         while i < count {
+            nanSeen = nanSeen || a[i].isNaN
             result = Swift.min(result, a[i])
             i += 1
         }
 
-        return result
+        return nanSeen ? .nan : result
     }
 
+    /// Largest absolute value: NaN when any element is NaN, +0 for a zero result and for `count == 0` (as
+    /// `vDSP_maxmgvD`). T16 reduction NaN contract; a NaN flag selects NaN over the unchanged fold.
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Double>,
@@ -290,6 +307,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         guard count != 0 else { return 0 }
 
         var result = abs(a[0])
+        var nanSeen = a[0].isNaN
         var i = 1
 
         // Process SIMD8 chunks
@@ -298,6 +316,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
             )
+            nanSeen = nanSeen || any(va .!= va)
             let absVa = va.replacing(with: -va, where: va .< 0)
             result = Swift.max(result, absVa.max())
             i += 8
@@ -305,11 +324,14 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
 
         // Process remaining scalars
         while i < count {
+            nanSeen = nanSeen || a[i].isNaN
             result = Swift.max(result, abs(a[i]))
             i += 1
         }
 
-        return result
+        if nanSeen { return .nan }
+        // A zero magnitude is +0 (the chunk "abs" above keeps -0 as -0), as `vDSP_maxmgvD` returns.
+        return result == 0 ? 0 : result
     }
 
     // MARK: - Utility Operations
@@ -372,6 +394,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
 
     // MARK: - Extended Operations
 
+    /// Clips each element to [low, high]; a NaN element stays NaN (T16). Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Double>,
@@ -392,7 +415,8 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
                 a[i], a[i+1], a[i+2], a[i+3],
                 a[i+4], a[i+5], a[i+6], a[i+7]
             )
-            let clipped = va.clamped(lowerBound: lowVec8, upperBound: highVec8)
+            // `clamped` maps a NaN lane to `low`; keep it NaN (T16), as `vDSP_vclipD` does.
+            let clipped = va.clamped(lowerBound: lowVec8, upperBound: highVec8).replacing(with: va, where: va .!= va)
             result[i] = clipped[0]
             result[i+1] = clipped[1]
             result[i+2] = clipped[2]
@@ -407,7 +431,7 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
         // Process SIMD4 chunks
         while i + 4 <= count {
             let va = SIMD4<Double>(a[i], a[i+1], a[i+2], a[i+3])
-            let clipped = va.clamped(lowerBound: lowVec4, upperBound: highVec4)
+            let clipped = va.clamped(lowerBound: lowVec4, upperBound: highVec4).replacing(with: va, where: va .!= va)
             result[i] = clipped[0]
             result[i+1] = clipped[1]
             result[i+2] = clipped[2]
@@ -417,7 +441,8 @@ public struct SwiftDoubleSIMDProvider: SIMDProvider {
 
         // Process remaining scalars
         while i < count {
-            result[i] = Swift.max(low, Swift.min(high, a[i]))
+            // `max(low, min(high, NaN))` would give `high`; a NaN element stays NaN (T16).
+            result[i] = a[i].isNaN ? a[i] : Swift.max(low, Swift.min(high, a[i]))
             i += 1
         }
     }

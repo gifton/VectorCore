@@ -1,0 +1,48 @@
+{
+  "task": "E06",
+  "status": "accepted",
+  "task_base": "545d819f1ec57f9b504757ab6ae2fa42488cbd29",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-02"
+  ],
+  "breaking_change": "BatchOperations.updateConfiguration is async throws; validates complete candidate atomically before publication. Rejected update retains old snapshot.",
+  "validation": {
+    "red": "Four actual unchanged-base public scenarios failed: nil default batch, threshold routing, Int.max minimum chunk, invalid publication/rollback.",
+    "debug_release": "v1 each83 reported SwiftTesting/9suites plus7XCTest;4 SwiftTesting and1XCTest child-entry no-ops excluded;78retained actual children/config plus16E01 cases whose harness deletes raw captures.",
+    "v2": "Only local actor print label corrected;7transaction functions/1suite plus4actualchildren/config;all production and other test bytes identical.",
+    "asan": "v1 nine actual in-process functions plus14actual directly launched/preloaded scenarios passed.28earlier startup failures before entry retained separately;leak detection disabled.",
+    "consumer": "External Swift6 compile/link/run; E03 positive typecheck and expected negative non-Sendable capture rejection;7scanner checks.",
+    "provenance": "Root complete287base/290final reconstruction;387worker artifacts/canonical copies;178actual child associations;1001current build entries copied/rehashed;133production artifacts/config identical across v1/v2."
+  },
+  "review": "reports/E06-implementation-review.md",
+  "evidence": "reports/E06.md",
+  "commands": "reports/E06-final-commands.json",
+  "root_verification": [
+    "reports/E06-root-source-verification.json",
+    "reports/E06-root-evidence-verification.json"
+  ],
+  "diff_sha256": "2fd68f93261f55789ad7755b99c556bd320546099abdd1cc0009591ec17f56c2",
+  "frozen_sha256": {
+    "Scripts/ci/tests/E03ConfigurationConsumer.swift": "907992291a7efd75126f898c1dbf5b1a6af308460a8245b370112fc13354fdbf",
+    "Sources/VectorCore/Operations/BatchOperations.swift": "8940cb5391380bf4a5843257350af86baafaa789c0e5a7db426daaeb8a8028da",
+    "Sources/VectorCore/Utilities/BoundedExecution.swift": "c4ba080e5f85f42e49fdc9ac0433576f11153df2b3d015c9f1a8f8cb53acca49",
+    "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift": "ac12f6ddd27c52d9d9239d3f50a2c5eabeee600107e8cf4c545189f8a13350c3",
+    "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift": "c747b9cbdfc454c5f8ea64867d1422dfdf7f45967a6cf2a4be7440466af9b48b",
+    "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift": "50a59d3c151829ca266a60c0c2a73390fb14fd58c4a9e632df56456336639782",
+    "Tests/ComprehensiveTests/E06ConfigurationTestHelpers.swift": "b6ee14ac76096d83ccc46b104aca5a384cc91b4ba6d7bbaa0a0c32e52c760c94",
+    "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift": "71570e945ad227c127af91b647b975b7dcc47e7e88cb6927b2297d9c7f95a807",
+    "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift": "f8aaedbf695b5425b1a004a74804d58318509e8bb57e50dc45b1dc6473822934",
+    "Tests/ComprehensiveTests/MatrixMetricContractTests.swift": "c25d6d2b77668a0ccf3ebd20bb64a469d43dbde2ae6927e937604cbc51775069",
+    "Tests/E06Consumers/PublicConfiguration.swift": "beb03aa8700fff062e0fc11854e2aa487cc3ca27a9cbaa57ed6d94d07e06f649"
+  },
+  "limitations": [
+    "v1 Debug/Release loaded test bundle bytes were overwritten by v2. Historical source/hashes/logs remain;exact one-print-line delta, production artifact identity and affected reruns support qualified use. No relabeling of v1 evidence.",
+    "Root retained actual current v2 Debug/Release and v1 ASan build bytes outside tmp.",
+    "One configuration snapshot and hardware core count per public async operation. Pairwise retains independent N100 row gate. Synchronous sample remains independent.",
+    "Six optimized public nearest routes are exercised; nonfinite assertions include unchanged kernel parity, not universal NaN propagation.",
+    "No numerical kernels/shared heuristics/configuration actor/provider scheduler bodies changed; no performance/production-envelope/downstream claim."
+  ],
+  "combined_verification": "reports/milestone-08-verification.json",
+  "combined_review": "reports/milestone-08-review.md"
+}

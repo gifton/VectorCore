@@ -6,22 +6,20 @@ struct TopKNaNWrapperTests {
     @Test func batchSelectionPreservesInputEdgeBehavior() async {
         let query = Vector<Dim2>(x: 0, y: 0)
         let candidates = [Float.nan, 2, 1, .nan].map { Vector<Dim2>(x: $0, y: 0) }
-        await Operations.$computeProvider.withValue(CPUComputeProvider(mode: .sequential)) {
-            let zeroK = await BatchOperations.findNearest(to: query, in: candidates, k: 0)
-            let negativeK = await BatchOperations.findNearest(to: query, in: candidates, k: -1)
-            let empty = await BatchOperations.findNearest(to: query, in: [Vector<Dim2>](), k: 3)
-            #expect(zeroK.isEmpty)
-            #expect(negativeK.isEmpty)
-            #expect(empty.isEmpty)
-            for k in [4, 99] {
-                let result = await BatchOperations.findNearest(to: query, in: candidates, k: k)
-                #expect(result.map(\.index) == [2, 1, 0, 3])
-                #expect(result.count == candidates.count)
-                #expect(result[0].distance == 1)
-                #expect(result[1].distance == 2)
-                #expect(result[2].distance.isNaN)
-                #expect(result[3].distance.isNaN)
-            }
+        let zeroK = await BatchOperations.findNearest(to: query, in: candidates, k: 0)
+        let negativeK = await BatchOperations.findNearest(to: query, in: candidates, k: -1)
+        let empty = await BatchOperations.findNearest(to: query, in: [Vector<Dim2>](), k: 3)
+        #expect(zeroK.isEmpty)
+        #expect(negativeK.isEmpty)
+        #expect(empty.isEmpty)
+        for k in [4, 99] {
+            let result = await BatchOperations.findNearest(to: query, in: candidates, k: k)
+            #expect(result.map(\.index) == [2, 1, 0, 3])
+            #expect(result.count == candidates.count)
+            #expect(result[0].distance == 1)
+            #expect(result[1].distance == 2)
+            #expect(result[2].distance.isNaN)
+            #expect(result[3].distance.isNaN)
         }
     }
 
@@ -100,17 +98,30 @@ struct TopKNaNWrapperTests {
         let query = Vector<Dim2>(x: 0, y: 0)
         var candidates = Array(repeating: Vector<Dim2>(x: .nan, y: 0), count: 100)
         candidates[99] = query
-        #expect(!ParallelHeuristic.shouldParallelize(dim: 2, items: 100, variant: .generic, metric: .euclideanLike))
+        // Route premise, from BatchOperations.findNearest: serial iff count < the entry snapshot's
+        // parallelThreshold; heap iff TopKSelection.usesSmallKStrategy, else sort.
+        let configuration = await BatchOperations.configuration()
+        #expect(100 < configuration.parallelThreshold)
+        #expect(TopKSelection.usesSmallKStrategy(actualK: 3, count: 100))
+        #expect(!TopKSelection.usesSmallKStrategy(actualK: 10, count: 100))
         #expect(EuclideanDistance().distance(query, candidates[0]).isNaN)
         let inputs = candidates
-        await Operations.$computeProvider.withValue(CPUComputeProvider(mode: .sequential)) {
-            for k in [3, 10] {
-                let result = await BatchOperations.findNearest(to: query, in: inputs, k: k)
-                #expect(result.map(\.index) == [99] + Array(0..<(k - 1)))
-                #expect(result.count == k)
-                #expect(result[0].distance == 0)
-                #expect(result.dropFirst().allSatisfy { $0.distance.isNaN })
-            }
+        for k in [3, 10] {
+            let events = P01OpsEvents()
+            let trace = P01BatchTrace()
+            let result = await BoundedExecution.$observation.withValue({ events.record($0) }, operation: {
+                await BatchOperations.$smallKTrace.withValue({ trace.record($0) }, operation: {
+                    await BatchOperations.findNearest(to: query, in: inputs, k: k)
+                })
+            })
+            // Observed route: serial (no BoundedExecution event at all); heap for k = 3 (one serial partial heap
+            // of capacity 3), sort for k = 10 (no small-k trace).
+            #expect(events.snapshot().isEmpty, "serial route k=\(k)")
+            #expect(trace.partials.map(\.heapCapacity) == (k == 3 ? [3] : []), "heap/sort route k=\(k)")
+            #expect(result.map(\.index) == [99] + Array(0..<(k - 1)))
+            #expect(result.count == k)
+            #expect(result[0].distance == 0)
+            #expect(result.dropFirst().allSatisfy { $0.distance.isNaN })
         }
     }
 
@@ -120,18 +131,33 @@ struct TopKNaNWrapperTests {
         var candidates = Array(repeating: nan, count: 1024)
         candidates[700] = query
         candidates[900] = query
-        #expect(ParallelHeuristic.shouldParallelize(dim: 512, items: 1024, variant: .generic, metric: .euclideanLike))
+        // Route premise, from BatchOperations.findNearest: parallel iff count >= the entry snapshot's
+        // parallelThreshold; heap iff TopKSelection.usesSmallKStrategy, else sort.
+        let configuration = await BatchOperations.configuration()
+        #expect(1024 >= configuration.parallelThreshold)
+        #expect(TopKSelection.usesSmallKStrategy(actualK: 3, count: 1024))
+        #expect(!TopKSelection.usesSmallKStrategy(actualK: 103, count: 1024))
         #expect(EuclideanDistance().distance(query, nan).isNaN)
         let inputs = candidates
-        await Operations.$computeProvider.withValue(CPUComputeProvider(mode: .parallel)) {
-            for k in [3, 103] {
-                let result = await BatchOperations.findNearest(to: query, in: inputs, k: k)
-                #expect(result.map(\.index) == [700, 900] + Array(0..<(k - 2)))
-                #expect(result.count == k)
-                #expect(result[0].distance == 0)
-                #expect(result[1].distance == 0)
-                #expect(result.dropFirst(2).allSatisfy { $0.distance.isNaN })
-            }
+        for k in [3, 103] {
+            let events = P01OpsEvents()
+            let trace = P01BatchTrace()
+            let result = await BoundedExecution.$observation.withValue({ events.record($0) }, operation: {
+                await BatchOperations.$smallKTrace.withValue({ trace.record($0) }, operation: {
+                    await BatchOperations.findNearest(to: query, in: inputs, k: k)
+                })
+            })
+            // Observed route: parallel generic workers (phase batch.nearest), bounded by the hardware limit, each
+            // submitted worker completed; heap for k = 3 (one partial heap per submitted worker), sort for k = 103.
+            let submitted = events.submitted(phase: "batch.nearest")
+            #expect(submitted > 0, "parallel route k=\(k)")
+            events.verify(maximum: BoundedExecution.hardwareLimit)
+            #expect(trace.partials.count == (k == 3 ? submitted : 0), "heap/sort route k=\(k)")
+            #expect(result.map(\.index) == [700, 900] + Array(0..<(k - 2)))
+            #expect(result.count == k)
+            #expect(result[0].distance == 0)
+            #expect(result[1].distance == 0)
+            #expect(result.dropFirst(2).allSatisfy { $0.distance.isNaN })
         }
     }
 
@@ -146,16 +172,24 @@ struct TopKNaNWrapperTests {
         #expect(matrix[0].isNaN)
         #expect(matrix[255] == 512)
         let inputs = candidates
-        try await Operations.$computeProvider.withValue(CPUComputeProvider(mode: .sequential)) {
-            let result = try await Operations.findNearestBatch(queries: queries, in: inputs, k: 3)
-            #expect(result.count == 8)
-            for row in result {
-                #expect(row.map(\.index) == [255, 0, 1])
-                #expect(row.count == 3)
-                #expect(row[0].distance == Float(512).squareRoot())
-                #expect(row[1].distance.isNaN)
-                #expect(row[2].distance.isNaN)
-            }
+        // P02: the GEMM route is the explicit `.gram` strategy (8 x 256 tiles: one tile here); the seam shows it ran.
+        // `.gram` runs on the calling task and schedules nothing on a ComputeProvider
+        // (`P02GramRouteTests.serialAndUnscheduled`), so no provider is installed here.
+        let trace = P02GramTraceLog()
+        let result = try await Operations.$gramTrace.withValue({ trace.append($0) }, operation: {
+            try await Operations.findNearestBatch(queries: queries, in: inputs, k: 3,
+                                                  cpuStrategy: .gram(queryTileRows: 8, candidateTileRows: 256,
+                                                                     maximumTemporaryPayloadBytes: Int.max))
+        })
+        #expect(trace.tiles.count == 1 && trace.tiles.allSatisfy { $0.m == 8 && $0.n == 256 && $0.k == 512 })
+        #expect(trace.tiles.first.map { $0.scores[255] == 512 && $0.scores[0].isNaN } == true)
+        #expect(result.count == 8)
+        for row in result {
+            #expect(row.map(\.index) == [255, 0, 1])
+            #expect(row.count == 3)
+            #expect(row[0].distance == Float(512).squareRoot())
+            #expect(row[1].distance.isNaN)
+            #expect(row[2].distance.isNaN)
         }
     }
 }

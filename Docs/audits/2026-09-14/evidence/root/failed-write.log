@@ -1,0 +1,5 @@
+Failed to write JSON to /private/tmp/vectorcore-validated-audit-2026-09-14/root: Error Domain=NSCocoaErrorDomain Code=512 "The file “root” couldn’t be saved in the folder “vectorcore-validated-audit-2026-09-14”." UserInfo={NSFilePath=/private/tmp/vectorcore-validated-audit-2026-09-14/root, NSURL=file:///private/tmp/vectorcore-validated-audit-2026-09-14/root/, NSUnderlyingError=0x8a7010870 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}}
+
+=== VectorCore Bench (Phase 2) ===
+
+Correctness violations: 0

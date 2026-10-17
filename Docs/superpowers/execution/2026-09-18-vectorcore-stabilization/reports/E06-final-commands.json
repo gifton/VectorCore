@@ -1,0 +1,1687 @@
+[
+  {
+    "label": "debug",
+    "command": [
+      "swift",
+      "test",
+      "--jobs",
+      "6",
+      "--scratch-path",
+      "/private/tmp/vectorcore-stabilization-E06-debug",
+      "--filter",
+      "BatchConfigurationContractTests|ExecutionSchedulingContractTests|ProviderConformanceTests|ConfigurationTransactionTests|ExecutionBoundaryTests|BatchGEMMRoutingTests|MatrixMetricContractTests|BatchStatisticsRangeTests|TopKNaN"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {
+      "E06_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E02_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "R03_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E03_CHILD_LOG_DIR": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures"
+    },
+    "exit": 0,
+    "expectedExit": 0,
+    "seconds": 18.299174070358276,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-debug.log",
+    "logSHA256": "6b10d4732d55fdb4971ba54f03f038646335e16ecdac983f417a61a59b2ed3c7",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": [
+      {
+        "family": "E06",
+        "scenario": "defaultBatch",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-584366FA-A63C-4F8C-B774-AE69597A805A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-584366FA-A63C-4F8C-B774-AE69597A805A.log",
+        "sha256": "9d3382da0a4f04fd599a07996826461e0cc0f9ba0c2e0ebf0372ad159120af4b"
+      },
+      {
+        "family": "E02",
+        "scenario": "defaultBound",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-defaultBound-65D945F6-9B56-401B-BEDE-F396B9810E64.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-defaultBound-65D945F6-9B56-401B-BEDE-F396B9810E64.log",
+        "sha256": "6fdb291d228c02c5970aeb795d3b3656b72414b6581edd13c3da8cf05e002828"
+      },
+      {
+        "family": "E02",
+        "scenario": "shape",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shape-43CFFFF9-3299-4050-B354-D6C54AF290C1.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shape-43CFFFF9-3299-4050-B354-D6C54AF290C1.log",
+        "sha256": "2d5844add71287467993edb7f8ad194b234305cf83c2ff15985efcea902217e0"
+      },
+      {
+        "family": "E02",
+        "scenario": "cancelSerial",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-cancelSerial-C613E59A-8C4E-40E7-A90E-3326ED624A6F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-cancelSerial-C613E59A-8C4E-40E7-A90E-3326ED624A6F.log",
+        "sha256": "9045892fc34a817b13b7e488c9ee37883f15337c8d6e71f954f68ba09b3d49cd"
+      },
+      {
+        "family": "E02",
+        "scenario": "factory1000",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1000-62DF7871-4773-4E51-97E6-8A46357D98A1.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1000-62DF7871-4773-4E51-97E6-8A46357D98A1.log",
+        "sha256": "08fb09193c30bfd786b0ccab5a50a11ff6078d814ecff1ec0e2b3444e4b7cfa4"
+      },
+      {
+        "family": "E02",
+        "scenario": "factory1",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1-1279EAEE-B271-4A65-A628-81264D6CF9A7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1-1279EAEE-B271-4A65-A628-81264D6CF9A7.log",
+        "sha256": "11468f78d90974350c7c86dee68dd917906d0a858c2c338563382e49767c9c2d"
+      },
+      {
+        "family": "E02",
+        "scenario": "gatedCancellation",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-gatedCancellation-77AE3752-3E6F-4F08-8B84-9A831C8FEB80.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-gatedCancellation-77AE3752-3E6F-4F08-8B84-9A831C8FEB80.log",
+        "sha256": "82d815f747c0f85f441ab3b3b15bc1ad5dbe12e4fe347adca046568c1bbfdbb0"
+      },
+      {
+        "family": "E02",
+        "scenario": "batchControl",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-batchControl-C2561466-D1BD-40F1-9D00-C6A54DAE1B71.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-batchControl-C2561466-D1BD-40F1-9D00-C6A54DAE1B71.log",
+        "sha256": "0aceef40b08cb46022a0839ede276b123f400626e37dba77a4bdeb4b8532adc7"
+      },
+      {
+        "family": "E02",
+        "scenario": "shortBatch",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shortBatch-3738EDB7-576F-4C66-98EF-28E700BE496B.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shortBatch-3738EDB7-576F-4C66-98EF-28E700BE496B.log",
+        "sha256": "d155d3f67ca4520d789144de68cba1df2ea78ef204884a7e740de5df4bfb09a8"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-euclideanRoutedMatchesKernel",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-euclideanRoutedMatchesKernel-D30E92DC-C71A-47CA-9165-BCC59A1E62D4.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-euclideanRoutedMatchesKernel-D30E92DC-C71A-47CA-9165-BCC59A1E62D4.log",
+        "sha256": "27125578105af10a468352dc3a6dadbb8cd854e7b00f08ad26765bb565615eb9"
+      },
+      {
+        "family": "E02",
+        "scenario": "reverseAndError",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-reverseAndError-339D2ACD-669B-4AE3-9915-72FFE3411590.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-reverseAndError-339D2ACD-669B-4AE3-9915-72FFE3411590.log",
+        "sha256": "d037b94c6eebf49db98423ce49a4d9ea3aafec63d695ccc4fa9d0200d135d879"
+      },
+      {
+        "family": "E06",
+        "scenario": "threshold",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-3F3CCAF9-8FF3-4D4C-9DFA-7DC369DF5ABE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-3F3CCAF9-8FF3-4D4C-9DFA-7DC369DF5ABE.log",
+        "sha256": "dfbd900276048b1916224b9062a586632252b5fa774cf0ef3928db168558561b"
+      },
+      {
+        "family": "E06",
+        "scenario": "generic-nearest",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-A7F26850-EBD1-4F8B-B9C9-96AD6A296DF7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-A7F26850-EBD1-4F8B-B9C9-96AD6A296DF7.log",
+        "sha256": "d40e7aa3675acdba0065b29e0e335073374795b63cf7e4444a13a2de472b3818"
+      },
+      {
+        "family": "E06",
+        "scenario": "chunks",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-A9755EE2-54DE-4722-924F-D3C39BDE10E7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-A9755EE2-54DE-4722-924F-D3C39BDE10E7.log",
+        "sha256": "0b0e245e25fcffbf123e2613bfdc9bc082f58bf483ce18d7ceae9e359a298fb5"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-255-74B9584D-5228-45BA-B7BF-4E322861185E.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-255-74B9584D-5228-45BA-B7BF-4E322861185E.log",
+        "sha256": "f593f4051b8a474f3808a46a13a3bcb95a5459c34638be8de3239155374bef48"
+      },
+      {
+        "family": "E06",
+        "scenario": "invalid",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-D686116B-5DFC-4D39-B012-7A3451B3A56F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-D686116B-5DFC-4D39-B012-7A3451B3A56F.log",
+        "sha256": "758b32dff76d8996f951dcf7b191c7a44a6b7bb3b9ac90748108543a5ab7bf37"
+      },
+      {
+        "family": "E06",
+        "scenario": "domains",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-C370E0F4-D53B-409E-855D-7B3CB6392350.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-C370E0F4-D53B-409E-855D-7B3CB6392350.log",
+        "sha256": "8e70ad5ef8c98efb845264b99f834a2dce50dcb833c8bf43f99d607c5e58bf38"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-cosineRoutedMatchesReference",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-cosineRoutedMatchesReference-FC192600-D940-4D81-984C-A711532A6AAA.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-cosineRoutedMatchesReference-FC192600-D940-4D81-984C-A711532A6AAA.log",
+        "sha256": "88ff1ac13df03d00626d9515bcd50639e5f1a63e6f74a60bfeb2849886b0953f"
+      },
+      {
+        "family": "E06",
+        "scenario": "linear",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-F0E3070E-6396-4612-9C3B-61EC20F9A630.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-F0E3070E-6396-4612-9C3B-61EC20F9A630.log",
+        "sha256": "e7a73dc8e1ee14307cfdb8938bfc67b65a8b96d36cce45d8cbc19df4b5e6e426"
+      },
+      {
+        "family": "E06",
+        "scenario": "partitions",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-3859F856-D2AF-4449-A36F-A5FE55532A58.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-3859F856-D2AF-4449-A36F-A5FE55532A58.log",
+        "sha256": "497be4463c069d6e00512c8dac1b926d70b4095a25d65d45b0fff5638fc2f6d8"
+      },
+      {
+        "family": "E06",
+        "scenario": "snapshot",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-7D0CE576-58EE-4C48-A894-51273588A968.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-7D0CE576-58EE-4C48-A894-51273588A968.log",
+        "sha256": "deb989ded8d4dafcdb4fae8af1e38bfd38e107f48746d9415ebacac9a2714525"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-manhattanFallsBack",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-manhattanFallsBack-84893CFB-B969-4499-A335-88856E8989FE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-manhattanFallsBack-84893CFB-B969-4499-A335-88856E8989FE.log",
+        "sha256": "64d1a0a723be3e8c4f01a62449359b7b841382e6d059c15b1359a466eb78f4fe"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-256-C6ED41D4-5CF4-470C-8B21-058B521DE10F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-256-C6ED41D4-5CF4-470C-8B21-058B521DE10F.log",
+        "sha256": "12467b4dbb4a106c5683f246b1c57a7e666a135af7c41016fd305ba7a9d7e77c"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-dynamicDoesNotRoute",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-dynamicDoesNotRoute-95DB56F1-AFAB-49F9-BB6E-AA5F59E36884.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-dynamicDoesNotRoute-95DB56F1-AFAB-49F9-BB6E-AA5F59E36884.log",
+        "sha256": "8937781457598cfea15f5ddd344f5b8ebed413572212b19837a740b23c497109"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-routingToggleConsistent",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-routingToggleConsistent-F3C44570-6BA4-4433-BC89-58923F3087F8.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-routingToggleConsistent-F3C44570-6BA4-4433-BC89-58923F3087F8.log",
+        "sha256": "33a2af3f4dbd3af71454d23f02445b0cdab27ea3188ccc9c494abc0bf51f4834"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes512",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-8F375EC1-3136-4EFD-90DE-22605F2BD572.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-8F375EC1-3136-4EFD-90DE-22605F2BD572.log",
+        "sha256": "48161d25fc99b71e0d0a162c3a5c9aab4f365d7c743b4b77d8310c7d588d542e"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-257-79C19115-4727-4142-941A-EE8440B99FF6.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-257-79C19115-4727-4142-941A-EE8440B99FF6.log",
+        "sha256": "ce06f86e17b9de45e8b7ec9d7cebe8655611418da89bb2a8ff295d50c77e00ca"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-disabled-257-D78D69CC-E104-442E-A432-FA223026FEA6.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-disabled-257-D78D69CC-E104-442E-A432-FA223026FEA6.log",
+        "sha256": "ded19b3e59a3d467ff8d725ab255084970e9d5b30d0e593834025e075866ec54"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-7-8E0AAD30-C524-49B9-B257-730F68A40E00.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-7-8E0AAD30-C524-49B9-B257-730F68A40E00.log",
+        "sha256": "3be14a6d9162fe4923a03c629165ba42b53eaebc32581b2543280e21dedbe5cd"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-8-0415048C-DE69-4445-B564-FEC2007249AA.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-8-0415048C-DE69-4445-B564-FEC2007249AA.log",
+        "sha256": "5bb1a9ab57e4088509e40d56104b194c3ce36483158781e054df80e6c3824a4c"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes768",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-4D8C1403-B226-48F5-8BE2-F21025B3A515.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-4D8C1403-B226-48F5-8BE2-F21025B3A515.log",
+        "sha256": "6a6ef427c76f14600b17fac2b36237154ad8a92412894d07fd8f7ffd13c63849"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-9-91B7D5B1-3F1F-434B-810A-391F88DF6582.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-9-91B7D5B1-3F1F-434B-810A-391F88DF6582.log",
+        "sha256": "6d5b07c74e8be44f07794f2213b4aba95a74252197126bfe9778dac8a8781137"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-255-3421132C-5F43-4E13-9778-D117670329F7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-255-3421132C-5F43-4E13-9778-D117670329F7.log",
+        "sha256": "0d5540c8a08406808ceb431fa852135c3a0adf983a5e76e4d0c0ba77c02d057b"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes1536",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-F46F6CC6-FAF4-4798-B3BC-36623BF9326E.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-F46F6CC6-FAF4-4798-B3BC-36623BF9326E.log",
+        "sha256": "3163814d09eb057ff2bcce38706d80d0ee7b97f5520e197d807e6e196b1fa851"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-256-2507AC46-FF05-4083-95C8-68E9233482DE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-256-2507AC46-FF05-4083-95C8-68E9233482DE.log",
+        "sha256": "8872d16edb0519e04ca908625a7af01a4991bfd4da17ae3ad2e405aad0dc6838"
+      },
+      {
+        "family": "E06",
+        "scenario": "pairwise",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-E024CAB5-B9E2-441E-BB40-0403DB8E2BFA.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-E024CAB5-B9E2-441E-BB40-0403DB8E2BFA.log",
+        "sha256": "2d5b3b9e930c46fbd5939990799da5e1d5e79eb492c9eb0ab3f5e4a6b5f88c57"
+      },
+      {
+        "family": "E06",
+        "scenario": "nested",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-D61F5A06-7918-4DDB-AB44-A1E9A847A062.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-D61F5A06-7918-4DDB-AB44-A1E9A847A062.log",
+        "sha256": "45cd96affefbd3f4a1aeb993fabb838ad088cdb4828d246fd883e2ce3b6b17a8"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-257-54141537-6B34-4870-9543-49935B357741.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-257-54141537-6B34-4870-9543-49935B357741.log",
+        "sha256": "6addaafab99fe1905cd437daf207442dd536ff798ac771f54bbf6e43e140cb3b"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-disabled-257-753EC780-7432-499B-B6D1-8F5B8BC4BFA6.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-disabled-257-753EC780-7432-499B-B6D1-8F5B8BC4BFA6.log",
+        "sha256": "15050d780daa30e2bd83c1f76c10e0e61c0f2d929cb9b40a2abbb5772ed18e85"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-7-68CC79DC-EC84-4ADB-AC29-67B561905872.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-7-68CC79DC-EC84-4ADB-AC29-67B561905872.log",
+        "sha256": "74a14edb27681947f987396bb56809b07ba974bfca29b0f2847bd24f3b0fc092"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-8-0942040B-6F2F-4A05-8FB4-26286D7C57AA.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-8-0942040B-6F2F-4A05-8FB4-26286D7C57AA.log",
+        "sha256": "2622cae893aaf979aa818cb90cc09abb0218ce54f9be682263345659b80e7a38"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-9-5E27399F-56E8-4BE1-A0E0-8BD713C062BB.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-9-5E27399F-56E8-4BE1-A0E0-8BD713C062BB.log",
+        "sha256": "e3a43b295c73dd22dfa9b1bfed39d7480a7b117edae77e8dd3ae831240800988"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-custom-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-custom-default-257-0EFB55E9-D6BF-4FE6-AD92-E73F6231F24F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-custom-default-257-0EFB55E9-D6BF-4FE6-AD92-E73F6231F24F.log",
+        "sha256": "08d22513f73144030c9138d5e3c128ed52ee67478d69fb7b0442df46140baea1"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-255-10289443-CA5D-461C-A341-6C8AF1DB1F02.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-255-10289443-CA5D-461C-A341-6C8AF1DB1F02.log",
+        "sha256": "c7bd553ace1859c60cfa6d640938e9916c355b077a94252da7000a004398db15"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-256-7AC7988C-0765-485E-8FC3-D9E50D9F81BC.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-256-7AC7988C-0765-485E-8FC3-D9E50D9F81BC.log",
+        "sha256": "8e64a3138cfcddb4f2b11200445290cd3420442551bed2761c30d220a48cbc88"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-257-D66C6E5A-8C0F-4CB2-850C-649BB8827AF1.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-257-D66C6E5A-8C0F-4CB2-850C-649BB8827AF1.log",
+        "sha256": "c93ddf60f3ac515a636c2835f2970295c9a01a45a8cd84586c0f218056115acc"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-disabled-257-AE5ECC94-83D7-4467-8BFF-444C61F98860.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-disabled-257-AE5ECC94-83D7-4467-8BFF-444C61F98860.log",
+        "sha256": "0feba3f087fe60757359b55ec6f98e3b0071c84ea8b03e008f76302ac71d2aef"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-7-B5C2060F-1264-4BAC-BCC7-507F3C97DC9F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-7-B5C2060F-1264-4BAC-BCC7-507F3C97DC9F.log",
+        "sha256": "dd358e7c486c1ddc3a7cbf00904706f95896539d816a025a5f28840b1620ac9e"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-8-22ADDFDE-D255-4CB0-BC9D-77A2849B56D5.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-8-22ADDFDE-D255-4CB0-BC9D-77A2849B56D5.log",
+        "sha256": "29aa21f5ac306406db718df41c79d5942187bd3a705762cb69db408afc0a2e25"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-9-C72B3ACE-AE68-4BB7-A850-158FAE1C1108.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-9-C72B3ACE-AE68-4BB7-A850-158FAE1C1108.log",
+        "sha256": "360f1f92c081537d0a87e3ee95f7121184b641ae7016c3b27ec601e902c0040a"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-255-1FBCEB77-2429-4D8D-9DB5-292CAFD0D5EF.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-255-1FBCEB77-2429-4D8D-9DB5-292CAFD0D5EF.log",
+        "sha256": "e9dab68519d65c3dda994e3006cc4131305d75f3093880f6d763379b742022ea"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-256-DC60CDA6-A8C1-4E03-8482-41EC6C2C866D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-256-DC60CDA6-A8C1-4E03-8482-41EC6C2C866D.log",
+        "sha256": "301e111a9d5130abca8fdfe43e8f6333fb53cc5a4fd2ad8365d50aa8d3015bed"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-257-89D51FDB-A8BE-4C09-A55E-BA6EA054B8B0.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-257-89D51FDB-A8BE-4C09-A55E-BA6EA054B8B0.log",
+        "sha256": "4034acbc47d3b6611fe3acf6943d84bad0f912fbb07d25bf160d38544b140196"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-disabled-257-414AB454-3D9B-45A5-B9EE-8B035E04A9A3.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-disabled-257-414AB454-3D9B-45A5-B9EE-8B035E04A9A3.log",
+        "sha256": "11f66ac47a6a3a4520a96adadabd97f7f5d43856b17cdfa64daf94a7da4dd0a2"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-7-EDBFC6F7-CA2B-4B71-88A4-E8E85576E63C.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-7-EDBFC6F7-CA2B-4B71-88A4-E8E85576E63C.log",
+        "sha256": "848f8777d8a1aa38ed4fff83ac8d5ca25cf0553ecd5985f692c33897c4ae1f60"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-8-9BB710FF-FD5E-4A8F-B87B-1DC14166286C.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-8-9BB710FF-FD5E-4A8F-B87B-1DC14166286C.log",
+        "sha256": "a4320611c5c88f658c18b8030e9168d7f7ddc3550da8e698a3aaf3e5319664c7"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-9-73C03BF6-B906-401E-B610-D7C48E400058.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-9-73C03BF6-B906-401E-B610-D7C48E400058.log",
+        "sha256": "b3ec30145faccfa8c5dc042bb6fd6f8fa1f71a72b5fcc5f73cd4aa56e94bd5ce"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-custom-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-custom-default-257-C0CA0AAE-80CE-4EFC-8A54-D5BB7FA27973.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-custom-default-257-C0CA0AAE-80CE-4EFC-8A54-D5BB7FA27973.log",
+        "sha256": "94709202eb236052c43efb7db634484d63dae41150b86245132fcaccefc16802"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-255-7C6744CA-167A-41B4-B1D3-77ABE4975F11.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-255-7C6744CA-167A-41B4-B1D3-77ABE4975F11.log",
+        "sha256": "c9ef7bfbf29c4c041385776b6f6e800a7a0d511c37f28e38bd1830ecd8dfa66e"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-256-50C9C3BA-D3DA-43D6-B156-B77C5C7F15E6.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-256-50C9C3BA-D3DA-43D6-B156-B77C5C7F15E6.log",
+        "sha256": "f7bd17a513890be73cd9019735087785a3a4e5b7c0510049af270f1d843078d2"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-257-49DE0CA7-5779-4536-8E8E-AF673AE5A4FB.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-257-49DE0CA7-5779-4536-8E8E-AF673AE5A4FB.log",
+        "sha256": "f3a8123628bb49385fcb1720009c95500a563a8e6f721256af7e7aac5fd29c9d"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-disabled-257-2FCCD44D-033F-48D0-9177-E34BF5E46990.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-disabled-257-2FCCD44D-033F-48D0-9177-E34BF5E46990.log",
+        "sha256": "7b41780fdb12fbc537b686065372b4ce8ac916f2c62bba482d347782c70db2c6"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-7-8376A9C4-2233-4FA2-B786-FE277DD26300.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-7-8376A9C4-2233-4FA2-B786-FE277DD26300.log",
+        "sha256": "ffec2f752c43b21198f57bfa3dbf7287612786f65e50366209ea2ed0c84cfd25"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-8-9914970E-E69C-4C4C-A3C8-CF9D3FD32BE2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-8-9914970E-E69C-4C4C-A3C8-CF9D3FD32BE2.log",
+        "sha256": "5a2ed0c59e963c03f625ae4ccd906a007f9dfdc42e449a02ecdf44dbcd35cd6c"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-9-D4A98F37-D697-475E-85A6-50C395665665.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-9-D4A98F37-D697-475E-85A6-50C395665665.log",
+        "sha256": "13ec0d7ee97adf09c62fa1991e272edb7bf7a99e90fede3bbb55b16279938e3c"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-255-F76931D9-AF58-4A60-9EE7-76311D8C69C2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-255-F76931D9-AF58-4A60-9EE7-76311D8C69C2.log",
+        "sha256": "b7d3c3330a378b4f44f57adb6900479fc3044f8d2283799b4a58efef0baeecc9"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-256-3686E4A6-2B75-4DA8-B00C-EC00170E7474.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-256-3686E4A6-2B75-4DA8-B00C-EC00170E7474.log",
+        "sha256": "37de7ff4c9275aeb957b3464ece3e303e65928f9dd2c2cfbad4dd808004b1e72"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-257-5B56E1E1-3912-4E1C-B492-012A2B7DEFBE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-257-5B56E1E1-3912-4E1C-B492-012A2B7DEFBE.log",
+        "sha256": "d5f11b33876eda83a503ddc5993846ea102367f0d1e1784f9d563f8daa280f8b"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-disabled-257-F94B5A0A-F031-49C7-AFEA-96FC4CE9FC5A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-disabled-257-F94B5A0A-F031-49C7-AFEA-96FC4CE9FC5A.log",
+        "sha256": "f7bedc9ec55be5db2f3e9064a9441541f82304060cfe3322b9d1d2a2228d6266"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-7-217121CE-B07A-45CB-9B37-E0A9410BB7DC.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-7-217121CE-B07A-45CB-9B37-E0A9410BB7DC.log",
+        "sha256": "e4f88e9ae55b2836a0623cd80f265be8fdbc33068f2e79f135e2901a88f91c8b"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-8-4F6CE0F2-3E4E-4389-8B80-926FCCF42CEA.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-8-4F6CE0F2-3E4E-4389-8B80-926FCCF42CEA.log",
+        "sha256": "40eca180b42c1bfb9c14f5e8b1efea1240be6eab84e624e5c0c69aa226882a6c"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-9-3AC63F6F-522B-43EE-8D6E-43859839C267.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-9-3AC63F6F-522B-43EE-8D6E-43859839C267.log",
+        "sha256": "7d9e038b42ffb812b70d0a0c85daeb10637e9d44aa8ff8263b52e4955b2b4de9"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-custom-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-custom-default-257-AF4FBC1A-2AA7-4219-B473-BAAB3E2D8422.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-custom-default-257-AF4FBC1A-2AA7-4219-B473-BAAB3E2D8422.log",
+        "sha256": "206ce6969a55a8782c430153316289e484e747933bdbc82afe13a93076d3bcd1"
+      },
+      {
+        "family": "E02",
+        "scenario": "watchdog",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-watchdog-CC003977-7106-4611-99A6-FF23C23B2123.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-watchdog-CC003977-7106-4611-99A6-FF23C23B2123.log",
+        "sha256": "bbd0c8e3510967c98366e6fb89484e664c513f63341e0772b159165dd0e7379a"
+      },
+      {
+        "family": "E03",
+        "scenario": "increments",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-increments-CA19E2CA-6A49-490C-B5DA-96520692C794.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-increments-CA19E2CA-6A49-490C-B5DA-96520692C794.log",
+        "sha256": "e417bda253a1cb37bd5cf8f5c29673bebdc962751550f924a099ebdc3dd62618"
+      },
+      {
+        "family": "E03",
+        "scenario": "independent",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-independent-C9E3B48A-FA20-472B-A5B6-43D4454EDA68.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-independent-C9E3B48A-FA20-472B-A5B6-43D4454EDA68.log",
+        "sha256": "e93692d4c91c2874bce17dae9ef903dba04dbe2531fa2e0d02a1907f3a7c29f5"
+      },
+      {
+        "family": "E03",
+        "scenario": "rollback",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-rollback-57C636C0-20DB-45F6-848E-1580F5DD52F6.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-rollback-57C636C0-20DB-45F6-848E-1580F5DD52F6.log",
+        "sha256": "be87e41d82bb82deaadb4d4c537130241938eeb0d8e020cdd6b5cd19e50529d9"
+      },
+      {
+        "family": "E03",
+        "scenario": "snapshots",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-snapshots-E37DF7A0-F61A-44A4-B75D-474D13092031.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-snapshots-E37DF7A0-F61A-44A4-B75D-474D13092031.log",
+        "sha256": "37458c8b2fd564626f1e9d91291fb5cefab9ce9136453d518072feb973f14466"
+      }
+    ]
+  },
+  {
+    "label": "release",
+    "command": [
+      "swift",
+      "test",
+      "-c",
+      "release",
+      "--jobs",
+      "6",
+      "--scratch-path",
+      "/private/tmp/vectorcore-stabilization-E06-release",
+      "--filter",
+      "BatchConfigurationContractTests|ExecutionSchedulingContractTests|ProviderConformanceTests|ConfigurationTransactionTests|ExecutionBoundaryTests|BatchGEMMRoutingTests|MatrixMetricContractTests|BatchStatisticsRangeTests|TopKNaN"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {
+      "E06_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E02_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "R03_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E03_CHILD_LOG_DIR": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures"
+    },
+    "exit": 0,
+    "expectedExit": 0,
+    "seconds": 237.35676312446594,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-release.log",
+    "logSHA256": "bf609b2b599883e481f20867b60ffdf2a98a51d247376b06a5a9fd77f92bd401",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": [
+      {
+        "family": "E02",
+        "scenario": "shape",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shape-FE5520BE-DC55-4FAF-AF5A-F04C5A5A4864.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shape-FE5520BE-DC55-4FAF-AF5A-F04C5A5A4864.log",
+        "sha256": "0efda1394aa36584de0f46358a123efefe99b7b0a94b1f60acdaed49ceda96a1"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-euclideanRoutedMatchesKernel",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-euclideanRoutedMatchesKernel-9EBFFAA3-8691-4DA5-B577-D2CD1838F3DC.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-euclideanRoutedMatchesKernel-9EBFFAA3-8691-4DA5-B577-D2CD1838F3DC.log",
+        "sha256": "7937ae2c7dfb150c108f77d3a90f609a179983896881e871688b245cd18b74e5"
+      },
+      {
+        "family": "E06",
+        "scenario": "generic-nearest",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-163825DD-12AF-4613-AC30-98DBFE6FB90E.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-163825DD-12AF-4613-AC30-98DBFE6FB90E.log",
+        "sha256": "560d674eef9c6ca1c250e8b02aaba55c2a919903e4ccc2a041c18302ec9b0866"
+      },
+      {
+        "family": "E02",
+        "scenario": "shortBatch",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shortBatch-EF05EE8B-9DF6-48A6-B8A2-5A03AC74C41D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-shortBatch-EF05EE8B-9DF6-48A6-B8A2-5A03AC74C41D.log",
+        "sha256": "5a0676dc6854a12e47aac5033b5732360c076e0d2b15222fb22ac42e3ba18da1"
+      },
+      {
+        "family": "E02",
+        "scenario": "factory1",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1-BED3DB0A-1823-4021-BDF8-665E3BE1DDDE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1-BED3DB0A-1823-4021-BDF8-665E3BE1DDDE.log",
+        "sha256": "81c3ae15ae10863fee0528cf648bd3b5cced2e4c595eb3f9bff3cf89fca1e005"
+      },
+      {
+        "family": "E02",
+        "scenario": "gatedCancellation",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-gatedCancellation-523BCA9D-5684-4531-8051-761A043A1058.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-gatedCancellation-523BCA9D-5684-4531-8051-761A043A1058.log",
+        "sha256": "50f8b7bc8ea23dd3287ecadcfd0e359b2229f2b02c9646f3a3fdfe6b62604404"
+      },
+      {
+        "family": "E02",
+        "scenario": "cancelSerial",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-cancelSerial-49BDEC63-FE90-43DA-925D-E40A3D7969E7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-cancelSerial-49BDEC63-FE90-43DA-925D-E40A3D7969E7.log",
+        "sha256": "d0f968b75d551d299f8a0287afccef26e0a1eebb408420cab5335bab4a1f01a1"
+      },
+      {
+        "family": "E02",
+        "scenario": "reverseAndError",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-reverseAndError-58DF1B95-5DF9-4998-B548-448E59E17BF2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-reverseAndError-58DF1B95-5DF9-4998-B548-448E59E17BF2.log",
+        "sha256": "9a9069baceaf1984cbdc5eda268995af1e0dd9f502f51a1f0f154069ddc7d27b"
+      },
+      {
+        "family": "E02",
+        "scenario": "factory1000",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1000-1CB0E632-E5BF-40F1-974F-E6819873EFD2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-factory1000-1CB0E632-E5BF-40F1-974F-E6819873EFD2.log",
+        "sha256": "a1be2944c8cc5c5b051f75ea3fb2726fa68ba8cdfe075c793a556e7a242a3e04"
+      },
+      {
+        "family": "E02",
+        "scenario": "batchControl",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-batchControl-59CDC478-3D05-4A9F-9C0E-2C62CADD1EDC.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-batchControl-59CDC478-3D05-4A9F-9C0E-2C62CADD1EDC.log",
+        "sha256": "a85b7e0eaaefe8c68c8ce3e67817f1c92d3598dbeb133edc111665d7b5f34599"
+      },
+      {
+        "family": "E06",
+        "scenario": "defaultBatch",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-4BC95C7E-EBD1-42C0-B283-A78C8FF4ED3C.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-4BC95C7E-EBD1-42C0-B283-A78C8FF4ED3C.log",
+        "sha256": "b078a37a2355b30de15c8b9234682c778d159a302c3f1387ed345054493dce48"
+      },
+      {
+        "family": "E02",
+        "scenario": "defaultBound",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-defaultBound-A6DEED53-B0F7-49E2-9E65-705929CC0B7E.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-defaultBound-A6DEED53-B0F7-49E2-9E65-705929CC0B7E.log",
+        "sha256": "a00691d847b86a44d1b3120dffeca3c269542c900ea8862d2da15e967cbe8c0b"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-255-B32B0333-905B-4095-BB8C-99FA050877FC.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-255-B32B0333-905B-4095-BB8C-99FA050877FC.log",
+        "sha256": "833d90f5c47322190ea6e29fb32fbf29beb38346da20f3ebde434d67ec1524d0"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-cosineRoutedMatchesReference",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-cosineRoutedMatchesReference-E0160289-7B86-4923-A1AC-C9820BA99B5E.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-cosineRoutedMatchesReference-E0160289-7B86-4923-A1AC-C9820BA99B5E.log",
+        "sha256": "b323941ff65b2b549154128a8dc576735c85f6709a28535819b12f28676cbe9e"
+      },
+      {
+        "family": "E06",
+        "scenario": "threshold",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-CDD34AFC-74ED-439D-A214-E96D9619F81F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-CDD34AFC-74ED-439D-A214-E96D9619F81F.log",
+        "sha256": "342041ec18755003b58891969b6da616f76bebab10b8e23b6c53a07a903cc214"
+      },
+      {
+        "family": "E06",
+        "scenario": "chunks",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-167B82A3-F8C0-4EEE-88ED-0AA3B3F1E745.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-167B82A3-F8C0-4EEE-88ED-0AA3B3F1E745.log",
+        "sha256": "949319e4fb2bf9762bc6d934be00a3f5eaf2a503b013302f04c0f1a949e405a7"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-manhattanFallsBack",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-manhattanFallsBack-B4233D7B-F54A-474B-A677-792E050BC783.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-manhattanFallsBack-B4233D7B-F54A-474B-A677-792E050BC783.log",
+        "sha256": "13b60da52650b9e067de61579216303294f83ee8c10d7ae7f469ae399e4f24b0"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-256-A7780446-95D8-4772-BCCB-A803A773C176.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-256-A7780446-95D8-4772-BCCB-A803A773C176.log",
+        "sha256": "f2bea2bb1398fb1589d6de9149c6c178663a5d6f6e570ab8d8f54ac91d14e22d"
+      },
+      {
+        "family": "E06",
+        "scenario": "invalid",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-26A83165-2F0E-4A24-9769-A097565284F2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-26A83165-2F0E-4A24-9769-A097565284F2.log",
+        "sha256": "b3ab45ca7184bc9c62cd8bc247213fa1cc98a2e949bcdbbfcd92ab7bd210e526"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-dynamicDoesNotRoute",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-dynamicDoesNotRoute-239869A9-DEFF-4444-AA18-469CB576D9C4.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-dynamicDoesNotRoute-239869A9-DEFF-4444-AA18-469CB576D9C4.log",
+        "sha256": "9c02f5bfebf2658bbf21d9ba120989a248c39d57694c591e9f3719446d5dd50a"
+      },
+      {
+        "family": "E06",
+        "scenario": "domains",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-8FCA7F36-26C5-4F34-B9F9-BCA830FFA9E7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-8FCA7F36-26C5-4F34-B9F9-BCA830FFA9E7.log",
+        "sha256": "f583940dc5c01d7464a5d062b343aae0c8357508535c9cdacbcee0450ea2a52e"
+      },
+      {
+        "family": "E06",
+        "scenario": "gemm-routingToggleConsistent",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-routingToggleConsistent-457B9C36-097F-4C35-90F0-95305728991A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-gemm-routingToggleConsistent-457B9C36-097F-4C35-90F0-95305728991A.log",
+        "sha256": "0ccc580ae27f5248acb212f29882d4881444d15cd81e287a4d79e4f40cb8f97b"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-257-BDAAF160-EDB0-4B1D-A0B3-5D241C8BA7B8.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-default-257-BDAAF160-EDB0-4B1D-A0B3-5D241C8BA7B8.log",
+        "sha256": "9fb1dd85b7e4112def5035e6e7604bcb602dfe7927888d17e394d0d4fdad630d"
+      },
+      {
+        "family": "E06",
+        "scenario": "linear",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-F546F716-6882-4618-BC94-E38A28A53827.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-F546F716-6882-4618-BC94-E38A28A53827.log",
+        "sha256": "c85f0d13d2c8150f89228b89b8d141feabcbe5a253a0b4d90e3653ffdd2e0eaf"
+      },
+      {
+        "family": "E06",
+        "scenario": "partitions",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-436D1C75-7FEE-473B-8399-0FCA5A7C4D04.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-436D1C75-7FEE-473B-8399-0FCA5A7C4D04.log",
+        "sha256": "6f303f8665b79e715bb355f42b7c731b2217672b95362c73f5182bd8431129fa"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-disabled-257-A69C419C-FF56-4EC7-A2EC-5A4D89392049.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-disabled-257-A69C419C-FF56-4EC7-A2EC-5A4D89392049.log",
+        "sha256": "9cf5c27e45de0a71baa93b994d3b160a96025dadf4a800f295a8cf8c16acd867"
+      },
+      {
+        "family": "E06",
+        "scenario": "snapshot",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-402356B1-CE3A-4771-845E-6B89A1148DFF.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-402356B1-CE3A-4771-845E-6B89A1148DFF.log",
+        "sha256": "f8565c2ba64871160459bfb0c8373c8ba414e382e51da1f2681a93d8d73ceb22"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-7-7CA4E8D4-83AD-4ED0-8F0A-48897630245D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-7-7CA4E8D4-83AD-4ED0-8F0A-48897630245D.log",
+        "sha256": "75f966693dc34f1407731cbafe5686211eb10e9f40587bc354624160fa882be9"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes512",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-7A31D210-2CC7-4CFE-A86A-6C9DD4A8B43F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-7A31D210-2CC7-4CFE-A86A-6C9DD4A8B43F.log",
+        "sha256": "9a48630144aea89531d101c075957dcf2ba32965a221ac04eb8b8d4637626f66"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-8-4E29E308-583C-456D-9234-85367AD9471B.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-8-4E29E308-583C-456D-9234-85367AD9471B.log",
+        "sha256": "9235348277c7d098df41b5df5ed541e63d090ed157b46733362c08e969f8334e"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes768",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-CA516940-ACF2-4627-89C0-5C54CA68301F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-CA516940-ACF2-4627-89C0-5C54CA68301F.log",
+        "sha256": "a85f083859bdc40bd255bfe44cdb13eb649de30985841c964c376f81abffef96"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-euclidean-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-9-08415589-2473-4E77-9849-8E3AF2E094F9.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-euclidean-small-9-08415589-2473-4E77-9849-8E3AF2E094F9.log",
+        "sha256": "116d216830506430ff7c69827852ca89eddd06993ec35b077d07a5e4d1debc05"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes1536",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-47B7B1D3-276B-4916-91AE-0CCDF97982B2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-47B7B1D3-276B-4916-91AE-0CCDF97982B2.log",
+        "sha256": "0a5fd9f233f743d1f1546693bedcde4b157f6103f5882f00bac4db67e224e204"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-255-A893CE87-9DF3-464E-8434-2CF37CFB6A3D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-255-A893CE87-9DF3-464E-8434-2CF37CFB6A3D.log",
+        "sha256": "21ba36a808f63365ef5c9818d4f0fe3c3db320600c7e6f58f620b1019870f118"
+      },
+      {
+        "family": "E06",
+        "scenario": "pairwise",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-0165BA41-4B70-4804-977D-8F9349398241.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-0165BA41-4B70-4804-977D-8F9349398241.log",
+        "sha256": "8b54545805a12ca4c6d9dbfbfa3cb81b95e84289993c121f62512a3b67482662"
+      },
+      {
+        "family": "E06",
+        "scenario": "nested",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-AF546FA0-734A-4EF8-98E3-8644D77F0975.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-AF546FA0-734A-4EF8-98E3-8644D77F0975.log",
+        "sha256": "0f47cedf997df71dba82df2ce41c54887258ec2ae8f8c7f97c00eb0f754c270e"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-256-B0130F9F-AB1D-4275-9790-D7B1C381677A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-256-B0130F9F-AB1D-4275-9790-D7B1C381677A.log",
+        "sha256": "ed3669d40e31709972b2842504dcd85f9ac7b4a7fbf5c2176ce47ea25c8567db"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-257-FDB13AF4-87B5-439E-BA7B-DE5BB242C45A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-default-257-FDB13AF4-87B5-439E-BA7B-DE5BB242C45A.log",
+        "sha256": "7158a565b670e2e1bdbdb52b320561566ee3ffa145f8ae05bdaec136dceedef5"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-disabled-257-6801962A-0631-4738-88C4-6F9B9C544C8F.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-disabled-257-6801962A-0631-4738-88C4-6F9B9C544C8F.log",
+        "sha256": "35edba814f1f1cdf98731a7af7cf0d6e32e9570e4f69767f9e5dd6be3a1a1810"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-7-0715959C-1C01-484E-9FBC-EDF649E84425.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-7-0715959C-1C01-484E-9FBC-EDF649E84425.log",
+        "sha256": "21fa90b26031cacd99606eb6f40aa880a04897d57bbf9489b2fb50d25d9ca120"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-8-F6ECFD1B-FD82-46C3-AFFD-9532EE534661.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-8-F6ECFD1B-FD82-46C3-AFFD-9532EE534661.log",
+        "sha256": "ad0e1809e0ccdda8996d8c4667c9a114eaff71d81bd40e688b92b67bfe5ba398"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-cosine-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-9-BED75DF0-2836-4E9C-9BC5-C47748E32D89.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-cosine-small-9-BED75DF0-2836-4E9C-9BC5-C47748E32D89.log",
+        "sha256": "188d13c7c1e9d94390527e3bfbc27b1f5dae2615349aea7e4ad505fd350fd8ab"
+      },
+      {
+        "family": "R03",
+        "scenario": "512-custom-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-custom-default-257-EF968BAD-A150-4CC3-ABF8-81BA71F63E7E.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-512-custom-default-257-EF968BAD-A150-4CC3-ABF8-81BA71F63E7E.log",
+        "sha256": "819775c4169ee44fcf0d41b36728edc1ec36eb61127a53c7d14139ec94851621"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-255-6426FE89-49E6-4DCA-9613-D4F567A9AD9C.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-255-6426FE89-49E6-4DCA-9613-D4F567A9AD9C.log",
+        "sha256": "4405c63ed22e2f3e62e7d6e6d71b28dbcdf3fb7f6d5bb846af3f60d4b678dfb6"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-256-1C43026B-FA46-4033-AEEC-2365B2C45CF2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-256-1C43026B-FA46-4033-AEEC-2365B2C45CF2.log",
+        "sha256": "2c6cb06262d80426d037e007aa95112b20847f15cfacf06f60337c2b4403d681"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-257-A254E9CA-9ABB-4288-835F-D5921B553170.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-default-257-A254E9CA-9ABB-4288-835F-D5921B553170.log",
+        "sha256": "ae975fc0893947061a6668f2b480e84a54cc80a9fed36676db14fb0479ba199c"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-disabled-257-4472F43D-2E71-4EC6-BF5C-2824CF7C2D64.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-disabled-257-4472F43D-2E71-4EC6-BF5C-2824CF7C2D64.log",
+        "sha256": "a1f6b208169bf0d4dd71d88b9b7f30b8b8ac36a4e3d151a5434dd84289e1400e"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-7-88F79743-CDD8-4252-A8E9-9010CE7CAFBE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-7-88F79743-CDD8-4252-A8E9-9010CE7CAFBE.log",
+        "sha256": "1ca62ff212eb7cd323183294e18c8a809a36a63f1ba66d5dfe1a6bfb3d5d7ec9"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-8-3CB8E644-3C9A-4E12-B401-41F2E4326016.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-8-3CB8E644-3C9A-4E12-B401-41F2E4326016.log",
+        "sha256": "c353340a2325e5a941ed2d9fa3875219b42209aea7caa430a4a4396374bc4c9f"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-euclidean-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-9-68264474-B1C1-4114-8D7C-36C3B5E32EBA.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-euclidean-small-9-68264474-B1C1-4114-8D7C-36C3B5E32EBA.log",
+        "sha256": "2c6657e626adf5981926c4b5e0a49e2e84c1191f33297e0a4fdbe6285ed8f44e"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-255-4E0DAC23-9A62-4F45-BE63-3A7D8F3228D1.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-255-4E0DAC23-9A62-4F45-BE63-3A7D8F3228D1.log",
+        "sha256": "815e86b65a828bc4014ea32f6b3a78ce6bc3eddbe8ff475844f20b524095605b"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-256-DFD6A799-1F20-41BE-9263-A5D1A2244AF9.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-256-DFD6A799-1F20-41BE-9263-A5D1A2244AF9.log",
+        "sha256": "615651d9e9e1fa41bb7d7bb01ed6cffbbb8af02a6d48048c48e0adb7c2a31b5a"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-257-9DE85C29-4335-4E26-A142-06876BC2B0BE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-default-257-9DE85C29-4335-4E26-A142-06876BC2B0BE.log",
+        "sha256": "78a9a3ed6b8ff65590736a70bb4812848427fe584893c3482cc37009147eacde"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-disabled-257-9E8B3514-6459-48A9-A21D-207E873D0E80.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-disabled-257-9E8B3514-6459-48A9-A21D-207E873D0E80.log",
+        "sha256": "5e0f153cab287deca60874b7db5794b69faaf33c870e1c127aed2e1d25130481"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-7-5F8E7BA6-8974-49A8-9519-84928983E281.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-7-5F8E7BA6-8974-49A8-9519-84928983E281.log",
+        "sha256": "c0747e34f895e683d379527e7c2815804a23ed0db418eeefe2ee530d086de56d"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-8-74C62531-97AE-40CA-8EAF-D5FE4E5B2DF9.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-8-74C62531-97AE-40CA-8EAF-D5FE4E5B2DF9.log",
+        "sha256": "f7b118fc1231b37ddd706d0c10d6f12caf3e094b0b85c336ea10344e62c7415a"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-cosine-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-9-BDCC59F8-32B0-4FEE-9A75-AE4BC5583FE7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-cosine-small-9-BDCC59F8-32B0-4FEE-9A75-AE4BC5583FE7.log",
+        "sha256": "b00efe41ad8221ea5f9dbc889fc44ff0e15b64f5d0d6a647ffe83e377f0f9f7d"
+      },
+      {
+        "family": "R03",
+        "scenario": "768-custom-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-custom-default-257-0454250B-B081-41C1-B7F7-8A24BFED74A2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-768-custom-default-257-0454250B-B081-41C1-B7F7-8A24BFED74A2.log",
+        "sha256": "1fceed6e1eb6320bebf32102c9c9a55c3dd9b6c2425944569d8c39cad31d7e03"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-255-D7D95312-51FA-47D2-B494-62C42FCA30DE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-255-D7D95312-51FA-47D2-B494-62C42FCA30DE.log",
+        "sha256": "71867a8307264254284949cd2a4226e11aac6e5ea1628190273b3331eae06ba7"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-256-D6093127-4220-482E-AEF5-FDBE6501D73A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-256-D6093127-4220-482E-AEF5-FDBE6501D73A.log",
+        "sha256": "4cb14340c6edf62ed75ac6309585d45e1b8b09de3363696c72d2d853a4685510"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-257-D2BBF2F5-CCE0-4155-80CC-68B3E51DC656.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-default-257-D2BBF2F5-CCE0-4155-80CC-68B3E51DC656.log",
+        "sha256": "b83cec00fe4af8c0343399da089c721209808eb3e2f2547285ec9be23f5ec08c"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-disabled-257-0180CCAC-B8DD-4305-825B-739BA5C95D9D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-disabled-257-0180CCAC-B8DD-4305-825B-739BA5C95D9D.log",
+        "sha256": "c9daa11798056f73c8de899c8aae4911b7be147f82a06afba35166acc78b52fa"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-7-432C22C4-9DE7-49DB-9377-0F2E21712764.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-7-432C22C4-9DE7-49DB-9377-0F2E21712764.log",
+        "sha256": "e480784c2374edc7276b122a2f560347772986cfcbae0b2f9666ac0205806d55"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-8-C36B3CF8-AC14-48BD-A909-8F219A3B2741.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-8-C36B3CF8-AC14-48BD-A909-8F219A3B2741.log",
+        "sha256": "2b526405fe89d93554196ee343e58877a676eb77726f583aca5c1a2d77bfe903"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-euclidean-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-9-2971D2A9-A90A-4733-A165-1A1B459A0CA5.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-euclidean-small-9-2971D2A9-A90A-4733-A165-1A1B459A0CA5.log",
+        "sha256": "8b13b9f53ff552bd6f50a25e63e25c4a5b231dc6997f063834eb75c6cb9a9eba"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-default-255",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-255-7F6DBC90-C606-4CBA-ABC1-A9753B50FC8D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-255-7F6DBC90-C606-4CBA-ABC1-A9753B50FC8D.log",
+        "sha256": "b26b5bf1ff1529425ef5fe86e049de8c174f8bbf9ec4811c4530245884c3a894"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-default-256",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-256-E0B499D6-EF4E-4B22-B80E-895430343CB7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-256-E0B499D6-EF4E-4B22-B80E-895430343CB7.log",
+        "sha256": "fc9b92c50f4c655664e5c5c1fdfedfa3db4776caccc4bb1b8f37dd59ca565a7a"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-257-8AEB51BB-08FA-4BBE-9EFE-75D1CF02230A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-default-257-8AEB51BB-08FA-4BBE-9EFE-75D1CF02230A.log",
+        "sha256": "9a591f47a7614241d33488f840da932216a26112dc02aa73cbb34cb3d50aeb20"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-disabled-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-disabled-257-B48B7AD9-F77E-4DC0-AB5D-BDB0D8CF9BED.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-disabled-257-B48B7AD9-F77E-4DC0-AB5D-BDB0D8CF9BED.log",
+        "sha256": "5ddf5455d77a1074ec2465de6404a10056fa334b63858be7ab0422cd5d91c2e1"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-small-7",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-7-6B8D9DE5-60BD-499C-ABAF-7A8E7B42C363.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-7-6B8D9DE5-60BD-499C-ABAF-7A8E7B42C363.log",
+        "sha256": "d44e892f8ae8733a95a7a5476c44b6803d99cbf02489a52ed99ffe8bb92c7f8a"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-small-8",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-8-EC6D2156-2600-43CE-B8D5-08231F287C19.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-8-EC6D2156-2600-43CE-B8D5-08231F287C19.log",
+        "sha256": "07f9023ec606dfa191bf8101f53e246a09bb0b8c239a638bac84821c7c2b334a"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-cosine-small-9",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-9-C77BA414-3244-4EF4-9DD5-34697A48BF76.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-cosine-small-9-C77BA414-3244-4EF4-9DD5-34697A48BF76.log",
+        "sha256": "be5a3ca027226c140dcdb9973f685b998a40d2201d63c18db847299121df8632"
+      },
+      {
+        "family": "R03",
+        "scenario": "1536-custom-default-257",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-custom-default-257-7B8F51CD-77B6-4F0D-9D75-CFC5CBFB1913.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/R03-configuration-1536-custom-default-257-7B8F51CD-77B6-4F0D-9D75-CFC5CBFB1913.log",
+        "sha256": "70a93c6b9b630f88a6a1adb83383ffbef60cd4f17f166a0a07b0d38f1e3dcaee"
+      },
+      {
+        "family": "E02",
+        "scenario": "watchdog",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-watchdog-B54AD7A0-D050-4632-8966-3A9BF30E1A9C.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E02-watchdog-B54AD7A0-D050-4632-8966-3A9BF30E1A9C.log",
+        "sha256": "d106de1830f4080682bb6cf8e00a117074810ecb814ed757c8d4bab516841bce"
+      },
+      {
+        "family": "E03",
+        "scenario": "increments",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-increments-60295DB1-A07C-47F8-A392-BA194EB3DB5B.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-increments-60295DB1-A07C-47F8-A392-BA194EB3DB5B.log",
+        "sha256": "e417bda253a1cb37bd5cf8f5c29673bebdc962751550f924a099ebdc3dd62618"
+      },
+      {
+        "family": "E03",
+        "scenario": "independent",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-independent-2C1E0A8B-DFB2-48D0-AAFE-8DB9609A3321.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-independent-2C1E0A8B-DFB2-48D0-AAFE-8DB9609A3321.log",
+        "sha256": "e93692d4c91c2874bce17dae9ef903dba04dbe2531fa2e0d02a1907f3a7c29f5"
+      },
+      {
+        "family": "E03",
+        "scenario": "rollback",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-rollback-784D0455-39FA-4572-9BC2-7FA6E181056A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-rollback-784D0455-39FA-4572-9BC2-7FA6E181056A.log",
+        "sha256": "be87e41d82bb82deaadb4d4c537130241938eeb0d8e020cdd6b5cd19e50529d9"
+      },
+      {
+        "family": "E03",
+        "scenario": "snapshots",
+        "observedStatus": 0,
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-snapshots-95645D24-A13A-47A9-8C5B-BC206ECC7444.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E03-child-snapshots-95645D24-A13A-47A9-8C5B-BC206ECC7444.log",
+        "sha256": "37458c8b2fd564626f1e9d91291fb5cefab9ce9136453d518072feb973f14466"
+      }
+    ]
+  },
+  {
+    "label": "asan",
+    "command": [
+      "swift",
+      "test",
+      "--jobs",
+      "6",
+      "--scratch-path",
+      "/private/tmp/vectorcore-stabilization-E06-asan",
+      "--sanitize",
+      "address",
+      "--filter",
+      "BatchConfigurationContractTests|ExecutionSchedulingContractTests/(providerOrderedCoverageAndWorkerBounds|batchTransformsOrderingAndCancellation|liveTransformsContextHintsAndFactoryIdentity|matricesStatisticsAndNonthrowingCancellation|sixDormantOptimizedHelpersDirectCoverage|inheritedBatchQueryRoute|nestedProvidersAndLegacySuppression|reductionCombineCancellationAndRegionAcrossProvidersAndOverloads|publicGenericNearestBoundaryWorkerObservation)"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {
+      "E06_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E02_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "R03_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E03_CHILD_LOG_DIR": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "ASAN_OPTIONS": "detect_leaks=0"
+    },
+    "exit": 1,
+    "expectedExit": 0,
+    "seconds": 58.41689205169678,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-asan.log",
+    "logSHA256": "096d2238a84cd9f30bc8251afb679b451f5cb33f8492090728be9dd9689b1751",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": [
+      {
+        "family": "E06",
+        "scenario": "defaultBatch",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-8032AAC6-1E1B-4F2A-8AF3-E014807F9980.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-8032AAC6-1E1B-4F2A-8AF3-E014807F9980.log",
+        "sha256": "8cca809616122ff67ac4f60b781d652cfd3a97fbed5150d25ab561a764b15233"
+      },
+      {
+        "family": "E06",
+        "scenario": "generic-nearest",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-25F19A14-7FF6-4A9D-A3CB-F378E4BFDDA5.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-25F19A14-7FF6-4A9D-A3CB-F378E4BFDDA5.log",
+        "sha256": "6085c9d667fd8e172f71e4d59e5eb765dbf2174d42013d75b437628558594bd1"
+      },
+      {
+        "family": "E06",
+        "scenario": "threshold",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-D44BC041-ACA9-45CE-9722-AC50085D09BB.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-D44BC041-ACA9-45CE-9722-AC50085D09BB.log",
+        "sha256": "73d46cb34824ea9c4f877981f6b72c0726e4b2ac41d71c605a1070c2b9c1b61c"
+      },
+      {
+        "family": "E06",
+        "scenario": "chunks",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-3DC43EBA-71DA-4712-82C1-894D36599858.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-3DC43EBA-71DA-4712-82C1-894D36599858.log",
+        "sha256": "6baede150bd8251cc2217b1888b1043cbce4250fe3ee6630c947fd771e0522f2"
+      },
+      {
+        "family": "E06",
+        "scenario": "invalid",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-2017AE3D-5BD7-4F87-A5D7-FDC50F84FC7A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-2017AE3D-5BD7-4F87-A5D7-FDC50F84FC7A.log",
+        "sha256": "76934b6eecca6a5b8d77340ce7bc57b89c6f8729b60d5a0be88ddff31fd1b9d2"
+      },
+      {
+        "family": "E06",
+        "scenario": "domains",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-CEA3C873-A00F-4F17-B88A-EB8E35FBD1BE.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-CEA3C873-A00F-4F17-B88A-EB8E35FBD1BE.log",
+        "sha256": "21185a70cf3ffe294f9100d8021697040fb9405651b09994f74c2af5d8e5e2ac"
+      },
+      {
+        "family": "E06",
+        "scenario": "linear",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-CC07090C-6EAC-4F35-A22B-8443E3C52D5A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-CC07090C-6EAC-4F35-A22B-8443E3C52D5A.log",
+        "sha256": "a629e5aac85221f522b79ecd7c0cf0968cc5b5f0f470c4e2a03ce7f11b8d0f32"
+      },
+      {
+        "family": "E06",
+        "scenario": "partitions",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-78D51A99-E46D-4F87-AC9A-C6BC559DADF3.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-78D51A99-E46D-4F87-AC9A-C6BC559DADF3.log",
+        "sha256": "55d7f583db79e1affb0fd17f8578c28612c645f1c6f78ad1d986f082dc5c3e5f"
+      },
+      {
+        "family": "E06",
+        "scenario": "snapshot",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-C8F4B3A9-978A-4A53-9F0D-73E95E31C999.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-C8F4B3A9-978A-4A53-9F0D-73E95E31C999.log",
+        "sha256": "232908c6842e6bea3b24773364e92a750aba19866064d3bb536deeac21254f66"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes512",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-EBF3D49D-6326-4DB2-9A46-88B97CDC7E2A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-EBF3D49D-6326-4DB2-9A46-88B97CDC7E2A.log",
+        "sha256": "0c4e22daa4ed044844ecc577b7d6dd90f12936fe520832714bccf74bccb09050"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes768",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-FC2E756B-B894-4722-8501-2B0B14172DD7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-FC2E756B-B894-4722-8501-2B0B14172DD7.log",
+        "sha256": "c8e3b3b2eec571e13ea4ec1bf70f92e59ab42124ae9d47d845ff17d77ea1f5a3"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes1536",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-65E227D6-570A-4FF0-BD2D-804E8DA623C7.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-65E227D6-570A-4FF0-BD2D-804E8DA623C7.log",
+        "sha256": "72412714efa536a8452df0fe567163b3f17af39451a5079e46c5d68432d5cbe7"
+      },
+      {
+        "family": "E06",
+        "scenario": "pairwise",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-7EA3378D-CA64-4E0B-8324-D2BE5543C525.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-7EA3378D-CA64-4E0B-8324-D2BE5543C525.log",
+        "sha256": "80c224ba94c0327dbfa28091ccc09c459fb6dd1660001831be493e779b06d549"
+      },
+      {
+        "family": "E06",
+        "scenario": "nested",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-D8D88430-C954-4B9F-B64E-39F70FBB4983.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-D8D88430-C954-4B9F-B64E-39F70FBB4983.log",
+        "sha256": "5793c282f1f9f9c0433ba4c452aa27d58e90e7041387cc89ce36e1dbbaa4b28a"
+      }
+    ]
+  },
+  {
+    "label": "asan-preloaded",
+    "command": [
+      "swift",
+      "test",
+      "--skip-build",
+      "--jobs",
+      "6",
+      "--scratch-path",
+      "/private/tmp/vectorcore-stabilization-E06-asan",
+      "--sanitize",
+      "address",
+      "--filter",
+      "BatchConfigurationContractTests|ExecutionSchedulingContractTests/(providerOrderedCoverageAndWorkerBounds|batchTransformsOrderingAndCancellation|liveTransformsContextHintsAndFactoryIdentity|matricesStatisticsAndNonthrowingCancellation|sixDormantOptimizedHelpersDirectCoverage|inheritedBatchQueryRoute|nestedProvidersAndLegacySuppression|reductionCombineCancellationAndRegionAcrossProvidersAndOverloads|publicGenericNearestBoundaryWorkerObservation)"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {
+      "E06_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E02_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "R03_CAPTURE_DIRECTORY": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "E03_CHILD_LOG_DIR": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures",
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "DYLD_INSERT_LIBRARIES": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.asan_osx_dynamic.dylib"
+    },
+    "exit": 1,
+    "expectedExit": 0,
+    "seconds": 1.8109323978424072,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-asan-preloaded.log",
+    "logSHA256": "e9298cde3053364a51054e5313d42f87f5d3f473269e20a3e928a8e7c106c02b",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": [
+      {
+        "family": "E06",
+        "scenario": "generic-nearest",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-ED5A8A98-80D7-4507-9E90-97D4697D3FA0.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-generic-nearest-ED5A8A98-80D7-4507-9E90-97D4697D3FA0.log",
+        "sha256": "4adf7f913305e1329123197767b05c14af5d21778e144b6b864c3f7739af236a"
+      },
+      {
+        "family": "E06",
+        "scenario": "defaultBatch",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-EE5DACD7-B6EA-4DF9-A04A-EC1B5C684D46.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-defaultBatch-EE5DACD7-B6EA-4DF9-A04A-EC1B5C684D46.log",
+        "sha256": "089bc9f665b8674e62e906e306cb55027923f222bf45d953a88abe1e2d71d54f"
+      },
+      {
+        "family": "E06",
+        "scenario": "threshold",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-6A0A91BF-3CE5-4E3C-BA1B-FFA8C4DFCF12.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-threshold-6A0A91BF-3CE5-4E3C-BA1B-FFA8C4DFCF12.log",
+        "sha256": "9a2fd92c651ef470d8e1b9bdbb10426330cf7b849ef165633bb6b1f3f80ae007"
+      },
+      {
+        "family": "E06",
+        "scenario": "chunks",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-6C6B83CC-2E15-4B3F-81F9-F967ADDCD95E.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-chunks-6C6B83CC-2E15-4B3F-81F9-F967ADDCD95E.log",
+        "sha256": "a289fbbb70e43ef5e97d44d1b971dd519b9aee8344b914f2ad93df1eb30a6e50"
+      },
+      {
+        "family": "E06",
+        "scenario": "invalid",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-56B2B629-AD64-4C9C-A302-9165A47883AC.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-invalid-56B2B629-AD64-4C9C-A302-9165A47883AC.log",
+        "sha256": "1857adf8950d24c01d5651d9733732799b101aeb344e44dc3c8262ce1e7fda5a"
+      },
+      {
+        "family": "E06",
+        "scenario": "domains",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-4B17596E-DD80-4323-837B-995575481197.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-domains-4B17596E-DD80-4323-837B-995575481197.log",
+        "sha256": "3daab7eaca44a851675205ae71102546b385da2f7fe57451fa01bc79e8465aa7"
+      },
+      {
+        "family": "E06",
+        "scenario": "linear",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-EADD0DC9-0407-4368-969D-2C884D7A5D6D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-linear-EADD0DC9-0407-4368-969D-2C884D7A5D6D.log",
+        "sha256": "27c22e61a1dd942ca1aefceec12469bc53108531641fd4af28e81905310b5d2f"
+      },
+      {
+        "family": "E06",
+        "scenario": "partitions",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-ECE0398D-BA0A-4F56-8F83-BF06DDA4530A.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-partitions-ECE0398D-BA0A-4F56-8F83-BF06DDA4530A.log",
+        "sha256": "fcebb2c30aec8dd28d981c6894e344b6d274ccbb102e2fb035615bf340af74fc"
+      },
+      {
+        "family": "E06",
+        "scenario": "snapshot",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-6650E92D-CD9E-4B2E-A8BC-31F1612DC2B2.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-snapshot-6650E92D-CD9E-4B2E-A8BC-31F1612DC2B2.log",
+        "sha256": "acf506535d77a6dabdef57c392f5ad6ac781cb4c4d3a11a1d8d3c5296b2aef1a"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes512",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-DFD6C161-55FB-4B0B-8B79-DC2A199ACFC0.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes512-DFD6C161-55FB-4B0B-8B79-DC2A199ACFC0.log",
+        "sha256": "66975731c11617550b54ab0287de58e4a9a2fda47beb9f95baef3a1634d9e4ac"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes768",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-533991BE-760A-453E-98BC-81690C62308D.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes768-533991BE-760A-453E-98BC-81690C62308D.log",
+        "sha256": "d9624a8173c6b5fbb62814f9d5fa7980135f9d4d18667add11dc4a1d86438444"
+      },
+      {
+        "family": "E06",
+        "scenario": "routes1536",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-135655DD-4014-4FFD-9303-316FD23687ED.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-routes1536-135655DD-4014-4FFD-9303-316FD23687ED.log",
+        "sha256": "45dc220ebc0359e8a6ddc652690a0716c971555facdd1f3d6dbd730b709953dd"
+      },
+      {
+        "family": "E06",
+        "scenario": "pairwise",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-97BFBE6B-89BF-44C5-93EA-486C2E83B69B.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-pairwise-97BFBE6B-89BF-44C5-93EA-486C2E83B69B.log",
+        "sha256": "42dc3a54478a48aab82d0db89a9f739e12dafe51d204f53c4d8d34749cfb4765"
+      },
+      {
+        "family": "E06",
+        "scenario": "nested",
+        "original": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-5CF77822-0393-4315-BE03-4127C2A99984.log",
+        "retained": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-child-captures/E06-nested-5CF77822-0393-4315-BE03-4127C2A99984.log",
+        "sha256": "548624163d8ebac7aba164493b01c24b728be2ff8a36c9dbba8905c37e145106"
+      }
+    ]
+  },
+  {
+    "label": "asan-inprocess",
+    "command": [
+      "swift",
+      "test",
+      "--skip-build",
+      "--jobs",
+      "6",
+      "--scratch-path",
+      "/private/tmp/vectorcore-stabilization-E06-asan",
+      "--sanitize",
+      "address",
+      "--filter",
+      "BatchConfigurationContractTests/partitionArithmeticBoundaries|ExecutionSchedulingContractTests/(providerOrderedCoverageAndWorkerBounds|batchTransformsOrderingAndCancellation|liveTransformsContextHintsAndFactoryIdentity|matricesStatisticsAndNonthrowingCancellation|sixDormantOptimizedHelpersDirectCoverage|inheritedBatchQueryRoute|nestedProvidersAndLegacySuppression|reductionCombineCancellationAndRegionAcrossProvidersAndOverloads)"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {
+      "ASAN_OPTIONS": "detect_leaks=0"
+    },
+    "exit": 0,
+    "expectedExit": 0,
+    "seconds": 2.8851840496063232,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-asan-inprocess.log",
+    "logSHA256": "c6afbd2d2ec7799a70304a3a8375080c661ef19b3e9f241d59202cdd2bf106d5",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": []
+  },
+  {
+    "label": "public-compile",
+    "command": [
+      "swiftc",
+      "-swift-version",
+      "6",
+      "-strict-concurrency=complete",
+      "-I",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/Modules",
+      "-I",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build",
+      "-parse-as-library",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06/Tests/E06Consumers/PublicConfiguration.swift",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/AccelerateSIMDProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/AffineQuantizationCore.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/AlignedDynamicArrayStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/AlignedMemory.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/AlignedValueStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/AlignmentStrategy.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ArraySIMDProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ArrayStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/AutoTuning.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BatchKernelProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BatchKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BatchKernels_SoA.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BatchOperations.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BinaryFormat.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BinaryProtocols.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BoundedExecution.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BufferPool.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/BufferProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/CKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/COWDynamicStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/CPUComputeProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/CPUContext.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/CRC32.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ComputeDevice.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ComputeProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ConvenienceInitializers.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/CoreProtocols.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/CosineKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Dimension.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/DimensionSpecificStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/DimensionStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/DistanceMetric.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/DistanceMetrics.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/DotKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/DynamicVector.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/EdgeCaseHandler.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ErrorHandlingUtilities.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/EuclideanKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ExecutionContext.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ExecutionOperations.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/FeatureFlags.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/FuzzySimplicialSet.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/HybridStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/IndexableVector.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/KNNGraph.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/KernelAutoTuner.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/LAPACKLinearAlgebraProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/LinearAlgebraProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Logger.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MagnitudeStatisticsAccumulator.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ManhattanKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MatrixDistance.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MatrixMultiply.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MemoryPool.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MemoryUtilities.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MinHeap.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MixedPrecisionAutoTuner.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MixedPrecisionDiagnostics.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MixedPrecisionKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/MixedPrecisionValidation.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/NaNInfinityHandling.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/NormCache.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/NormalizationCore.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/NormalizeKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/OperationProgress.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Operations.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Operators.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/OptimizationAttributes.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/OptimizedDistanceMetrics.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/OptimizedVector.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/PCA.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ParallelHeuristic.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/PlatformConfiguration.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/PointerBridge.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/PoolAllocation.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ProviderProtocols.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/QuantizationSchemes.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/QuantizedKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SIMDExtensions.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SIMDMemoryUtilities.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SIMDOperations.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SIMDProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SIMDStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SearchResult.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SoA.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SoAFP16Cache.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SoALayout.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SwiftBufferPool.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SwiftDoubleSIMDProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SwiftFloatSIMDProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SwiftLinearAlgebraProvider.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/SyncBatchOperations.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/ThreadSafeConfiguration.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/TieredStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/TimeExtensions.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/TopKSelection.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/TopKSelectionKernels.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/TransformOperations.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/TriangularMatrix.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/UMAP.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/UnifiedStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/UnifiedVectorBuffer.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VSKError.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Vector.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Vector1536Optimized.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Vector384Optimized.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Vector512Optimized.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Vector768Optimized.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorCollection.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorCore.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorCoreOperations.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorData.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorEntropy.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorError.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorFactory.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorMath.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorNormalization.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorOperationsProtocol.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorProducer.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorProtocol.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorSerialization.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorStorage.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/VectorTypeFactory.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCore.build/Version.swift.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build/arm64/vc_arm64.c.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build/common/vc_dispatch.c.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build/common/vc_features.c.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build/common/vc_lapack.c.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build/common/vc_scalar.c.o",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build/x86_64/vc_x86.c.o",
+      "-o",
+      "/private/tmp/E06-public-consumer"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {},
+    "exit": 0,
+    "expectedExit": 0,
+    "seconds": 0.5292689800262451,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-public-compile.log",
+    "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": []
+  },
+  {
+    "label": "public-run",
+    "command": [
+      "/private/tmp/E06-public-consumer"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {},
+    "exit": 0,
+    "expectedExit": 0,
+    "seconds": 0.29733705520629883,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-public-run.log",
+    "logSHA256": "52c47f8f670157614d1c1357b08b75b3281ea329ca7f3d849673dca64d0c3d83",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": []
+  },
+  {
+    "label": "e03-positive",
+    "command": [
+      "swiftc",
+      "-swift-version",
+      "6",
+      "-strict-concurrency=complete",
+      "-I",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/Modules",
+      "-I",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build",
+      "-typecheck",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06/Scripts/ci/tests/E03ConfigurationConsumer.swift"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {},
+    "exit": 0,
+    "expectedExit": 0,
+    "seconds": 0.18740320205688477,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-e03-positive.log",
+    "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": []
+  },
+  {
+    "label": "e03-negative",
+    "command": [
+      "swiftc",
+      "-swift-version",
+      "6",
+      "-strict-concurrency=complete",
+      "-I",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/Modules",
+      "-I",
+      "/private/tmp/vectorcore-stabilization-E06-debug/arm64-apple-macosx/debug/VectorCoreC.build",
+      "-typecheck",
+      "-D",
+      "E03_NEGATIVE_CAPTURE",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06/Scripts/ci/tests/E03ConfigurationConsumer.swift"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {},
+    "exit": 1,
+    "expectedExit": 1,
+    "seconds": 0.19617390632629395,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-e03-negative.log",
+    "logSHA256": "e532c05e1964f73d3645a3a99aa3479d8705f23a2fdaaa9f4175cb69fa741020",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": []
+  },
+  {
+    "label": "scanner",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "Scripts.ci.tests.test_child_process_bounds",
+      "-v"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/E06",
+    "environment": {},
+    "exit": 0,
+    "expectedExit": 0,
+    "seconds": 0.14350271224975586,
+    "log": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-final-scanner.log",
+    "logSHA256": "e4c430d515b8a81ffc0b93baaf3a452ef182adbdd04c90938baea4fecd858174",
+    "fullDiffSHA256": "7b042a798f66720e519935d1c111b6075ce1bad27254e09d43ce6649849e2b7c",
+    "captures": []
+  }
+]

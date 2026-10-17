@@ -85,7 +85,7 @@ public protocol VectorCollection: Sendable {
     func search(
         query: Vector,
         k: Int,
-        metric: any DistanceMetric
+        metric: any DistanceMetric<Float>
     ) -> SearchResults<ID>
 }
 
@@ -95,7 +95,8 @@ extension VectorCollection {
     /// Default isEmpty based on count
     public var isEmpty: Bool { count == 0 }
 
-    /// Default batch vector retrieval
+    /// Default batch retrieval composes individual reads, not an atomic snapshot.
+    /// Concurrent snapshot consistency is the conformer's responsibility.
     public func vectors(for ids: [ID]) -> [ID: Vector] {
         var result: [ID: Vector] = [:]
         result.reserveCapacity(ids.count)
@@ -107,76 +108,46 @@ extension VectorCollection {
         return result
     }
 
-    /// Default brute-force search implementation using Euclidean distance.
-    ///
-    /// VectorIndex will override this with optimized ANN algorithms.
-    /// This implementation has O(n * d) complexity where n is vector count
-    /// and d is dimension.
+    /// Default brute-force search using the supplied metric, in O(n * d) work.
+    /// Composing allIDs and vector(for:) does not provide an atomic snapshot;
+    /// concurrent snapshot consistency is the conformer's responsibility.
     public func search(
         query: Vector,
         k: Int,
-        metric: any DistanceMetric
+        metric: any DistanceMetric<Float>
     ) -> SearchResults<ID> {
-        // Use specific metric implementations to avoid existential limitations
-        if metric is EuclideanDistance {
-            return searchWithMetric(query: query, k: k, metric: EuclideanDistance())
-        } else if metric is CosineDistance {
-            return searchWithMetric(query: query, k: k, metric: CosineDistance())
-        } else if metric is ManhattanDistance {
-            return searchWithMetric(query: query, k: k, metric: ManhattanDistance())
-        } else if metric is DotProductDistance {
-            return searchWithMetric(query: query, k: k, metric: DotProductDistance())
-        } else {
-            // Fallback to Euclidean for unknown metrics
-            return searchWithMetric(query: query, k: k, metric: EuclideanDistance())
-        }
-    }
-
-    /// Internal generic search implementation
-    private func searchWithMetric<M: DistanceMetric>(
-        query: Vector,
-        k: Int,
-        metric: M
-    ) -> SearchResults<ID> where M.Scalar == Float {
         let startTime = DispatchTime.now().uptimeNanoseconds
-
-        // Collect all vectors with their IDs
-        let allVectors: [(ID, Vector)] = allIDs.compactMap { id in
-            guard let v = vector(for: id) else { return nil }
-            return (id, v)
+        let snapshot: [(ID, Vector)] = allIDs.compactMap { id in
+            guard let value = vector(for: id) else { return nil }
+            return (id, value)
         }
-
-        guard !allVectors.isEmpty else {
-            return SearchResults()
-        }
-
-        // Compute distances
-        var distances: [Float] = []
-        distances.reserveCapacity(allVectors.count)
-
-        for (_, candidate) in allVectors {
-            let distance = metric.distance(query, candidate)
-            distances.append(distance)
-        }
-
-        // Select top-k
-        let topK = TopKSelection.select(k: k, from: distances)
-
-        // Build results with original IDs
-        let results: [SearchResult<ID>] = topK.indices.enumerated().map { offset, index in
-            let (id, _) = allVectors[index]
-            return SearchResult(id: id, distance: topK.distances[offset])
-        }
-
-        let endTime = DispatchTime.now().uptimeNanoseconds
-
-        return SearchResults(
-            results: results,
-            candidatesSearched: allVectors.count,
-            searchTimeNanos: endTime - startTime,
-            isExhaustive: true
-        )
+        return searchCapturedVectors(snapshot, query: query, k: k, metric: metric, startTime: startTime)
     }
+}
+
+/// Rank captured bindings by the actual distance witness, preserving TopK policy.
+/// Interpret only selected distances, once each; SearchResultScoreContractTests
+/// checks both producer routes and reentrant score callbacks outside Simple's lock.
+private func searchCapturedVectors<ID: Hashable & Sendable, V: IndexableVector, M: DistanceMetric>(
+    _ snapshot: [(ID, V)], query: V, k: Int, metric: M, startTime: UInt64
+) -> SearchResults<ID> where M.Scalar == Float {
+    guard !snapshot.isEmpty else { return SearchResults() }
+    var distances: [Float] = []
+    distances.reserveCapacity(snapshot.count)
+    for (_, candidate) in snapshot {
+        distances.append(metric.distance(query, candidate))
+    }
+    let topK = TopKSelection.select(k: k, from: distances)
+    let results: [SearchResult<ID>] = topK.indices.enumerated().map { offset, index in
+        let distance = topK.distances[offset]
+        return SearchResult(id: snapshot[index].0, distance: distance, score: metric.relevanceScore(for: distance))
+    }
+    return SearchResults(
+        results: results,
+        candidatesSearched: snapshot.count,
+        searchTimeNanos: DispatchTime.now().uptimeNanoseconds - startTime,
+        isExhaustive: true
+    )
 }
 
 // MARK: - Euclidean Search Convenience
@@ -223,26 +194,16 @@ public protocol MutableVectorCollection: VectorCollection {
     /// Remove all vectors from the collection.
     mutating func removeAll()
 
-    /// Update a vector in the collection.
+    /// Transactionally replace an existing binding.
+    /// Every thrown update must preserve the previous binding and membership.
+    /// Conformers must validate and commit within their own synchronization or
+    /// transaction boundary; no generic remove/add rollback is provided.
     ///
     /// - Parameters:
     ///   - id: Identifier of vector to update
     ///   - vector: New vector value
     /// - Throws: If the vector dimension doesn't match or ID doesn't exist
     mutating func update(id: ID, vector: Vector) throws
-}
-
-// MARK: - Default Update Implementation
-
-extension MutableVectorCollection {
-    /// Default update implementation using remove + add
-    public mutating func update(id: ID, vector: Vector) throws {
-        guard self.vector(for: id) != nil else {
-            throw VectorError.indexOutOfBounds(index: 0, dimension: dimension)
-        }
-        remove(id: id)
-        try add(id: id, vector: vector)
-    }
 }
 
 // MARK: - Simple In-Memory Collection
@@ -256,13 +217,21 @@ public final class SimpleVectorCollection<V: IndexableVector>: MutableVectorColl
     public typealias ID = Int
 
     private var vectors: [Int: V] = [:]
-    private var nextID: Int = 0
+    // nil denotes exhaustion after allocating Int.max. Errors leave this unchanged.
+    private var nextID: Int? = 0
     private let lock = NSLock()
 
     public let dimension: Int
 
     public init(dimension: Int) {
         self.dimension = dimension
+    }
+
+    /// Internal boundary seam for bounded exhaustion tests; not public configuration.
+    internal init(dimension: Int, nextGeneratedID: Int) {
+        precondition(nextGeneratedID >= 0, "Generated IDs must be nonnegative")
+        self.dimension = dimension
+        self.nextID = nextGeneratedID
     }
 
     public var count: Int {
@@ -283,16 +252,57 @@ public final class SimpleVectorCollection<V: IndexableVector>: MutableVectorColl
         return vectors[id]
     }
 
+    /// Capture all requested bindings under one lock. V's value semantics remain
+    /// the conformer's responsibility; this does not freeze external reference aliases.
+    public func vectors(for ids: [Int]) -> [Int: V] {
+        lock.lock()
+        defer { lock.unlock() }
+        var result: [Int: V] = [:]
+        result.reserveCapacity(ids.count)
+        for id in ids {
+            if let value = vectors[id] { result[id] = value }
+        }
+        return result
+    }
+
+    /// Capture bindings once under the lock, then invoke the metric outside it.
+    /// VectorCollectionTransactionTests exercises reentrant metric mutations.
+    /// Captured V bindings are not universal deep copies of custom reference storage.
+    public func search(query: V, k: Int, metric: any DistanceMetric<Float>) -> SearchResults<Int> {
+        let startTime = DispatchTime.now().uptimeNanoseconds
+        lock.lock()
+        let snapshot: [(Int, V)] = vectors.map { ($0.key, $0.value) }
+        lock.unlock()
+        return searchCapturedVectors(snapshot, query: query, k: k, metric: metric, startTime: startTime)
+    }
+
+    /// Validate before locking; replace only after confirming membership.
+    public func update(id: Int, vector: V) throws {
+        guard vector.scalarCount == dimension else {
+            throw VectorError.dimensionMismatch(expected: dimension, actual: vector.scalarCount)
+        }
+        lock.lock()
+        defer { lock.unlock() }
+        guard vectors[id] != nil else {
+            throw VectorError.indexOutOfBounds(index: 0, dimension: dimension)
+        }
+        vectors[id] = vector
+    }
+
     public func add(id: Int, vector: V) throws {
         guard vector.scalarCount == dimension else {
             throw VectorError.dimensionMismatch(expected: dimension, actual: vector.scalarCount)
         }
         lock.lock()
         defer { lock.unlock() }
+        guard vectors[id] == nil else {
+            throw VectorError(.invalidConfiguration, message: "Duplicate vector ID: \(id)")
+        }
         vectors[id] = vector
     }
 
-    /// Add a vector with auto-generated ID
+    /// Add with a nonnegative monotonic ID, skipping occupied bindings.
+    /// Removal and removeAll do not rewind the cursor; exhaustion throws unchanged.
     @discardableResult
     public func add(vector: V) throws -> Int {
         guard vector.scalarCount == dimension else {
@@ -300,9 +310,19 @@ public final class SimpleVectorCollection<V: IndexableVector>: MutableVectorColl
         }
         lock.lock()
         defer { lock.unlock() }
-        let id = nextID
-        nextID += 1
+        guard var id = nextID else {
+            throw VectorError(.resourceExhausted, message: "Generated vector IDs exhausted")
+        }
+        while vectors[id] != nil {
+            let (successor, overflow) = id.addingReportingOverflow(1)
+            guard !overflow else {
+                throw VectorError(.resourceExhausted, message: "Generated vector IDs exhausted")
+            }
+            id = successor
+        }
         vectors[id] = vector
+        let (successor, overflow) = id.addingReportingOverflow(1)
+        nextID = overflow ? nil : successor
         return id
     }
 

@@ -5,7 +5,9 @@ import OSLog
 
 // MARK: - Overflow Tracking & Diagnostics
 
-/// Diagnostic utilities for tracking FP16 conversion overflow and precision issues
+/// Diagnostics for FP32 inputs and their rounded FP16 representation.
+/// Mutable recording state is protected by one lock; snapshots and batch commits
+/// share that lock. The unchecked Sendable conformance relies on this discipline.
 public final class MixedPrecisionDiagnostics: @unchecked Sendable {
 
     // MARK: - Shared Instance
@@ -17,13 +19,24 @@ public final class MixedPrecisionDiagnostics: @unchecked Sendable {
 
     // MARK: - Overflow Tracking
 
+    /// Accepted events, with each cumulative counter saturating independently at
+    /// Int.max. Rates widen counters to Double before arithmetic. Exceptional
+    /// categories are mutually exclusive per event before cumulative saturation.
     public struct OverflowStatistics: Sendable {
         public var totalConversions: Int = 0
+        /// Finite original inputs whose rounded FP16 bits are signed infinity.
         public var overflowToInfinity: Int = 0
+        /// Finite nonzero inputs whose rounded bits are either signed zero.
         public var underflowToZero: Int = 0
+        /// Finite inputs whose rounded bits have zero exponent and nonzero fraction.
         public var subnormalValues: Int = 0
+        /// Original NaN inputs; original infinities contribute only to the total.
         public var nanValues: Int = 0
+        /// Original finite-input upper bound; both bounds remain +0 until a finite
+        /// input occurs. A lone signed zero preserves its sign; mixed signs of zero
+        /// produce -0 as the minimum and +0 as the maximum.
         public var maxValueSeen: Float = 0
+        /// Original finite-input lower bound, with the same empty/signed-zero policy.
         public var minValueSeen: Float = 0
 
         public var overflowRate: Double {
@@ -50,143 +63,179 @@ public final class MixedPrecisionDiagnostics: @unchecked Sendable {
         }
     }
 
-    private var statistics = OverflowStatistics()
-    private var isEnabled = false
+    private struct State {
+        var statistics = OverflowStatistics()
+        var isEnabled = false
+        var hasFiniteValue = false
+    }
+    private var state = State()
 
-    private init() {}
+    /// Internal per-instance seam; the public recorder remains `shared`.
+    internal init() {}
+
+    /// Seeds counters only for saturation-boundary tests; uses the normal commit path.
+    internal func seedCountersForTesting(_ counters: OverflowStatistics) {
+        precondition([counters.totalConversions, counters.overflowToInfinity,
+                      counters.underflowToZero, counters.subnormalValues, counters.nanValues].allSatisfy { $0 >= 0 })
+        lock.lock()
+        state.statistics = counters
+        state.statistics.minValueSeen = 0
+        state.statistics.maxValueSeen = 0
+        state.hasFiniteValue = false
+        lock.unlock()
+    }
 
     // MARK: - Public API
 
-    /// Enable overflow tracking (adds performance overhead, use for debugging only)
+    /// Atomically reset statistics and finite-range state, then enable recording.
+    /// Repeated enable calls reset as well. Intended for diagnostic use.
     public func enable() {
         lock.lock()
-        defer { lock.unlock() }
-        isEnabled = true
-        statistics = OverflowStatistics()
+        state = State()
+        state.isEnabled = true
+        lock.unlock()
         logger.info("Mixed precision diagnostics enabled")
     }
 
-    /// Disable overflow tracking
+    /// Disable future accepted records while retaining the last snapshot.
     public func disable() {
         lock.lock()
-        defer { lock.unlock() }
-        isEnabled = false
+        state.isEnabled = false
+        lock.unlock()
         logger.info("Mixed precision diagnostics disabled")
     }
 
-    /// Whether conversion recording is currently enabled. Cheap check so hot conversion
-    /// paths can skip building diagnostic buffers when tracking is off.
+    /// Synchronized hint, not a reservation. A false hint may skip preparation even
+    /// if another thread enables recording afterward.
     public var isRecording: Bool {
         lock.lock()
         defer { lock.unlock() }
-        return isEnabled
+        return state.isEnabled
     }
 
-    /// Get current statistics
+    /// Return a coherent value snapshot. Counters independently saturate at Int.max.
     public func getStatistics() -> OverflowStatistics {
         lock.lock()
         defer { lock.unlock() }
-        return statistics
+        return state.statistics
     }
 
-    /// Reset statistics
+    /// Atomically reset counters and finite range without changing enabled state.
     public func reset() {
         lock.lock()
-        defer { lock.unlock() }
-        statistics = OverflowStatistics()
+        state.statistics = OverflowStatistics()
+        state.hasFiniteValue = false
+        lock.unlock()
         logger.info("Mixed precision diagnostics reset")
     }
 
-    /// Record a conversion event
-    @inline(__always)
-    internal func recordConversion(_ value: Float) {
-        guard isEnabled else { return }
+    private static func saturatedAdd(_ lhs: Int, _ rhs: Int) -> Int {
+        let (sum, overflow) = lhs.addingReportingOverflow(rhs)
+        return overflow ? Int.max : sum
+    }
 
-        lock.lock()
-        defer { lock.unlock() }
+    private static func lower(_ lhs: Float, _ rhs: Float) -> Float {
+        if rhs < lhs || (rhs == 0 && lhs == 0 && rhs.sign == .minus) { return rhs }
+        return lhs
+    }
 
-        statistics.totalConversions += 1
+    private static func upper(_ lhs: Float, _ rhs: Float) -> Float {
+        if rhs > lhs || (rhs == 0 && lhs == 0 && rhs.sign == .plus) { return rhs }
+        return lhs
+    }
 
-        // Update min/max
-        if value.isFinite {
-            statistics.maxValueSeen = max(statistics.maxValueSeen, value)
-            statistics.minValueSeen = min(statistics.minValueSeen, value)
-        }
+    /// Local immutable-input reduction; it never reads shared state.
+    private struct Summary {
+        var statistics = OverflowStatistics()
+        var hasFiniteValue = false
 
-        // Check for overflow/underflow
-        let fp16Max: Float = 65504.0
-        let fp16Min: Float = -65504.0
-        let fp16MinNormal: Float = 6.10352e-5
-
-        if value.isNaN {
-            statistics.nanValues += 1
-        } else if value.isInfinite {
-            statistics.overflowToInfinity += 1
-            logger.debug("FP16 overflow: value \(value) → infinity")
-        } else if value > fp16Max {
-            statistics.overflowToInfinity += 1
-            logger.warning("FP16 overflow: value \(value) exceeds max (\(fp16Max)) → clamped to infinity")
-        } else if value < fp16Min {
-            statistics.overflowToInfinity += 1
-            logger.warning("FP16 overflow: value \(value) below min (\(fp16Min)) → clamped to -infinity")
-        } else if abs(value) < fp16MinNormal && value != 0 {
-            statistics.subnormalValues += 1
-            if statistics.subnormalValues % 1000 == 0 {  // Log every 1000th to avoid spam
-                logger.debug("FP16 subnormal: value \(value) in subnormal range")
+        mutating func add(_ input: Float, rounded bits: UInt16) {
+            statistics.totalConversions = saturatedAdd(statistics.totalConversions, 1)
+            if input.isFinite {
+                if hasFiniteValue {
+                    statistics.minValueSeen = lower(statistics.minValueSeen, input)
+                    statistics.maxValueSeen = upper(statistics.maxValueSeen, input)
+                } else {
+                    statistics.minValueSeen = input
+                    statistics.maxValueSeen = input
+                    hasFiniteValue = true
+                }
             }
-        } else if abs(value) < 1e-10 && value != 0 {
-            statistics.underflowToZero += 1
-            logger.debug("FP16 underflow: value \(value) → flushed to zero")
+            let magnitude = bits & 0x7fff
+            if input.isNaN {
+                statistics.nanValues = saturatedAdd(statistics.nanValues, 1)
+            } else if input.isFinite {
+                if magnitude == 0x7c00 {
+                    statistics.overflowToInfinity = saturatedAdd(statistics.overflowToInfinity, 1)
+                } else if magnitude == 0 && input != 0 {
+                    statistics.underflowToZero = saturatedAdd(statistics.underflowToZero, 1)
+                } else if magnitude > 0 && magnitude < 0x0400 {
+                    statistics.subnormalValues = saturatedAdd(statistics.subnormalValues, 1)
+                }
+            }
         }
     }
 
-    /// Record batch conversion events (optimized for performance)
-    @inline(__always)
-    internal func recordBatchConversion(_ values: [Float]) {
-        guard isEnabled else { return }
-
+    /// Commit a whole summary only if enabled under the lock. Preparation begun
+    /// before reset may join the new generation; there is no start-time epoch.
+    /// Logging uses captured summary values after unlocking.
+    private func commit(_ summary: Summary) {
         lock.lock()
-        defer { lock.unlock() }
+        guard state.isEnabled else { lock.unlock(); return }
+        let incoming = summary.statistics
+        state.statistics.totalConversions = Self.saturatedAdd(state.statistics.totalConversions, incoming.totalConversions)
+        state.statistics.overflowToInfinity = Self.saturatedAdd(state.statistics.overflowToInfinity, incoming.overflowToInfinity)
+        state.statistics.underflowToZero = Self.saturatedAdd(state.statistics.underflowToZero, incoming.underflowToZero)
+        state.statistics.subnormalValues = Self.saturatedAdd(state.statistics.subnormalValues, incoming.subnormalValues)
+        state.statistics.nanValues = Self.saturatedAdd(state.statistics.nanValues, incoming.nanValues)
+        if summary.hasFiniteValue {
+            if state.hasFiniteValue {
+                state.statistics.minValueSeen = Self.lower(state.statistics.minValueSeen, incoming.minValueSeen)
+                state.statistics.maxValueSeen = Self.upper(state.statistics.maxValueSeen, incoming.maxValueSeen)
+            } else {
+                state.statistics.minValueSeen = incoming.minValueSeen
+                state.statistics.maxValueSeen = incoming.maxValueSeen
+                state.hasFiniteValue = true
+            }
+        }
+        lock.unlock()
+        if incoming.overflowToInfinity > 0 || incoming.underflowToZero > 0 {
+            logger.debug("FP16 batch: \(incoming.totalConversions) events, \(incoming.overflowToInfinity) rounded overflows, \(incoming.underflowToZero) rounded underflows")
+        }
+    }
 
-        let fp16Max: Float = 65504.0
-        let fp16Min: Float = -65504.0
-        let fp16MinNormal: Float = 6.10352e-5
+    /// Record using the same scalar round-to-nearest-even contract as conversion.
+    internal func recordConversion(_ value: Float) {
+        guard isRecording else { return }
+        var summary = Summary()
+        summary.add(value, rounded: MixedPrecisionKernels.fp32ToFp16_scalar(value))
+        commit(summary)
+    }
 
-        var batchOverflows = 0
-        var batchUnderflows = 0
-        var batchSubnormals = 0
-        var batchNaNs = 0
-
+    /// An accepted batch commits all events atomically relative to toggles/reset.
+    /// Input infinities are not arithmetic overflows; range includes finite inputs only.
+    internal func recordBatchConversion(_ values: [Float]) {
+        guard isRecording else { return }
+        var summary = Summary()
         for value in values {
-            statistics.totalConversions += 1
+            summary.add(value, rounded: MixedPrecisionKernels.fp32ToFp16_scalar(value))
+        }
+        commit(summary)
+    }
 
-            if value.isFinite {
-                statistics.maxValueSeen = max(statistics.maxValueSeen, value)
-                statistics.minValueSeen = min(statistics.minValueSeen, value)
+    /// Constructor recording classifies already-produced bits without reconversion.
+    internal func recordBatchConversion(
+        _ values: ContiguousArray<SIMD4<Float>>, rounded: ContiguousArray<UInt16>
+    ) {
+        guard isRecording else { return }
+        precondition(rounded.count == values.count * 4, "Diagnostic input/output shape mismatch")
+        var summary = Summary()
+        for lane in values.indices {
+            for element in 0..<4 {
+                summary.add(values[lane][element], rounded: rounded[lane * 4 + element])
             }
-
-            if value.isNaN {
-                batchNaNs += 1
-            } else if value.isInfinite || value > fp16Max || value < fp16Min {
-                batchOverflows += 1
-            } else if abs(value) < fp16MinNormal && value != 0 {
-                batchSubnormals += 1
-            } else if abs(value) < 1e-10 && value != 0 {
-                batchUnderflows += 1
-            }
         }
-
-        statistics.overflowToInfinity += batchOverflows
-        statistics.underflowToZero += batchUnderflows
-        statistics.subnormalValues += batchSubnormals
-        statistics.nanValues += batchNaNs
-
-        if batchOverflows > 0 {
-            logger.warning("Batch conversion: \(batchOverflows) overflows detected in \(values.count) values")
-        }
-        if batchUnderflows > 0 {
-            logger.debug("Batch conversion: \(batchUnderflows) underflows detected in \(values.count) values")
-        }
+        commit(summary)
     }
 
     // MARK: - Hardware Detection

@@ -72,9 +72,9 @@ let package = Package(
         (fixture / "Package.swift").write_text(manifest)
         # Build the dependency once and each example as its own executable.
         build = ["swift", "build", "--package-path", str(fixture), "-c", "release"]
-        subprocess.run(build, check=True)
+        subprocess.run(build, check=True, timeout=1800)
         binary_directory = Path(subprocess.check_output(
-            build + ["--show-bin-path"], text=True).strip())
+            build + ["--show-bin-path"], text=True, timeout=600).strip())
         for index, example in enumerate(examples):
             print(f'Running {example["document"]}, Swift block {example["block"]}', flush=True)
             subprocess.run([str(binary_directory / f"Consumer{index}")], check=True, timeout=60)

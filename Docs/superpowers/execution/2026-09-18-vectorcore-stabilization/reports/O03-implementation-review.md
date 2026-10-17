@@ -1,0 +1,39 @@
+# O03 independent implementation review
+
+## Frozen v1 source verdict
+
+**ACCEPT source/contract review; final runtime/allocation acceptance pending.** No concrete production blocker found. Reviewed the complete eight-file diff, new tests, allocator callback, workload fixture and bounded driver. Binding scope includes the root-approved state.json managed-DimensionStorage addendum; the older brief's negative-control assumption is not treated as a prohibition against this evidence-authorized same-class repair.
+
+Base: `6d47ec508d55ef7e863ca3b9d51ac0d2f5cca10b`. Diff SHA256: `9c0fb3a99702f051cb5ba766f1c4c52815e3a57b56687a39f66b8647a0e4a4cc`. Manifest SHA256: `8a12531fd64b65fd318d18b4a9d86928dff0d023933f1726c47dedd4facedb0c`. Independently verified those hashes, all274 final code hashes, all270 baseline hashes against exact git blobs, and exactly eight inventory differences. Applied every unified hunk in memory and obtained the exact archived bytes for all eight files. No unrelated source changes appear.
+
+## Ownership and semantics
+
+HybridStorage removes the redundant outer allocation/check. Heap scalar writes and mutable borrows move the enum's owner into a local and replace the stored payload with a nonallocating inline placeholder before ManagedStorage's sole COW boundary. A retained external alias remains a real owner and therefore still causes detachment. Throwing mutable borrows restore the mutated local through defer, preserving partial writes and error/return propagation. Inline mutable borrows retain their value-buffer/defer restoration behavior. Exclusivity excludes observing the temporary placeholder through a legal overlapping access.
+
+DimensionStorage applies the same rule to both hybrid and managed branches, removing its otherwise retained wrapper owner. Uniqueness getters move out and restore without invoking a mutable borrow or allocator. makeUnique's empty mutable borrow requests exactly the existing COW boundary, leaving unique heap/inline values alone and detaching shared heap storage. No persistent instrumentation or provider/state hook is introduced. Default mode, explicit modes, threshold64 bytes and always-managed generator behavior remain unchanged.
+
+Hybrid fill now has one mutable borrow and one element pass. copyFrom and DynamicVector.resized update already initialized floating-point elements. Retained input aliases are separated at COW before mutation; source snapshots remain unchanged. Resize's dimensions, prefix, fill and zero behavior are untouched. The DynamicVector min/max/clamped edits only remove dead initial arrays and bind the existing provider result directly. Shape checks, TaskLocal witness, argument order and one provider invocation remain unchanged; generic wrappers are controls.
+
+## Regression and allocation fixture assessment
+
+StorageAllocationContractTests covers the specified Float/Double inline boundaries and large widths; construction/fill/copy, all DimensionStorage modes, generator exception, unique/shared diagnostics, makeUnique, forwarding add/multiply/copy, alternating retained-copy mutation and ordinary/throwing borrows. Borrow tests assert closure count, return value, exact error identity and destination partial writes after failure, including empty Hybrid storage. Expected arrays use exactly representable integers, not the implementation under test. Extended lifetimes keep shared controls live.
+
+Dynamic resize/factories and public/generic min/max/clamped controls cover ordinary expected arrays, distinctive custom provider output, exact recorded argument bits/counts, shape rejection before provider invocation, and existing provider-specific NaN/Inf/signed-zero bits. These do not impose a new nonfinite policy.
+
+The linked Release allocation fixture uses the actual public library, fresh setup for each row, a warmup pass outside credited rows, consumed outputs and retained aliases. It distinguishes constructor/factory cost, ten unique writes, bulk writes, first shared detach, subsequent unique writes, and direct concrete default-managed versus generic wrapper controls. Mode and scalar-width series are explicit. Provider counting remains outside production. The C callback uses fixed atomic counters/histogram storage and records successful allocation events/requested bytes; calibration includes synthetic event decoding, actual malloc/aligned allocation, Array allocation and no-op controls. This is allocation-event evidence, not peak-live memory or timing. Histogram capacity is32 sizes; final evidence must retain the total counters rather than treating that histogram as an unbounded trace.
+
+The driver snapshots linked objects/modules and fixture bytes, compiles with the stated optimization, records executable/log hashes and commands, and uses file output plus15-second phase deadlines and bounded2-second postkill cleanup. It does not rebuild the library. Identical before/after fixture and object/source provenance must be checked in the final evidence package, especially for the expanded managed-branch control. An optimizer-eliminated unused result must remain an unchanged OWN-22 row, not a fabricated improvement.
+
+## Evidence status and limits
+
+Read initial `/private/tmp/O03-final-debug-01.log`, which reports53 tests in9 suites passed. This is an initial observation, not a substitute for final sealed command/source/bundle association. Final Release, focused ASan, before/after linked allocation records, complete immutable worker evidence and canonical backup association remain pending for final acceptance. Root separately adjudicates the actual managed baseline20 events/20,880 requested bytes and historical OWN-26 fixture distinction. This review makes no blanket build-independent quadratic-copy claim, timing/throughput claim, allocation-free public-operation claim or final runtime acceptance.
+
+## Final sealed v1 verdict — ACCEPT
+
+Verified evidence index SHA256 `53a70f1ff5206e074c2c83d573df11d198b8898bc7d3d7e320ff40250652e3ab` and all34 indexed worker artifacts. Rechecked all274 frozen source hashes. Exact build/test status records and retained logs distinguish setup failures, behavioral RED and final successes. Final Debug/Release each report53 tests in9 suites with exit0; ASan reports8 real new matrix functions in1 suite with exit0 and no AddressSanitizer finding. Verified helper and each loaded test bundle against its recorded hash and canonical binary copy; helper identity is not substituted for bundle identity.
+
+Verified both actual linked allocation snapshots, all134 object/module artifacts per side, exact fixture hashes, source association to baseline/final manifest, executable hashes and all three phase exits/log hashes. Full snapshot files match canonical before04/after01 backups. All627 aligned comparison rows match their raw logs; independently checked268 zero-event/zero-byte mutation/diagnostic rows and47 shared-detach rows, with inline zero or exactly one40-byte owner plus payload. The reviewed comparison also checks constructor count bounds, resize and factory byte formulas. This is a bounded actual-library observation, not pointer-only COW inference.
+
+OWN-22 has an actual reduction in this linked build: at Float512 Dynamic min/max lose one2,080-byte Array allocation (six to five events), clamp five to four, with one provider call and checked outputs. Fixed controls stay unchanged. The managed direct start/stop control changes20events/20,880bytes to zero for ten writes. The historical source-fixture negative control remains separately qualified; no blanket compiler-independent default-vector copying claim follows.
+
+**FINAL ACCEPT O03 v1.** Source and scoped runtime/allocation obligations are satisfied. Root owns audit closure and import. No latency, peak-live memory, RSS, throughput, allocation-free public wrapper or downstream claim is added. No builds or runtime reruns performed by this review.

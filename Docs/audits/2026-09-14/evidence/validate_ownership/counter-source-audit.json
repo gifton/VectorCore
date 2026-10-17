@@ -1,0 +1,6 @@
+{
+  "Storage/UnifiedStorage.swift": true,
+  "Storage/HybridStorage.swift": true,
+  "Storage/DimensionStorage.swift": true,
+  "Storage/VectorStorage.swift": true
+}

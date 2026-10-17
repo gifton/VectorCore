@@ -1,0 +1,117 @@
+[
+  {
+    "cmd": [
+      "python3",
+      "/private/tmp/vectorcore-review-2026-09-14/build_probe.py",
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/search_probe.swift",
+      "release"
+    ],
+    "returncode": 1
+  },
+  {
+    "cmd": [
+      "python3",
+      "/private/tmp/vectorcore-review-2026-09-14/build_probe.py",
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/interfaces_probe.swift",
+      "release"
+    ],
+    "returncode": 1
+  },
+  {
+    "cmd": [
+      "python3",
+      "/private/tmp/vectorcore-review-2026-09-14/build_probe.py",
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/batch_probe.swift",
+      "release"
+    ],
+    "returncode": 1
+  },
+  {
+    "cmd": [
+      "python3",
+      "/private/tmp/vectorcore-review-2026-09-14/build_probe.py",
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExecutionPublicProbe.swift",
+      "release"
+    ],
+    "returncode": 1
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "normal"
+    ],
+    "returncode": 0,
+    "stdout": "tupleStride 16\nsequentialNearMax [9223372036854775805, 9223372036854775806]\nactualSearchScores [(3, -2.0, -1.0), (2, -1.0, inf), (1, -0.5, 2.0)]\nsimilarity [[0.0, -1.0000001], [-1.0000001, 0.0]]\ndisabledLoggerEvaluations 1\noppositeHeap [1, 2] [3, 4]\n"
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "factory-zero"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "pca-overflow"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "cpu-execute"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "cpu-each"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "cpu-each-hint"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "cpu-reduce"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "cpu-reduce-hint"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "cpu-large-hint"
+    ],
+    "returncode": -5,
+    "stdout": ""
+  },
+  {
+    "cmd": [
+      "/private/tmp/vectorcore-validated-audit-2026-09-14/validate_execution_api/ExtraProbe",
+      "negative-heap"
+    ],
+    "timeout": 3
+  }
+]

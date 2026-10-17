@@ -1,0 +1,45 @@
+# Q02 independent frozen-v3 scoped source review
+
+**Source disposition: ACCEPT. Final runtime/evidence acceptance remains pending.** This is the requested v2-to-v3 review; the preserved v1 production and v2 coverage reviews continue to apply.
+
+Verified canonical frozen-v3 full patch SHA256 `eabcfe85abf022ff546198a56c7b920944cf66598b078e044b9310776ab68b24`, manifest `2f6341184e527785d90cee57c7fc01cf801c4990d40f174543c92e62368b64f1`, frozen hash map `f66e08edb81d5f25e6ced2dce4522252da271f33f1d0cf479c5206d4dc454d78`, and every map entry. Comparing complete v2/v3 final inventory maps identifies exactly three changed test files: MixedPrecisionAutoTunerTests.swift, MixedPrecisionKernelTests.swift, and PrecisionSelectionContractTests.swift. Production, public consumers, probes and drivers are byte-identical to reviewed v2.
+
+Read all three deltas. Legacy medium/relaxed lookup tests now assert fullFP32 rather than merely printing. The strict-limit miss requires fullFP32 instead of permitting unprofiled reduced strategies. The integration miss likewise asserts fullFP32; a vacuous unused strategy comparison is removed. Labels distinguish a synthetic filter from a general accuracy guarantee, and the residual “Cached strategies” wording from v2 is corrected to repeated unprofiled results.
+
+The new Kernel invalid-calibration matrix independently supplies negative/zero counts, unsupported width, zero/negative iterations, negative warmups, count overflow and execution-count overflow. Every case must throw invalidConfiguration; an unexpected error escapes and fails the test, and successful return records an issue. Accumulated work counters must remain exactly zero. These inputs are rejected before allocating huge buffers or invoking kernels. The already-cancelled/prior-state and active reduced-override bridge controls from v2 remain unchanged.
+
+No new source blocker found. Reported v2 Debug/Release totals are not treated as v3 execution; the final handoff must associate the exact test revision with successful commands, retained artifacts and logs and preserve prior-version qualifications. No builds, source edits, index changes or delegation were performed.
+
+## Final sealed runtime and measurement adjudication
+
+**FINAL ACCEPT — Q02 frozen v3, with NUM21 peak-live characterization explicitly staged.** This accepts the scoped implementation and its verified tests/ordinary allocation/work observations; it does not claim successful peak-live profiling, a performance target, or downstream integration.
+
+Verified sealed worker index SHA256 `f3087d10f63084a90a9b17d5f6ce40c2770d38841127be6103d18dbdb1a7aba0`: all1519 canonical artifacts match their recorded byte lengths and SHA256. Command/runtime index is `4dea33346e0ecef2381711b4c9490610a79b12618a81f7906b62523f8a8211cb`; final report is `8a4557f872a2396f8c4acf182ad1e1d7561c7ef3b930147ada5c9e501882d36a`. Reviewed exact source/version, command, artifact, host/bundle and probe associations. Prior v1/v2/v3 source reviews remain applicable; final production is unchanged across those versions.
+
+### Runtime and consumer evidence
+
+Actual final Debug and Release logs each report24 XCTest cases without failures and36 Swift Testing functions in five suites. Repeated XCTest aggregate summaries are not extra cases. Separate bounded direct helper runs each execute all17 PrecisionSelectionContractTests functions and pass with exit0, no timeout/cleanup timeout,15-second execution and2-second cleanup deadlines. These are actual tests, not scenario-guard no-op entry functions. Copied host-binaries/swiftpm-testing-helper hashes match the direct metadata; loaded Debug/Release test bundles have their own different hashes and match the command index and exact argv. The initial host lookup in this review assumed a per-configuration directory, then used the explicitly retained host-binaries directory; no artifact was missing.
+
+Ordinary public Debug and Release consumers each complete initializer typecheck, compile/link and execution with exit0/no timeout. Each actual consumer log contains58 checks, all15 independent invalid-record mutations, the ordinary persistence/profile-first transaction controls, structured save-failure state checks, active reduced shared override/full-mode precedence and final PASS/body-end markers. Verified copied fixtures, modules/objects, executable hashes, command log hashes and expected statuses. The131 baseline Swift source hashes and132 final Swift source hashes in the probe/public provenance maps agree with the corresponding exact base/final manifest entries. All136 baseline and137 final linked-artifact records per selected snapshot match retained bytes. Public fixture execution is independent of the test-only v3 refinements; the consumer source and production were already verified byte-identical.
+
+The original semantic RED probe records seven intended failures and expected child exit1; the final probe records success. Baseline initializer access-control failure is API admission evidence, not a persistence runtime reproduction. The private baseline initializers prevented the ordinary temporary-URL experiment, correctly leaving that historical issue source-established. The first public consumer's deliberate save-failure assertion used the wrong error representation; its failure remains separate from the corrected successful structured-context consumer. Module-map/module-cache setup failures and literal-inference compilation failure are not counted as executed behavioral tests.
+
+### Matched allocation and work evidence
+
+Authoritative selection measurements are before-02 and after-01. Swift fixture, C allocation logger and Python driver hashes are identical. Release target compiler options match after normalizing scratch paths; the caller's Q02_BASELINE compatibility define is the disclosed source/API difference. Neither ordinary allocation binary uses the separate coverage instrumentation. Exact source/object/module/executable associations are retained.
+
+Independently matched every six-workload raw measurement row (width512/768/1536, N50/500) against the comparison record, including cold/warm event counts, requested bytes and elapsed values. Cold selection changes from5554/51254 events and approximately11–315MB cumulative requested bytes to2 events/64 requested bytes in these fixtures; all recorded warm rows are zero events/bytes. Actual no-op, C and owned-Array instrumentation controls accompany measurement children. These are cumulative allocator requests from single observations, not peak live bytes, a timing distribution, or an allocation-free API promise.
+
+All six old work logs match `25*(4*N+2)*D` converted elements; all final selection work logs show zero. Separate explicit-calibration children retain five actual strategy results, the same conversion-count identity and nonzero allocation/time observations. Work moved into the explicit operation; it was not claimed eliminated. This distinction agrees with the lookup-only source contract.
+
+Rechecked exported coverage functions/regions directly against mapping.json for all six baseline workloads:125 strategy entries, five benchmark entries, one baseline and one generator entry. Verified all30 kernel closures have25 entries and the independent known-count function exports three. Generator loop region counts and source callsite-derived constructor/builder counts are expressly different quantities from function-entry counts. Source-unchanged coverage binaries/raw/merged/export artifacts are separate from ordinary allocation/time snapshots. No work count is inferred from elapsed time.
+
+### Bounds, historical limitations and final scope
+
+Reviewed the retained direct-host driver and previously reviewed frozen public/selection/calibration drivers. Owned subprocesses capture files, use process-group termination, impose15-second execution and at most2-second cleanup, and represent timeout status as absent before failing. Actual final bounded runs report no timeout. Source-side work counters, injected selection latencies and measured public timing remain separate evidence mechanisms.
+
+The Allocations attempt completed naturally with exit2 and an actual “Failed to attach to target process” log/retained trace. It was neither a timeout nor successful peak-live measurement. NUM21 peak-live remains staged as explicitly accepted by root; requested-byte totals or RSS are not substitutes.
+
+Lost original temporary baseline build logs, caller inventories and unfrozen development-tests-03 artifacts remain excluded from final proof. Reconstructed exact-base inventories are labeled reconstructions; historical24/32 observations are not used as final execution. Canonical ordinary baseline binaries/objects, frozen sources, coverage and final runtime artifacts survived and are the verified basis here. Mutable build scratches are not represented as sealed artifacts.
+
+No unresolved source or evidence blocker remains for the bounded Q02 implementation. No builds/reruns, source edits, commits/index operations or nested delegation were performed in this adjudication.

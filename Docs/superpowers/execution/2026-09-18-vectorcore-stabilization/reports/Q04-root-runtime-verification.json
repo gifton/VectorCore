@@ -1,0 +1,32 @@
+{
+  "task": "Q04",
+  "frozen": "v1",
+  "runtime": {
+    "debug": {
+      "canonicalBuildEntriesVerified": 131,
+      "actualChildrenVerified": 45,
+      "log": "Q04-green-debug-01.log",
+      "logSHA256": "28671389ccdd423e020f4001efe3569ac38fc09d9d08576fdd3485d5e3721d2b",
+      "helperSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+      "loadedBundleSHA256": "beea6f67579a0847f9c9bc96cefcbed75adf42b1899a4a4dcf82a08d5dcb4b50"
+    },
+    "release": {
+      "canonicalBuildEntriesVerified": 131,
+      "actualChildrenVerified": 45,
+      "log": "Q04-final-release-01.log",
+      "logSHA256": "26565c70c07153f490a89f83a1261c79bcbefb5419b4623868a82f2ad41373bd",
+      "helperSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+      "loadedBundleSHA256": "143c5f03649494b2b4c63bc8ccd82ab3b1dc25783a4278da2912ef4309061aee"
+    },
+    "asan": {
+      "canonicalBuildEntriesVerified": 131,
+      "actualChildrenVerified": 0,
+      "log": "Q04-final-asan-01.log",
+      "logSHA256": "af9bd594466df6460ebaa2b057e255be83be447f8a634fe6957fd2bb16b388ba",
+      "helperSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+      "loadedBundleSHA256": "ce122f5ba1f2d0c4e1a4b503875a0b11a788071e271e5efa2aa871517b0f13f1"
+    }
+  },
+  "baseline": "actual63issues in45 invalid children; independent finite/exceptional controls passed",
+  "limits": "22 reported functions include parameterized rejection and one no-op child dispatcher; actual45 rejection children counted separately. ASan only the2actualvalid matrices."
+}

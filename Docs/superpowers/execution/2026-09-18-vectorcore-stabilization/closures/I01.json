@@ -1,0 +1,27 @@
+{
+  "task": "I01",
+  "status": "accepted-staged",
+  "task_base": "297ad4e",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [],
+  "partial_records": [
+    "OWN-03",
+    "API-33"
+  ],
+  "validation": {
+    "red": "50 tests /684 issues before repair",
+    "debug": "50 tests /2 suites passed",
+    "release": "50 tests /2 suites passed",
+    "matrix": "588 mutation cases across21 representations, plus advisory decoding"
+  },
+  "review": "reports/I01-review.md",
+  "evidence": "reports/I01.md",
+  "limitations": [
+    "Executed downstream HNSW and VectorAccelerate CPU/GPU checks pending",
+    "Custom external reference aliases require stable caller snapshots",
+    "Codable clears advisory hints; callers explicitly reconstruct trusted metadata"
+  ],
+  "satisfied_prerequisites": {
+    "S01": "Accepted shape guards plus integrated NormalizationHint mutation tests; see closures/S01.json"
+  }
+}

@@ -50,7 +50,7 @@ also not a standalone program
     def list_examples(self):
         return subprocess.run(
             [sys.executable, str(self.script), "--list-examples"],
-            capture_output=True, text=True)
+            capture_output=True, text=True, timeout=60)
 
     def test_includes_each_reference_block_but_not_installation_or_deferred_guides(self):
         # A README-only collector or a recursive scan would select the wrong programs.

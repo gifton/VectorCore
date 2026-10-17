@@ -21,6 +21,7 @@ struct CLIOptions {
     var filters: [String] = []      // include patterns
     var excludes: [String] = []     // exclude patterns
     var filterMode: String = "glob" // glob|regex
+    var configurationError: String? = nil
     var help: Bool = false
     var dims: [Int] = [512, 768, 1536]
     var batchNs: [Int] = [100, 1_000] // profile-driven; default for short
@@ -47,136 +48,6 @@ struct CLIOptions {
     var progressFormat: String = "none" // none|text|json
 }
 
-func parseCLI() -> CLIOptions {
-    var opts = CLIOptions()
-    var it = CommandLine.arguments.dropFirst().makeIterator()
-    while let arg = it.next() {
-        switch arg {
-        case "--help", "-h":
-            opts.help = true
-        case "--suites":
-            if let v = it.next() { opts.suites = v.split(separator: ",").map { String($0) } }
-        case "--min-time":
-            if let v = it.next(), let d = Double(v) { opts.minTimeSeconds = d; opts._userSetMinTime = true }
-        case "--repeats":
-            if let v = it.next(), let n = Int(v) { opts.repeats = n }
-        case "--samples":
-            if let v = it.next(), let n = Int(v) { opts.samples = max(1, n) }
-        case "--format":
-            if let v = it.next() { opts.format = v }
-        case "--out":
-            if let v = it.next() { opts.outputPath = v }
-        case "--profile":
-            if let v = it.next() { opts.profile = v }
-        case "--mode":
-            if let v = it.next() { opts.mode = v }
-        case "--run-label":
-            if let v = it.next() { opts.runLabel = v }
-        case "--filter":
-            if let v = it.next() { opts.filters = v.split(separator: ",").map { String($0) }.filter { !$0.isEmpty } }
-        case "--exclude":
-            if let v = it.next() { opts.excludes = v.split(separator: ",").map { String($0) }.filter { !$0.isEmpty } }
-        case "--filter-mode":
-            if let v = it.next() { opts.filterMode = v }
-        case "--prefer-soa":
-            opts.preferSoA = true
-        case "--no-prefer-soa":
-            opts.preferSoA = false
-        case "--use-mixed-precision":
-            opts.useMixedPrecision = true
-        case "--no-use-mixed-precision":
-            opts.useMixedPrecision = false
-        case "--ab":
-            opts.abCompare = true
-        case "--no-ab":
-            opts.abCompare = false
-        case "--use-underscored":
-            opts.useUnderscored = true
-        case "--no-use-underscored":
-            opts.useUnderscored = false
-        case "--use-ckernels":
-            opts.useCKernels = true
-        case "--no-use-ckernels":
-            opts.useCKernels = false
-        case "--release-size":
-            opts.releaseSize = true
-        case "--no-release-size":
-            opts.releaseSize = false
-        case "--ab-only":
-            opts.abOnly = true
-        case "--no-ab-only":
-            opts.abOnly = false
-        case "--max-rel-error":
-            if let v = it.next(), let d = Double(v) { opts.maxRelError = d }
-        case "--max-abs-error":
-            if let v = it.next(), let d = Double(v) { opts.maxAbsError = d }
-        case "--strict-correctness":
-            opts.strictCorrectness = true
-        case "--progress-format":
-            if let v = it.next() { opts.progressFormat = v }
-        case "--dims":
-            if let v = it.next() {
-                let parts = v.split(separator: ",").compactMap { Int($0) }
-                if !parts.isEmpty { opts.dims = parts; opts._userSetDims = true }
-            }
-        case "--batch-ns":
-            if let v = it.next() {
-                let parts = v.split(separator: ",").compactMap { Int($0) }
-                if !parts.isEmpty { opts.batchNs = parts; opts._userSetBatchNs = true }
-            }
-        case "--run-seed":
-            if let v = it.next() {
-                if let s = UInt64(v) { opts.runSeed = s; opts._userSetRunSeed = true }
-                else if v.lowercased().hasPrefix("0x"), let s = UInt64(v.dropFirst(2), radix: 16) { opts.runSeed = s; opts._userSetRunSeed = true }
-            }
-        default:
-            break
-        }
-    }
-    var out = applyProfile(opts)
-    out = applyMode(out)
-    // Fallback to env var when CLI not provided
-    if !out._userSetRunSeed, let env = ProcessInfo.processInfo.environment["VC_RUN_SEED"] {
-        if let s = UInt64(env) { out.runSeed = s }
-        else if env.lowercased().hasPrefix("0x"), let s = UInt64(env.dropFirst(2), radix: 16) { out.runSeed = s }
-    }
-    if out.runLabel == nil, let envLabel = ProcessInfo.processInfo.environment["VC_RUN_LABEL"], !envLabel.isEmpty {
-        out.runLabel = envLabel
-    }
-    // Resolve feature toggles with env fallbacks and sensible defaults
-    if out.preferSoA == nil {
-        if let s = ProcessInfo.processInfo.environment["VC_SOA"], s == "1" { out.preferSoA = true } else { out.preferSoA = false }
-    }
-    if out.useMixedPrecision == nil {
-        if let s = ProcessInfo.processInfo.environment["VC_MIXED_PRECISION"], s == "1" { out.useMixedPrecision = true } else { out.useMixedPrecision = false }
-    }
-    if out.abCompare == nil {
-        if let s = ProcessInfo.processInfo.environment["VC_BATCH_AB"] { out.abCompare = (s != "0") } else { out.abCompare = true }
-    }
-    if out.abOnly == nil {
-        if let s = ProcessInfo.processInfo.environment["VC_AB_ONLY"], s == "1" { out.abOnly = true } else { out.abOnly = false }
-    }
-    // abOnly implies abCompare
-    if out.abOnly == true { out.abCompare = true }
-    // Threshold env fallbacks
-    if out.maxRelError == nil, let s = ProcessInfo.processInfo.environment["VC_MAX_REL_ERROR"], let d = Double(s) {
-        out.maxRelError = d
-    }
-    if out.maxAbsError == nil, let s = ProcessInfo.processInfo.environment["VC_MAX_ABS_ERROR"], let d = Double(s) {
-        out.maxAbsError = d
-    }
-    if out.useUnderscored == nil {
-        if let s = ProcessInfo.processInfo.environment["VC_USE_UNDERSCORED"], s == "1" { out.useUnderscored = true } else { out.useUnderscored = false }
-    }
-    if out.useCKernels == nil {
-        if let s = ProcessInfo.processInfo.environment["VC_USE_CKERNELS"], s == "1" { out.useCKernels = true } else { out.useCKernels = false }
-    }
-    if out.releaseSize == nil {
-        if let s = ProcessInfo.processInfo.environment["VC_RELEASE_SIZE"], s == "1" { out.releaseSize = true } else { out.releaseSize = false }
-    }
-    return out
-}
-
 func printUsage() {
     let usage = """
     vectorcore-bench — VectorCore benchmarks
@@ -190,7 +61,8 @@ func printUsage() {
                        [--max-rel-error <d>] [--max-abs-error <d>] [--strict-correctness]
 
     Options:
-      --suites      Comma-separated suite list
+      --suites      Comma-separated suite list. Opt-in only (never default, never auto-paired): boundary, the setup-inclusive
+                    companions, reusable-output counterparts and consumer-only records (see Docs/Benchmark_Measurement_Boundaries.md)
       --min-time    Target measurement time per case in seconds (default 0.5)
       --repeats     Fixed repeat count (overrides min-time if provided)
       --samples     Repeat whole measurement N times and aggregate (default 1)
@@ -208,14 +80,13 @@ func printUsage() {
       --prefer-soa  Prefer Structure-of-Arrays kernels for batch when available (fallback VC_SOA=1)
       --use-mixed-precision  Enable FP16 mixed-precision kernels when available (fallback VC_MIXED_PRECISION=1)
       --ab          Enable A/B comparisons (euclidean vs euclidean2, fused vs preNorm) (fallback VC_BATCH_AB, default on)
-      --use-underscored      Build/measure with underscored attributes enabled
-      --use-ckernels         Enable C kernel paths (when available)
-      --release-size         Use size-optimized build profile for A/B
+      --use-ckernels         Assert this binary was compiled with VC_USE_C_KERNELS
       --ab-only      Restrict generated cases to A/B pairs (batch euclidean vs euclidean2; cosine fused vs preNorm)
       --max-rel-error  Max allowed relative error for correctness gating (env VC_MAX_REL_ERROR)
       --max-abs-error  Max allowed absolute error for correctness gating (env VC_MAX_ABS_ERROR)
       --strict-correctness  Exit non-zero when any case exceeds thresholds
-      Defaults: FP32 rel<=1e-6; FP16 rel<=2e-3; cosine(FP16) rel<=3e-3
+      Defaults: derived per-route bounds for the modeled Euclidean and matrix routes (see CorrectnessPolicy);
+                FP32 rel<=1e-6, FP16 rel<=2e-3, cosine(FP16) rel<=3e-3 for every other validated route
       --progress-format  Progress output format: none|text|json (default: none)
                          Emits structured progress events to stderr for UI tools
       -h, --help    Show this help message
@@ -265,13 +136,39 @@ func applyMode(_ options: CLIOptions) -> CLIOptions {
     return opts
 }
 
-protocol BenchmarkSuite {
-    static var name: String { get }
-    static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult]
+/// Scope, work unit, consumer and per-operation summary appended to a result line.
+private func boundarySuffix(_ r: BenchResult) -> String {
+    guard let b = r.boundary else { return "" }
+    var text = "  scope=\(b.timingScope.rawValue) unit=\(b.workUnit)x\(b.unitsPerInvocation) consumer=\(b.consumer)"
+    if let stats = PerOperationStatistics(sampleNsPerInvocation: r.sampleNsPerInvocation, unitsPerInvocation: b.unitsPerInvocation) {
+        text += String(format: "  per-%@ median=%.4f ns/%@ RSD=%.2f%%", b.workUnit, stats.median, b.workUnit, stats.rsdPercent)
+    }
+    return text
 }
 
-func printPretty(results: [BenchResult], options: CLIOptions) {
+private func printSamples(_ r: BenchResult) {
+    guard r.sampleNsPerInvocation.count > 1 else { return }
+    print("    samples ns/invocation: " + r.sampleNsPerInvocation.map { String(format: "%.2f", $0) }.joined(separator: " "))
+    guard let b = r.boundary,
+          let stats = PerOperationStatistics(sampleNsPerInvocation: r.sampleNsPerInvocation,
+              unitsPerInvocation: b.unitsPerInvocation) else { return }
+    print("    samples ns/\(b.workUnit): " + stats.samples.map { String(format: "%.4f", $0) }.joined(separator: " "))
+}
+
+private func printComparisons(_ comparisons: [ABComparison]) {
+    for comparison in comparisons {
+        print("AB \(comparison.comparison) D=\(comparison.dim) N=\(comparison.n) \(comparison.variant ?? "") "
+              + "\(comparison.provider ?? "") delta=\(comparison.deltaPercent)%")
+        print("    purpose: \(comparison.purpose)")
+        if let left = comparison.leftBoundary { print("    left  \(comparison.leftName): \(left.canonicalJSON())") }
+        if let right = comparison.rightBoundary { print("    right \(comparison.rightName): \(right.canonicalJSON())") }
+    }
+}
+
+func printPretty(results: [BenchResult], options: ValidatedOptions, comparisons: [ABComparison], unavailable: [UnavailableCase] = []) {
     print("\n=== VectorCore Bench (Phase 2) ===")
+    print("statistic: \(BenchMetadata.currentStatisticUnit) (per-<unit> fields are ns per declared work unit; time/op, med= and p90= "
+        + "are ns per invocation)")
     for r in results {
         let nsPerIter = Double(r.totalNanoseconds) / Double(max(r.iterations, 1))
         let unitNs = nsPerIter / Double(max(r.unitCount, 1))
@@ -279,11 +176,11 @@ func printPretty(results: [BenchResult], options: CLIOptions) {
         let name = r.name.padding(toLength: 40, withPad: " ", startingAt: 0)
         var line = "\(name)  iters=\(String(format: "%8d", r.iterations))  total=\(String(format: "%8.3f", msTotal)) ms  time/op=\(String(format: "%10.2f", nsPerIter)) ns"
         if r.unitCount > 1 {
-            let throughput = (Double(r.iterations * r.unitCount) / (Double(r.totalNanoseconds) / 1_000_000_000.0))
+            let throughput = ((Double(r.iterations) * Double(r.unitCount)) / (Double(r.totalNanoseconds) / 1_000_000_000.0))
             line += String(format: "  unit/op=%8.2f ns  throughput=%8.0f vec/s", unitNs, throughput)
         }
         if r.samples > 1, let med = r.medianNsPerOp, let p90 = r.p90NsPerOp, let rsd = r.rsdPercent {
-            line += String(format: "  med=%8.2f ns p90=%8.2f ns RSD=%5.2f%%", med, p90, rsd)
+            line += String(format: "  med=%8.2f ns/inv p90=%8.2f ns/inv RSD=%5.2f%%", med, p90, rsd)
         }
         if r.name.hasPrefix("dot.") || r.name.hasPrefix("dist.dot.") {
             let parts = r.name.split(separator: ".")
@@ -296,166 +193,148 @@ func printPretty(results: [BenchResult], options: CLIOptions) {
         if nsPerIter < 5.0 {
             line += "  [WARN <5ns suspicious]"
         }
+        line += boundarySuffix(r)
         print(line)
+        printSamples(r)
     }
 
-    // A/B summaries (gated by flag)
-    guard options.abCompare ?? true else { return }
-    // A/B summary: compare euclidean (sqrt) vs euclidean2 (squared) for batch cases
-    // Group by dim, N, variant, provider
-    struct Key: Hashable { let dim: Int?; let n: Int?; let variant: String?; let provider: String? }
-    var byKey: [Key: [String: BenchResult]] = [:]
-    for r in results {
-        let p = CaseParsing.parse(name: r.name)
-        guard p.kind == "batch" else { continue }
-        let key = Key(dim: p.dim, n: p.n, variant: p.variant, provider: p.provider)
-        byKey[key, default: [:]][p.metric ?? ""] = r
+    printComparisons(comparisons)
+    for entry in unavailable {
+        print("UNAVAILABLE \(entry.name): \(entry.reason)")
     }
 
-    var abLines: [String] = []
-    for (key, dict) in byKey {
-        guard let r2 = dict["euclidean2"], let r1 = dict["euclidean"] else { continue }
-        let ns1 = Double(r1.totalNanoseconds) / Double(max(r1.iterations, 1))
-        let ns2 = Double(r2.totalNanoseconds) / Double(max(r2.iterations, 1))
-        let unitNs1 = ns1 / Double(max(r1.unitCount, 1))
-        let unitNs2 = ns2 / Double(max(r2.unitCount, 1))
-        let delta = (unitNs1 - unitNs2) / unitNs1 * 100.0
-        let dimS = key.dim.map(String.init) ?? "?"
-        let nS = key.n.map(String.init) ?? "?"
-        let varS = key.variant ?? "?"
-        let provS = key.provider ?? "?"
-        let line = String(format: "AB batch d=%@ N=%@ %@ %@  euclid2 vs euclid: unit/op=%8.2f ns vs %8.2f ns  Δ=%6.2f%%",
-                          dimS, nS, varS, provS, unitNs2, unitNs1, delta)
-        abLines.append(line)
-    }
-    if !abLines.isEmpty {
-        print("\n--- A/B Summary (euclidean2 vs euclidean) ---")
-        for l in abLines.sorted() { print(l) }
-    }
+    printCorrectnessSummary(results: results, options: options)
+}
 
-    // A/B summary: cosine fused vs preNormalized for batch cases
-    var cosByKey: [Key: [String: BenchResult]] = [:]
-    for r in results {
-        let p = CaseParsing.parse(name: r.name)
-        guard p.kind == "batch", p.metric == "cosine" else { continue }
-        let key = Key(dim: p.dim, n: p.n, variant: p.variant, provider: p.provider)
-        cosByKey[key, default: [:]][p.variant ?? ""] = r
-    }
-    var cosLines: [String] = []
-    for (key, dict) in cosByKey {
-        guard let rf = dict["optimized-fused"], let rp = dict["optimized-preNorm"] else { continue }
-        let nsF = Double(rf.totalNanoseconds) / Double(max(rf.iterations, 1))
-        let nsP = Double(rp.totalNanoseconds) / Double(max(rp.iterations, 1))
-        let unitF = nsF / Double(max(rf.unitCount, 1))
-        let unitP = nsP / Double(max(rp.unitCount, 1))
-        let delta = (unitF - unitP) / unitF * 100.0
-        let dimS = key.dim.map(String.init) ?? "?"
-        let nS = key.n.map(String.init) ?? "?"
-        let provS = key.provider ?? "?"
-        let line = String(format: "AB batch d=%@ N=%@ cosine %@  preNorm vs fused: unit/op=%8.2f ns vs %8.2f ns  Δ=%6.2f%%",
-                          dimS, nS, provS, unitP, unitF, delta)
-        cosLines.append(line)
-    }
-    if !cosLines.isEmpty {
-        print("\n--- A/B Summary (cosine preNorm vs fused) ---")
-        for l in cosLines.sorted() { print(l) }
-    }
-
-    // Correctness summary (show when any case reported correctness stats)
+private func printCorrectnessSummary(results: [BenchResult], options: ValidatedOptions) {
     let corrCases = results.compactMap { r in r.correctness.map { (r, $0) } }
+    let declaredNotApplicable = results.filter {
+        $0.correctness == nil && CorrectnessPolicy.validation(forCaseName: $0.name) != .required
+    }.count
     if !corrCases.isEmpty {
         var worstRel: (name: String, val: Double)? = nil
         var worstAbs: (name: String, val: Double)? = nil
         var failCount = 0
         var passCount = 0
-        var fp16Fail = 0
-        var fp16Pass = 0
-        var soaFail = 0
-        var soaPass = 0
+        var derived = 0
+        var empirical = 0
 
         for (r, c) in corrCases {
-            let policy = defaultThresholdPolicy(for: r)
-            let relThr = options.maxRelError ?? policy.maxRel
-            let absThr = options.maxAbsError ?? policy.maxAbs
-            let isFailRel = relThr.map { c.maxRelError > $0 } ?? false
-            let isFailAbs = absThr.map { c.maxAbsError > $0 } ?? false
-            let failed = isFailRel || isFailAbs
+            // The same decision the gate records (evaluateCorrectnessWithPolicy), so the summary cannot disagree with it.
+            let failed = CorrectnessPolicy.failure(for: r, overrideRel: options.maxRelError, overrideAbs: options.maxAbsError) != nil
             if failed { failCount += 1 } else { passCount += 1 }
-
-            if policy.isFP16 { if failed { fp16Fail += 1 } else { fp16Pass += 1 } }
-            if policy.isSoA { if failed { soaFail += 1 } else { soaPass += 1 } }
-
-            if worstRel == nil || c.maxRelError > worstRel!.val { worstRel = (r.name, c.maxRelError) }
-            if worstAbs == nil || c.maxAbsError > worstAbs!.val { worstAbs = (r.name, c.maxAbsError) }
+            if case .derived = CorrectnessPolicy.rule(forCaseName: r.name).basis { derived += 1 } else { empirical += 1 }
+            if c.status == .valid {
+                if worstRel == nil || c.maxRelError > worstRel!.val { worstRel = (r.name, c.maxRelError) }
+                if worstAbs == nil || c.maxAbsError > worstAbs!.val { worstAbs = (r.name, c.maxAbsError) }
+            }
         }
 
         print("\n--- Correctness Summary ---")
         print("cases=\(corrCases.count)  pass=\(passCount)  fail=\(failCount)")
         if let w = worstRel { print(String(format: "worst maxRel=%.3e  (%@)", w.val, w.name)) }
         if let w = worstAbs { print(String(format: "worst maxAbs=%.3e  (%@)", w.val, w.name)) }
-        if fp16Pass + fp16Fail > 0 {
-            print("FP16 pass=\(fp16Pass) fail=\(fp16Fail)  (default rel<=\(String(format: "%.1e", DefaultThresholds.fp16RelDefault)))")
-        }
-        if soaPass + soaFail > 0 {
-            print("SoA pass=\(soaPass) fail=\(soaFail)  (uses FP32 defaults)")
-        }
         if options.maxRelError == nil && options.maxAbsError == nil {
-            print("defaults: FP32 rel<=\(String(format: "%.1e", DefaultThresholds.fp32RelDefault)), FP16 rel<=\(String(format: "%.1e", DefaultThresholds.fp16RelDefault)), cosine(FP16) rel<=\(String(format: "%.1e", DefaultThresholds.fp16CosineRelDefault))")
+            let fixed = [CorrectnessPolicy.fp32EmpiricalRelative, CorrectnessPolicy.fp16EmpiricalRelative,
+                         CorrectnessPolicy.fp16CosineEmpiricalRelative].map { String(format: "%.1e", $0) }
+            print("thresholds: \(derived) case(s) derived per route from worst-case rounding bounds (CorrectnessPolicy); "
+                + "\(empirical) case(s) on empirical fixed thresholds: FP32 rel<=\(fixed[0]), FP16 rel<=\(fixed[1]), "
+                + "cosine(FP16) rel<=\(fixed[2])")
         } else {
             let relS = options.maxRelError.map { String(format: "%.3e", $0) } ?? "nil"
             let absS = options.maxAbsError.map { String(format: "%.3e", $0) } ?? "nil"
             print("overrides: maxRel=\(relS) maxAbs=\(absS)")
         }
     }
+    if declaredNotApplicable > 0 {
+        print("not validated (declared not applicable in CorrectnessPolicy): \(declaredNotApplicable) case(s)")
+    }
 }
 
-@main
-struct App {
-    static func main() async {
-        let options = parseCLI()
-        if options.help {
-            printUsage()
-            return
-        }
+/// The `fixture-injected` timing scope exists only for injected test suites; a production registry must never contain it.
+func injectedScopeProblem(cases: [BenchmarkCase], injectedRegistry: Bool) -> String? {
+    guard !injectedRegistry else { return nil }
+    let offenders = cases.filter { $0.boundary.timingScope == .fixtureInjected }.map(\.name)
+    return offenders.isEmpty ? nil : "fixture-injected scope in a production registry: \(offenders.joined(separator: ","))"
+}
 
+/// The explanation printed when every selected entry is unavailable: nil when something is executable, otherwise one header
+/// line and one `UNAVAILABLE <id>: <reason>` line per entry.
+func unavailableOnlyMessage(cases: [BenchmarkCase]) -> String? {
+    guard !cases.isEmpty, cases.allSatisfy({ $0.availability != .available }) else { return nil }
+    var text = "Invalid configuration: no executable selected cases (all selected entries are unavailable)\n"
+    for item in cases {
+        if case .unavailable(let reason) = item.availability { text += "UNAVAILABLE \(item.name): \(reason)\n" }
+    }
+    return text
+}
+
+public struct BenchmarkRunner {
+    public static func runCLI() async -> Int32 {
+        await run(options: parseCLI())
+    }
+
+    static func run(options input: CLIOptions, registry injectedRegistry: [String: BenchmarkSuite.Type]? = nil, onCase: (@Sendable (String) -> Void)? = nil) async -> Int32 {
+        let options: ValidatedOptions
+        let allowed: Set<String> = Set(injectedRegistry?.keys.map { $0 }
+            ?? ["dot", "distance", "normalize", "batch", "matrix", "memory", "noop", "boundary"])
+        do {
+            options = try ValidatedOptions(input, allowedSuites: allowed)
+        } catch {
+            fputs("Invalid configuration: \(error)\n", stderr); return 1
+        }
+        if input.help { printUsage(); return 0 }
         var allResults: [BenchResult] = []
-        let registry: [String: BenchmarkSuite.Type] = [
+        var allUnavailable: [UnavailableCase] = []
+        let thermalStart = EnvCapture.thermalState()
+        let registry: [String: BenchmarkSuite.Type] = injectedRegistry ?? [
             NoopBench.name: NoopBench.self,
             DotProductBench.name: DotProductBench.self,
             DistanceBench.name: DistanceBench.self,
             NormalizationBench.name: NormalizationBench.self,
             BatchBench.name: BatchBench.self,
             MemoryBench.name: MemoryBench.self,
-            MatrixDistanceBench.name: MatrixDistanceBench.self
+            MatrixDistanceBench.name: MatrixDistanceBench.self,
+            BoundaryBench.name: BoundaryBench.self
         ]
 
         // Create progress reporter based on CLI flag
         let progressFormat = ProgressFormat(rawValue: options.progressFormat) ?? .none
-        let progress = ProgressReporter(format: progressFormat)
+        let progress = BenchmarkProgressReporter(format: progressFormat)
 
-        // AB-only: restrict to batch benchmarks since A/B pairs are defined there
-        let suiteNames: [String] = (options.abOnly ?? false) ? ["batch"] : options.suites
-        for s in suiteNames {
-            guard let suite = registry[s.lowercased()] else {
-                fputs("Warning: unknown suite: \(s)\n", stderr)
-                continue
-            }
-            progress.suiteStarted(s)
-            let suiteStartTime = Date()
-            let results = await suite.run(options: options, progress: progress)
-            allResults.append(contentsOf: results)
-            let suiteDuration = Date().timeIntervalSince(suiteStartTime) * 1000.0
-            progress.suiteCompleted(suite: s, cases: results.count, durationMs: suiteDuration)
+        let plans = options.suites.map { suite in
+            (suite, registry[suite]!.catalog(options: options, progress: progress).filter { options.caseFilter.matches($0.name) })
         }
-
-        // Always print pretty for local visibility
-        let filtered: [BenchResult]
-        if !options.filters.isEmpty || !options.excludes.isEmpty {
-            filtered = allResults.filter { Filters.shouldRun(name: $0.name, options: options) }
-        } else {
-            filtered = allResults
+        let selectedCases = plans.flatMap { $0.1 }
+        if let problem = injectedScopeProblem(cases: selectedCases, injectedRegistry: injectedRegistry != nil) {
+            fputs("Invalid configuration: \(problem)\n", stderr); return 1
         }
-        printPretty(results: filtered, options: options)
+        let executableCases = selectedCases.filter { $0.availability == .available }
+        let selectedIDs = executableCases.map(\.name)
+        let unavailableIDs = selectedCases.filter { $0.availability != .available }.map(\.name)
+        guard !selectedCases.isEmpty else { fputs("Invalid configuration: empty selected case set\n", stderr); return 1 }
+        if let message = unavailableOnlyMessage(cases: selectedCases) { fputs(message, stderr); return 1 }
+        do {
+            let missing = try ABComparisons.missingSides(boundaries: selectedCases.map { ($0.name, $0.boundary) })
+            if options.abOnly == true && !missing.isEmpty { throw BenchmarkReportError(missing.joined(separator: "; ")) }
+        } catch { fputs("Invalid configuration: \(error)\n", stderr); return 1 }
+        for (suite, cases) in plans where !cases.isEmpty {
+            progress.suiteStarted(suite)
+            let start = Date()
+            let executed = await CaseExecution.execute(cases, options: options, progress: progress, suite: suite, onCase: onCase)
+            allResults += executed.results
+            allUnavailable += executed.unavailable
+            progress.suiteCompleted(suite: suite, cases: cases.count, durationMs: Date().timeIntervalSince(start) * 1000)
+        }
+        if allResults.isEmpty { allResults = [BenchResult(name: "empty-run", iterations: 0, totalNanoseconds: 0, executionFailure: "Selected cases returned no measurements")] }
+        let filtered = allResults // Selection already happened before case setup; never post-filter results.
+        let executionFailures = filtered.compactMap { r in
+            reportFailure(for: r).map { BenchmarkFailure(name: r.name, reason: $0, boundary: r.boundary) }
+        }
+        let reportable = filtered.filter { reportFailure(for: $0) == nil }
+        let violations = evaluateCorrectnessWithPolicy(results: filtered, overrideRel: options.maxRelError, overrideAbs: options.maxAbsError)
+        let failures = executionFailures + violations
+        for failure in failures { fputs("\(failure.name): \(failure.reason)\n", stderr) }
 
         // Write machine-readable outputs when requested
         let format = options.format.lowercased()
@@ -464,52 +343,64 @@ struct App {
             useMixedPrecision: options.useMixedPrecision ?? false,
             abCompare: options.abCompare ?? true,
             abOnly: options.abOnly ?? false,
-            useUnderscored: options.useUnderscored ?? false,
-            useCKernels: options.useCKernels ?? false,
-            releaseSize: options.releaseSize ?? false
+            useCKernels: VectorCoreCompiledFeatures.useCKernels,
+            requestedCKernels: options.useCKernels
         )
-        // Persist only explicit CLI/global thresholds; calibrated defaults are applied per-case during evaluation
+        // Persist only explicit CLI/global thresholds; CorrectnessPolicy's per-case thresholds are applied during evaluation
         let thr = RunThresholds(maxRelError: options.maxRelError, maxAbsError: options.maxAbsError)
-        let runFilters = (!options.filters.isEmpty || !options.excludes.isEmpty) ? RunFilters(mode: options.filterMode, include: options.filters.isEmpty ? nil : options.filters, exclude: options.excludes.isEmpty ? nil : options.excludes) : nil
-        let metadata = EnvCapture.collectMetadata(suites: options.suites, dims: options.dims, buildConfig: "release", runSeed: options.runSeed, runLabel: options.runLabel, flags: flags, thresholds: (thr.maxRelError != nil || thr.maxAbsError != nil) ? thr : nil, filters: runFilters)
-        let cases = JSONWriter.toCases(filtered)
-        let ab = (flags.abCompare ? ABComparisons.buildComparisons(cases: cases) : [])
+        let runFilters = (!options.filters.isEmpty || !options.excludes.isEmpty) ? RunFilters(mode: options.filterMode,
+            include: options.filters.isEmpty ? nil : options.filters, exclude: options.excludes.isEmpty ? nil : options.excludes) : nil
+        let metadata = EnvCapture.collectMetadata(suites: plans.filter { !$0.1.isEmpty }.map { $0.0 }, dims: options.dims,
+            buildConfig: BenchmarkCompiledFeatures.configuration, runSeed: options.runSeed, runLabel: options.runLabel, flags: flags,
+            thresholds: (thr.maxRelError != nil || thr.maxAbsError != nil) ? thr : nil, filters: runFilters, selectedCaseIDs: selectedIDs, samples: options.samples,
+            repeats: options.repeats, minTimeSeconds: options.minTimeSeconds, batchNs: options.batchNs, profile: options.profile,
+                mode: options.mode,
+            unavailableCaseIDs: unavailableIDs, thermalStateStart: thermalStart,
+            harnessCalibration: options.repeats.map { "not used (fixed --repeats \($0): exactly that many invocations per sample)" }
+                ?? "\(HarnessConfig.calibrationVersion); clock tick \(ClockResolution.tickNanoseconds) ns (\(ClockResolution.source))")
+        let cases: [BenchCase]
+        let ab: [ABComparison]
+        let missingSides: [String]
+        do {
+            cases = try JSONWriter.toCases(reportable)
+            if flags.abCompare {
+                let report = try ABComparisons.report(cases: cases)
+                ab = report.comparisons; missingSides = report.missingSides
+            } else { ab = []; missingSides = [] }
+        } catch { fputs("Report integrity error: \(error)\n", stderr); return 1 }
+        for missing in missingSides { fputs("\(missing)\n", stderr) }
+        printPretty(results: reportable, options: options, comparisons: ab, unavailable: allUnavailable)
 
         if format == "json" {
             let path = options.outputPath ?? defaultRunPath(for: metadata, ext: "json")
-            let run = BenchRun(metadata: metadata, results: cases, abComparisons: ab.isEmpty ? nil : ab)
+            let run = BenchRun(metadata: metadata, results: cases, abComparisons: ab.isEmpty ? nil : ab, failures: failures,
+                abMissingSides: missingSides, unavailable: allUnavailable)
             do {
                 try JSONWriter.write(run: run, to: path)
                 print("\nSaved JSON results to: \(path)")
             } catch {
                 fputs("Failed to write JSON to \(path): \(error)\n", stderr)
+                return 1
             }
         } else if format == "csv" {
             // Default CSV alongside JSON with same layout
             let path = options.outputPath ?? defaultRunPath(for: metadata, ext: "csv")
             do {
-                try CSVWriter.write(cases: cases, metadata: metadata, to: path)
+                try CSVWriter.write(cases: cases, metadata: metadata, failures: failures, unavailable: allUnavailable, to: path)
                 print("\nSaved CSV results to: \(path)")
             } catch {
                 fputs("Failed to write CSV to \(path): \(error)\n", stderr)
+                return 1
             }
         }
 
-        // Correctness gating: evaluate after writing results so artifacts are preserved
-        if options.strictCorrectness || thr.maxRelError != nil || thr.maxAbsError != nil {
-            let violations = evaluateCorrectnessWithPolicy(results: filtered, overrideRel: thr.maxRelError, overrideAbs: thr.maxAbsError)
-            if violations.count > 0 {
-                print("\nCorrectness violations: \(violations.count)")
-                for v in violations.prefix(10) { print("- \(v)") }
-                if options.strictCorrectness { exit(1) }
-            } else {
-                print("\nCorrectness violations: 0")
-            }
-        }
+        return !executionFailures.isEmpty || (options.strictCorrectness && !violations.isEmpty) ? 1 : 0
     }
 }
 
-// Build default run file path: .bench/runs/<device-tag>/<timestamp>_<git-sha>.<ext>
+// Build default run file path: .bench/runs/<device-tag>/<timestamp>_<git-sha>.<ext>. The SHA is `meta.gitSHA`, the
+// `git rev-parse HEAD` of the benchmark process's working directory at run time, not the identity of the measured
+// source ("nogit" when unavailable).
 private func defaultRunPath(for meta: BenchMetadata, ext: String) -> String {
     let baseDir = ".bench/runs"
     let device = sanitizePathComponent(meta.deviceTag)
@@ -534,60 +425,20 @@ private func sanitizePathComponent(_ s: String) -> String {
     return result.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
 }
 
-// Scan results and return list of violating case names with max errors
-private enum DefaultThresholds {
-    // Baseline FP32 default (relative)
-    static let fp32RelDefault = 1e-6
-    // Mixed-precision FP16 defaults (relative)
-    static let fp16RelDefault = 2e-3
-    // Cosine can accumulate more error in FP16
-    static let fp16CosineRelDefault = 3e-3
-}
-
-private struct ThresholdPolicy {
-    let maxRel: Double?
-    let maxAbs: Double?
-    let isFP16: Bool
-    let isSoA: Bool
-}
-
-private func defaultThresholdPolicy(for r: BenchResult) -> ThresholdPolicy {
-    let name = r.name.lowercased()
-    let p = CaseParsing.parse(name: r.name)
-    let isFP16 = name.contains("fp16")
-    let isSoA = name.contains("soa")
-    let metric = (p.metric ?? "")
-
-    // Relative threshold selection
-    let rel: Double
-    if isFP16 {
-        if metric == "cosine" { rel = DefaultThresholds.fp16CosineRelDefault }
-        else { rel = DefaultThresholds.fp16RelDefault }
-    } else {
-        rel = DefaultThresholds.fp32RelDefault
-    }
-    // Absolute threshold left nil by default (relative dominates)
-    let abs: Double? = nil
-    return ThresholdPolicy(maxRel: rel, maxAbs: abs, isFP16: isFP16, isSoA: isSoA)
-}
-
-private func evaluateCorrectnessWithPolicy(results: [BenchResult], overrideRel: Double?, overrideAbs: Double?) -> [String] {
-    var out: [String] = []
+/// The correctness gate: one failure per result that `CorrectnessPolicy` rejects (see its derivations and declarations).
+func evaluateCorrectnessWithPolicy(results: [BenchResult], overrideRel: Double?, overrideAbs: Double?) -> [BenchmarkFailure] {
+    var out: [BenchmarkFailure] = []
+    if results.isEmpty { out.append(BenchmarkFailure(name: "run", reason: "No selected results; missing validation")) }
     for r in results {
-        guard let c = r.correctness else { continue }
-        let policy = defaultThresholdPolicy(for: r)
-        let relThr = overrideRel ?? policy.maxRel
-        let absThr = overrideAbs ?? policy.maxAbs
-        let relBad = relThr.map { c.maxRelError > $0 } ?? false
-        let absBad = absThr.map { c.maxAbsError > $0 } ?? false
-        if relBad || absBad {
-            let desc = String(format: "%@  maxRel=%.3e maxAbs=%.3e  thr(rel=%@ abs=%@)",
-                              r.name,
-                              c.maxRelError, c.maxAbsError,
-                              relThr.map { String(format: "%.1e", $0) } ?? "nil",
-                              absThr.map { String(format: "%.1e", $0) } ?? "nil")
-            out.append(desc)
-        }
+        if let failure = CorrectnessPolicy.failure(for: r, overrideRel: overrideRel, overrideAbs: overrideAbs) { out.append(failure) }
     }
     return out
+}
+
+func reportFailure(for result: BenchResult) -> String? {
+    if let error = result.executionFailure { return error }
+    guard result.iterations > 0, result.totalNanoseconds > 0, result.unitCount > 0, result.samples > 0 else { return "Invalid timing counts or duration" }
+    let statistics = [result.meanNsPerOp, result.medianNsPerOp, result.p90NsPerOp, result.stddevNsPerOp, result.rsdPercent].compactMap { $0 }
+    guard statistics.allSatisfy({ $0.isFinite && $0 >= 0 }) else { return "Nonfinite or negative timing statistic" }
+    return nil
 }

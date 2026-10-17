@@ -1,0 +1,15 @@
+{
+  "review_files_verified": 5,
+  "changed_production_files": [
+    "Sources/VectorCore/Operations/BatchOperations.swift",
+    "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+    "Sources/VectorCore/Protocols/ComputeProvider.swift",
+    "Sources/VectorCore/Providers/CPUComputeProvider.swift"
+  ],
+  "base": "6f364bac978e099feeb2e02693235bbbcdcc88b3",
+  "shared_files_match_base_before_import": true,
+  "evidence_hashes_verified": 14,
+  "review_hash_refreshed_after_final_verdict": true,
+  "debug": "7XCTest entries/0failures +16SwiftTesting controls passed",
+  "release": "7XCTest entries/0failures +16SwiftTesting controls passed"
+}

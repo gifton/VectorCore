@@ -190,17 +190,22 @@ func cosineSimilarity(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float
     let dot = a.dotProduct(b)
     let magProduct = a.magnitude * b.magnitude
 
+    // A NaN or infinite magnitude (a NaN or infinite coordinate, or an overflowing product): report NaN
+    guard magProduct.isFinite else { return .nan }
     guard magProduct > 0 else { return 0 }
 
     let similarity = dot / magProduct
+    guard similarity.isFinite else { return .nan }
 
     // Floating-point error might give 1.0000001 or -1.0000001
-    // Clamp to valid [-1, 1] range
+    // Clamp the finite similarity to the valid [-1, 1] range
     return max(-1.0, min(1.0, similarity))
 }
 ```
 
 Without clamping, `acos(1.0000001)` returns `NaN` because the input is technically outside the domain.
+Clamp only after the finiteness checks: `min(1.0, .nan)` is 1.0 in Swift, so a clamp applied to a NaN
+similarity reports a perfect match instead of the invalid input.
 
 ---
 

@@ -5,7 +5,8 @@
 
 import Foundation
 
-/// Handle to a managed buffer
+/// Immutable borrowed buffer metadata. Retain its provider until release.
+/// Sending metadata does not synchronize access to its pointee.
 public struct BufferHandle: Sendable, Hashable {
     /// Unique identifier for this buffer
     public let id: UUID
@@ -17,7 +18,7 @@ public struct BufferHandle: Sendable, Hashable {
     private let pointerAddress: Int
 
     /// Access the pointer
-    /// - Warning: Only valid while handle is active
+    /// - Warning: Only valid while the provider is alive and the handle is active.
     public var pointer: UnsafeMutableRawPointer {
         UnsafeMutableRawPointer(bitPattern: pointerAddress)!
     }
@@ -45,9 +46,10 @@ public struct BufferStatistics: Sendable {
 
     /// Hit rate (reused / total requests)
     public var hitRate: Double {
-        let total = totalAllocations + reusedBuffers
+        guard totalAllocations >= 0, reusedBuffers >= 0 else { return 0 }
+        let total = Double(totalAllocations) + Double(reusedBuffers)
         guard total > 0 else { return 0 }
-        return Double(reusedBuffers) / Double(total)
+        return Double(reusedBuffers) / total
     }
 
     public init(
@@ -65,8 +67,8 @@ public struct BufferStatistics: Sendable {
 
 /// Protocol for managed memory buffers
 ///
-/// BufferProvider abstracts memory management for vector operations,
-/// enabling efficient buffer reuse and platform-specific optimizations.
+/// BufferProvider abstracts buffer acquisition and release for vector operations,
+/// so a conformer can reuse buffers or use platform-specific allocation.
 ///
 /// ## Design Principles
 /// - Async-safe with actor isolation
@@ -76,9 +78,10 @@ public struct BufferStatistics: Sendable {
 ///
 /// ## Usage Pattern
 /// ```swift
-/// let handle = try await provider.acquire(size: 1024)
-/// defer { await provider.release(handle) }
-/// // Use handle.pointer for operations
+/// let address = try await provider.withBuffer(size: 1024) { handle in
+///     UInt(bitPattern: handle.pointer)
+/// }
+/// // The returned address is diagnostic metadata; its lease has ended.
 /// ```
 public protocol BufferProvider: Sendable {
 
@@ -111,12 +114,33 @@ public protocol BufferProvider: Sendable {
 // MARK: - Default Implementation
 
 public extension BufferProvider {
+    /// Acquires uninitialized storage, retains the provider through the body, and
+    /// awaits release before returning or rethrowing the body's error. Cancellation
+    /// does not release storage until the body finishes or throws. The caller must
+    /// deinitialize every initialized element before the body exits and must not
+    /// let a usable pointer escape its lease.
+    func withBuffer<R: Sendable>(
+        size: Int, _ body: @Sendable (BufferHandle) async throws -> R
+    ) async throws -> R {
+        let handle = try await acquire(size: size)
+        do {
+            let result = try await body(handle)
+            await release(handle)
+            return result
+        } catch {
+            await release(handle)
+            throw error
+        }
+    }
+
     /// Default alignment (64 bytes for cache lines)
     var alignment: Int { 64 }
 }
 
 /// Errors that can occur in buffer operations
 public enum BufferError: Error, Sendable {
+    /// Negative sizes or unrepresentable physical bucket sizes.
+    case invalidRequest(size: Int)
     case allocationFailed(size: Int)
     case invalidHandle
     case outOfMemory
@@ -144,6 +168,10 @@ public struct BufferConfiguration: Sendable {
         alignment: Int = 64,
         trackStatistics: Bool = true
     ) {
+        guard maxPoolSize >= 0, maxBufferSize >= 0,
+              PoolRequest.validAlignment(alignment) else {
+            fatalError("BufferConfiguration requires nonnegative budgets and power-of-two alignment >= 16")
+        }
         self.maxPoolSize = maxPoolSize
         self.maxBufferSize = maxBufferSize
         self.alignment = alignment

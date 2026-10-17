@@ -3,6 +3,9 @@ import Foundation
 @preconcurrency import Darwin
 @testable import VectorCore
 
+// Real-storage payload probe shared with MixedPrecisionPerformanceBenchmark (stored bytes, not allocation).
+private typealias PayloadProbe = MixedPrecisionPerformanceBenchmark
+
 // MARK: - Type Aliases for Nested Mixed Precision Types
 
 fileprivate typealias Vector512FP16 = MixedPrecisionKernels.Vector512FP16
@@ -123,13 +126,15 @@ struct MixedPrecisionKernelsTests {
             // Storage is a flat ContiguousArray<UInt16> with one element per dimension
             #expect(fp16Vector.storage.count == 512)
 
-            // Verify memory footprint reduction
+            // Verify stored scalar payload (not process memory)
             // FP16 uses 2 bytes per element vs FP32's 4 bytes
-            let fp16MemorySize = MemoryLayout<UInt16>.size * fp16Vector.storage.count
-            let fp32MemorySize = MemoryLayout<SIMD4<Float>>.size * fp32Vector.storage.count
-            #expect(fp16MemorySize == fp32MemorySize / 2)
+            let fp16PayloadBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(fp16Vector.storage)
+            let fp32PayloadBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(fp32Vector.storage)
+            #expect(fp16PayloadBytes == 1024)
+            #expect(fp32PayloadBytes == 2048)
 
-            // Test alignment - SIMD4 should be 8-byte aligned for Float16
+            // Stdlib layout pin: SIMD4<UInt16> has 8-byte alignment (the FP16 storage itself is a flat
+            // ContiguousArray<UInt16>, not SIMD4 lanes)
             let alignment = MemoryLayout<SIMD4<UInt16>>.alignment
             #expect(alignment == 8)
 
@@ -190,7 +195,7 @@ struct MixedPrecisionKernelsTests {
             }
 
             // Test values outside FP16 range. Per the documented conversion contract
-            // (MixedPrecisionKernels.swift:303-305), FP32→FP16 uses IEEE round-to-nearest:
+            // (the doc comment of `MixedPrecisionKernels.Vector512FP16.init(from:)`), FP32→FP16 uses IEEE round-to-nearest:
             // values exceeding ±65504 overflow to ±infinity (they are NOT saturated/clamped).
             let outOfRange: [Float] = [100000.0, -100000.0, 1e10, -1e10]
             for value in outOfRange {
@@ -225,18 +230,19 @@ struct MixedPrecisionKernelsTests {
 
             // Conversions should be fast (< 1ms per 1000 vectors on modern hardware)
             if strictPerfGatesEnabled {
-                #expect(fp32ToFP16Time < 0.001 * Double(vectorCount))
-                #expect(fp16ToFP32Time < 0.001 * Double(vectorCount))
+                expectPerformance("MixedPrecisionKernelsTests.testFP16ConversionPerformance.1", fp32ToFP16Time < 0.001 * Double(vectorCount))
+                expectPerformance("MixedPrecisionKernelsTests.testFP16ConversionPerformance.2", fp16ToFP32Time < 0.001 * Double(vectorCount))
             }
 
-            // Verify memory savings
-            let fp32MemorySize = MemoryLayout<SIMD4<Float>>.size * 128 * vectorCount
-            let fp16MemorySize = MemoryLayout<SIMD4<UInt16>>.size * 128 * vectorCount
-            #expect(fp16MemorySize == fp32MemorySize / 2)
+            // Stored scalar payload of the real vectors (not measured process memory)
+            let fp32PayloadBytes = vectors.reduce(0) { $0 + PayloadProbe.storedScalarPayloadBytes($1.storage) }
+            let fp16PayloadBytes = fp16Vectors.reduce(0) { $0 + PayloadProbe.storedScalarPayloadBytes($1.storage) }
+            #expect(fp32PayloadBytes == 2048 * vectorCount)
+            #expect(fp16PayloadBytes == 1024 * vectorCount)
 
             print("FP32→FP16 conversion: \(fp32ToFP16Time * 1000)ms for \(vectorCount) vectors")
             print("FP16→FP32 conversion: \(fp16ToFP32Time * 1000)ms for \(vectorCount) vectors")
-            print("Memory saved: \((fp32MemorySize - fp16MemorySize) / 1024)KB")
+            print("Stored payload difference: \((fp32PayloadBytes - fp16PayloadBytes) / 1024)KB")
         }
     }
 
@@ -324,16 +330,18 @@ struct MixedPrecisionKernelsTests {
                 }
             }
 
-            // Verify memory savings
-            let fp16MemorySize = MemoryLayout<Vector512FP16>.stride * candidatesFP16.count
-            let fp32MemorySize = MemoryLayout<Vector512Optimized>.stride * candidatesFP32.count
-            print("Memory usage: FP16=\(fp16MemorySize) bytes, FP32=\(fp32MemorySize) bytes")
-            print("Memory saved: \((fp32MemorySize - fp16MemorySize) / 1024)KB (\(100 * (fp32MemorySize - fp16MemorySize) / fp32MemorySize)%)")
+            // Logical scalar payload model (not measured memory; excludes array header, spare capacity,
+            // allocation rounding and sharing; stride includes per-element padding). Handle strides are
+            // deliberately not used.
+            let fp16PayloadModel = MemoryLayout<UInt16>.stride * 512 * candidatesFP16.count
+            let fp32PayloadModel = MemoryLayout<Float>.stride * 512 * candidatesFP32.count
+            print("Logical scalar payload model: FP16=\(fp16PayloadModel) bytes, FP32=\(fp32PayloadModel) bytes")
+            print("Logical payload difference (model): \((fp32PayloadModel - fp16PayloadModel) / 1024)KB")
         }
 
         @Test
         func testEuclideanDistanceBothFP16() throws {
-            // Test with both query and candidates in FP16 for maximum memory savings
+            // Both query and candidates in FP16 (the smallest scalar payload of these variants; memory is not measured)
             let queryFP32 = try Vector512Optimized((0..<512).map { sin(Float($0) * 0.01) })
             let queryFP16 = Vector512FP16(from: queryFP32)
 
@@ -366,12 +374,17 @@ struct MixedPrecisionKernelsTests {
                 #expect(relativeError < 0.02, "Index \(i): error=\(relativeError)")
             }
 
-            // Calculate memory savings
-            let fp16TotalSize = MemoryLayout<Vector512FP16>.stride * (1 + candidatesFP16.count)
-            let fp32TotalSize = MemoryLayout<Vector512Optimized>.stride * (1 + candidatesFP32.count)
-            let savings = (fp32TotalSize - fp16TotalSize) * 100 / fp32TotalSize
-            print("Total memory savings with both FP16: \(savings)%")
-            #expect(savings > 45)  // Should be close to 50% savings
+            // Stored scalar payload of the real query + candidate storage; not measured process memory.
+            // Excludes array header, spare capacity, allocation rounding and sharing (stride includes
+            // per-element padding).
+            let fp16PayloadBytes = PayloadProbe.storedScalarPayloadBytes(queryFP16.storage)
+                + candidatesFP16.reduce(0) { $0 + PayloadProbe.storedScalarPayloadBytes($1.storage) }
+            let fp32PayloadBytes = PayloadProbe.storedScalarPayloadBytes(queryFP32.storage)
+                + candidatesFP32.reduce(0) { $0 + PayloadProbe.storedScalarPayloadBytes($1.storage) }
+            let vectorTotal = 1 + candidatesFP16.count
+            print("Stored scalar payload difference with both FP16: \((fp32PayloadBytes - fp16PayloadBytes) * 100 / fp32PayloadBytes)%")
+            #expect(fp32PayloadBytes == 2048 * vectorTotal, "FP32 stored scalar payload")
+            #expect(fp16PayloadBytes == 1024 * vectorTotal, "FP16 stored scalar payload")
         }
 
         @Test
@@ -639,7 +652,7 @@ struct MixedPrecisionKernelsTests {
                 let vBack = vFP16.toFP32()
 
                 // IEEE round-to-nearest: values beyond ±65504 overflow to ±infinity
-                // (documented contract at MixedPrecisionKernels.swift:303-305), not saturated.
+                // (documented contract in the doc comment of `MixedPrecisionKernels.Vector512FP16.init(from:)`), not saturated.
                 #expect(vBack[0].isInfinite, "Overflow should produce infinity")
                 #expect(vBack[0].sign == (value > 0 ? .plus : .minus))
             }
@@ -773,7 +786,7 @@ struct MixedPrecisionKernelsTests {
 
         @Test
         func testMemoryFootprintReduction() throws {
-            // Test 2x memory footprint reduction with FP16
+            // Test the 2:1 stored scalar payload ratio of real FP16 vs FP32 vector storage (not measured memory)
             var rng = SeededGenerator(seed: 0xC4040005)
             let vectorCount = 1000
 
@@ -782,32 +795,25 @@ struct MixedPrecisionKernelsTests {
                 try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })
             }
 
-            // Convert to FP16
-            let _ = fp32Vectors.map { Vector512FP16(from: $0) }  // Memory analysis only
+            // Convert to FP16 and keep the vectors: their real storage is measured below.
+            let fp16Vectors = fp32Vectors.map { Vector512FP16(from: $0) }
 
-            // Calculate memory sizes
-            let fp32ElementSize = MemoryLayout<Float>.size
-            let fp16ElementSize = MemoryLayout<UInt16>.size
+            // Stored scalar payload of the real vectors (not measured process memory).
+            let fp32PayloadBytes = fp32Vectors.reduce(0) { $0 + PayloadProbe.storedScalarPayloadBytes($1.storage) }
+            let fp16PayloadBytes = fp16Vectors.reduce(0) { $0 + PayloadProbe.storedScalarPayloadBytes($1.storage) }
 
-            let fp32TotalSize = fp32ElementSize * 512 * vectorCount
-            let fp16TotalSize = fp16ElementSize * 512 * vectorCount
+            let reductionRatio = Float(fp32PayloadBytes) / Float(fp16PayloadBytes)
 
-            let reductionRatio = Float(fp32TotalSize) / Float(fp16TotalSize)
+            print("Stored scalar payload (real storage):")
+            print("  FP32 scalar payload: \(fp32PayloadBytes / 1024)KB")
+            print("  FP16 scalar payload: \(fp16PayloadBytes / 1024)KB")
+            print("  Scalar-width ratio: \(reductionRatio)x")
+            print("  Stored payload difference: \((fp32PayloadBytes - fp16PayloadBytes) / 1024)KB")
 
-            print("Memory Footprint Reduction:")
-            print("  FP32 total size: \(fp32TotalSize / 1024)KB")
-            print("  FP16 total size: \(fp16TotalSize / 1024)KB")
-            print("  Reduction ratio: \(reductionRatio)x")
-            print("  Memory saved: \((fp32TotalSize - fp16TotalSize) / 1024)KB")
-
-            // Verify 2x reduction
-            #expect(abs(reductionRatio - 2.0) < 0.01, "Should achieve ~2x memory reduction")
-
-            // Test actual storage overhead
-            let fp32StorageSize = MemoryLayout<Vector512Optimized>.size
-            let fp16StorageSize = MemoryLayout<Vector512FP16>.size
-
-            #expect(fp16StorageSize < fp32StorageSize, "FP16 storage should be smaller")
+            // Independent literal expectations: 2048 and 1024 bytes per 512-scalar vector.
+            #expect(fp32PayloadBytes == 2048 * vectorCount, "FP32 stored scalar payload")
+            #expect(fp16PayloadBytes == 1024 * vectorCount, "FP16 stored scalar payload")
+            #expect(abs(reductionRatio - 2.0) < 0.01, "Scalar-width ratio should be 2:1")
         }
 
         @Test
@@ -875,7 +881,7 @@ struct MixedPrecisionKernelsTests {
         @Test(.enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
         func testMemoryBandwidthUtilization() throws {
             // Test memory bandwidth utilization with FP16
-            // FP16 uses 50% of the bandwidth of FP32
+            // FP16 stores half the scalar payload of FP32; that is a payload model, not a measured bandwidth
 
             var rng = SeededGenerator(seed: 0xC4040007)
             let vectorCount = 10000
@@ -928,7 +934,7 @@ struct MixedPrecisionKernelsTests {
 
             // FP16 should show nearly 2x effective bandwidth improvement
             if strictPerfGatesEnabled {
-                #expect(effectiveBandwidthRatio > 1.5, "FP16 should provide >1.5x bandwidth improvement")
+                expectPerformance("MixedPrecisionKernelsTests.testMemoryBandwidthUtilization.3", effectiveBandwidthRatio > 1.5, "FP16 should provide >1.5x bandwidth improvement")
             }
         }
 
@@ -1000,8 +1006,8 @@ struct MixedPrecisionKernelsTests {
                 print("  16-byte aligned: \(alignment16 == 0)")
                 print("  8-byte aligned: \(alignment8 == 0)")
                 print("  4-byte aligned: \(alignment4 == 0)")
-                print("  Storage count: \(buffer.count) SIMD4<Float16> elements")
-                print("  Total bytes: \(buffer.count * MemoryLayout<SIMD4<UInt16>>.size)")
+                print("  Storage count: \(buffer.count) UInt16 bit patterns")
+                print("  Total bytes: \(MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(vFP16.storage))")
 
                 // Verify alignment for SIMD operations
                 #expect(alignment8 == 0, "FP16 storage should be at least 8-byte aligned")
@@ -1093,7 +1099,7 @@ struct MixedPrecisionKernelsTests {
 
             print("NEON FP16 Performance: \(iterations) conversions in \(elapsed * 1000)ms")
             if strictPerfGatesEnabled {
-                #expect(elapsed < 1.0)  // Should be fast
+                expectPerformance("MixedPrecisionKernelsTests.testNEONFP16Performance.4", elapsed < 1.0)  // Should be fast
             }
         }
 
@@ -1246,7 +1252,7 @@ struct MixedPrecisionKernelsTests {
                 if batchSize > 10, strictPerfGatesEnabled {
                     let perVectorTime = toFP16Time / Double(batchSize)
                     let smallBatchPerVector = toFP16Time / 10.0  // Approximate
-                    #expect(perVectorTime < smallBatchPerVector, "Larger batches should amortize better")
+                    expectPerformance("MixedPrecisionKernelsTests.testBatchConversionPerformance.5", perVectorTime < smallBatchPerVector, "Larger batches should amortize better")
                 }
             }
         }
@@ -1415,11 +1421,11 @@ struct MixedPrecisionKernelsTests {
                 #expect(error < 0.05, "FP16 results should be within 5% of FP32")
             }
 
-            // Memory bandwidth comparison
+            // Scalar payload comparison (payload model, not measured memory or bandwidth)
             let memoryFP32 = 512 * 4 * sizes.last!  // bytes
             let memoryFP16 = 512 * 2 * sizes.last!  // bytes
-            print("Memory usage: FP32=\(memoryFP32/1024)KB, FP16=\(memoryFP16/1024)KB")
-            print("Memory reduction: \((1.0 - Double(memoryFP16)/Double(memoryFP32)) * 100)%")
+            print("Scalar payload: FP32=\(memoryFP32/1024)KB, FP16=\(memoryFP16/1024)KB")
+            print("Scalar payload difference: \((1.0 - Double(memoryFP16)/Double(memoryFP32)) * 100)%")
         }
 
         @Test
@@ -1468,7 +1474,7 @@ struct MixedPrecisionKernelsTests {
 
                 print("Scaling efficiency: \(scalingFactor)")
                 if strictPerfGatesEnabled {
-                    #expect(scalingFactor > 0.5, "Performance should scale reasonably with size")
+                    expectPerformance("MixedPrecisionKernelsTests.testPerformanceScaling.6", scalingFactor > 0.5, "Performance should scale reasonably with size")
                 }
             }
         }
@@ -1527,8 +1533,8 @@ struct MixedPrecisionKernelsTests {
 
             // Performance should be consistent (CV < 10%)
             if strictPerfGatesEnabled {
-                #expect(cv < 0.10, "Coefficient of variation should be < 10%")
-                #expect((maxTime - minTime) / mean < 0.2, "Range should be < 20% of mean")
+                expectPerformance("MixedPrecisionKernelsTests.testPerformanceConsistency.7", cv < 0.10, "Coefficient of variation should be < 10%")
+                expectPerformance("MixedPrecisionKernelsTests.testPerformanceConsistency.8", (maxTime - minTime) / mean < 0.2, "Range should be < 20% of mean")
             }
         }
 
@@ -1598,9 +1604,9 @@ struct MixedPrecisionKernelsTests {
             // Tests pass as long as we're within 10x of baseline (very generous for CI);
             // still trips under sanitizer slowdown, so gate behind strict-perf runs
             if strictPerfGatesEnabled {
-                #expect(conversionTime < PerformanceBaseline.fp16Conversion * 10, "Severe conversion regression")
-                #expect(dotTime < PerformanceBaseline.dotProduct * 10, "Severe dot product regression")
-                #expect(distTime < PerformanceBaseline.euclideanDistance * 10, "Severe distance regression")
+                expectPerformance("MixedPrecisionKernelsTests.testPerformanceRegressionDetection.9", conversionTime < PerformanceBaseline.fp16Conversion * 10, "Severe conversion regression")
+                expectPerformance("MixedPrecisionKernelsTests.testPerformanceRegressionDetection.10", dotTime < PerformanceBaseline.dotProduct * 10, "Severe dot product regression")
+                expectPerformance("MixedPrecisionKernelsTests.testPerformanceRegressionDetection.11", distTime < PerformanceBaseline.euclideanDistance * 10, "Severe distance regression")
             }
         }
     }
@@ -1632,7 +1638,7 @@ struct MixedPrecisionKernelsTests {
             }
 
             // Test values that overflow FP16 → IEEE round-to-nearest produces +infinity
-            // (documented contract at MixedPrecisionKernels.swift:303-305), not saturation.
+            // (documented contract in the doc comment of `MixedPrecisionKernels.Vector512FP16.init(from:)`), not saturation.
             let overflowVector = Vector512Optimized(repeating: 100000.0)
             let overflowVectorFP16 = Vector512FP16(from: overflowVector)
             let overflowBack = overflowVectorFP16.toFP32()
@@ -1684,7 +1690,7 @@ struct MixedPrecisionKernelsTests {
                 let back = vectorFP16.toFP32()
 
                 // IEEE round-to-nearest: both infinity inputs and values beyond ±65504
-                // overflow to ±infinity (MixedPrecisionKernels.swift:303-305), not saturation.
+                // overflow to ±infinity (the doc comment of `MixedPrecisionKernels.Vector512FP16.init(from:)`), not saturation.
                 #expect(back[0].isInfinite, "Overflow/infinity should produce infinity")
                 #expect(back[0].sign == (value > 0 ? .plus : .minus))
             }
@@ -1865,7 +1871,7 @@ struct MixedPrecisionKernelsTests {
             // Denormals shouldn't cause extreme slowdown with FP16
             // (they're likely flushed to zero)
             if strictPerfGatesEnabled {
-                #expect(denormalTime / normalTime < 2.0, "Denormals shouldn't cause extreme slowdown")
+                expectPerformance("MixedPrecisionKernelsTests.testDenormalNumberHandling.12", denormalTime / normalTime < 2.0, "Denormals shouldn't cause extreme slowdown")
             }
         }
 
@@ -2202,7 +2208,7 @@ struct MixedPrecisionKernelsTests {
 
             print("  Embedding lookup FP32: \(fp32Time * 1000000)μs")
             print("  Embedding lookup FP16: \(fp16Time * 1000000)μs")
-            print("  Memory savings: 50%")
+            print("  Scalar payload: FP16 is 50% of FP32 (not measured memory)")
 
             #expect(avgError < 0.01, "Average attention error should be small")
             #expect(maxError < 0.1, "Max attention error should be bounded")
@@ -2363,39 +2369,6 @@ struct MixedPrecisionKernelsTests {
 
         // Return average relative error as primary metric
         return avgRelError
-    }
-
-    // Measure memory usage of operation
-    private static func measureMemoryUsage(operation: () -> Void) -> Int {
-        // Note: This is a simplified memory measurement
-        // For accurate measurement, use Instruments or memory profiling tools
-
-        // Get baseline memory
-        var info = mach_task_basic_info()
-        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
-
-        let result = withUnsafeMutablePointer(to: &info) { ptr in
-            ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { int_ptr in
-                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
-            }
-        }
-
-        let baselineMemory = result == KERN_SUCCESS ? info.resident_size : 0
-
-        // Run operation
-        operation()
-
-        // Get memory after operation
-        _ = withUnsafeMutablePointer(to: &info) { ptr in
-            ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { int_ptr in
-                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
-            }
-        }
-
-        let afterMemory = result == KERN_SUCCESS ? info.resident_size : baselineMemory
-
-        // Return difference in bytes
-        return Int(afterMemory - baselineMemory)
     }
 
     // Measure performance improvement of FP16 vs FP32

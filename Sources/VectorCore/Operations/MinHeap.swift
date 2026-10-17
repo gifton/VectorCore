@@ -8,7 +8,9 @@ import Foundation
 
 // MARK: - Min Heap
 
-/// A min-heap data structure optimized for k-nearest neighbor operations
+/// A heap whose root precedes its other elements under a strict weak ordering.
+/// A capacity retains the last elements in that ordering: `<` keeps the largest,
+/// `>` keeps the smallest. See `HeapMembershipContractTests.genericMembershipMatrix`.
 public struct MinHeap<Element> {
     @usableFromInline
     internal var elements: [Element]
@@ -32,37 +34,34 @@ public struct MinHeap<Element> {
 
     /// Initialize an empty heap
     /// - Parameters:
-    ///   - capacity: Optional maximum capacity (for k-nearest)
+    ///   - capacity: Nil for unbounded retention, otherwise nonnegative. Zero
+    ///     stays empty. A limit does not eagerly allocate that many elements.
     ///   - compare: Comparison function (true if first element should be before second)
     public init(capacity: Int? = nil, compare: @escaping (Element, Element) -> Bool) {
+        precondition(capacity.map { $0 >= 0 } ?? true, "Heap capacity must be nonnegative")
         self.elements = []
         self.capacity = capacity
         self.compare = compare
 
-        if let capacity = capacity {
-            elements.reserveCapacity(capacity)
-        }
     }
 
-    /// Initialize from an array (heapify)
+    /// Initialize with the same retained membership as streaming insertion.
+    /// Full-retention inputs use heapify; truncated inputs use bounded insertion.
     public init(
         from array: [Element],
         capacity: Int? = nil,
         compare: @escaping (Element, Element) -> Bool
     ) {
-        self.elements = array
-        self.capacity = capacity
-        self.compare = compare
-
-        // Build heap from bottom up
-        for i in stride(from: count / 2 - 1, through: 0, by: -1) {
-            siftDown(from: i)
-        }
-
-        // If capacity is set and we exceed it, remove excess elements
-        if let capacity = capacity {
-            while count > capacity {
-                removeLast()
+        self.init(capacity: capacity, compare: compare)
+        guard capacity != 0 else { return }
+        if let capacity, array.count > capacity {
+            for element in array { insert(element) }
+        } else {
+            self.elements = array
+            if count > 1 {
+                for i in stride(from: count / 2 - 1, through: 0, by: -1) {
+                    siftDown(from: i)
+                }
             }
         }
     }
@@ -73,11 +72,11 @@ public struct MinHeap<Element> {
     @discardableResult
     @inlinable
     public mutating func insert(_ element: Element) -> Bool {
-        // If a capacity is set (k-nearest use-case), maintain exactly the best `capacity` items
+        // If a capacity is set, retain up to that many of the latest-ordered items.
         if let capacity = capacity, count >= capacity {
             guard let root = min else { return false }
             // Root is the current extremum according to `compare` and sits at index 0.
-            // Keep `element` only if it should come before the current root in the heap ordering.
+            // Keep `element` only if it comes after the current root in the heap ordering.
             // This condition correctly handles both min-heap and max-heap configurations.
             if !compare(root, element) {
                 return false
@@ -109,12 +108,6 @@ public struct MinHeap<Element> {
         siftDown(from: 0)
 
         return min
-    }
-
-    /// Remove the last element (used internally)
-    private mutating func removeLast() {
-        guard !isEmpty else { return }
-        elements.removeLast()
     }
 
     /// Get sorted array of all elements
@@ -196,7 +189,9 @@ public struct MinHeap<Element> {
 
 // MARK: - K-Nearest Specific Heap
 
-/// Specialized heap for k-nearest neighbor operations
+/// Distance heap ordered numeric-before-NaN, lower distance first, then smaller
+/// index for numeric and NaN ties. Duplicate entries are allowed.
+/// See `HeapMembershipContractTests.nearestPermutationMatrix`.
 public struct KNearestHeap {
     /// Internal storage using max-heap (inverted comparison)
     @usableFromInline
@@ -210,9 +205,12 @@ public struct KNearestHeap {
 
     /// Initialize k-nearest heap
     public init(k: Int) {
+        precondition(k >= 0, "Heap capacity must be nonnegative")
         self.k = k
-        // Use max-heap by inverting comparison (keep k smallest)
-        self.heap = MinHeap(capacity: k) { $0.distance > $1.distance }
+        // Reverse the shared best-first order so the worst retained item is root.
+        self.heap = MinHeap(capacity: k) {
+            TopKSelection.orderedAscending($1, $0, .smallerIndex)
+        }
     }
 
     /// Try to insert a new neighbor

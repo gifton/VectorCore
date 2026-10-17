@@ -1,0 +1,10 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite "GEMM routing in BatchOperations" started.
+􀟈 Test "Routed Cosine pairwise matches double-precision reference" started.
+E06_INVOCATION {"argv":["\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/libexec\/swift\/pm\/swiftpm-testing-helper","--test-bundle-path","\/private\/tmp\/vectorcore-stabilization-milestone08\/arm64-apple-macosx\/release\/VectorCorePackageTests.xctest\/Contents\/MacOS\/VectorCorePackageTests","-c","release","--jobs","4","--scratch-path","\/private\/tmp\/vectorcore-stabilization-milestone08","--filter","BatchGEMMRoutingTests\/cosineRoutedMatchesReference","\/private\/tmp\/vectorcore-stabilization-milestone08\/arm64-apple-macosx\/release\/VectorCorePackageTests.xctest\/Contents\/MacOS\/VectorCorePackageTests","--testing-library","swift-testing"],"DYLD_FRAMEWORK_PATH":"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/Frameworks:\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/PrivateFrameworks","DYLD_LIBRARY_PATH":"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/usr\/lib","scenario":"gemm-cosineRoutedMatchesReference"}
+E06_COMPLETE gemm-cosineRoutedMatchesReference
+􁁛 Test "Routed Cosine pairwise matches double-precision reference" passed after 0.006 seconds.
+􁁛 Suite "GEMM routing in BatchOperations" passed after 0.006 seconds.
+􁁛 Test run with 1 test in 1 suite passed after 0.006 seconds.

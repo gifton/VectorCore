@@ -2,9 +2,10 @@
 //  QuantizedKernels.swift
 //  VectorCore
 //
-//  INT8 quantized kernels for high-performance vector compression
-//  Provides 4x memory reduction with minimal accuracy loss
-//  Phase 1: Core algorithms and distance kernels with SIMD4<Int8> optimization
+//  INT8 quantized kernels
+//  One byte per stored scalar, a quarter of the FP32 scalar payload (payload model only, not a measured memory
+//  saving); the accuracy loss is not characterized in this file
+//  Phase 1: Core algorithms and distance kernels with SIMD4<Int8> storage
 //
 
 import Foundation
@@ -15,49 +16,51 @@ import simd
 /// Parameters for linear (affine) quantization: q = round(x/scale + zeroPoint).
 public struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
     public let scale: Float
-    /// Affine zero point. Stored as `Int32` (not `Int8`): for asymmetric ranges that do not
-    /// straddle zero (e.g. [-10,-1] or near-constant data) the required offset
-    /// `round(-128 - min/scale)` exceeds the Int8 range, and clamping it to Int8 collapsed the
-    /// mapping (saturating one tail). The quantized *codes* remain Int8; only this offset widens.
+    /// Affine zero point. Legacy decoded tuples retain the full Int32 domain.
     public let zeroPoint: Int32
     public let minValue: Float
     public let maxValue: Float
     public let isSymmetric: Bool
 
     public init(minValue: Float, maxValue: Float, symmetric: Bool = true) {
+        let calibrated = AffineQuantizationCore.calibrate(minimum: minValue, maximum: maxValue, symmetric: symmetric)
         self.minValue = minValue
         self.maxValue = maxValue
         self.isSymmetric = symmetric
+        self.scale = calibrated.0
+        self.zeroPoint = calibrated.1
+    }
 
-        if symmetric {
-            // Symmetric quantization: zeroPoint = 0. Range [-127, 127] is used to maintain symmetry.
-            let absMax = max(abs(minValue), abs(maxValue))
-            // Ensure scale is not zero or subnormal if the range is zero.
-            self.scale = absMax <= Float.leastNormalMagnitude ? 1.0 : absMax / 127.0
-            self.zeroPoint = 0
-        } else {
-            // Asymmetric quantization: Range [-128, 127].
-            let range = maxValue - minValue
-            self.scale = range <= Float.leastNormalMagnitude ? 1.0 : range / 255.0
+    @usableFromInline internal var isValid: Bool {
+        scale.isFinite && scale > 0 && minValue.isFinite && maxValue.isFinite
+            && minValue <= maxValue && (!isSymmetric || zeroPoint == 0)
+    }
 
-            // Calculate zero point: zp = round(-128 - min/scale). Clamp to Int32 (wide enough
-            // to hold the exact affine offset for any realistic range).
-            let zpFloat = -128.0 - (minValue / self.scale)
-            self.zeroPoint = Int32(clamping: Int(zpFloat.rounded()))
+    private enum CodingKeys: String, CodingKey { case scale, zeroPoint, minValue, maxValue, isSymmetric }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        scale = try container.decode(Float.self, forKey: .scale)
+        zeroPoint = try container.decode(Int32.self, forKey: .zeroPoint)
+        minValue = try container.decode(Float.self, forKey: .minValue)
+        maxValue = try container.decode(Float.self, forKey: .maxValue)
+        isSymmetric = try container.decode(Bool.self, forKey: .isSymmetric)
+        guard isValid else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Quantization requires valid parameters"))
         }
     }
 
     @inlinable
     public func quantize(_ value: Float) -> Int8 {
-        let scaledValue = value / scale + Float(zeroPoint)
-        // Use clamping conversion for safety and efficiency.
-        return Int8(clamping: Int(scaledValue.rounded(.toNearestOrAwayFromZero)))
+        guard isValid else { fatalError("Quantization requires valid parameters") }
+        guard value.isFinite else { fatalError("Quantization requires finite input coordinates") }
+        let rounded = (Double(value) / Double(scale) + Double(zeroPoint)).rounded(.toNearestOrAwayFromZero)
+        return Int8(max(-128, min(127, rounded)))
     }
 
     @inlinable
     public func dequantize(_ quantizedValue: Int8) -> Float {
-        // Inverse transformation: x' = scale * (q - zeroPoint)
-        return scale * (Float(quantizedValue) - Float(zeroPoint))
+        return Float(Double(scale) * (Double(quantizedValue) - Double(zeroPoint)))
     }
 }
 
@@ -67,7 +70,7 @@ public struct LinearQuantizationParams: Sendable, Equatable, Hashable, Codable {
 public protocol QuantizedVectorINT8: Sendable, VectorProtocol {
     associatedtype FloatVectorType: OptimizedVector
 
-    /// Storage uses SIMD4<Int8> for efficient packing (4 bytes per lane).
+    /// Storage is `SIMD4<Int8>`: four Int8 values (4 bytes) per element.
     var storage: ContiguousArray<SIMD4<Int8>> { get }
     var quantizationParams: LinearQuantizationParams { get }
 
@@ -88,13 +91,14 @@ extension QuantizedVectorINT8 {
 
     /// Initializes by quantizing an FP32 vector. Auto-calibrates parameters if not provided.
     public init(from vector: FloatVectorType, params: LinearQuantizationParams? = nil) {
+        AffineQuantizationCore.requireFinite(vector.toArray())
         let finalParams: LinearQuantizationParams
 
         if let providedParams = params {
             finalParams = providedParams
         } else {
             // Auto-calibrate parameters by finding the min/max range of the input vector.
-            // Use SIMDStorage extension for efficient min/max finding
+            // `storage.minMax()` (a SIMDStorage extension) finds the range.
             let (minVal, maxVal) = vector.storage.minMax()
             // Default to symmetric quantization for optimization compatibility.
             finalParams = LinearQuantizationParams(minValue: minVal, maxValue: maxVal, symmetric: true)
@@ -107,33 +111,11 @@ extension QuantizedVectorINT8 {
 
     /// Optimized quantization using SIMD operations.
     private static func vectorizedQuantize(vector: FloatVectorType, params: LinearQuantizationParams) -> ContiguousArray<SIMD4<Int8>> {
-        let invScale = 1.0 / params.scale
-        let vInvScale = SIMD4<Float>(repeating: invScale)
-        let vOffset = SIMD4<Float>(repeating: Float(params.zeroPoint))
-        let vMin = SIMD4<Float>(repeating: -128.0)
-        let vMax = SIMD4<Float>(repeating: 127.0)
-
-        let quantizedStorage = ContiguousArray<SIMD4<Int8>>(unsafeUninitializedCapacity: Self.laneCount) { buffer, count in
-            vector.storage.withUnsafeBufferPointer { fp32Ptr in
-                for i in 0..<Self.laneCount {
-                    let vInput = fp32Ptr[i]
-
-                    // Calculate: (x * invScale) + offset (FMA).
-                    var vQuantized = vInput * vInvScale + vOffset
-
-                    // Round and Clamp.
-                    vQuantized = simd_max(vMin, simd_min(vMax, vQuantized.rounded(.toNearestOrAwayFromZero)))
-
-                    // Convert FP32 -> INT32 with explicit conversion
-                    let vInt32 = SIMD4<Int32>(Int32(vQuantized.x), Int32(vQuantized.y), Int32(vQuantized.z), Int32(vQuantized.w))
-
-                    // Narrowing conversion using `clamping:` (saturating conversion).
-                    buffer[i] = SIMD4<Int8>(clamping: vInt32)
-                }
-            }
-            count = Self.laneCount
-        }
-        return quantizedStorage
+        guard params.isValid else { fatalError("Quantization requires valid parameters") }
+        return ContiguousArray((0..<Self.laneCount).map { index in
+            let lane = vector.storage[index]
+            return SIMD4(params.quantize(lane.x), params.quantize(lane.y), params.quantize(lane.z), params.quantize(lane.w))
+        })
     }
 
     /// Dequantizes the vector back to FP32.
@@ -163,40 +145,163 @@ extension QuantizedVectorINT8 {
 
 public struct Vector512INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector512Optimized
-    public var storage: ContiguousArray<SIMD4<Int8>>
+    private var _storage: ContiguousArray<SIMD4<Int8>>
+
+    /// SIMD storage. Replacement must contain exactly 128 SIMD4 elements.
+    /// Inout mutation must preserve this count, including when unwinding a throw.
+    public var storage: ContiguousArray<SIMD4<Int8>> {
+        get { _storage }
+        set {
+            guard newValue.count == 128 else { fatalError("Storage must contain exactly 128 SIMD4 elements") }
+            _storage = newValue
+        }
+        _modify {
+            defer {
+                guard _storage.count == 128 else { fatalError("Storage must contain exactly 128 SIMD4 elements") }
+            }
+            yield &_storage
+        }
+    }
     public let quantizationParams: LinearQuantizationParams
 
     public static let laneCount: Int = 128  // 512 / 4
 
+    /// - Precondition: Storage contains exactly 128 SIMD4 elements.
     public init(storage: ContiguousArray<SIMD4<Int8>>, params: LinearQuantizationParams) {
-        self.storage = storage
+        guard storage.count == 128 else { fatalError("Storage must contain exactly 128 SIMD4 elements") }
+        self._storage = storage
         self.quantizationParams = params
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case storage, quantizationParams
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let storage = try container.decode(ContiguousArray<SIMD4<Int8>>.self, forKey: .storage)
+        guard storage.count == 128 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .storage, in: container,
+                debugDescription: "Storage must contain exactly 128 SIMD4 elements"
+            )
+        }
+        let params = try container.decode(LinearQuantizationParams.self, forKey: .quantizationParams)
+        self.init(storage: storage, params: params)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(_storage, forKey: .storage)
+        try container.encode(quantizationParams, forKey: .quantizationParams)
     }
 }
 
 public struct Vector768INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector768Optimized
-    public var storage: ContiguousArray<SIMD4<Int8>>
+    private var _storage: ContiguousArray<SIMD4<Int8>>
+
+    /// SIMD storage. Replacement must contain exactly 192 SIMD4 elements.
+    /// Inout mutation must preserve this count, including when unwinding a throw.
+    public var storage: ContiguousArray<SIMD4<Int8>> {
+        get { _storage }
+        set {
+            guard newValue.count == 192 else { fatalError("Storage must contain exactly 192 SIMD4 elements") }
+            _storage = newValue
+        }
+        _modify {
+            defer {
+                guard _storage.count == 192 else { fatalError("Storage must contain exactly 192 SIMD4 elements") }
+            }
+            yield &_storage
+        }
+    }
     public let quantizationParams: LinearQuantizationParams
 
     public static let laneCount: Int = 192  // 768 / 4
 
+    /// - Precondition: Storage contains exactly 192 SIMD4 elements.
     public init(storage: ContiguousArray<SIMD4<Int8>>, params: LinearQuantizationParams) {
-        self.storage = storage
+        guard storage.count == 192 else { fatalError("Storage must contain exactly 192 SIMD4 elements") }
+        self._storage = storage
         self.quantizationParams = params
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case storage, quantizationParams
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let storage = try container.decode(ContiguousArray<SIMD4<Int8>>.self, forKey: .storage)
+        guard storage.count == 192 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .storage, in: container,
+                debugDescription: "Storage must contain exactly 192 SIMD4 elements"
+            )
+        }
+        let params = try container.decode(LinearQuantizationParams.self, forKey: .quantizationParams)
+        self.init(storage: storage, params: params)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(_storage, forKey: .storage)
+        try container.encode(quantizationParams, forKey: .quantizationParams)
     }
 }
 
 public struct Vector1536INT8: QuantizedVectorINT8 {
     public typealias FloatVectorType = Vector1536Optimized
-    public var storage: ContiguousArray<SIMD4<Int8>>
+    private var _storage: ContiguousArray<SIMD4<Int8>>
+
+    /// SIMD storage. Replacement must contain exactly 384 SIMD4 elements.
+    /// Inout mutation must preserve this count, including when unwinding a throw.
+    public var storage: ContiguousArray<SIMD4<Int8>> {
+        get { _storage }
+        set {
+            guard newValue.count == 384 else { fatalError("Storage must contain exactly 384 SIMD4 elements") }
+            _storage = newValue
+        }
+        _modify {
+            defer {
+                guard _storage.count == 384 else { fatalError("Storage must contain exactly 384 SIMD4 elements") }
+            }
+            yield &_storage
+        }
+    }
     public let quantizationParams: LinearQuantizationParams
 
     public static let laneCount: Int = 384  // 1536 / 4
 
+    /// - Precondition: Storage contains exactly 384 SIMD4 elements.
     public init(storage: ContiguousArray<SIMD4<Int8>>, params: LinearQuantizationParams) {
-        self.storage = storage
+        guard storage.count == 384 else { fatalError("Storage must contain exactly 384 SIMD4 elements") }
+        self._storage = storage
         self.quantizationParams = params
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case storage, quantizationParams
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let storage = try container.decode(ContiguousArray<SIMD4<Int8>>.self, forKey: .storage)
+        guard storage.count == 384 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .storage, in: container,
+                debugDescription: "Storage must contain exactly 384 SIMD4 elements"
+            )
+        }
+        let params = try container.decode(LinearQuantizationParams.self, forKey: .quantizationParams)
+        self.init(storage: storage, params: params)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(_storage, forKey: .storage)
+        try container.encode(quantizationParams, forKey: .quantizationParams)
     }
 }
 
@@ -217,6 +322,10 @@ extension Vector512INT8 {
             throw VectorError.dimensionMismatch(expected: 512, actual: array.count)
         }
 
+        let invalidIndices = array.indices.filter { !array[$0].isFinite }
+        guard invalidIndices.isEmpty else {
+            throw VectorError.invalidValues(indices: invalidIndices, reason: "Quantization requires finite input coordinates")
+        }
         let minVal = array.min() ?? 0
         let maxVal = array.max() ?? 1
         let params = LinearQuantizationParams(minValue: minVal, maxValue: maxVal)
@@ -238,6 +347,7 @@ extension Vector512INT8 {
     }
 
     public init(repeating value: Float) {
+        guard value.isFinite else { fatalError("Quantization requires finite input coordinates") }
         let params = LinearQuantizationParams(minValue: value, maxValue: value)
         let quantized = params.quantize(value)
         let simd4 = SIMD4<Int8>(repeating: quantized)
@@ -253,11 +363,15 @@ extension Vector512INT8 {
         return try fp32Vector.withUnsafeBufferPointer(body)
     }
 
+    /// A thrown body discards the temporary and preserves raw storage and parameters.
+    /// Normal return validates finite output and recalibrates, including a no-op body.
+    /// A legacy tuple with infinite Float projections therefore rejects on normal return.
     public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
         // Convert to FP32, apply transformation, then quantize back
         var fp32Vector = toFP32()
         let result = try fp32Vector.withUnsafeMutableBufferPointer(body)
         let newArray = fp32Vector.toArray()
+        AffineQuantizationCore.requireFinite(newArray)
         self = try! Vector512INT8(newArray)
         return result
     }
@@ -278,6 +392,10 @@ extension Vector768INT8 {
             throw VectorError.dimensionMismatch(expected: 768, actual: array.count)
         }
 
+        let invalidIndices = array.indices.filter { !array[$0].isFinite }
+        guard invalidIndices.isEmpty else {
+            throw VectorError.invalidValues(indices: invalidIndices, reason: "Quantization requires finite input coordinates")
+        }
         let minVal = array.min() ?? 0
         let maxVal = array.max() ?? 1
         let params = LinearQuantizationParams(minValue: minVal, maxValue: maxVal)
@@ -299,6 +417,7 @@ extension Vector768INT8 {
     }
 
     public init(repeating value: Float) {
+        guard value.isFinite else { fatalError("Quantization requires finite input coordinates") }
         let params = LinearQuantizationParams(minValue: value, maxValue: value)
         let quantized = params.quantize(value)
         let simd4 = SIMD4<Int8>(repeating: quantized)
@@ -314,10 +433,14 @@ extension Vector768INT8 {
         return try fp32Vector.withUnsafeBufferPointer(body)
     }
 
+    /// A thrown body discards the temporary and preserves raw storage and parameters.
+    /// Normal return validates finite output and recalibrates, including a no-op body.
+    /// A legacy tuple with infinite Float projections therefore rejects on normal return.
     public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
         var fp32Vector = toFP32()
         let result = try fp32Vector.withUnsafeMutableBufferPointer(body)
         let newArray = fp32Vector.toArray()
+        AffineQuantizationCore.requireFinite(newArray)
         self = try! Vector768INT8(newArray)
         return result
     }
@@ -338,6 +461,10 @@ extension Vector1536INT8 {
             throw VectorError.dimensionMismatch(expected: 1536, actual: array.count)
         }
 
+        let invalidIndices = array.indices.filter { !array[$0].isFinite }
+        guard invalidIndices.isEmpty else {
+            throw VectorError.invalidValues(indices: invalidIndices, reason: "Quantization requires finite input coordinates")
+        }
         let minVal = array.min() ?? 0
         let maxVal = array.max() ?? 1
         let params = LinearQuantizationParams(minValue: minVal, maxValue: maxVal)
@@ -359,6 +486,7 @@ extension Vector1536INT8 {
     }
 
     public init(repeating value: Float) {
+        guard value.isFinite else { fatalError("Quantization requires finite input coordinates") }
         let params = LinearQuantizationParams(minValue: value, maxValue: value)
         let quantized = params.quantize(value)
         let simd4 = SIMD4<Int8>(repeating: quantized)
@@ -374,10 +502,14 @@ extension Vector1536INT8 {
         return try fp32Vector.withUnsafeBufferPointer(body)
     }
 
+    /// A thrown body discards the temporary and preserves raw storage and parameters.
+    /// Normal return validates finite output and recalibrates, including a no-op body.
+    /// A legacy tuple with infinite Float projections therefore rejects on normal return.
     public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
         var fp32Vector = toFP32()
         let result = try fp32Vector.withUnsafeMutableBufferPointer(body)
         let newArray = fp32Vector.toArray()
+        AffineQuantizationCore.requireFinite(newArray)
         self = try! Vector1536INT8(newArray)
         return result
     }
@@ -391,7 +523,7 @@ internal enum QuantizedKernels {
     // MARK: Conversion Helpers (NEON Optimization)
 
     /// Optimized conversion from INT8 to FP32, applying dequantization parameters.
-    /// Optimized FMA: x' = (q_f - zp_f) * scale => x' = q_f * scale + (-zp_f * scale)
+    /// Each affine coordinate is rounded once to Float after Double evaluation.
     @inline(__always)
     @usableFromInline
     internal static func convertToFP32_NEON(
@@ -399,27 +531,11 @@ internal enum QuantizedKernels {
         scale: Float,
         zeroPoint: Int32
     ) -> SIMD4<Float> {
-        // 1. Widen Int8 -> Int32 (Sign extension).
-        let int32Vec = SIMD4<Int32>(Int32(int8Vec.x), Int32(int8Vec.y), Int32(int8Vec.z), Int32(int8Vec.w))
-
-        // 2. Convert Int32 -> Float.
-        let fp32Vec = SIMD4<Float>(Float(int32Vec.x), Float(int32Vec.y), Float(int32Vec.z), Float(int32Vec.w))
-
-        // 3. Apply FMA optimization.
-        let scaleVec = SIMD4<Float>(repeating: scale)
-
-        if zeroPoint == 0 {
-            // Symmetric optimization.
-            return fp32Vec * scaleVec
-        }
-
-        // Asymmetric optimization.
-        // Calculate bias: -zp_f * scale
-        let bias = (-Float(zeroPoint)) * scale
-        let biasVec = SIMD4<Float>(repeating: bias)
-
-        // result = bias + scale * q_f
-        return biasVec.addingProduct(scaleVec, fp32Vec)
+        SIMD4<Float>(
+            Float(Double(scale) * (Double(int8Vec.x) - Double(zeroPoint))),
+            Float(Double(scale) * (Double(int8Vec.y) - Double(zeroPoint))),
+            Float(Double(scale) * (Double(int8Vec.z) - Double(zeroPoint))),
+            Float(Double(scale) * (Double(int8Vec.w) - Double(zeroPoint))))
     }
 }
 
@@ -439,13 +555,18 @@ extension QuantizedKernels {
 
         let isSymmetric = query.quantizationParams.isSymmetric && candidate.quantizationParams.isSymmetric
 
-        // Use a relative tolerance for scale comparison.
-        let scaleTolerance = 1e-6 * query.quantizationParams.scale
-        let scalesMatch = abs(query.quantizationParams.scale - candidate.quantizationParams.scale) <= scaleTolerance
-
-        if !isSymmetric || !scalesMatch {
-            // If conditions aren't met, fallback to the mixed-precision path (Dequantize-then-Compute) for correctness.
-            return euclidean_generic_mixed(query: query, candidate: candidate.toFP32())
+        let scalesMatch = query.quantizationParams.scale == candidate.quantizationParams.scale
+        if !isSymmetric || !scalesMatch || query.quantizationParams.zeroPoint != 0 || candidate.quantizationParams.zeroPoint != 0 {
+            var sum: Double = 0
+            for i in 0..<V.laneCount {
+                for j in 0..<4 {
+                    let difference = AffineQuantizationCore.difference(
+                        AffineQuantizationCore.product(query.storage[i][j], query.quantizationParams),
+                        AffineQuantizationCore.product(candidate.storage[i][j], candidate.quantizationParams))
+                    sum += difference * difference
+                }
+            }
+            return Float(sqrt(sum))
         }
 
         // Optimized path for identical, symmetric quantization parameters.
@@ -466,12 +587,12 @@ extension QuantizedKernels {
                 l2sq = dotQQ &- 2 &* dotQC &+ dotCC
             }
         }
-        return scale * sqrt(Float(max(0, l2sq)))
+        return Float(Double(scale) * sqrt(Double(max(0, l2sq))))
         #else
         let laneCount = V.laneCount
 
         // Use Int32 accumulators. Max accumulation for 1536 dimensions is safe within Int32 limits.
-        // Max diff^2 = 254^2 = 64516. Total = 1536 * 64516 ≈ 99 million. Int32 max ≈ 2.1 billion.
+        // Max diff^2 = 255^2 = 65025. Total = 1536 * 65025 < 100 million. Int32 max ≈ 2.1 billion.
         var acc1: Int32 = 0; var acc2: Int32 = 0; var acc3: Int32 = 0; var acc4: Int32 = 0
 
         query.storage.withUnsafeBufferPointer { queryPtr in
@@ -529,7 +650,7 @@ extension QuantizedKernels {
         let totalAccumulator = acc1 + acc2 + acc3 + acc4
 
         // D = sqrt(S^2 * Sum(diff^2)) = S * sqrt(Sum(diff^2))
-        return scale * sqrt(Float(totalAccumulator))
+        return Float(Double(scale) * sqrt(Double(totalAccumulator)))
         #endif
     }
 
@@ -555,67 +676,14 @@ extension QuantizedKernels {
     internal static func euclidean_generic_mixed<V_INT8: QuantizedVectorINT8, V_FP32: OptimizedVector>(
         query: V_INT8, candidate: V_FP32
     ) -> Float where V_INT8.FloatVectorType == V_FP32 {
-
-        let laneCount = V_INT8.laneCount
-        let queryParams = query.quantizationParams
-        let scale = queryParams.scale
-        let zeroPoint = queryParams.zeroPoint
-
-        // Use SIMD4<Float> accumulators for efficient FMA operations.
-        var s0 = SIMD4<Float>.zero; var s1 = SIMD4<Float>.zero
-        var s2 = SIMD4<Float>.zero; var s3 = SIMD4<Float>.zero
-
-        query.storage.withUnsafeBufferPointer { queryPtr in
-            candidate.storage.withUnsafeBufferPointer { candidatePtr in
-                let qINT8 = queryPtr.baseAddress!; let cFP32 = candidatePtr.baseAddress!
-
-                // Process in blocks with proper remainder handling
-                let fullBlocks = laneCount / 16
-                let remainder = laneCount % 16
-
-                // Process full blocks of 16 lanes
-                for blockIdx in 0..<fullBlocks {
-                    let baseIdx = blockIdx * 16
-
-                    // Unroll 16 lanes, interleaving dequantization and FMA.
-                    for offset in 0..<16 {
-                        let idx = baseIdx + offset
-                        let qFP32 = convertToFP32_NEON(int8Vec: qINT8[idx], scale: scale, zeroPoint: zeroPoint)
-                        let diff = qFP32 - cFP32[idx]
-
-                        // Distribute across 4 accumulators
-                        switch offset % 4 {
-                        case 0: s0.addProduct(diff, diff)
-                        case 1: s1.addProduct(diff, diff)
-                        case 2: s2.addProduct(diff, diff)
-                        case 3: s3.addProduct(diff, diff)
-                        default: break
-                        }
-                    }
-                }
-
-                // Handle remainder lanes
-                if remainder > 0 {
-                    let baseIdx = fullBlocks * 16
-                    for j in 0..<remainder {
-                        let idx = baseIdx + j
-                        let qFP32 = convertToFP32_NEON(int8Vec: qINT8[idx], scale: scale, zeroPoint: zeroPoint)
-                        let diff = qFP32 - cFP32[idx]
-
-                        switch j % 4 {
-                        case 0: s0.addProduct(diff, diff)
-                        case 1: s1.addProduct(diff, diff)
-                        case 2: s2.addProduct(diff, diff)
-                        case 3: s3.addProduct(diff, diff)
-                        default: break
-                        }
-                    }
-                }
+        var sum: Double = 0
+        for i in 0..<V_INT8.laneCount {
+            for j in 0..<4 {
+                let difference = AffineQuantizationCore.difference(query.storage[i][j], query.quantizationParams, candidate.storage[i][j])
+                sum += difference * difference
             }
         }
-
-        // Horizontal reduction.
-        return sqrt((s0 + s1 + s2 + s3).sum())
+        return Float(sqrt(sum))
     }
 
     // Public API (512 specialization)
@@ -690,7 +758,8 @@ extension QuantizedKernels {
     ) -> FusedAccumulators? {
 
         // This optimized integer path requires symmetric quantization (ZeroPoint=0).
-        guard query.quantizationParams.isSymmetric && candidate.quantizationParams.isSymmetric else {
+        guard query.quantizationParams.isValid && candidate.quantizationParams.isValid && query.quantizationParams.isSymmetric && candidate.quantizationParams.isSymmetric
+            && query.quantizationParams.zeroPoint == 0 && candidate.quantizationParams.zeroPoint == 0 else {
             return nil // Cannot use optimized path for asymmetric quantization.
         }
 
@@ -740,109 +809,68 @@ extension QuantizedKernels {
         return acc
     }
 
+    @usableFromInline
+    internal static func centeredSums<V: QuantizedVectorINT8>(query: V, candidate: V) -> (Double, Double, Double) {
+        if let fast = accumulate_fused_generic(query: query, candidate: candidate) {
+            return (Double(fast.dotProduct), Double(fast.queryMagnitudeSquared), Double(fast.candidateMagnitudeSquared))
+        }
+        var dot = AffineWideInteger(), querySquare = AffineWideInteger(), candidateSquare = AffineWideInteger()
+        for i in 0..<V.laneCount {
+            for j in 0..<4 {
+                let q = Int64(query.storage[i][j]) - Int64(query.quantizationParams.zeroPoint)
+                let c = Int64(candidate.storage[i][j]) - Int64(candidate.quantizationParams.zeroPoint)
+                dot.add(q * c); querySquare.add(q * q); candidateSquare.add(c * c)
+            }
+        }
+        return (dot.doubleValue, querySquare.doubleValue, candidateSquare.doubleValue)
+    }
+
+    @usableFromInline
+    internal static func cosine_generic<V: QuantizedVectorINT8>(query: V, candidate: V) -> Float {
+        let sums = centeredSums(query: query, candidate: candidate)
+        if sums.1 == 0 || sums.2 == 0 { return 1 }
+        let similarity = sums.0 / (sqrt(sums.1) * sqrt(sums.2))
+        // Unreachable (centeredSums returns integer sums, both nonzero past the check above); Float.nan keeps the T15 policy.
+        guard similarity.isFinite else { return .nan }
+        return Float(1 - max(-1, min(1, similarity)))
+    }
+
+    @usableFromInline
+    internal static func dot_generic<V: QuantizedVectorINT8>(query: V, candidate: V) -> Float {
+        let dot = centeredSums(query: query, candidate: candidate).0
+        return Float(dot * (Double(query.quantizationParams.scale) * Double(candidate.quantizationParams.scale)))
+    }
+
     @inlinable
     public static func cosine512(query: Vector512INT8, candidate: Vector512INT8) -> Float {
-        guard let accumulators = accumulate_fused_generic(query: query, candidate: candidate) else {
-            // Fallback for asymmetric quantization (Dequantize-then-Compute).
-            return query.toFP32().cosineDistance(to: candidate.toFP32())
-        }
-
-        // Final scaling and calculation in FP32.
-        let qScale = query.quantizationParams.scale
-        let cScale = candidate.quantizationParams.scale
-
-        // Dot(Q_f, C_f) = Dot(Q_i, C_i) * S_q * S_c
-        let dotProductFP32 = Float(accumulators.dotProduct) * (qScale * cScale)
-
-        // Mag(V_f)^2 = Mag(V_i)^2 * S_v^2
-        let queryMagSqFP32 = Float(accumulators.queryMagnitudeSquared) * (qScale * qScale)
-        let candidateMagSqFP32 = Float(accumulators.candidateMagnitudeSquared) * (cScale * cScale)
-
-        let magnitudeProduct = sqrt(queryMagSqFP32 * candidateMagSqFP32)
-
-        // Handle division by zero.
-        if magnitudeProduct <= Float.leastNormalMagnitude {
-            return 1.0 // Distance is 1 (Similarity 0) if either vector is zero.
-        }
-
-        let similarity = dotProductFP32 / magnitudeProduct
-        // Clamp for numerical stability and return distance.
-        return 1.0 - max(-1.0, min(1.0, similarity))
+        cosine_generic(query: query, candidate: candidate)
     }
 
     @inlinable
     public static func dotProduct512(query: Vector512INT8, candidate: Vector512INT8) -> Float {
-        // Reuse the fused kernel logic.
-        guard let accumulators = accumulate_fused_generic(query: query, candidate: candidate) else {
-            return query.toFP32().dotProduct(candidate.toFP32())
-        }
-
-        let scaleProduct = query.quantizationParams.scale * candidate.quantizationParams.scale
-        return Float(accumulators.dotProduct) * scaleProduct
+        dot_generic(query: query, candidate: candidate)
     }
 
     // 768-dimensional cosine and dot product
     @inlinable
     public static func cosine768(query: Vector768INT8, candidate: Vector768INT8) -> Float {
-        guard let accumulators = accumulate_fused_generic(query: query, candidate: candidate) else {
-            return query.toFP32().cosineDistance(to: candidate.toFP32())
-        }
-
-        let qScale = query.quantizationParams.scale
-        let cScale = candidate.quantizationParams.scale
-        let dotProductFP32 = Float(accumulators.dotProduct) * (qScale * cScale)
-        let queryMagSqFP32 = Float(accumulators.queryMagnitudeSquared) * (qScale * qScale)
-        let candidateMagSqFP32 = Float(accumulators.candidateMagnitudeSquared) * (cScale * cScale)
-        let magnitudeProduct = sqrt(queryMagSqFP32 * candidateMagSqFP32)
-
-        if magnitudeProduct <= Float.leastNormalMagnitude {
-            return 1.0
-        }
-
-        let similarity = dotProductFP32 / magnitudeProduct
-        return 1.0 - max(-1.0, min(1.0, similarity))
+        cosine_generic(query: query, candidate: candidate)
     }
 
     @inlinable
     public static func dotProduct768(query: Vector768INT8, candidate: Vector768INT8) -> Float {
-        guard let accumulators = accumulate_fused_generic(query: query, candidate: candidate) else {
-            return query.toFP32().dotProduct(candidate.toFP32())
-        }
-
-        let scaleProduct = query.quantizationParams.scale * candidate.quantizationParams.scale
-        return Float(accumulators.dotProduct) * scaleProduct
+        dot_generic(query: query, candidate: candidate)
     }
 
     // 1536-dimensional cosine and dot product
     @inlinable
     public static func cosine1536(query: Vector1536INT8, candidate: Vector1536INT8) -> Float {
-        guard let accumulators = accumulate_fused_generic(query: query, candidate: candidate) else {
-            return query.toFP32().cosineDistance(to: candidate.toFP32())
-        }
-
-        let qScale = query.quantizationParams.scale
-        let cScale = candidate.quantizationParams.scale
-        let dotProductFP32 = Float(accumulators.dotProduct) * (qScale * cScale)
-        let queryMagSqFP32 = Float(accumulators.queryMagnitudeSquared) * (qScale * qScale)
-        let candidateMagSqFP32 = Float(accumulators.candidateMagnitudeSquared) * (cScale * cScale)
-        let magnitudeProduct = sqrt(queryMagSqFP32 * candidateMagSqFP32)
-
-        if magnitudeProduct <= Float.leastNormalMagnitude {
-            return 1.0
-        }
-
-        let similarity = dotProductFP32 / magnitudeProduct
-        return 1.0 - max(-1.0, min(1.0, similarity))
+        cosine_generic(query: query, candidate: candidate)
     }
 
     @inlinable
     public static func dotProduct1536(query: Vector1536INT8, candidate: Vector1536INT8) -> Float {
-        guard let accumulators = accumulate_fused_generic(query: query, candidate: candidate) else {
-            return query.toFP32().dotProduct(candidate.toFP32())
-        }
-
-        let scaleProduct = query.quantizationParams.scale * candidate.quantizationParams.scale
-        return Float(accumulators.dotProduct) * scaleProduct
+        dot_generic(query: query, candidate: candidate)
     }
 }
 
@@ -857,91 +885,45 @@ internal struct QuantizationCalibrator {
     public static func calibrate<V: OptimizedVector>(
         vectors: [V], strategy: QuantizationStrategy = .symmetric
     ) -> LinearQuantizationParams {
-        guard !vectors.isEmpty else {
-            return LinearQuantizationParams(minValue: -1.0, maxValue: 1.0, symmetric: true)
-        }
-
-        var globalMin: Float = .greatestFiniteMagnitude
-        var globalMax: Float = -.greatestFiniteMagnitude
-
+        guard strategy != .perChannel else { fatalError("Quantization perChannel calibration is unsupported") }
+        var minimum = Float.infinity
+        var maximum = -Float.infinity
+        var hasValues = false
         for vector in vectors {
-            vector.storage.withUnsafeBufferPointer { ptr in
-                for simd in ptr {
-                    globalMin = min(globalMin, simd.min())
-                    globalMax = max(globalMax, simd.max())
+            vector.storage.withUnsafeBufferPointer { buffer in
+                for lane in buffer {
+                    for index in 0..<4 {
+                        let value = lane[index]
+                        guard value.isFinite else { fatalError("Quantization requires finite input coordinates") }
+                        if !hasValues {
+                            minimum = value
+                            maximum = value
+                            hasValues = true
+                        } else {
+                            if value < minimum { minimum = value }
+                            if value > maximum { maximum = value }
+                        }
+                    }
                 }
             }
         }
-
-        return LinearQuantizationParams(
-            minValue: globalMin,
-            maxValue: globalMax,
-            symmetric: strategy == .symmetric
-        )
+        return LinearQuantizationParams(minValue: hasValues ? minimum : 0,
+                                        maxValue: hasValues ? maximum : 0,
+                                        symmetric: strategy == .symmetric)
     }
 
     public static func calibrateWithDistribution<V: OptimizedVector>(
         vectors: [V],
         percentile: Float = 99.9
     ) -> LinearQuantizationParams {
-        var allValues: [Float] = []
-
-        for vector in vectors {
-            vector.storage.withUnsafeBufferPointer { ptr in
-                for simd in ptr {
-                    allValues.append(contentsOf: [simd.x, simd.y, simd.z, simd.w])
-                }
-            }
-        }
-
-        guard !allValues.isEmpty else {
-            return LinearQuantizationParams(minValue: -1.0, maxValue: 1.0, symmetric: true)
-        }
-
-        allValues.sort()
-        let clipIndex = Int(Float(allValues.count) * percentile / 100.0)
-        let safeIndex = min(max(clipIndex, 1), allValues.count - 1)
-
-        let minValue = allValues[allValues.count - safeIndex]
-        let maxValue = allValues[safeIndex - 1]
-
-        return LinearQuantizationParams(minValue: minValue, maxValue: maxValue, symmetric: true)
-    }
-}
-
-internal struct QuantizationError {
-    public let meanAbsoluteError: Float
-    public let maxAbsoluteError: Float
-    public let rootMeanSquareError: Float
-}
-
-internal struct QuantizationErrorAnalyzer {
-    public static func analyzeError<V: QuantizedVectorINT8>(
-        original: V.FloatVectorType,
-        quantized: V
-    ) -> QuantizationError {
-        let restored = quantized.toFP32()
-        var errors: [Float] = []
-
-        for i in 0..<original.storage.count {
-            let origSIMD = original.storage[i]
-            let restSIMD = restored.storage[i]
-
-            let error = [
-                abs(origSIMD.x - restSIMD.x),
-                abs(origSIMD.y - restSIMD.y),
-                abs(origSIMD.z - restSIMD.z),
-                abs(origSIMD.w - restSIMD.w)
-            ]
-
-            errors.append(contentsOf: error)
-        }
-
-        let mae = errors.reduce(0, +) / Float(errors.count)
-        let maxError = errors.max() ?? 0
-        let rmse = sqrt(errors.map { $0 * $0 }.reduce(0, +) / Float(errors.count))
-
-        return QuantizationError(meanAbsoluteError: mae, maxAbsoluteError: maxError, rootMeanSquareError: rmse)
+        guard percentile.isFinite && percentile > 0 && percentile <= 100 else { fatalError("Quantization percentile must be finite and in (0,100]") }
+        let values = vectors.flatMap { $0.toArray() }
+        AffineQuantizationCore.requireFinite(values)
+        guard !values.isEmpty else { return LinearQuantizationParams(minValue: 0, maxValue: 0) }
+        let magnitudes = values.map { abs($0) }.sorted()
+        let index = AffineQuantizationCore.percentileIndex(count: magnitudes.count, percentile: percentile)
+        let threshold = magnitudes[index]
+        return LinearQuantizationParams(minValue: -threshold, maxValue: threshold)
     }
 }
 
@@ -961,7 +943,7 @@ extension Vector512INT8 {
     }
 
     public func validateQuantization() -> Bool {
-        return quantizationParams.scale > 0
+        return quantizationParams.isValid
     }
 }
 
@@ -979,7 +961,7 @@ extension Vector768INT8 {
     }
 
     public func validateQuantization() -> Bool {
-        return quantizationParams.scale > 0
+        return quantizationParams.isValid
     }
 }
 
@@ -997,14 +979,14 @@ extension Vector1536INT8 {
     }
 
     public func validateQuantization() -> Bool {
-        return quantizationParams.scale > 0
+        return quantizationParams.isValid
     }
 }
 
 // MARK: - Phase 2: SoA Quantized Types (Pure SoA Layout)
 
 /// Structure-of-Arrays (SoA) storage for INT8 quantized vectors.
-/// Pure SoA Layout: Organized by dimension index for efficient batch computation.
+/// Pure SoA Layout: organized by dimension index, then by groups of four vectors.
 /// Storage structure:
 /// Dim 0: [V0_d0, V1_d0, V2_d0, V3_d0], [V4_d0, V5_d0, V6_d0, V7_d0], ...
 /// Dim 1: [V0_d1, V1_d1, V2_d1, V3_d1], [V4_d1, V5_d1, V6_d1, V7_d1], ...
@@ -1020,13 +1002,15 @@ public struct SoAINT8<VectorType: OptimizedVector>: Sendable {
     public let simdGroups: Int
 
     public init(from vectors: [VectorType], params: LinearQuantizationParams? = nil) {
+        if let params { guard params.isValid else { fatalError("Quantization requires valid parameters") } }
+        for vector in vectors { AffineQuantizationCore.requireFinite(vector.toArray()) }
         self.dimension = vectors.first?.scalarCount ?? 0
         self.vectorCount = vectors.count
 
         guard !vectors.isEmpty else {
             self.storage = []
             self.simdGroups = 0
-            self.quantizationParams = params ?? LinearQuantizationParams(minValue: -1, maxValue: 1, symmetric: true)
+            self.quantizationParams = params ?? LinearQuantizationParams(minValue: 0, maxValue: 0, symmetric: true)
             return
         }
 
@@ -1042,19 +1026,7 @@ public struct SoAINT8<VectorType: OptimizedVector>: Sendable {
 
     /// Fallback calibration when QuantizationCalibrator is not available
     public static func calibrateParams(vectors: [VectorType]) -> LinearQuantizationParams {
-        var globalMin: Float = Float.infinity
-        var globalMax: Float = -Float.infinity
-
-        for vector in vectors {
-            vector.withUnsafeBufferPointer { buffer in
-                for element in buffer {
-                    globalMin = min(globalMin, element)
-                    globalMax = max(globalMax, element)
-                }
-            }
-        }
-
-        return LinearQuantizationParams(minValue: globalMin, maxValue: globalMax, symmetric: true)
+        QuantizationCalibrator.calibrate(vectors: vectors)
     }
 
     /// Transposes AoS FP32 vectors to SoA INT8 storage.
@@ -1063,8 +1035,6 @@ public struct SoAINT8<VectorType: OptimizedVector>: Sendable {
         let capacity = dimension * simdGroups
         var soaStorage = ContiguousArray<SIMD4<Int8>>(repeating: .zero, count: capacity)
 
-        let invScale = 1.0 / params.scale
-        let offset = Float(params.zeroPoint)
 
         // Iterate over dimensions.
         for d in 0..<dimension {
@@ -1086,7 +1056,7 @@ public struct SoAINT8<VectorType: OptimizedVector>: Sendable {
                 let fVec = SIMD4<Float>(f0, f1, f2, f3)
 
                 // Quantize the 4 elements simultaneously.
-                let qVec = quantizeSIMD4(fVec, invScale: invScale, offset: offset)
+                let qVec = quantizeSIMD4(fVec, params: params)
 
                 // Store in SoA layout: [Dim 0 Groups..., Dim 1 Groups..., ...]
                 soaStorage[d * simdGroups + g] = qVec
@@ -1096,23 +1066,8 @@ public struct SoAINT8<VectorType: OptimizedVector>: Sendable {
     }
 
     @inline(__always)
-    private static func quantizeSIMD4(_ input: SIMD4<Float>, invScale: Float, offset: Float) -> SIMD4<Int8> {
-        // Vectorized quantization helper (Adapted from Part 1).
-        let vInvScale = SIMD4<Float>(repeating: invScale)
-        let vOffset = SIMD4<Float>(repeating: offset)
-        let vMin = SIMD4<Float>(repeating: -128.0)
-        let vMax = SIMD4<Float>(repeating: 127.0)
-
-        var vQuantized = input * vInvScale + vOffset
-        vQuantized = max(vMin, min(vMax, vQuantized.rounded(.toNearestOrAwayFromZero)))
-
-        let vQuantizedInt32 = SIMD4<Int32>(Int32(vQuantized.x), Int32(vQuantized.y), Int32(vQuantized.z), Int32(vQuantized.w))
-        return SIMD4<Int8>(
-            Int8(clamping: vQuantizedInt32.x),
-            Int8(clamping: vQuantizedInt32.y),
-            Int8(clamping: vQuantizedInt32.z),
-            Int8(clamping: vQuantizedInt32.w)
-        )
+    private static func quantizeSIMD4(_ input: SIMD4<Float>, params: LinearQuantizationParams) -> SIMD4<Int8> {
+        SIMD4(params.quantize(input.x), params.quantize(input.y), params.quantize(input.z), params.quantize(input.w))
     }
 }
 
@@ -1132,67 +1087,15 @@ extension QuantizedKernels {
     internal static func batchEuclidean_generic_mixed<V: OptimizedVector>(
         query: V, candidates: SoAINT8<V>, results: UnsafeMutableBufferPointer<Float>
     ) {
-        precondition(results.count >= candidates.vectorCount)
-
-        let dimension = candidates.dimension
-        let simdGroups = candidates.simdGroups
-        let candidateParams = candidates.quantizationParams
-        let scale = candidateParams.scale
-        let zeroPoint = candidateParams.zeroPoint
-
-        // Initialize accumulators for all candidates.
-        var accumulators = ContiguousArray<Float>(repeating: 0.0, count: candidates.vectorCount)
-
-        query.storage.withUnsafeBufferPointer { queryPtr in
-            candidates.storage.withUnsafeBufferPointer { candPtr in
-                let queryFP32 = queryPtr // AoS layout
-
-                // Iterate over dimensions.
-                for d in 0..<dimension {
-                    let laneIndex = d / 4
-                    let elementIndex = d % 4
-
-                    // Load the query element for this dimension and broadcast it.
-                    let q_d = queryFP32[laneIndex][elementIndex]
-                    let qBroadcast = SIMD4<Float>(repeating: q_d)
-
-                    // Iterate over groups of 4 candidates.
-                    for g in 0..<simdGroups {
-                        let storageIndex = d * simdGroups + g
-
-                        // Load 4 candidate elements for this dimension (SoA layout).
-                        let cINT8 = candPtr[storageIndex]
-
-                        // Dequantize on-the-fly.
-                        let cFP32 = convertToFP32_NEON(int8Vec: cINT8, scale: scale, zeroPoint: zeroPoint)
-
-                        // Calculate differences: (Q_d - Ck_d)^2
-                        let diffs = qBroadcast - cFP32
-                        let squaredDiffs = diffs * diffs
-
-                        // Accumulate results.
-                        let baseVectorIndex = g * 4
-                        accumulators.withUnsafeMutableBufferPointer { accPtr in
-                            // Handle tail cases safely.
-                            accPtr[baseVectorIndex] += squaredDiffs.x
-                            if baseVectorIndex + 1 < candidates.vectorCount {
-                                accPtr[baseVectorIndex + 1] += squaredDiffs.y
-                            }
-                            if baseVectorIndex + 2 < candidates.vectorCount {
-                                accPtr[baseVectorIndex + 2] += squaredDiffs.z
-                            }
-                            if baseVectorIndex + 3 < candidates.vectorCount {
-                                accPtr[baseVectorIndex + 3] += squaredDiffs.w
-                            }
-                        }
-                    }
-                }
+        guard results.count >= candidates.vectorCount else { fatalError("Quantized batch results capacity must cover vectorCount") }
+        for k in 0..<candidates.vectorCount {
+            var sum: Double = 0
+            for d in 0..<candidates.dimension {
+                let code = candidates.storage[d * candidates.simdGroups + k / 4][k % 4]
+                let difference = AffineQuantizationCore.difference(code, candidates.quantizationParams, query.storage[d / 4][d % 4])
+                sum += difference * difference
             }
-        }
-
-        // Final step: Apply sqrt to all results.
-        for i in 0..<candidates.vectorCount {
-            results[i] = sqrt(accumulators[i])
+            results[k] = Float(sqrt(sum))
         }
     }
 
@@ -1210,17 +1113,21 @@ extension QuantizedKernels {
         query: Q, candidates: SoAINT8<C>, results: UnsafeMutableBufferPointer<Float>
     ) where Q.FloatVectorType == C {
 
-        // Check optimization criteria (symmetric and matching scales).
+        guard results.count >= candidates.vectorCount else { fatalError("Quantized batch results capacity must cover vectorCount") }
         let qParams = query.quantizationParams
         let cParams = candidates.quantizationParams
-
-        let isSymmetric = qParams.isSymmetric && cParams.isSymmetric
-        let scaleTolerance = 1e-6 * qParams.scale
-        let scalesMatch = abs(qParams.scale - cParams.scale) <= scaleTolerance
-
-        guard isSymmetric && scalesMatch else {
-            // Fallback to mixed precision if not optimized.
-            batchEuclidean_generic_mixed(query: query.toFP32(), candidates: candidates, results: results)
+        guard qParams.isSymmetric && cParams.isSymmetric && qParams.zeroPoint == 0 && cParams.zeroPoint == 0 && qParams.scale == cParams.scale else {
+            for k in 0..<candidates.vectorCount {
+                var sum: Double = 0
+                for d in 0..<candidates.dimension {
+                    let code = candidates.storage[d * candidates.simdGroups + k / 4][k % 4]
+                    let difference = AffineQuantizationCore.difference(
+                        AffineQuantizationCore.product(query.storage[d / 4][d % 4], qParams),
+                        AffineQuantizationCore.product(code, cParams))
+                    sum += difference * difference
+                }
+                results[k] = Float(sqrt(sum))
+            }
             return
         }
 
@@ -1285,7 +1192,7 @@ extension QuantizedKernels {
 
         // Final step: Apply scaling and sqrt. D = S * sqrt(Sum(diff^2)).
         for i in 0..<candidates.vectorCount {
-            results[i] = scale * sqrt(Float(accumulators[i]))
+            results[i] = Float(Double(scale) * sqrt(Double(accumulators[i])))
         }
     }
 
@@ -1296,120 +1203,63 @@ extension QuantizedKernels {
     }
 }
 
-// MARK: - Phase 2: Quality Analysis Framework
-
-internal struct QuantizationQualityAnalyzer {
-    public struct QualityMetrics: Sendable {
-        public let meanAbsoluteError: Float
-        public let rootMeanSquareError: Float
-        public let maxAbsoluteError: Float
-        public let signalToNoiseRatio: Float
-    }
-
-    public static func analyzeQuality<V_FP32: OptimizedVector, V_INT8: QuantizedVectorINT8>(
-        originalVectors: [V_FP32],
-        quantizedVectors: [V_INT8]
-    ) -> QualityMetrics where V_INT8.FloatVectorType == V_FP32 {
-
-        // Use Double for accumulation to maintain precision.
-        var sumAbsError: Double = 0.0
-        var sumSqError: Double = 0.0
-        var maxAbsError: Float = 0.0
-        var sumSqSignal: Double = 0.0
-        var elementCount: Int = 0
-
-        for (orig, quant) in zip(originalVectors, quantizedVectors) {
-            let restored = quant.toFP32()
-            elementCount += orig.scalarCount
-            // Calculate errors element-wise since we can't access storage directly in generic context
-            for j in 0..<orig.scalarCount {
-                let origValue = orig[j]
-                let restValue = restored[j]
-                let diff = origValue - restValue
-                let absDiff = abs(diff)
-                let sqDiff = diff * diff
-                let sqSignal = origValue * origValue
-
-                sumAbsError += Double(absDiff)
-                sumSqError += Double(sqDiff)
-                sumSqSignal += Double(sqSignal)
-
-                maxAbsError = max(maxAbsError, absDiff)
-            }
-        }
-
-        guard elementCount > 0 else {
-            return QualityMetrics(meanAbsoluteError: 0, rootMeanSquareError: 0, maxAbsoluteError: 0, signalToNoiseRatio: 0)
-        }
-
-        let countD = Double(elementCount)
-        let mae = Float(sumAbsError / countD)
-        let rmse = Float(sqrt(sumSqError / countD))
-
-        // SNR = 10 * log10(P_signal / P_noise)
-        let signalPower = sumSqSignal / countD
-        let noisePower = sumSqError / countD
-
-        let snr: Float
-        if noisePower <= Double.leastNormalMagnitude {
-            snr = Float.infinity
-        } else {
-            snr = Float(10.0 * log10(signalPower / noisePower))
-        }
-
-        return QualityMetrics(
-            meanAbsoluteError: mae,
-            rootMeanSquareError: rmse,
-            maxAbsoluteError: maxAbsError,
-            signalToNoiseRatio: snr
-        )
-    }
-}
-
 // MARK: - Phase 2: AutoTuning Integration Framework
 
+/// A heuristic suggestion cache. The hint is not a measured error guarantee.
+/// All mutable cache state is protected by `lock`.
 public final class QuantizedAutoTuner: @unchecked Sendable {
     public static let shared = QuantizedAutoTuner()
-    private var calibrationCache: [String: QuantizationStrategy] = [:]
-    private let lock = NSLock() // Ensure thread safety.
+    private struct Request: Hashable {
+        let operation: String
+        let dimension: Int
+        let candidateCount: Int
+        let hintBits: UInt32
+    }
+    private var calibrationCache: [Request: QuantizationStrategy] = [:]
+    private let lock = NSLock()
 
     public enum QuantizationStrategy: Sendable {
         case fullFP32, candidatesINT8, bothINT8
     }
 
-    private init() {} // Singleton
+    public init() {}
 
-    /// Selects optimal quantization strategy based on operation characteristics
-    public func selectOptimalQuantization(
+    /// Suggests a representation using count and a nonnegative relative-error hint.
+    /// No calibration or accuracy measurement occurs. Validate actual application
+    /// error separately before using a reduced representation.
+    public func suggestQuantization(
         for operation: String,
         dimension: Int,
         candidateCount: Int,
-        accuracyRequirement: Float = 0.02
-    ) -> QuantizationStrategy {
-        let cacheKey = "\(operation)_\(dimension)_\(candidateCount)"
-
+        relativeErrorHint: Float = 0.02
+    ) throws -> QuantizationStrategy {
+        guard dimension > 0 else {
+            throw PrecisionTuningSupport.invalid("dimension", "must be positive")
+        }
+        guard candidateCount >= 0 else {
+            throw PrecisionTuningSupport.invalid("candidateCount", "must be nonnegative")
+        }
+        try PrecisionTuningSupport.validateLimit(relativeErrorHint, field: "relativeErrorHint")
+        let request = Request(operation: operation, dimension: dimension,
+                              candidateCount: candidateCount,
+                              hintBits: relativeErrorHint == 0 ? 0 : relativeErrorHint.bitPattern)
         lock.lock()
         defer { lock.unlock() }
-
-        if let cached = calibrationCache[cacheKey] {
-            return cached
-        }
-
-        // Heuristic-based strategy selection
+        if let cached = calibrationCache[request] { return cached }
         let strategy: QuantizationStrategy
-        if candidateCount > 1000 && accuracyRequirement < 0.05 {
-            strategy = .candidatesINT8
-        } else if candidateCount > 5000 && accuracyRequirement < 0.1 {
+        if candidateCount == 0 || relativeErrorHint == 0 {
+            strategy = .fullFP32
+        } else if candidateCount > 5000 && relativeErrorHint >= 0.1 {
             strategy = .bothINT8
+        } else if candidateCount > 1000 && relativeErrorHint >= 0.05 {
+            strategy = .candidatesINT8
         } else {
             strategy = .fullFP32
         }
-
-        calibrationCache[cacheKey] = strategy
+        calibrationCache[request] = strategy
         return strategy
     }
 
-    /// Clears the calibration cache (useful for testing or memory management)
     public func clearCache() {
         lock.lock()
         defer { lock.unlock() }

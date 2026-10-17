@@ -1,0 +1,19 @@
+{
+  "task": "S03",
+  "version": "v1",
+  "base": "813255cb389891590db172480667bb47d83fbdd1",
+  "baseRegularFiles": 5842,
+  "baseCodeCount": 315,
+  "finalCodeCount": 320,
+  "changed": {
+    "Scripts/ci/fixtures/S03-dynamic.json": "081bbf68defdebb23581374c4aadebb8b054e921634fcd4bc88aa46734b3fe7b",
+    "Scripts/ci/fixtures/S03-int8.json": "08c4923b267e1eaf9e8252a4e57171e899be46c15bec81777a4059b6d2b2a928",
+    "Scripts/ci/fixtures/S03-search.json": "ed07d4e0a8f14c04e7cca8d36ff53c0900aa2c4da9a43c8d12ce8334b49ea646",
+    "Scripts/ci/fixtures/S03-topk.json": "f21c04a5aec487c9cc5725182d0eec79fd6bd90d24628374bf561cb3d4bb7845",
+    "Sources/VectorCore/Operations/TopKSelection.swift": "037813f918df508d70b103a056b4a3206c878f4d674a8e880c3a41a391d4cfd3",
+    "Tests/ComprehensiveTests/DecodedInvariantTests.swift": "02cb72b7e83a7ca74900b827b4b1ae3569ad18ee96301f69a8fd140b03adecdc"
+  },
+  "completeDiffSHA256": "08a64cea19d6afc3badca2ab07a0ea617f4c7cae3e2749c29fcb4fe68a291e56",
+  "sourceManifestSHA256": "ac829c269dda5464512bd797722510d2f07b2f8ffce90b6d3cbe10a517ea43d7",
+  "rootChecks": "Regenerated complete patch including no-final-newline markers; compared every final inventoried byte and every unowned base archive file; owned integration files still match base before import. Initial incomplete patch is packaging history only."
+}

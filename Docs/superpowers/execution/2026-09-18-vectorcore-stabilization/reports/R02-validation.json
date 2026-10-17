@@ -1,0 +1,59 @@
+{
+  "source_diff_sha256": "30825c993d28937ce5f7dcaa26ca5f67ebbf4d586f2293cc597a2081c8f3c7cf",
+  "working_directory": "/private/tmp/vectorcore-stabilization-R02-implementation",
+  "debug": {
+    "command": "swift test --jobs 6 --scratch-path /private/tmp/vectorcore-R02-debug --filter 'VectorCollectionTransactionTests|MetricDispatchContractTests|IntegrationProtocolsSuite|TopKNaN' > /private/tmp/R02-debug-final-01.log 2>&1",
+    "exit": 0,
+    "reported_test_functions": 80,
+    "suites": 5,
+    "log_sha256": "702cd2fff66afebff9b0f4b300ce2eaf8f1c27b1b9e3684cf8e71a2ece6943ab"
+  },
+  "release": {
+    "status": "complete",
+    "command": "swift test -c release --jobs 6 --scratch-path /private/tmp/vectorcore-R02-release --filter 'VectorCollectionTransactionTests|MetricDispatchContractTests|IntegrationProtocolsSuite|TopKNaN' > /private/tmp/R02-release-final-01.log 2>&1",
+    "exit": 0,
+    "reported_test_functions": 80,
+    "suites": 5,
+    "log_sha256": "1351f69064d74666a1bc6b2ed1a4016961ab7a82403ba319fd6adb7a0bbf2297"
+  },
+  "consumers": {
+    "missing_witness": {
+      "command": "swiftc -swift-version 6 -strict-concurrency=complete -typecheck -D MISSING_UPDATE -I /private/tmp/vectorcore-R02-debug/arm64-apple-macosx/debug/Modules -I /private/tmp/vectorcore-R02-debug/arm64-apple-macosx/debug/VectorCoreC.build Scripts/ci/tests/R02CollectionUpdateConsumer.swift > /private/tmp/R02-consumer-missing-witness.log 2>&1",
+      "exit": 1,
+      "expected_diagnostic": "protocol requires function 'update(id:vector:)'",
+      "log_sha256": "395075c947c2df147bc76db1176d8abce4e6107ba26216bb342d7b791e61e5e1"
+    },
+    "positive_compile": {
+      "command": "swiftc -swift-version 6 -strict-concurrency=complete -I /private/tmp/vectorcore-R02-debug/arm64-apple-macosx/debug/Modules -I /private/tmp/vectorcore-R02-debug/arm64-apple-macosx/debug/VectorCoreC.build Scripts/ci/tests/R02CollectionUpdateConsumer.swift /private/tmp/vectorcore-R02-debug/arm64-apple-macosx/debug/VectorCore.build/*.o /private/tmp/vectorcore-R02-debug/arm64-apple-macosx/debug/VectorCoreC.build/*/*.o -o /private/tmp/R02-public-consumer > /private/tmp/R02-consumer-positive-compile-02.log 2>&1",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "positive_run": {
+      "command": "/private/tmp/R02-public-consumer > /private/tmp/R02-consumer-positive-run.log 2>&1",
+      "exit": 0,
+      "marker": "R02_PUBLIC_TRANSACTIONAL_WITNESS_OK",
+      "log_sha256": "7d150faa8c7bf4d8a85a18c87896b00366e333327c9572ceb002fd1fefb44546"
+    }
+  },
+  "red": {
+    "command": "swift test --jobs 6 --scratch-path /private/tmp/vectorcore-R02-debug --filter VectorCollectionTransactionTests > /private/tmp/R02-red-01.log 2>&1",
+    "exit": 1,
+    "tests": 2,
+    "behavioral_issues": 10,
+    "exact_source_archive": "R02-red-source.tar.gz in canonical recovery directory",
+    "log_sha256": "babf3203fe84e51808321dd4c945849ae63276ef21e7b883a8c024815c5a8621"
+  },
+  "new_test_counting": {
+    "new_parent_reported_functions": 12,
+    "new_parent_actively_exercised_functions": 11,
+    "parent_no_op": "reentrantSearchChildProbe without R02_REENTRANT_PROBE",
+    "separate_deadline_bounded_child_execution": "reentrantSearchChildProbe with R02_REENTRANT_PROBE=1"
+  },
+  "final_source_hash_recheck": "All three changed/new files match the frozen manifest after final Debug, Release, and public Swift 6 consumer checks.",
+  "environment": {
+    "architecture": "arm64",
+    "swift": "Apple Swift 6.3.3",
+    "macOS": "26.5.2 (25F84)",
+    "source_language": "Swift tools 6.0, default Swift 6 language mode; StrictConcurrency; ExistentialAny; no defaultIsolation override. Public consumers explicitly use -swift-version 6 and -strict-concurrency=complete."
+  }
+}

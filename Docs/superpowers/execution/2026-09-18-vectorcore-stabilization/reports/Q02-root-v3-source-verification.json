@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "version": "v3",
+  "base": "101b3749bf531cfdbc42d61198b503e94af4aa5b",
+  "manifestSHA256": "2f6341184e527785d90cee57c7fc01cf801c4990d40f174543c92e62368b64f1",
+  "patchSHA256": "eabcfe85abf022ff546198a56c7b920944cf66598b078e044b9310776ab68b24",
+  "frozenHashMapSHA256": "f66e08edb81d5f25e6ced2dce4522252da271f33f1d0cf479c5206d4dc454d78",
+  "baselineArchiveSHA256": "54c57fe5938052ca6a405eeaddfb2da8155ecc5a01ba93a7647073b6690b4179",
+  "baselineInventoryCount": 328,
+  "finalInventoryCount": 338,
+  "changed": [
+    "Sources/VectorCore/Operations/Kernels/KernelAutoTuner.swift",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionAutoTuner.swift",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+    "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift",
+    "Tests/ComprehensiveTests/KernelAutoTunerTests.swift",
+    "Tests/ComprehensiveTests/MixedPrecisionAutoTunerTests.swift",
+    "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift"
+  ],
+  "added": [
+    "Scripts/ci/tests/Q02Allocation.c",
+    "Scripts/ci/tests/Q02CalibrationProbe.swift",
+    "Scripts/ci/tests/Q02InitializerAdmission.swift",
+    "Scripts/ci/tests/Q02PublicConsumer.swift",
+    "Scripts/ci/tests/Q02RunCalibrationProbe.py",
+    "Scripts/ci/tests/Q02RunPublicConsumer.py",
+    "Scripts/ci/tests/Q02RunSelectionProbe.py",
+    "Scripts/ci/tests/Q02SelectionProbe.swift",
+    "Sources/VectorCore/Operations/Kernels/PrecisionTuningSupport.swift",
+    "Tests/ComprehensiveTests/PrecisionSelectionContractTests.swift"
+  ],
+  "reconstruction": "/var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/vectorcore-Q02-root-v3-source-p_ac58my",
+  "runtimeVerified": false,
+  "qualification": "Revised frozen source verified. Runtime and evidence acceptance require separate sealed-record checks."
+}

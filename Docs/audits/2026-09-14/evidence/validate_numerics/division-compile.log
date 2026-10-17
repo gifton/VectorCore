@@ -1,0 +1,8 @@
+/private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/DivisionProbe.swift:4:14: warning: '1e-40' underflows and loses precision during conversion to 'Float'
+ 2 | import VectorCore
+ 3 | @main struct P { static func main() {
+ 4 |  let s:Float=1e-40
+   |              `- warning: '1e-40' underflows and loses precision during conversion to 'Float'
+ 5 |  var w=DynamicVector([s,0]); print("before",w.toArray()); w.inPlaceDivide(s); print("direct method",w.toArray())
+ 6 |  var x=DynamicVector([s,0]); x /= s; print("operator",x.toArray())
+/private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/DivisionProbe

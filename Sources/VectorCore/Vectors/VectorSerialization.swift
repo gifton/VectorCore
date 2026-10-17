@@ -57,7 +57,14 @@ extension DynamicVector: Codable {
 // MARK: - Binary Serialization (see BinaryFormat + CRC32 in Utilities)
 
 extension VectorProtocol where Scalar == Float {
-    /// Encode vector to binary format using BinaryFormat utilities and CRC32 checksum
+    /// Encode the current Float coordinates as version1 little-endian FP32 words.
+    /// DynamicVector empty values encode a 16-byte frame. Decode accepts 0...10000;
+    /// this nonthrowing encoder also emits representable larger dimensions, which
+    /// decode rejects (B01BinaryContractTests.dimensionCapAndTinyHeaderBomb).
+    /// Optimized and INT8 vectors use explicit DynamicVector or matching Vector<D>
+    /// destinations. INT8 coordinates are dequantized FP32, not compressed codes.
+    /// Methods alone do not adopt BinaryEncodable; see the consumer-owned adapter.
+    /// Exact stored FP32 bits are exercised by B01BinaryContractTests.pathologicalStoredBitsAndSlices.
     public func encodeBinary() -> Data {
         var data = Data()
         data.reserveCapacity(BinaryFormat.expectedDataSize(for: scalarCount))
@@ -77,7 +84,9 @@ extension VectorProtocol where Scalar == Float {
 }
 
 extension Vector {
-    /// Decode vector from binary format
+    /// Decode a complete version1 frame into this exact fixed dimension.
+    /// Header, size and CRC validation precede destination-dimension validation.
+    /// B01BinaryContractTests covers malformed frames and positive fixed dimensions.
     public static func decodeBinary(from data: Data) throws -> Vector {
         // Validate header and checksum using BinaryFormat
         let header = try BinaryFormat.validateHeader(in: data)
@@ -94,7 +103,8 @@ extension Vector {
 }
 
 extension DynamicVector {
-    /// Decode dynamic vector from binary format
+    /// Decode a complete version1 frame with dimension 0...10000, including empty.
+    /// B01BinaryContractTests.emptyDynamicRoundTrip exercises the empty cases.
     public static func decodeBinary(from data: Data) throws -> DynamicVector {
         let header = try BinaryFormat.validateHeader(in: data)
         try BinaryFormat.validateChecksum(in: data)

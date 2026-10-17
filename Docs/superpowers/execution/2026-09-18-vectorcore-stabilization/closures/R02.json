@@ -1,0 +1,37 @@
+{
+  "task": "R02",
+  "status": "accepted",
+  "task_base": "84f42d01489a526b8ae40bd77fe7618c0de33f34",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-09",
+    "API-10"
+  ],
+  "validation": {
+    "red": "Two actual-library tests report ten issues: failed update deletes binding, generated insert overwrites explicit ID, duplicate explicit insert overwrites",
+    "debug": "80 reported functions in five suites; new suite has 11 exercised parent functions, one parent no-op entry and one separately executed reentrant child; exit0",
+    "release": "Same frozen source/filter and counts, exit0; actual reentrant child capture retained",
+    "consumers": "Public Swift 6 missing-update fixture rejects at intended witness; explicit transactional witness compiles, links and runs generic failure/success paths",
+    "provenance": "Complete patch reconstruction matches three files; full 248/250 code-file inventory contains only declared edits; source backup and exact runtime/consumer/child log hashes verified"
+  },
+  "review": "reports/R02-implementation-review.md",
+  "evidence": "reports/R02-implementation.md",
+  "commands": "reports/R02-validation.json",
+  "root_verification": "reports/R02-root-verification.json",
+  "frozen_sha256": {
+    "Scripts/ci/tests/R02CollectionUpdateConsumer.swift": "d68ceab8a603bd068392ccc9135dd938c43643f71da6f466c9eac7e662c842e5",
+    "Sources/VectorCore/Integration/VectorCollection.swift": "d3a34685dece1b4cb6bb0a0d0793248795d8980aaa52e1e2a3c5dd7ae1258aad",
+    "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift": "bfb9c6d4fa1fc88bb09df2cef90d839639ff48ee419200cc8053b5716feacbfe"
+  },
+  "migrations": [
+    "MutableVectorCollection conformers must supply a failure-preserving transactional update witness",
+    "Duplicate explicit IDs throw invalidConfiguration; generated IDs skip occupied IDs and never rewind on removal/removeAll",
+    "Generated cursor exhaustion throws resourceExhausted without mutation; explicit insertion does not advance it",
+    "Simple batch/search capture bindings under one lock and score outside the lock; generic defaults do not promise atomic snapshots"
+  ],
+  "limitations": [
+    "Captured generic V bindings do not guarantee deep immutability of external reference aliases",
+    "Bounded concurrency observations supplement the source-derived single-lock invariant, not every possible schedule",
+    "No score policy, throughput target, downstream VectorIndex or VectorAccelerate execution claim"
+  ]
+}

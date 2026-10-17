@@ -771,7 +771,8 @@ struct BatchKernels_SoATests {
 
                 // SoA should not be more than 2x slower (allowing for setup overhead)
                 if strictPerfGatesEnabled {
-                    #expect(batchTime < individualTime * 2.0, "Batch processing took \(batchTime)s vs individual \(individualTime)s for size \(batchSize)")
+                    expectPerformance("BatchKernels_SoATests.testMediumBatchSize.1", batchTime < individualTime * 2.0,
+                        "Batch processing took \(batchTime)s vs individual \(individualTime)s for size \(batchSize)")
                 }
             }
         }
@@ -793,10 +794,12 @@ struct BatchKernels_SoATests {
 
                 #expect(batchResults.count == batchSize)
 
-                // Memory should be reasonable (not growing excessively)
-                let memoryGrowth = finalMemory - initialMemory
-                let expectedMemory = batchSize * 512 * 4 * 2 // Rough estimate: candidates + SoA conversion
-                #expect(memoryGrowth < expectedMemory * 3, "Memory usage should be reasonable for batch size \(batchSize)")
+                // Informational only: whole-process RSS, unreliable under parallel tests;
+                // isolated-process measurements are V04's memory probe. Signed, never asserted.
+                let memoryGrowth: Int64 = Int64(finalMemory) - Int64(initialMemory)
+                let label = "whole-process RSS, unreliable under parallel tests; "
+                    + "isolated-process measurements are V04's memory probe"
+                print("  [\(label)] batch \(batchSize) RSS delta: \(memoryGrowth) bytes")
 
                 // Spot check accuracy (test every 100th element for large batches)
                 let stepSize = max(1, batchSize / 10)
@@ -822,7 +825,7 @@ struct BatchKernels_SoATests {
                     // Allow some tolerance for measurement variance
                     let expectedRatio = 3.0 // Allow SoA to be up to 3x slower in debug mode
                     if strictPerfGatesEnabled {
-                        #expect(batchTime < individualTime * expectedRatio || batchTime < 0.1,
+                        expectPerformance("BatchKernels_SoATests.testLargeBatchSize.2", batchTime < individualTime * expectedRatio || batchTime < 0.1,
                                "Large batch \(batchSize): SoA time \(batchTime)s should be reasonable vs individual \(individualTime)s")
                     }
                 }
@@ -1089,13 +1092,13 @@ struct BatchKernels_SoATests {
             // Allow tolerance for debug overhead
             print("  [perf] SoA blocking: \(soaTime)s vs individual \(individualTime)s")
             if strictPerfGatesEnabled {
-                #expect(soaTime < individualTime * 10.0 || soaTime < 1.0,
+                expectPerformance("BatchKernels_SoATests.testBlockingEfficiency.3", soaTime < individualTime * 10.0 || soaTime < 1.0,
                        "SoA blocking should be efficient: SoA time \(soaTime)s vs individual \(individualTime)s")
             }
 
             // Test that blocking handles different batch sizes efficiently
             let testSizes = [2, 4, 10, 50, 100, 500]
-            var allTimesReasonable = true
+            var sizeTimings: [(size: Int, elapsed: Double)] = []
 
             for size in testSizes {
                 let testCandidates = Array(candidates.prefix(size))
@@ -1103,15 +1106,14 @@ struct BatchKernels_SoATests {
                     _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: testCandidates)
                 }
 
-                // Time should scale roughly linearly with size
-                let expectedTime = soaTime * Double(size) / Double(candidateCount)
-                if timeForSize > expectedTime * 5 && timeForSize > 0.001 {
-                    allTimesReasonable = false
-                }
+                sizeTimings.append((size, timeForSize))
             }
 
             if strictPerfGatesEnabled {
-                #expect(allTimesReasonable, "Blocking efficiency should scale reasonably with batch size")
+                expectPerformance("BatchKernels_SoATests.testBlockingEfficiency.4", sizeTimings.allSatisfy { observation in
+                    let expectedTime = soaTime * Double(observation.size) / Double(candidateCount)
+                    return !(observation.elapsed > expectedTime * 5 && observation.elapsed > 0.001)
+                }, "Blocking efficiency should scale reasonably with batch size")
             }
         }
 
@@ -1246,7 +1248,7 @@ struct BatchKernels_SoATests {
             // For large batches, SoA should be reasonable (debug mode considerations)
             // Allow tolerance for debug overhead
             if strictPerfGatesEnabled {
-                #expect(soaTime < aosTime * 3.0 || soaTime < 0.1,
+                expectPerformance("BatchKernels_SoATests.testSoAvsAoSPerformance.5", soaTime < aosTime * 3.0 || soaTime < 0.1,
                        "SoA should be reasonable vs AoS: SoA \(soaTime)s vs AoS \(aosTime)s")
             }
 
@@ -1273,7 +1275,7 @@ struct BatchKernels_SoATests {
             let expectedRatio = 500.0 / 100.0 // 5x
             let actualRatio = mediumTime / max(smallTime, 1e-6)
             if strictPerfGatesEnabled {
-                #expect(actualRatio < expectedRatio * 2 || mediumTime < 0.001,
+                expectPerformance("BatchKernels_SoATests.testSoAvsAoSPerformance.6", actualRatio < expectedRatio * 2 || mediumTime < 0.001,
                        "Performance should scale reasonably: small \(smallTime)s, medium \(mediumTime)s, ratio \(actualRatio)")
             }
         }
@@ -1303,7 +1305,7 @@ struct BatchKernels_SoATests {
 
             // Sequential should be at least as fast as random (cache benefits)
             if strictPerfGatesEnabled {
-                #expect(sequentialTime <= randomTime * 1.5 || sequentialTime < 0.1,
+                expectPerformance("BatchKernels_SoATests.testCacheLocalityImprovements.7", sequentialTime <= randomTime * 1.5 || sequentialTime < 0.1,
                        "Sequential access should benefit from cache locality: sequential \(sequentialTime)s vs random \(randomTime)s")
             }
 
@@ -1335,7 +1337,7 @@ struct BatchKernels_SoATests {
 
             // Lane-wise access should be more cache-friendly
             if strictPerfGatesEnabled {
-                #expect(laneAccessTime <= candidateAccessTime * 2.0 || laneAccessTime < 0.01,
+                expectPerformance("BatchKernels_SoATests.testCacheLocalityImprovements.8", laneAccessTime <= candidateAccessTime * 2.0 || laneAccessTime < 0.01,
                        "Lane-wise access should be cache-friendly: lane \(laneAccessTime)s vs candidate \(candidateAccessTime)s")
             }
 
@@ -1358,7 +1360,7 @@ struct BatchKernels_SoATests {
                 }
             }
 
-            #expect(accessPatternTest < 1.0, "Optimal access pattern should be fast")
+            expectPerformance("BatchKernels_SoATests.testCacheLocalityImprovements.9", accessPatternTest < 1.0, "Optimal access pattern should be fast")
         }
 
         @Test
@@ -1433,7 +1435,7 @@ struct BatchKernels_SoATests {
 
             // SIMD should be reasonably efficient (allowing for debug mode)
             if strictPerfGatesEnabled {
-                #expect(simdTime <= scalarTime * 2.0 || simdTime < 0.1,
+                expectPerformance("BatchKernels_SoATests.testSIMDUtilization.10", simdTime <= scalarTime * 2.0 || simdTime < 0.1,
                        "SIMD operations should be efficient: SIMD \(simdTime)s vs scalar \(scalarTime)s")
             }
 
@@ -1496,7 +1498,7 @@ struct BatchKernels_SoATests {
 
             for timing in timings where strictPerfGatesEnabled {
                 let deviation = abs(timing.timePerItem - meanTimePerItem) / meanTimePerItem
-                #expect(deviation < 2.0 || timing.time < 0.01,
+                expectPerformance("BatchKernels_SoATests.testScalingWithBatchSize.11", deviation < 2.0 || timing.time < 0.01,
                        "Scaling should be roughly linear. Size \(timing.size): \(timing.timePerItem) vs mean \(meanTimePerItem)")
             }
 
@@ -1508,27 +1510,20 @@ struct BatchKernels_SoATests {
 
                 // Large batches should have better or similar efficiency
                 if strictPerfGatesEnabled {
-                    #expect(largeBatchEfficiency <= smallBatchEfficiency * 3.0 || largeBatchEfficiency < 1e-6,
+                    expectPerformance("BatchKernels_SoATests.testScalingWithBatchSize.12", largeBatchEfficiency <= smallBatchEfficiency * 3.0 || largeBatchEfficiency < 1e-6,
                            "Large batches should be efficient: small \(smallBatchEfficiency) vs large \(largeBatchEfficiency)")
                 }
             }
 
             // Test 3: Check for performance cliffs
             // Look for sudden changes in performance
-            var hasPerformanceCliff = false
-            for i in 1..<timings.count {
-                let prevEfficiency = timings[i-1].timePerItem
-                let currEfficiency = timings[i].timePerItem
-                let change = abs(currEfficiency - prevEfficiency) / prevEfficiency
-
-                if change > 5.0 && currEfficiency > 1e-6 {
-                    hasPerformanceCliff = true
-                    break
-                }
-            }
-
             if strictPerfGatesEnabled {
-                #expect(!hasPerformanceCliff, "Should not have dramatic performance cliffs")
+                expectPerformance("BatchKernels_SoATests.testScalingWithBatchSize.13", (1..<timings.count).allSatisfy { index in
+                    let prevEfficiency = timings[index - 1].timePerItem
+                    let currEfficiency = timings[index].timePerItem
+                    let change = abs(currEfficiency - prevEfficiency) / prevEfficiency
+                    return !(change > 5.0 && currEfficiency > 1e-6)
+                }, "Should not have dramatic performance cliffs")
             }
 
             // Test 4: Verify SoA threshold recommendations
@@ -1574,8 +1569,8 @@ struct BatchKernels_SoATests {
             let ratio1536to512 = time1536 / max(time512, 1e-9)
 
             if strictPerfGatesEnabled {
-                #expect(ratio768to512 < 3.0 || time768 < 0.01, "768D should scale reasonably vs 512D: \(ratio768to512)x")
-                #expect(ratio1536to512 < 6.0 || time1536 < 0.01, "1536D should scale reasonably vs 512D: \(ratio1536to512)x")
+                expectPerformance("BatchKernels_SoATests.testScalingWithBatchSize.14", ratio768to512 < 3.0 || time768 < 0.01, "768D should scale reasonably vs 512D: \(ratio768to512)x")
+                expectPerformance("BatchKernels_SoATests.testScalingWithBatchSize.15", ratio1536to512 < 6.0 || time1536 < 0.01, "1536D should scale reasonably vs 512D: \(ratio1536to512)x")
             }
         }
     }
@@ -1613,7 +1608,7 @@ struct BatchKernels_SoATests {
 
             print("  [perf] empty-batch ×100: \(emptyTime)s (gate < 0.001)")
             if strictPerfGatesEnabled {
-                #expect(emptyTime < 0.001, "Empty batch processing should be very fast: \(emptyTime)s")
+                expectPerformance("BatchKernels_SoATests.testEmptyBatch.16", emptyTime < 0.001, "Empty batch processing should be very fast: \(emptyTime)s")
             }
         }
 
@@ -2866,7 +2861,7 @@ struct BatchKernels_SoATests {
             // Generally expect processing time to scale with dimension
             // (may not hold in debug mode)
             if strictPerfGatesEnabled {
-                #expect(time512 <= time1536 * 2 || time512 < 0.01,
+                expectPerformance("BatchKernels_SoATests.testIntegrationWithVectorTypes.17", time512 <= time1536 * 2 || time512 < 0.01,
                        "512D should generally be faster than 1536D")
             }
         }
@@ -3108,7 +3103,7 @@ struct BatchKernels_SoATests {
             #expect(rankedDocs.count == topK, "Should find top K documents")
             print("  [perf] document search: \(searchTime)s (gate < 1.0)")
             if strictPerfGatesEnabled {
-                #expect(searchTime < 1.0, "Search should complete in reasonable time")
+                expectPerformance("BatchKernels_SoATests.testRealWorldWorkloads.18", searchTime < 1.0, "Search should complete in reasonable time")
             }
 
             // Test 2: Recommendation system pattern
@@ -3353,12 +3348,14 @@ struct BatchKernels_SoATests {
         var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
 
         // Access mach_task_self_ directly - @preconcurrency import allows this
-        let result = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: 1) { infoPtr in
+        // Values are read inside the closure (lost-store workaround W2; swiftlang/swift#92562).
+        let (result, resident) = withUnsafeMutablePointer(to: &info) { pointer in
+            let status = pointer.withMemoryRebound(to: integer_t.self, capacity: 1) { infoPtr in
                 task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), infoPtr, &count)
             }
+            return (status, pointer.pointee.resident_size)
         }
 
-        return result == KERN_SUCCESS ? Int(info.resident_size) : 0
+        return result == KERN_SUCCESS ? Int(resident) : 0
     }
 }

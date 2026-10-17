@@ -1,0 +1,171 @@
+{
+  "task": "N01",
+  "base": "028b4aacc80249b745a89454008c7d2b9e5da154",
+  "files": [
+    {
+      "path": "Scripts/N01-reference-generator.py",
+      "sha256": "c8553d3ae4325d16d425dbd77e06e548a19d84efd287045c46e4fdc5e49b08ee",
+      "baseSHA256": null,
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Integration/IndexableVector.swift",
+      "sha256": "c569c3333a01d1fa1395e58a87a6262309a55492d5326233ec31ec188a7f68e2",
+      "baseSHA256": "e70f78b6a11aefadcf65ba6e3c054001cd601d55131b59dc9583ec2d20e51c30",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Operations/Kernels/NormCache.swift",
+      "sha256": "1d8502ae88833e6c1585e141ff2dd94f4c25a3f0963eb64c9e07052ff378bf7a",
+      "baseSHA256": "59b0309734472de604dfcc0c62aee6eeb3090569445a37d089d5ca71dd4a1b08",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Operations/Kernels/NormalizationCore.swift",
+      "sha256": "96090efcae43162da52eb56f20f572f94c91d7c0f3fcc3b7585e87012f821590",
+      "baseSHA256": null,
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift",
+      "sha256": "8166172710571411748dc8f83a23706a7bf56c14e2a140bf2b703ee045409d2e",
+      "baseSHA256": "1f05962053a3e8553b34e59a857cf6541b8563ae56281a3fc008464be0c09966",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Operations/MatrixDistance.swift",
+      "sha256": "41b44d7735dc4a9a3341a057b6be3a08b2fab629e1f73cd5e7fa696fb6f4ef71",
+      "baseSHA256": "f88a3fc81f01135bc36374c33354274dd37032393ec0dcba994c14c92480bbe2",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Operations/NaNInfinityHandling.swift",
+      "sha256": "1147a9c285398816a6088a72ef149e4df409100184ae4fbd0a4f3a389f3bc29c",
+      "baseSHA256": "1f93703c6c2c9c8eb43ff055fd5e883282a2d3845ce962d848011a572d968f5a",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Operations/TransformOperations.swift",
+      "sha256": "c0ba1d716ca5111a25de6e340b6fb4a45939be8044649ec835e89dc3eee4f938",
+      "baseSHA256": "83cb600075c4ced9cca28608c74c3cd83d7cbd6017100a2c96c45a2a12b86b5a",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Operations/VectorNormalization.swift",
+      "sha256": "3d4d23c82062ef94e5ddea2200a9c81d4dc01d15a214fd2f6a33a1643fc16b74",
+      "baseSHA256": "0ad6ccdf16dda7f150b9d2fa920d18cb86a88dc10e6dfbc26922663ca0ae0bab",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Platform/AccelerateSIMDProvider.swift",
+      "sha256": "0b01a3a179207338c55ffd782539071ea2d0fedeb9cb0cb727900ff999db0128",
+      "baseSHA256": "1c2e3f837c8aaf24244039ad8f56b354eb307ca88bf7d84326ae42fda62c5122",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Platform/ArraySIMDProvider.swift",
+      "sha256": "bab1ec5f187ace38d13fe8c675b569d3428a3d11e3594097ad98d53e21aace70",
+      "baseSHA256": "0aa2b35ce9c9704f02c13f881153d465f5b339b0264fdef2dde30ca6b7f0909b",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Platform/SIMDProvider.swift",
+      "sha256": "84248991e5e51e546748be5eb2d106849322ab326d05d07b16939cf12fc9de1c",
+      "baseSHA256": "01c61a337101f81a786ef32dc6d228d1a578e8e8b68b76bc61f7d907e79d739c",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Platform/SwiftFloatSIMDProvider.swift",
+      "sha256": "1ec36989b56e9a1b49a3d72a9fbf045d22ace574cc828a00e55a2e4e89c88d78",
+      "baseSHA256": "a46bc6efc58c506223ec1d47211b7089a279994f860eadbf3595cf40b73bc298",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Protocols/VectorFactory.swift",
+      "sha256": "17613252eeee311c70d1a97b63ff9583608c5b13a62bc61f09a2bcefb104336c",
+      "baseSHA256": "f3ab6d80b2751498bb198922f71cb0b1af05790ff6cbbb64945ccc03e4e8c980",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Protocols/VectorProtocol.swift",
+      "sha256": "2ad1ad2175ed9c53e5993d7c7f5bf624a6d9f7e5cc945d39aefc248151752dfe",
+      "baseSHA256": "16f9591e31e086bf40c97e88afab6ae31476c178e1a7e3cce09e921fe8115acf",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Vectors/Vector1536Optimized.swift",
+      "sha256": "37f8ea53340794d320e9519c2b9768bf9be957625475f839aa279d74f3e68909",
+      "baseSHA256": "34d5a9466fedd52540a4d79dc28d7bb60e46fb012a1acee0599a6bcf69c1e282",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Vectors/Vector384Optimized.swift",
+      "sha256": "be7677467ae3ff650390cdb30e382c3c2e4fbe42f83ab4f1a9058d2df72f0f4f",
+      "baseSHA256": "a17329832d222784a665358d8f724c02a1a080bf55fc8439865dae2fde8b1ade",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Vectors/Vector512Optimized.swift",
+      "sha256": "96f8b02f662ec96c7933b394e068930c6e2b78959340c173129a9972403cc9d8",
+      "baseSHA256": "0294506696487b7357fba3847180c4fa1af5d773d9e62466dbb962db2fbc8467",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Vectors/Vector768Optimized.swift",
+      "sha256": "6dd4adec6d358da5b90a99d8dd0cedc4cac7cba89bdf7e306752930635a42b02",
+      "baseSHA256": "c55bf88e745278de8da76f80e285c6b38a5b06a2debb152630e547cd691d7e9c",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Tests/ComprehensiveTests/DivisionRangeContractTests.swift",
+      "sha256": "c8abf9b3743b9c7072d4b004d03f873af0ff85ec577efb4cfd158575650d19f9",
+      "baseSHA256": null,
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift",
+      "sha256": "de1ca764aefe6c14d64db4578e1806c44b8d8da8a5e0a0b17f0354c6c2031d10",
+      "baseSHA256": null,
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift",
+      "sha256": "c9f64f73ed1d479444f56d906d37dbdabba36775e34cc54073921fd742f58c1c",
+      "baseSHA256": null,
+      "sharedBaseUnchanged": true
+    }
+  ],
+  "completeDiffSHA256": "213a43e5b1c58b630322dba48573f83d9b627d41032da578f5da0abc53025633",
+  "baseCodeFiles": 271,
+  "archiveCodeFiles": 276,
+  "onlyManifestedChanges": [
+    "Scripts/N01-reference-generator.py",
+    "Sources/VectorCore/Integration/IndexableVector.swift",
+    "Sources/VectorCore/Operations/Kernels/NormCache.swift",
+    "Sources/VectorCore/Operations/Kernels/NormalizationCore.swift",
+    "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift",
+    "Sources/VectorCore/Operations/MatrixDistance.swift",
+    "Sources/VectorCore/Operations/NaNInfinityHandling.swift",
+    "Sources/VectorCore/Operations/TransformOperations.swift",
+    "Sources/VectorCore/Operations/VectorNormalization.swift",
+    "Sources/VectorCore/Platform/AccelerateSIMDProvider.swift",
+    "Sources/VectorCore/Platform/ArraySIMDProvider.swift",
+    "Sources/VectorCore/Platform/SIMDProvider.swift",
+    "Sources/VectorCore/Platform/SwiftFloatSIMDProvider.swift",
+    "Sources/VectorCore/Protocols/VectorFactory.swift",
+    "Sources/VectorCore/Protocols/VectorProtocol.swift",
+    "Sources/VectorCore/Vectors/Vector1536Optimized.swift",
+    "Sources/VectorCore/Vectors/Vector384Optimized.swift",
+    "Sources/VectorCore/Vectors/Vector512Optimized.swift",
+    "Sources/VectorCore/Vectors/Vector768Optimized.swift",
+    "Tests/ComprehensiveTests/DivisionRangeContractTests.swift",
+    "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift",
+    "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift"
+  ],
+  "evidenceArtifactCount": 169,
+  "finalLogHashesVerified": true,
+  "independentReview": "ACCEPT bounded frozen Core implementation",
+  "imported": true,
+  "independentReviewSHA256": "9b73997d177a777231668d618929fe9aa978df1e50fe061bbcf68230cad4fcd2",
+  "retainedGuardCaptures": 144
+}

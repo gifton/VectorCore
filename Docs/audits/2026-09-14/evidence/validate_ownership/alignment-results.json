@@ -1,0 +1,80 @@
+[
+  {
+    "exe": "Ownership",
+    "dimension": 3,
+    "exit": 0,
+    "output": "misaligned normalized 3 0.57735026\n",
+    "error": []
+  },
+  {
+    "exe": "Ownership",
+    "dimension": 4,
+    "exit": 0,
+    "output": "misaligned normalized 4 0.5\n",
+    "error": []
+  },
+  {
+    "exe": "Ownership",
+    "dimension": 5,
+    "exit": 0,
+    "output": "misaligned normalized 5 0.4472136\n",
+    "error": []
+  },
+  {
+    "exe": "Ownership",
+    "dimension": 16,
+    "exit": 0,
+    "output": "misaligned normalized 16 0.25\n",
+    "error": []
+  },
+  {
+    "exe": "Ownership",
+    "dimension": 17,
+    "exit": 0,
+    "output": "misaligned normalized 17 0.24253564\n",
+    "error": []
+  },
+  {
+    "exe": "AlignmentDebug",
+    "dimension": 3,
+    "exit": 0,
+    "output": "misaligned normalized 3 0.57735026\n",
+    "error": []
+  },
+  {
+    "exe": "AlignmentDebug",
+    "dimension": 4,
+    "exit": -5,
+    "output": "",
+    "error": [
+      "Swift/UnsafeRawPointer.swift:1288: Fatal error: load from misaligned raw pointer"
+    ]
+  },
+  {
+    "exe": "AlignmentDebug",
+    "dimension": 5,
+    "exit": -5,
+    "output": "",
+    "error": [
+      "Swift/UnsafeRawPointer.swift:1288: Fatal error: load from misaligned raw pointer"
+    ]
+  },
+  {
+    "exe": "AlignmentDebug",
+    "dimension": 16,
+    "exit": -5,
+    "output": "",
+    "error": [
+      "Swift/UnsafeRawPointer.swift:1288: Fatal error: load from misaligned raw pointer"
+    ]
+  },
+  {
+    "exe": "AlignmentDebug",
+    "dimension": 17,
+    "exit": -5,
+    "output": "",
+    "error": [
+      "Swift/UnsafeRawPointer.swift:1288: Fatal error: load from misaligned raw pointer"
+    ]
+  }
+]

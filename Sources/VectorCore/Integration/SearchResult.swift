@@ -21,7 +21,8 @@ public struct SearchResult<ID: Hashable & Sendable>: Sendable, Equatable {
     /// Distance from query (lower is more similar for distance metrics)
     public let distance: Float
 
-    /// Optional relevance score (higher is better, typically 1/(1+distance) or similar)
+    /// Optional relevance supplied by the producer or caller. Explicit values
+    /// retain their bits and need not obey any built-in metric's range or domain.
     public let score: Float?
 
     /// Initialize with required fields
@@ -31,10 +32,14 @@ public struct SearchResult<ID: Hashable & Sendable>: Sendable, Equatable {
         self.score = score
     }
 
-    /// Compute relevance score from distance using inverse transform.
-    /// Returns a value in (0, 1] where 1 is perfect match (distance = 0).
-    public var computedScore: Float {
-        score ?? (1.0 / (1.0 + distance))
+    /// Return the stored score unchanged, or ask the supplied metric exactly once.
+    /// Pass the metric that produced `distance`; unknown interpretations return nil.
+    /// Migration from the former metric-free property: use `.score` for a
+    /// producer-populated value or `.computedScore(using: theMetric)` with context.
+    /// SearchResultScoreContractTests verifies witness calls and explicit score bits.
+    public func computedScore(using metric: any DistanceMetric<Float>) -> Float? {
+        if let score { return score }
+        return metric.relevanceScore(for: distance)
     }
 }
 

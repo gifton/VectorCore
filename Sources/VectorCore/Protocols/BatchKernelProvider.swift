@@ -43,7 +43,9 @@ public protocol BatchKernelProvider: ComputeProvider {
 
 public extension BatchKernelProvider {
     /// Default: dispatch each query through `findNearest` using the provider's own
-    /// scheduler. Backward-compatible — conformers that don't override get this.
+    /// scheduler. Default ComputeProvider scheduling bounds workers by maxConcurrency
+    /// and preserves query order; overriding providers own those scheduling laws.
+    /// ExecutionSchedulingContractTests covers inherited default query scheduling.
     func findNearestBatch<V: VectorProtocol>(
         queries: [V], candidates: [V], k: Int, metric: any DistanceMetric
     ) async throws -> [[(index: Int, distance: Float)]] where V.Scalar == Float {

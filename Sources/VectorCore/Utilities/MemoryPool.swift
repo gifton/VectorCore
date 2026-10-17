@@ -1,376 +1,224 @@
-//
-//  MemoryPool.swift
-//  VectorCore
-//
-//  Memory pool for reusing temporary buffers to reduce allocation overhead
-//
-
 import Foundation
 
-/// Reuses memory buffers for temporary calculations in vector operations.
-/// State changes run synchronously under a lock; callers never wait for queued
-/// pool bookkeeping. `Scripts/ci/check_memory_pool.py` exercises concurrent
-/// acquire/return/quiesce calls with an external process timeout.
+/// Reuses uninitialized storage. Pool bookkeeping is synchronized by stateLock;
+/// handles and their pointees are not Sendable. The standalone regression driver
+/// exercises concurrent acquire/return/quiesce with an external deadline.
 public final class MemoryPool: @unchecked Sendable {
-    // MARK: - Singleton
-
-    /// Shared memory pool instance for application-wide buffer reuse
     public static let shared = MemoryPool()
 
-    // MARK: - Configuration
-
-    /// Configuration parameters for memory pool behavior
     public struct Configuration {
-        /// Maximum number of buffers to keep per size category
         public var maxBuffersPerSize: Int = 10
-        /// Maximum total memory to use for pooled buffers (in bytes)
-        public var maxTotalMemory: Int = 100_000_000  // 100MB
-        /// Interval for automatic cleanup of unused buffers
-        public var cleanupInterval: TimeInterval = 30.0
-
+        /// Strict cap on cached physical payload bytes, excluding live handles.
+        public var maxTotalMemory: Int = 100_000_000
+        /// Nonpositive, nonfinite or beyond the dispatch horizon disables the timer.
+        /// Explicit cleanup still uses this interval as its age cutoff.
+        public var cleanupInterval: TimeInterval = 30
         public init() {}
     }
 
-    // MARK: - Buffer Handle
-
-    /// Handle to a borrowed buffer that automatically returns to pool on deallocation
+    /// Owns its allocation even after the pool is destroyed. Initialize and
+    /// deinitialize exactly the used elements before releasing the handle.
     public final class BufferHandle<T> {
-        fileprivate let buffer: UnsafeMutableBufferPointer<T>
+        fileprivate let allocation: PoolAllocation
         fileprivate weak var pool: MemoryPool?
-        fileprivate let sizeKey: Int
-        fileprivate let alignment: Int
+        public let count: Int
+        public var pointer: UnsafeMutablePointer<T> { allocation.pointer.assumingMemoryBound(to: T.self) }
+        fileprivate var buffer: UnsafeMutableBufferPointer<T> { UnsafeMutableBufferPointer(start: pointer, count: count) }
 
-        /// Pointer to the buffer's base address
-        public var pointer: UnsafeMutablePointer<T> {
-            buffer.baseAddress!
-        }
-
-        /// Number of elements in the buffer
-        public var count: Int {
-            buffer.count
-        }
-
-        fileprivate init(
-            buffer: UnsafeMutableBufferPointer<T>,
-            pool: MemoryPool,
-            sizeKey: Int,
-            alignment: Int
-        ) {
-            self.buffer = buffer
+        fileprivate init(allocation: PoolAllocation, count: Int, pool: MemoryPool) {
+            self.allocation = allocation
+            self.count = count
             self.pool = pool
-            self.sizeKey = sizeKey
-            self.alignment = alignment
         }
-
-        deinit {
-            // Return buffer to pool
-            if let pool {
-                pool.returnBuffer(buffer, sizeKey: sizeKey, alignment: alignment)
-            } else if let pointer = buffer.baseAddress {
-                AlignedMemory.deallocate(pointer)
-            }
-        }
+        deinit { pool?.returnBuffer(allocation, type: T.self) }
     }
 
-    // MARK: - Pool Statistics
-
-    /// Statistics about pool usage for monitoring and optimization
     internal struct PoolStatistics {
-        public let totalAllocated: Int
-        public let totalInUse: Int
-        public let hitRate: Double
-        public let bufferCountByType: [String: Int]
+        let totalAllocated: Int
+        let totalInUse: Int
+        let cachedBytes: Int
+        let hitRate: Double
+        let bufferCountByType: [String: Int]
     }
 
-    // MARK: - Private State
-
-    /// Configuration
-    private var configuration: Configuration
-
-    /// Protects pools and statistics; no asynchronous work runs inside this lock.
+    private let configuration: Configuration
+    private let allocationBoundary: any PoolAllocationBoundary
     private let stateLock = NSLock()
-
-    /// Pool storage: [TypeID: [SizeKey: [BufferEntry]]]
     private var pools: [ObjectIdentifier: [Int: [BufferEntry]]] = [:]
-
-    /// Statistics tracking
     private var stats = Statistics()
-
-    /// Cleanup timer
+    private var cachedByteCount = 0
     private var cleanupTimer: (any DispatchSourceTimer)?
 
-    // MARK: - Internal Types
-
     private struct BufferEntry {
-        let pointer: UnsafeMutableRawPointer
+        let allocation: PoolAllocation
+        let lastAccessed: Date
+    }
+    private struct Statistics {
+        var totalAllocated = 0
+        var totalInUse = 0
+        var hits = 0
+        var misses = 0
+    }
+    private struct Request {
         let capacity: Int
         let byteCount: Int
         let alignment: Int
-        var lastAccessed: Date
     }
 
-    private struct Statistics {
-        var totalAllocated: Int = 0
-        var totalInUse: Int = 0
-        var hits: Int = 0
-        var misses: Int = 0
-    }
-
-    // MARK: - Initialization
-
-    /// Initialize with optional configuration
-    internal init(configuration: Configuration = Configuration()) {
+    internal init(configuration: Configuration = Configuration(),
+                  allocationBoundary: any PoolAllocationBoundary = SystemPoolAllocationBoundary()) {
+        guard configuration.maxBuffersPerSize >= 0, configuration.maxTotalMemory >= 0 else {
+            fatalError("MemoryPool requires nonnegative cache limits")
+        }
         self.configuration = configuration
+        self.allocationBoundary = allocationBoundary
         setupCleanupTimer()
     }
 
-    // MARK: - Public API
-
-    /// Acquire a buffer from the pool
-    public func acquire<T>(
-        type: T.Type,
-        count: Int,
-        alignment: Int = 16
-    ) -> BufferHandle<T>? {
-        let typeID = ObjectIdentifier(T.self)
-        let sizeKey = roundUpToPowerOfTwo(count)
-
-        // Try to get from pool
-        var buffer: UnsafeMutableBufferPointer<T>?
-
-        stateLock.withLock {
-            if let typePool = pools[typeID],
-               let sizePool = typePool[sizeKey],
-               let index = sizePool.firstIndex(where: { $0.alignment >= alignment }) {
-
-                // Found suitable buffer
-                var entry = sizePool[index]
-                entry.lastAccessed = Date()
-
-                let typedPointer = entry.pointer.bindMemory(to: T.self, capacity: entry.capacity)
-                buffer = UnsafeMutableBufferPointer(start: typedPointer, count: count)
-
-                // Remove from pool
-                pools[typeID]![sizeKey]!.remove(at: index)
-                stats.hits += 1
-                stats.totalInUse += 1
-            } else {
-                stats.misses += 1
-            }
-        }
-
-        // Allocate new if not found
-        if buffer == nil {
-            let capacity = sizeKey
-            // Try aligned allocation; if it fails, return nil (caller will handle)
-            if let pointer = try? AlignedMemory.allocateAligned(type: T.self, count: capacity, alignment: alignment) {
-                buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
-                stateLock.withLock {
-                    self.stats.totalAllocated += capacity * MemoryLayout<T>.stride
-                    self.stats.totalInUse += 1
-                }
-            } else {
-                return nil
-            }
-        }
-
-        return BufferHandle(
-            buffer: buffer!,
-            pool: self,
-            sizeKey: sizeKey,
-            alignment: alignment
-        )
+    private func request<T>(type: T.Type, count: Int, alignment: Int) -> Request? {
+        guard PoolRequest.validAlignment(alignment, natural: MemoryLayout<T>.alignment),
+              let capacity = PoolRequest.capacity(count, powerOfTwo: true),
+              let bytes = PoolRequest.byteCount(capacity: capacity, stride: MemoryLayout<T>.stride) else { return nil }
+        return Request(capacity: capacity, byteCount: bytes, alignment: alignment)
     }
 
-    /// Use a buffer temporarily with automatic return to pool
-    internal func withBuffer<T, R>(
-        type: T.Type,
-        count: Int,
-        alignment: Int = 16,
+    /// Invalid, unrepresentable or failed requests return nil without a live handle.
+    /// Zero count has zero logical elements and a minimum one-element allocation.
+    public func acquire<T>(type: T.Type, count: Int, alignment: Int = 16) -> BufferHandle<T>? {
+        guard let request = request(type: type, count: count, alignment: alignment) else { return nil }
+        return acquire(type: type, count: count, request: request)
+    }
+
+    private func acquire<T>(type: T.Type, count: Int, request: Request) -> BufferHandle<T>? {
+        let typeID = ObjectIdentifier(type)
+        let prepared: (cached: PoolAllocation?, mayAllocate: Bool) = stateLock.withLock {
+            guard stats.totalInUse < Int.max else { return (nil, false) }
+            if let index = pools[typeID]?[request.capacity]?.firstIndex(where: { $0.allocation.alignment >= request.alignment }),
+               let entry = pools[typeID]?[request.capacity]?.remove(at: index) {
+                cachedByteCount -= entry.allocation.byteCount
+                stats.totalInUse += 1
+                PoolRequest.increment(&stats.hits)
+                return (entry.allocation, false)
+            }
+            guard !stats.totalAllocated.addingReportingOverflow(request.byteCount).overflow else { return (nil, false) }
+            PoolRequest.increment(&stats.misses)
+            return (nil, true)
+        }
+        if let cached = prepared.cached { return BufferHandle(allocation: cached, count: count, pool: self) }
+        guard prepared.mayAllocate else { return nil }
+        // Allocation runs outside the lock. Recheck the accounting commit because
+        // another acquisition may have advanced it while the allocator ran.
+        guard let allocation = PoolAllocation(capacity: request.capacity, byteCount: request.byteCount,
+            alignment: request.alignment, boundary: allocationBoundary) else { return nil }
+        let committed = stateLock.withLock {
+            let (total, overflow) = stats.totalAllocated.addingReportingOverflow(request.byteCount)
+            guard !overflow, stats.totalInUse < Int.max else { return false }
+            stats.totalAllocated = total
+            stats.totalInUse += 1
+            return true
+        }
+        guard committed else { return nil }
+        _ = allocation.pointer.bindMemory(to: T.self, capacity: request.capacity)
+        return BufferHandle(allocation: allocation, count: count, pool: self)
+    }
+
+    /// The caller must deinitialize initialized elements on every exit. Allocation
+    /// failure tries aligned direct storage, then a best-effort Swift raw allocation
+    /// with the same alignment; real exhaustion may terminate in the final stage.
+    internal func withBuffer<T, R>(type: T.Type, count: Int, alignment: Int = 16,
         _ body: (UnsafeMutableBufferPointer<T>) throws -> R
     ) rethrows -> R {
-        guard let handle = acquire(type: type, count: count, alignment: alignment) else {
-            // Fallback to direct aligned allocation; if that fails, rethrow allocation error up as VectorError via body
-            if let pointer = try? AlignedMemory.allocateAligned(type: T.self, count: count, alignment: alignment) {
-                // posix_memalign → must free with `free()`, not `.deallocate()`
-                defer { AlignedMemory.deallocate(pointer) }
-                let buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
-                return try body(buffer)
-            } else {
-                // As last resort, allocate with natural alignment to avoid immediate crash
-                let raw = UnsafeMutableRawPointer.allocate(byteCount: count * MemoryLayout<T>.stride,
-                                                           alignment: MemoryLayout<T>.alignment)
-                let pointer = raw.assumingMemoryBound(to: T.self)
-                defer { raw.deallocate() }
-                let buffer = UnsafeMutableBufferPointer(start: pointer, count: count)
-                return try body(buffer)
-            }
+        guard let request = request(type: type, count: count, alignment: alignment) else {
+            fatalError("MemoryPool.withBuffer requires a nonnegative representable count and valid alignment")
         }
-
-        return try body(handle.buffer)
+        if let handle = acquire(type: type, count: count, request: request) {
+            return try withExtendedLifetime(handle) { try body(handle.buffer) }
+        }
+        let allocation = PoolAllocation(capacity: request.capacity, byteCount: request.byteCount,
+            alignment: alignment, stage: .direct, boundary: allocationBoundary)
+            ?? PoolAllocation(capacity: request.capacity, byteCount: request.byteCount,
+                alignment: alignment, family: .swiftRaw, stage: .finalFallback, boundary: allocationBoundary)
+        guard let allocation else { fatalError("MemoryPool.withBuffer final allocation failed") }
+        let pointer = allocation.pointer.bindMemory(to: T.self, capacity: request.capacity)
+        return try withExtendedLifetime(allocation) {
+            try body(UnsafeMutableBufferPointer(start: pointer, count: count))
+        }
     }
 
-    /// Get current statistics
     internal var statistics: PoolStatistics {
         stateLock.withLock {
-            let hitRate = stats.hits + stats.misses > 0
-                ? Double(stats.hits) / Double(stats.hits + stats.misses)
-                : 0.0
-
-            var bufferCounts: [String: Int] = [:]
-            for (typeID, typePool) in pools {
-                let typeName = String(describing: typeID)
-                bufferCounts[typeName] = typePool.values.reduce(0) { $0 + $1.count }
+            let requests = Double(stats.hits) + Double(stats.misses)
+            var counts: [String: Int] = [:]
+            for (type, buckets) in pools {
+                counts[String(describing: type)] = buckets.values.reduce(0) { $0 + $1.count }
             }
-
-            return PoolStatistics(
-                totalAllocated: stats.totalAllocated,
-                totalInUse: stats.totalInUse,
-                hitRate: hitRate,
-                bufferCountByType: bufferCounts
-            )
+            return PoolStatistics(totalAllocated: stats.totalAllocated, totalInUse: stats.totalInUse,
+                cachedBytes: cachedByteCount, hitRate: requests > 0 ? Double(stats.hits) / requests : 0,
+                bufferCountByType: counts)
         }
     }
 
-    /// Wait for the current state mutation to finish.
-    /// Returns, statistics updates, and explicit cleanup now finish synchronously;
-    /// this method remains available for callers that previously drained the queue.
-    public func quiesce() {
-        stateLock.withLock { }
+    /// Independent bucket scan for invariant tests; the return path never scans.
+    internal var independentlyCountedCachedBytes: Int {
+        stateLock.withLock {
+            pools.values.reduce(0) { total, buckets in
+                total + buckets.values.reduce(0) { subtotal, entries in
+                    subtotal + entries.reduce(0) { $0 + $1.allocation.byteCount }
+                }
+            }
+        }
     }
+    internal var automaticCleanupEnabled: Bool { cleanupTimer != nil }
 
-    /// Manually trigger cleanup
+    public func quiesce() { stateLock.withLock {} }
+
     public func cleanup() {
-        let cutoffDate = Date().addingTimeInterval(-configuration.cleanupInterval)
-
+        let cutoff = Date().addingTimeInterval(-configuration.cleanupInterval)
         stateLock.withLock {
-            var totalFreed = 0
-
-            for (typeID, var typePool) in self.pools {
-                for (sizeKey, var sizePool) in typePool {
-                    // Remove old entries
-                    sizePool.removeAll { entry in
-                        if entry.lastAccessed < cutoffDate {
-                            // Pooled entries originate from posix_memalign-backed allocations
-                            AlignedMemory.deallocate(entry.pointer)
-                            totalFreed += entry.byteCount
-                            return true
-                        }
-                        return false
+            for (type, var buckets) in pools {
+                for (size, var entries) in buckets {
+                    entries.removeAll { entry in
+                        guard entry.lastAccessed < cutoff else { return false }
+                        cachedByteCount -= entry.allocation.byteCount
+                        stats.totalAllocated -= entry.allocation.byteCount
+                        return true
                     }
-
-                    // Remove empty size pools
-                    if sizePool.isEmpty {
-                        typePool.removeValue(forKey: sizeKey)
-                    } else {
-                        typePool[sizeKey] = sizePool
-                    }
+                    if entries.isEmpty { buckets.removeValue(forKey: size) }
+                    else { buckets[size] = entries }
                 }
-
-                // Remove empty type pools
-                if typePool.isEmpty {
-                    self.pools.removeValue(forKey: typeID)
-                } else {
-                    self.pools[typeID] = typePool
-                }
+                if buckets.isEmpty { pools.removeValue(forKey: type) }
+                else { pools[type] = buckets }
             }
-
-            self.stats.totalAllocated -= totalFreed
         }
     }
 
-    // MARK: - Private Methods
-
-    /// Return buffer to pool
-    fileprivate func returnBuffer<T>(
-        _ buffer: UnsafeMutableBufferPointer<T>,
-        sizeKey: Int,
-        alignment: Int
-    ) {
-        guard let pointer = buffer.baseAddress else { return }
-
-        let typeID = ObjectIdentifier(T.self)
-        let rawPointer = UnsafeMutableRawPointer(pointer)
-        let byteCount = sizeKey * MemoryLayout<T>.stride
-
+    private func returnBuffer<T>(_ allocation: PoolAllocation, type: T.Type) {
         stateLock.withLock {
-            // Initialize type pool if needed
-            if self.pools[typeID] == nil {
-                self.pools[typeID] = [:]
-            }
-
-            // Initialize size pool if needed
-            if self.pools[typeID]![sizeKey] == nil {
-                self.pools[typeID]![sizeKey] = []
-            }
-
-            // Check pool limits
-            let currentCount = self.pools[typeID]![sizeKey]!.count
-            let totalMemory = self.pools.values.flatMap { $0.values }.flatMap { $0 }.reduce(0) { $0 + $1.byteCount }
-
-            if currentCount < self.configuration.maxBuffersPerSize &&
-                totalMemory <= self.configuration.maxTotalMemory &&
-                byteCount <= self.configuration.maxTotalMemory - totalMemory {
-                // Add to pool
-                let entry = BufferEntry(
-                    pointer: rawPointer,
-                    capacity: sizeKey,
-                    byteCount: byteCount,
-                    alignment: alignment,
-                    lastAccessed: Date()
-                )
-                self.pools[typeID]![sizeKey]!.append(entry)
-            } else {
-                // Pool full, deallocate (posix_memalign-backed pointer)
-                AlignedMemory.deallocate(rawPointer)
-                self.stats.totalAllocated -= byteCount
-            }
-
-            self.stats.totalInUse -= 1
+            let typeID = ObjectIdentifier(type)
+            if (pools[typeID]?[allocation.capacity]?.count ?? 0) < configuration.maxBuffersPerSize,
+               allocation.byteCount <= configuration.maxTotalMemory - cachedByteCount {
+                pools[typeID, default: [:]][allocation.capacity, default: []].append(
+                    BufferEntry(allocation: allocation, lastAccessed: Date()))
+                cachedByteCount += allocation.byteCount
+            } else { stats.totalAllocated -= allocation.byteCount }
+            stats.totalInUse -= 1
         }
     }
 
-    /// Round up to next power of two
-    private func roundUpToPowerOfTwo(_ n: Int) -> Int {
-        guard n > 0 else { return 1 }
-
-        var power = 1
-        while power < n && power <= Int.max / 2 {
-            power *= 2
-        }
-        return power
-    }
-
-    /// Setup cleanup timer
     private func setupCleanupTimer() {
-        // Only create timer if cleanup interval is finite
-        guard configuration.cleanupInterval.isFinite && configuration.cleanupInterval > 0 else {
-            return
-        }
-
+        let seconds = configuration.cleanupInterval
+        // Strict bound avoids Double(Int.max) rounding upward to an invalid Int.
+        guard seconds.isFinite, seconds > 0, seconds < Double(Int.max) / 1_000_000_000 else { return }
+        let nanoseconds = max(1, UInt64(seconds * 1_000_000_000))
+        let now = DispatchTime.now().uptimeNanoseconds
+        guard nanoseconds < UInt64(Int.max), now <= UInt64.max - nanoseconds else { return }
         let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
-        timer.schedule(
-            deadline: .now() + configuration.cleanupInterval,
-            repeating: configuration.cleanupInterval
-        )
-        timer.setEventHandler { [weak self] in
-            self?.cleanup()
-        }
+        timer.schedule(deadline: DispatchTime(uptimeNanoseconds: now + nanoseconds),
+            repeating: .nanoseconds(Int(nanoseconds)))
+        timer.setEventHandler { [weak self] in self?.cleanup() }
         timer.resume()
         cleanupTimer = timer
     }
 
-    deinit {
-        cleanupTimer?.cancel()
-
-        // Deallocate all buffers
-        for typePool in pools.values {
-            for sizePool in typePool.values {
-                for entry in sizePool {
-                    // Pooled entries are aligned allocations
-                    AlignedMemory.deallocate(entry.pointer)
-                }
-            }
-        }
-    }
+    deinit { cleanupTimer?.cancel() }
 }

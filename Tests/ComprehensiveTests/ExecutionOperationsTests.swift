@@ -86,10 +86,10 @@ struct OperationsTests {
     }
 
     @Test
-    func testCentroidBasic() {
+    func testCentroidBasic() throws {
         let v1 = Vector<Dim2>(x: 0, y: 0)
         let v2 = Vector<Dim2>(x: 2, y: 2)
-        let centroid: Vector<Dim2> = Operations.centroid(of: [v1, v2])
+        let centroid: Vector<Dim2> = try Operations.centroid(of: [v1, v2])
         #expect(approxEqual(centroid[0], 1))
         #expect(approxEqual(centroid[1], 1))
     }
@@ -102,10 +102,10 @@ struct OperationsTests {
     }
 
     @Test
-    func testStatistics_BasicMeanAndMagnitudes() {
+    func testStatistics_BasicMeanAndMagnitudes() throws {
         let a = Vector<Dim2>(x: 3, y: 4) // mag 5
         let b = Vector<Dim2>(x: 0, y: 0) // mag 0
-        let stats = Operations.statistics(for: [a, b])
+        let stats = try Operations.statistics(for: [a, b])
         #expect(stats.count == 2)
         #expect(stats.dimensions == 2)
         #expect(approxEqual(stats.magnitudes.mean, 2.5, tol: 1e-6))

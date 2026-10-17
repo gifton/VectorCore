@@ -1,0 +1,69 @@
+{
+  "task": "O04",
+  "base": "cd9bbe392901d1467318c00cba7e96dd973ea1a9",
+  "archive": "/private/tmp/vectorcore-stabilization-O04-implementation",
+  "files": {
+    "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift": {
+      "sha256": "1f05962053a3e8553b34e59a857cf6541b8563ae56281a3fc008464be0c09966",
+      "root_matches_task_base": true
+    },
+    "Sources/VectorCore/Vectors/Vector384Optimized.swift": {
+      "sha256": "a17329832d222784a665358d8f724c02a1a080bf55fc8439865dae2fde8b1ade",
+      "root_matches_task_base": true
+    },
+    "Sources/VectorCore/Vectors/Vector512Optimized.swift": {
+      "sha256": "0294506696487b7357fba3847180c4fa1af5d773d9e62466dbb962db2fbc8467",
+      "root_matches_task_base": true
+    },
+    "Sources/VectorCore/Vectors/Vector768Optimized.swift": {
+      "sha256": "c55bf88e745278de8da76f80e285c6b38a5b06a2debb152630e547cd691d7e9c",
+      "root_matches_task_base": true
+    },
+    "Sources/VectorCore/Vectors/Vector1536Optimized.swift": {
+      "sha256": "34d5a9466fedd52540a4d79dc28d7bb60e46fb012a1acee0599a6bcf69c1e282",
+      "root_matches_task_base": true
+    },
+    "Sources/VectorCore/Storage/AlignedMemory.swift": {
+      "sha256": "d92969378bce18f8bcaf83e1629b2f6388b06774aed1599e09bd509789493d5a",
+      "root_matches_task_base": true
+    },
+    "Sources/VectorCore/Storage/AlignedDynamicArrayStorage.swift": {
+      "sha256": "f2f4923d81bdaa50f1ae7ef733d1fddede2b503e690987d9d9a92e448d6b91ed",
+      "root_matches_task_base": true
+    },
+    "Sources/VectorCore/Utilities/MemoryUtilities.swift": {
+      "sha256": "805edd86f8454f4a241e443c31bf748a60d66729be86fe741126f8dcd6a467da",
+      "root_matches_task_base": true
+    },
+    "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift": {
+      "sha256": "dc02aef15d6c042bfc76946b191b61a403e3bb06b79ea1d18e01f92c55b0e022",
+      "root_matches_task_base": true
+    }
+  },
+  "inventory": {
+    "tracked_code_files_checked": 237,
+    "archive_code_files_checked": 238,
+    "only_manifest_paths_changed": true,
+    "full_diff_matches": true,
+    "changed": [
+      "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift",
+      "Sources/VectorCore/Storage/AlignedDynamicArrayStorage.swift",
+      "Sources/VectorCore/Storage/AlignedMemory.swift",
+      "Sources/VectorCore/Utilities/MemoryUtilities.swift",
+      "Sources/VectorCore/Vectors/Vector1536Optimized.swift",
+      "Sources/VectorCore/Vectors/Vector384Optimized.swift",
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift",
+      "Sources/VectorCore/Vectors/Vector768Optimized.swift",
+      "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift"
+    ]
+  },
+  "evidence": {
+    "hashes_verified": 18,
+    "final_review_hash_refreshed": true,
+    "debug": "55 tests/8 suites passed",
+    "release": "55 tests/8 suites passed",
+    "asan": "8 valid tests/1 suite passed, no sanitizer diagnostics",
+    "red": "copy lifetime1issue and independent Debug misaligned-load trap"
+  },
+  "imported_exact_reviewed_bytes": true
+}

@@ -1,0 +1,34 @@
+# B01 final independent review — frozen v1
+
+**ACCEPT within the approved B01 scope.** The accepted source and sealed runtime evidence support the empty-frame repair and specified serialization/API dispositions. No unresolved blocker found. This adjudication ran no builds, tests, consumers or generators and made no source/index changes.
+
+## Seal and source association
+
+Independently rehashed all **16,324** entries in canonical `B01-worker-evidence-index.json`: every retained file length/hash matches. Index SHA256 is `3cff8b83116266afdd4d48810025419fb1d8e29cbe3d26915a754f69c20c157f`. Final report SHA256 is `24b7088ff1751cb80d8c1a1a690c8ae836293190388a5bb41e1d69b6c1bbef6e`; shared report and source/runtime association are byte-identical to their canonical copies. The index excludes itself and independent/root reports.
+
+Source remains accepted v1, diff `fa091f10be7c25c3c9252fa32523d9f405331bbc7b238f4ed7e1a5abd1a51b82`, with the prior independent complete 5,943-file source hash check and source review unchanged. All four artifact manifests map without mismatch to the actual files independently rehashed here: RED4,363 / Debug4,363 / Release2,891 / ASan4,364. These are manifest file entries, not counts of tests or distinct compiler operations. No tested version was replaced by a later source revision.
+
+Independently compared the retained RED archive with the retained base archive: no changed or removed base file, exactly the three recorded B01 test/golden/generator additions. The RED source association is therefore consistent with unchanged production, rather than a reconstructed numerical failure from modified code.
+
+## Observed results and distinctions
+
+- Actual RED command completed exit1. Its log has exactly the three parameterized empty routes failing with invalidDimension0, while the independent nonempty golden/direct-slice function passes. The log reports two functions/three issues; it is not three different failed functions. The separately retained lexical finding identifies the15 old empty registrations. An approval-bound invocation with no process/log is not credited as execution.
+- Final Debug and Release command records each complete exit0 with the exact approved focused filter. Each log reports **51 Swift Testing functions in7 suites**, comprising **50 exercised functions and one parent childProbe no-op**, plus separately **one XCTest parameter-decoder method**. The filter includes B01, both serialization suites, accepted S03/S01, TopK Codable and normalization-hint decode controls. Every B01 parameterized empty case executes.
+- Each configuration retains126 S01 capture files. Independently inspected their names/content: **42 valid controls** have the accepted marker and child pass summary; **84 rejection controls** have child entry plus the intended storage diagnostic. Parent source asserts successful status for valid cases and uncaught signal/no accepted marker for rejections. Its passing boundary-matrix result supplies those status assertions; the logs alone do not independently sample exit status.
+- Primary ASan completes exit0 with **seven actual B01 functions**, including three empty invocations, slices and bounded malformed framing; no intentional S01 trap children or dispatcher no-op are included. No ASan finding appears in the retained run. Supplemental direct Debug/Release/ASan runs each execute the same seven B01 functions successfully; they add provenance, not new unique coverage.
+- Public Swift6 compile and executable run succeed. The run emits the concrete/generic/existential/decode/empty/cap completion marker. Four separate bare fixed/Dynamic/optimized/INT8 typechecks each exit1 with the intended missing BinaryDecodable/BinaryEncodable constraint diagnostics, rather than generic compile failure. The initial ModuleCache sandbox failure is separately retained and is not a negative-conformance success.
+- The maintained B01 lexical/mutation suite executes seven passing checks; the existing child-process scanner independently executes seven passing checks. Golden reproduction records exit0 and the expected CRC/three-frame completion marker. These are actual explicit commands, not inferred from Swift test discovery.
+
+## Host, bundle, child and public linkage qualifications
+
+Direct provenance records distinguish the copied `swiftpm-testing-helper` host (`da2601bc…`) from the loaded test bundles: Debug `1db4ea9c…`, Release `65775da3…`, ASan `866159db…`. Actual copied host and bundle bytes match, argv names the corresponding immutable bundle and B01 filter, and logs match each record. The direct ASan preload path/environment and retained runtime hash are recorded and rehashed. Driver source uses file capture,15-second wait and at most1+1-second cleanup, throwing before a timeout can become a status acceptance.
+
+The **252 S01 children do not have independently retained per-child argv/PID records**. Their association consists of the passing parent assertions, complete capture sets, original-to-canonical directory map, and unchanged source forwarding of the parent helper/bundle arguments with only filter/environment changes. The source installs the completion handler before launch, uses15+2-second bounds, and throws before status access on timeout. Supplemental direct provenance covers only the seven B01 functions; it is not presented as direct observation of each S01 child's process arguments. This explicit limitation does not invalidate the retained regression outcomes.
+
+The successful public input map has139 entries including131 linked Core/C objects; every referenced file matches its hash. Compiler arguments select Swift6 strict concurrency, actual immutable Release modules/objects, the frozen consumer and no @testable import. The consumer itself is compiled without unchecked optimization, so its assertions are not inferred from an optimized-out body. Positive compile/run and intended negative records include file logs and bounded deadlines. No universal process-tree cleanup guarantee is inferred.
+
+## Claim disposition
+
+SER-01/02/06 receive their concrete empty-frame, wire documentation and executable coverage repairs. SER-04/05 are accepted as the explicit representation/protocol dispositions and working consumer-owned adapter, not new built-in conformances, compressed INT8 storage or raw FP16 preservation. SER-07 framing remains preserved with broader independent class coverage.
+
+**SER-03 remains unoptimized and unmeasured**, requiring accepted V04 and separate authorization before scalar-loop changes or speed/allocation claims. The nonthrowing encoder/decode-cap asymmetry and header representability domain remain explicit. Acceptance establishes no production workload target, allocation profile, authentication, streaming, compression, automatic detection/migration, downstream adoption or cross-platform runtime result.

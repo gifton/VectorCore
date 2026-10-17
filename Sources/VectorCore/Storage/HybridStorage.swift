@@ -121,22 +121,6 @@ extension HybridStorage {
 // MARK: - Copy-on-Write Support
 
 extension HybridStorage {
-    /// Ensure unique ownership before mutation
-    private mutating func ensureUniquelyReferenced() {
-        switch backing {
-        case .inline:
-            // Inline storage is always unique (value type)
-            break
-        case .heap(var heapStorage):
-            if !heapStorage.isUniquelyReferenced {
-                // Create a copy
-                var newStorage = ManagedStorage<Element>(capacity: count)
-                newStorage.copyFrom(heapStorage)
-                backing = .heap(newStorage)
-            }
-        }
-    }
-
     /// Check if storage is uniquely referenced
     public var isUniquelyReferenced: Bool {
         mutating get {
@@ -144,6 +128,8 @@ extension HybridStorage {
             case .inline:
                 return true
             case .heap(var heapStorage):
+                backing = .inline(InlineBuffer())
+                defer { backing = .heap(heapStorage) }
                 return heapStorage.isUniquelyReferenced
             }
         }
@@ -179,12 +165,13 @@ extension HybridStorage: VectorStorage {
         }
         set {
             precondition(index >= 0 && index < count, "Index out of bounds")
-            ensureUniquelyReferenced()
             switch backing {
             case .inline(var buffer):
                 buffer.set(newValue, at: index)
                 backing = .inline(buffer)
             case .heap(var heapStorage):
+                // Remove the enum owner before ManagedStorage performs its COW check.
+                backing = .inline(InlineBuffer())
                 heapStorage[index] = newValue
                 backing = .heap(heapStorage)
             }
@@ -205,12 +192,12 @@ extension HybridStorage: VectorStorage {
     public mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
     ) rethrows -> R {
-        ensureUniquelyReferenced()
         switch backing {
         case .inline(var buffer):
             defer { backing = .inline(buffer) }
             return try buffer.withUnsafeMutableBufferPointer(count: count, body)
         case .heap(var heapStorage):
+            backing = .inline(InlineBuffer())
             defer { backing = .heap(heapStorage) }
             return try heapStorage.withUnsafeMutableBufferPointer(body)
         }
@@ -220,11 +207,10 @@ extension HybridStorage: VectorStorage {
 // MARK: - Convenience Methods
 
 extension HybridStorage {
-    /// Fill storage with a value
+    /// Fill storage with one mutable borrow and one pass over its elements.
     public mutating func fill(with value: Element) {
-        ensureUniquelyReferenced()
-        for i in 0..<count {
-            self[i] = value
+        withUnsafeMutableBufferPointer { buffer in
+            for i in buffer.indices { buffer[i] = value }
         }
     }
 
@@ -233,7 +219,7 @@ extension HybridStorage {
         precondition(count == other.count, "Size mismatch")
         withUnsafeMutableBufferPointer { dest in
             other.withUnsafeBufferPointer { src in
-                _ = dest.initialize(from: src)
+                _ = dest.update(from: src)
             }
         }
     }

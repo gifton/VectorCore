@@ -1,0 +1,154 @@
+[
+  {
+    "sourceVersion": "v1",
+    "argv": [
+      "swift",
+      "test",
+      "--jobs",
+      "6",
+      "--scratch-path",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/build-v1-debug",
+      "--filter",
+      "PCACenteringContractTests|PCA|QRThinSuite|SymmetricEigenSuite|SVDThinSuite|LinearAlgebraParitySuite|KNNGraphSuite|UMAPLayoutSuite"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/L02",
+    "environment": {
+      "L02_CAPTURE_DIRECTORY": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v1/debug-children"
+    },
+    "exit": 1,
+    "statusSource": "Observed exec/write_stdin completion",
+    "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v1/debug.log",
+    "logSHA256": "e72c320c01675d2ebf0c9024c3bac693e3c0817e1012001ee26137ca3afc03c3",
+    "testFunctions": 0
+  },
+  {
+    "sourceVersion": "v2",
+    "argv": [
+      "swift",
+      "test",
+      "--jobs",
+      "6",
+      "--scratch-path",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/build-v2-debug",
+      "--filter",
+      "PCACenteringContractTests|PCA|QRThinSuite|SymmetricEigenSuite|SVDThinSuite|LinearAlgebraParitySuite|KNNGraphSuite|UMAPLayoutSuite"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/L02",
+    "environment": {
+      "L02_CAPTURE_DIRECTORY": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/debug-children"
+    },
+    "exit": 0,
+    "statusSource": "Observed exec/write_stdin completion",
+    "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/debug.log",
+    "logSHA256": "f802e1c40848befaf103e8e0578a87d8bb3cf102dc689c6a476cde2403e980b4",
+    "testFunctions": 37
+  },
+  {
+    "sourceVersion": "v2",
+    "argv": [
+      "swift",
+      "test",
+      "-c",
+      "release",
+      "--jobs",
+      "3",
+      "--scratch-path",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/build-v2-release",
+      "--filter",
+      "PCACenteringContractTests|PCA|QRThinSuite|SymmetricEigenSuite|SVDThinSuite|LinearAlgebraParitySuite|KNNGraphSuite|UMAPLayoutSuite"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/L02",
+    "environment": {
+      "L02_CAPTURE_DIRECTORY": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/release-children"
+    },
+    "exit": 0,
+    "statusSource": "Observed exec/write_stdin completion",
+    "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/release.log",
+    "logSHA256": "93636ef91bb26292537fa361ef6db356912ab289000c8c6d562f87a7abfcd313",
+    "testFunctions": 37
+  },
+  {
+    "sourceVersion": "v2",
+    "argv": [
+      "swift",
+      "test",
+      "--sanitize",
+      "address",
+      "--jobs",
+      "3",
+      "--scratch-path",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/build-v2-asan",
+      "--filter",
+      "PCACenteringContractTests/(translatedPair|sketchBoundariesAndProviderIdentity|shapeAndSharedFlattenBoundaries|multicolumnAndRandomizedTranslations|ordinaryOffsetCovarianceAndImmutability|compensatedMeanRetainsSmallTerm)|PCAExact|PCARandomized|PCAInvariants|PCAAPI|PCAGemm|KNNGraphSuite|UMAPLayoutSuite"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/L02",
+    "environment": {
+      "ASAN_OPTIONS": "detect_leaks=0"
+    },
+    "exit": 0,
+    "statusSource": "Observed exec/write_stdin completion",
+    "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/asan.log",
+    "logSHA256": "8ce849649817a2436fe591884cccedc03e0b3be470d3887b0d21bec45f0dd546",
+    "testFunctions": 13
+  },
+  {
+    "sourceVersion": "v2",
+    "argv": [
+      "swift",
+      "test",
+      "--skip-build",
+      "--sanitize",
+      "address",
+      "--jobs",
+      "3",
+      "--scratch-path",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/build-v2-asan",
+      "--filter",
+      "PCASpectralSuite|PCABehaviorSuite|LAMatMulParitySuite"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/L02",
+    "environment": {
+      "ASAN_OPTIONS": "detect_leaks=0"
+    },
+    "exit": 0,
+    "statusSource": "Observed exec/write_stdin completion",
+    "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/asan-existing-pca-status.log",
+    "logSHA256": "1b94ecb202c1abb67507fb480b027a85920917ac4a2cb234602f20aad1ecc2a6",
+    "testFunctions": 9
+  },
+  {
+    "sourceVersion": "v2",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "Scripts.ci.tests.test_child_process_bounds",
+      "-v"
+    ],
+    "cwd": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/workspaces/L02",
+    "exit": 0,
+    "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/child-scanner.log",
+    "logSHA256": "6894fd830c00885b3c6aed93883014ddab1d8fcda4d453c1f4f3632607da04d3",
+    "tests": 7
+  },
+  {
+    "sourceVersion": "v2",
+    "argv": [
+      "ASAN_OPTIONS=detect_leaks=0",
+      "swift",
+      "test",
+      "--skip-build",
+      "--sanitize",
+      "address",
+      "--jobs",
+      "3",
+      "--scratch-path",
+      "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/build-v2-asan",
+      "--filter",
+      "PCASpectralSuite|PCABehaviorSuite|LAMatMulParitySuite"
+    ],
+    "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/asan-existing-pca.log",
+    "logSHA256": "957aee44b31ae2da78be95f0a0dcf511b7fcca68c4f73b11fc8c8245cef12c22",
+    "status": "Log reports 9 passed; shell chained direct driver so no separately captured exit. Repeated above to capture independent exit status."
+  }
+]

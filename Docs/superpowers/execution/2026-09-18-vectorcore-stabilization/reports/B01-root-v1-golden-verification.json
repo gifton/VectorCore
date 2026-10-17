@@ -1,0 +1,38 @@
+{
+  "version": "v1",
+  "fixture_sha256": "fd38206ac66a9a9660df50360c532be7e74dcffbd8c233e8715ee1b4843a084b",
+  "rows": [
+    {
+      "name": "empty",
+      "dimension": 0,
+      "bytes": 16,
+      "crc32": "be732c74",
+      "frame_sha256": "c5a99ba440d8242c0467957d62a6e45dfafcfa573a7aa3cf94790c7c4b569839",
+      "frame_hex": "544345560100000000000000742c73be"
+    },
+    {
+      "name": "ordinary",
+      "dimension": 3,
+      "bytes": 28,
+      "crc32": "5e7572ed",
+      "frame_sha256": "7a6a197d2aaa1997c9d0e544306a1e28abeb4b8bb9110868d0972e74f0b89c56",
+      "frame_hex": "5443455601000300000000000000803f000020c000000000ed72755e"
+    },
+    {
+      "name": "special",
+      "dimension": 16,
+      "bytes": 80,
+      "crc32": "56c35a8a",
+      "frame_sha256": "2fea195527bc64a89bb542eab4101f10c223100ab92bf8e7a95b648d238be551",
+      "frame_hex": "54434556010010000000000000000000000000800000807f000080ff0100c07f4523c1ff0100807f230180ff01000000010000800000800000008080ffff7f7fffff7fff0000803f000020c08a5ac356"
+    }
+  ],
+  "controls": [
+    "standard CRC check vector",
+    "independent MSB polynomial division plus zlib",
+    "explicit header bytes and little-endian integer words",
+    "complete frame lengths and CRC tails",
+    "signed zero/infinity/quiet and signaling NaN/subnormal/normal/finite-extreme stored words"
+  ],
+  "scope": "Independent fixture validation only. No production encoder or decoder is executed."
+}

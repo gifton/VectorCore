@@ -1,0 +1,47 @@
+{
+  "task": "O05",
+  "version": "v2",
+  "base": "94b73440eae64e2d97726138f2ee9752708e5736",
+  "diffSHA256": "7696d82de3c9a40259b316d203c29e1f396634d1ec2d10b54210fcc8d46c27c9",
+  "manifestSHA256": "9278b35c579ed66c72f13af6d19227bc2b5785c3d1a2d57e1953e5ed2264420b",
+  "completeBaseFinalInventoryVerified": [
+    278,
+    286
+  ],
+  "inventoryIncludesTwoTouchedDocs": true,
+  "reconstruction": "/var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/vectorcore-O05-root-v2-uhoem44v",
+  "changedFiles": 13,
+  "allChangedSharedPathsAtTaskBase": true,
+  "canonicalFrozenSourceBackupVerified": true,
+  "runtimeAcceptance": "accepted following full source reconstruction, artifact/canonical verification and independent final review",
+  "imported": true,
+  "v1ToV2ChangedPaths": [
+    "Scripts/ci/tests/O05RunConsumers.py"
+  ],
+  "workerEvidenceFilesVerified": 59,
+  "workerEvidenceIndexSHA256": "5d36a49b9331d403455f5be78b28be6d65b55aee31dbf94dc3c7655aa4250f2b",
+  "testEvidence": {
+    "debug": {
+      "tests": 63,
+      "suites": 9
+    },
+    "release": {
+      "tests": 63,
+      "suites": 9
+    },
+    "asan": {
+      "tests": 23,
+      "suites": 3
+    }
+  },
+  "publicConsumerPhasesVerified": {
+    "baseline": 6,
+    "finalV1": 12,
+    "finalV2": 12
+  },
+  "publicArtifactsVerifiedPerSnapshot": 134,
+  "publicExecutablesVerified": 6,
+  "testLibraryObjectsVerified": 369,
+  "hostAndLoadedBundleHashesVerified": true,
+  "versionMapping": "Debug-02/Release-01/ASan-01 use v1 Swift code, byte-identical to v2; v2 modifies only Python scanner/driver and has a fresh complete final public consumer run."
+}

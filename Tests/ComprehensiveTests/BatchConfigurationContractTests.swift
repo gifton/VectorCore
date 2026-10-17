@@ -394,14 +394,21 @@ extension BatchConfigurationContractTests {
                     let control = directScores(query:query,rows:rows,cosine:cosine)
                     // Independent finite ranking formula for the two populated coordinates.
                     // Nonfinite membership uses the direct-kernel policy.
-                    let rankingScores: [Float] = patterns.enumerated().map { index, values in
+                    // Typed parts: the inline literal-ternary form exceeded the Swift 6.0 type
+                    // checker's limits in CI (Xcode 16.2). Same Double operations in the same order.
+                    let queryX: Double = zeroQuery ? 0 : 2, queryY: Double = zeroQuery ? 0 : 1
+                    let rankingScores: [Float] = patterns.enumerated().map { (index, values) -> Float in
                         guard values.allSatisfy(\.isFinite) else { return control[index] }
                         let x = Double(values[0]), y = Double(values[1])
-                        if !cosine { return Float(sqrt(pow((zeroQuery ? 0 : 2)-x,2) + pow((zeroQuery ? 0 : 1)-y,2))) }
+                        if !cosine {
+                            let dx: Double = queryX-x, dy: Double = queryY-y
+                            return Float(sqrt(pow(dx,2) + pow(dy,2)))
+                        }
                         if x == 0 && y == 0 { return 1 }
                         if zeroQuery { return 1 }
                         if x == 2 && y == 1 { return 0 }
-                        return Float(1-(2*x+y)/sqrt(5*(x*x+y*y)))
+                        let norm: Double = sqrt(5*(x*x+y*y))
+                        return Float(1-(2*x+y)/norm)
                     }
                     let expectedOrder = Array(0..<count).sorted { first,second in
                         let a = rankingScores[first],b = rankingScores[second]

@@ -1,0 +1,22 @@
+{
+  "task": "T20",
+  "status": "accepted",
+  "task_base": "e713d90",
+  "integration_revision": "80bfba2",
+  "closed_records": ["T20-CI-TOOLCHAIN-TYPECHECK", "T20-REPOSITORY-CHECKS-TIMEOUT"],
+  "disposition_records": {
+    "T20-CI-TOOLCHAIN-TYPECHECK": "PR #56 CI run 1: Swift 6.0 (Xcode 16.2) and 6.2 (Xcode 26.3) reported 'unable to type-check this expression in reasonable time' at Benchmarks/VectorCoreBench/Formatters/CSVWriter.swift:71 (every build job; introduced by d2d579a) and Tests/ComprehensiveTests/BatchConfigurationContractTests.swift:397 (Xcode 16.2 Release). Both expressions are now built from typed parts with the same element expressions, order and Double operations. Swift 6.4 accepted both originals, and its -warn-long-expression-type-checking=100 scan flagged neither; the four slowest expressions it did flag (237-468 ms) are from main, where CI passes. So the local compiler cannot predict this class, and CI's toolchain matrix is its closure.",
+    "T20-REPOSITORY-CHECKS-TIMEOUT": "The Repository checks job (ubuntu-24.04) was cancelled at timeout-minutes 5 with 15 of 38 Python test modules started (the reviewer counted 254 of 523 tests). Raised to 20; the suite took 205.8 s locally in milestone 18."
+  },
+  "validation": {
+    "suite": "Workspace: full Debug (EXTENDED=0) 1701 tests / 252 suites plus XCTest 75, 0 failures; Release vectorcore-bench plus test_benchmark_contracts.py PASS (10 invalid threshold configurations, JSON/CSV write failures, finite strict real benchmark, 28 provider calls / 14 case boundaries); SwiftLint 0.65.1 on both Swift files: 0 serious, warning counts unchanged (22 and 259).",
+    "policy": "git-less unittest 523 OK (skipped 6); check_claim_ledger 0 problems.",
+    "review": "Independent Sonnet review APPROVE (T20/review-report.md): CSV row byte-identical (21 expressions, same order and types); ranking formula bit-identical; ci.yml timeout not pinned by any policy test; one wording nit (205 s to 205.8 s) applied."
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T20",
+  "reviewed_tree": "manifest T20/freeze-sha256.txt (6333 files)",
+  "limitations": [
+    "Swift 6.0 and 6.2 are not installed locally (only Xcode 27 / Swift 6.4). Compatibility is proven only by CI on the PR. The CSVWriter failure stopped most CI builds before the test targets compiled, so more old-toolchain errors in test files may surface on the next CI run."
+  ],
+  "routed": []
+}

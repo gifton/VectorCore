@@ -2189,3 +2189,34 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - Routed before the 0.4.0 tag: the child-probe tests' fixed cleanup and deadline budgets (2 s and 3 s; R03 child deadline). The class is time-bounded child-process assertions under host suspension or throttling; the cause is not proven.
 - state.json: milestones 16, 17 and 18 recorded (they had been ledgered in progress.md only); T18 integration_revision filled (3f59a28; it held a placeholder).
 - NEXT: the slim PR (worktree /Users/goftin/dev/vectorcore-0.4.0-baseline, branch stabilization/0.4.0-baseline from main 8b02e75).
+- SLIM PR OPENED (user-authorized, 2026-10-16: "we should open a pr after this is complete"; slim, with Docs/audits and Docs/reviews): https://github.com/gifton/VectorCore/pull/56
+  - Branch stabilization/0.4.0-baseline (worktree /Users/goftin/dev/vectorcore-0.4.0-baseline): one commit 0317984 on main 8b02e75. Its tree = integration aaf1d83 minus the 4,416 paths in R/pr-slim-drop.txt; 1,917 files, 26.2 MB.
+  - Built with `git read-tree -u --reset aaf1d83` plus `git rm -f --pathspec-from-file` (GIT_LITERAL_PATHSPECS=1).
+  - Root verification (R/pr/verify/summary.txt; R/pr/verify_slim.sh):
+    - composition EXACT against the integration ls-tree minus the drop list (mode, object, path);
+    - 0 drop paths present; worktree clean;
+    - check_claim_ledger 0 problems;
+    - CHANGELOG coverage 91/91 and 37/37 against the slim tree's own DOWNSTREAM_UPGRADES.md;
+    - Python 523 OK in-repo (skipped 2) and in a git-less export (skipped 6);
+    - credential-pattern scan of the diff: 0 hits.
+  - The PR body (R/pr/PR_BODY.md) carries the M18 result, the confirmation run, and the follow-up list, including the child-probe fixed budgets.
+  - CI on the PR (Xcode 16.2 and 26.3) is the authority for the toolchains not run locally; its status is recorded on completion.
+- PR #56 CI RUN 1: 14 of 20 checks failed (R/pr/ci-run1/). Root cause analysis:
+  - A. Swift 6.0 (Xcode 16.2) and 6.2 (Xcode 26.3) report "unable to type-check this expression in reasonable time" at:
+    - CSVWriter.swift:71 (every build job, including sanitizers, platforms, benchmark contracts and the SDK-collision symbol-graph build);
+    - BatchConfigurationContractTests.swift:397 (Xcode 16.2 Release).
+  - The CSVWriter failure stopped most builds before the test targets compiled.
+  - B. Repository checks (ubuntu-24.04) was cancelled at timeout-minutes 5, with 15 of 38 test modules started.
+  - The class: the program's 309 commits were never compiled by CI's toolchains; local gates used only Xcode 27 / Swift 6.4, the only toolchain installed.
+  - Swift 6.4's `-warn-long-expression-type-checking=100` scan (T20/slow-expr-scan.plain.log) flags neither failure. The four slowest expressions it does flag come from main, where CI passes. So the local heuristic does not predict this class.
+  - Ruling: fix only the CI-proven failures and let CI's toolchain matrix be the class closure — the local compiler cannot predict old-solver limits — cost if wrong: one more CI round per hidden instance.
+- T20 (root-created) ACCEPTED and MERGED as 80bfba2: 3 files via import_task (manifest, preimage vs e713d90 and composition OK).
+  - Changes: CSVWriter row built from typed parts; the BatchConfigurationContractTests ranking formula uses typed Double locals; repository-checks timeout 5 → 20.
+  - Workspace validation:
+    - Debug 1701/252 plus XCTest 75, 0 failures;
+    - Release vectorcore-bench plus test_benchmark_contracts.py PASS;
+    - git-less 523 OK; ledger 0 problems;
+    - SwiftLint: 0 serious, unchanged.
+  - Independent Sonnet review: APPROVE; one wording nit applied (T20/review-report.md).
+  - Closure: closures/T20.json.
+- NEXT: re-sync the PR branch to the integration tree minus the drop list, then push for CI run 2. More old-toolchain errors in test files may surface now that builds get past the benchmark target.

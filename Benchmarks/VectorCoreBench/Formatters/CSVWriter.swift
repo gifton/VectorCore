@@ -68,14 +68,20 @@ enum CSVWriter {
 
         for c in cases {
             let p = c.params
-            let fields: [String] = [
+            // Built in typed parts: the single literal-plus-concatenation form exceeded the
+            // Swift 6.0/6.2 type checker's limits in CI (Xcode 16.2 and 26.3).
+            let identity: [String] = [
                 c.name, p.kind ?? "", p.metric ?? "",
                 p.dim.map(String.init) ?? "",
                 p.variant ?? "", p.provider ?? "",
-                p.n.map(String.init) ?? "",
+                p.n.map(String.init) ?? ""
+            ]
+            let totals: [String] = [
                 String(c.iterations), String(c.totalNS), String(c.nsPerOp),
                 String(c.unitCount), String(c.nsPerUnit),
-                String(c.throughputPerSec),
+                String(c.throughputPerSec)
+            ]
+            let statistics: [String] = [
                 c.gflops.map { String($0) } ?? "",
                 c.samples.map(String.init) ?? "",
                 c.meanNsPerOp.map { String($0) } ?? "",
@@ -84,7 +90,11 @@ enum CSVWriter {
                 c.stddevNsPerOp.map { String($0) } ?? "",
                 c.rsdPercent.map { String($0) } ?? "",
                 c.suspicious ? "true" : "false"
-            ] + boundaryCells(c, statisticUnit: metadata.statisticUnit)
+            ]
+            var fields: [String] = identity
+            fields += totals
+            fields += statistics
+            fields += boundaryCells(c, statisticUnit: metadata.statisticUnit)
             rows.append(row(fields))
         }
 

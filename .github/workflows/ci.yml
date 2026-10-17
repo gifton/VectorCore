@@ -22,7 +22,9 @@ jobs:
   repository-checks:
     name: Repository checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    # The policy suite (523 tests) took 205.8 s locally in milestone 18; on PR #56 this runner
+    # was cancelled at 5 minutes with 15 of its 38 test modules started.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:

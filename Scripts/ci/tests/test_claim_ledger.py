@@ -168,10 +168,16 @@ class TemporaryRepository(unittest.TestCase):
                             ignore=shutil.ignore_patterns('.build', '*.o', '*.swiftmodule'))
         (cls.root / 'Scripts/ci').mkdir(parents=True)
         shutil.copy2(ROOT / LEDGER, cls.root / LEDGER)
-        # Literal paths outside those trees that the ledger names (Markdown regions and forbidden-phrase paths).
+        # Literal paths outside those trees that the ledger names (Markdown regions, forbidden-phrase paths and the
+        # files of named-test references, which R3 opens; a policy test under Scripts/ci/tests can be cited evidence).
         ledger = json.loads((ROOT / LEDGER).read_text(encoding='utf-8'))
         literal = {region['path'] for region in ledger['regions']}
         literal |= {path for rule in ledger['forbiddenPhrases'] for path in rule['paths'] if not chk.GLOB_META.search(path)}
+        for entry in ledger['entries']:
+            if entry['evidence']['kind'] == 'named-test':
+                references = entry['evidence']['reference']
+                for reference in (references if isinstance(references, list) else [references]):
+                    literal.add(reference.split('::', 1)[0])
         for path in sorted(literal):
             if not (cls.root / path).exists():
                 (cls.root / path).parent.mkdir(parents=True, exist_ok=True)

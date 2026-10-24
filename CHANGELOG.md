@@ -1133,6 +1133,24 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   a `maxConcurrency` of 0
   (`ComputeProviderForwardingTests.hintedDefaultsReachHintlessWitnesses`).
 
+- **The never-run consumer fixtures are gone, and the must-not-compile contracts
+  now run.** Forty-six fixture, probe and driver files under `Tests/*Consumers`,
+  `Scripts/ci/tests` and `Scripts/ci/fixtures` were executed by nothing: not a
+  SwiftPM test target, not collected by unittest, not called by any workflow.
+  They are removed; what remains in those directories is read or executed by a
+  live test or regenerates a committed table. The nine must-not-compile fixtures
+  (`R01MetricScalarContract`, `R02CollectionUpdateConsumer`, the five D02
+  negatives, `B01BareConformanceNegative`, `R05OldPropertyNegative`) and their
+  positive controls are compiled by `consumer_smoke.py` in the consumer job, from
+  the documentation examples' scratch package: a negative must fail with one
+  error on each expected line and the named diagnostic, a control must build or
+  run and print its marker. The table is checked without a compiler by
+  `test_consumer_smoke.CompileContractTests.test_table_names_the_nine_negatives_and_their_controls`
+  and the judgement by `ContractJudgementTests.test_negative_with_every_code_line_erroring`.
+  The stale paragraph in
+  `Docs/README.md` that called the Performance Guide and the how-to "retained
+  unchanged" is rewritten, and the how-to's four throwing calls now say `try`.
+
 - **`VectorCoreBenchmarking` builds on every declared Apple platform, and normalization builds on Intel
   macOS and Mac Catalyst (T07).** `Host.current()` and Foundation's `Process` are macOS-only, so off
   macOS `EnvCapture` now reports the device tag `"host-unavailable"`, subprocess observations as

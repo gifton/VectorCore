@@ -12,7 +12,7 @@ This table describes configured remote commands. Local verification is recorded 
 | Thread sanitizer | Same shared driver with `--sanitizer thread` | 39 entries; Q03 parent requires its actual instrumented child, six × 2000 loops and all result/join markers. Parent deadline 49s, child 45s, cleanup ≤2s; other executions 15s. |
 | Repository policy | `python3 -B -m unittest discover -s Scripts/ci/tests -v`; `ruby Scripts/ci/validate_github.rb` | Exact seven-job aggregate, semantic commands, independent sanitizer body set, maintained timing sites, target membership and mutation controls. Narrow lexical/workflow checks, not arbitrary Swift/shell dataflow proof. |
 | Lint | Pinned SwiftLint 0.65.1 `lint --config .swiftlint.yml` | Sources, Tests and Benchmarks; no `analyze`, unused-declaration or unused-import analysis claim. |
-| Documentation consumers | `python3 Scripts/ci/consumer_smoke.py` | Build and execute extracted supported public examples. |
+| Documentation consumers | `python3 Scripts/ci/consumer_smoke.py` | Build and execute extracted supported public examples; compile the nine must-not-compile contract fixtures and their positive controls. |
 | Apple platforms | `xcodebuild` library destinations; Intel `swift build --build-tests --triple x86_64-apple-macosx14.0` | Compilation only for these destinations; no device or downstream runtime claim. |
 | CodeQL | Separate scheduled/PR CodeQL workflow | Library and extracted dependencies; outside CI Required, not all tests/benchmarks/every file. |
 | Perf smoke / full benchmarks | Separate reporting jobs | Outside CI Required; executable failure still fails their own jobs. No speed target. |

@@ -158,7 +158,7 @@ GEMM routing (opt‑in)
 - Enable or tune it:
 
 ```swift
-await BatchOperations.updateConfiguration { config in
+try await BatchOperations.updateConfiguration { config in
     config.enableMatrixRouting = true
 }
 ```
@@ -175,12 +175,12 @@ Provider overrides (advanced)
 
 ```swift
 // Force array-SIMD provider for this scope
-await Operations.$simdProvider.withValue(DefaultArraySIMDProvider()) {
+try await Operations.$simdProvider.withValue(DefaultArraySIMDProvider()) {
     let _ = try await Operations.findNearest(to: query, in: database, k: 10)
 }
 
 // Hint parallel CPU execution
-await Operations.$computeProvider.withValue(CPUComputeProvider.parallel) {
+try await Operations.$computeProvider.withValue(CPUComputeProvider.parallel) {
     let _ = try await Operations.distanceMatrix(between: [query], and: database)
 }
 ```
@@ -189,7 +189,7 @@ Scaling up to the GPU (0.3.0)
 - Installing a `BatchKernelProvider` (e.g. VectorAccelerate's Metal provider) makes `Operations.findNearest` and `findNearestBatch` delegate to it before any built-in CPU route (and before `findNearestBatch` reads its `cpuStrategy`), with the original `k` and metric; its results, ordering and errors are returned unchanged, and where the work runs is the provider's choice (`P01OperationsRouteTests.providerPrecedence`).
 
 ```swift
-await Operations.$computeProvider.withValue(yourGPUProvider) {
+try await Operations.$computeProvider.withValue(yourGPUProvider) {
     let _ = try await Operations.findNearestBatch(queries: queries, in: database, k: 10)
 }
 ```

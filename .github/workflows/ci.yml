@@ -22,8 +22,8 @@ jobs:
   repository-checks:
     name: Repository checks
     runs-on: ubuntu-24.04
-    # The policy suite (523 tests) took 205.8 s locally in milestone 18; on PR #56 this runner
-    # was cancelled at 5 minutes with 15 of its 38 test modules started.
+    # The policy suite (541 tests) ran in 204 to 238 s in three local runs on 2026-10-23 (Apple M3 Max,
+    # Python 3.14); on PR #56 this runner was cancelled at 5 minutes with 15 of its 38 modules started.
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -164,8 +164,6 @@ jobs:
           swift build -c release --product vectorcore-bench --scratch-path "$RUNNER_TEMP/benchmark-contract-build"
           BENCH_BIN="$(swift build -c release --show-bin-path --scratch-path "$RUNNER_TEMP/benchmark-contract-build")/vectorcore-bench"
           python3 Scripts/ci/tests/test_benchmark_contracts.py "$BENCH_BIN"
-      - name: Execute policy tests separately
-        run: python3 -B -m unittest discover -s Scripts/ci/tests -v
       - name: Execute four compiled build modes and public C routes
         run: python3 Scripts/ci/check_benchmark_build_modes.py --scratch-root "$RUNNER_TEMP/benchmark-modes" --output benchmark-contract-results/build-modes --jobs 3
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

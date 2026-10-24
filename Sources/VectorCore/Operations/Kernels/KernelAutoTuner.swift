@@ -656,7 +656,9 @@ public actor KernelAutoTuner {
 
     /// Validates both inputs, rejects resource filters (DOT profiles cannot certify
     /// this Euclidean path), then honors full mode without consulting either tuner.
-    /// Reduced modes delegate lookup only; no calibration occurs here.
+    /// Reduced modes delegate lookup only; no calibration occurs here. The one default
+    /// limit, 0.001, applies to every precision mode (0.3.3 used a per-mode limit, ten
+    /// times looser for `.int8Acceptable`); pass the limit a workload tolerates.
     public func selectMixedPrecisionStrategy(for workload: WorkloadCharacteristics,
         maximumSyntheticRelativeError: Float = 0.001) async throws -> MixedPrecisionStrategy {
         try validate(workload)

@@ -153,7 +153,6 @@ def validate_executable_contracts(workflow, workflows, root)
   require_command(bench, %r{\Aswift build -c release --product vectorcore-bench --scratch-path "\$RUNNER_TEMP/benchmark-contract-build"\z}, 'actual Release benchmark product')
   require_command(bench, %r{\ABENCH_BIN="\$\(swift build -c release --show-bin-path --scratch-path "\$RUNNER_TEMP/benchmark-contract-build"\)/vectorcore-bench"\z}, 'actual built benchmark bin path')
   require_command(bench, %r{\Apython3 Scripts/ci/tests/test_benchmark_contracts\.py "\$BENCH_BIN"\z}, 'actual CLI contract cases (not discovery)')
-  require_command(bench, %r{\Apython3 -B -m unittest discover -s Scripts/ci/tests -v\z}, 'separate policy discovery')
   require_command(bench, %r{\Apython3 Scripts/ci/check_benchmark_build_modes\.py --scratch-root "\$RUNNER_TEMP/benchmark-modes" --output benchmark-contract-results/build-modes --jobs [1-6]\z}, 'four distinct build modes and observable routes')
   aggregate = jobs.values.find { |job| job['name'] == 'CI Required' }
   expected_command = 'python3 Scripts/ci/check_required.py ' + REQUIRED_JOBS.join(' ')

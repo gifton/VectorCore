@@ -1226,7 +1226,11 @@ public final class QuantizedAutoTuner: @unchecked Sendable {
 
     /// Suggests a representation using count and a nonnegative relative-error hint.
     /// No calibration or accuracy measurement occurs. Validate actual application
-    /// error separately before using a reduced representation.
+    /// error separately before using a reduced representation. The hint is the
+    /// relative error you tolerate: `candidatesINT8` needs at least 0.05 with more
+    /// than 1,000 candidates and `bothINT8` at least 0.1 with more than 5,000, so
+    /// the default hint of 0.02 always yields `fullFP32` (0.3.3's parameter was a
+    /// required accuracy with the opposite sense).
     public func suggestQuantization(
         for operation: String,
         dimension: Int,

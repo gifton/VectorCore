@@ -162,6 +162,10 @@ public struct BufferConfiguration: Sendable {
     /// Enable statistics tracking
     public let trackStatistics: Bool
 
+    /// - Precondition: `maxPoolSize >= 0`, `maxBufferSize >= 0`, and `alignment` a power of two of at least 16
+    ///   (`PoolRequest.validAlignment`). A violation stops with a named `fatalError` in every build; 0.3.3 accepted
+    ///   these values (`MemoryPoolBoundaryTests.guardChildProbe`, scenarios `configuration-negative`,
+    ///   `configuration-buffer-negative`, `configuration-alignment`).
     public init(
         maxPoolSize: Int = 100_000_000, // 100MB
         maxBufferSize: Int = 10_000_000, // 10MB

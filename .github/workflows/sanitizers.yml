@@ -1,11 +1,11 @@
 name: Sanitizers
 
+# The required `sanitizers` job in ci.yml runs the same driver on every push and pull request; this standalone
+# workflow is for manual runs and a weekly sweep (PR #56 review CI6: two identical 30-minute macOS jobs per PR).
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'
 
 permissions:
   contents: read

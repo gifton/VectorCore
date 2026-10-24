@@ -281,6 +281,8 @@ extension Operations {
     /// vectors: consumes the §3.2 CSR interchange directly.
     /// `initialCoordinates` rows (e.g. a PCA projection of the same points)
     /// seed the layout; nil falls back to seeded random in [−10, 10].
+    /// - Throws: `.invalidDimension` for fewer than two points (0.3.3 threw `.invalidOperation`) and for the other
+    ///   count, configuration and scheduling rejections the entry validates before allocating.
     public static func umap(
         graph: KNNGraph,
         dimensions: Int = 2,

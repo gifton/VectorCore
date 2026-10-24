@@ -1,9 +1,10 @@
 # VectorCore downstream upgrade list: every consumer-visible change since v0.3.3
 
 - **Baseline:** tag `v0.3.3`, commit `fca4b602383589c46b627d8a0de2b6b2a68cd07d` (2026-09-06), the last release.
-- **Target:** branch `codex/vectorcore-stabilization-2026-09-18` at `fa19bc96acca0044945c82a0281308c9d271e687` (2026-10-16). Local only: not pushed, merged or released (D01-L04 decision packet).
+- **Target:** PR #56, branch `stabilization/0.4.0-baseline`, at the current commit (first compiled against `codex/vectorcore-stabilization-2026-09-18` at `fa19bc96acca0044945c82a0281308c9d271e687`, 2026-10-16). Not merged or released.
 - **Scope:** VectorCore only (products `VectorCore`, `VectorCoreBenchmarking`, `vectorcore-bench`, and the `VectorCoreC` headers). Sibling repositories were not read; mapping these rows onto VectorIndex, VectorAccelerate or any other client is the consumer agent's job.
 - **Compiled:** 2026-10-16, from four sources: `CHANGELOG.md` `[Unreleased]` at the target; `git log --first-parent v0.3.3..codex/vectorcore-stabilization-2026-09-18`; the task closures with the D01-L04 decision packet; and a mechanical diff of the public symbol graphs and C headers (Appendix C).
+- **Updated:** 2026-10-23 for the PR #56 review (headline items 1 to 7): rows BH-53 to BH-61 added; Appendices A and B are regenerated from `CHANGELOG.md` at the current commit by `Scripts/ci/downstream_appendices.py` (checked by `Scripts/ci/tests/test_downstream_appendices.py`); the row-count table is recomputed with them. Sections 1 to 7 are otherwise as compiled on 2026-10-16.
 
 ## How to use this
 
@@ -13,7 +14,7 @@ Upgrade in this order. (1) Make the client compile: work through section 1 (remo
 |---|---|
 | 1. Compile-breaking | 19 |
 | 2. Signature changes | 12 |
-| 3. Behaviour changes | 52 |
+| 3. Behaviour changes | 61 |
 | 4. ABI/layout | 8 |
 | 5. Performance | 10 |
 | 6. New APIs | 13 |
@@ -24,7 +25,7 @@ Upgrade in this order. (1) Make the client compile: work through section 1 (remo
 
 **Tags.** `stated`: the CHANGELOG, a closure (or the task report it cites) or the commit message says it. `observed`: only a mechanical diff shows it (the public symbol graphs, the C headers, or for BC-10 `Package.swift`); the row then describes the declaration change and nothing more. `stated; observed`: both.
 
-**Important gap in the CHANGELOG.** `[Unreleased]` records #41 and #46 and the tasks T01, R05, V04, T11 to T16, P01, P02 and D02. It does not record the tasks S01-S03, O01-O05, I01-I02, R01-R04, E01-E06, N01-N04, Q01-Q04, L01-L03, B01, D03, V01 and V02, nor T07's `EnvCapture` change, and several of those change public signatures (for example `PCAModel.mean`, `TypedBufferPool`, `KernelAutoTuner`, `Operations.centroid`). Their rows below come from the closures, the task reports the closures cite, the commits and the symbol diff; Appendix B lists them.
+**CHANGELOG coverage.** `[Unreleased]` was reconciled with the task record in T18 and T19 and now carries an entry for the tasks this document draws on; Appendix A indexes every entry and names the tasks that no entry mentions. Rows sourced to a task closure or to a mechanical diff are tagged `observed` where the CHANGELOG says nothing.
 
 ## 1. Compile-breaking: removed or renamed public API
 
@@ -124,6 +125,8 @@ These compile unchanged and return different results, throw or trap in new place
 | BH-32 | `createVector(dimension:data:)` and `VectorTypeFactory`: the documentation now states `createVector`'s preconditions (`dimension >= 0`; `data`, when given, has `dimension` elements) and that a violation stops the process, with `VectorTypeFactory.vector(of:from:)` as the throwing alternative; `VectorTypeFactory.isSupported(dimension:)` names the actual results (`Vector<DimN>` for 128, 256, 384, 512, 768, 1536 and 3072, `DynamicVector` otherwise, never a `Vector*Optimized` type); `hasOptimizedSupport(for:)` names the seven `Vector<DimN>` widths. Documented contracts; the CHANGELOG records no code change. | Use `VectorTypeFactory.vector(of:from:)` where malformed input must be recoverable; do not expect the factory to return optimized types. | D02 (93e08c4); CL-53; CL-55 | stated |
 | BH-54 | Release builds trap on an undersized output buffer in the fifteen public `MixedPrecisionKernels` SoA batch kernels (`batchEuclidean*`, `batchDotProductSoA`, `batchEuclideanBlocked*`), the six public `batchDotFP16_*`/`batchDotMixed*` array kernels and the internal SoA kernels behind the optimized batch routes (named `fatalError` before any write; Debug-only asserts before), and `MatrixDistance` rejects rows whose `elementCount` differs from the first row's with a named `fatalError` in every build (it read past a shorter row before). | Size `results` to at least `candidates.vectorCount`; give `MatrixDistance` rows of one dimension. Both were already the documented contract. | PR #56 review AP2, CV1 (2026-10-23) | stated |
 | BH-55 | `ComputeProvider`'s chunk-hinted defaults (`parallelForEach(items:minChunk:)`, `parallelReduce(items:initial:minChunk:_:_:)`) validate `minChunk` and then call the hint-less requirements, as 0.3.3 did; a conformer implementing only the hint-less overloads is reached by the optimized search routes and its `maxConcurrency` is not consulted by those defaults. | None for 0.3.3 conformers. A conformer that overrides only the hinted overloads is reached by hinted calls only; override the hint-less overloads to be reached by every default. | PR #56 review CM1, AM3 (2026-10-23) | stated |
+| BH-57 | `BufferConfiguration.init` stops with a named `fatalError`, in every build, for a negative `maxPoolSize` or `maxBufferSize` or an `alignment` that is not a power of two of at least 16 (0.3.3 accepted them). | Audit stored or computed configurations: `alignment: 8` and negative budgets abort at construction. | PR #56 review BMem1 (2026-10-23); CHANGELOG E04 entry | stated |
+| BH-58 | Fewer than two points throws `.invalidDimension` from `KNNGraph.bruteForce` and `Operations.umap`; 0.3.3 threw `.invalidOperation`. `PCAModel.fit` keeps `.invalidOperation`. | Match on `.invalidDimension` for the manifold entries, or on both kinds. | PR #56 review AP8, AP6 (2026-10-23); CHANGELOG L03 entry | stated |
 
 ### 3d. Normalization, statistics, entropy, quantization and FP16
 
@@ -140,6 +143,9 @@ These compile unchanged and return different results, throw or trap in new place
 | BH-41 | FP16 diagnostics are synchronized and classify rounded outputs; preflight is a hint, and a prepared batch may join a new reset generation (not every physical conversion during toggling is promised counted). Conversion arithmetic is unchanged. | Do not treat diagnostic counters as exact under concurrent toggling. | Q03 (9c035ef); closure Q03 limitations[0..2] | stated |
 | BH-42 | `PrecisionProfile.summary` reasoning text: the `.fp16`, `.int8` and `.mixed` lines no longer state memory-saving percentages or a balance label; they give the scalar payload size (FP16 2 bytes, INT8 1 byte, FP32 4 bytes per scalar). | Update any parsing or snapshot of this text. | D02 (93e08c4); CL-09 | stated |
 | BH-43 | Binary serialization: valid empty `DynamicVector` binary frames now decode; positive fixed dimensions still reject empty after CRC; version-1 bytes and validation order are preserved. Built-in binary methods do not gain `BinaryCodable` conformance. The decode cap remains 10000. | Use explicit consumer-owned witnesses for `BinaryCodable`. | B01 (17c1af9); closure B01 migrations[0..1], limitations[1] | stated |
+| BH-59 | Asymmetric INT8 calibration widens the interval to include zero: `[a, b]` with `0 < a` loses a factor of `b / (b − a)` in resolution and collapses to one code once `b − a < b / 255` (`[1000, 1001]` quantizes to a single value). | Offset or symmetrize one-sided data before quantizing; re-baseline stored codes. | PR #56 review SW1-1 (2026-10-23); CHANGELOG Q01 entry | stated |
+| BH-60 | `QuantizedAutoTuner.suggestQuantization` with the default `relativeErrorHint` (0.02) always returns `fullFP32` (a reduced strategy needs at least 0.05 or 0.1); `KernelAutoTuner.selectMixedPrecisionStrategy` applies one default limit (0.001) to every mode, ten times tighter than 0.3.3's `.int8Acceptable` limit. | Pass the error you tolerate explicitly to both. | PR #56 review SW1-2 (2026-10-23); CHANGELOG auto-tuning entry | stated |
+| BH-61 | `normalizedUncheckedWithHint()` on `IndexableVector` and `NormalizationHint` stops the process on a zero, nonfinite or non-normalizable vector (0.3.3 returned a wrongly flagged hint). | Use `normalizedWithHint()` where the input is not known to be normalizable. | PR #56 review BMem3 (2026-10-23); CHANGELOG N01 entry | stated |
 
 ### 3e. Memory, pools, storage ownership and platform
 
@@ -240,98 +246,155 @@ A curated subset of the 280 added symbol-graph keys (all are in `symbol-diff/add
 
 ## Appendix A. CHANGELOG `[Unreleased]` entry index (CL keys)
 
-CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the target, in order. "Rows" names the rows of this document that carry each entry; documentation-only entries with no consumer action say so.
+CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the current commit, in order; the entry title is the stable anchor (a key moves when an entry is inserted before it). Task and Rows carry over from the previous index when the title is unchanged; otherwise Task is the task id in the title and Rows are the rows of this document whose Source names it. `none` marks an entry no row carries. Generated by `Scripts/ci/downstream_appendices.py`; `Scripts/ci/tests/test_downstream_appendices.py` fails when this text is stale.
 
 | Key | Section | Entry (title as written) | Task (commit) | Rows |
 |---|---|---|---|---|
-| CL-01 | Added | `ComputeDevice.isSupportedByCore` and `ComputeDevice.coreSupportedDevices` | D02 (93e08c4) | NA-02 |
-| CL-02 | Added | `BatchSearchCPUStrategy` and the `cpuStrategy:` parameter of `Operations.findNearestBatch` | P02 (1544ab4) | NA-01, SG-01, PF-10 |
-| CL-03 | Added | Opt-in `boundary` benchmark suite | V04 (2179a19; entry fcb6c34) | BC-08 |
-| CL-04 | Changed | Breaking: `StaticDimension` requires only `value` | D02 (93e08c4) | CB-01, AB-02, BH-20 |
-| CL-05 | Changed | `minElement()` and `maxElement()` state their width-0 precondition | D02 (93e08c4) | BH-20 |
-| CL-06 | Changed | Breaking: `isNormalized`, and four norms in code generic over the dimension, bind to `Vector`'s own members | D02 (93e08c4) | BH-19, AB-02 |
-| CL-07 | Changed | `entropyFast` is deprecated, renamed `entropy` | D02 (93e08c4) | SG-02, NA-04 |
-| CL-08 | Changed | VectorCoreC: `vc_dot_int8` has a defined result for every input | D02 (93e08c4) | BC-12 |
-| CL-09 | Changed | `PrecisionProfile.summary` reasoning text | D02 (93e08c4) | BH-42 |
-| CL-10 | Changed | Breaking: `Operations.findNearestBatch` no longer switches to a GEMM route by itself | P02 (1544ab4) | BH-01, SG-01, PF-01 |
-| CL-11 | Changed | Breaking (binary layout): the optimized vector types no longer store `scalarCount` | P02 (1544ab4) | AB-01, BH-50, PF-05 |
-| CL-12 | Changed | `BatchOperations.pairwiseDistances` builds its matrix-route rows one query row at a time | P02 (1544ab4) | BH-09, PF-02 |
-| CL-13 | Changed | Optimized routes test an array's element type without a conditional cast | P02 (1544ab4) | BH-08, PF-04 |
-| CL-14 | Changed | Breaking (benchmark support products): benchmark report schema 3 and `JSONWriter.toCases` now throws | V04 (d2d579a) | BC-01, SG-40, SG-42 |
-| CL-15 | Changed | Breaking: `VectorCoreBenchmarking.ProgressReporter` is now `BenchmarkProgressReporter` | T01 (e6e1bae) | CB-40 |
-| CL-16 | Changed | Breaking: `SearchResult.computedScore` is replaced by `computedScore(using:)`, and search results now carry relevance scores | R05 (cd13e1c) | CB-07, BH-05, NA-03 |
-| CL-17 | Changed | Breaking: `VectorMath.nearestNeighbors(query:in:k:using:)` now follows the shared Top-K selection policy | P01 (a5b2189) | BH-03 |
-| CL-18 | Changed | Breaking: generic small-`k` `Operations.findNearest` streams each candidate through `parallelReduce`, without AutoTuning calibration | P01 (a5b2189) | BH-02, PF-07 |
-| CL-19 | Changed | Optimized-vector hashing now covers every coordinate | P01 (a5b2189) | BH-11, PF-03 |
-| CL-20 | Changed | Benchmark auto-scaling calibration (`V04-calibration-2`) | V04 (2179a19; entry fcb6c34) | BC-04 |
-| CL-21 | Changed | Benchmark consumers fold every produced output | V04 (d2d579a; entry fcb6c34) | BC-05 |
-| CL-22 | Changed | arm64 batch FP16 encoding canonicalizes NaN | T12 (d7f4f3d) | BH-17 |
-| CL-23 | Changed | Euclidean and dot-product scores on the optimized types now use one arithmetic | T14 phase 2 (819d3fe) | BH-12 |
-| CL-24 | Changed | Cosine scores on the optimized types now use one arithmetic, and no longer depend on a candidate's position or on k | T14 phase 3 (2cccd8c) | BH-13, PF-08 |
-| CL-25 | Changed | Breaking: cosine distance no longer turns NaN or infinite inputs into a perfect match | T15 (e2414e3) | BH-14 |
-| CL-26 | Changed | Breaking: `ChebyshevDistance` and `HammingDistance` return NaN for a NaN coordinate | T15 (e2414e3) | BH-15 |
-| CL-27 | Changed | Breaking: min/max reductions, index reductions, element statistics, element-wise min/max and clip propagate NaN | T16 (614c670) | BH-16, PF-09 |
-| CL-28 | Removed | Breaking: the `StaticDimension.Storage` requirement and the `Dim2` ... `Dim3072` `Storage` aliases | D02 (93e08c4) | CB-01, AB-02 |
-| CL-29 | Removed | Breaking: `ComputeDevice` discovery members and `DeviceCapabilities` | D02 (93e08c4) | CB-02, NA-02 |
-| CL-30 | Removed | Breaking (C): 18 proposed declarations in `VectorCoreC.h` | D02 (93e08c4) | BC-11 |
-| CL-31 | Removed | Breaking: `Operations.bufferProvider`, `VectorCore.Configuration` and `VectorCore.configuration` | D02 (93e08c4) | CB-03 |
-| CL-32 | Removed | Breaking: the flag helpers `isSIMDEnabled`, `isReleaseMode`, `releaseOnly` and `performancePrecondition` | D02 (93e08c4) | CB-04 |
-| CL-33 | Removed | Breaking: `SoA.memoryEfficiency` | D02 (93e08c4) | CB-05 |
-| CL-34 | Removed | Breaking: `BatchKernels_SoA.estimatePerformanceGain` | D02 (93e08c4) | CB-05 |
-| CL-35 | Removed | The internal `SIMDMemoryUtilities` helpers (internal; no public API change) | D02 (93e08c4) | none (internal) |
-| CL-36 | Removed | Breaking (source-compatible): 24 concrete metric overloads | T14 phase 2 (819d3fe) | CB-06, AB-03, BH-12 |
-| CL-37 | Removed | Breaking (source-compatible): the 6 concrete `CosineDistance` overloads | T14 phase 3 (2cccd8c) | CB-06, AB-03, BH-13 |
-| CL-38 | Removed | The native `Float16` branch of the FP16 scalar converters, never enabled by default | T12 (d7f4f3d) | BH-18 |
-| CL-39 | Removed | Two unused internal quantization analyzers (internal; no public API change) | T16 (614c670) | none (internal) |
-| CL-40 | Fixed | `vectorcore-bench` correctness gate | T11 (c4305e5) | BC-06 |
-| CL-41 | Fixed | Benchmark metadata `binarySizes.vectorCoreLibraryBytes` | V04 (fcb6c34) | BC-07 |
-| CL-42 | Fixed | MemoryPool bookkeeping and lifetime | #41 (f4d5b49; entry text 8b02e75) | BH-44 |
-| CL-43 | Fixed | FP16 portability on Intel macOS and Mac Catalyst | #41 (f4d5b49; entry text 8b02e75) | BH-49, CB-14 |
-| CL-44 | Fixed | FP16 kernels no longer heap-allocate on each 8-lane load | T12 (d7f4f3d) | PF-06 |
-| CL-45 | Documentation | Refresh the README and core references | #46 (8b02e75) | none (documentation) |
-| CL-46 | Documentation | Correct historical matrix allocation, accuracy, and routing claims; clarify SVD/PCA rank-deficiency limits | #46 (8b02e75) | none (documentation) |
-| CL-47 | Documentation | Reconcile performance and robustness claims with their evidence (claim ledger) | V04 (3f9bf63, fcb6c34) | none (documentation) |
-| CL-48 | Documentation | `Docs/Performance_Guide.md` uses the real `vectorcore-bench` options | V04, T11 | BC-06 |
-| CL-49 | Documentation | `Docs/Benchmark_Measurement_Boundaries.md` defines `unverified` per case ID | V04 (fcb6c34) | BC-07 |
-| CL-50 | Documentation | Extend the claim ledger (T13) | T13 (ecbb39a) | none (comment-only) |
-| CL-51 | Documentation | VectorCoreC contracts | D02 (93e08c4) | BC-13 |
-| CL-52 | Documentation | Dispatch of protocol members | D02 (93e08c4) | BH-13 |
-| CL-53 | Documentation | `VectorTypeFactory.isSupported(dimension:)` | D02 (93e08c4) | BH-32 |
-| CL-54 | Documentation | Provider hooks | D02 (93e08c4) | none (documentation; the `Operations` docs list every public entry that reads `computeProvider`, `simdProvider` or `linearAlgebraProvider`) |
-| CL-55 | Documentation | `VectorCore.createVector(dimension:data:)` and `hasOptimizedSupport(for:)` | D02 (93e08c4) | BH-32 |
-| CL-56 | Documentation | `Logger` next to `os.Logger` | D02 (93e08c4) | BH-51 |
-| CL-57 | Documentation | Products and hosts | D02 (93e08c4) | BC-09 |
-| CL-58 | Documentation | `VectorQualityMetrics.entropy` | D02 (93e08c4) | BH-38 |
+| CL-01 | Added | `VectorCoreCompiledFeatures` (V02). | V02 | BC-03, NA-10, NA-13 |
+| CL-02 | Added | `ComputeDevice.isSupportedByCore` and `ComputeDevice.coreSupportedDevices`. | D02 (93e08c4) | NA-02 |
+| CL-03 | Added | `BatchSearchCPUStrategy` and the `cpuStrategy:` parameter of `Operations.findNearestBatch`. | P02 (1544ab4) | NA-01, SG-01, PF-10 |
+| CL-04 | Added | Opt-in `boundary` benchmark suite. | V04 (2179a19; entry fcb6c34) | BC-08 |
+| CL-05 | Changed | Breaking: fixed-size vector storage must have the type's lane count (S01). | S01 | BH-21, NA-12 |
+| CL-06 | Changed | Breaking: `Operations.centroid(of:)` and `Operations.statistics(for:)` now throw, and dimensions are checked before mutation and aggregation (S02). | S02 | BH-22 |
+| CL-07 | Changed | Decoding a `TopKResult` with mismatched counts throws (S03). | S03 | BH-07 |
+| CL-08 | Changed | Breaking: the Float search facades take `any DistanceMetric<Float>` and use the supplied metric (R01). | R01 | BH-04, NA-11 |
+| CL-09 | Changed | Two defaulted protocol requirements can bind an existing client method (R01, R05). | R01, R05 | BH-04, BH-05, NA-03, NA-11 |
+| CL-10 | Changed | Breaking: `MutableVectorCollection.update(id:vector:)` has no default implementation, and collection IDs are not reused (R02). | R02 | BH-26, NA-11 |
+| CL-11 | Changed | Breaking: matrix diagonals are the metric's self score, and `cosineSimilarityMatrix` returns similarity (R03). | R03 | BH-10 |
+| CL-12 | Changed | `KNearestHeap` and the bounded heaps share one ordering and reject negative sizes (R04). | R04 | BH-06 |
+| CL-13 | Changed | Execution domains are validated (E01, E02). | E01, E02 | BH-23, BH-24 |
+| CL-14 | Changed | Throwing execution routes honor cancellation, and reductions combine in range order (E02). | E02 | BH-23, BH-24 |
+| CL-15 | Changed | Breaking: `BatchOperations.updateConfiguration(_:)` is `async throws` and validates the whole update (E03, E06). | E03, E06 | BH-25, NA-05 |
+| CL-16 | Changed | Breaking: `TypedBufferPool` has a byte cap and returns lease handles, and the actor pools own their allocations (E04). | E04 | BH-44, BH-45, BH-57, CB-19, NA-06 |
+| CL-17 | Changed | Breaking (source-compatible): AutoTuning calibration is reentrant and accepts throwing calibrators (E05). | E05 | BH-27 |
+| CL-18 | Changed | Breaking (binary layout): `NormalizationHint` clears its hints before mutable access and when decoded (I01). | I01 | BH-34 |
+| CL-19 | Changed | Breaking: `SoAFP16Cache512` is a caller-owned cache with a byte budget (I02). | I02 | BH-46, NA-07 |
+| CL-20 | Changed | `TriangularMatrix` storage copies are isolated, and partial writes persist (O01, O02). | O01, O02 | BH-48 |
+| CL-21 | Changed | Redundant storage detaches and unused result-array initializations are removed (O03). | O03 | none |
+| CL-22 | Changed | Breaking (source-compatible): aligned-memory helpers validate their inputs and leave initialization to the caller (O04). | O04 | BH-47 |
+| CL-23 | Changed | Breaking: the FP16 vector types' `fp16Storage` getters are replaced by a scoped accessor (O05). | O05 | NA-08 |
+| CL-24 | Changed | Normalization follows one range policy (N01). | N01 | BH-33, BH-61 |
+| CL-25 | Changed | Breaking: approximate equality, precision validation and `safeLog` check their domains (N02). | N02 | BH-35 |
+| CL-26 | Changed | Batch magnitude statistics accumulate in Double and return NaN for a nonfinite magnitude (N03). | N03 | BH-36 |
+| CL-27 | Changed | Vector entropy is scale-invariant truncated entropy (N04). | N04 | BH-37 |
+| CL-28 | Changed | Breaking: INT8 quantization calibrates around zero and validates its inputs (Q01). | Q01 | BH-39, BH-59 |
+| CL-29 | Changed | Breaking: the kernel, mixed-precision and quantized auto-tuner APIs are reshaped (Q02). | Q02 | BH-40, NA-09 |
+| CL-30 | Changed | FP16 conversion diagnostics are synchronized and classify rounded outputs (Q03). | Q03 | BH-41 |
+| CL-31 | Changed | The FP16 candidate-range wrappers validate the range before any work (Q04). | Q04 | BH-28 |
+| CL-32 | Changed | Breaking: `PCAModel.mean` is `[Double]`, and QR, SVD, eigen and PCA reject nonfinite data with typed errors (L01, L02). | L01, L02 | BH-29 |
+| CL-33 | Changed | UMAP curve fitting and smooth-kNN calibration changed, and manifold entry points validate their configuration (L03). | L03 | BH-30, BH-58 |
+| CL-34 | Changed | Empty `DynamicVector` binary frames decode (B01). | B01 | BH-43 |
+| CL-35 | Changed | `Logger` evaluates admitted messages once, and `PerformanceTimer` uses a monotonic clock (D03). | D03 | BH-31 |
+| CL-36 | Changed | Breaking (benchmark support products): `RunFlags`, `CorrectnessOut` and the report initializers (V01, V02). | V01, V02 | BC-02, BC-03, NA-10, NA-13 |
+| CL-37 | Changed | Breaking: `StaticDimension` requires only `value`. | D02 (93e08c4) | CB-01, AB-02, BH-20 |
+| CL-38 | Changed | `minElement()` and `maxElement()` state their width-0 precondition. | D02 (93e08c4) | BH-20 |
+| CL-39 | Changed | Breaking: `isNormalized`, and four norms in code generic over the dimension, bind to `Vector`'s own members. | D02 (93e08c4) | BH-19, AB-02 |
+| CL-40 | Changed | `entropyFast` is deprecated, renamed `entropy`. | D02 (93e08c4) | SG-02, NA-04 |
+| CL-41 | Changed | VectorCoreC: `vc_dot_int8` has a defined result for every input. | D02 (93e08c4) | BC-12 |
+| CL-42 | Changed | `PrecisionProfile.summary` reasoning text. | D02 (93e08c4) | BH-42 |
+| CL-43 | Changed | Breaking: `Operations.findNearestBatch` no longer switches to a GEMM route by itself. | P02 (1544ab4) | BH-01, SG-01, PF-01 |
+| CL-44 | Changed | Breaking: `BatchOperations.pairwiseDistances` no longer takes the GEMM route by default. | PR #56 review AB1, AL2a | BH-09, BH-53 |
+| CL-45 | Changed | Breaking (binary layout): the optimized vector types no longer store `scalarCount`. | P02 (1544ab4) | AB-01, BH-50, PF-05 |
+| CL-46 | Changed | `BatchOperations.pairwiseDistances` builds its matrix-route rows one query row at a time. | P02 (1544ab4) | BH-09, PF-02 |
+| CL-47 | Changed | Optimized routes test an array's element type without a conditional cast. | P02 (1544ab4) | BH-08, PF-04 |
+| CL-48 | Changed | Breaking (benchmark support products): benchmark report schema 3 and `JSONWriter.toCases` now throws. | V04 (d2d579a) | BC-01, SG-40, SG-42 |
+| CL-49 | Changed | Breaking: `VectorCoreBenchmarking.ProgressReporter` is now `BenchmarkProgressReporter` | T01 (e6e1bae) | CB-40 |
+| CL-50 | Changed | Breaking: `SearchResult.computedScore` is replaced by `computedScore(using:)`, and search results now carry relevance scores. | R05 (cd13e1c) | CB-07, BH-05, NA-03 |
+| CL-51 | Changed | Breaking: `VectorMath.nearestNeighbors(query:in:k:using:)` now follows the shared Top-K selection policy. | P01 (a5b2189) | BH-03 |
+| CL-52 | Changed | Breaking: generic small-`k` `Operations.findNearest` streams each candidate through `parallelReduce`, without AutoTuning calibration. | P01 (a5b2189) | BH-02, PF-07 |
+| CL-53 | Changed | Optimized-vector hashing now covers every coordinate. | P01 (a5b2189) | BH-11, PF-03 |
+| CL-54 | Changed | Benchmark auto-scaling calibration (`V04-calibration-2`). | V04 (2179a19; entry fcb6c34) | BC-04 |
+| CL-55 | Changed | Benchmark consumers fold every produced output. | V04 (d2d579a; entry fcb6c34) | BC-05 |
+| CL-56 | Changed | arm64 batch FP16 encoding canonicalizes NaN. | T12 (d7f4f3d) | BH-17 |
+| CL-57 | Changed | Euclidean and dot-product scores on the optimized types now use one arithmetic. | T14 phase 2 (819d3fe) | BH-12 |
+| CL-58 | Changed | Cosine scores on the optimized types now use one arithmetic, and no longer depend on a candidate's position or on k. | T14 phase 3 (2cccd8c) | BH-13, PF-08 |
+| CL-59 | Changed | Breaking: cosine distance no longer turns NaN or infinite inputs into a perfect match. | T15 (e2414e3) | BH-14 |
+| CL-60 | Changed | Breaking: `ChebyshevDistance` and `HammingDistance` return NaN for a NaN coordinate. | T15 (e2414e3) | BH-15 |
+| CL-61 | Changed | Breaking: min/max reductions, index reductions, element statistics, element-wise min/max and clip propagate NaN. | T16 (614c670) | BH-16, PF-09 |
+| CL-62 | Removed | Breaking: the `StaticDimension.Storage` requirement and the `Dim2` … `Dim3072` `Storage` aliases. | D02 (93e08c4) | CB-01, AB-02 |
+| CL-63 | Removed | Breaking: `ComputeDevice` discovery members and `DeviceCapabilities`. | D02 (93e08c4) | CB-02, NA-02 |
+| CL-64 | Removed | Breaking (C): 18 proposed declarations in `VectorCoreC.h`. | D02 (93e08c4) | BC-11 |
+| CL-65 | Removed | Breaking: `Operations.bufferProvider`, `VectorCore.Configuration` and `VectorCore.configuration`. | D02 (93e08c4) | CB-03 |
+| CL-66 | Removed | Breaking: the flag helpers `isSIMDEnabled`, `isReleaseMode`, `releaseOnly` and `performancePrecondition`. | D02 (93e08c4) | CB-04 |
+| CL-67 | Removed | Breaking: `SoA.memoryEfficiency`. | D02 (93e08c4) | CB-05 |
+| CL-68 | Removed | Breaking: `BatchKernels_SoA.estimatePerformanceGain`. | D02 (93e08c4) | CB-05 |
+| CL-69 | Removed | The internal `SIMDMemoryUtilities` helpers. | none | none |
+| CL-70 | Removed | Breaking (source-compatible): 24 concrete metric overloads. | T14 phase 2 (819d3fe) | CB-06, AB-03, BH-12 |
+| CL-71 | Removed | Breaking (source-compatible): the 6 concrete `CosineDistance` overloads. | T14 phase 3 (2cccd8c) | CB-06, AB-03, BH-13 |
+| CL-72 | Removed | The native `Float16` branch of the FP16 scalar converters, never enabled by default. | T12 (d7f4f3d) | BH-18 |
+| CL-73 | Removed | Two unused internal quantization analyzers. | none | none |
+| CL-74 | Fixed | Release builds check the output capacity of the FP16 SoA batch kernels and the row shapes of `MatrixDistance`. | PR #56 review AP2, CV1 | BH-54 |
+| CL-75 | Fixed | Pool teardown leaks active leases instead of freeing them, and the `MemoryPool` cleanup timer no longer depends on the width of `Int`. | PR #56 review AM1, DP1 | BH-56 |
+| CL-76 | Fixed | `ComputeProvider`'s chunk-hinted defaults call the hint-less requirements. | PR #56 review CM1, AM3 | BH-55 |
+| CL-77 | Fixed | The never-run consumer fixtures are gone, and the must-not-compile contracts now run. | none | none |
+| CL-78 | Fixed | `VectorCoreBenchmarking` builds on every declared Apple platform, and normalization builds on Intel macOS and Mac Catalyst (T07). | T07 | BC-09, BH-49 |
+| CL-79 | Fixed | `vectorcore-bench` correctness gate. | T11 (c4305e5) | BC-06 |
+| CL-80 | Fixed | Benchmark metadata `binarySizes.vectorCoreLibraryBytes`. | V04 (fcb6c34) | BC-07 |
+| CL-81 | Fixed | MemoryPool bookkeeping and lifetime. | #41 (f4d5b49; entry text 8b02e75) | BH-44 |
+| CL-82 | Fixed | FP16 portability on Intel macOS and Mac Catalyst. | #41 (f4d5b49; entry text 8b02e75) | BH-49, CB-14 |
+| CL-83 | Fixed | FP16 kernels no longer heap-allocate on each 8-lane load. | T12 (d7f4f3d) | PF-06 |
+| CL-84 | Fixed | LAPACK workspace check on near-square inputs (introduced after `v0.3.3`, fixed before release). | none | none |
+| CL-85 | Documentation | Refresh the README and core references, distinguish current contracts from | none | none |
+| CL-86 | Documentation | Correct historical matrix allocation, accuracy, and routing claims below; | #46 (8b02e75) | none (documentation) |
+| CL-87 | Documentation | Reconcile performance and robustness claims with their evidence. Benchmark | V04 (3f9bf63, fcb6c34) | none (documentation) |
+| CL-88 | Documentation | `Docs/Performance_Guide.md` uses the real `vectorcore-bench` options | V04, T11 | BC-06 |
+| CL-89 | Documentation | `Docs/Benchmark_Measurement_Boundaries.md` defines `unverified` per case ID, | V04 (fcb6c34) | BC-07 |
+| CL-90 | Documentation | Extend the claim ledger (T13). Qualitative performance and robustness | none | none |
+| CL-91 | Documentation | VectorCoreC contracts. | D02 (93e08c4) | BC-13 |
+| CL-92 | Documentation | Dispatch of protocol members. | D02 (93e08c4) | BH-13 |
+| CL-93 | Documentation | `VectorTypeFactory.isSupported(dimension:)` | D02 (93e08c4) | BH-32 |
+| CL-94 | Documentation | Provider hooks. | D02 (93e08c4) | none (documentation; the `Operations` docs list every public entry that reads `computeProvider`, `simdProvider` or `linearAlgebraProvider`) |
+| CL-95 | Documentation | `VectorCore.createVector(dimension:data:)` and `hasOptimizedSupport(for:)`. | D02 (93e08c4) | BH-32 |
+| CL-96 | Documentation | `Logger` next to `os.Logger`. | D02 (93e08c4) | BH-51 |
+| CL-97 | Documentation | Products and hosts. | D02 (93e08c4) | BC-09 |
+| CL-98 | Documentation | `VectorQualityMetrics.entropy` | D02 (93e08c4) | BH-38 |
+| CL-99 | Documentation | Measured workload envelope for PCA, kNN and UMAP (one host). | none | none |
 
 ## Appendix B. CHANGELOG Breaking lines mapped to rows
 
-Every top-level `[Unreleased]` bullet whose title says "Breaking" (21 entries; the CHANGELOG also uses the word once inside CL-23 as a cross-reference to CL-10, which is not an entry).
+Every top-level `[Unreleased]` bullet whose title starts with "Breaking" (39 entries); every one has at least one row.
 
 | CHANGELOG entry | Title | Rows |
 |---|---|---|
-| CL-04 | Breaking: `StaticDimension` requires only `value` | CB-01, AB-02, BH-20 |
-| CL-06 | Breaking: `isNormalized`, and four norms in code generic over the dimension, bind to `Vector`'s own members | BH-19, AB-02 |
-| CL-10 | Breaking: `Operations.findNearestBatch` no longer switches to a GEMM route by itself | BH-01, SG-01, PF-01 |
-| CL-11 | Breaking (binary layout): the optimized vector types no longer store `scalarCount` | AB-01, BH-50, PF-05 |
-| CL-14 | Breaking (benchmark support products): benchmark report schema 3 and `JSONWriter.toCases` now throws | BC-01, SG-40, SG-42 |
-| CL-15 | Breaking: `VectorCoreBenchmarking.ProgressReporter` is now `BenchmarkProgressReporter` | CB-40 |
-| CL-16 | Breaking: `SearchResult.computedScore` is replaced by `computedScore(using:)`, and search results now carry relevance scores | CB-07, BH-05, NA-03 |
-| CL-17 | Breaking: `VectorMath.nearestNeighbors(query:in:k:using:)` now follows the shared Top-K selection policy | BH-03 |
-| CL-18 | Breaking: generic small-`k` `Operations.findNearest` streams each candidate through `parallelReduce`, without AutoTuning calibration | BH-02, PF-07 |
-| CL-25 | Breaking: cosine distance no longer turns NaN or infinite inputs into a perfect match | BH-14 |
-| CL-26 | Breaking: `ChebyshevDistance` and `HammingDistance` return NaN for a NaN coordinate | BH-15 |
-| CL-27 | Breaking: min/max reductions, index reductions, element statistics, element-wise min/max and clip propagate NaN | BH-16, PF-09 |
-| CL-28 | Breaking: the `StaticDimension.Storage` requirement and the `Dim2` ... `Dim3072` `Storage` aliases | CB-01, AB-02 |
-| CL-29 | Breaking: `ComputeDevice` discovery members and `DeviceCapabilities` | CB-02, NA-02 |
-| CL-30 | Breaking (C): 18 proposed declarations in `VectorCoreC.h` | BC-11 |
-| CL-31 | Breaking: `Operations.bufferProvider`, `VectorCore.Configuration` and `VectorCore.configuration` | CB-03 |
-| CL-32 | Breaking: the flag helpers `isSIMDEnabled`, `isReleaseMode`, `releaseOnly` and `performancePrecondition` | CB-04 |
-| CL-33 | Breaking: `SoA.memoryEfficiency` | CB-05 |
-| CL-34 | Breaking: `BatchKernels_SoA.estimatePerformanceGain` | CB-05 |
-| CL-36 | Breaking (source-compatible): 24 concrete metric overloads | CB-06, AB-03, BH-12 |
-| CL-37 | Breaking (source-compatible): the 6 concrete `CosineDistance` overloads | CB-06, AB-03, BH-13 |
-
-Consumer-visible changes that the CHANGELOG does not record at all (sources: closures, task reports, commits and the symbol diff): the compile-breaking rows CB-08 to CB-13, CB-15, CB-41 and CB-42; the signature rows SG-03 to SG-09, SG-41 and SG-42; the layout rows AB-04 to AB-08; and the behaviour rows BH-04, BH-06, BH-07, BH-10, BH-21 to BH-31, BH-33 to BH-37, BH-39 to BH-41, BH-43 and BH-45 to BH-48 (BH-44 is recorded only for the #41 part). See the header's note on the CHANGELOG gap.
+| CL-05 | Breaking: fixed-size vector storage must have the type's lane count (S01). | BH-21, NA-12 |
+| CL-06 | Breaking: `Operations.centroid(of:)` and `Operations.statistics(for:)` now throw, and dimensions are checked before mutation and aggregation (S02). | BH-22 |
+| CL-08 | Breaking: the Float search facades take `any DistanceMetric<Float>` and use the supplied metric (R01). | BH-04, NA-11 |
+| CL-10 | Breaking: `MutableVectorCollection.update(id:vector:)` has no default implementation, and collection IDs are not reused (R02). | BH-26, NA-11 |
+| CL-11 | Breaking: matrix diagonals are the metric's self score, and `cosineSimilarityMatrix` returns similarity (R03). | BH-10 |
+| CL-15 | Breaking: `BatchOperations.updateConfiguration(_:)` is `async throws` and validates the whole update (E03, E06). | BH-25, NA-05 |
+| CL-16 | Breaking: `TypedBufferPool` has a byte cap and returns lease handles, and the actor pools own their allocations (E04). | BH-44, BH-45, BH-57, CB-19, NA-06 |
+| CL-17 | Breaking (source-compatible): AutoTuning calibration is reentrant and accepts throwing calibrators (E05). | BH-27 |
+| CL-18 | Breaking (binary layout): `NormalizationHint` clears its hints before mutable access and when decoded (I01). | BH-34 |
+| CL-19 | Breaking: `SoAFP16Cache512` is a caller-owned cache with a byte budget (I02). | BH-46, NA-07 |
+| CL-22 | Breaking (source-compatible): aligned-memory helpers validate their inputs and leave initialization to the caller (O04). | BH-47 |
+| CL-23 | Breaking: the FP16 vector types' `fp16Storage` getters are replaced by a scoped accessor (O05). | NA-08 |
+| CL-25 | Breaking: approximate equality, precision validation and `safeLog` check their domains (N02). | BH-35 |
+| CL-28 | Breaking: INT8 quantization calibrates around zero and validates its inputs (Q01). | BH-39, BH-59 |
+| CL-29 | Breaking: the kernel, mixed-precision and quantized auto-tuner APIs are reshaped (Q02). | BH-40, NA-09 |
+| CL-32 | Breaking: `PCAModel.mean` is `[Double]`, and QR, SVD, eigen and PCA reject nonfinite data with typed errors (L01, L02). | BH-29 |
+| CL-36 | Breaking (benchmark support products): `RunFlags`, `CorrectnessOut` and the report initializers (V01, V02). | BC-02, BC-03, NA-10, NA-13 |
+| CL-37 | Breaking: `StaticDimension` requires only `value`. | CB-01, AB-02, BH-20 |
+| CL-39 | Breaking: `isNormalized`, and four norms in code generic over the dimension, bind to `Vector`'s own members. | BH-19, AB-02 |
+| CL-43 | Breaking: `Operations.findNearestBatch` no longer switches to a GEMM route by itself. | BH-01, SG-01, PF-01 |
+| CL-44 | Breaking: `BatchOperations.pairwiseDistances` no longer takes the GEMM route by default. | BH-09, BH-53 |
+| CL-45 | Breaking (binary layout): the optimized vector types no longer store `scalarCount`. | AB-01, BH-50, PF-05 |
+| CL-48 | Breaking (benchmark support products): benchmark report schema 3 and `JSONWriter.toCases` now throws. | BC-01, SG-40, SG-42 |
+| CL-49 | Breaking: `VectorCoreBenchmarking.ProgressReporter` is now `BenchmarkProgressReporter` | CB-40 |
+| CL-50 | Breaking: `SearchResult.computedScore` is replaced by `computedScore(using:)`, and search results now carry relevance scores. | CB-07, BH-05, NA-03 |
+| CL-51 | Breaking: `VectorMath.nearestNeighbors(query:in:k:using:)` now follows the shared Top-K selection policy. | BH-03 |
+| CL-52 | Breaking: generic small-`k` `Operations.findNearest` streams each candidate through `parallelReduce`, without AutoTuning calibration. | BH-02, PF-07 |
+| CL-59 | Breaking: cosine distance no longer turns NaN or infinite inputs into a perfect match. | BH-14 |
+| CL-60 | Breaking: `ChebyshevDistance` and `HammingDistance` return NaN for a NaN coordinate. | BH-15 |
+| CL-61 | Breaking: min/max reductions, index reductions, element statistics, element-wise min/max and clip propagate NaN. | BH-16, PF-09 |
+| CL-62 | Breaking: the `StaticDimension.Storage` requirement and the `Dim2` … `Dim3072` `Storage` aliases. | CB-01, AB-02 |
+| CL-63 | Breaking: `ComputeDevice` discovery members and `DeviceCapabilities`. | CB-02, NA-02 |
+| CL-64 | Breaking (C): 18 proposed declarations in `VectorCoreC.h`. | BC-11 |
+| CL-65 | Breaking: `Operations.bufferProvider`, `VectorCore.Configuration` and `VectorCore.configuration`. | CB-03 |
+| CL-66 | Breaking: the flag helpers `isSIMDEnabled`, `isReleaseMode`, `releaseOnly` and `performancePrecondition`. | CB-04 |
+| CL-67 | Breaking: `SoA.memoryEfficiency`. | CB-05 |
+| CL-68 | Breaking: `BatchKernels_SoA.estimatePerformanceGain`. | CB-05 |
+| CL-70 | Breaking (source-compatible): 24 concrete metric overloads. | CB-06, AB-03, BH-12 |
+| CL-71 | Breaking (source-compatible): the 6 concrete `CosineDistance` overloads. | CB-06, AB-03, BH-13 |
 
 ## Appendix C. Completeness: the mechanical public-API diff
 
@@ -359,6 +422,8 @@ Consumer-visible changes that the CHANGELOG does not record at all (sources: clo
 
 ### C.4 Result
 
+The symbol-graph figures below were computed on 2026-10-16 by tooling outside this repository against the integration commit named in the header; they are a dated record and are not recomputed here (PR #56 review SW4-1). Appendix B states the Breaking-entry mapping at the current commit.
+
 Removed and changed public symbols from the mechanical diff, against the keys named in sections 1, 2 and 4 (each key counted once, in the first section that names it), and the C header against section 7:
 
 | Measure | Count |
@@ -372,7 +437,6 @@ Removed and changed public symbols from the mechanical diff, against the keys na
 | Covered by section 7 | 18 |
 | C additions (macros, informational) | 2 |
 | Swift keys added (informational, section 6 curates) | 280 |
-| CHANGELOG Breaking entries / mapped to rows | 21 / 21 |
 
 ```coverage-summary
 swift-removed-keys: 90
@@ -384,8 +448,6 @@ swift-covered-first-in-section-2: 32
 swift-covered-first-in-section-4: 77
 c-removed-or-changed: 18
 c-covered-in-section-7: 18
-changelog-breaking-entries: 21
-changelog-breaking-mapped: 21
 ```
 
 Recompute with `python3 -B check_coverage.py` from `downstream-upgrades/` (exit 0 when every count above holds).

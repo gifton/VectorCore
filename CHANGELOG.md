@@ -198,7 +198,10 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   ignores cancellation. `MemoryPool.BufferHandle` now retains an allocation owner and a weak pool, and
   its `count` is stored instead of computed, so binaries must be rebuilt; MemoryPool handles may outlive
   their pool, an invalid MemoryPool acquisition returns `nil`, and a nonpositive, nonfinite or
-  beyond-horizon timer interval disables automatic cleanup.
+  beyond-horizon timer interval disables automatic cleanup. `BufferConfiguration.init` now stops with a
+  named `fatalError`, in every build, for a negative `maxPoolSize` or `maxBufferSize` or an `alignment`
+  that is not a power of two of at least 16; 0.3.3 accepted them, so a stored configuration with
+  `alignment: 8` aborts at construction (`MemoryPoolBoundaryTests.guardChildProbe`).
 
 - **Breaking (source-compatible): AutoTuning calibration is reentrant and accepts throwing calibrators
   (E05).**
@@ -307,7 +310,11 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 - **Breaking: INT8 quantization calibrates around zero and validates its inputs (Q01).** Asymmetric
   calibration now includes zero, so a narrow one-sided interval trades resolution for a representable
-  zero point (for example, [-100, -10] uses scale 100/255 instead of 90/255), and newly calibrated
+  zero point (for example, [-100, -10] uses scale 100/255 instead of 90/255). The scale is the widened
+  width over 255, so an interval [a, b] with 0 < a loses a factor of b / (b − a) in resolution, and
+  every value decodes to one code once b − a is below b / 255: [100, 101] has a step of 101/255 and
+  [1000, 1001] quantizes to a single value. Keep such data symmetric or offset it before quantizing.
+  Newly calibrated
   parameters decode all 256 codes to finite values. Nonfinite input to the throwing array conversions
   throws `.invalidData` naming the exact invalid indices; the nonthrowing conversion, calibration and
   mutation paths stop with named guards. Invalid decoded parameter tuples are rejected, while valid
@@ -339,7 +346,14 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   expecting a measured selection, and `MixedPrecisionAutoTuner()` creates a separate tuner.
   `QuantizedAutoTuner.selectOptimalQuantization(for:dimension:candidateCount:accuracyRequirement:)` is
   replaced by `suggestQuantization(for:dimension:candidateCount:relativeErrorHint:)`, and
-  `QuantizedAutoTuner()` is now constructible. Adaptive FP16 acceptance checks both operands and the actual
+  `QuantizedAutoTuner()` is now constructible. The hint's meaning flipped from a required accuracy to
+  a tolerated relative error while its default stayed `0.02`, and a reduced strategy needs a hint of at
+  least `0.05` (`candidatesINT8`, more than 1,000 candidates) or `0.1` (`bothINT8`, more than 5,000), so
+  the default call now always returns `fullFP32` where 0.3.3 could return `candidatesINT8`; pass the
+  error you tolerate. `selectMixedPrecisionStrategy(for:maximumSyntheticRelativeError:)` applies its one
+  default, `0.001`, to every precision mode, where 0.3.3 used a per-mode limit, so `.int8Acceptable`
+  workloads are held to a ten times tighter bound unless the limit is passed. Adaptive FP16 acceptance
+  checks both operands and the actual
   widened error against one defined FP32 result, and full mode keeps the `fullFP32` policy. Synthetic
   profiles are fixture measurements, not data-dependent accuracy or production performance guarantees.
 
@@ -379,7 +393,9 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   output counts and bytes, and the scheduling domain before allocating; SGD rejects nonfinite
   intermediates. Public signatures are unchanged, but the curve fit and the smooth-kNN memberships are
   computed differently, so re-baseline UMAP outputs, and expect nonfinite configuration to be rejected
-  with an error. A runtime failure may leave an internal optimizer buffer partly updated.
+  with an error. Fewer than two points now throws `.invalidDimension` from `KNNGraph.bruteForce` and
+  `Operations.umap` (0.3.3 threw `.invalidOperation`); `PCAModel.fit` keeps `.invalidOperation`. A
+  runtime failure may leave an internal optimizer buffer partly updated.
 
 - **Empty `DynamicVector` binary frames decode (B01).** A valid empty `DynamicVector` binary frame now
   decodes; fixed positive dimensions still reject an empty frame after the CRC check, and version-1 bytes
@@ -469,7 +485,13 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   (`P02DefaultRouteRedTests.defaultRouteEqualsSingleQuery`). For the inputs
   that took the GEMM route this changes scores and rankings, and the work and
   temporary storage: no queries × candidates score matrix is built, and each
-  query runs its own single-query search. On one test host (P02 phase G
+  query runs its own single-query search. With the default
+  `CPUComputeProvider.automatic` those searches run on one core unless the batch
+  has at least 50,000 queries (the provider's `parallelizationThreshold`); the
+  `.parallel` and `.performance` presets still submit a single worker for up to
+  256 queries (the 256-item chunk minimum of `parallelExecute`), and the
+  per-query scan inside each worker runs inline as a nested region. On one test
+  host (P02 phase G
   allocation probe, not a test) the old route requested a buffer of Q × N
   Floats on every call at Q 8 with N 256 and at Q 64 with N 4096, and the new
   default requested none that large. The new default is slower in most measured

@@ -314,7 +314,9 @@ extension NormalizationHint {
         return NormalizationHint(vector: norm, isNormalized: true)
     }
 
-    /// Returns a re-hinted copy with normalized status (unchecked).
+    /// Returns a re-hinted copy with normalized status (unchecked). A zero, nonfinite or non-normalizable vector stops
+    /// the process in every build (`normalizedUnchecked`'s named guard; 0.3.3 returned a wrongly flagged hint); use
+    /// `normalizedWithHint()` for a checked result (`NormalizationRangeContractTests.guardChildProbe`, scenario `zero`).
     public func normalizedUncheckedWithHint() -> NormalizationHint<V> {
         let normalized = vector.normalizedUnchecked()
         return NormalizationHint(vector: normalized, isNormalized: hasUnitFloatCoordinates(normalized))
@@ -340,7 +342,9 @@ extension IndexableVector {
         return NormalizationHint(vector: normalized, isNormalized: true)
     }
 
-    /// Create a normalized copy (unchecked) with hint.
+    /// Create a normalized copy (unchecked) with hint. A zero, nonfinite or non-normalizable vector stops the process in
+    /// every build (`normalizedUnchecked`'s named guard; 0.3.3 returned a wrongly flagged hint); use
+    /// `normalizedWithHint()` for a checked result (`NormalizationRangeContractTests.guardChildProbe`, scenario `zero`).
     public func normalizedUncheckedWithHint() -> NormalizationHint<Self> {
         let normalized = normalizedUnchecked()
         return NormalizationHint(vector: normalized, isNormalized: hasUnitFloatCoordinates(normalized))

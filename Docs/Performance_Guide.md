@@ -289,7 +289,11 @@ let results = try await Operations.findNearestBatch(queries: queries, in: databa
 
 `findNearestBatch` runs `findNearest`'s routes once per query by default and its tiled Gram route only for
 `cpuStrategy: .gram(...)` (see the [routing table](API_Overview_Map.md#search-and-matrix-routing)); whether either is
-faster than a loop over `findNearest` is not verified in this repository.
+faster than a loop over `findNearest` is not verified in this repository. Under the default
+`CPUComputeProvider.automatic` the per-query searches run on one core unless the batch has at least 50,000 queries,
+and the `.parallel` and `.performance` presets submit one worker for up to 256 queries, because `parallelExecute`
+chunks by at least 256 items; the scan inside each worker runs inline as a nested region. To use more cores on a
+smaller batch, split it across tasks yourself or install a provider with a smaller chunk minimum.
 
 ### Pitfall 4: Random access over large candidate sets
 

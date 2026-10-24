@@ -129,7 +129,8 @@ extension KNNGraph {
     /// less than quadratically from 500 to 5,000; do not extrapolate. Larger n
     /// is not measured.
     ///
-    /// - Throws: invalidDimension for n/d, k, LP64 or count/byte rejection;
+    /// - Throws: invalidDimension for n/d, k, LP64 or count/byte rejection (fewer than two points included; 0.3.3
+    ///   threw invalidOperation for that case);
     ///   dimensionMismatch for ragged input; invalidData if computed entries do
     ///   not satisfy the checked CSR contract.
     public static func bruteForce<V: VectorProtocol>(

@@ -17,8 +17,8 @@ The recovered execution policy calls for Astra/medium implementers and independe
 
 ## Workspace at interruption
 
-- Main checkout: `/Users/goftin/dev/gsuite/VSK/VectorCore`, branch `main`.
-- Implementation checkout: `/private/tmp/vectorcore-stabilization-2026-09-18`, branch `codex/vectorcore-stabilization-2026-09-18`.
+- Main checkout: `<repo>`, branch `main`.
+- Implementation checkout: `<tmp>/vectorcore-stabilization-2026-09-18`, branch `codex/vectorcore-stabilization-2026-09-18`.
 - Both HEADs: `8b02e75bca7055ae11170873d15c06f1538709b7` (`docs: refresh references and reconcile documented contracts (#46)`).
 - Both checkouts had no tracked or staged changes. There were no stabilization commits or stashes.
 - The audit, review and planning documents remain untracked. All 92 audit files, 24 review files and seven plan files compared byte-for-byte equal between the two checkouts during recovery.
@@ -32,10 +32,10 @@ The worktree was created around **9:23 p.m. Pacific**. The audit, review and pla
 At **9:24:20 p.m.**, the following command ran in the implementation checkout and exited 1:
 
 ```sh
-swift test --jobs 6 --filter 'TriangularMatrix|TopKNaN|Integration' > /private/tmp/vectorcore-stabilization-baseline.log 2>&1
+swift test --jobs 6 --filter 'TriangularMatrix|TopKNaN|Integration' > <tmp>/vectorcore-stabilization-baseline.log 2>&1
 ```
 
-The retained [baseline log](baseline-interrupted.log) reports that `/Users/goftin/.cache/clang/ModuleCache` could not be written (`Operation not permitted`), followed by inability to load the standard library. This is a baseline setup failure; no test result was obtained.
+The retained [baseline log](baseline-interrupted.log) reports that `<home>/.cache/clang/ModuleCache` could not be written (`Operation not permitted`), followed by inability to load the standard library. This is a baseline setup failure; no test result was obtained.
 
 At **9:24:27 p.m.**, the last recorded tool call requested the same command with `sandbox_permissions: "require_escalated"`, asking for access to compiler caches. The transcript ends without that retry's result. Do not assume it ran or passed.
 
@@ -54,12 +54,12 @@ At **9:24:27 p.m.**, the last recorded tool call requested the same command with
 - [Work items](../../plans/2026-09-18-vectorcore-stabilization/WORK_ITEMS.md), [tracking data](../../plans/2026-09-18-vectorcore-stabilization/tracking.json), and [agent workflow](../../plans/2026-09-18-vectorcore-stabilization/AGENT_WORKFLOW.md).
 - [Validated audit](../../../audits/2026-09-14/README.md): 131 adjudicated records, including overlapping findings, opportunities, three unverified concerns and one rejected inference; not 131 independent bugs.
 - Original thread: `01a0a347-3759-7d80-b6ef-a82386372197`, titled **Review library for production scale**.
-- Transcript: `/Users/goftin/.codex/sessions/2026/09/14/rollout-2026-09-14T21-15-48-01a0a347-3759-7d80-b6ef-a82386372197.jsonl`. User authorization is at line 1529; the final tool call is at line 1611; last event timestamp is `2026-09-19T04:24:27.828Z`.
+- Transcript: `<home>/.codex/sessions/2026/09/14/rollout-2026-09-14T21-15-48-01a0a347-3759-7d80-b6ef-a82386372197.jsonl`. User authorization is at line 1529; the final tool call is at line 1611; last event timestamp is `2026-09-19T04:24:27.828Z`.
 
 Recovery checks passed:
 
 - `python3 Docs/audits/2026-09-14/evidence/validate_audit.py --verify-source`: 131 records, 46 canonical labels, 91 retained evidence files and 355 tracked-file hashes verified.
-- `python3 /private/tmp/check-vectorcore-stabilization-plan.py`: record ownership, 43 work items, 12 streams, acyclic dependencies, 455 links and source/test references verified. Its printed `execution unauthorized` assertion checks only the historical planning JSON; the later user authorization above supersedes it.
+- `python3 <tmp>/check-vectorcore-stabilization-plan.py`: record ownership, 43 work items, 12 streams, acyclic dependencies, 455 links and source/test references verified. Its printed `execution unauthorized` assertion checks only the historical planning JSON; the later user authorization above supersedes it.
 - Git status and staged/unstaged diffs checked in both worktrees; audit/review/plan copies compared byte-for-byte.
 
 No Swift tests or benchmarks were run during recovery. Historical test results are not evidence that these findings have been repaired.

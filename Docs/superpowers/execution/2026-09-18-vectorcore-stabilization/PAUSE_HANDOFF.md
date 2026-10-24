@@ -6,9 +6,9 @@
 
 The program contains 43 tasks. **32 Core patches are accepted and integrated locally**, including I01 and N01 whose downstream acceptance is staged; **11 tasks remain**. L03 is reviewed and verified, awaiting integration. Milestones 01–10 are recorded focused integration checks, not a whole-package or production-readiness claim.
 
-Integration checkout: `/private/tmp/vectorcore-stabilization-2026-09-18`, branch `codex/vectorcore-stabilization-2026-09-18`. Latest accepted production commit: `53976c1f1d21f3005473d209106e0ef3df995438` (V02). The pause checkpoint adds documentation/evidence only. Main/user files and sibling repositories remain preserved; no push, merge or release was performed.
+Integration checkout: `<tmp>/vectorcore-stabilization-2026-09-18`, branch `codex/vectorcore-stabilization-2026-09-18`. Latest accepted production commit: `53976c1f1d21f3005473d209106e0ef3df995438` (V02). The pause checkpoint adds documentation/evidence only. Main/user files and sibling repositories remain preserved; no push, merge or release was performed.
 
-Durable source/evidence root: `/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/`. October2 contains canonical workspaces, task evidence and this checkpoint; September24/29 evidence remains authoritative for prior work. Git commits belong to the canonical repository's shared object database. A complete checkpoint archive and its verification manifest are additionally retained under October2/pause-checkpoint. Do not rely only on the temporary integration directory; it has lost files in prior sessions.
+Durable source/evidence root: `<repo>/.stabilization-recovery/`. October2 contains canonical workspaces, task evidence and this checkpoint; September24/29 evidence remains authoritative for prior work. Git commits belong to the canonical repository's shared object database. A complete checkpoint archive and its verification manifest are additionally retained under October2/pause-checkpoint. Do not rely only on the temporary integration directory; it has lost files in prior sessions.
 
 ## Exact stopping points
 

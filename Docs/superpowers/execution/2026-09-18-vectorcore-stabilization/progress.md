@@ -4,7 +4,7 @@ Persistent execution source of truth: this directory's state.json, POLICY.md, PR
 
 ## Baseline
 
-- Existing worktree verified: /private/tmp/vectorcore-stabilization-2026-09-18, branch codex/vectorcore-stabilization-2026-09-18.
+- Existing worktree verified: <tmp>/vectorcore-stabilization-2026-09-18, branch codex/vectorcore-stabilization-2026-09-18.
 - Base source: 8b02e75bca7055ae11170873d15c06f1538709b7; no tracked changes at resume.
 - `swift test --jobs 6 --filter 'TriangularMatrix|TopKNaN|Integration'`: exit 0, 81 Swift Testing tests in 14 suites passed. Full output: baseline-resumed.log. These existing tests do not close audited gaps.
 - Planning preflight: PREFLIGHT.md covers candidate checkpoint presence, acceptance ownership and every pair of shared source paths. Dispatch briefs remain required.
@@ -14,16 +14,16 @@ Persistent execution source of truth: this directory's state.json, POLICY.md, PR
 
 O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a staged Core repair; S02 validation is incomplete in its isolated snapshot. Eighteen audit records are closed; the staged I01 records still require their remaining evidence. Workers must not commit or edit shared source files; root owns index operations.
 
-- O01 dispatched to /root/o01_implementation at base ed1fd0b; default .build reserved. V01 approved with /private/tmp/vectorcore-stabilization-V01-build scratch.
+- O01 dispatched to <agents>/o01_implementation at base ed1fd0b; default .build reserved. V01 approved with <tmp>/vectorcore-stabilization-V01-build scratch.
 - Retained audit logs and baseline evidence explicitly added despite the broad log ignore rule.
 
-- V01 dispatched to /root/v01_implementation at base 04f27df; runtime RED includes 10 assertion failures and an actual CLI artifact-write failure incorrectly returning zero. Focused helper GREEN, expanded process table underway.
-- O01 reproduced compact aliasing/lifetime defects (10 tests, 2060 issues) and singleton trap separately. Debug passed 11 test functions; immutable-snapshot Release passed. Independent /root/o01_review approved source/test design with only a new unused-result warning, now cleaned up. Final Release/ASan and corrected file hashes remain pending. No audit closure yet.
+- V01 dispatched to <agents>/v01_implementation at base 04f27df; runtime RED includes 10 assertion failures and an actual CLI artifact-write failure incorrectly returning zero. Focused helper GREEN, expanded process table underway.
+- O01 reproduced compact aliasing/lifetime defects (10 tests, 2060 issues) and singleton trap separately. Debug passed 11 test functions; immutable-snapshot Release passed. Independent <agents>/o01_review approved source/test design with only a new unused-result warning, now cleaned up. Final Release/ASan and corrected file hashes remain pending. No audit closure yet.
 - Root recorded S01/I01/I02/R01 design decisions; R01 and staged I01 briefs are ready. Decoded hint invalidation is an authorized behavior change and must be documented.
 
 - O01 accepted after final Release/ASan and scoped re-review. Root verified all three hashes against working files. OWN-10/API-47 closed in closures/O01.json; OWN-05 remains partial until O02. Local source commit follows; no push or merge.
 
-- O01 integrated locally at 312bec8. R01 dispatch base is 312bec8; all R01 editing/builds use /private/tmp/vectorcore-stabilization-R01-implementation (immutable base archive plus task edits), preventing overlap with V01's shared-source Release compile. Root imports only accepted assigned files later. V01 independent review dispatched to /root/v01_review.
+- O01 integrated locally at 312bec8. R01 dispatch base is 312bec8; all R01 editing/builds use <tmp>/vectorcore-stabilization-R01-implementation (immutable base archive plus task edits), preventing overlap with V01's shared-source Release compile. Root imports only accepted assigned files later. V01 independent review dispatched to <agents>/v01_review.
 
 - V01 round1 review requires corrections: actual provider observations must be validated, CSV close failures must propagate, and failure identity tests need exact names/reasons. Root checked and accepted findings. Release XCTest passed but unexpected App execution in the Swift Testing runner prevents acceptance; support/executable target separation is authorized if confirmed by focused diagnosis. V01 remains open; report/brief addendum retained.
 
@@ -31,24 +31,24 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 
 - R01 integrated at61a9bbd. V01 round2 independently approved with no remaining findings; root verified14 hashes and final test/CLI evidence. TOOL-01/TOOL-02 accepted; V02/V04 and performance claims remain open. Final JSON/CSV artifacts retained with hashes before local commit.
 
-- V01 integrated locally at297ad4e. Next workers: staged Core I01 and O02, each in an isolated base297ad4e archive under /private/tmp; no shared-source edits. Root retains import/index ownership and reserves integrated checks on the shared branch. I01 full closure still needs S01 and downstream evidence.
+- V01 integrated locally at297ad4e. Next workers: staged Core I01 and O02, each in an isolated base297ad4e archive under <tmp>; no shared-source edits. Root retains import/index ownership and reserves integrated checks on the shared branch. I01 full closure still needs S01 and downstream evidence.
 
 - Integration milestone 01 at source revision297ad4e: combined Debug and Release focused runs both exited0, each passing8 XCTest tests and86 Swift Testing tests in7 suites. Filters combine TieredStorageOwnership, MetricDispatchContractTests, TopKNaN, BatchKernelProviderTests, IntegrationProtocolsSuite and BenchmarkContract. Complete commands/output are retained in reports/milestone-01-{debug,release}.log; no broader audit closure is inferred.
 - Root recorded source-established EX-01 in FOLLOW_UP_FINDINGS.md: INT8 mutable temporary buffers discard writes when the body throws. Q01 must choose and test its quantization-aware policy before changing writeback; O02 remains bounded to TieredStorage.
 
 - I01 independently approved and imported after three matching frozen hashes. Final Debug/Release each passed50 tests/2 suites after684-issue behavioral RED. Core access/decode contract accepted, but OWN-03/API-33 remain partial pending S01 and actual downstream checks; closures/I01.json records exclusions. S02 contract prepared with authorized throwing centroid/statistics migration and explicit dimension/empty behavior.
 
-- I01 integrated locally at99a2ac4. S01 dispatched to /root/s01_implementation in isolated base99a2ac4 archive with all accepted source changes. O02 continues independently at its recorded base. I01 ignored logs explicitly retained in the following ledger commit after an embedded git subprocess was blocked by sandbox index permissions; direct approved git add succeeded.
+- I01 integrated locally at99a2ac4. S01 dispatched to <agents>/s01_implementation in isolated base99a2ac4 archive with all accepted source changes. O02 continues independently at its recorded base. I01 ignored logs explicitly retained in the following ledger commit after an embedded git subprocess was blocked by sandbox index permissions; direct approved git add succeeded.
 
 - O02 independently approved and imported after two matching frozen hashes and unchanged-base checks. Debug/Release each pass17 functions/1116 invocations; ASan14 throwing-reference cases pass. Root verified all254 before/after build artifacts, three probe sources and five review files; only TieredStorage changed among135 production files. Actual Release allocation evidence establishes one shared detach and zero measured repeated-write allocations; n256 complete construction requested bytes fall from8,525,090,769 to534,609. OWN-05 (with O01), OWN-13 and OWN-14 closed in closures/O02.json. Spare capacity retention is excluded; historical failed characterization logs retained. No latency or operating-envelope claim.
 
-- O02 integrated locally at6f364ba. E01 dispatched in isolated base6f364ba archive to /root/e01_implementation. S01 guard diagnostics were stripped under standard Release preconditions; root-approved guard/fatalError preserves the required-count diagnostic without changing valid mutation behavior. Final validation and independent review are in progress.
+- O02 integrated locally at6f364ba. E01 dispatched in isolated base6f364ba archive to <agents>/e01_implementation. S01 guard diagnostics were stripped under standard Release preconditions; root-approved guard/fatalError preserves the required-count diagnostic without changing valid mutation behavior. Final validation and independent review are in progress.
 
 - S01 final source snapshot passed89 tests/16 suites in Debug and Release,5 valid tests under ASan; independent review favorable with all8 hashes verified. Root withheld closure pending extra test-only mixed/SoA/calibrator post-replacement coverage required by OWN-02. Worker resumed within same archive; all7 production files remain frozen. No S01 import/closure yet.
 
 - S01 supplemental post-replacement mixed/SoA/calibrator function passed Debug/Release/ASan and scoped independent review. Root verified8hashes, unchanged7production files and reconstructed original test SHA256, then imported exact8files. OWN-01/OWN-02 closed in closures/S01.json; I01 shape prerequisite satisfied but downstream evidence remains open. Original89/5 runs and supplemental1/1/1 runs are recorded separately; no combined90-test run is inferred. Optional C alternative uncompiled.
 
-- S01 integrated locally at7c211d9. S02 dispatched to /root/s02_implementation in isolated base7c211d9 archive; E01 final validation and independent review continue separately. Next shared integration milestone should combine these new boundary/API repairs with accepted storage/metric/hint/benchmark contracts after their imports.
+- S01 integrated locally at7c211d9. S02 dispatched to <agents>/s02_implementation in isolated base7c211d9 archive; E01 final validation and independent review continue separately. Next shared integration milestone should combine these new boundary/API repairs with accepted storage/metric/hint/benchmark contracts after their imports.
 
 - E01 independently approved with final Debug/Release each7XCTest entries/0failures +16SwiftTesting controls. Root verified5frozen hashes, complete scope inventory and14retained evidence hashes (review checksum refreshed after final verdict), then imported exact5files. API-07/API-08/API-44 closed in closures/E01.json. E02/E03/E06 and general triangular overflow remain separate; no scheduling/performance claim.
 
@@ -66,19 +66,19 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 
 - O04 revision2 independently approved and imported after root verified9frozen hashes, exact full diff,237/238code-file inventory and18evidence hashes. Debug/Release each55tests8suites andASan8validtests1suite pass; named new boundary diagnostics retained in Release. OWN-08/09/11/25 closed to their bounded acceptance, retaining no-miscompile/no-realOOM qualifications. MemoryPool fallback remains EX-05/E04; normalization range remains N01.
 
-- O04 integrated locally at98388fc. I02 dispatch base is the same accepted revision; isolated archive /private/tmp/vectorcore-stabilization-I02-implementation owns only the FP16 cache and specified cache tests. S02 compiler diagnosis continues; no overlapping source ownership or shared build directory.
+- O04 integrated locally at98388fc. I02 dispatch base is the same accepted revision; isolated archive <tmp>/vectorcore-stabilization-I02-implementation owns only the FP16 cache and specified cache tests. S02 compiler diagnosis continues; no overlapping source ownership or shared build directory.
 
 - Q01 final bounded brief independently approved after resolving exact-dot cancellation and affine-difference rounding gaps. Root retained the review and optimized offline integer-oracle experiment, and incorporated final precision/nonfinite refinements. I02 revision2 now passes22focusedtests in Debug/Release with bounded child probes and is under independent review. S02 final Release64tests/9suites passed after test-only explicit subscripts; final Debug/ASan and scoped re-review remain. No new task closure.
 
 - I02 revision2 independently approved and imported after root verified3frozenhashes,completepatch,238/239code-fileinventory and18evidencehashes. Final Debug/Release each22tests/2suites pass, including named negative initialization diagnostics with bounded child probes. OWN-04/18/19 closed to exact identity and cache-retained allocated payload accounting; metadata/transients/caller-onlyretention and measuredRSS remain excluded. Required maxBytes/removal of shared/manualstore migrations are documented.
 
-- I02 integrated locally at0dbb18c. Q01 dispatch base is the same accepted revision, in isolated archive /private/tmp/vectorcore-stabilization-Q01-implementation; owns quantization calibration/conversion/decoded metric regions only. S02 sanitizer validation continues separately; N01 remains next after its acceptance.
+- I02 integrated locally at0dbb18c. Q01 dispatch base is the same accepted revision, in isolated archive <tmp>/vectorcore-stabilization-Q01-implementation; owns quantization calibration/conversion/decoded metric regions only. S02 sanitizer validation continues separately; N01 remains next after its acceptance.
 
 - N03 magnitude-population-statistics brief independently approved; synchronous duplicate joins serial/parallel repair, while E03 prerequisite remains pending. E04 source inventory retained as preliminary design only; checked-out ownership, generic initialization and budget/statistics policy still require root decisions before dispatch.
 
 - S02 finalcleanup independently approved and imported after root verified6frozenhashes,exactcompletepatch,236/237code-fileinventory and61evidencehashes. Final Debug/Release each64tests/9suites and ASan5validtests/1suite pass. OWN-06/API-13/API-19 and execution findingsEX-02/03 closed within their dimension/factory contracts. Compiler workaround remains test-only with pre-S02reproduction; finalchildhelper has15s execution+atmost2s cleanup. N01 prerequisites are now satisfied.
 
-- S02 integrated locally at028b4aa. N01 dispatched from the same accepted revision in /private/tmp/vectorcore-stabilization-N01-implementation; all S01/S02/O04/CoreI01 prerequisites included. Q01 continues on disjoint quantization files. Combined integration milestone03 will validate newly integrated O04/I02/S02 against prior accepted contracts.
+- S02 integrated locally at028b4aa. N01 dispatched from the same accepted revision in <tmp>/vectorcore-stabilization-N01-implementation; all S01/S02/O04/CoreI01 prerequisites included. Q01 continues on disjoint quantization files. Combined integration milestone03 will validate newly integrated O04/I02/S02 against prior accepted contracts.
 
 - Integration milestone03 at source028b4aa passed Debug and Release, each15XCTest entries plus197SwiftTesting tests/21suites. This combines accepted O04/I02/S02 with prior contracts; isolated N01/Q01 work is excluded. Exact commands, exits and log hashes are in state.json; initial sandbox compiler-cache denial is retained separately. No broader rerun needed until further code changes or a concrete concern. R05 score design independently approved and queued after R02; no implementation dispatched.
 
@@ -88,13 +88,13 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 
 - Q01 revision4 independently ACCEPTED and exact7files imported after root verified completepatch,270/274codefileinventory,all845workerartifacthashes,unchangedsharedbase. FinalDebug/Release each17XCTest+50SwiftTesting;ASan10+7 pass. NUM-03/04/05 andEX-01/04 closed;SER-08 remains stagedS03. Measured allocation regressions resolved with0events/bytes inall22v4probe rows,identicalv2resultbits; no latencyclaim. N01 full22filediff nowunderindependentreview whilefinalchecksrun.
 
-- Q01 integrated locally at8f7b828. E03 atomicconfiguration transaction implementation dispatched to reused /root/q01_implementation in isolatedbase8f7b828 archive/private/tmp/vectorcore-stabilization-E03-implementation, disjointfromN01. Reviewer/root continueN01verification.
+- Q01 integrated locally at8f7b828. E03 atomicconfiguration transaction implementation dispatched to reused <agents>/q01_implementation in isolatedbase8f7b828 archive/private/tmp/vectorcore-stabilization-E03-implementation, disjointfromN01. Reviewer/root continueN01verification.
 
 - N01 independently ACCEPTED asCorestagedrepair and exact22filesimported afterrootcompletepatch/hash/271-to276codeinventory verification. FinalDebug/Release each100functions10suites incl24diagnosticchildren;ASan33exercised+2explicitnoops pass. NUM-01/02closed;API-39 remainsdownstreamstaged. Noexistingtestexpectationschanged. Rootwillcheckcombined N01/Q01integration beforeclaimingcombinedsuccess.
 
-- N01 integrated locally at 84f42d0. R02 dispatched to reused /root/n01_implementation in an isolated archive of that revision. E03 continues on separate configuration files. Combined integration milestone04 is running from source 84f42d01489a526b8ae40bd77fe7618c0de33f34 with a fresh build scratch; no further source import until it finishes.
+- N01 integrated locally at 84f42d0. R02 dispatched to reused <agents>/n01_implementation in an isolated archive of that revision. E03 continues on separate configuration files. Combined integration milestone04 is running from source 84f42d01489a526b8ae40bd77fe7618c0de33f34 with a fresh build scratch; no further source import until it finishes.
 
-- E03 revision 2 passed independent review and root complete reconstruction: all five files, 243/246 code-file inventory and 35 evidence hashes match. Four global scenarios now execute in isolated bounded children, resolving interference with routing tests; Debug/Release and the combined routing run pass. Import is waiting for the current root integration build, not for further implementation. N02 dispatched to /root/q01_implementation at base 84f42d0 in its separate archive; accepted N01 files are preserved outside the explicitly owned methods.
+- E03 revision 2 passed independent review and root complete reconstruction: all five files, 243/246 code-file inventory and 35 evidence hashes match. Four global scenarios now execute in isolated bounded children, resolving interference with routing tests; Debug/Release and the combined routing run pass. Import is waiting for the current root integration build, not for further implementation. N02 dispatched to <agents>/q01_implementation at base 84f42d0 in its separate archive; accepted N01 files are preserved outside the explicitly owned methods.
 
 - Milestone 04 completed on accepted N01/Q01 plus the reviewed EX06 test/CI repair: Debug and Release each pass 25 XCTest tests and 260 Swift Testing functions in 28 suites. Root retained 274 shape/unsafe-memory child captures and exact commands/hashes in milestone-04-verification.json. EX06 closes the observed unbounded API class, with Python runtime RED/GREEN and a mechanical CI gate; Swift timeout branches are source-reviewed rather than claimed as forced runtime coverage. The sole existing expectation migration is O04 normalize diagnostic wording. E04 root design candidate is under independent review; its baseline allocation profile is retained.
 
@@ -104,21 +104,21 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 
 - R02 accepted and exact three files imported after independent review and root reconstruction. API-09/API-10 close: transactional update witness, duplicate rejection, monotonic checked IDs, one-lock binding snapshots and metric execution outside the lock. Debug/Release each pass 80 reported functions in five suites; actual reentrant children and public Swift 6 positive/negative migration consumers are retained. The full 248/250 code-file inventory, frozen backup and all final evidence hashes match. No score policy or downstream execution claim.
 
-- R02 integrated locally at ae0fd90. E04 dispatched to /root/n01_implementation from that complete base archive, with exclusive pool/OperationContext scope and the independently approved ownership/budget/fallback brief. Actor handles remain borrowed; MemoryPool handles retain late-owner lifetime. Typed pool source migration and explicit cached-byte budget are authorized. Final allocation profile comparison remains a root responsibility.
+- R02 integrated locally at ae0fd90. E04 dispatched to <agents>/n01_implementation from that complete base archive, with exclusive pool/OperationContext scope and the independently approved ownership/budget/fallback brief. Actor handles remain borrowed; MemoryPool handles retain late-owner lifetime. Typed pool source migration and explicit cached-byte budget are authorized. Final allocation profile comparison remains a root responsibility.
 
 - N02 accepted and exact four files imported after independent review and root reconstruction. NUM-14/NUM-15 close with finite-aware equality, consistent widened distance accuracy and staged safeLog input/domain policy. Final Debug and Release each pass seven functions in two suites. All 27 evidence artifacts, eight command-log records, full code inventory and canonical backups match. Two optimized compiler failures are retained; a reproduced, faithful test-only subscript workaround leaves production code and flags unchanged.
 
-- N02 integrated locally at 1c55a85. N03 dispatched to /root/q01_implementation from that complete accepted archive, with exclusive statistics-only BatchOperations/SyncBatchOperations ownership. E04 continues on disjoint pool files. New E05, S03 and Q03 contracts passed independent design review and are ready for future slots; their exact recording, decoder and reentrant-calibration policies are preserved in the approved briefs.
+- N02 integrated locally at 1c55a85. N03 dispatched to <agents>/q01_implementation from that complete accepted archive, with exclusive statistics-only BatchOperations/SyncBatchOperations ownership. E04 continues on disjoint pool files. New E05, S03 and Q03 contracts passed independent design review and are ready for future slots; their exact recording, decoder and reentrant-calibration policies are preserved in the approved briefs.
 
 - E02 scheduling design independently approved after a mechanical 30-site task-submission/caller inventory. Root resolved phase-local worker limits, nested suppression, cooperative cancellation, ordered identity reduction, truthful synchronous executeBatch behavior and deletion of unused internal engines. Live custom-factory traps join the scoped repair. Dispatch waits for R03/N03/E04 integration. R03 global configuration fixtures now require isolated bounded child processes, incorporating the demonstrated E03 suite-interference finding. E04 source review accepted v1; final validation and allocation repeat remain pending. N03 v1 is under independent review after root reconstruction and byte-identical fixture regeneration.
 
 - N03 accepted and exact seven files imported after independent final review. NUM-06 closes with shared centered Double population statistics, full-count NaN propagation and chunk-index merge order across the public async and internal synchronous routes. Final Debug/Release each pass eight functions in one suite. Root verified the full 256/261 code-path inventory, regenerated Decimal fixtures byte-for-byte and checked all 16 evidence artifacts plus canonical backups. No settings activation or broader scheduling claim.
 
-- N03 integrated locally at a558253. E05 dispatched to /root/q01_implementation from that complete accepted archive with exclusive AutoTuning ownership and only a necessary Operations calibration-call migration permitted. E04 v2 source/allocation evidence is independently accepted; final runtime package awaits adjudication. Root allocation probe verified 133 linked artifacts and removed cache-size allocation growth while retaining explicit bookkeeping/timing limitations.
+- N03 integrated locally at a558253. E05 dispatched to <agents>/q01_implementation from that complete accepted archive with exclusive AutoTuning ownership and only a necessary Operations calibration-call migration permitted. E04 v2 source/allocation evidence is independently accepted; final runtime package awaits adjudication. Root allocation probe verified 133 linked artifacts and removed cache-size allocation growth while retaining explicit bookkeeping/timing limitations.
 
 - E04 final v2 accepted and exact 16 files imported. API-05/06/32/37 and EX-05 close with actor-owned allocation teardown, fresh lease identities, strict return-time physical byte caps, awaited scoped release, checked fallback alignment/binding and maintained MemoryPool cached bytes. Debug/Release each pass 48 reported functions; ASan covers 46 valid functions/63 invocations with rejection no-ops excluded. Root verified all 264 worker evidence files and canonical copies, full reconstruction, 132 public linked artifacts and exact child associations. Three linked Release allocation repetitions remove cache-size growth while retaining bookkeeping allocations; no timing or downstream claim.
 
-- E04 integrated locally at 076f60b. R03 dispatched to /root/n01_implementation from a complete archive of that revision, with matrix semantics and logical SoA output bounds as exclusive scope. E05 continues independently. Combined milestone 05 will cover the five accepted task patches since milestone 04; no production imports while those checks run.
+- E04 integrated locally at 076f60b. R03 dispatched to <agents>/n01_implementation from a complete archive of that revision, with matrix semantics and logical SoA output bounds as exclusive scope. E05 continues independently. Combined milestone 05 will cover the five accepted task patches since milestone 04; no production imports while those checks run.
 
 - Milestone 05 passed on committed source 076f60b: Debug and Release each pass 25 XCTest tests plus 331 Swift Testing functions in 35 suites. Source hashes were rechecked unchanged across both runs. Root retained 322 printed S01/O04/E03/E04 child captures and exact source/command/log/executable association; other bounded children remain supported by their actual passing parent assertions, not an invented per-child inventory. E05 and R03 are not yet imported.
 
@@ -126,11 +126,11 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 
 - E05 final v1 accepted and exact three files imported. API-29 closes with one-lock state, callbacks/clock/logging outside the lock, nonblocking provisional same-key fallback, manual-wins publication, throwing cleanup and safe arithmetic fallback. Both actual baseline deadlocks now complete. Debug/Release each pass eight reported functions plus 21 isolated child scenarios, seven separate Operations controls and public Swift 6 typechecks. Root verified the 261/263 code inventory, all 151 worker artifacts/canonical copies and 63 child associations; the unavailable original RED bundle hash is explicitly qualified. No tuner quality or hard callback-deadline claim.
 
-- E05 integrated locally at 6d47ec5. O03 dispatched to /root/q01_implementation from that complete archive; exclusive HybridStorage/DimensionStorage/resize/temp-result scope. R03 v1 is frozen for independent source review and final runtime checks. O05 remains designed but waits for accepted O03; E02 waits for accepted R03.
+- E05 integrated locally at 6d47ec5. O03 dispatched to <agents>/q01_implementation from that complete archive; exclusive HybridStorage/DimensionStorage/resize/temp-result scope. R03 v1 is frozen for independent source review and final runtime checks. O05 remains designed but waits for accepted O03; E02 waits for accepted R03.
 
 - R03 final v2 accepted and exact six files imported. API-14/15/16 close with supplied-metric diagonals, true cosine similarity and logical-prefix-only zero-query SoA writes. Debug/Release each pass 77 functions in 16 suites and 45 actual configuration children; focused ASan covers three functions/five invocations, and the public Swift 6 consumer compiles and runs. Root verified all 167 worker artifacts/canonical copies, 974 build artifacts, 133 linked public artifacts, source reconstruction and 90 final child associations. V2 adds only three mechanically verified test-reference comments to tested v1. E02 prerequisites are now accepted.
 
-- R03 integrated locally at 433efec. E02 dispatched to /root/n01_implementation from a complete archive of that accepted revision. The approved contract bounds library worker submissions, suppresses nested fan-out, preserves ordered reductions and adds cooperative cancellation. O03 continues on disjoint storage files.
+- R03 integrated locally at 433efec. E02 dispatched to <agents>/n01_implementation from a complete archive of that accepted revision. The approved contract bounds library worker submissions, suppresses nested fan-out, preserves ordered reductions and adds cooperative cancellation. O03 continues on disjoint storage files.
 
 - O03 actual linked Release baseline confirms copying in default-managed DimensionStorage too: a direct concrete ten-write measurement allocates ten 40-byte owners plus ten 2,048-byte payloads. Root approved the same enum-owner repair for that managed branch while preserving the historical OWN-26 source-fixture result and rejecting blanket extrapolation. Baseline/final linked evidence remains required.
 
@@ -270,7 +270,7 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 - October2 user-requested pause: all new implementation/builds stopped at durable boundaries. L03 final v3 independently accepted and root source/reference/lint/evidence checks pass, but its 11 files remain unimported. V03 v3 source accepted with final runtime pending; the legacy five-to-seven required-job test migration remains pending. R05 actual dot-score RED reproduced seven issues; the six-path draft is preserved uncompiled/unverified. All workers report no active processes. PAUSE_HANDOFF.md and canonical worker handoffs are authoritative on resume; 32 accepted Core patches/11 remaining.
 - Root corrected benchmark-entry accounting: BenchmarkContractSwiftTestingEntry is a real serialization assertion, not a no-op. V02 benchmark runs have one XCTest no-op and one real Swift Testing entry; milestone10 has one XCTest and one Swift Testing no-op. Offline milestone verification reran successfully without any test/source/binary changes; historical sealed reports preserved with an explicit erratum.
 
-- October3 resume (explicit user "resume"; new root session in Claude Code). Host rebooted: /private/tmp integration worktree was lost; branch tip af0a980 and all commits intact in the canonical object DB; pause archive integration-af0a980.tar rehashed to 5e97026f… (match). Worktree pruned and re-added at the same path; 6,101 tracked files, clean. October2 worker workspaces L03/V03/R05 intact.
+- October3 resume (explicit user "resume"; new root session in Claude Code). Host rebooted: <tmp> integration worktree was lost; branch tip af0a980 and all commits intact in the canonical object DB; pause archive integration-af0a980.tar rehashed to 5e97026f… (match). Worktree pruned and re-added at the same path; 6,101 tracked files, clean. October2 worker workspaces L03/V03/R05 intact.
 - Ruling: Worker model mapping — POLICY.md pins gpt-6-astra/medium, which is unavailable in this Claude Code session. Implementers and scoped re-reviews use Claude Sonnet 5.5; independent reviews of production numerical/concurrency diffs use Claude Opus 5.5. No nested delegation; at most two implementers plus a reviewer; root owns integration/index/commits — unchanged. Recorded, not silent. Cost if wrong: user wanted model parity with prior evidence; redirect re-runs only reviews/implementations dispatched after this entry.
 - Ruling: Toolchain change — the host is now macOS 27 / Xcode 27.0 (27A266a) / Swift 6.4 (swiftlang-6.4.0.34.1); all accepted evidence through V02/L03 was Swift 6.3.3. Prior source acceptances stand; every new build/test record states its toolchain; no 6.3.3/6.4 parity is claimed. SwiftPM 6.4 defaults to the swiftbuild build system (native deprecated). Cost if wrong: evidence comparability across the toolchain boundary is weaker than within it.
 - L03 final v3 imported byte-identically (11 paths; all preimages unchanged since 17c1af9; post-copy hashes equal L03-v3-manifest.json). Closure closes NUM-11/12/13/25/28 and the UMAP half of NUM-26 against named tests; NUM-27 remains qualified. First Swift 6.4 integration run of the L03 focused filter failed to COMPILE (Debug and Release, exit 1) before any test ran — evidence 2026-10-03/L03-integration.
@@ -1817,9 +1817,9 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - Closure: closures/P02.json. state.json: P02 accepted.
 - NEXT: T17 (dispatch drafted: R/T17/dispatch.md; plain-copy workspace of 1544ab4), then milestone 16, then D02 phase 5 and its merge, then STOP at D01/L04.
 - T17 WORKSPACE HAZARD (root-found, corrected before dispatch):
-  - A plain copy under R/ (.stabilization-recovery/…) sits INSIDE the user's main checkout, so `git rev-parse` there resolves to the parent repo. Root removed that copy (its own, untouched) and re-created it at /private/tmp/vectorcore-ws-T17, outside every repo (git-less confirmed; manifest R/T17/00-base-sha256.txt, 6298 files).
-  - Impact on earlier evidence, root-checked: NONE. The guards walk the filesystem and use git only for `git show <rev>:<path>` baseline lookups, which skip when the revision is unavailable and reach the same objects in the parent repo when it is. Merge gates ran git-less in the session scratchpad (/private/tmp), outside any repo.
-  - Rule from now on: plain-copy workspaces live under /private/tmp, outside every repository.
+  - A plain copy under R/ (.stabilization-recovery/…) sits INSIDE the user's main checkout, so `git rev-parse` there resolves to the parent repo. Root removed that copy (its own, untouched) and re-created it at <tmp>/vectorcore-ws-T17, outside every repo (git-less confirmed; manifest R/T17/00-base-sha256.txt, 6298 files).
+  - Impact on earlier evidence, root-checked: NONE. The guards walk the filesystem and use git only for `git show <rev>:<path>` baseline lookups, which skip when the revision is unavailable and reach the same objects in the parent repo when it is. Merge gates ran git-less in the session scratchpad (<tmp>), outside any repo.
+  - Rule from now on: plain-copy workspaces live under <tmp>, outside every repository.
 - T17 DISPATCHED (Sonnet; R/T17/dispatch.md).
 - T17 PARTIAL (implementer, Sonnet).
   - Python is done: the lost-store lint opts in (4 must-fail, 2 must-pass, RED → GREEN). NumericalStabilityTests.magnitudeDiagnostic is fixed per W2: the lint goes from one hit to 0 and the diagnostic text is unchanged.
@@ -1828,9 +1828,9 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - BLOCKER: capture_swift.py refuses a workdir outside RECOVERY or the integration checkout, so the Swift run did not happen.
 - Ruling (the capture-driver policy): do NOT loosen the driver; its allowlist is a deliberate safety policy. Split by tool:
   - Swift runs in a copy under R/, which the driver accepts and SwiftPM is unaffected by the parent repo; P02c and D02 built there throughout.
-  - The git-less Python gate runs in a /private/tmp export outside every repo.
+  - The git-less Python gate runs in a <tmp> export outside every repo.
   - Applied to T17: root runs Debug and Release NumericalStability on R/T17/swift-tree, which matches T17/freeze-sha256.txt (0 mismatches).
-  - Applied to D02 phase 5: its dispatch now puts the workspace at R/workspaces/D02p5 (no git commands there), with the git-less gate in /private/tmp/vectorcore-gitless-D02p5.
+  - Applied to D02 phase 5: its dispatch now puts the workspace at R/workspaces/D02p5 (no git commands there), with the git-less gate in <tmp>/vectorcore-gitless-D02p5.
   - Cost if wrong: one extra rsync per task.
   - Root Swift runs on R/T17/swift-tree: NumericalStability Debug rc 0 and Release rc 0, 43 tests in 10 suites each (T17/root-swift). magnitudeDiagnostic runs only on failure paths, so the evidence is compiling in both configurations plus the suites passing.
 - T17 REVIEW dispatched (Sonnet; R/T17/review-package.diff, 408 lines).
@@ -1838,7 +1838,7 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - The opt-in fixtures bite. The Float16 no-opt-in decision is verified: opting in makes its control vacuous.
   - The inert-provider full outputs are IDENTICAL on the real tree before and after.
   - The per-test diff with the baseline guards swapped back is exactly the intended additions.
-- ROOT ADJUDICATION OF THE T17 RESIDUALS (applied by root in /private/tmp/vectorcore-ws-T17):
+- ROOT ADJUDICATION OF THE T17 RESIDUALS (applied by root in <tmp>/vectorcore-ws-T17):
   - M1 FIX. `components` in magnitudeDiagnostic is also computed inside its closure and returned (W2). The comment is reworded so it no longer over-claims: the lint flags the maxComponent assignment form; `components` follows W2 as a precaution; the upstream miscompile is the mutable-pointer form.
   - M2 FIX. test_interpolated_code_is_seen is split into 3 tests. With the opt-in mutated off, both interpolation tests fail independently.
   - M3 FIX. The clock pin gains the LIMITS example's direct `Date()` form. With the opt-in mutated on, the pin fails.
@@ -1863,7 +1863,7 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
     - sanitizers: ASan 77 bodies, TSan 39.
   - Extras:
     - Debug with EXTENDED=1: 1658/239;
-    - git-less export in /private/tmp: 497 (git rev-parse fails there);
+    - git-less export in <tmp>: 497 (git rev-parse fails there);
     - ledger 0 problems;
     - P02RunConsumers: P02_CONSUMERS_FINAL_COMPLETE;
     - P02 ASan via check_sanitizers' mechanism (`--sanitize address --disable-xctest`): 41/6 clean.
@@ -1875,11 +1875,11 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 - Root deleted milestone 16's 7 verified SwiftPM caches (3.7 GB; manifest current-handoff/build-scratch-deleted-2026-10-07b.txt). runner-temp and the result dirs are KEPT as report evidence. Free space: 29 GB.
 - D02 PHASE 5 DISPATCHED (fresh Opus; R/D02/phase5-dispatch.md; workspace R/workspaces/D02p5).
 - D02 PHASE 5 STALL (watchdog, ~23:24, while composing guard additions; load 48). Root checked: 24 files edited and evidence in progress; no running processes. RESUMED with instructions: small edits, a load wait, and a scope check. Boundaries.swift (Benchmarks) was edited, but RD-R3 says V04-C-0607 is a LEDGER-ONLY rebind: revert it if that is the reason, otherwise cite the ruling; every changed file maps to a ruling in the report.
-- INCIDENT (2026-10-08 ~00:29, found ~01:03 when a ledger commit failed with "not a git repository"): the integration checkout in /private/tmp LOST its `.git` gitlink file and 73 tracked files. Branch, objects and worktree metadata were intact (tip e85ebc5).
+- INCIDENT (2026-10-08 ~00:29, found ~01:03 when a ledger commit failed with "not a git repository"): the integration checkout in <tmp> LOST its `.git` gitlink file and 73 tracked files. Branch, objects and worktree metadata were intact (tip e85ebc5).
   - Root-verified damage: every one of the 73 deleted tracked files is an EMPTY blob (0 bytes: old placeholder logs under Docs/audits/…/validate_execution_api and the execution reports/). No content file and no ledger was lost; the only other difference was root's own uncommitted progress.md append.
   - Cause, from the evidence (not log-confirmed; the system log showed nothing for the window): the macOS /tmp cleaner, which works on access time. The deleted set is exactly the files that nothing had read since the Oct 3 checkout: the empty files (rsync reads no content) and the gitlink (excluded from every rsync). Every non-empty file was read by root's rsyncs on Oct 7 and survived. The D02 phase 5 agent is excluded: its scripts never reference the integration path, and their only delete is the ruled SIMDMemoryUtilities removal in its own workspace.
   - Restore (writes only inside the checkout; no write to the shared repo): the gitlink was re-created pointing at the existing worktree metadata, and the 73 empty files were re-created. `git status` is clean apart from progress.md, and HEAD is e85ebc5.
-  - Exposure: the cleaner can recur on files unread for about 3 days. RECOMMENDATION FOR THE USER: relocate the integration worktree out of /private/tmp (`git worktree move` writes repo metadata, so it is the user's call). Until then, root re-checks `git status` before each integration step.
+  - Exposure: the cleaner can recur on files unread for about 3 days. RECOMMENDATION FOR THE USER: relocate the integration worktree out of <tmp> (`git worktree move` writes repo metadata, so it is the user's call). Until then, root re-checks `git status` before each integration step.
 - D02 PHASE 5 SECOND STALL: after the resume the agent made NO tool progress (no file or evidence touched after 23:30). Diagnosis: a single overlong response generation (composing the guard additions in one go), not host load. Ruling: do NOT resume it a third time. A FRESH Opus agent continues from the workspace state, with a hard cap of about 80 lines per Write/Edit and one file per response.
   - The stalled agent's state: work items largely applied (phase5/scripts/apply_p5_*.py; 24+ files edited; negative consumers written); full-debug rc 0 (before the later edits); full-debug-v2 never recorded (it died with the agent); no report written.
 - Ruling (proposal P5-P1..P3, test_claim_ledger.py; the workspace still has the ORIGINAL): APPROVED.
@@ -1963,12 +1963,12 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - (6) L04 needs a conversation. The use case: text documents (a sentence to thousands of words), N = 50-5000 documents.
   - (7) L04 cancellation only if the lift is minimal (nice-to-have).
   - (8) Open a PR after L04 completes; more cleanup may follow.
-  - (9) Move the integration worktree into /Users/goftin/dev.
+  - (9) Move the integration worktree into <home>/dev.
   - (10) The compiler-bug filing waits until after the new baseline.
   - (11) The routed VectorCore follow-ups are done after this PR closes and before the 0.4.0 tag.
   - (12) The optional quiet-machine timing re-run happens BEFORE the PR. Delete T09 build-intel. The machine is open for about 3 hours.
-- INCIDENT 2 (found 2026-10-16): after 5 idle days the macOS /tmp cleaner emptied the whole /private/tmp integration worktree (all 6327 tracked files and the gitlink; the directory was 0 B). Branch and objects were intact at 5d5894b; nothing untracked or modified existed (the pause state was clean).
-  - Fix (user-approved): `git worktree repair` re-wrote the gitlink, then `git worktree move` moved it to /Users/goftin/dev/vectorcore-integration-2026-09-18 (registration name unchanged), then `git checkout -- .` restored all 6327 files. Status is clean at 5d5894b.
+- INCIDENT 2 (found 2026-10-16): after 5 idle days the macOS /tmp cleaner emptied the whole <tmp> integration worktree (all 6327 tracked files and the gitlink; the directory was 0 B). Branch and objects were intact at 5d5894b; nothing untracked or modified existed (the pause state was clean).
+  - Fix (user-approved): `git worktree repair` re-wrote the gitlink, then `git worktree move` moved it to <integration-worktree> (registration name unchanged), then `git checkout -- .` restored all 6327 files. Status is clean at 5d5894b.
   - The INTEGRATION constants in capture_swift.py and import_task.py are updated to the new path. The new location is deliberately not next to VectorCore, so `../VectorIndex`-style paths do not resolve to the real siblings.
 - T09 workspaces/T09/T09/fix1-review/build-intel is deleted (user-approved).
 - D01: HANDED OFF (status `handed-off`); root keeps docs/downstream-upgrades. I01 and N01 move from accepted-staged to accepted.
@@ -2188,9 +2188,9 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
   - Ruling: M18 is the final gate and passes — every REQUIRED job is rc 0, and the only failures are in an extra run, in fixed-budget child-process tests, under host sleep — cost if wrong: a real launcher-cleanup defect ships in test-only code (not library code), and CI's Debug job would surface it.
   - Routed before the 0.4.0 tag: the child-probe tests' fixed cleanup and deadline budgets (2 s and 3 s; R03 child deadline). The class is time-bounded child-process assertions under host suspension or throttling; the cause is not proven.
 - state.json: milestones 16, 17 and 18 recorded (they had been ledgered in progress.md only); T18 integration_revision filled (3f59a28; it held a placeholder).
-- NEXT: the slim PR (worktree /Users/goftin/dev/vectorcore-0.4.0-baseline, branch stabilization/0.4.0-baseline from main 8b02e75).
+- NEXT: the slim PR (worktree <pr-worktree>, branch stabilization/0.4.0-baseline from main 8b02e75).
 - SLIM PR OPENED (user-authorized, 2026-10-16: "we should open a pr after this is complete"; slim, with Docs/audits and Docs/reviews): https://github.com/gifton/VectorCore/pull/56
-  - Branch stabilization/0.4.0-baseline (worktree /Users/goftin/dev/vectorcore-0.4.0-baseline): one commit 0317984 on main 8b02e75. Its tree = integration aaf1d83 minus the 4,416 paths in R/pr-slim-drop.txt; 1,917 files, 26.2 MB.
+  - Branch stabilization/0.4.0-baseline (worktree <pr-worktree>): one commit 0317984 on main 8b02e75. Its tree = integration aaf1d83 minus the 4,416 paths in R/pr-slim-drop.txt; 1,917 files, 26.2 MB.
   - Built with `git read-tree -u --reset aaf1d83` plus `git rm -f --pathspec-from-file` (GIT_LITERAL_PATHSPECS=1).
   - Root verification (R/pr/verify/summary.txt; R/pr/verify_slim.sh):
     - composition EXACT against the integration ls-tree minus the drop list (mode, object, path);

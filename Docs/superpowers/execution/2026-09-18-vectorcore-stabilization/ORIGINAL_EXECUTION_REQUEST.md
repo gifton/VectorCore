@@ -8,7 +8,7 @@ You are the lead orchestrator for stabilizing VectorCore. I want you to execute 
   integration decisions yourself.
 
   Repository:
-    /Users/goftin/dev/gsuite/VSK/VectorCore
+    <repo>
 
   Start by reading:
     Docs/superpowers/plans/2026-09-18-vectorcore-stabilization/README.md

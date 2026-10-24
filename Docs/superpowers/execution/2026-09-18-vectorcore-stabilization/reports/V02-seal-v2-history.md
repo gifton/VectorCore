@@ -1,7 +1,0 @@
-# V02 draft history and final seal 2
-
-Source freeze remains v7. The shared historical draft had been published and committed by root as a partial checkpoint. Its exact retained bytes are now copied to V02-implementation-historical-checkpoint.md (SHA256 46c98f1ad83b525db5991a728c37001aea19d3ba7d9559046c8159099175a60f), from /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/V02-implementation-draft.md.
-
-The canonical V02-implementation-draft.md remained a working draft and received progress paragraphs before the first evidence index was created (SHA256 2d5e71cfd3044e12dd8da96f23850e14fad0424e30519131047fb5a44cfd56f1). The shared historical draft was not overwritten with those later paragraphs. Both are superseded partial records, including superseded method-count estimates. Neither is the final acceptance report.
-
-The first index V02-worker-evidence-index.json (SHA256 4e58e55fe61a3f3de974e66221f0a9a019a63d596d06217444d1371d07fe3987) and every artifact it lists remain byte-identical. Seal 2 only adds this history note, the historical copy, a separately named final report and index-generation script. V02-implementation-final-v2.md is the final worker report; V02-worker-evidence-index-v2.json is the authoritative final worker index. Source, binaries, runtime records and prior reports are unchanged. An initial tool-orchestration syntax error occurred before this history-copy command executed; no child or filesystem change occurred in that failed tool attempt.

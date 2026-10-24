@@ -1,0 +1,6 @@
+tupleStride 16
+sequentialNearMax [9223372036854775805, 9223372036854775806]
+actualSearchScores [(3, -2.0, -1.0), (2, -1.0, inf), (1, -0.5, 2.0)]
+similarity [[0.0, -1.0000001], [-1.0000001, 0.0]]
+disabledLoggerEvaluations 1
+oppositeHeap [1, 2] [3, 4]

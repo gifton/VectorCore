@@ -1,0 +1,20 @@
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/E04Consumers/NegativeResult.swift:4:51: error: type 'NonSendableResult' does not conform to the 'Sendable' protocol
+1 | import VectorCore
+2 | final class NonSendableResult { var value = 0 }
+  |             `- note: class 'NonSendableResult' does not conform to the 'Sendable' protocol
+3 | func rejected(_ provider: any BufferProvider, _ typed: TypedBufferPool<Float>) async throws {
+4 |     let _: NonSendableResult = try await provider.withBuffer(size: 1) { _ in NonSendableResult() }
+  |                                                   `- error: type 'NonSendableResult' does not conform to the 'Sendable' protocol
+5 |     let _: NonSendableResult = await typed.withBuffer(count: 1) { _ in NonSendableResult() }
+6 | }
+
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/E04Consumers/NegativeResult.swift:5:44: error: type 'NonSendableResult' does not conform to the 'Sendable' protocol
+1 | import VectorCore
+2 | final class NonSendableResult { var value = 0 }
+  |             `- note: class 'NonSendableResult' does not conform to the 'Sendable' protocol
+3 | func rejected(_ provider: any BufferProvider, _ typed: TypedBufferPool<Float>) async throws {
+4 |     let _: NonSendableResult = try await provider.withBuffer(size: 1) { _ in NonSendableResult() }
+5 |     let _: NonSendableResult = await typed.withBuffer(count: 1) { _ in NonSendableResult() }
+  |                                            `- error: type 'NonSendableResult' does not conform to the 'Sendable' protocol
+6 | }
+7 | 

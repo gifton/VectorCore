@@ -1,0 +1,14 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite FP16DiagnosticsBoundaryTests started.
+􀟈 Test childProbe() started.
+Q03_BODY_BEGIN concurrency
+Q03_WORKERS_JOINED completedLoops=[2000, 2000, 2000, 2000, 2000, 2000]
+Q03_STABLE_TOTALS_JOINED
+Q03_ATOMIC_BATCHES_JOINED
+Q03_RESULT concurrency
+Q03_BODY_END concurrency
+􁁛 Test childProbe() passed after 0.014 seconds.
+􁁛 Suite FP16DiagnosticsBoundaryTests passed after 0.014 seconds.
+􁁛 Test run with 1 test in 1 suite passed after 0.014 seconds.

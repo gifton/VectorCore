@@ -1,0 +1,11 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite ConfigurationTransactionTests started.
+􀟈 Test globalChildProbe() started.
+E03_BODY_BEGIN rollback
+E03 rollback six-fields identity=true restored=true
+E03_BODY_END rollback
+􁁛 Test globalChildProbe() passed after 0.001 seconds.
+􁁛 Suite ConfigurationTransactionTests passed after 0.001 seconds.
+􁁛 Test run with 1 test in 1 suite passed after 0.001 seconds.

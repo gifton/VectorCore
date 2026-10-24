@@ -1,0 +1,8 @@
+empty 0 bytes 16
+empty binary rejected VectorError.invalidDimension: Invalid dimension 0: Must be between 1 and 10000
+empty JSON dimension 0
+binary hex 54434556010006000000000000000000000000804523c17f0000807f000080ff01000000b12ecf19
+bit patterns match true
+slice start 3 bits match true
+large binary rejected VectorError.invalidDimension: Invalid dimension 10001: Must be between 1 and 10000
+FP32 handle 16 FP16 handle 8

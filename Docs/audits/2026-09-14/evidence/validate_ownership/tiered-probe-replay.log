@@ -1,0 +1,19 @@
+unique size65 matrix 10 writes aligned copies 10 last 10.0
+matrix 2 original 1.0 copy 99.0
+matrix 3 original 1.0 copy 99.0
+matrix 4 original 99.0 copy 99.0
+matrix 16 original 99.0 copy 99.0
+matrix 32 original 99.0 copy 99.0
+matrix 33 original 1.0 copy 99.0
+matrix 64 original 1.0 copy 99.0
+matrix 65 original 1.0 copy 99.0
+reference matrix count 6
+compact reference leaked true
+alignedCopy offset 0 old destination leaked true
+alignedCopy offset 1 old destination leaked false
+tier buffer 4 original 1.0 mutated 19.0
+tier buffer 5 original 19.0 mutated 19.0
+tier buffer 512 original 19.0 mutated 19.0
+tier buffer 513 original 1.0 mutated 1.0
+tier buffer 2048 original 1.0 mutated 1.0
+tier buffer 2049 original 1.0 mutated 19.0

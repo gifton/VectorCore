@@ -1,0 +1,207 @@
+[0/1] Planning build
+Building for debugging...
+[0/5] Write sources
+[1/5] Write swift-version--58304C5D6DBC2206.txt
+[3/5] Emitting module ComprehensiveTests
+[4/5] Compiling ComprehensiveTests BufferPoolOwnershipTests.swift
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:42:18: warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+ 40 |         let ledger = E04AllocationLedger()
+ 41 |         var pool: SwiftBufferPool? = SwiftBufferPool(configuration: BufferConfiguration(maxPoolSize: 64, maxBufferSize: 64), allocationBoundary: ledger)
+ 42 |         weak var owner = pool
+    |                  `- warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+ 43 |         var handles: [BufferHandle] = []
+ 44 |         for _ in 0..<8 { handles.append(try await pool!.acquire(size: 64)) }
+
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:263:18: warning: weak variable 'weakPool' was never mutated; consider changing to 'let' constant [#WeakMutability]
+261 |         let ledger = E04AllocationLedger()
+262 |         var pool: SwiftBufferPool? = SwiftBufferPool(configuration: BufferConfiguration(maxPoolSize: 0), allocationBoundary: ledger)
+263 |         weak var weakPool = pool
+    |                  `- warning: weak variable 'weakPool' was never mutated; consider changing to 'let' constant [#WeakMutability]
+264 |         let entered = E04Gate(), finish = E04Gate()
+265 |         let task = Task { [provider = pool!] in
+
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:311:22: warning: weak variable 'weakReference' was never mutated; consider changing to 'let' constant [#WeakMutability]
+309 |         let referenceReleased = await typed.withBuffer(count: 1) { buffer in
+310 |             var reference: E04BodyError? = E04BodyError()
+311 |             weak var weakReference = reference
+    |                      `- warning: weak variable 'weakReference' was never mutated; consider changing to 'let' constant [#WeakMutability]
+312 |             buffer.baseAddress!.initialize(to: reference!)
+313 |             reference = nil
+
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:402:18: warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+400 |         let ledger = E04AllocationLedger()
+401 |         var pool: BufferPool? = BufferPool(allocationBoundary: ledger)
+402 |         weak var owner = pool
+    |                  `- warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+403 |         let handle = await pool!.acquire(count: 16)
+404 |         await pool!.release(handle)
+
+[#WeakMutability]: <https://docs.swift.org/compiler/documentation/diagnostics/weak-mutability>
+[5/6] Compiling ComprehensiveTests MemoryPoolBoundaryTests.swift
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift:139:30: warning: weak variable 'witness' was never mutated; consider changing to 'let' constant [#WeakMutability]
+137 |                 let _: Int = try pool.withBuffer(type: Payload.self, count: 1, alignment: 64) { buffer in
+138 |                     var payload: Payload? = Payload()
+139 |                     weak var witness = payload
+    |                              `- warning: weak variable 'witness' was never mutated; consider changing to 'let' constant [#WeakMutability]
+140 |                     buffer.baseAddress!.initialize(to: payload!)
+141 |                     payload = nil
+
+[#WeakMutability]: <https://docs.swift.org/compiler/documentation/diagnostics/weak-mutability>
+[5/7] Write Objects.LinkFileList
+[6/7] Linking VectorCorePackageTests
+Build complete! (8.07s)
+Test Suite 'Selected tests' started at 2026-09-23 11:57:02.155.
+Test Suite 'VectorCorePackageTests.xctest' started at 2026-09-23 11:57:02.156.
+Test Suite 'VectorCorePackageTests.xctest' passed at 2026-09-23 11:57:02.156.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-09-23 11:57:02.156.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite "E04 MemoryPool boundaries" started.
+􀟈  Suite "E04 buffer pool ownership" started.
+􀟈  Suite "Memory Pool Tests" started.
+􀟈  Suite "Provider conformance" started.
+􀟈  Test invalidRequestsStopBeforeAllocatorAndRepresentableLimitsCanFail() started.
+􀟈  Test internalBudgetAndReleaseIdentity(megabytes:) started.
+􀟈  Test timerDomainAndCachedDestruction() started.
+􀟈  Test swiftLifecycleBudgetMatrix(budget:) started.
+􀟈  Test scopedThrowAndReferenceDestructionAcrossAllStages() started.
+􀟈  Test scopedInternalContextsAwaitReleaseAndTypedReferenceLifetime() started.
+􀟈  Test forcedFallbacksPreserveAlignmentBindingAndFreeFamily() started.
+􀟈  Test mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test lateHandleOwnsAllocationAndAlignmentMetadataSurvivesReuse() started.
+􀟈  Test guardChildProbe() started.
+􀟈  Test scopedProviderRetainedDuringCancellationIgnoringBody() started.
+􀟈  Test protocolScopedDefaultInvokesReleaseExactlyOncePerExit() started.
+􀟈  Test scopedProviderSuccessThrowCancellationAndAcquireFailure() started.
+􀟈  Test emptyOwnersOversizedReturnsAndInternalZeroCount() started.
+􀟈  Test synchronousScopedBodyObservesCancellationAndReleasesBeforeThrow() started.
+􀟈  Test namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test "SwiftBufferPool conforms" started.
+􀟈  Test "AccelerationProvider laws A1/A3/A4 + type preservation" started.
+􀟈  Test "CPUComputeProvider .parallel conforms" started.
+􀟈  Test typedLifecycleBudgetAndFreshLease(budget:) started.
+􀟈  Test swiftPoolDestructionAndFreshReturnCap() started.
+􀟈  Test "ComputeProvider default implementations conform" started.
+􀟈  Test "MockBufferProvider conforms" started.
+􀟈  Test statisticsAndRequestFailures() started.
+􀟈  Test internalAndTypedDestructionOwnActiveAndCached() started.
+􀟈  Test "parallelReduce is mode-invariant for an identity initial (C5)" started.
+􀟈  Test internalCachedAllocationIsFreedByDestructionWithoutClear() started.
+􀟈  Test swiftRejectsAllForgedFieldsBeforeConsumingLease() started.
+􀟈  Test "CPUComputeProvider .automatic (parallel path) conforms" started.
+􀟈  Test "CPUComputeProvider .sequential conforms" started.
+􀟈  Test case passing 1 argument megabytes → 1 to internalBudgetAndReleaseIdentity(megabytes:) started.
+􀟈  Test case passing 1 argument budget → 1 to swiftLifecycleBudgetMatrix(budget:) started.
+􀟈  Test case passing 1 argument megabytes → 0 to internalBudgetAndReleaseIdentity(megabytes:) started.
+􀟈  Test case passing 1 argument budget → 0 to swiftLifecycleBudgetMatrix(budget:) started.
+􀟈  Test case passing 1 argument budget → 0 to mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test testAcquire_ReturnsBufferWithCountAndAlignment() started.
+􀟈  Test case passing 1 argument budget → 63 to swiftLifecycleBudgetMatrix(budget:) started.
+􀟈  Test case passing 1 argument budget → 1 to mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test case passing 1 argument budget → 64 to swiftLifecycleBudgetMatrix(budget:) started.
+􀟈  Test case passing 1 argument budget → 65 to swiftLifecycleBudgetMatrix(budget:) started.
+􀟈  Test case passing 1 argument budget → 31 to mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test case passing 1 argument budget → 128 to swiftLifecycleBudgetMatrix(budget:) started.
+􀟈  Test case passing 1 argument budget → 33 to mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test case passing 1 argument budget → 32 to mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test case passing 1 argument mode → "configuration-negative" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument budget → 0 to typedLifecycleBudgetAndFreshLease(budget:) started.
+􀟈  Test case passing 1 argument budget → 64 to mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test case passing 1 argument budget → 1 to typedLifecycleBudgetAndFreshLease(budget:) started.
+􀟈  Test case passing 1 argument budget → 128 to mixedPhysicalByteAccountingAndZeroCount(budget:) started.
+􀟈  Test case passing 1 argument budget → 31 to typedLifecycleBudgetAndFreshLease(budget:) started.
+􀟈  Test case passing 1 argument budget → 32 to typedLifecycleBudgetAndFreshLease(budget:) started.
+􀟈  Test case passing 1 argument budget → 33 to typedLifecycleBudgetAndFreshLease(budget:) started.
+􀟈  Test case passing 1 argument budget → 64 to typedLifecycleBudgetAndFreshLease(budget:) started.
+􁁛  Test invalidRequestsStopBeforeAllocatorAndRepresentableLimitsCanFail() passed after 0.015 seconds.
+􁁛  Test scopedThrowAndReferenceDestructionAcrossAllStages() passed after 0.015 seconds.
+􁁛  Test forcedFallbacksPreserveAlignmentBindingAndFreeFamily() passed after 0.016 seconds.
+􁁛  Test lateHandleOwnsAllocationAndAlignmentMetadataSurvivesReuse() passed after 0.017 seconds.
+􁁛  Test "AccelerationProvider laws A1/A3/A4 + type preservation" passed after 0.016 seconds.
+􁁛  Test timerDomainAndCachedDestruction() passed after 0.017 seconds.
+􁁛  Test guardChildProbe() passed after 0.018 seconds.
+􁁛  Test emptyOwnersOversizedReturnsAndInternalZeroCount() passed after 0.018 seconds.
+􁁛  Test swiftLifecycleBudgetMatrix(budget:) with 6 test cases passed after 0.018 seconds.
+􁁛  Test internalBudgetAndReleaseIdentity(megabytes:) with 2 test cases passed after 0.016 seconds.
+􁁛  Test swiftPoolDestructionAndFreshReturnCap() passed after 0.019 seconds.
+􁁛  Test statisticsAndRequestFailures() passed after 0.019 seconds.
+􁁛  Test internalAndTypedDestructionOwnActiveAndCached() passed after 0.019 seconds.
+􁁛  Test swiftRejectsAllForgedFieldsBeforeConsumingLease() passed after 0.019 seconds.
+􁁛  Test internalCachedAllocationIsFreedByDestructionWithoutClear() passed after 0.020 seconds.
+􁁛  Test testAcquire_ReturnsBufferWithCountAndAlignment() passed after 0.019 seconds.
+􁁛  Test typedLifecycleBudgetAndFreshLease(budget:) with 6 test cases passed after 0.022 seconds.
+􀟈  Test case passing 1 argument mode → "configuration-buffer-negative" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􁁛  Test protocolScopedDefaultInvokesReleaseExactlyOncePerExit() passed after 0.024 seconds.
+􁁛  Test synchronousScopedBodyObservesCancellationAndReleasesBeforeThrow() passed after 0.024 seconds.
+􁁛  Test mixedPhysicalByteAccountingAndZeroCount(budget:) with 7 test cases passed after 0.023 seconds.
+􁁛  Test scopedProviderRetainedDuringCancellationIgnoringBody() passed after 0.025 seconds.
+􀟈  Test testAcquire_ReusesReturnedBuffer_IncreasesHitRate() started.
+􁁛  Test scopedProviderSuccessThrowCancellationAndAcquireFailure() passed after 0.025 seconds.
+􁁛  Test scopedInternalContextsAwaitReleaseAndTypedReferenceLifetime() passed after 0.028 seconds.
+􁁛  Test testAcquire_ReusesReturnedBuffer_IncreasesHitRate() passed after 0.002 seconds.
+􀟈  Test case passing 1 argument mode → "configuration-alignment" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts() started.
+􁁛  Suite "E04 buffer pool ownership" passed after 0.029 seconds.
+􁁛  Test testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts() passed after 0.001 seconds.
+􀟈  Test case passing 1 argument mode → "internal-negative-budget" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse() started.
+􁁛  Test testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse() passed after 0.001 seconds.
+􁁛  Test "SwiftBufferPool conforms" passed after 0.033 seconds.
+􀟈  Test testReturn_RespectsMaxBuffersPerSizeLimit() started.
+􁁛  Test "parallelReduce is mode-invariant for an identity initial (C5)" passed after 0.032 seconds.
+􀟈  Test case passing 1 argument mode → "internal-overflow-budget" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􁁛  Test testReturn_RespectsMaxBuffersPerSizeLimit() passed after 0.001 seconds.
+􀟈  Test testReturn_RespectsMaxTotalMemoryLimit() started.
+􀟈  Test case passing 1 argument mode → "internal-negative-per-size" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􁁛  Test testReturn_RespectsMaxTotalMemoryLimit() passed after 0.001 seconds.
+􀟈  Test testRetentionLimitUsesBytesAcrossElementTypes() started.
+􀟈  Test case passing 1 argument mode → "typed-negative-budget" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􁁛  Test "MockBufferProvider conforms" passed after 0.037 seconds.
+􁁛  Test testRetentionLimitUsesBytesAcrossElementTypes() passed after 0.001 seconds.
+􀟈  Test case passing 1 argument mode → "typed-negative-per-size" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test testCleanupSubtractsBytesAcrossElementTypes() started.
+􁁛  Test testCleanupSubtractsBytesAcrossElementTypes() passed after 0.001 seconds.
+􀟈  Test testCleanup_RemovesStaleEntries_UpdatesStats() started.
+􀟈  Test case passing 1 argument mode → "memory-negative-budget" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "memory-negative-per-size" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "internal-negative-count" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "internal-overflow-count" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "typed-negative-count" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "typed-overflow-count" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "internal-allocation-failure" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "typed-allocation-failure" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "scoped-negative-count" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "scoped-overflow-count" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "scoped-invalid-alignment" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􀟈  Test case passing 1 argument mode → "scoped-final-failure" to namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) started.
+􁁛  Test namedGuardsRejectBeforeBodyOrInvalidAllocation(mode:) with 20 test cases passed after 0.052 seconds.
+􁁛  Suite "E04 MemoryPool boundaries" passed after 0.053 seconds.
+􁁛  Test "CPUComputeProvider .sequential conforms" passed after 0.054 seconds.
+􁁛  Test "CPUComputeProvider .parallel conforms" passed after 0.066 seconds.
+􁁛  Test "CPUComputeProvider .automatic (parallel path) conforms" passed after 0.065 seconds.
+􁁛  Test "ComputeProvider default implementations conform" passed after 0.068 seconds.
+􁁛  Suite "Provider conformance" passed after 0.070 seconds.
+􁁛  Test testCleanup_RemovesStaleEntries_UpdatesStats() passed after 0.065 seconds.
+􀟈  Test testWithBuffer_ProvidesWritableAlignedBuffer() started.
+􁁛  Test testWithBuffer_ProvidesWritableAlignedBuffer() passed after 0.001 seconds.
+􀟈  Test testWithBuffer_OrdinaryZeroAndSmallAcquisitions() started.
+􁁛  Test testWithBuffer_OrdinaryZeroAndSmallAcquisitions() passed after 0.001 seconds.
+􀟈  Test testStatistics_TotalInUseTracksAcquireAndReturn() started.
+􁁛  Test testStatistics_TotalInUseTracksAcquireAndReturn() passed after 0.001 seconds.
+􀟈  Test testStatistics_BufferCountByTypeReflectsPools() started.
+􁁛  Test testStatistics_BufferCountByTypeReflectsPools() passed after 0.001 seconds.
+􀟈  Test testConcurrentAcquireAndReturn_NoLeaksNoCrashes() started.
+􁁛  Test testConcurrentAcquireAndReturn_NoLeaksNoCrashes() passed after 0.001 seconds.
+􀟈  Test testSeparateTypePools_DoNotInterfere() started.
+􁁛  Test testSeparateTypePools_DoNotInterfere() passed after 0.001 seconds.
+􀟈  Test testAcquire_CountZero_ReturnsZeroLengthHandle() started.
+􁁛  Test testAcquire_CountZero_ReturnsZeroLengthHandle() passed after 0.001 seconds.
+􀟈  Test testAcquire_SmallCounts_AlignmentDefaultIsApplied() started.
+􁁛  Test testAcquire_SmallCounts_AlignmentDefaultIsApplied() passed after 0.001 seconds.
+􀟈  Test testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash() started.
+􁁛  Test testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash() passed after 0.001 seconds.
+􁁛  Suite "Memory Pool Tests" passed after 0.109 seconds.
+􁁛  Test run with 48 tests in 4 suites passed after 0.109 seconds.

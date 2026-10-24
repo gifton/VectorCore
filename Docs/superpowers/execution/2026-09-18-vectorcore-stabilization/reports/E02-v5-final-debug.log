@@ -1,0 +1,516 @@
+[0/1] Planning build
+Building for debugging...
+[0/5] Write sources
+[1/5] Write swift-version--58304C5D6DBC2206.txt
+[3/9] Compiling VectorCore BoundedExecution.swift
+[4/9] Emitting module VectorCore
+[5/9] Compiling VectorCore ComputeProvider.swift
+[6/9] Compiling VectorCore CPUComputeProvider.swift
+[7/13] Compiling VectorCore ExecutionOperations.swift
+[8/13] Compiling VectorCore TransformOperations.swift
+[9/13] Compiling VectorCore TriangularMatrix.swift
+[10/13] Compiling VectorCore BatchOperations.swift
+[10/14] Write Objects.LinkFileList
+[11/16] Linking vectorcore-bench
+[12/16] Applying vectorcore-bench
+[14/16] Emitting module ComprehensiveTests
+[15/16] Compiling ComprehensiveTests ExecutionSchedulingContractTests.swift
+[15/17] Write Objects.LinkFileList
+[16/17] Linking VectorCorePackageTests
+Build complete! (11.87s)
+Test Suite 'Selected tests' started at 2026-09-24 21:56:47.263.
+Test Suite 'VectorCorePackageTests.xctest' started at 2026-09-24 21:56:47.263.
+Test Suite 'ExecutionBoundaryTests' started at 2026-09-24 21:56:47.263.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testArbitraryLoopWidthsExactCoverage]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testArbitraryLoopWidthsExactCoverage]' passed (0.009 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testChildProbe]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testChildProbe]' passed (0.000 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testDangerousBoundariesInChildren]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testDangerousBoundariesInChildren]' passed (0.617 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testHintValidationBeforeEmptySequentialParallelAndNestedRouting]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testHintValidationBeforeEmptySequentialParallelAndNestedRouting]' passed (0.047 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLargeRepresentableReductionLengthsInChild]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLargeRepresentableReductionLengthsInChild]' passed (0.046 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLoopErrorsStopAtFirstInteriorAndTail]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLoopErrorsStopAtFirstInteriorAndTail]' passed (0.001 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testNegativeBatchRejectedBeforeDroppedWork]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testNegativeBatchRejectedBeforeDroppedWork]' passed (0.002 seconds).
+Test Suite 'ExecutionBoundaryTests' passed at 2026-09-24 21:56:47.987.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.723 (0.723) seconds
+Test Suite 'VectorCorePackageTests.xctest' passed at 2026-09-24 21:56:47.987.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.723 (0.723) seconds
+Test Suite 'Selected tests' passed at 2026-09-24 21:56:47.987.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.723 (0.724) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite NormalizationRangeContractTests started.
+􀟈  Suite BatchStatisticsRangeTests started.
+􀟈  Suite "Quantized Kernels" started.
+􀟈  Suite ExecutionSchedulingContractTests started.
+􀟈  Suite "R03 matrix metric and logical output contracts" started.
+􀟈  Suite "BatchKernelProvider GPU dispatch (R4)" started.
+􀟈  Suite "Top-K CPU wrapper NaN contract" started.
+􀟈  Suite "Provider conformance" started.
+􀟈  Suite "Mixed Precision Comprehensive Tests" started.
+􀟈  Suite "Top-K NaN ordering contract" started.
+􀟈  Suite "Operations Batch Tests" started.
+􀟈  Suite "Operations Tests" started.
+􀟈  Test halfWideningAndScalarMagnitude() started.
+􀟈  Suite "Integration with Vector Operations" started.
+􀟈  Test invalidInputsRejectInChildren() started.
+􀟈  Test bothBatchRoutesAtSchedulingBoundary() started.
+􀟈  Test actualPreparedAndUnpreparedMatrixPropagation() started.
+􀟈  Test safeNormalizedAllIndependentFlags() started.
+􀟈  Test ordinaryAndEmptyDimensions() started.
+􀟈  Test finiteRangeRouteMatrix() started.
+􀟈  Test nativeDoubleIndependentOracles() started.
+􀟈  Test hintActualWritebackAndNormalizedCaches() started.
+􀟈  Test checkedFailuresAndPermissiveBits() started.
+􀟈  Test pointerNaturalOffsetsAndSentinels() started.
+􀟈  Test identicalMeasurements() started.
+􀟈  Test batchFactoryErrorsUnchanged() started.
+􀟈  Test strictToleranceBoundary() started.
+􀟈  Test accumulatorDomainAndMergeIdentities() started.
+􀟈  Test soaLogicalOutputMatrix(dimension:) started.
+􀟈  Test decimalFixtures() started.
+􀟈  Test finiteExtremeNormalization() started.
+􀟈  Test thresholdDiscontinuity() started.
+􀟈  Test doublePowerOfTwoDirectionAndFloatMixedScales() started.
+􀟈  Suite "Batch Operations Tests" started.
+􀟈  Test isolatedConfigurationChild() started.
+􀟈  Test similarityDoesNotClampNonfiniteScoresIntoFiniteRange() started.
+􀟈  Test configurationScenarioRunsInFreshProcess(scenario:) started.
+􀟈  Test partitionAndOrderMatrix() started.
+􀟈  Test cancellationBetweenUnitsAndOriginalBodyError() started.
+􀟈  Test matrixDiagonalAndSimilarityBehavioralRegression() started.
+􀟈  Test zeroQuerySoASuffixBehavioralRegression() started.
+􀟈  Test safeSoAInsufficientCapacityPreservesOutputAndError() started.
+􀟈  Test suppliedArrayProviderWitnessIsHonored() started.
+􀟈  Test "A BatchKernelProvider is usable as a ComputeProvider" started.
+􀟈  Test reductionIdentityAndOrderedAssociativity() started.
+􀟈  Test eachRangeHelperChecksAfterBodyBeforeNextUnit() started.
+􀟈  Test "findNearestBatch uses the provider's batch override (not the default loop)" started.
+􀟈  Test "Default provider uses the CPU path (no sentinel)" started.
+􀟈  Test convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test invalidMeasurements() started.
+􀟈  Test executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test "findNearest passes through all k provider results" started.
+􀟈  Test watchdogRejectsTimedOutChild() started.
+􀟈  Test nestedProvidersAndLegacySuppression() started.
+􀟈  Test "findNearestBatch delegates per query (GPU precedence over CPU GEMM)" started.
+􀟈  Test pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test providerOrderedCoverageAndWorkerBounds() started.
+􀟈  Test invalidPartialsAndOverflowingFiniteRows() started.
+􀟈  Test reductionCombineCancellationAndRegionAcrossProvidersAndOverloads() started.
+􀟈  Test batchCancellationBetweenWorkUnits() started.
+􀟈  Test optimizedParallelFiniteTiesUseOriginalIndices() started.
+􀟈  Test sixDormantOptimizedHelpersDirectCoverage() started.
+􀟈  Test preCancelledThrowingRoutesAndExecute() started.
+􀟈  Test executeBatchModeSettingsAndEmptyControl() started.
+􀟈  Test batchSelectionPreservesInputEdgeBehavior() started.
+􀟈  Test batchTransformsOrderingAndCancellation() started.
+􀟈  Test optimizedParallelEuclideanRetainsNaNsAfterNumericCandidates() started.
+􀟈  Test batchParallelHeapAndSortPreserveGlobalIndices() started.
+􀟈  Test publicGenericNearestBoundaryWorkerObservation() started.
+􀟈  Test "Operations.findNearest delegates to an installed BatchKernelProvider" started.
+􀟈  Test batchSerialHeapAndSortKeepNaNsLast() started.
+􀟈  Test guardChildProbe() started.
+􀟈  Test genericOperationsSelectsNumericScoresBeforeNaNs() started.
+􀟈  Test invalidLimitsAndHintsPrecedeCallbacks() started.
+􀟈  Test childProbe() started.
+􀟈  Test inheritedBatchQueryRoute() started.
+􀟈  Test nestedMatrixCallbackCreatesNoLibraryWorkers() started.
+􀟈  Test boundedRegressionChild(scenario:) started.
+􀟈  Test matricesStatisticsAndNonthrowingCancellation() started.
+􀟈  Test liveTransformsContextHintsAndFactoryIdentity() started.
+􀟈  Test gemmBatchEuclideanFormattingPreservesSelectedNaNs() started.
+􀟈  Test cancelledLiveTransformsAndMatrix() started.
+􀟈  Test "CPUComputeProvider .automatic (parallel path) conforms" started.
+􀟈  Test optimizedParallelDotNegationKeepsNaNsLast() started.
+􀟈  Test "SwiftBufferPool conforms" started.
+􀟈  Test "parallelReduce is mode-invariant for an identity initial (C5)" started.
+􀟈  Test case passing 1 argument dimension → 512 to soaLogicalOutputMatrix(dimension:) started.
+􀟈  Test "CPUComputeProvider .sequential conforms" started.
+􀟈  Test case passing 1 argument dimension → 768 to soaLogicalOutputMatrix(dimension:) started.
+􀟈  Test case passing 1 argument dimension → 1536 to soaLogicalOutputMatrix(dimension:) started.
+􀟈  Test "MockBufferProvider conforms" started.
+􀟈  Test "CPUComputeProvider .parallel conforms" started.
+􀟈  Test "AccelerationProvider laws A1/A3/A4 + type preservation" started.
+􀟈  Test "ComputeProvider default implementations conform" started.
+􀟈  Test exactTiesAndSignedZeroKeepOriginalPositionsAndBits() started.
+􀟈  Test case passing 1 argument scenario → "512-euclidean-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􀟈  Test pointerIDsAreLabelsAfterSelection() started.
+􀟈  Test comparatorLaws() started.
+􀟈  Test numericInfinityOutranksNaN() started.
+􀟈  Test publicDotProductMaximizesWithNaNsLast() started.
+􀟈  Test canonicalMembershipAndOrderBothDirections() started.
+􀟈  Test testFindNearest_SortedDistancesContainExpected() started.
+􀟈  Test existingPublicSelectionEdges() started.
+􀟈  Test testDistanceMatrix_ParallelLargeMatchesSync() started.
+􀟈  Test testFindNearestBatch_TwoQueries() started.
+􀟈  Test heapEvictsInitialNaN() started.
+􀟈  Test testStatistics_BasicMeanAndMagnitudes() started.
+􀟈  Test disjointMergesKeepGlobalIndicesAndDestinationPolicy() started.
+􀟈  Test testCentroidBasic() started.
+􀟈  Test nanCandidatesFillRemainingPositions() started.
+􀟈  Test testFindNearest_ParallelMatchesSyncBaseline() started.
+􀟈  Test publicHeapEvictionAndCrossover() started.
+􀟈  Test publicSelectionKeepsNaNsLastAndPreservesCount() started.
+􀟈  Test testDistanceMatrix_SymmetricZeroDiagonal() started.
+􀟈  Test explicitTiePoliciesRespectTheirScope() started.
+􀟈  Test testNormalize_ReturnsUnitVectors() started.
+􀟈  Test testFindNearest_BasicTopKOrder() started.
+􀟈  Test testFindNearest_KGreaterThanCount_Clamps() started.
+􀟈  Test testFindNearest_CustomMetric_Manhattan() started.
+􀟈  Test testFindNearestBatch_Basic() started.
+􀟈  Test testFindNearest_EqualDistances_SetEquality() started.
+􀟈  Test testQuantizedOptimizedVectorIntegration() started.
+􀟈  Test testQuantizedCachingIntegration() started.
+􀟈  Test case passing 1 argument count → 0 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument count → 1 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument count → 2 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument count → 31 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument count → 0 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test case passing 1 argument count → 32 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument count → 1 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test case passing 1 argument count → 2 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test case passing 1 argument count → 31 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test testQuantizedBatchOperations() started.
+􀟈  Test case passing 1 argument count → 32 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test testQuantizedPipelineIntegration() started.
+􀟈  Test case passing 1 argument count → 0 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 1 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 2 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 99 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 100 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 101 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument scenario → "defaultBound" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "cancelSerial" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "factory1" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "factory1000" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "shape" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "batchControl" to boundedRegressionChild(scenario:) started.
+N01_CHILD_CAPTURE empty /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-empty-FAA0A6CD-73B1-49C5-99DB-C055CEFF8FF1.log
+􀟈  Test case passing 1 argument scenario → "gatedCancellation" to boundedRegressionChild(scenario:) started.
+E02_CHILD_CAPTURE defaultBound /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-defaultBound-99590B4D-64BA-4B7D-9B50-E1D0592AF47A.log
+E02_CHILD_RESULT defaultBound status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-defaultBound-99590B4D-64BA-4B7D-9B50-E1D0592AF47A.log
+􀟈  Test case passing 1 argument scenario → "shortBatch" to boundedRegressionChild(scenario:) started.
+E02_CHILD_CAPTURE factory1000 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-factory1000-AD603E37-10D2-450D-B2ED-A9C974DEC3BA.log
+E02_CHILD_RESULT factory1000 status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-factory1000-AD603E37-10D2-450D-B2ED-A9C974DEC3BA.log
+􀟈  Test case passing 1 argument scenario → "reverseAndError" to boundedRegressionChild(scenario:) started.
+E02_CHILD_CAPTURE cancelSerial /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-cancelSerial-F2EB00C6-9314-4A92-9AF8-860BA94BEE8C.log
+E02_CHILD_RESULT cancelSerial status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-cancelSerial-F2EB00C6-9314-4A92-9AF8-860BA94BEE8C.log
+N01_CHILD_CAPTURE zero /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-zero-4686B9EE-0F9B-4168-A9DD-9CC48785759A.log
+􁁛  Test ordinaryAndEmptyDimensions() passed after 0.177 seconds.
+􁁛  Test strictToleranceBoundary() passed after 0.178 seconds.
+E02_CHILD_CAPTURE factory1 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-factory1-EF772E8F-A78A-4372-AFD8-D51FE8A5E7AA.log
+E02_CHILD_RESULT factory1 status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-factory1-EF772E8F-A78A-4372-AFD8-D51FE8A5E7AA.log
+􁁛  Test finiteExtremeNormalization() passed after 0.179 seconds.
+􁁛  Test decimalFixtures() passed after 0.179 seconds.
+􁁛  Test accumulatorDomainAndMergeIdentities() passed after 0.179 seconds.
+E02_CHILD_CAPTURE shape /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-shape-1FE529A6-ED53-46B4-AAA5-BCD863D64586.log
+E02_CHILD_RESULT shape status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-shape-1FE529A6-ED53-46B4-AAA5-BCD863D64586.log
+􁁛  Test doublePowerOfTwoDirectionAndFloatMixedScales() passed after 0.180 seconds.
+􀟈  Test "Batch dot mixed precision correctness" started.
+􀟈  Test "Batch operations preserve query precision" started.
+􀟈  Test "Batch dot FP16 correctness" started.
+􁁛  Test similarityDoesNotClampNonfiniteScoresIntoFiniteRange() passed after 0.180 seconds.
+􁁛  Test isolatedConfigurationChild() passed after 0.180 seconds.
+􁁛  Test actualPreparedAndUnpreparedMatrixPropagation() passed after 0.180 seconds.
+􁁛  Test pointerNaturalOffsetsAndSentinels() passed after 0.181 seconds.
+􁁛  Test zeroQuerySoASuffixBehavioralRegression() passed after 0.182 seconds.
+􁁛  Test safeSoAInsufficientCapacityPreservesOutputAndError() passed after 0.182 seconds.
+E02_CHILD_CAPTURE gatedCancellation /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-gatedCancellation-797640D7-62C7-4669-9BBD-A8E129098DDC.log
+E02_CHILD_RESULT gatedCancellation status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-gatedCancellation-797640D7-62C7-4669-9BBD-A8E129098DDC.log
+􁁛  Test suppliedArrayProviderWitnessIsHonored() passed after 0.186 seconds.
+􁁛  Test matrixDiagonalAndSimilarityBehavioralRegression() passed after 0.189 seconds.
+Quantized Vector Integration with OptimizedVector Protocol:
+  Vector512Optimized integration:
+    Quantization params: scale=0.007874014, zero=0
+    Dequantization successful: true
+    Round-trip error: 0.0019210794
+
+  Batch operation integration:
+E02_CHILD_CAPTURE batchControl /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-batchControl-1BD13D72-7CEC-4E8B-96EF-7F2CFBAB50B5.log
+E02_CHILD_RESULT batchControl status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-batchControl-1BD13D72-7CEC-4E8B-96EF-7F2CFBAB50B5.log
+􁁛  Test "Default provider uses the CPU path (no sentinel)" passed after 0.194 seconds.
+􁁛  Test "findNearest passes through all k provider results" passed after 0.194 seconds.
+􁁛  Test checkedFailuresAndPermissiveBits() passed after 0.194 seconds.
+    Batch quantization: 10 vectors
+    Euclidean distance: 5.7422304
+    Dot product: 350.7673
+
+  Type system integration:
+    Storage size: 512 bytes
+    Expected: 512 bytes
+
+  SIMD operation compatibility:
+    SIMD4 lanes: 128
+    Total elements: 512
+
+  Protocol compliance verified:
+    ✓ Quantization from OptimizedVector
+    ✓ Dequantization to OptimizedVector
+    ✓ Batch operations support
+    ✓ Distance metric computation
+    ✓ Storage efficiency
+    ✓ SIMD compatibility
+􁁛  Test "findNearestBatch uses the provider's batch override (not the default loop)" passed after 0.205 seconds.
+􁁛  Test executeBatchModeSettingsAndEmptyControl() passed after 0.220 seconds.
+􁁛  Test batchSelectionPreservesInputEdgeBehavior() passed after 0.222 seconds.
+􁁛  Test batchSerialHeapAndSortKeepNaNsLast() passed after 0.230 seconds.
+􁁛  Test "Operations.findNearest delegates to an installed BatchKernelProvider" passed after 0.230 seconds.
+􁁛  Test guardChildProbe() passed after 0.230 seconds.
+􁁛  Test genericOperationsSelectsNumericScoresBeforeNaNs() passed after 0.230 seconds.
+􁁛  Test childProbe() passed after 0.230 seconds.
+􁁛  Test invalidLimitsAndHintsPrecedeCallbacks() passed after 0.230 seconds.
+􁁛  Test nativeDoubleIndependentOracles() passed after 0.231 seconds.
+􁁛  Test hintActualWritebackAndNormalizedCaches() passed after 0.230 seconds.
+􁁛  Test halfWideningAndScalarMagnitude() passed after 0.231 seconds.
+􁁛  Test gemmBatchEuclideanFormattingPreservesSelectedNaNs() passed after 0.231 seconds.
+􁁛  Test "SwiftBufferPool conforms" passed after 0.236 seconds.
+􁁛  Test "CPUComputeProvider .sequential conforms" passed after 0.236 seconds.
+E02_CHILD_CAPTURE shortBatch /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-shortBatch-59C14F4C-950F-489C-9A17-6E8235BBB5B8.log
+E02_CHILD_RESULT shortBatch status=5 reason=2 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-shortBatch-59C14F4C-950F-489C-9A17-6E8235BBB5B8.log
+􁁛  Test "MockBufferProvider conforms" passed after 0.241 seconds.
+􁁛  Test "AccelerationProvider laws A1/A3/A4 + type preservation" passed after 0.240 seconds.
+􁁛  Test pointerIDsAreLabelsAfterSelection() passed after 0.239 seconds.
+􁁛  Test numericInfinityOutranksNaN() passed after 0.238 seconds.
+􁁛  Test exactTiesAndSignedZeroKeepOriginalPositionsAndBits() passed after 0.240 seconds.
+􁁛  Test publicDotProductMaximizesWithNaNsLast() passed after 0.239 seconds.
+􁁛  Test testFindNearest_SortedDistancesContainExpected() passed after 0.239 seconds.
+􁁛  Test existingPublicSelectionEdges() passed after 0.239 seconds.
+􁁛  Test canonicalMembershipAndOrderBothDirections() passed after 0.239 seconds.
+􁁛  Test testFindNearestBatch_TwoQueries() passed after 0.238 seconds.
+􁁛  Test heapEvictsInitialNaN() passed after 0.238 seconds.
+􁁛  Test testStatistics_BasicMeanAndMagnitudes() passed after 0.238 seconds.
+􁁛  Test comparatorLaws() passed after 0.240 seconds.
+􁁛  Test testCentroidBasic() passed after 0.238 seconds.
+􁁛  Test nanCandidatesFillRemainingPositions() passed after 0.238 seconds.
+􁁛  Test publicHeapEvictionAndCrossover() passed after 0.238 seconds.
+􁁛  Test publicSelectionKeepsNaNsLastAndPreservesCount() passed after 0.238 seconds.
+􁁛  Test testDistanceMatrix_SymmetricZeroDiagonal() passed after 0.238 seconds.
+􁁛  Test explicitTiePoliciesRespectTheirScope() passed after 0.238 seconds.
+􁁛  Test testNormalize_ReturnsUnitVectors() passed after 0.238 seconds.
+􁁛  Test testFindNearest_BasicTopKOrder() passed after 0.238 seconds.
+􁁛  Test testFindNearest_KGreaterThanCount_Clamps() passed after 0.238 seconds.
+􁁛  Test testFindNearest_CustomMetric_Manhattan() passed after 0.238 seconds.
+􁁛  Test testFindNearestBatch_Basic() passed after 0.238 seconds.
+􁁛  Test testFindNearest_EqualDistances_SetEquality() passed after 0.238 seconds.
+E02_CHILD_CAPTURE reverseAndError /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-reverseAndError-E7F0DBEC-F50D-43E2-8A9C-E91F266B6798.log
+E02_CHILD_RESULT reverseAndError status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-reverseAndError-E7F0DBEC-F50D-43E2-8A9C-E91F266B6798.log
+Quantized Caching Integration:
+􁁛  Test disjointMergesKeepGlobalIndicesAndDestinationPolicy() passed after 0.255 seconds.
+N01_CHILD_CAPTURE nan /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-nan-7B381B67-473C-4294-9407-57AF8129F9FC.log
+􁁛  Test testQuantizedPipelineIntegration() passed after 0.242 seconds.
+􁁛  Test testQuantizedOptimizedVectorIntegration() passed after 0.268 seconds.
+Batch query precision preservation:
+  Mean error (mixed): 0.058273%
+  Mean error (fp16):  0.058273%
+􁁛  Test testFindNearest_ParallelMatchesSyncBaseline() passed after 0.292 seconds.
+  Cache hits: 30
+  Cache misses: 0
+  Hit rate: 0.75
+  Memory saved: 76800 bytes
+  Sequential access time: 0.04303455352783203 ms
+  Random access time: 0.007987022399902344 ms
+  FP32 memory: 102400 bytes
+  INT8 memory: 25600 bytes
+  Compression ratio: 4.0x
+E02_GENERIC_NEAREST N=34 exceptional=false k=1 parallel=false submitted=0 limit=16
+􁁛  Test batchFactoryErrorsUnchanged() passed after 0.334 seconds.
+􁁛  Test boundedRegressionChild(scenario:) with 9 test cases passed after 0.335 seconds.
+􁁛  Test "A BatchKernelProvider is usable as a ComputeProvider" passed after 0.336 seconds.
+􁁛  Test convenienceReturnsSimilarityIncludingZeroRows(count:) with 5 test cases passed after 0.342 seconds.
+􁁛  Test "Batch operations preserve query precision" passed after 0.162 seconds.
+􁁛  Test testQuantizedCachingIntegration() passed after 0.351 seconds.
+􁁛  Test optimizedParallelEuclideanRetainsNaNsAfterNumericCandidates() passed after 0.359 seconds.
+N01_CHILD_CAPTURE infinity /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-infinity-86373A4B-610C-4FA9-B022-8F606986904D.log
+􁁛  Test "findNearestBatch delegates per query (GPU precedence over CPU GEMM)" passed after 0.360 seconds.
+􁁛  Test nestedMatrixCallbackCreatesNoLibraryWorkers() passed after 0.359 seconds.
+􁁛  Test "parallelReduce is mode-invariant for an identity initial (C5)" passed after 0.361 seconds.
+􁁛  Test optimizedParallelDotNegationKeepsNaNsLast() passed after 0.361 seconds.
+􁁛  Suite "Top-K NaN ordering contract" passed after 0.362 seconds.
+􁁛  Suite "Operations Tests" passed after 0.362 seconds.
+􁁛  Test testDistanceMatrix_ParallelLargeMatchesSync() passed after 0.355 seconds.
+E02_GENERIC_NEAREST N=34 exceptional=false k=34 parallel=false submitted=0 limit=16
+􁁛  Test "Batch dot mixed precision correctness" passed after 0.188 seconds.
+􁁛  Suite "BatchKernelProvider GPU dispatch (R4)" passed after 0.371 seconds.
+􁁛  Test "Batch dot FP16 correctness" passed after 0.190 seconds.
+􁁛  Test thresholdDiscontinuity() passed after 0.372 seconds.
+􁁛  Test nestedProvidersAndLegacySuppression() passed after 0.373 seconds.
+􁁛  Test batchParallelHeapAndSortPreserveGlobalIndices() passed after 0.387 seconds.
+R03_CHILD_CAPTURE 512-euclidean-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-euclidean-default-255-8B21FC6C-19C4-4B82-A741-0FDF76BEBC22.log
+􁁛  Suite "Operations Batch Tests" passed after 0.391 seconds.
+􁁛  Test bothBatchRoutesAtSchedulingBoundary() passed after 0.394 seconds.
+􁁛  Suite "Batch Operations Tests" passed after 0.394 seconds.
+Quantized Batch Operations:
+  Batch size: 100
+  Top-5 overlap: 5/5
+E02_GENERIC_NEAREST N=34 exceptional=true k=1 parallel=false submitted=0 limit=16
+  Similarity matrix computed for 10x10
+􁁛  Suite "Mixed Precision Comprehensive Tests" passed after 0.396 seconds.
+􀟈  Test case passing 1 argument scenario → "512-euclidean-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test testQuantizedBatchOperations() passed after 0.363 seconds.
+E02_GENERIC_NEAREST N=34 exceptional=true k=34 parallel=false submitted=0 limit=16
+􁁛  Suite "Integration with Vector Operations" passed after 0.408 seconds.
+􁁛  Suite "Quantized Kernels" passed after 0.410 seconds.
+E02_GENERIC_NEAREST N=35 exceptional=false k=1 parallel=true submitted=1 limit=16
+􁁛  Test cancellationBetweenUnitsAndOriginalBodyError() passed after 0.420 seconds.
+􁁛  Test optimizedParallelFiniteTiesUseOriginalIndices() passed after 0.436 seconds.
+E02_GENERIC_NEAREST N=35 exceptional=false k=35 parallel=true submitted=1 limit=16
+􁁛  Suite "Top-K CPU wrapper NaN contract" passed after 0.439 seconds.
+􁁛  Test batchCancellationBetweenWorkUnits() passed after 0.441 seconds.
+E02_GENERIC_NEAREST N=35 exceptional=true k=1 parallel=true submitted=1 limit=16
+N01_CHILD_CAPTURE double /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-double-4C31D430-D498-4EF1-933E-1AD8F2F3D376.log
+E02_GENERIC_NEAREST N=35 exceptional=true k=35 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=false k=1 parallel=true submitted=1 limit=16
+􁁛  Test finiteRangeRouteMatrix() passed after 0.467 seconds.
+􁁛  Test reductionCombineCancellationAndRegionAcrossProvidersAndOverloads() passed after 0.467 seconds.
+􁁛  Test liveTransformsContextHintsAndFactoryIdentity() passed after 0.470 seconds.
+E02_GENERIC_NEAREST N=36 exceptional=false k=36 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=true k=1 parallel=true submitted=1 limit=16
+􁁛  Test cancelledLiveTransformsAndMatrix() passed after 0.474 seconds.
+E02_GENERIC_NEAREST N=36 exceptional=true k=36 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=4097 exceptional=false k=1 parallel=true submitted=9 limit=16
+􁁛  Test eachRangeHelperChecksAfterBodyBeforeNextUnit() passed after 0.496 seconds.
+􁁛  Test inheritedBatchQueryRoute() passed after 0.496 seconds.
+􁁛  Test invalidMeasurements() passed after 0.502 seconds.
+􁁛  Test batchTransformsOrderingAndCancellation() passed after 0.506 seconds.
+􀙟  Test preCancelledThrowingRoutesAndExecute() was cancelled after 0.507 seconds.
+E02_GENERIC_NEAREST N=4097 exceptional=false k=4097 parallel=true submitted=9 limit=16
+􁁛  Test "CPUComputeProvider .automatic (parallel path) conforms" passed after 0.512 seconds.
+􁁛  Test identicalMeasurements() passed after 0.520 seconds.
+􁁛  Test executionMatrixSerialParallelMetricParity(count:) with 5 test cases passed after 0.525 seconds.
+N01_CHILD_CAPTURE optimized384 /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-optimized384-D8A5BAE3-4AB8-4D68-80C4-29CA1B0F5D59.log
+E02_GENERIC_NEAREST N=4097 exceptional=true k=1 parallel=true submitted=9 limit=16
+􁁛  Test "CPUComputeProvider .parallel conforms" passed after 0.540 seconds.
+􁁛  Test "ComputeProvider default implementations conform" passed after 0.541 seconds.
+􁁛  Suite "Provider conformance" passed after 0.545 seconds.
+E02_GENERIC_NEAREST N=4097 exceptional=true k=4097 parallel=true submitted=9 limit=16
+􁁛  Test publicGenericNearestBoundaryWorkerObservation() passed after 0.547 seconds.
+􁁛  Test reductionIdentityAndOrderedAssociativity() passed after 0.547 seconds.
+􁁛  Test invalidPartialsAndOverflowingFiniteRows() passed after 0.548 seconds.
+N01_CHILD_CAPTURE optimized512 /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-optimized512-B4450B82-012B-4FAE-BC5E-383A78D4FADE.log
+􁁛  Test matricesStatisticsAndNonthrowingCancellation() passed after 0.701 seconds.
+N01_CHILD_CAPTURE optimized768 /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-optimized768-C1968C9A-2BF6-4BC6-964D-003041A9BF59.log
+􁁛  Test partitionAndOrderMatrix() passed after 0.749 seconds.
+􁁛  Suite BatchStatisticsRangeTests passed after 0.749 seconds.
+R03_CHILD_CAPTURE 512-euclidean-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-euclidean-default-256-C4196D60-B5F5-4483-B840-A2E8257FA8BE.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+N01_CHILD_CAPTURE optimized1536 /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-optimized1536-5847F644-54D6-47F3-BB3E-3560CDF0A836.log
+N01_CHILD_CAPTURE pointerZero /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-pointerZero-ECCA384D-78F5-41F7-BF40-5956DBB53463.log
+N01_CHILD_CAPTURE pointerNaN /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-pointerNaN-4F809C12-B299-4CA5-8C1C-58D5D1EEE2A9.log
+􁁛  Test providerOrderedCoverageAndWorkerBounds() passed after 1.002 seconds.
+N01_CHILD_CAPTURE pointerInfinity /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-pointerInfinity-CCE0C2D7-95A8-4F45-AF43-5211A9E24260.log
+N01_CHILD_CAPTURE negativeDimension /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-negativeDimension-4AD67CB2-C3D6-4344-AC46-41FD5C8F04C2.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-euclidean-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-euclidean-default-257-563703A2-F635-494F-B5F2-2AEDD1A6EE06.log
+N01_CHILD_CAPTURE toleranceNegative /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-toleranceNegative-CD1C5EB8-1A44-4DFF-94C4-689F92D85DBA.log
+N01_CHILD_CAPTURE toleranceNaN /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-toleranceNaN-8A282D5B-A438-4C7A-A669-1B51F7E47769.log
+N01_CHILD_CAPTURE toleranceInfinity /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-toleranceInfinity-4FF5D545-D853-4F41-BC56-207D6FD89B64.log
+N01_CHILD_CAPTURE toleranceNegativeInfinity /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-toleranceNegativeInfinity-0D4B1834-3B97-412B-9A41-E1C8A401B103.log
+R03_CHILD_CAPTURE 512-euclidean-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-euclidean-disabled-257-B5954C46-FD87-46C8-A263-0CF57C74AF94.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+N01_CHILD_CAPTURE divideZero /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-divideZero-348157EE-88B4-427F-9D13-941536617F24.log
+R03_CHILD_CAPTURE 512-euclidean-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-euclidean-small-7-A3C19211-09D0-47F1-8F3A-1FBE66261D73.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+N01_CHILD_CAPTURE divideNegativeZero /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-divideNegativeZero-EE9C3B7D-CEB1-41CC-926E-C8B7E0A189D1.log
+R03_CHILD_CAPTURE 512-euclidean-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-euclidean-small-8-428F1B42-8367-4AAF-B548-0B1BBC367A46.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+N01_CHILD_CAPTURE divideAssignZero /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-divideAssignZero-1160057D-3042-437F-927C-64846C0CE6B0.log
+R03_CHILD_CAPTURE 512-euclidean-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-euclidean-small-9-2A0AF0CD-62F2-4837-8CC4-B8B73B3226A0.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+N01_CHILD_CAPTURE divideInPlaceZero /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-divideInPlaceZero-669AE9F8-7297-4D4D-BE91-EA7E0ADF7E34.log
+􁁛  Test pairwiseAllBuiltInAndConfiguredMetrics(count:) with 6 test cases passed after 1.699 seconds.
+􁁛  Test sixDormantOptimizedHelpersDirectCoverage() passed after 1.750 seconds.
+N01_CHILD_CAPTURE negativeCountSwift /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-negativeCountSwift-D98FAED2-E60E-41CE-823F-24BAA9B16A61.log
+N01_CHILD_CAPTURE negativeCountAccelerate /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-negativeCountAccelerate-422AE074-CC21-4B84-BD85-8B005D4F5264.log
+N01_CHILD_CAPTURE negativeCountDefault /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/N01-guard-negativeCountDefault-4E09183D-46F7-4523-A46C-C9E13F074B64.log
+􁁛  Test invalidInputsRejectInChildren() passed after 1.928 seconds.
+􁁛  Test safeNormalizedAllIndependentFlags() passed after 1.976 seconds.
+􁁛  Suite NormalizationRangeContractTests passed after 1.976 seconds.
+R03_CHILD_CAPTURE 512-cosine-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-cosine-default-255-7D61B5B7-DE1D-4EA9-980E-45664030D3C0.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-cosine-default-256-E1010EF8-64DA-4D96-BE9F-09A9A56BD84A.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-cosine-default-257-6F5F7267-F4AF-44BE-9ECD-3D539827F915.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-cosine-disabled-257-DDAA30DF-192D-4C93-89AF-336DA17AD7D0.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-cosine-small-7-F925EF79-8B98-47C0-BDC6-C666A49F18A4.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-cosine-small-8-03CEAEED-2321-4A93-A6EA-3A4B51850853.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-cosine-small-9-7732E1B4-2471-4023-9D0E-CE57BB689335.log
+􀟈  Test case passing 1 argument scenario → "512-custom-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-custom-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-512-custom-default-257-C2DE29DE-6744-4099-9312-FD7C921684BB.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test soaLogicalOutputMatrix(dimension:) with 3 test cases passed after 4.269 seconds.
+R03_CHILD_CAPTURE 768-euclidean-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-euclidean-default-255-E89FA785-CBC4-4138-A05D-DCE6F9B5251F.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-euclidean-default-256-42684010-BF66-4BDD-96CD-70F9BE712576.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-euclidean-default-257-AA2F47D6-508D-42FB-BE84-140E0B3BF73A.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-euclidean-disabled-257-22D6FB38-F3B2-4C5B-AF9B-C1AA9EFB854E.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-euclidean-small-7-DAF0AC02-86DB-4A86-AFF1-58C2F15F3DB0.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-euclidean-small-8-8F214702-9B6E-4AC5-BBD3-5E9A43C70EE4.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-euclidean-small-9-D979BD15-003B-478C-AA85-B999E9D041FD.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-cosine-default-255-FD3E2B3F-3C0E-4945-B7BA-5160AB533770.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-cosine-default-256-3D0F1A2E-7CBC-477D-9D4D-D6EE832FEF00.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-cosine-default-257-55305FFF-1AF9-4FC3-A20E-E5900EF92965.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-cosine-disabled-257-217F6EA5-EF69-473F-8D79-AF4CE88B4CDE.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-cosine-small-7-177A6623-24FF-4AEF-BB5B-9870AD72E4F2.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-cosine-small-8-6F235EE2-5CBF-4751-A4B2-80C10B521A94.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-cosine-small-9-B79167A0-E7BF-48C6-AB76-97FA45319D75.log
+􀟈  Test case passing 1 argument scenario → "768-custom-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-custom-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-768-custom-default-257-E5D12426-519E-44E0-9F1E-89187A4539E0.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-euclidean-default-255-03A6009D-8E86-4B7F-88A6-50CD324678C4.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-euclidean-default-256-5B6B45BD-C8D0-48B4-B160-9D4AAD6C1DD6.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-euclidean-default-257-DA4ED705-204B-4989-9194-1C8311FAAA1F.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-euclidean-disabled-257-DCBEA2E2-F708-4517-90D7-8101A077F838.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-euclidean-small-7-1E054455-9100-40E7-81C8-06E488BCBE22.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-euclidean-small-8-3B84EA4D-D597-4F50-B1E4-CA28CD815E41.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-euclidean-small-9-5CC0A5CF-E65F-4346-B8AE-E605F9807E31.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-cosine-default-255-CF579D8E-C31D-4836-B683-B61BA0017709.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-cosine-default-256-48F16A3C-59AF-429C-9F79-8503893F886D.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-cosine-default-257-6080A36B-B192-4B09-9DA5-0D40F17D9C70.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-cosine-disabled-257-73E91741-2ADF-4625-B006-0E768A3CC59C.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-cosine-small-7-ABA3BF50-D05B-4948-B812-B5616DCCB1E7.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-cosine-small-8-7F7034D8-C9AB-460C-A083-CB28B4CD2CEC.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-cosine-small-9-B816BD99-1ACC-401B-BD28-3D30E14474E6.log
+􀟈  Test case passing 1 argument scenario → "1536-custom-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-custom-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-regression-child-captures/R03-configuration-1536-custom-default-257-6315FEF5-449F-4EB3-93F5-B3B9D5B50106.log
+􁁛  Test configurationScenarioRunsInFreshProcess(scenario:) with 45 test cases passed after 12.521 seconds.
+􁁛  Suite "R03 matrix metric and logical output contracts" passed after 12.522 seconds.
+E02_CHILD_CAPTURE watchdog /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-watchdog-C7A7BCE0-50DC-4D4A-823D-EC26655449EE.log
+E02_CHILD_TIMEOUT watchdog cleanupReaped=true path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E02-v5-child-captures/E02-watchdog-C7A7BCE0-50DC-4D4A-823D-EC26655449EE.log
+􁁛  Test watchdogRejectsTimedOutChild() passed after 16.031 seconds.
+􁁛  Suite ExecutionSchedulingContractTests passed after 16.031 seconds.
+􁁛  Test run with 110 tests in 14 suites passed after 16.032 seconds.

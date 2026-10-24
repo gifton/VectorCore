@@ -1,0 +1,7 @@
+nanScalar samples 1 maxAbs nan maxRel nan violates false
+nanVector samples 1 maxAbs 0.0 maxRel 0.0 violates false
+emptyVsNonempty samples 0 maxAbs 0.0 maxRel 0.0 violates false
+longerOutput samples 1 maxAbs 0.0 maxRel 0.0 violates false
+equalInfinities samples 1 maxAbs nan maxRel nan violates false
+cosineABPairCount 0
+nanJSON encoding rejected

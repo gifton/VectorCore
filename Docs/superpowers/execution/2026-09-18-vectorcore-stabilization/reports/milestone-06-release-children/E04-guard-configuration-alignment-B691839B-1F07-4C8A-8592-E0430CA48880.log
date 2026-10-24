@@ -1,0 +1,7 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite "E04 MemoryPool boundaries" started.
+􀟈 Test guardChildProbe() started.
+E04_CHILD_STARTED:configuration-alignment
+VectorCore/BufferProvider.swift:173: Fatal error: BufferConfiguration requires nonnegative budgets and power-of-two alignment >= 16

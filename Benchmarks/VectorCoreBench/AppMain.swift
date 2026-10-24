@@ -29,6 +29,7 @@ struct CLIOptions {
     var _userSetMinTime: Bool = false
     var _userSetDims: Bool = false
     var _userSetBatchNs: Bool = false
+    var _userSetSuites: Bool = false
     // Reproducible randomness: global run seed used to derive per-case seeds
     var runSeed: UInt64 = 0
     var _userSetRunSeed: Bool = false
@@ -81,7 +82,8 @@ func printUsage() {
       --use-mixed-precision  Enable FP16 mixed-precision kernels when available (fallback VC_MIXED_PRECISION=1)
       --ab          Enable A/B comparisons (euclidean vs euclidean2, fused vs preNorm) (fallback VC_BATCH_AB, default on)
       --use-ckernels         Assert this binary was compiled with VC_USE_C_KERNELS
-      --ab-only      Restrict generated cases to A/B pairs (batch euclidean vs euclidean2; cosine fused vs preNorm)
+      --ab-only      Restrict generated cases to A/B pairs (batch euclidean vs euclidean2; cosine fused vs preNorm).
+                     Runs only the batch suite: an explicit --suites must be exactly batch (fallback VC_AB_ONLY=1)
       --max-rel-error  Max allowed relative error for correctness gating (env VC_MAX_REL_ERROR)
       --max-abs-error  Max allowed absolute error for correctness gating (env VC_MAX_ABS_ERROR)
       --strict-correctness  Exit non-zero when any case exceeds thresholds
@@ -167,6 +169,7 @@ private func printComparisons(_ comparisons: [ABComparison]) {
 
 func printPretty(results: [BenchResult], options: ValidatedOptions, comparisons: [ABComparison], unavailable: [UnavailableCase] = []) {
     print("\n=== VectorCore Bench (Phase 2) ===")
+    print(BenchmarkCompiledFeatures.bannerLine())
     print("statistic: \(BenchMetadata.currentStatisticUnit) (per-<unit> fields are ns per declared work unit; time/op, med= and p90= "
         + "are ns per invocation)")
     for r in results {

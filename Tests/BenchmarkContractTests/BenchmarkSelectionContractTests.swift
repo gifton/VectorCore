@@ -126,6 +126,35 @@ final class BenchmarkSelectionContractTests: XCTestCase {
         XCTAssertNoThrow(try options(["--suites", "memory", "--dims", "1"]))
         XCTAssertThrowsError(try options(["--suites", "dot", "--dims", "1"]))
     }
+    // PR #56 review BM8: --ab-only runs only the batch suite. An explicit --suites that is not exactly batch is a
+    // contradictory request and is rejected by name, before the dimension check that used to blame the batch suite.
+    func testABOnlyRejectsAnExplicitSuiteListOtherThanBatch() throws {
+        for arguments in [["--suites", "memory", "--ab-only"], ["--suites", "batch,memory", "--ab-only"], ["--suites", "dot", "--ab-only"]] {
+            XCTAssertThrowsError(try options(arguments), "\(arguments)") { error in
+                XCTAssertTrue(String(describing: error).contains("--ab-only"), "\(arguments): \(error)")
+            }
+        }
+        XCTAssertThrowsError(try options(["--suites", "memory", "--dims", "100", "--ab-only"])) { error in
+            let text = String(describing: error)
+            XCTAssertTrue(text.contains("--ab-only"), text)
+            XCTAssertFalse(text.contains("Unsupported dimension"), text)
+        }
+        XCTAssertThrowsError(try ValidatedOptions(parseCLI(arguments: ["--suites", "memory"], environment: ["VC_AB_ONLY": "1"])))
+        // Accepted: the batch suite named once or repeatedly, and no --suites at all (the default list narrows to batch).
+        XCTAssertEqual(try options(["--suites", "batch", "--ab-only"]).suites, ["batch"])
+        XCTAssertEqual(try options(["--suites", "batch,batch", "--ab-only"]).suites, ["batch"])
+        XCTAssertEqual(try options(["--ab-only"]).suites, ["batch"])
+        XCTAssertEqual(try options(["--suites", "memory", "--no-ab-only"]).suites, ["memory"])
+    }
+    // PR #56 review BM5: the pretty banner names the compiled configuration, and a build other than release is flagged
+    // on that line, so -Onone numbers cannot be quoted from a normal-looking table.
+    func testPrettyBannerNamesTheConfigurationAndFlagsNonReleaseBuilds() {
+        XCTAssertEqual(BenchmarkCompiledFeatures.bannerLine(configuration: "release"), "configuration: release")
+        for configuration in ["debug", "unknown"] {
+            let line = BenchmarkCompiledFeatures.bannerLine(configuration: configuration)
+            XCTAssertTrue(line.hasPrefix("configuration: \(configuration)  [WARN \(configuration) build"), line)
+        }
+    }
     @MainActor func testActualOptimizedOnlyAndExcludedProviderAllWidths() async throws {
         let options = try self.options(["--suites", "dot", "--repeats", "1", "--min-time", "0", "--filter", "*.optimized"])
         let ledger = CaseLedger()

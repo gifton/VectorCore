@@ -176,11 +176,18 @@ func main() throws -> Int32 {
     let baseline = try Run(path: cli.baseline, cli: cli), current = try Run(path: cli.current, cli: cli)
     let incompatible = mismatches(baseline.metadata, current.metadata)
     for mismatch in incompatible { print("Metadata mismatch: \(mismatch)") }
+    // A non-release build on either side is flagged before the compatibility decision: a debug-vs-debug pair is
+    // compatible (equal configurations) and would otherwise read like a release comparison.
+    for (side, metadata) in [("baseline", baseline.metadata), ("current", current.metadata)] {
+        for key in ["coreConfiguration", "benchmarkConfiguration", "buildConfiguration"] {
+            if let value = identity(metadata[key]), value != "release" { print("WARN \(side).\(key)=\(value): timings are not release numbers") }
+        }
+    }
     if !incompatible.isEmpty {
         guard cli.allowIncompatible else { throw ComparisonError("Incompatible benchmark metadata; explicit --allow-incompatible required") }
         print("OVERRIDE --allow-incompatible: metadata compatibility checks waived")
     }
-    for field in ["runtimeCheckout.value", "gitSHA", "date", "runLabel"] {
+    for field in ["runtimeCheckout.value", "gitSHA", "date", "runLabel", "coreConfiguration", "benchmarkConfiguration"] {
         print("Observation \(field): baseline=\(identity(observation(baseline.metadata, field)) ?? "unavailable"), current=\(identity(observation(current.metadata, field)) ?? "unavailable")")
     }
     func selected(_ name: String) -> Bool { cli.includes.isEmpty || cli.includes.contains(where: name.contains) }

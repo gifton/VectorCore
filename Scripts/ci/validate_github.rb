@@ -179,7 +179,7 @@ def validate_executable_contracts(workflow, workflows, root)
     end
   end
   driver = File.join(root, 'Scripts/ci/check_benchmark_build_modes.py')
-  assert_policy(Digest::SHA256.file(driver).hexdigest == 'f300477f37f05cd9dedce983231a4debfede5311fb8ba0fea2b4e1f7c4963752', 'accepted V02 four-build/observable-route driver changed; root review required')
+  assert_policy(Digest::SHA256.file(driver).hexdigest == '6a8da314b1297277737386935ddcf2332fb53c994bbdf5678cbdb7e2d1613134', 'accepted V02 four-build/observable-route driver changed; root review required')
 end
 
 root = File.expand_path(ARGV.fetch(0, '../..'), ARGV.empty? ? __dir__ : Dir.pwd)

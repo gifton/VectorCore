@@ -65,6 +65,8 @@ struct ValidatedOptions: Sendable {
         if let requested = input.useCKernels {
             try require(requested == VectorCoreCompiledFeatures.useCKernels, "Requested use-ckernels does not match compiled VC_USE_C_KERNELS")
         }
+        try require(input.abOnly != true || !input._userSetSuites || unique(input.suites) == ["batch"],
+            "--ab-only runs only the batch suite; an explicit --suites must be exactly batch")
         let selectedSuites = input.abOnly == true ? ["batch"] : unique(input.suites)
         for suite in selectedSuites {
             if ["dot", "distance", "normalize", "batch", "matrix", "boundary"].contains(suite) {
@@ -118,6 +120,13 @@ enum BenchmarkCompiledFeatures {
     #else
     static let configuration = "unknown"
     #endif
+    /// The pretty banner's configuration line. A build other than release carries the warning on the same line, so a
+    /// `swift run vectorcore-bench` table (SwiftPM builds debug by default) cannot be quoted as release timings. JSON and
+    /// CSV reports carry the same value as `benchmarkConfiguration`.
+    static func bannerLine(configuration: String = configuration) -> String {
+        configuration == "release" ? "configuration: release"
+            : "configuration: \(configuration)  [WARN \(configuration) build: timings are not release numbers]"
+    }
 }
 
 func parseCLI(
@@ -189,7 +198,7 @@ private enum CLIParsing {
 
     static func selection(_ key: String, text: String, result: inout CLIOptions) throws {
         switch key {
-        case "--suites": result.suites = try list(text)
+        case "--suites": result.suites = try list(text); result._userSetSuites = true
         case "--dims": result.dims = try list(text).map(integer); result._userSetDims = true
         case "--batch-ns": result.batchNs = try list(text).map(integer); result._userSetBatchNs = true
         case "--format": result.format = try text

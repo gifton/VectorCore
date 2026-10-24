@@ -1107,6 +1107,28 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Fixed
 
+- **`vectorcore-bench --ab-only` with an explicit suite list.** `--ab-only` runs only the
+  `batch` suite. Before, an explicit `--suites` naming any other suite was replaced by
+  `batch` with no message, and `--dims` was then checked against the batch suite, so
+  `--suites memory --dims 100 --ab-only` failed with "Unsupported dimension for batch".
+  Now an explicit `--suites` under `--ab-only` must name only `batch`; anything else exits 1
+  with a message that names `--ab-only`. Without `--suites`, `--ab-only` still runs the batch
+  suite alone, and the help text says so
+  (`BenchmarkSelectionContractTests.testABOnlyRejectsAnExplicitSuiteListOtherThanBatch`;
+  `Scripts/ci/tests/test_benchmark_contracts.py` runs the built binary).
+
+- **`vectorcore-bench` output names the build configuration.** The banner prints
+  `configuration: release`, or `configuration: debug  [WARN debug build: timings are not
+  release numbers]` for any other configuration, so a `swift run vectorcore-bench` table
+  (SwiftPM builds debug by default) is not read as release timings; before, only the JSON and
+  CSV metadata carried the value. `Scripts/compare_benchmarks.swift` prints both reports'
+  `coreConfiguration` and `benchmarkConfiguration` as observations and a `WARN` line for each
+  side whose configuration is not `release`, before it decides compatibility
+  (`BenchmarkSelectionContractTests.testPrettyBannerNamesTheConfigurationAndFlagsNonReleaseBuilds`;
+  the benchmark-contracts CI job checks the banner of the release binary and of the four
+  build-mode products, and the comparator's lines, in `test_benchmark_contracts.py` and
+  `check_benchmark_build_modes.py`).
+
 - **Release builds check the output capacity of the FP16 SoA batch kernels and
   the row shapes of `MatrixDistance`.** The fifteen public
   `MixedPrecisionKernels.batchEuclidean{512,768,1536}`, `batchDotProductSoA` and
@@ -1288,6 +1310,11 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   Its CI recipe now passes `--samples 5`: a single-sample report carries no
   median, and the comparator never substitutes another statistic, so
   `--metric median` on the recipe's former reports always exited 2.
+- `Benchmarks/baselines/README.md` shows the two comparator invocations that run against the
+  stored baseline files: both need `--allow-incompatible` (the files carry legacy metadata),
+  and the local file has no median, so it is compared with `--metric nsPerOp`. The former
+  single line exited 2 against both files. `Scripts/ci/tests/test_benchmark_contracts.py`
+  runs both lines against the stored files and checks that the former forms exit 2.
 - `Docs/Benchmark_Measurement_Boundaries.md` defines `unverified` per case ID,
   lists the measured `routeInternalAllocation` resolutions and their scope (28
   case IDs at 512 dimensions, one Release arm64 build, records outside the

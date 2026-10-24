@@ -185,7 +185,10 @@ def cell(configuration, enabled, scratch_root, output, jobs):
     request = "--use-ckernels" if enabled else "--no-use-ckernels"
     for mode, flags in [("absent", []), ("matching", [request])]:
         report = directory / (mode + "-report.json")
-        run(command + flags + ["--out", report], directory, "benchmark-" + mode)
+        text = run(command + flags + ["--out", report], directory, "benchmark-" + mode)
+        # PR #56 review BM5: the pretty banner names this product's configuration; only release is unflagged.
+        assert f"configuration: {configuration}" in text, text
+        assert (f"[WARN {configuration} build" in text) == (configuration != "release"), text
         result = json.loads(report.read_text())
         metadata = result["metadata"]
         assert metadata["coreConfiguration"] == configuration and metadata["benchmarkConfiguration"] == configuration

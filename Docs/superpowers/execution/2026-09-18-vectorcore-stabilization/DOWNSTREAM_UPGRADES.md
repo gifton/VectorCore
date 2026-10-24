@@ -323,32 +323,35 @@ CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the cur
 | CL-71 | Removed | Breaking (source-compatible): the 6 concrete `CosineDistance` overloads. | T14 phase 3 (2cccd8c) | CB-06, AB-03, BH-13 |
 | CL-72 | Removed | The native `Float16` branch of the FP16 scalar converters, never enabled by default. | T12 (d7f4f3d) | BH-18 |
 | CL-73 | Removed | Two unused internal quantization analyzers. | none | none |
-| CL-74 | Fixed | Release builds check the output capacity of the FP16 SoA batch kernels and the row shapes of `MatrixDistance`. | PR #56 review AP2, CV1 | BH-54 |
-| CL-75 | Fixed | Pool teardown leaks active leases instead of freeing them, and the `MemoryPool` cleanup timer no longer depends on the width of `Int`. | PR #56 review AM1, DP1 | BH-56 |
-| CL-76 | Fixed | `ComputeProvider`'s chunk-hinted defaults call the hint-less requirements. | PR #56 review CM1, AM3 | BH-55 |
-| CL-77 | Fixed | The never-run consumer fixtures are gone, and the must-not-compile contracts now run. | none | none |
-| CL-78 | Fixed | `VectorCoreBenchmarking` builds on every declared Apple platform, and normalization builds on Intel macOS and Mac Catalyst (T07). | T07 | BC-09, BH-49 |
-| CL-79 | Fixed | `vectorcore-bench` correctness gate. | T11 (c4305e5) | BC-06 |
-| CL-80 | Fixed | Benchmark metadata `binarySizes.vectorCoreLibraryBytes`. | V04 (fcb6c34) | BC-07 |
-| CL-81 | Fixed | MemoryPool bookkeeping and lifetime. | #41 (f4d5b49; entry text 8b02e75) | BH-44 |
-| CL-82 | Fixed | FP16 portability on Intel macOS and Mac Catalyst. | #41 (f4d5b49; entry text 8b02e75) | BH-49, CB-14 |
-| CL-83 | Fixed | FP16 kernels no longer heap-allocate on each 8-lane load. | T12 (d7f4f3d) | PF-06 |
-| CL-84 | Fixed | LAPACK workspace check on near-square inputs (introduced after `v0.3.3`, fixed before release). | none | none |
-| CL-85 | Documentation | Refresh the README and core references, distinguish current contracts from | none | none |
-| CL-86 | Documentation | Correct historical matrix allocation, accuracy, and routing claims below; | #46 (8b02e75) | none (documentation) |
-| CL-87 | Documentation | Reconcile performance and robustness claims with their evidence. Benchmark | V04 (3f9bf63, fcb6c34) | none (documentation) |
-| CL-88 | Documentation | `Docs/Performance_Guide.md` uses the real `vectorcore-bench` options | V04, T11 | BC-06 |
-| CL-89 | Documentation | `Docs/Benchmark_Measurement_Boundaries.md` defines `unverified` per case ID, | V04 (fcb6c34) | BC-07 |
-| CL-90 | Documentation | Extend the claim ledger (T13). Qualitative performance and robustness | none | none |
-| CL-91 | Documentation | VectorCoreC contracts. | D02 (93e08c4) | BC-13 |
-| CL-92 | Documentation | Dispatch of protocol members. | D02 (93e08c4) | BH-13 |
-| CL-93 | Documentation | `VectorTypeFactory.isSupported(dimension:)` | D02 (93e08c4) | BH-32 |
-| CL-94 | Documentation | Provider hooks. | D02 (93e08c4) | none (documentation; the `Operations` docs list every public entry that reads `computeProvider`, `simdProvider` or `linearAlgebraProvider`) |
-| CL-95 | Documentation | `VectorCore.createVector(dimension:data:)` and `hasOptimizedSupport(for:)`. | D02 (93e08c4) | BH-32 |
-| CL-96 | Documentation | `Logger` next to `os.Logger`. | D02 (93e08c4) | BH-51 |
-| CL-97 | Documentation | Products and hosts. | D02 (93e08c4) | BC-09 |
-| CL-98 | Documentation | `VectorQualityMetrics.entropy` | D02 (93e08c4) | BH-38 |
-| CL-99 | Documentation | Measured workload envelope for PCA, kNN and UMAP (one host). | none | none |
+| CL-74 | Fixed | `vectorcore-bench --ab-only` with an explicit suite list. | none | none |
+| CL-75 | Fixed | `vectorcore-bench` output names the build configuration. | none | none |
+| CL-76 | Fixed | Release builds check the output capacity of the FP16 SoA batch kernels and the row shapes of `MatrixDistance`. | PR #56 review AP2, CV1 | BH-54 |
+| CL-77 | Fixed | Pool teardown leaks active leases instead of freeing them, and the `MemoryPool` cleanup timer no longer depends on the width of `Int`. | PR #56 review AM1, DP1 | BH-56 |
+| CL-78 | Fixed | `ComputeProvider`'s chunk-hinted defaults call the hint-less requirements. | PR #56 review CM1, AM3 | BH-55 |
+| CL-79 | Fixed | The never-run consumer fixtures are gone, and the must-not-compile contracts now run. | none | none |
+| CL-80 | Fixed | `VectorCoreBenchmarking` builds on every declared Apple platform, and normalization builds on Intel macOS and Mac Catalyst (T07). | T07 | BC-09, BH-49 |
+| CL-81 | Fixed | `vectorcore-bench` correctness gate. | T11 (c4305e5) | BC-06 |
+| CL-82 | Fixed | Benchmark metadata `binarySizes.vectorCoreLibraryBytes`. | V04 (fcb6c34) | BC-07 |
+| CL-83 | Fixed | MemoryPool bookkeeping and lifetime. | #41 (f4d5b49; entry text 8b02e75) | BH-44 |
+| CL-84 | Fixed | FP16 portability on Intel macOS and Mac Catalyst. | #41 (f4d5b49; entry text 8b02e75) | BH-49, CB-14 |
+| CL-85 | Fixed | FP16 kernels no longer heap-allocate on each 8-lane load. | T12 (d7f4f3d) | PF-06 |
+| CL-86 | Fixed | LAPACK workspace check on near-square inputs (introduced after `v0.3.3`, fixed before release). | none | none |
+| CL-87 | Documentation | Refresh the README and core references, distinguish current contracts from | none | none |
+| CL-88 | Documentation | Correct historical matrix allocation, accuracy, and routing claims below; | #46 (8b02e75) | none (documentation) |
+| CL-89 | Documentation | Reconcile performance and robustness claims with their evidence. Benchmark | V04 (3f9bf63, fcb6c34) | none (documentation) |
+| CL-90 | Documentation | `Docs/Performance_Guide.md` uses the real `vectorcore-bench` options | V04, T11 | BC-06 |
+| CL-91 | Documentation | `Benchmarks/baselines/README.md` shows the two comparator invocations that run against the | none | none |
+| CL-92 | Documentation | `Docs/Benchmark_Measurement_Boundaries.md` defines `unverified` per case ID, | V04 (fcb6c34) | BC-07 |
+| CL-93 | Documentation | Extend the claim ledger (T13). Qualitative performance and robustness | none | none |
+| CL-94 | Documentation | VectorCoreC contracts. | D02 (93e08c4) | BC-13 |
+| CL-95 | Documentation | Dispatch of protocol members. | D02 (93e08c4) | BH-13 |
+| CL-96 | Documentation | `VectorTypeFactory.isSupported(dimension:)` | D02 (93e08c4) | BH-32 |
+| CL-97 | Documentation | Provider hooks. | D02 (93e08c4) | none (documentation; the `Operations` docs list every public entry that reads `computeProvider`, `simdProvider` or `linearAlgebraProvider`) |
+| CL-98 | Documentation | `VectorCore.createVector(dimension:data:)` and `hasOptimizedSupport(for:)`. | D02 (93e08c4) | BH-32 |
+| CL-99 | Documentation | `Logger` next to `os.Logger`. | D02 (93e08c4) | BH-51 |
+| CL-100 | Documentation | Products and hosts. | D02 (93e08c4) | BC-09 |
+| CL-101 | Documentation | `VectorQualityMetrics.entropy` | D02 (93e08c4) | BH-38 |
+| CL-102 | Documentation | Measured workload envelope for PCA, kNN and UMAP (one host). | none | none |
 
 ## Appendix B. CHANGELOG Breaking lines mapped to rows
 

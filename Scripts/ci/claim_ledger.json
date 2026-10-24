@@ -22782,22 +22782,22 @@
    "id": "V04-C-0765",
    "path": "Docs/Performance_Guide.md",
    "symbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
-   "fingerprint": "b91583ba972fdb4a",
-   "statement": "`scripts/compare_benchmarks.swift` exits 1 when the chosen statistic of any matched case rises by more than `--threshold` percent over the baseline, or when a case is missing from either report (unless `--allow-missing`). it exits 2 when the comparison is invalid: either report records an execution or correctness failure in its `failures` array (never waivable), incompatible run metadata (unless `--allow-incompatible`), a present but different boundary (never waivable), zero matched cases, a missing requested statistic, or malformed input. a report has a median, p90 and mean only when it was run with `--samples` of 2 or more, and the comparator never substitutes another statistic, so the benchmark step above passes `--samples 5`. these exit codes are read from the script's `main()` and its report reader; no automated test in this repository runs the comparator, so they are not verified by a test. see [comparing reports across runs](benchmark_measurement_boundaries.md#comparing-reports-across-runs) and `benchmarks/baselines/readme.md`.",
+   "fingerprint": "78ca96ccdb1fd645",
+   "statement": "`scripts/compare_benchmarks.swift` exits 1 when the chosen statistic of any matched case rises by more than `--threshold` percent over the baseline, or when a case is missing from either report (unless `--allow-missing`). it exits 2 when the comparison is invalid: either report records an execution or correctness failure in its `failures` array (never waivable), incompatible run metadata (unless `--allow-incompatible`), a present but different boundary (never waivable), zero matched cases, a missing requested statistic, or malformed input. a report has a median, p90 and mean only when it was run with `--samples` of 2 or more, and the comparator never substitutes another statistic, so the benchmark step above passes `--samples 5`. these exit codes are read from the script's `main()` and its report reader. the benchmark-contracts ci job (`scripts/ci/tests/test_benchmark_contracts.py`) runs the comparator only for the baselines readme invocations (exit 0 against the stored files; exit 2 without `--allow-incompatible` and for a missing statistic) and for its build-configuration warnings; the other exit codes are not verified by a test. see [comparing reports across runs](benchmark_measurement_boundaries.md#comparing-reports-across-runs) and `benchmarks/baselines/readme.md`.",
    "kind": "markdown",
-   "lineHint": 222,
+   "lineHint": 226,
    "category": "measurement-boundary",
-   "disposition": "unverified-contract",
+   "disposition": "corrected",
    "evidence": {
     "kind": "unverified-contract",
     "reference": "the statement says \"not verified\"",
     "domain": "Docs/Performance_Guide.md",
-    "limitations": "Read from the comparator main() and Run (failures array; the selected statistic is a required numeric field with no fallback) and from Harness.measure / JSONWriter.toCases (a single-sample result carries no median, p90 or mean); the driver table in Scripts/ci/tests/test_benchmark_reporting.py is not run by unittest discover. The T11 evidence ran the comparator on single-sample reports (exit 2, missing medianNsPerOp) outside the repository."
+    "limitations": "Read from the comparator main() and Run (failures array; the selected statistic is a required numeric field with no fallback) and from Harness.measure / JSONWriter.toCases (a single-sample result carries no median, p90 or mean). The driver table in Scripts/ci/tests/test_benchmark_reporting.py is not run by unittest discover or by any workflow. Since 2026-10-24 the benchmark-contracts job's test_benchmark_contracts.py (comparator_contracts) compiles the script and runs the two baselines README lines against the stored files (exit 0), the forms without --allow-incompatible (exit 2, incompatible metadata) and --metric median on the local file (exit 2, missing medianNsPerOp), and the configuration observations and WARN lines on fixture reports; regressions (exit 1), --allow-missing, failures arrays and boundary mismatches are still not run by a test."
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
+    "originalStatement": "`scripts/compare_benchmarks.swift` exits 1 when the chosen statistic of any matched case rises by more than `--threshold` percent over the baseline, or when a case is missing from either report (unless `--allow-missing`). it exits 2 when the comparison is invalid: either report records an execution or correctness failure in its `failures` array (never waivable), incompatible run metadata (unless `--allow-incompatible`), a present but different boundary (never waivable), zero matched cases, a missing requested statistic, or malformed input. a report has a median, p90 and mean only when it was run with `--samples` of 2 or more, and the comparator never substitutes another statistic, so the benchmark step above passes `--samples 5`. these exit codes are read from the script's `main()` and its report reader; no automated test in this repository runs the comparator, so they are not verified by a test. see [comparing reports across runs](benchmark_measurement_boundaries.md#comparing-reports-across-runs) and `benchmarks/baselines/readme.md`.",
+    "originalFingerprint": "b91583ba972fdb4a",
     "origin": "V04 final fix round",
     "superseded": [
      {
@@ -22813,7 +22813,10 @@
       "revision": "2240d2e (V04 closure polish round)"
      }
     ],
-    "revisedIn": "T11 (correctness-gate policy)"
+    "revisedIn": "T11 (correctness-gate policy)",
+    "originalSymbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
+    "originalRevision": "d0eb404",
+    "correctedIn": "PR #56 review benchmark CLI trio, SW4-5 and BM5 (2026-10-24)"
    }
   },
   {

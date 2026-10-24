@@ -230,7 +230,9 @@ array (never waivable), incompatible run metadata (unless `--allow-incompatible`
 (never waivable), zero matched cases, a missing requested statistic, or malformed input. A report has a median, p90 and
 mean only when it was run with `--samples` of 2 or more, and the comparator never substitutes another statistic, so
 the benchmark step above passes `--samples 5`. These exit codes are read from the script's `main()` and its report
-reader; no automated test in this repository runs the comparator, so they are not verified by a test. See
+reader. The benchmark-contracts CI job (`Scripts/ci/tests/test_benchmark_contracts.py`) runs the comparator only for
+the baselines README invocations (exit 0 against the stored files; exit 2 without `--allow-incompatible` and for a
+missing statistic) and for its build-configuration warnings; the other exit codes are not verified by a test. See
 [Comparing reports across runs](Benchmark_Measurement_Boundaries.md#comparing-reports-across-runs) and
 `Benchmarks/baselines/README.md`.
 

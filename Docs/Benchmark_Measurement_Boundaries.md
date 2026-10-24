@@ -71,7 +71,8 @@ end-to-end strategy-speed claim). Members of different timing scopes never pair.
 
 ## The opt-in `boundary` suite
 
-`vectorcore-bench --suites boundary` is never part of the default suites, is not selected by `--ab-only`, and ignores `--prefer-soa`
+`vectorcore-bench --suites boundary` is never part of the default suites, is not selected by `--ab-only` (which runs only the `batch`
+suite and rejects any other explicit `--suites`), and ignores `--prefer-soa`
 and `--use-mixed-precision` (those control default batch eligibility only). For squared Euclidean distance, per width in
 {512, 768, 1536} and per `--batch-ns` count N, it provides:
 

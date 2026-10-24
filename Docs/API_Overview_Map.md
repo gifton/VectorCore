@@ -98,7 +98,7 @@ These are current implementation choices, not stable crossover guarantees:
 | Entry point | Built-in matrix route |
 |---|---|
 | `Operations.findNearestBatch` | Only when the caller passes `cpuStrategy: .gram(...)` (the default `.perQuery` never takes it); Euclidean/cosine; optimized 512, 768, or 1536 types; after external provider delegation |
-| `BatchOperations.pairwiseDistances` | `Configuration.enableMatrixRouting` and `matrixRoutingMinN` (defaults: `true`, `256`); Euclidean/cosine; optimized 512, 768, or 1536 types |
+| `BatchOperations.pairwiseDistances` | Only when `Configuration.enableMatrixRouting` is set (default `false`) and the count reaches `matrixRoutingMinN` (default `256`); Euclidean/cosine; optimized 512, 768, or 1536 types |
 | `MatrixDistance` | Explicit matrix operation over `UnifiedVectorBuffer`; no automatic crossover gate |
 
 `BatchOperations.updateConfiguration` affects the pairwise gate above. It does

@@ -39,14 +39,18 @@ public enum BatchOperations {
         public var defaultBatchSize: Int = 1024
 
         /// Route large pairwise distance matrices through GEMM (`cblas_sgemm`)
-        /// for supported optimized vector types and Euclidean/cosine metrics.
-        /// GEMM and per-pair kernels can differ, especially for nearby vectors;
-        /// no universal relative-error bound is guaranteed. Disabling this flag
-        /// keeps `pairwiseDistances` on its per-pair path. It does not affect
-        /// `Operations.findNearestBatch`, which selects Gram search only through
-        /// its `cpuStrategy` parameter
+        /// for supported optimized vector types and Euclidean/cosine metrics; off
+        /// by default. The GEMM identity ‖q‖² + ‖c‖² − 2⟨q, c⟩ is a different
+        /// arithmetic from the per-pair kernels with no universal relative-error
+        /// bound, and it loses the offset of near-duplicate rows at large
+        /// magnitude (the offset-1000 rows, as for `findNearestBatch`), so the
+        /// default keeps `pairwiseDistances` on its per-pair path at every size
+        /// (`P02PairwiseRowTests.defaultConfigurationUsesPerPairKernelsAtAnEligibleN`).
+        /// Setting this true routes matrices with at least `matrixRoutingMinN`
+        /// rows. It does not affect `Operations.findNearestBatch`, which selects
+        /// Gram search only through its `cpuStrategy` parameter
         /// (`P02GramRouteTests.matrixRoutingFlagDoesNotAffectBatchSearch`).
-        public var enableMatrixRouting: Bool = true
+        public var enableMatrixRouting: Bool = false
 
         /// Positive minimum N per side for eligible pairwise GEMM routing.
         /// This is a routing policy, not a universal performance crossover.
@@ -304,7 +308,8 @@ public enum BatchOperations {
 
     /// Compute the pairwise matrix row by row through `MatrixDistance`'s prepared/into path (P02 RD10): the candidates
     /// are packed (and, for cosine, normalized) once with `prepare`, then each query row is computed straight into its
-    /// final N-element row, and Euclidean rows are formatted in place (`v > 0 ? sqrt(v) : 0`, so a NaN becomes 0). No
+    /// final N-element row, and Euclidean rows are formatted in place (a NaN squared score stays NaN, as on the per-pair
+    /// route and in `GramBatchSearch`; otherwise `v > 0 ? sqrt(v) : 0`; `P02PairwiseRowTests.nanRowsAtAnEligibleN`). No
     /// flat N·N score buffer is built. Each row is its own one-query SGEMM, so off-diagonal bits can differ from a
     /// single N×N multiply (`P02PairwiseRowTests.rowsEqualPreparedIntoPerRow`).
     private static func gemmPairwiseTyped<O: UnifiedVectorBuffer>(
@@ -319,7 +324,7 @@ public enum BatchOperations {
             var row = [Float](repeating: 0, count: n)
             if euclid {
                 MatrixDistance.euclideanSquaredMatrix(queries: [vs[i]], prepared: prepared, into: &row)
-                for j in 0..<n { let v = row[j]; row[j] = v > 0 ? sqrt(v) : 0 }
+                for j in 0..<n { let v = row[j]; row[j] = v.isNaN ? v : (v > 0 ? sqrt(v) : 0) }
             } else {
                 MatrixDistance.cosineDistanceMatrix(queries: [vs[i]], prepared: prepared, into: &row)
             }

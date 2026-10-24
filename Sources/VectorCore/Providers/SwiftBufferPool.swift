@@ -2,7 +2,9 @@ import Foundation
 
 /// Actor-isolated pool of uninitialized raw buffers in power-of-two buckets.
 /// Handles borrow storage: retain this provider until release and do not access a
-/// pointer after release. Cache admission is bounded by physical payload bytes.
+/// pointer after release. A lease still active when the provider is destroyed is
+/// leaked, not freed (`BufferPoolOwnershipTests.swiftPoolDestructionLeaksActiveLease`).
+/// Cache admission is bounded by physical payload bytes.
 public actor SwiftBufferPool: BufferProvider {
     private let configuration: BufferConfiguration
     private var storage: BorrowedPoolStorage
@@ -23,6 +25,8 @@ public actor SwiftBufferPool: BufferProvider {
             maxBuffersPerSize: Int.max, maxBufferBytes: configuration.maxBufferSize,
             boundary: allocationBoundary)
     }
+
+    deinit { storage.leakActiveLeases() }
 
     public nonisolated var alignment: Int { configuration.alignment }
     /// Physical payload bytes currently retained for reuse, excluding active leases.

@@ -90,9 +90,11 @@ internal struct PoolLease: Sendable {
     let allocation: PoolAllocation
 }
 
-/// Actor-isolated value state shared by the three borrowed-lease pools.
-/// References in active/cached dictionaries own all allocations, including on
-/// actor destruction; handles returned to callers contain no owner references.
+/// Actor-isolated value state shared by the three borrowed-lease pools. References in the active and cached
+/// dictionaries own all allocations; handles returned to callers contain no owner references. The owning actor's
+/// `deinit` calls `leakActiveLeases()` first, so on destruction cached allocations are freed and active leases are
+/// leaked rather than freed under a live handle
+/// (`BufferPoolOwnershipTests.internalAndTypedDestructionOwnCachedAndLeakActive`).
 internal struct BorrowedPoolStorage: Sendable {
     private var cached: [Int: [PoolAllocation]] = [:]
     private var active: [UUID: PoolLease] = [:]
@@ -149,5 +151,12 @@ internal struct BorrowedPoolStorage: Sendable {
     mutating func clear() {
         cached.removeAll()
         cachedBytes = 0
+    }
+
+    /// Retains every active lease's allocation once more, for good. Called from the owning actor's `deinit`, it turns
+    /// a lease that outlived its pool into a leak instead of a use-after-free through the escaped handle (0.3.3 leaked
+    /// too). Cached allocations are untouched and are freed with the storage.
+    func leakActiveLeases() {
+        for lease in active.values { _ = Unmanaged.passRetained(lease.allocation) }
     }
 }

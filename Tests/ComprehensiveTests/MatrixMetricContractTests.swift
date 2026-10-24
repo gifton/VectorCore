@@ -320,7 +320,7 @@ extension MatrixMetricContractTests {
         let fields = scenario.split(separator: "-").map(String.init)
         let dimension = Int(fields[0])!, metric = fields[1], mode = fields[2], count = Int(fields[3])!
         let original = await BatchOperations.configuration()
-        #expect(original.enableMatrixRouting && original.matrixRoutingMinN == 256)
+        #expect(!original.enableMatrixRouting && original.matrixRoutingMinN == 256)
         var requested = original
         requested.enableMatrixRouting = mode != "disabled"
         requested.matrixRoutingMinN = mode == "small" ? 8 : 256

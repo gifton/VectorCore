@@ -90,7 +90,7 @@ let results = try await Operations.$computeProvider.withValue(yourGPUProvider) {
 ## Batch Operations
 
 `BatchOperations.Configuration` has six fields: `parallelThreshold` (default `1000`), `oversubscription` (default
-`2.0`), `minimumChunkSize` (default `256`), `defaultBatchSize` (default `1024`), `enableMatrixRouting` (default `true`)
+`2.0`), `minimumChunkSize` (default `256`), `defaultBatchSize` (default `1024`), `enableMatrixRouting` (default `false`)
 and `matrixRoutingMinN` (default `256`). Update them with a throwing transaction; an invalid value is rejected and every
 old field is kept (`batchRollbackPreservesEveryFieldAndErrorIdentity` in `ConfigurationTransactionTests`):
 

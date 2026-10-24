@@ -10,8 +10,9 @@ public final class MemoryPool: @unchecked Sendable {
         public var maxBuffersPerSize: Int = 10
         /// Strict cap on cached physical payload bytes, excluding live handles.
         public var maxTotalMemory: Int = 100_000_000
-        /// Nonpositive, nonfinite or beyond the dispatch horizon disables the timer.
-        /// Explicit cleanup still uses this interval as its age cutoff.
+        /// Nonpositive, nonfinite or at or beyond the 64-bit nanosecond horizon (the same bound on
+        /// every platform; `cleanupTimerNanoseconds`) disables the timer. Explicit cleanup still
+        /// uses this interval as its age cutoff.
         public var cleanupInterval: TimeInterval = 30
         public init() {}
     }
@@ -205,16 +206,26 @@ public final class MemoryPool: @unchecked Sendable {
         }
     }
 
+    /// The cleanup timer's tick in nanoseconds for `seconds`, or nil when the timer is disabled: nonpositive, nonfinite,
+    /// or at or beyond the 64-bit nanosecond horizon (two to the 63rd nanoseconds), the bound under which the deadline
+    /// and the repeat interval are representable as `UInt64` nanoseconds. The bound does not involve `Int`, so a 32-bit
+    /// `Int` (arm64_32) schedules the same intervals as a 64-bit one; the former `Double(Int.max) / 1e9` guard was about
+    /// two seconds there (`MemoryPoolBoundaryTests.timerHorizonIsIndependentOfIntWidth`). A sub-nanosecond interval
+    /// rounds up to one tick.
+    internal static func cleanupTimerNanoseconds(seconds: Double) -> UInt64? {
+        guard seconds.isFinite, seconds > 0 else { return nil }
+        let nanoseconds = seconds * 1_000_000_000
+        guard nanoseconds < 0x1p63 else { return nil }
+        return max(1, UInt64(nanoseconds))
+    }
+
     private func setupCleanupTimer() {
-        let seconds = configuration.cleanupInterval
-        // Strict bound avoids Double(Int.max) rounding upward to an invalid Int.
-        guard seconds.isFinite, seconds > 0, seconds < Double(Int.max) / 1_000_000_000 else { return }
-        let nanoseconds = max(1, UInt64(seconds * 1_000_000_000))
+        guard let nanoseconds = Self.cleanupTimerNanoseconds(seconds: configuration.cleanupInterval) else { return }
         let now = DispatchTime.now().uptimeNanoseconds
-        guard nanoseconds < UInt64(Int.max), now <= UInt64.max - nanoseconds else { return }
+        guard now <= UInt64.max - nanoseconds else { return }
         let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
         timer.schedule(deadline: DispatchTime(uptimeNanoseconds: now + nanoseconds),
-            repeating: .nanoseconds(Int(nanoseconds)))
+            repeating: configuration.cleanupInterval)
         timer.setEventHandler { [weak self] in self?.cleanup() }
         timer.resume()
         cleanupTimer = timer

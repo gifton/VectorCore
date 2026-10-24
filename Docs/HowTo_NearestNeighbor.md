@@ -150,16 +150,16 @@ Batch sizes and auto‑parallelization
 - `Operations.findNearest` schedules through `Operations.computeProvider`; the default `CPUComputeProvider.automatic` runs a scan as parallel ranges only when the candidate count is at least its `parallelizationThreshold` (50,000 by default).
 - `BatchOperations` linear operations, including `findNearest`, take their parallel route when the input count is at least `Configuration.parallelThreshold` (1,000 by default); `pairwiseDistances` uses bounded row workers at N ≥ 100, independent of that setting.
 
-GEMM auto‑routing (0.3.0)
-- For large inputs, `BatchOperations.pairwiseDistances` automatically routes through a CPU GEMM path (`MatrixDistance` via Accelerate `cblas_sgemm`; which hardware unit Accelerate uses is not specified by this repository) once the input clears its configured gate. `Operations.findNearestBatch` takes a GEMM route only when called with `cpuStrategy: .gram(...)`.
-- `BatchOperations.pairwiseDistances` is controlled by `BatchOperations.Configuration.enableMatrixRouting` (default `true`) and `matrixRoutingMinN` (default `256`); its diagonal is re‑scored with the metric's own `distance`.
+GEMM routing (opt‑in)
+- `BatchOperations.pairwiseDistances` routes through a CPU GEMM path (`MatrixDistance` via Accelerate `cblas_sgemm`; which hardware unit Accelerate uses is not specified by this repository) only when `enableMatrixRouting` is set and the input clears its size gate; by default it stays on the per‑pair kernels. `Operations.findNearestBatch` takes a GEMM route only when called with `cpuStrategy: .gram(...)`.
+- `BatchOperations.pairwiseDistances` is controlled by `BatchOperations.Configuration.enableMatrixRouting` (default `false`) and `matrixRoutingMinN` (default `256`); when routed, its diagonal is re‑scored with the metric's own `distance` and Euclidean rows keep NaN. The default is pinned by `P02PairwiseRowTests.defaultConfigurationUsesPerPairKernelsAtAnEligibleN`.
 - `Operations.findNearestBatch` reads neither setting and has no size gate: its default never takes the GEMM route, and the snippet below does not affect it (`P02GramRouteTests.matrixRoutingFlagDoesNotAffectBatchSearch`).
 - The GEMM path is a different arithmetic from the per‑pair kernels and the `DistanceMetric` witness, so its scores are not guaranteed to be bit‑identical to them, and near zero they can differ by more than any fixed relative tolerance (one host's T14 probe, not pinned by a test: GEMM returned 0 where the per‑pair Euclidean distance was about 0.02). See [Numerical Behavior](Numerical_Behavior.md#matrix-distances-shape-memory-and-precision).
-- Tune or disable it:
+- Enable or tune it:
 
 ```swift
 await BatchOperations.updateConfiguration { config in
-    config.enableMatrixRouting = false
+    config.enableMatrixRouting = true
 }
 ```
 

@@ -4,14 +4,15 @@ import Testing
 
 // P02 phase D (RD10; phase 1 check map R2-R4, R8-R10, X11/R13, E24): the GEMM route of
 // `BatchOperations.pairwiseDistances` prepares the candidates once and computes each query row through MatrixDistance's
-// prepared/into path straight into its final row, formatting Euclidean rows in place (`v > 0 ? sqrt(v) : 0`). Every
-// test runs at an eligible size under the default configuration (`enableMatrixRouting`, `matrixRoutingMinN` 256;
-// E06 changes it only in child processes) and observes the `batch.pairwise.gemm` phase, so it exercises that route.
-// The source shape (no flat N·N buffer, no allocating matrix call) is pinned lexically by
+// prepared/into path straight into its final row, formatting Euclidean rows in place (a NaN stays NaN; otherwise
+// `v > 0 ? sqrt(v) : 0`). The route is opt-in: the default configuration (`enableMatrixRouting` false) keeps
+// `pairwiseDistances` on its per-pair kernels (`defaultConfigurationUsesPerPairKernelsAtAnEligibleN`), so every test
+// of the route runs in an isolated child (E06) that enables routing at `matrixRoutingMinN` 256 and observes the
+// `batch.pairwise.gemm` phase. The source shape (no flat N·N buffer, no allocating matrix call) is pinned lexically by
 // Scripts/ci/tests/test_gram_route_lexical.py C7.
 
 /// The independent per-row reference: `MatrixDistance.prepare` once, then the public prepared/into entry for each query
-/// row `[rows[i]]`, Euclidean rows formatted as the route documents (a NaN or nonpositive squared score gives 0).
+/// row `[rows[i]]`, Euclidean rows formatted as the route documents (a NaN stays NaN; a nonpositive squared score gives 0).
 func p02PreparedRows<V: UnifiedVectorBuffer>(_ rows: [V], euclidean: Bool) -> [[Float]] {
     let n = rows.count
     let prepared = MatrixDistance.prepare(rows, normalized: !euclidean)
@@ -19,7 +20,7 @@ func p02PreparedRows<V: UnifiedVectorBuffer>(_ rows: [V], euclidean: Bool) -> [[
         var row = [Float](repeating: 0, count: n)   // swiftlang/swift#92562: a non-literal initializer
         if euclidean {
             MatrixDistance.euclideanSquaredMatrix(queries: [rows[i]], prepared: prepared, into: &row)
-            return row.map { $0 > 0 ? $0.squareRoot() : 0 }
+            return row.map { $0.isNaN ? $0 : ($0 > 0 ? $0.squareRoot() : 0) }
         }
         MatrixDistance.cosineDistanceMatrix(queries: [rows[i]], prepared: prepared, into: &row)
         return row
@@ -50,6 +51,47 @@ struct P02PairwiseRowTests {
         return Array(base.prefix(count)) + p02RandomRows(max(0, count - base.count), width: width, seed: 0x5EED)
     }
 
+    /// Runs `body` in an isolated child (E06) with `enableMatrixRouting = true` and the configuration restored after:
+    /// the default keeps `pairwiseDistances` on its per-pair kernels, so the GEMM route is reached only when enabled.
+    static func withMatrixRouting(_ name: String, _ body: () async throws -> Void) async throws {
+        try await e06IsolatedScenario("p02-pairwise-\(name)", filter: "P02PairwiseRowTests/\(name)") {
+            try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
+            try await body()
+        }
+    }
+
+    // MARK: Default route: per-pair kernels, also at an eligible N
+
+    /// Under the default configuration, 256 `Vector512Optimized` rows of the offset-1000 fixture (row 1 is `1000·1`,
+    /// every other row adds 0.125 in coordinate 0, so the true distance between row 1 and any other row is exactly
+    /// 0.125 and between two other rows exactly 0) open no `batch.pairwise.gemm` phase, and every off-diagonal entry
+    /// equals the per-pair metric bit for bit, for Euclidean and cosine. The GEMM identity ‖q‖² + ‖c‖² − 2⟨q, c⟩
+    /// returns 0.0 or √32 for these pairs (every operand is a multiple of the Float ulp 32 at this magnitude), which
+    /// is why the route is opt-in (PR #56 review AB1).
+    @Test func defaultConfigurationUsesPerPairKernelsAtAnEligibleN() async throws {
+        let rows = try p02Vectors(p02Rows(.offset1000, width: 512), as: Vector512Optimized.self)
+        #expect(rows.count == 256)
+        for euclidean in [true, false] {
+            let label = euclidean ? "euclidean" : "cosine"
+            let (matrix, gemmRoute) = await p02ObservedPairwise(rows, euclidean: euclidean)
+            #expect(!gemmRoute, "\(label): the default configuration opened a batch.pairwise.gemm phase")
+            #expect(matrix.count == 256 && matrix.allSatisfy { $0.count == 256 }, "\(label)")
+            var mismatches = 0
+            for i in 0..<256 {
+                for j in 0..<256 where j != i {
+                    let direct = euclidean ? EuclideanDistance().distance(rows[i], rows[j])
+                                           : CosineDistance().distance(rows[i], rows[j])
+                    if matrix[i][j].bitPattern != direct.bitPattern { mismatches += 1 }
+                }
+            }
+            #expect(mismatches == 0, "\(label): \(mismatches) off-diagonal entries differ from the per-pair metric")
+            if euclidean {
+                #expect(matrix[0][1] == 0.125 && matrix[1][0] == 0.125, "row 1 vs row 0: \(matrix[0][1]), \(matrix[1][0])")
+                #expect(matrix[0][2] == 0, "two offset rows: \(matrix[0][2])")
+            }
+        }
+    }
+
     // MARK: R2, R3, R4, R8, R10: row bits are the per-row prepared/into bits; the diagonal is the metric
 
     /// At N = 256 and 257, every width, Euclidean and cosine: each off-diagonal entry equals, bit for bit, the public
@@ -57,7 +99,9 @@ struct P02PairwiseRowTests {
     /// `metric.distance(v, v)` bit for bit. The number of off-diagonal entries where a single N×N multiply (the former
     /// route) gives other bits is printed as a `P02_PAIRWISE_GEOMETRY` line: a one-host record, not an assertion.
     @Test func rowsEqualPreparedIntoPerRow() async throws {
-        try await p02ForEachWidth { type in try await perRow(type) }
+        try await Self.withMatrixRouting("rowsEqualPreparedIntoPerRow") {
+            try await p02ForEachWidth { type in try await perRow(type) }
+        }
     }
 
     private func perRow<V: P02GramWidth>(_ type: V.Type) async throws {
@@ -93,11 +137,14 @@ struct P02PairwiseRowTests {
     // MARK: R9, R10: exceptional rows at an eligible N
 
     /// N = 256 with a NaN coordinate in row 3 and an all-NaN row 4. Euclidean: the per-row squared scores of those rows
-    /// are NaN and the route formats them to 0 off the diagonal (the documented pairwise Euclidean NaN-to-zero
-    /// formatting), in their rows and columns; the diagonal stays `metric.distance(v, v)` (NaN). Cosine: no formatting,
-    /// so those off-diagonal entries stay NaN. Every entry still equals the per-row prepared/into reference bits.
+    /// are NaN and the route keeps them NaN off the diagonal (NaN-preserving formatting, as the per-pair route, `.gram`
+    /// and `.perQuery` do; PR #56 review AL2a), in their rows and columns; the diagonal stays `metric.distance(v, v)`
+    /// (NaN). Cosine: no formatting, so those off-diagonal entries stay NaN. Every entry still equals the per-row
+    /// prepared/into reference bits.
     @Test func nanRowsAtAnEligibleN() async throws {
-        try await p02ForEachWidth { type in try await nanRows(type) }
+        try await Self.withMatrixRouting("nanRowsAtAnEligibleN") {
+            try await p02ForEachWidth { type in try await nanRows(type) }
+        }
     }
 
     private func nanRows<V: P02GramWidth>(_ type: V.Type) async throws {
@@ -118,11 +165,7 @@ struct P02PairwiseRowTests {
                 for j in 0..<256 where j != i {
                     #expect(matrix[i][j].bitPattern == reference[i][j].bitPattern, "\(label) (\(i), \(j))")
                     if [3, 4].contains(i) || [3, 4].contains(j) {
-                        if euclidean {
-                            #expect(matrix[i][j] == 0 && matrix[i][j].sign == .plus, "\(label) (\(i), \(j)) = \(matrix[i][j])")
-                        } else {
-                            #expect(matrix[i][j].isNaN, "\(label) (\(i), \(j)) = \(matrix[i][j])")
-                        }
+                        #expect(matrix[i][j].isNaN, "\(label) (\(i), \(j)) = \(matrix[i][j])")
                     }
                 }
             }
@@ -141,6 +184,7 @@ struct P02PairwiseRowTests {
     /// element-type identity checks (`exactArray(...) != nil`) run before that observation begins. Each diagonal is
     /// still the metric's own self-distance. Control: `Vector512Optimized` at the same size opens the phase.
     @Test func ineligibleTypesOpenNoGemmPhase() async throws {
+        try await Self.withMatrixRouting("ineligibleTypesOpenNoGemmPhase") {
         let values = Self.rows(count: 256, width: 512)
         func check<V: VectorProtocol & Sendable>(_ rows: [V], expectGemm: Bool) async where V.Scalar == Float {
             for euclidean in [true, false] {
@@ -156,6 +200,7 @@ struct P02PairwiseRowTests {
         await check(try values.map { try Vector384Optimized(Array($0.prefix(384))) }, expectGemm: false)
         await check(try values.map { try Vector<Dim512>($0) }, expectGemm: false)
         await check(try p02Vectors(values, as: Vector512Optimized.self), expectGemm: true)
+        }
     }
 
     // MARK: X11, R13: complete result under cancellation at an eligible N
@@ -164,6 +209,7 @@ struct P02PairwiseRowTests {
     /// at N = 256, Vector512Optimized, Euclidean and cosine, the cancelled call takes the GEMM route and returns the
     /// same N×N bits as an uncancelled call (the ExecutionScheduling/P01 cancelled-matrix law at a GEMM-eligible size).
     @Test func completeResultUnderCancellation() async throws {
+        try await Self.withMatrixRouting("completeResultUnderCancellation") {
         let rows = try p02Vectors(Self.rows(count: 256, width: 512), as: Vector512Optimized.self)
         for euclidean in [true, false] {
             let label = euclidean ? "euclidean" : "cosine"
@@ -177,6 +223,7 @@ struct P02PairwiseRowTests {
             #expect(uncancelledRoute && cancelledRoute, "\(label): no batch.pairwise.gemm phase")
             #expect(cancelled.count == 256 && cancelled.allSatisfy { $0.count == 256 }, "\(label)")
             #expect(cancelled.map { $0.map(\.bitPattern) } == expected.map { $0.map(\.bitPattern) }, "\(label)")
+        }
         }
     }
 }

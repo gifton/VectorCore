@@ -76,6 +76,10 @@ public protocol ComputeProvider: Sendable {
     /// Execute side-effecting work in parallel with a minimum chunk size hint.
     /// Requires a representable range length and `minChunk > 0`, including empty ranges.
     /// Throws `.invalidRange` or `.invalidConfiguration` for these invalid inputs.
+    /// The default validates both and then calls `parallelForEach(items:_:)`, so a
+    /// conformer that implements only the hint-less requirement is reached by every
+    /// hinted call (`ComputeProviderForwardingTests.hintedDefaultsReachHintlessWitnesses`);
+    /// override this to honour the hint.
     func parallelForEach(
         items: Range<Int>,
         minChunk: Int,
@@ -102,6 +106,10 @@ public protocol ComputeProvider: Sendable {
     /// Execute a parallel reduction with a minimum chunk size hint.
     /// Requires a representable range length and `minChunk > 0`, including empty ranges.
     /// Throws `.invalidRange` or `.invalidConfiguration` for these invalid inputs.
+    /// The default validates both and then calls `parallelReduce(items:initial:_:_:)`, so a
+    /// conformer that implements only the hint-less requirement is reached by every
+    /// optimized search route (`ComputeProviderForwardingTests.hintedDefaultsReachHintlessWitnesses`);
+    /// override this to honour the hint.
     func parallelReduce<R: Sendable>(
         items: Range<Int>,
         initial: R,
@@ -152,24 +160,29 @@ public extension ComputeProvider {
         try await BoundedExecution.forEach(items, limit: maxConcurrency, phase: "default.forEach", body: body)
     }
 
+    // The hinted defaults validate the range and the hint, then call the hint-less requirements (the 0.3.3 direction),
+    // so a conformer that implements only those is reached; `.invalidRange` keeps precedence over `.invalidConfiguration`.
     func parallelForEach(items: Range<Int>, minChunk: Int, _ body: @Sendable @escaping (Int) async throws -> Void) async throws {
-        try await BoundedExecution.forEach(items, limit: maxConcurrency, minimum: minChunk, phase: "default.forEachHint", body: body)
+        _ = try ComputeRangeBoundary.count(items)
+        try ComputeRangeBoundary.validate(minChunk: minChunk)
+        try await parallelForEach(items: items, body)
     }
 
     func parallelReduce<R: Sendable>(items: Range<Int>, initial: R,
         _ rangeWork: @Sendable @escaping (Range<Int>) async throws -> R,
         _ combine: @Sendable @escaping (R, R) -> R
     ) async throws -> R {
-        try await parallelReduce(items: items, initial: initial, minChunk: 1, rangeWork, combine)
+        let parts = try await BoundedExecution.ranges(items, limit: maxConcurrency, phase: "default.reduce", body: rangeWork)
+        return try BoundedExecution.combinePartials(parts, initial: initial, combine)
     }
 
     func parallelReduce<R: Sendable>(items: Range<Int>, initial: R, minChunk: Int,
         _ rangeWork: @Sendable @escaping (Range<Int>) async throws -> R,
         _ combine: @Sendable @escaping (R, R) -> R
     ) async throws -> R {
-        let parts = try await BoundedExecution.ranges(items, limit: maxConcurrency, minimum: minChunk,
-            phase: "default.reduce", body: rangeWork)
-        return try BoundedExecution.combinePartials(parts, initial: initial, combine)
+        _ = try ComputeRangeBoundary.count(items)
+        try ComputeRangeBoundary.validate(minChunk: minChunk)
+        return try await parallelReduce(items: items, initial: initial, rangeWork, combine)
     }
 }
 

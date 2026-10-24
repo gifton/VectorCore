@@ -54,7 +54,9 @@ struct BufferPoolOwnershipTests {
         #expect(ledger.counts.allocated == ledger.counts.freed)
     }
 
-    @Test func internalAndTypedDestructionOwnActiveAndCached() async {
+    /// Destroying a pool frees its cached allocations and leaks (never frees) its active leases, so a handle that
+    /// outlived its pool still points at live memory (PR #56 review AM1; BASE leaked too).
+    @Test func internalAndTypedDestructionOwnCachedAndLeakActive() async {
         let first = E04AllocationLedger()
         var pool: BufferPool? = BufferPool(allocationBoundary: first)
         let active = await pool!.acquire(count: 16)
@@ -63,8 +65,10 @@ struct BufferPoolOwnershipTests {
         await pool!.clear()
         #expect(first.bytes == 64)
         pool = nil
-        #expect(first.bytes == 0)
+        #expect(first.bytes == 64, "the active 16-Float lease was freed under a live handle")
+        active.buffer.initialize(repeating: 1)      // safe: the lease is still allocated
         withExtendedLifetime(active) {}
+        #expect(first.bytes == 64, "an escaped lease is leaked, not freed, after its handle drops")
 
         let second = E04AllocationLedger()
         var typed: TypedBufferPool<String>? = TypedBufferPool(maxCachedBytes: 128, allocationBoundary: second)
@@ -72,8 +76,27 @@ struct BufferPoolOwnershipTests {
         let cached = await typed!.acquire(count: 2)
         await typed!.release(cached)
         typed = nil
-        #expect(second.bytes == 0)
+        #expect(second.bytes == 2 * MemoryLayout<String>.stride, "the active 2-element lease was freed under a live handle")
+        borrowed.buffer.initialize(repeating: "live")
+        borrowed.buffer.deinitialize()
         withExtendedLifetime(borrowed) {}
+    }
+
+    /// `SwiftBufferPool`: the same teardown rule for its public `BufferHandle`.
+    @Test func swiftPoolDestructionLeaksActiveLease() async throws {
+        let ledger = E04AllocationLedger()
+        let configuration = BufferConfiguration(maxPoolSize: 64, maxBufferSize: 64)
+        var pool: SwiftBufferPool? = SwiftBufferPool(configuration: configuration, allocationBoundary: ledger)
+        let active = try await pool!.acquire(size: 48)
+        let returned = try await pool!.acquire(size: 48)
+        await pool!.release(returned)
+        #expect(ledger.bytes == 128)
+        pool = nil
+        #expect(ledger.bytes == 64, "the active lease was freed under a live handle")
+        active.pointer.storeBytes(of: UInt64.max, as: UInt64.self)   // safe: the lease is still allocated
+        withExtendedLifetime(active) {}
+        #expect(ledger.bytes == 64)
+        #expect(ledger.counts.allocated == ledger.counts.freed + 1)
     }
 }
 
@@ -114,9 +137,9 @@ extension BufferPoolOwnershipTests {
         }
         let active = try await pool!.acquire(size: 7)
         pool = nil
-        #expect(ledger.bytes == 0)
+        #expect(ledger.bytes == 8, "the active lease (capacity 8) was freed under a live handle")
         withExtendedLifetime(active) {}
-        #expect(ledger.counts.allocated == ledger.counts.freed)
+        #expect(ledger.counts.allocated == ledger.counts.freed + 1)
     }
 
     @Test func swiftRejectsAllForgedFieldsBeforeConsumingLease() async throws {

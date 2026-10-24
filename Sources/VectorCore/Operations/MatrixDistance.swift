@@ -56,7 +56,10 @@ public enum MatrixDistance {
 
     /// Pack candidates once for reuse. `normalized: false` prepares for Euclidean
     /// (raw rows + squared norms); `normalized: true` prepares for Cosine
-    /// (L2-normalized rows).
+    /// (L2-normalized rows). Every row must have the first row's `elementCount`; a
+    /// shorter or longer row stops with a named `fatalError` in every build, before
+    /// any row is read past its end (`ReleaseSizeGuardTests.matrixRowsOfUnequalLengthTrap`).
+    /// The same check covers the query rows of every matrix entry.
     public static func prepare<V: UnifiedVectorBuffer>(
         _ candidates: [V], normalized: Bool = false
     ) -> PreparedCandidates {
@@ -239,6 +242,10 @@ public enum MatrixDistance {
     ) {
         let bytes = d * MemoryLayout<Float>.stride
         for (offset, i) in rows.enumerated() {
+            // A named guard: a `precondition` message is dropped at -O, and the Release row asserts this diagnostic.
+            guard vs[i].elementCount == d else {
+                fatalError("MatrixDistance rows must share a dimension: row \(i) has \(vs[i].elementCount) elements, expected \(d)")
+            }
             let target = dst + offset * d
             vs[i].withUnsafeContiguousBytes { src in
                 _ = memcpy(target, src.baseAddress!, bytes)

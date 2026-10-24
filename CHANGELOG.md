@@ -494,6 +494,20 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   error context captured in Debug builds names
   `findNearestBatch(queries:in:k:metric:cpuStrategy:)`.
 
+
+- **Breaking: `BatchOperations.pairwiseDistances` no longer takes the GEMM route
+  by default.** `BatchOperations.Configuration.enableMatrixRouting` now defaults
+  to `false` (it was `true`): the default keeps every pairwise matrix on the
+  per-pair kernels, whose off-diagonal entries equal the metric's own score bit
+  for bit. The GEMM route is the arithmetic the `findNearestBatch` entry above
+  describes, and it loses the 0.125 offset of the offset-1000 rows at N = 256;
+  the default is pinned by
+  `P02PairwiseRowTests.defaultConfigurationUsesPerPairKernelsAtAnEligibleN`.
+  Set `enableMatrixRouting = true` through `updateConfiguration` to opt in. When
+  routed, a Euclidean entry whose squared score is NaN now stays NaN (it was
+  formatted to 0, so a row with one NaN coordinate became the nearest neighbour
+  of every other row), as on the per-pair route, `.gram` and `.perQuery`
+  (`P02PairwiseRowTests.nanRowsAtAnEligibleN`).
 - **Breaking (binary layout): the optimized vector types no longer store
   `scalarCount`.** `Vector384Optimized`, `Vector512Optimized`,
   `Vector768Optimized` and `Vector1536Optimized` now compute `scalarCount`
@@ -1070,6 +1084,54 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   were internal, so no public API changes.
 
 ### Fixed
+
+- **Release builds check the output capacity of the FP16 SoA batch kernels and
+  the row shapes of `MatrixDistance`.** The fifteen public
+  `MixedPrecisionKernels.batchEuclidean{512,768,1536}`, `batchDotProductSoA` and
+  `batchEuclideanBlocked{512,768,1536}` SoA kernels, the six public
+  `batchDotFP16_{512,768,1536}` and `batchDotMixed{512,768,1536}` array kernels
+  (through two shared internal kernels) and the nine internal SoA kernels behind
+  the optimized batch routes checked the output count only under `#if DEBUG`, so
+  a Release caller passing a buffer shorter than the candidate count was written
+  past its end with no diagnostic. They now stop with a named `fatalError` before
+  any write, in every build; the mixed-precision range core's own capacity and
+  range preconditions are active in every build as well. The policy test
+  `test_release_active_capacity_guards.py` fails on any new Debug-only capacity
+  assert in `Sources/VectorCore`.
+  `MatrixDistance.prepare` and the six matrix entries took the dimension from
+  the first row and copied that many bytes from every row, reading past a
+  shorter row; every packed row must now have that dimension, checked by a
+  named `fatalError` in every build. `ReleaseSizeGuardTests.kernelTrapsBeforeWriting`
+  and `matrixRowsOfUnequalLengthTrap` run each case in a child process on the
+  Debug and Release rows and check that the output it was given is untouched.
+
+- **Pool teardown leaks active leases instead of freeing them, and the
+  `MemoryPool` cleanup timer no longer depends on the width of `Int`.**
+  Destroying a `TypedBufferPool`, a `SwiftBufferPool` or the internal
+  `BufferPool` while a lease was still checked out freed that lease, so a
+  `Handle` or `BufferHandle` that outlived its pool pointed at freed memory and
+  the first write through it was a silent use-after-free. The three pools now
+  leak active leases on teardown and still free their cached allocations, as
+  0.3.3 did, so an escaped handle stays valid
+  (`BufferPoolOwnershipTests.internalAndTypedDestructionOwnCachedAndLeakActive`,
+  `swiftPoolDestructionLeaksActiveLease`); the lease contract is unchanged:
+  release every handle before dropping the pool. `MemoryPool` compared the
+  cleanup interval against `Double(Int.max) / 1e9`, which is 2.147 s on a 32-bit
+  `Int` (arm64_32 watchOS devices, inside the declared floor), so the default
+  30 s interval silently disabled automatic cleanup there; the bound is now the
+  64-bit nanosecond horizon on every platform
+  (`MemoryPoolBoundaryTests.timerHorizonIsIndependentOfIntWidth`).
+
+- **`ComputeProvider`'s chunk-hinted defaults call the hint-less requirements.**
+  The default `parallelForEach(items:minChunk:)` and
+  `parallelReduce(items:initial:minChunk:_:_:)` validate `minChunk` and then call
+  the hint-less requirement, the direction 0.3.3 used, so a conformer that
+  implements only the hint-less overloads (the ones the 0.3.3 guide named) is
+  reached by every optimized search route and its `maxConcurrency` is not
+  consulted by those defaults. During development the direction had been
+  reversed, which bypassed such conformers and threw `invalidConfiguration` for
+  a `maxConcurrency` of 0
+  (`ComputeProviderForwardingTests.hintedDefaultsReachHintlessWitnesses`).
 
 - **`VectorCoreBenchmarking` builds on every declared Apple platform, and normalization builds on Intel
   macOS and Mac Catalyst (T07).** `Host.current()` and Foundation's `Process` are macOS-only, so off

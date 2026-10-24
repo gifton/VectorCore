@@ -48,9 +48,9 @@ public enum BatchKernels_SoA {
 
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let queryStorage = query.storage
 
@@ -123,9 +123,9 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let lanes = soa.lanes
         let queryStorage = query.storage
@@ -233,9 +233,9 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let L = soa.lanes
         let queryStorage = query.storage
@@ -456,9 +456,9 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let lanes = soa.lanes
         let queryStorage = query.storage
@@ -523,9 +523,9 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let lanes = soa.lanes
         let queryStorage = query.storage
@@ -597,9 +597,9 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let L = soa.lanes
         let queryStorage = query.storage
@@ -878,8 +878,10 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
         #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
         assert(queryNorm.isNaN || queryNorm >= 0, "Invalid query norm: \(queryNorm)")
         #endif
 
@@ -970,9 +972,9 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let lanes = soa.lanes
         let queryStorage = query.storage
@@ -1068,9 +1070,9 @@ public enum BatchKernels_SoA {
         let N = soa.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
-        #endif
+        guard out.count >= N else {
+            fatalError("SoA batch output capacity must cover the candidate count")
+        }
 
         let L = soa.lanes
         let queryStorage = query.storage

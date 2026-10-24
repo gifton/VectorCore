@@ -27841,23 +27841,26 @@
    "id": "V04-C-0928",
    "path": "Docs/API_Overview_Map.md",
    "symbol": "section VectorCore API overview::section Search and matrix routing",
-   "fingerprint": "68a58a38da1fe2bf",
-   "statement": "| `batchoperations.pairwisedistances` | `configuration.enablematrixrouting` and `matrixroutingminn` (defaults: `true`, `256`); euclidean/cosine; optimized 512, 768, or 1536 types |",
+   "fingerprint": "b5a4ad22c86509c4",
+   "statement": "| `batchoperations.pairwisedistances` | only when `configuration.enablematrixrouting` is set (default `false`) and the count reaches `matrixroutingminn` (default `256`); euclidean/cosine; optimized 512, 768, or 1536 types |",
    "kind": "markdown",
    "lineHint": 102,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "BatchOperations.Configuration: `enableMatrixRouting` default true, `matrixRoutingMinN: Int = 256`; gemmPairwise handles Euclidean/cosine on the three optimized types",
+    "reference": "BatchOperations.Configuration: `enableMatrixRouting` default false (the route is opt-in), `matrixRoutingMinN: Int = 256`; gemmPairwise handles Euclidean/cosine on the three optimized types; default pinned by Tests/ComprehensiveTests/P02PairwiseRowTests.swift::P02PairwiseRowTests.defaultConfigurationUsesPerPairKernelsAtAnEligibleN",
     "domain": "pairwiseDistances matrix gate",
     "limitations": "none"
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "T13 phase 2B"
+    "originalStatement": "| `batchoperations.pairwisedistances` | `configuration.enablematrixrouting` and `matrixroutingminn` (defaults: `true`, `256`); euclidean/cosine; optimized 512, 768, or 1536 types |",
+    "originalFingerprint": "68a58a38da1fe2bf",
+    "originalSymbol": "section VectorCore API overview::section Search and matrix routing",
+    "originalRevision": "919e37e",
+    "origin": "PR #56 review AB1",
+    "correctedIn": "pairwiseDistances GEMM route made opt-in (2026-10-23)"
    }
   },
   {
@@ -29022,26 +29025,26 @@
    "id": "V04-C-0974",
    "path": "Docs/HowTo_NearestNeighbor.md",
    "symbol": "section Nearest Neighbor Recipes (How‑to)::section Performance Tips",
-   "fingerprint": "9019059a9115482d",
-   "statement": "gemm auto‑routing (0.3.0)",
+   "fingerprint": "825672b541c16ca1",
+   "statement": "- `batchoperations.pairwisedistances` is controlled by `batchoperations.configuration.enablematrixrouting` (default `false`) and `matrixroutingminn` (default `256`); when routed, its diagonal is re‑scored with the metric's own `distance` and euclidean rows keep nan. the default is pinned by `p02pairwiserowtests.defaultconfigurationusesperpairkernelsataneligiblen`.",
    "kind": "markdown",
    "lineHint": 153,
    "category": "non-claim",
    "disposition": "corrected",
    "evidence": {
     "kind": "none",
-    "reference": "",
+    "reference": "BatchOperations.Configuration: `enableMatrixRouting` default false, `matrixRoutingMinN: Int = 256`; pairwiseDistances re-scores the diagonal with metric.distance and gemmPairwiseTyped keeps NaN; default pinned by Tests/ComprehensiveTests/P02PairwiseRowTests.swift::P02PairwiseRowTests.defaultConfigurationUsesPerPairKernelsAtAnEligibleN",
     "domain": "",
     "limitations": ""
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "gemm/amx auto‑routing (0.3.0)",
-    "originalFingerprint": "2ac507645a9a7913",
+    "originalStatement": "gemm auto‑routing (0.3.0)",
+    "originalFingerprint": "9019059a9115482d",
     "originalSymbol": "section Nearest Neighbor Recipes (How‑to)::section Performance Tips",
-    "originalRevision": "7d8fc6b",
-    "origin": "T13 phase 2B",
-    "correctedIn": "T13 phase 2B"
+    "originalRevision": "919e37e",
+    "origin": "PR #56 review AB1",
+    "correctedIn": "pairwiseDistances GEMM route made opt-in (2026-10-23)"
    }
   },
   {
@@ -32513,6 +32516,110 @@
     "originalStatement": null,
     "originalFingerprint": null,
     "origin": "T18 (staged CHANGELOG reconciliation; applied after the T19 and L04 merges)"
+   }
+  },
+  {
+   "id": "R56-C-0001",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Changed",
+   "fingerprint": "b310e07122f3ec4a",
+   "statement": "- **Breaking: `BatchOperations.pairwiseDistances` no longer takes the GEMM route by default.** `BatchOperations.Configuration.enableMatrixRouting` now defaults to `false` (it was `true`): the default keeps every pairwise matrix on the per-pair kernels, whose off-diagonal entries equal the metric's own score bit for bit. The GEMM route is the arithmetic the `findNearestBatch` entry above describes, and it loses the 0.125 offset of the offset-1000 rows at N = 256; the default is pinned by `P02PairwiseRowTests.defaultConfigurationUsesPerPairKernelsAtAnEligibleN`. Set `enableMatrixRouting = true` through `updateConfiguration` to opt in. When routed, a Euclidean entry whose squared score is NaN now stays NaN (it was formatted to 0, so a row with one NaN coordinate became the nearest neighbour of every other row), as on the per-pair route, `.gram` and `.perQuery` (`P02PairwiseRowTests.nanRowsAtAnEligibleN`).",
+   "kind": "markdown",
+   "lineHint": 498,
+   "category": "numerical-accuracy",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/P02PairwiseRowTests.swift::P02PairwiseRowTests.defaultConfigurationUsesPerPairKernelsAtAnEligibleN",
+     "Tests/ComprehensiveTests/P02PairwiseRowTests.swift::P02PairwiseRowTests.nanRowsAtAnEligibleN"
+    ],
+    "domain": "pairwiseDistances default route and NaN formatting",
+    "limitations": "The default is pinned at N = 256 on the offset-1000 and near fixtures for Vector512Optimized/768/1536; other N are the same code path but are not separately pinned."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "PR #56 review remediation (2026-10-23)"
+   }
+  },
+  {
+   "id": "R56-C-0002",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "475fbda4283d3adc",
+   "statement": "- **Release builds check the output capacity of the FP16 SoA batch kernels and the row shapes of `MatrixDistance`.** The fifteen public `MixedPrecisionKernels.batchEuclidean{512,768,1536}`, `batchDotProductSoA` and `batchEuclideanBlocked{512,768,1536}` SoA kernels, the six public `batchDotFP16_{512,768,1536}` and `batchDotMixed{512,768,1536}` array kernels (through two shared internal kernels) and the nine internal SoA kernels behind the optimized batch routes checked the output count only under `#if DEBUG`, so a Release caller passing a buffer shorter than the candidate count was written past its end with no diagnostic. They now stop with a named `fatalError` before any write, in every build; the mixed-precision range core's own capacity and range preconditions are active in every build as well. The policy test `test_release_active_capacity_guards.py` fails on any new Debug-only capacity assert in `Sources/VectorCore`. `MatrixDistance.prepare` and the six matrix entries took the dimension from the first row and copied that many bytes from every row, reading past a shorter row; every packed row must now have that dimension, checked by a named `fatalError` in every build. `ReleaseSizeGuardTests.kernelTrapsBeforeWriting` and `matrixRowsOfUnequalLengthTrap` run each case in a child process on the Debug and Release rows and check that the output it was given is untouched.",
+   "kind": "markdown",
+   "lineHint": 1088,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift::ReleaseSizeGuardTests.kernelTrapsBeforeWriting",
+     "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift::ReleaseSizeGuardTests.matrixRowsOfUnequalLengthTrap"
+    ],
+    "domain": "FP16 SoA kernel output capacity; MatrixDistance row shape",
+    "limitations": "One undersized-buffer shape (4 slots for 8 candidates) and one short-row shape per entry; the guard is a count comparison, so other shapes follow from the same branch."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "PR #56 review remediation (2026-10-23)"
+   }
+  },
+  {
+   "id": "R56-C-0003",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "34464e38b7c8a06a",
+   "statement": "- **Pool teardown leaks active leases instead of freeing them, and the `MemoryPool` cleanup timer no longer depends on the width of `Int`.** Destroying a `TypedBufferPool`, a `SwiftBufferPool` or the internal `BufferPool` while a lease was still checked out freed that lease, so a `Handle` or `BufferHandle` that outlived its pool pointed at freed memory and the first write through it was a silent use-after-free. The three pools now leak active leases on teardown and still free their cached allocations, as 0.3.3 did, so an escaped handle stays valid (`BufferPoolOwnershipTests.internalAndTypedDestructionOwnCachedAndLeakActive`, `swiftPoolDestructionLeaksActiveLease`); the lease contract is unchanged: release every handle before dropping the pool. `MemoryPool` compared the cleanup interval against `Double(Int.max) / 1e9`, which is 2.147 s on a 32-bit `Int` (arm64_32 watchOS devices, inside the declared floor), so the default 30 s interval silently disabled automatic cleanup there; the bound is now the 64-bit nanosecond horizon on every platform (`MemoryPoolBoundaryTests.timerHorizonIsIndependentOfIntWidth`).",
+   "kind": "markdown",
+   "lineHint": 1103,
+   "category": "memory-model",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift::BufferPoolOwnershipTests.internalAndTypedDestructionOwnCachedAndLeakActive",
+     "Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift::BufferPoolOwnershipTests.swiftPoolDestructionLeaksActiveLease",
+     "Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift::MemoryPoolBoundaryTests.timerHorizonIsIndependentOfIntWidth"
+    ],
+    "domain": "pool teardown with active leases; MemoryPool cleanup-timer horizon",
+    "limitations": "The arm64_32 figure (2.147 s) is arithmetic on the former guard, not a measurement on a device; no CI leg builds arm64_32."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "PR #56 review remediation (2026-10-23)"
+   }
+  },
+  {
+   "id": "R56-C-0004",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "5d779c1ca1a3b760",
+   "statement": "- **`ComputeProvider`'s chunk-hinted defaults call the hint-less requirements.** The default `parallelForEach(items:minChunk:)` and `parallelReduce(items:initial:minChunk:_:_:)` validate `minChunk` and then call the hint-less requirement, the direction 0.3.3 used, so a conformer that implements only the hint-less overloads (the ones the 0.3.3 guide named) is reached by every optimized search route and its `maxConcurrency` is not consulted by those defaults. During development the direction had been reversed, which bypassed such conformers and threw `invalidConfiguration` for a `maxConcurrency` of 0 (`ComputeProviderForwardingTests.hintedDefaultsReachHintlessWitnesses`).",
+   "kind": "markdown",
+   "lineHint": 1120,
+   "category": "concurrency",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/ComputeProviderForwardingTests.swift::ComputeProviderForwardingTests.hintedDefaultsReachHintlessWitnesses"
+    ],
+    "domain": "ComputeProvider default forwarding direction",
+    "limitations": "Pinned at the protocol-extension level with a hint-less-only conformer; the optimized search routes pass minChunk, so they take the same defaults, but no route-level test installs such a conformer."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "PR #56 review remediation (2026-10-23)"
    }
   }
  ],

@@ -34,6 +34,8 @@ internal actor BufferPool {
             maxBufferBytes: Int.max, boundary: allocationBoundary)
     }
 
+    deinit { storage.leakActiveLeases() }
+
     var cachedBytes: Int { storage.cachedBytes }
     var activeBytes: Int { storage.activeBytes }
 
@@ -63,9 +65,12 @@ internal actor BufferPool {
     func getStatistics() -> Statistics { stats }
 }
 
-/// Pool-owned uninitialized storage. A handle borrows memory and cannot keep it
-/// alive after pool destruction. Initialize/deinitialize exactly the elements used
-/// before release; sending metadata alone does not make pointee access safe.
+/// Pool-owned uninitialized storage. A handle borrows memory: release it before the
+/// pool is destroyed. A lease still active at destruction is leaked, not freed, so an
+/// escaped handle never points at freed memory
+/// (`BufferPoolOwnershipTests.internalAndTypedDestructionOwnCachedAndLeakActive`).
+/// Initialize/deinitialize exactly the elements used before release; sending
+/// metadata alone does not make pointee access safe.
 public actor TypedBufferPool<Element> {
     public struct Handle: Sendable {
         fileprivate let id: UUID
@@ -94,6 +99,8 @@ public actor TypedBufferPool<Element> {
         storage = BorrowedPoolStorage(maxCachedBytes: maxCachedBytes, maxBuffersPerSize: maxBuffersPerSize,
             maxBufferBytes: Int.max, boundary: allocationBoundary)
     }
+
+    deinit { storage.leakActiveLeases() }
 
     public var cachedBytes: Int { storage.cachedBytes }
     public var activeBytes: Int { storage.activeBytes }

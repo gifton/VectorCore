@@ -1687,9 +1687,9 @@ public enum MixedPrecisionKernels {
         let N = candidates.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
-        #endif
+        guard out.count >= N else {
+            fatalError("MixedPrecision batch output capacity must cover the candidate count")
+        }
 
         let blockSize = 64  // 64 candidates per block (64 x D x 2 bytes of FP16 payload); not tuned by a measurement
 
@@ -1727,9 +1727,9 @@ public enum MixedPrecisionKernels {
         let N = candidates.count
         guard N > 0 else { return }
 
-        #if DEBUG
-        assert(out.count >= N, "Output buffer too small: \(out.count) < \(N)")
-        #endif
+        guard out.count >= N else {
+            fatalError("MixedPrecision batch output capacity must cover the candidate count")
+        }
 
         let blockSize = 64  // 64 candidates per block; not tuned by a measurement
 
@@ -1854,7 +1854,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP16 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances (must have capacity ≥ candidates.vectorCount)
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclidean512(
         query: Vector512FP16,
@@ -1864,8 +1864,10 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
         #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
         assert(candidates.dimension == 512, "Dimension mismatch")
         #endif
 
@@ -1938,7 +1940,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP16 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances (must have capacity ≥ candidates.vectorCount)
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclidean768(
         query: Vector768FP16,
@@ -1948,8 +1950,10 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
         #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
         assert(candidates.dimension == 768, "Dimension mismatch")
         #endif
 
@@ -2026,7 +2030,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclidean512(
         query: Vector512Optimized,
@@ -2036,9 +2040,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         query.storage.withUnsafeBufferPointer { queryPtr in
             candidates.storage.withUnsafeBufferPointer { candPtr in
@@ -2134,7 +2138,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclidean768(
         query: Vector768Optimized,
@@ -2144,9 +2148,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         query.storage.withUnsafeBufferPointer { queryPtr in
             candidates.storage.withUnsafeBufferPointer { candPtr in
@@ -2238,7 +2242,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP16 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances (must have capacity ≥ candidates.vectorCount)
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclidean1536(
         query: Vector1536FP16,
@@ -2248,8 +2252,10 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
         #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
         assert(candidates.dimension == 1536, "Dimension mismatch")
         #endif
 
@@ -2326,7 +2332,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclidean1536(
         query: Vector1536Optimized,
@@ -2336,9 +2342,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         query.storage.withUnsafeBufferPointer { queryPtr in
             candidates.storage.withUnsafeBufferPointer { candPtr in
@@ -2440,7 +2446,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector (512 dimensions)
     ///   - candidates: FP16 candidates in SoA layout
-    ///   - results: Output buffer (must have capacity >= candidates.vectorCount)
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     ///
     /// - Complexity: O(N × D) where N = candidates, D = 512
     @inlinable
@@ -2452,9 +2458,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         query.storage.withUnsafeBufferPointer { queryPtr in
             candidates.storage.withUnsafeBufferPointer { candPtr in
@@ -2554,7 +2560,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector (768 dimensions)
     ///   - candidates: FP16 candidates in SoA layout
-    ///   - results: Output buffer (must have capacity >= candidates.vectorCount)
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     ///
     /// - Complexity: O(N × D) where N = candidates, D = 768
     @inlinable
@@ -2566,8 +2572,10 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
         #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
         assert(candidates.dimension == 768, "Dimension mismatch")
         #endif
 
@@ -2628,7 +2636,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector (1536 dimensions)
     ///   - candidates: FP16 candidates in SoA layout
-    ///   - results: Output buffer (must have capacity >= candidates.vectorCount)
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     ///
     /// - Complexity: O(N × D) where N = candidates, D = 1536
     @inlinable
@@ -2640,8 +2648,10 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
         #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
         assert(candidates.dimension == 1536, "Dimension mismatch")
         #endif
 
@@ -2699,7 +2709,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP16 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclideanBlocked512(
         query: Vector512FP16,
@@ -2709,9 +2719,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         let blockSize = 8  // Process 8 candidates per iteration
 
@@ -2792,7 +2802,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclideanBlocked512(
         query: Vector512Optimized,
@@ -2802,9 +2812,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         let blockSize = 8
 
@@ -2888,7 +2898,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP16 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclideanBlocked768(
         query: Vector768FP16,
@@ -2898,9 +2908,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         let blockSize = 8  // Process 8 candidates per iteration
 
@@ -2981,7 +2991,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclideanBlocked768(
         query: Vector768Optimized,
@@ -2991,9 +3001,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         let blockSize = 8
 
@@ -3077,7 +3087,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP16 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclideanBlocked1536(
         query: Vector1536FP16,
@@ -3087,9 +3097,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         let blockSize = 8  // Process 8 candidates per iteration
 
@@ -3170,7 +3180,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP32 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclideanBlocked1536(
         query: Vector1536Optimized,
@@ -3180,9 +3190,9 @@ public enum MixedPrecisionKernels {
         let vectorCount = candidates.vectorCount
         guard vectorCount > 0 else { return }
 
-        #if DEBUG
-        assert(results.count >= vectorCount, "Results buffer too small")
-        #endif
+        guard results.count >= vectorCount else {
+            fatalError("MixedPrecision batch results capacity must cover vectorCount")
+        }
 
         let blockSize = 8
 
@@ -3263,7 +3273,7 @@ public enum MixedPrecisionKernels {
     /// - Parameters:
     ///   - query: FP16 query vector
     ///   - candidates: SoA-layout FP16 candidate vectors
-    ///   - results: Output buffer for distances (capacity ≥ candidates.vectorCount)
+    ///   - results: Output buffer; must have capacity ≥ candidates.vectorCount (a shorter buffer traps before any write, in every build)
     @inlinable
     public static func batchEuclideanSoA(
         query: Vector512FP16,
@@ -4064,10 +4074,9 @@ extension MixedPrecisionKernels {
         var outIdx = 0
         let end = range.upperBound
 
-        #if DEBUG
-        precondition(out.count >= range.count, "Output buffer too small")
-        precondition(end <= candidatesArray.count, "Range exceeds candidate count")
-        #endif
+        // Active in every build: the public range wrappers reject these first, and this core keeps its own check.
+        precondition(out.count >= range.count, "MixedPrecision range core output capacity must cover the range")
+        precondition(end <= candidatesArray.count, "MixedPrecision range core range exceeds the candidate count")
 
         // Main loop: 2-way blocking
         while candidateIdx + 1 < end {

@@ -126,6 +126,22 @@ extension MemoryPoolBoundaryTests {
         #expect(pool.automaticCleanupEnabled)
     }
 
+    /// The cleanup timer's domain is the 64-bit nanosecond horizon and never `Int`: 3 s, 30 s and 2^62 ns of seconds
+    /// are scheduled on every platform (the former guard compared against `Double(Int.max) / 1e9`, which is 2.147 s on a
+    /// 32-bit `Int`, so arm64_32 watchOS devices lost the default 30 s timer; PR #56 review DP1); a sub-nanosecond
+    /// interval rounds up to one tick; nonpositive, nonfinite and intervals at or beyond 2^63 ns are not scheduled.
+    @Test func timerHorizonIsIndependentOfIntWidth() {
+        #expect(MemoryPool.cleanupTimerNanoseconds(seconds: 3) == 3_000_000_000)
+        #expect(MemoryPool.cleanupTimerNanoseconds(seconds: 30) == 30_000_000_000)
+        #expect(MemoryPool.cleanupTimerNanoseconds(seconds: 0x1p62 / 1e9) != nil)
+        #expect(MemoryPool.cleanupTimerNanoseconds(seconds: 2.5e-10) == 1)
+        let disabledIntervals: [Double] = [0, -1, .nan, .infinity, -.infinity, 0x1p63 / 1e9, Double(Int.max) / 1e9,
+                                           Double(UInt64.max) / 1e9, .greatestFiniteMagnitude]
+        for disabled in disabledIntervals {
+            #expect(MemoryPool.cleanupTimerNanoseconds(seconds: disabled) == nil, "\(disabled)")
+        }
+    }
+
     @Test func scopedThrowAndReferenceDestructionAcrossAllStages() {
         final class Payload { }
         enum Expected: Error { case body }

@@ -10,8 +10,8 @@ as its own executable target with `define` as a compilation condition when given
 A row with expect "fail" must not build: with errorLines "code", exactly one
 `error:` on every non-blank, non-comment, non-import line of the fixture and none
 elsewhere (the D02 rule); with a list, one error per listed line (a line listed
-twice expects exactly two errors there); with neither, at least one error in the
-fixture. `diagnostics` are substrings the error
+twice expects exactly two errors there), and `optionalErrorLines` may error or not
+(compiler-dependent diagnostics); with neither, at least one error in the fixture. `diagnostics` are substrings the error
 text must contain and `diagnosticsAny` substrings of which one must appear. A
 "compile" row must build; a "run" row must build, run and print `marker`. Use
 --list-contracts to check the table without running Swift.
@@ -48,7 +48,11 @@ CONTRACTS = (
     {"id": "D02-routed-negative", "path": "Scripts/ci/tests/D02/RoutedNegative.swift", "expect": "fail", "errorLines": "code"},
     {"id": "D02-hooks-negative", "path": "Scripts/ci/tests/D02/HooksNegative.swift", "expect": "fail", "errorLines": "code"},
     {"id": "D02-device-negative", "path": "Scripts/ci/tests/D02/DeviceNegative.swift", "expect": "fail", "errorLines": "code"},
-    {"id": "D02-logger-negative", "path": "Scripts/ci/tests/D02/LoggerNegative.swift", "expect": "fail", "errorLines": "code"},
+    # LoggerNegative line 10 (`VectorCore.Logger`) errors on every supported compiler; line 9 (a bare `Logger` with both
+    # modules imported) is ambiguous under Swift 6.4 and accepted by Swift 6.0 (Xcode 16.2, the consumer job). The line
+    # numbers are absolute: editing the fixture's header comment moves them.
+    {"id": "D02-logger-negative", "path": "Scripts/ci/tests/D02/LoggerNegative.swift", "expect": "fail", "errorLines": [10],
+     "optionalErrorLines": [9], "diagnostics": ["type 'VectorCore' has no member 'Logger'"]},
     {"id": "D02-logger-qualification", "path": "Scripts/ci/tests/D02/LoggerQualification.swift", "expect": "run",
      "marker": "D02_LOGGER_QUALIFICATION_COMPLETE"},
     # B01: no vector type conforms to BinaryCodable bare. `BinaryCodable` is BinaryEncodable & BinaryDecodable, so the
@@ -92,9 +96,13 @@ def judge_contract(row, status, output, source, file_name=None):
     expected = row.get("errorLines")
     if expected == "code":
         expected = code_lines(source)
+    optional = sorted(row.get("optionalErrorLines", ()))
     if expected is not None:
-        if lines != sorted(expected):
-            return False, detail + f"; expected exactly one error on each of {sorted(expected)}"
+        required = sorted(expected)
+        present = [line for line in lines if line not in optional]
+        if present != required or any(lines.count(line) > 1 for line in optional):
+            return False, detail + (f"; expected exactly one error on each of {required}"
+                                    + (f" and at most one on each of {optional}" if optional else ""))
     elif not lines:
         return False, detail + "; no error in the fixture"
     text = "\n".join(message for _, message in errors)

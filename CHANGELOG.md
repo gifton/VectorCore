@@ -1342,9 +1342,10 @@ coverage is not a claim of runtime coverage on every declared platform.
 - **`Logger` next to `os.Logger`.** `Logger` keeps its name. In a file that imports both `os` and
   VectorCore, `import struct VectorCore.Logger` makes `Logger` name VectorCore's type there, and Apple's
   stays `os.Logger`. Client code cannot spell it `VectorCore.Logger`: `VectorCore` resolves to the
-  `VectorCore` enum. Checked with the Swift 6.4 compiler by the D02 consumers
-  `Scripts/ci/tests/D02/LoggerQualification.swift` and `LoggerNegative.swift`; other compiler versions are not
-  verified.
+  `VectorCore` enum. Without the scoped import a bare `Logger` is ambiguous under Swift 6.4 and accepted
+  by Swift 6.0 (Xcode 16.2), so write the scoped import rather than relying on either. Checked by the D02
+  compile contracts `Scripts/ci/tests/D02/LoggerQualification.swift` and `LoggerNegative.swift`, which the
+  consumer job compiles with Xcode 16.2 and which were also run with Swift 6.4.
 - **Products and hosts.** `Docs/Package_Boundaries.md` lists, for each product, the hosts that are
   supported, compiled in CI or not verified. `VectorCoreBenchmarking` and `vectorcore-bench` are macOS
   host tooling; `VectorCoreBenchmarking` compiles in CI for the simulator and Catalyst destinations, but

@@ -207,6 +207,17 @@ class ContractJudgementTests(unittest.TestCase):
         self.assertTrue(self.judge(twice, 1, both)[0])
         self.assertFalse(self.judge(twice, 1, "Fixture.swift:5:1: error: needs BinaryEncodable\n")[0], "only one error")
 
+    def test_optional_error_lines_absorb_compiler_dependent_diagnostics(self):
+        # D02 LoggerNegative line 7 (a bare `Logger` with both modules imported) is ambiguous under Swift 6.4 and accepted
+        # by Swift 6.0: the row requires line 8 and tolerates line 7, and still rejects any other line or a success.
+        row = {"expect": "fail", "errorLines": [8], "optionalErrorLines": [7]}
+        self.assertTrue(self.judge(row, 1, "Fixture.swift:8:1: error: a\n")[0])
+        self.assertTrue(self.judge(row, 1, "Fixture.swift:7:1: error: b\nFixture.swift:8:1: error: a\n")[0])
+        self.assertFalse(self.judge(row, 1, "Fixture.swift:7:1: error: b\n")[0], "the required line did not error")
+        self.assertFalse(self.judge(row, 1, "Fixture.swift:8:1: error: a\nFixture.swift:9:1: error: c\n")[0], "an unlisted line errored")
+        self.assertFalse(self.judge(row, 1, "Fixture.swift:8:1: error: a\nFixture.swift:8:9: error: d\n")[0], "two errors on a line listed once")
+        self.assertFalse(self.judge(row, 0, "")[0])
+
     def test_colour_coded_diagnostics_are_read(self):
         # swift build emits `path:line:col: ESC[1;31merror: ESC[1;39mmessage`; the judge strips the escapes first.
         row = {"expect": "fail", "errorLines": [3], "diagnostics": ["cannot find"]}

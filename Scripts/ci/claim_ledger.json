@@ -30925,23 +30925,26 @@
    "id": "D02-C-0013",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Documentation",
-   "fingerprint": "f16196e2bd9bb3d1",
-   "statement": "- **`logger` next to `os.logger`.** `logger` keeps its name. in a file that imports both `os` and vectorcore, `import struct vectorcore.logger` makes `logger` name vectorcore's type there, and apple's stays `os.logger`. client code cannot spell it `vectorcore.logger`: `vectorcore` resolves to the `vectorcore` enum. checked with the swift 6.4 compiler by the d02 consumers `scripts/ci/tests/d02/loggerqualification.swift` and `loggernegative.swift`; other compiler versions are not verified.",
+   "fingerprint": "36248d1a2c32f06f",
+   "statement": "- **`logger` next to `os.logger`.** `logger` keeps its name. in a file that imports both `os` and vectorcore, `import struct vectorcore.logger` makes `logger` name vectorcore's type there, and apple's stays `os.logger`. client code cannot spell it `vectorcore.logger`: `vectorcore` resolves to the `vectorcore` enum. without the scoped import a bare `logger` is ambiguous under swift 6.4 and accepted by swift 6.0 (xcode 16.2), so write the scoped import rather than relying on either. checked by the d02 compile contracts `scripts/ci/tests/d02/loggerqualification.swift` and `loggernegative.swift`, which the consumer job compiles with xcode 16.2 and which were also run with swift 6.4.",
    "kind": "markdown",
-   "lineHint": 836,
+   "lineHint": 1342,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "Scripts/ci/tests/D02/LoggerQualification.swift (runs) and LoggerNegative.swift (one error per line) through Scripts/ci/tests/D02RunConsumers.py; VectorCore declares `public enum VectorCore`",
+    "reference": "Scripts/ci/tests/D02/LoggerQualification.swift (runs) and LoggerNegative.swift (one error per line) through Scripts/ci/tests/D02RunConsumers.py; VectorCore declares `public enum VectorCore`; compile contracts D02-logger-negative (line 8 required, line 7 optional) and D02-logger-qualification in Scripts/ci/consumer_smoke.py, run by the consumer job on Xcode 16.2",
     "domain": "a client file importing os and VectorCore, Swift 6.4",
     "limitations": "Evidence consumers, not CI tests; other compiler versions are not verified."
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "D02 phase 5"
+    "originalStatement": "- **`logger` next to `os.logger`.** `logger` keeps its name. in a file that imports both `os` and vectorcore, `import struct vectorcore.logger` makes `logger` name vectorcore's type there, and apple's stays `os.logger`. client code cannot spell it `vectorcore.logger`: `vectorcore` resolves to the `vectorcore` enum. checked with the swift 6.4 compiler by the d02 consumers `scripts/ci/tests/d02/loggerqualification.swift` and `loggernegative.swift`; other compiler versions are not verified.",
+    "originalFingerprint": "f16196e2bd9bb3d1",
+    "originalSymbol": "section Changelog::section [Unreleased]::section Documentation",
+    "originalRevision": "e68343c",
+    "origin": "D02 phase 5",
+    "correctedIn": "PR #56 CI: Swift 6.0 accepts the bare Logger spelling (2026-10-24)"
    }
   },
   {

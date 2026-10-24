@@ -1,0 +1,46 @@
+{
+  "base": "8f7b8283df10ee16f43ebd86ec5d039e801821ba",
+  "integrationBase": "84f42d01489a526b8ae40bd77fe7618c0de33f34",
+  "diffSHA256": "c275afa79411680ff391cf04ff6ed75d1f120d389493e6393d5b6329443b34eb",
+  "verifiedFiles": [
+    {
+      "path": "Sources/VectorCore/Configuration/ThreadSafeConfiguration.swift",
+      "baseSHA256": "b35b2a32808feb6dceb6aace21fdf5fbbf48533977cbbb1d96ab51d46b0133f6",
+      "finalSHA256": "69413042d2e2816ca7a4225009e54fe504d0ceeeeca9678b40c5735ec79e083b"
+    },
+    {
+      "path": "Sources/VectorCore/Operations/BatchOperations.swift",
+      "baseSHA256": "5dc2eb9c395d263b2fc57d545d864f3d6b80d5b6dbb4df487af1a494892378e5",
+      "finalSHA256": "195378297c97f6a635af2fce6c30a20ce0c2ff38948bc2cd66693af89a65182d"
+    },
+    {
+      "path": "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+      "baseSHA256": null,
+      "finalSHA256": "833363e91a772877f532322d538d578485383c022aa0eb4dfe871e4c78701e2b"
+    },
+    {
+      "path": "Scripts/ci/tests/E03ConfigurationConsumer.swift",
+      "baseSHA256": null,
+      "finalSHA256": "b8a16a6b6575b6831e63a0acfb25445857d1f2412be1597ae43b6fdbb88abe90"
+    },
+    {
+      "path": "Scripts/ci/tests/E03TypecheckDriver.swift",
+      "baseSHA256": null,
+      "finalSHA256": "93b0ad5f825850fb1cfa6f51e7f8354a1b388b59fddba72179ee5fd2475b2195"
+    }
+  ],
+  "baseCodeFiles": 243,
+  "archiveCodeFiles": 246,
+  "changedPaths": [
+    "Scripts/ci/tests/E03ConfigurationConsumer.swift",
+    "Scripts/ci/tests/E03TypecheckDriver.swift",
+    "Sources/VectorCore/Configuration/ThreadSafeConfiguration.swift",
+    "Sources/VectorCore/Operations/BatchOperations.swift",
+    "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift"
+  ],
+  "verifiedEvidenceArtifacts": 35,
+  "executedChildBodies": 12,
+  "reconstruction": "git apply of complete patch reproduces every declared byte; full code inventory contains only five declared edits; current worktree base and canonical backup match",
+  "imported": true,
+  "importBase": "ce6b0d396ddf8716b50eae01643b24a503aa194c"
+}

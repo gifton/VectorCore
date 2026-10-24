@@ -1,0 +1,165 @@
+{
+  "task": "S02",
+  "root_head_before_import": "4d045c8fdc5f6c3aedf0b886621426b658baeffe",
+  "base": "7c211d9d230bbd7534099b28a4be3daee732d637",
+  "archive": "/private/tmp/vectorcore-stabilization-S02-implementation",
+  "verified_at": "2026-09-23T05:45:43.219579+00:00",
+  "file_hashes": {
+    "Sources/VectorCore/Protocols/VectorProtocol.swift": {
+      "baseSHA256": "1f7f9342fb19b54e32a617e2097dc86c64f6410468ea0937aaca963a8593bba7",
+      "finalSHA256": "16f9591e31e086bf40c97e88afab6ae31476c178e1a7e3cce09e921fe8115acf"
+    },
+    "Sources/VectorCore/Operations/Operations.swift": {
+      "baseSHA256": "39a34dd72b61605e9818ef09ff04c1654b360feba15505bcc4dee6c222a9ec68",
+      "finalSHA256": "b87f7cec39b3a7fac67cd9cb67eeafa241543d9f4ee12582f9da7d204f5994c4"
+    },
+    "Sources/VectorCore/Factory/VectorTypeFactory.swift": {
+      "baseSHA256": "320dfea4a11e908316b05956d839115b0252d4e42e1aff38036dac968f3bf2e3",
+      "finalSHA256": "cddb3f0443ff75799bdaa1adef3fec8cf73f8250c3e6a9a335eea92f74e8ef8a"
+    },
+    "Sources/VectorCore/Errors/VectorError.swift": {
+      "baseSHA256": "7c6a2c4b3976af4a1eaab4191e982e59d0e43713d94d8a8e481df0de8ed4213b",
+      "finalSHA256": "afc31638a3e2d4be2a9ef52bc9ece82976e9235ca6a22d4dc29b788d4ac53bf1"
+    },
+    "Tests/ComprehensiveTests/ExecutionOperationsTests.swift": {
+      "baseSHA256": "b49e76f9896cffb35fce77a2facbfac70991b60cd13eb6f9b8cf445d254cd9f1",
+      "finalSHA256": "ccd2b7864164723aa56ce5e82d30f4c3c248a298248dcac13d94da122df73161"
+    },
+    "Tests/ComprehensiveTests/VectorDispatchContractTests.swift": {
+      "baseSHA256": null,
+      "finalSHA256": "d685f7f16601b19cc2b8e3aa8c0e7c566337166e56ce6c7cf35e61afcce2403a"
+    }
+  },
+  "patch_sha256": "d0105e88c2cd19c42a8c41cf2376c1382ea560657eed1d20d8a7ba24337854c6",
+  "base_code_file_count": 236,
+  "archive_code_file_count": 237,
+  "only_changed_code_files": [
+    "Sources/VectorCore/Errors/VectorError.swift",
+    "Sources/VectorCore/Factory/VectorTypeFactory.swift",
+    "Sources/VectorCore/Operations/Operations.swift",
+    "Sources/VectorCore/Protocols/VectorProtocol.swift",
+    "Tests/ComprehensiveTests/ExecutionOperationsTests.swift",
+    "Tests/ComprehensiveTests/VectorDispatchContractTests.swift"
+  ],
+  "evidence_sha256": {
+    "S02-EX03-red.log": "4fd72ec391069b4c3c8dc1bffc65e390bd99e4005c40a9a73b02ed9bf3ef758b",
+    "S02-asan-cleanup.log": "e65e18b783ec1db98436c77006c6d41f55200fc78b269d6f286f990c87f8b24c",
+    "S02-asan.log": "0fb33c386554743ab6bf9497d5f741a1e1b997d3d8903adc651ec0f425f23bb0",
+    "S02-before-cleanup-VectorDispatchContractTests.swift": "9cbe6b3b1372d75834339f79bb4d43c0825ba1cb6459dbab49da530302796376",
+    "S02-before-cleanup-asan.log": "0fb33c386554743ab6bf9497d5f741a1e1b997d3d8903adc651ec0f425f23bb0",
+    "S02-before-cleanup-debug-reviewed.log": "941275e93430cdbc43ff2c0b65799278656aef5a215a4ffb2f771383244b3eeb",
+    "S02-before-cleanup-final-validation.json": "a26f6c75a379ce5cddea2201664db965216c6d07c884861016fe7f45990e1266",
+    "S02-before-cleanup-release-final.log": "e33840f99d2ee5fdaad567ed9c50b5d64d236bf5efebe71384e383aac8ab2577",
+    "S02-before-cleanup-review-manifest.json": "8052839e962798eb5a01a93d24467277a46379214ed9cc148f6a76dce2ccc3a1",
+    "S02-before-cleanup-review-package.diff": "24f374cb062f8624ba733e0d16c66d18801ed10306fb94f0792b779c4b096d07",
+    "S02-before-cleanup-sha256.txt": "1dcd72bccc8dcab7c60f8989e5d464e5f19b7da8f717a23ef1871cf8445c07d1",
+    "S02-before-doc-review-manifest.json": "2994580e17b9a1cf543d7c23aee239307b600dcdcb40b5e276cb9eca24dbcf59",
+    "S02-before-doc-review-package.diff": "da7d2eec72c1236abbfb001e2a6892070b0fccfe7ec296e3757b1268e6ba12a2",
+    "S02-before-doc-sha256.txt": "3a2825fc075089a3014d65e98cf43a70fda7ff5156c9521ad9a65df7b327ba3f",
+    "S02-before-helper-VectorDispatchContractTests.swift": "6d698406672c318f47aa286d605e35c2369877951151ca7a1c4401df31a23596",
+    "S02-before-helper-review-manifest.json": "e9da74008ace50205f820ea29d09f60b074875d29fbe28c5fd43dcd8d6057a86",
+    "S02-before-helper-review-package.diff": "b15c7189538c5cc92ab4a5356910148e87ff881a533e8efe5ee5c3cbb7353dd0",
+    "S02-before-helper-sha256.txt": "800cffcaa234cff91e82c45d200eb7e4c7e2574132f30a27a2135d58edc6156c",
+    "S02-cleanup-only.diff": "a5217bd3edc01b6af8023685244dc3c09acdfbf8725a6240e683fd6bc37831d3",
+    "S02-compiler-followup.py": "45da49fb8300729efdc177587242a4e808aabd3df26e970bc706a0fdbf7df180",
+    "S02-compiler-module-hashes.json": "c71ae99708c02a9f3425c40bbc3803a5eec02539c03f916dab0596095a795a4e",
+    "S02-compiler-probe-results.json": "d68e2691a0b9f8b5caf70948ae31efe1e60d2adb2dae9a534dea30e2a32b1a18",
+    "S02-debug-cleanup.log": "16956dd52adc4d44dc18abb45ace9aa2da82b1f8d5193f4a6acd6c23e613f4c0",
+    "S02-debug-complete.log": "3419a708d8a7980642ba13932e3e12868d899eb2708e957c02a3bd50d1c8b6cc",
+    "S02-debug-final.log": "f3da05857255ff7dd2a35a4ddcb796fb82cfe6413dcbc739b4b107454a916dc7",
+    "S02-debug-reviewed.log": "941275e93430cdbc43ff2c0b65799278656aef5a215a4ffb2f771383244b3eeb",
+    "S02-debug.log": "8ef9ed53616d0681c98714f6419372119d45792e4a13302df34b0729c587eb25",
+    "S02-final-test-command.json": "4ae344f2bf01acefecb426ef8ee9da6e50e6561f1b3f3babb73fabae9208d3b7",
+    "S02-final-test.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "S02-final-validation.json": "ca7e00cda2ca5896ba911f298ffa514f2da41d05bfddee6019f4cb0936364221",
+    "S02-prior-module-default-command.json": "22e2fbd504b702933dfb5fdc5b22634dce967ff5c3e14885c147d64e49e82f82",
+    "S02-prior-module-default.log": "99d192d1abdc1f6cf0b718e6ce0c113bba970f8c2100117b6b92be0083022cdc",
+    "S02-probe-explicitCollection.log": "76c7768215950bbb58215b6d4738d112d87b9b2174175014e2f766ca167709ed",
+    "S02-probe-explicitCollection.swift": "f5aa75b037b320b160350180eea1e99e8fca4bde4016385c87c36753a7423b2a",
+    "S02-probe-explicitSubscript.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "S02-probe-explicitSubscript.swift": "37374528a9462d1f91b2fb13953450f37fef7f7201dff79d2dd23b0cced7c115",
+    "S02-probe-explicitValidation.log": "b4913129241d5442689d467a0e8290171c91ea563f6217108eebf503254deb06",
+    "S02-probe-explicitValidation.swift": "bf080e8d8f2262ae69bfbc7183b9d6a78c321ef94c51e1aedf6001478307e09e",
+    "S02-probe-plain.log": "b404d630dda1cbaf3d6589c732e28485bb0fc5bc07bc7a1e0d4a879a3fd28e10",
+    "S02-probe-plain.swift": "60ca4c811e402b98ded11bbd4c7f6e30ce5f1e16b8cb1246ba13a981e16ba416",
+    "S02-probe-spy.log": "47042d5a6bdd9dcd0aa3ac71b6c12888461e556bb043762855ecb096c3074946",
+    "S02-probe-spy.swift": "45c1550e54456a0762c5ee13a8b4e3a878921b22eeeb20527a6315aefa6e2651",
+    "S02-red-bounded.log": "2f25bc967bcf5f7ee8f549b555f7fcf0e2421fd6df562f48b0439c7d2ff58aff",
+    "S02-red-compile.log": "1fe25dbff17669e3c3553afef6ddf3fcb5a87c9f8bee7f1758649e27f07b94fb",
+    "S02-red-compile2.log": "24903ca68cd93598cbbe282714b6c2b4f196156ae8a5636f03da4529ab154ed4",
+    "S02-red-compile3.log": "9adaef0f3209236ff1bb3895f6319dea21e31a31112ed7bfd215040bb6c94e21",
+    "S02-red-setup.log": "13e8cd9613907d1d1d4e4252c4e266c71aab5a0591cdccaa96bc488f1a3af854",
+    "S02-red.log": "2cdfc7fd914b57591cac4050b4c333690fa5f124ead9795f51f6e2d0a2f1a49b",
+    "S02-reduced-command.json": "05e84e28a5fa7255544eabec5cb70ca874cafaf00e52f6c5b05fe1424aeb8260",
+    "S02-reduced-compile.log": "73abcea2ecb452c8d782768190b6e616b90f5993a08f1a2e91f55089908baf56",
+    "S02-reduced-compile.py": "4c2a581a869eb362a33ea2792ee724505d52ca78def0387c861160cd8dcdf05c",
+    "S02-release-cleanup.log": "c46e53073692e8ab1cbba019389bf441c9305fa039001c59e7db9f5907ec83b5",
+    "S02-release-final.log": "e33840f99d2ee5fdaad567ed9c50b5d64d236bf5efebe71384e383aac8ab2577",
+    "S02-release.log": "cee47fa021e64a00a686b3365437cd1656023d8c3cabc63becea819796e6dd41",
+    "S02-review-manifest.json": "07afd08f765284ca8c0b9d0ae3e6aa32df7e4ca909d02482268a0cd692aca319",
+    "S02-review-package.diff": "d0105e88c2cd19c42a8c41cf2376c1382ea560657eed1d20d8a7ba24337854c6",
+    "S02-review.md": "d34a6cecd7ead2a05eca5024ace1bf4ff8830e0873094093dfb0e65e86b062f0",
+    "S02-sha256.txt": "004682c99376763df89e636ebdbee1bcccba264329cc532c30f7ba3d887c0eb6",
+    "S02-variants.py": "df01447a1f221b744d7c1d96fe323ad27b54dfd3dd5f595342e28ca03c1a69ed",
+    "S02-warning-inventory.txt": "8bb5f2b936424d02a2872c204e623067aace7d9ef28bf19e508b60df389c65ff",
+    "S02.md": "bec71d1552fb71a7714e0d7510c7b3383c06e1c09c7eeeeeaa09fe798bc92d80"
+  },
+  "import": "exact verified file bytes copied after independent ACCEPT",
+  "validation": {
+    "archive": "/private/tmp/vectorcore-stabilization-S02-implementation",
+    "runs": [
+      {
+        "log": "S02-debug-cleanup.log",
+        "log_sha256": "16956dd52adc4d44dc18abb45ace9aa2da82b1f8d5193f4a6acd6c23e613f4c0",
+        "command": "swift test --jobs 6 --scratch-path /private/tmp/vectorcore-stabilization-S02-debug --filter 'VectorDispatchContractTests|OperationsValidationTests|OperationsTests|VectorTypeFactorySuite|VectorShapeContractTests'",
+        "exit_code": 0,
+        "tests": 64,
+        "suites": 9,
+        "seconds": 17.285,
+        "source_sha256": {
+          "Sources/VectorCore/Protocols/VectorProtocol.swift": "16f9591e31e086bf40c97e88afab6ae31476c178e1a7e3cce09e921fe8115acf",
+          "Sources/VectorCore/Operations/Operations.swift": "b87f7cec39b3a7fac67cd9cb67eeafa241543d9f4ee12582f9da7d204f5994c4",
+          "Sources/VectorCore/Factory/VectorTypeFactory.swift": "cddb3f0443ff75799bdaa1adef3fec8cf73f8250c3e6a9a335eea92f74e8ef8a",
+          "Sources/VectorCore/Errors/VectorError.swift": "afc31638a3e2d4be2a9ef52bc9ece82976e9235ca6a22d4dc29b788d4ac53bf1",
+          "Tests/ComprehensiveTests/ExecutionOperationsTests.swift": "ccd2b7864164723aa56ce5e82d30f4c3c248a298248dcac13d94da122df73161",
+          "Tests/ComprehensiveTests/VectorDispatchContractTests.swift": "d685f7f16601b19cc2b8e3aa8c0e7c566337166e56ce6c7cf35e61afcce2403a"
+        }
+      },
+      {
+        "log": "S02-release-cleanup.log",
+        "log_sha256": "c46e53073692e8ab1cbba019389bf441c9305fa039001c59e7db9f5907ec83b5",
+        "command": "swift test -c release --jobs 6 --scratch-path /private/tmp/vectorcore-stabilization-S02-release --filter 'VectorDispatchContractTests|OperationsValidationTests|OperationsTests|VectorTypeFactorySuite|VectorShapeContractTests'",
+        "exit_code": 0,
+        "tests": 64,
+        "suites": 9,
+        "seconds": 16.524,
+        "source_sha256": {
+          "Sources/VectorCore/Protocols/VectorProtocol.swift": "16f9591e31e086bf40c97e88afab6ae31476c178e1a7e3cce09e921fe8115acf",
+          "Sources/VectorCore/Operations/Operations.swift": "b87f7cec39b3a7fac67cd9cb67eeafa241543d9f4ee12582f9da7d204f5994c4",
+          "Sources/VectorCore/Factory/VectorTypeFactory.swift": "cddb3f0443ff75799bdaa1adef3fec8cf73f8250c3e6a9a335eea92f74e8ef8a",
+          "Sources/VectorCore/Errors/VectorError.swift": "afc31638a3e2d4be2a9ef52bc9ece82976e9235ca6a22d4dc29b788d4ac53bf1",
+          "Tests/ComprehensiveTests/ExecutionOperationsTests.swift": "ccd2b7864164723aa56ce5e82d30f4c3c248a298248dcac13d94da122df73161",
+          "Tests/ComprehensiveTests/VectorDispatchContractTests.swift": "d685f7f16601b19cc2b8e3aa8c0e7c566337166e56ce6c7cf35e61afcce2403a"
+        }
+      },
+      {
+        "log": "S02-asan-cleanup.log",
+        "log_sha256": "e65e18b783ec1db98436c77006c6d41f55200fc78b269d6f286f990c87f8b24c",
+        "command": "swift test --sanitize address --jobs 6 --scratch-path /private/tmp/vectorcore-stabilization-S02-asan --filter 'VectorDispatchContractTests/(validMutationArithmeticAndCopies|validAggregatesAndEmptyPolicies|recoverableAggregateDimensionsAndArrayCounts|throwingFactoryValidationAndValidBatches|boundsErrorMetadataTable)'",
+        "exit_code": 0,
+        "tests": 5,
+        "suites": 1,
+        "seconds": 0.037,
+        "source_sha256": {
+          "Sources/VectorCore/Protocols/VectorProtocol.swift": "16f9591e31e086bf40c97e88afab6ae31476c178e1a7e3cce09e921fe8115acf",
+          "Sources/VectorCore/Operations/Operations.swift": "b87f7cec39b3a7fac67cd9cb67eeafa241543d9f4ee12582f9da7d204f5994c4",
+          "Sources/VectorCore/Factory/VectorTypeFactory.swift": "cddb3f0443ff75799bdaa1adef3fec8cf73f8250c3e6a9a335eea92f74e8ef8a",
+          "Sources/VectorCore/Errors/VectorError.swift": "afc31638a3e2d4be2a9ef52bc9ece82976e9235ca6a22d4dc29b788d4ac53bf1",
+          "Tests/ComprehensiveTests/ExecutionOperationsTests.swift": "ccd2b7864164723aa56ce5e82d30f4c3c248a298248dcac13d94da122df73161",
+          "Tests/ComprehensiveTests/VectorDispatchContractTests.swift": "d685f7f16601b19cc2b8e3aa8c0e7c566337166e56ce6c7cf35e61afcce2403a"
+        }
+      }
+    ]
+  },
+  "final_review": "reports/S02-review.md"
+}

@@ -1,0 +1,28 @@
+{
+  "task": "E06",
+  "base": "545d819f1ec57f9b504757ab6ae2fa42488cbd29",
+  "patch": "/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/E06-full-v2.diff",
+  "patchSHA256": "2fd68f93261f55789ad7755b99c556bd320546099abdd1cc0009591ec17f56c2",
+  "manifestSHA256": "9966b5bdce2b92184826e6a6458f1edba1b6deb24c70f640ec144f3f779f006c",
+  "baseCount": 287,
+  "finalCount": 290,
+  "changed": [
+    "Scripts/ci/tests/E03ConfigurationConsumer.swift",
+    "Sources/VectorCore/Operations/BatchOperations.swift",
+    "Sources/VectorCore/Utilities/BoundedExecution.swift",
+    "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift",
+    "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+    "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+    "Tests/ComprehensiveTests/E06ConfigurationTestHelpers.swift",
+    "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift",
+    "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+    "Tests/ComprehensiveTests/MatrixMetricContractTests.swift",
+    "Tests/E06Consumers/PublicConfiguration.swift"
+  ],
+  "reconstruction": "/var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/vectorcore-E06-root-source-m33d843y",
+  "fullReconstructionMatchesWorker": true,
+  "allChangedIntegrationPathsAtTaskBase": true,
+  "v1ToV2ChangedPaths": [
+    "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "results": [
+    {
+      "manifest": "L01-red-artifacts.json",
+      "manifestSHA256": "40aeea5298a8b76a292840b37bf392f17634bd4a6103b5a321386c32274e2d88",
+      "files": 8640,
+      "canonicalDirectory": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L01/red",
+      "allHashesVerified": true
+    },
+    {
+      "manifest": "L01-v2-debug-artifacts.json",
+      "manifestSHA256": "b6b085671b356cd381964da0013dcb4363f4e81618cca8488a6ab73c02881734",
+      "files": 8647,
+      "canonicalDirectory": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L01/v2",
+      "allHashesVerified": true
+    },
+    {
+      "manifest": "L01-v2-release-artifacts.json",
+      "manifestSHA256": "05e93ede2c8c13157151305ad35ff4135a44efd56de4f598841c37b4c3901123",
+      "files": 5744,
+      "canonicalDirectory": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L01/v2",
+      "allHashesVerified": true
+    },
+    {
+      "manifest": "L01-v3-debug-artifacts.json",
+      "manifestSHA256": "2f1c063d59fbf2eb6aae71adf8f39003f1689dc8d31bb837c5d7de7dfb5f20ab",
+      "files": 8651,
+      "canonicalDirectory": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L01/v3",
+      "allHashesVerified": true
+    },
+    {
+      "manifest": "L01-v3-release-artifacts.json",
+      "manifestSHA256": "642244694a60aac8de3eab562cc79a84351426a7ff193b82ce7c2e6709eeb717",
+      "files": 5747,
+      "canonicalDirectory": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L01/v3",
+      "allHashesVerified": true
+    },
+    {
+      "manifest": "L01-v3-asan-artifacts.json",
+      "manifestSHA256": "4ea863def06d61889f8ce595bfd047d7727124ca6fbe2035b563cadeb8582128",
+      "files": 8640,
+      "canonicalDirectory": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L01/v3",
+      "allHashesVerified": true
+    }
+  ],
+  "uniqueInodesHashed": 46075
+}

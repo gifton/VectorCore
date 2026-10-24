@@ -1,0 +1,19 @@
+# EX06 root integration review
+
+## Source verdict: ACCEPT; combined Swift runtime evidence pending
+
+Read the complete seven-file patch `EX06-root-v1.diff`, SHA256 `b1ffdf6ce63969d0c4835ca862464c7f3ec0fa5277ab5f9d2af449873d43dcfc`, and relevant full Python watchdog/test sources. Independently verified every final file hash and all six existing-file base hashes against `84f42d01489a526b8ae40bd77fe7618c0de33f34`. Scope is four existing Swift test helpers, the existing Python watchdog and its tests, and one new mechanical CI test. No production behavior changes. No builds, source/test edits, commits or delegation were performed.
+
+All four Swift helpers install a termination handler before starting their owned child. Execution waits are bounded at five or fifteen seconds; SIGKILL cleanup waits at most two additional seconds. A timeout throws before consulting termination status/reason. Normal exit retains the prior named-trap/body-reached/result assertions. The shape matrix replaces blocking pipe reads with unique retained file captures, eliminating the pipe EOF/drain dependency. The unsafe-memory helper also retains per-case logs, and only its normalization diagnostic is migrated to the accepted N01 spelling. Existing diagnostic policies remain otherwise intact. These child helpers launch direct test processes; this patch does not assert descendant-group cleanup for Swift helpers.
+
+The Python watchdog starts a private process session, kills the process group after execution timeout, tolerates the group already having disappeared, and bounds subsequent reap at two seconds. If reap itself times out, it raises the original execution timeout with the cleanup timeout as its cause. Nonzero-exit behavior remains unchanged. It has no unbounded post-kill wait.
+
+The new mocked regression meaningfully exercises unreapable-child behavior: it rejects a missing timeout, requires a positive cleanup timeout at most two seconds, requires two waits, verifies group SIGKILL and preserves both exception identity and causal context. Existing real descendant-group termination and nonzero-exit tests remain. The mechanical test scans Swift test/CI Process users for the repeated unbounded APIs and uses Python AST checks for explicit wait/communicate deadlines. Existing `.github/workflows/ci.yml` unittest discovery includes this new test automatically. This is a targeted regression guard for the observed API class, not a proof that every conceivable process orchestration is bounded (for example, arbitrary loops or dynamically supplied timeout expressions).
+
+No source blocker found. Root reports Python RED with three failures and GREEN with five passing tests; retained log verification and the combined Swift integration outcome will be appended when available. No timing or production-performance claim is made.
+
+## Runtime evidence follow-up
+
+Read `EX06-watchdog-red.log`: five tests ran with exactly three intended failures—the Python unbounded post-kill wait, the four Swift unbounded waits plus shape pipe read, and the mocked cleanup call without a deadline. Read `EX06-watchdog-green.log`: all five tests pass, including the real descendant-group termination and nonzero-exit checks. Read the final combined Debug summary in `milestone-04-debug-final.log`: 25 XCTest tests with zero failures and 260 Swift Testing functions in 28 suites pass. This includes the integrated Swift helpers; it does not imply that their timeout branches were deliberately forced at runtime. Their bounds follow directly from the reviewed adjacent code, with the mechanical check preventing recurrence of the identified unbounded APIs.
+
+**Verdict: ACCEPT the EX06 source and available Python/Debug evidence.** Root retains responsibility for associating the final combined Release evidence before recording integration completion. No additional blocker found.

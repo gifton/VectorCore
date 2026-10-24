@@ -1,0 +1,13 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite ConfigurationTransactionTests started.
+􀟈 Test globalChildProbe() started.
+E03_BODY_BEGIN independent
+E03 fields round=0 threshold=101 chunk=101 expected=101,101
+E03 fields round=1 threshold=101 chunk=101 expected=101,101
+E03 fields round=2 threshold=101 chunk=101 expected=101,101
+E03_BODY_END independent
+􁁛 Test globalChildProbe() passed after 0.001 seconds.
+􁁛 Suite ConfigurationTransactionTests passed after 0.001 seconds.
+􁁛 Test run with 1 test in 1 suite passed after 0.001 seconds.

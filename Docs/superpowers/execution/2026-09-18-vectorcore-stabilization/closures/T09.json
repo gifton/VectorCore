@@ -1,0 +1,41 @@
+{
+  "task": "T09",
+  "status": "accepted",
+  "task_base": "6e217b0 (T07 candidate tree 6f856b6 on 5e21d26)",
+  "integration_revision": "3f32f5a",
+  "closed_records": [
+    "T09-INTEL-BUILD-TESTS-FLOAT16",
+    "T09-FLOAT16-AVAILABILITY-CLASS"
+  ],
+  "disposition_records": {
+    "T09-INTEL-BUILD-TESTS-FLOAT16": "Since N01 (84f42d0), program-added tests used Float16 unguarded, so CI's Intel build-tests and Catalyst steps would fail on the integration branch. Six test files are guarded narrowly; Float16-free assertions stay on Intel via exact bit constants pinned by arm64-only native checks. Clean Intel build-tests exit 0 (T09 tree and merged integration tree).",
+    "T09-FLOAT16-AVAILABILITY-CLASS": "A repeated class (f4d5b49 on main, 84f42d0, 1c55a85, 101b374, plus 2 files found while iterating). Closed by test_float16_availability_guard.py (branch-condition evaluation; interpolation-aware; os(OSX); _Float16/CFloat16/simd_half; mutation control per rule; no git) and by the milestone CI-replay gate (Intel and platform builds)."
+  },
+  "validation": {
+    "intel": "clean build-tests exit 0 (implementer, reviewer, root on the merged tree)",
+    "arm64": "Debug EXTENDED=0 1453/199 pass; guarded tests run",
+    "policy": "unittest 268 OK in-repo (2 skips) and git-less (6 skips) on the merged integration tree",
+    "matrix": "10/10; fix-1 spot check iOS and Catalyst"
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T09",
+  "patch_sha256": "9ba835fc0a9aba84c203bb059e8b2c9f656bd5dec35d518c0d1e5f9b1b8fb699",
+  "frozen_sha256": {
+    "Scripts/ci/tests/test_float16_availability_guard.py": "89760705e8af178054d12c31d4f2170f4a3f9ad41ffb94075f2f35f268a92ce9",
+    "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift": "6613a02db09f9a8de542a641da38c4de41b4cb18c18db449915dacdd96ad88ff",
+    "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift": "46cd4a666244ec4b4365733406802b5c1bb9bc334adc1eefb39d283325a2953a",
+    "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift": "7ce64022e3fafa408e37c0db5df9b31c24bf1ddcc3fdaee89dd3c6f2618cf4ba",
+    "Tests/ComprehensiveTests/NumericalPolicyContractTests.swift": "f29ac6f2b3f8799e85afff5b9c22cf73536d8f950022ac56d87a88c3ba371474",
+    "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift": "abdff1aac63db27f73dd2b7f051822c3a82a47018edef9eb5cbd385b0e7181ae",
+    "Tests/ComprehensiveTests/StorageBorrowContractTests.swift": "2f8a1e4347efa28bbc301d30a4bd36c77f03e76d6559fac4d2c19900af12b805"
+  },
+  "limitations": [
+    "Intel coverage is compile-only (no Rosetta; CI's test job runs on arm64).",
+    "No CI job compiles TESTS for Mac Catalyst, so the Catalyst half of the test guards is never compiled.",
+    "Guard limits: typealias of Float16 not followed; conservative false positives (e.g. foo_Float16, targetEnvironment(simulator)).",
+    "The CLT Swift 6.2 proxy builds the library only (no XCTest), so it cannot replay CI's Xcode 26.3 test compile."
+  ],
+  "routed": [
+    "P02: a host-independent exhaustive FP16 software-converter test; precondition before anyone enables NATIVE_FLOAT16_SUPPORTED (D02/V04-F)."
+  ],
+  "incident": "The fix-1 re-reviewer left an untracked build dir at workspaces/T09/T09/fix1-review/build-intel (a relative scratch path). Its own delete was denied by the permission classifier; root did NOT delete it on the reviewer's behalf and surfaced it to the user. It does not affect the committed tree."
+}

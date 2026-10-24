@@ -1,0 +1,24 @@
+{
+  "task": "V01",
+  "status": "accepted",
+  "task_base": "04f27df",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "TOOL-01",
+    "TOOL-02"
+  ],
+  "validation": {
+    "debug": "8 XCTest +1 Swift Testing;41 subprocess cases passed",
+    "release": "8 XCTest +1 Swift Testing;41 subprocess cases passed",
+    "real_cli": "Debug/Release invalid-threshold and artifact-failure tables passed",
+    "real_routes": "54 finite small cases passed strict validation"
+  },
+  "review": "reports/V01-review-round2.md",
+  "evidence": "reports/V01.md",
+  "artifacts": "reports/V01-artifacts/manifest.json",
+  "limitations": [
+    "Collector comparison/locking is inside timing; V04 measurement work remains",
+    "No full registry or scale-readiness claim",
+    "Correctness/failure artifact schema changes require consumers to migrate"
+  ]
+}

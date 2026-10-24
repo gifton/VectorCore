@@ -1,0 +1,143 @@
+{
+  "cwd": "/private/tmp/vectorcore-stabilization-E03-implementation",
+  "manifest": "E03-review-v2-manifest.json",
+  "commands": [
+    {
+      "name": "behavioral RED",
+      "argv": [
+        "swift",
+        "test",
+        "--jobs",
+        "6",
+        "--scratch-path",
+        "/private/tmp/vectorcore-stabilization-E03-debug",
+        "--filter",
+        "ConfigurationTransactionTests"
+      ],
+      "log": "E03-red-runtime.log",
+      "exit": 1,
+      "failedAssertions": 9,
+      "source": "unchanged base plus first two tests"
+    },
+    {
+      "name": "v1 Debug",
+      "argv": [
+        "swift",
+        "test",
+        "--jobs",
+        "6",
+        "--scratch-path",
+        "/private/tmp/vectorcore-stabilization-E03-debug",
+        "--filter",
+        "ConfigurationTransactionTests"
+      ],
+      "log": "E03-debug-green-1.log",
+      "exit": 0,
+      "functions": 6
+    },
+    {
+      "name": "v1 Release",
+      "argv": [
+        "swift",
+        "test",
+        "-c",
+        "release",
+        "--jobs",
+        "6",
+        "--scratch-path",
+        "/private/tmp/vectorcore-stabilization-E03-release",
+        "--filter",
+        "ConfigurationTransactionTests"
+      ],
+      "log": "E03-release-final.log",
+      "exit": 0,
+      "functions": 6
+    },
+    {
+      "name": "final v2 Debug",
+      "argv": [
+        "swift",
+        "test",
+        "--jobs",
+        "6",
+        "--scratch-path",
+        "/private/tmp/vectorcore-stabilization-E03-debug",
+        "--filter",
+        "ConfigurationTransactionTests"
+      ],
+      "log": "E03-debug-final-v2.log",
+      "exit": 0,
+      "functions": 7,
+      "executedIsolatedChildBodies": 4,
+      "parentNoOpProbes": 1
+    },
+    {
+      "name": "final v2 combined Debug",
+      "argv": [
+        "swift",
+        "test",
+        "--jobs",
+        "6",
+        "--scratch-path",
+        "/private/tmp/vectorcore-stabilization-E03-debug",
+        "--filter",
+        "ConfigurationTransactionTests|BatchGEMMRoutingTests"
+      ],
+      "log": "E03-debug-combined-v2.log",
+      "exit": 0,
+      "functions": 12,
+      "executedIsolatedChildBodies": 4
+    },
+    {
+      "name": "final v2 Release",
+      "argv": [
+        "swift",
+        "test",
+        "-c",
+        "release",
+        "--jobs",
+        "6",
+        "--scratch-path",
+        "/private/tmp/vectorcore-stabilization-E03-release",
+        "--filter",
+        "ConfigurationTransactionTests"
+      ],
+      "log": "E03-release-final-v2.log",
+      "exit": 0,
+      "functions": 7,
+      "executedIsolatedChildBodies": 4,
+      "parentNoOpProbes": 1
+    },
+    {
+      "name": "typecheck driver compile",
+      "argv": [
+        "/usr/bin/xcrun",
+        "swiftc",
+        "-swift-version",
+        "6",
+        "-module-cache-path",
+        "/private/tmp/E03-driver-cache",
+        "Scripts/ci/tests/E03TypecheckDriver.swift",
+        "-o",
+        "/private/tmp/E03-typecheck-driver"
+      ],
+      "log": "E03-driver-build.log",
+      "exit": 0
+    },
+    {
+      "name": "public consumer positive/negative",
+      "argv": [
+        "/private/tmp/E03-typecheck-driver",
+        "Scripts/ci/tests/E03ConfigurationConsumer.swift",
+        "/private/tmp/vectorcore-stabilization-E03-debug/arm64-apple-macosx/debug",
+        "/private/tmp/E03-consumer-evidence"
+      ],
+      "log": "E03-consumer-driver.log",
+      "exit": 0,
+      "positiveExit": 0,
+      "negativeExit": 1,
+      "intendedNegativeDiagnostic": true,
+      "perCompilerCommands": "E03-consumer-results.json"
+    }
+  ]
+}

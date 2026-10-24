@@ -1,0 +1,2248 @@
+# SDD ledger — plan: Docs/superpowers/plans/2026-09-18-vectorcore-stabilization/WORK_ITEMS.md
+
+Persistent execution source of truth: this directory's state.json, POLICY.md, PREFLIGHT.md, briefs and reports. Original audit acceptance criteria remain binding. Recovered history is in RECOVERY.md; its snapshot predates this ledger.
+
+## Baseline
+
+- Existing worktree verified: /private/tmp/vectorcore-stabilization-2026-09-18, branch codex/vectorcore-stabilization-2026-09-18.
+- Base source: 8b02e75bca7055ae11170873d15c06f1538709b7; no tracked changes at resume.
+- `swift test --jobs 6 --filter 'TriangularMatrix|TopKNaN|Integration'`: exit 0, 81 Swift Testing tests in 14 suites passed. Full output: baseline-resumed.log. These existing tests do not close audited gaps.
+- Planning preflight: PREFLIGHT.md covers candidate checkpoint presence, acceptance ownership and every pair of shared source paths. Dispatch briefs remain required.
+- Breaking changes authorized by the user; performance targets/downstream intent deferred. POLICY.md supersedes historical compatibility-approval language.
+
+## Task activity
+
+O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a staged Core repair; S02 validation is incomplete in its isolated snapshot. Eighteen audit records are closed; the staged I01 records still require their remaining evidence. Workers must not commit or edit shared source files; root owns index operations.
+
+- O01 dispatched to /root/o01_implementation at base ed1fd0b; default .build reserved. V01 approved with /private/tmp/vectorcore-stabilization-V01-build scratch.
+- Retained audit logs and baseline evidence explicitly added despite the broad log ignore rule.
+
+- V01 dispatched to /root/v01_implementation at base 04f27df; runtime RED includes 10 assertion failures and an actual CLI artifact-write failure incorrectly returning zero. Focused helper GREEN, expanded process table underway.
+- O01 reproduced compact aliasing/lifetime defects (10 tests, 2060 issues) and singleton trap separately. Debug passed 11 test functions; immutable-snapshot Release passed. Independent /root/o01_review approved source/test design with only a new unused-result warning, now cleaned up. Final Release/ASan and corrected file hashes remain pending. No audit closure yet.
+- Root recorded S01/I01/I02/R01 design decisions; R01 and staged I01 briefs are ready. Decoded hint invalidation is an authorized behavior change and must be documented.
+
+- O01 accepted after final Release/ASan and scoped re-review. Root verified all three hashes against working files. OWN-10/API-47 closed in closures/O01.json; OWN-05 remains partial until O02. Local source commit follows; no push or merge.
+
+- O01 integrated locally at 312bec8. R01 dispatch base is 312bec8; all R01 editing/builds use /private/tmp/vectorcore-stabilization-R01-implementation (immutable base archive plus task edits), preventing overlap with V01's shared-source Release compile. Root imports only accepted assigned files later. V01 independent review dispatched to /root/v01_review.
+
+- V01 round1 review requires corrections: actual provider observations must be validated, CSV close failures must propagate, and failure identity tests need exact names/reasons. Root checked and accepted findings. Release XCTest passed but unexpected App execution in the Swift Testing runner prevents acceptance; support/executable target separation is authorized if confirmed by focused diagnosis. V01 remains open; report/brief addendum retained.
+
+- R01 accepted after independent approval, final74-test Debug/Release runs, Float-positive/Double-negative compilation and five matching hashes. Imported exact snapshot files into shared worktree after V01 validation finished. API-01/API-46 closed; relevance/downstream validation remain separate. V01 round2 has8 XCTest+1 Swift Testing passes per configuration,41 subprocess cases and54 finite real-route results; independent re-review pending.
+
+- R01 integrated at61a9bbd. V01 round2 independently approved with no remaining findings; root verified14 hashes and final test/CLI evidence. TOOL-01/TOOL-02 accepted; V02/V04 and performance claims remain open. Final JSON/CSV artifacts retained with hashes before local commit.
+
+- V01 integrated locally at297ad4e. Next workers: staged Core I01 and O02, each in an isolated base297ad4e archive under /private/tmp; no shared-source edits. Root retains import/index ownership and reserves integrated checks on the shared branch. I01 full closure still needs S01 and downstream evidence.
+
+- Integration milestone 01 at source revision297ad4e: combined Debug and Release focused runs both exited0, each passing8 XCTest tests and86 Swift Testing tests in7 suites. Filters combine TieredStorageOwnership, MetricDispatchContractTests, TopKNaN, BatchKernelProviderTests, IntegrationProtocolsSuite and BenchmarkContract. Complete commands/output are retained in reports/milestone-01-{debug,release}.log; no broader audit closure is inferred.
+- Root recorded source-established EX-01 in FOLLOW_UP_FINDINGS.md: INT8 mutable temporary buffers discard writes when the body throws. Q01 must choose and test its quantization-aware policy before changing writeback; O02 remains bounded to TieredStorage.
+
+- I01 independently approved and imported after three matching frozen hashes. Final Debug/Release each passed50 tests/2 suites after684-issue behavioral RED. Core access/decode contract accepted, but OWN-03/API-33 remain partial pending S01 and actual downstream checks; closures/I01.json records exclusions. S02 contract prepared with authorized throwing centroid/statistics migration and explicit dimension/empty behavior.
+
+- I01 integrated locally at99a2ac4. S01 dispatched to /root/s01_implementation in isolated base99a2ac4 archive with all accepted source changes. O02 continues independently at its recorded base. I01 ignored logs explicitly retained in the following ledger commit after an embedded git subprocess was blocked by sandbox index permissions; direct approved git add succeeded.
+
+- O02 independently approved and imported after two matching frozen hashes and unchanged-base checks. Debug/Release each pass17 functions/1116 invocations; ASan14 throwing-reference cases pass. Root verified all254 before/after build artifacts, three probe sources and five review files; only TieredStorage changed among135 production files. Actual Release allocation evidence establishes one shared detach and zero measured repeated-write allocations; n256 complete construction requested bytes fall from8,525,090,769 to534,609. OWN-05 (with O01), OWN-13 and OWN-14 closed in closures/O02.json. Spare capacity retention is excluded; historical failed characterization logs retained. No latency or operating-envelope claim.
+
+- O02 integrated locally at6f364ba. E01 dispatched in isolated base6f364ba archive to /root/e01_implementation. S01 guard diagnostics were stripped under standard Release preconditions; root-approved guard/fatalError preserves the required-count diagnostic without changing valid mutation behavior. Final validation and independent review are in progress.
+
+- S01 final source snapshot passed89 tests/16 suites in Debug and Release,5 valid tests under ASan; independent review favorable with all8 hashes verified. Root withheld closure pending extra test-only mixed/SoA/calibrator post-replacement coverage required by OWN-02. Worker resumed within same archive; all7 production files remain frozen. No S01 import/closure yet.
+
+- S01 supplemental post-replacement mixed/SoA/calibrator function passed Debug/Release/ASan and scoped independent review. Root verified8hashes, unchanged7production files and reconstructed original test SHA256, then imported exact8files. OWN-01/OWN-02 closed in closures/S01.json; I01 shape prerequisite satisfied but downstream evidence remains open. Original89/5 runs and supplemental1/1/1 runs are recorded separately; no combined90-test run is inferred. Optional C alternative uncompiled.
+
+- S01 integrated locally at7c211d9. S02 dispatched to /root/s02_implementation in isolated base7c211d9 archive; E01 final validation and independent review continue separately. Next shared integration milestone should combine these new boundary/API repairs with accepted storage/metric/hint/benchmark contracts after their imports.
+
+- E01 independently approved with final Debug/Release each7XCTest entries/0failures +16SwiftTesting controls. Root verified5frozen hashes, complete scope inventory and14retained evidence hashes (review checksum refreshed after final verdict), then imported exact5files. API-07/API-08/API-44 closed in closures/E01.json. E02/E03/E06 and general triangular overflow remain separate; no scheduling/performance claim.
+
+- E01 integrated locally atcd9bbe3. O04 dispatched in isolated basecd9bbe3 archive with S01 prerequisite included; S02 continues separately with no shared source ownership. Root approved S02 guard/fatalError diagnostics based on S01 verified Release message stripping; no duplicate compiler experiment needed. R04 bounded heap/legacy ordering contract is ready.
+
+- Integration milestone02 at sourcecd9bbe3 (documentation HEAD26df9f1) passed Debug and Release: each15XCTest entries/0failures plus109SwiftTesting tests/10suites. Root confirmed both process exits0; exact commands and log SHA256 in state.json. This combines O01/O02/R01/V01/I01/S01/E01; S02/O04 remain isolated and unaccepted. No further broad rerun needed without new changes.
+
+- N01 full Core brief prepared after independent numerical design review. Root resolved an acceptance ambiguity: numerical output thresholds apply when normalization occurs, while permissive/tolerance early returns assert unchanged bits and predicate. Float widening proof, generic-format failure qualification, TransformOperations routes, actual-output hint verification and matrix/preNormalized invalid propagation are explicit. S02/O04 prerequisites remain active; no N01 dispatch yet.
+
+- N01 full-brief design review completed with tolerance acceptance ambiguity resolved; implementation and prerequisite acceptance remain separate. S02 frozen complete diff entered independent review; root accepted the minor centroid zero-width complexity documentation correction. O04 root review requested specific diagnostics for new guards in both configurations instead of accepting any Release signal; initial frozen evidence must be retained. No source imports or new audit closure.
+
+- S02 latest Debug64/9 passed; independent source review resolved the centroid comment, but Release failed in Swift6.3.3 MandatorySILLinker before test execution. Root withheld acceptance and requested bounded child deadlines after finding unbounded readDataToEndOfFile/wait. Compiler diagnosis and ASan continue; no production workaround approved. O04 revision1 Debug/Release55/8 passed; required diagnostic revision and independent review are in progress. N04 entropy brief is ready; Q01 calibration candidate and independent design experiment are retained as explicitly unapproved design work.
+
+- Root N02 source inventory found public safeNormalized has an independent Float-magnitude normalization body omitted from the initial N01 brief. N01 now reserves only that method in NaNInfinityHandling, with explicit preprocess/strict/propagate/replacement/zero policy and all32 option combinations; scoped independent design review required before dispatch. N02 must not overlap this file.
+
+- O04 revision2 independently approved and imported after root verified9frozen hashes, exact full diff,237/238code-file inventory and18evidence hashes. Debug/Release each55tests8suites andASan8validtests1suite pass; named new boundary diagnostics retained in Release. OWN-08/09/11/25 closed to their bounded acceptance, retaining no-miscompile/no-realOOM qualifications. MemoryPool fallback remains EX-05/E04; normalization range remains N01.
+
+- O04 integrated locally at98388fc. I02 dispatch base is the same accepted revision; isolated archive /private/tmp/vectorcore-stabilization-I02-implementation owns only the FP16 cache and specified cache tests. S02 compiler diagnosis continues; no overlapping source ownership or shared build directory.
+
+- Q01 final bounded brief independently approved after resolving exact-dot cancellation and affine-difference rounding gaps. Root retained the review and optimized offline integer-oracle experiment, and incorporated final precision/nonfinite refinements. I02 revision2 now passes22focusedtests in Debug/Release with bounded child probes and is under independent review. S02 final Release64tests/9suites passed after test-only explicit subscripts; final Debug/ASan and scoped re-review remain. No new task closure.
+
+- I02 revision2 independently approved and imported after root verified3frozenhashes,completepatch,238/239code-fileinventory and18evidencehashes. Final Debug/Release each22tests/2suites pass, including named negative initialization diagnostics with bounded child probes. OWN-04/18/19 closed to exact identity and cache-retained allocated payload accounting; metadata/transients/caller-onlyretention and measuredRSS remain excluded. Required maxBytes/removal of shared/manualstore migrations are documented.
+
+- I02 integrated locally at0dbb18c. Q01 dispatch base is the same accepted revision, in isolated archive /private/tmp/vectorcore-stabilization-Q01-implementation; owns quantization calibration/conversion/decoded metric regions only. S02 sanitizer validation continues separately; N01 remains next after its acceptance.
+
+- N03 magnitude-population-statistics brief independently approved; synchronous duplicate joins serial/parallel repair, while E03 prerequisite remains pending. E04 source inventory retained as preliminary design only; checked-out ownership, generic initialization and budget/statistics policy still require root decisions before dispatch.
+
+- S02 finalcleanup independently approved and imported after root verified6frozenhashes,exactcompletepatch,236/237code-fileinventory and61evidencehashes. Final Debug/Release each64tests/9suites and ASan5validtests/1suite pass. OWN-06/API-13/API-19 and execution findingsEX-02/03 closed within their dimension/factory contracts. Compiler workaround remains test-only with pre-S02reproduction; finalchildhelper has15s execution+atmost2s cleanup. N01 prerequisites are now satisfied.
+
+- S02 integrated locally at028b4aa. N01 dispatched from the same accepted revision in /private/tmp/vectorcore-stabilization-N01-implementation; all S01/S02/O04/CoreI01 prerequisites included. Q01 continues on disjoint quantization files. Combined integration milestone03 will validate newly integrated O04/I02/S02 against prior accepted contracts.
+
+- Integration milestone03 at source028b4aa passed Debug and Release, each15XCTest entries plus197SwiftTesting tests/21suites. This combines accepted O04/I02/S02 with prior contracts; isolated N01/Q01 work is excluded. Exact commands, exits and log hashes are in state.json; initial sandbox compiler-cache denial is retained separately. No broader rerun needed until further code changes or a concrete concern. R05 score design independently approved and queued after R02; no implementation dispatched.
+
+- Q01 complete revision2 source review independently verified all7files/fullpatch/96exactoracles with no additional numerical blocker. Root found unbounded child cleanup (v3 correction prepared) and actual Release allocation regression:1536scalar/mixed6144allocations245760requestedbytes,5candidateSoA30720/1228800; ordinarycalibrate8x1536 28/156288 versusbaseline0. Authorized v4 fixed-value expansion scratch and streaming calibrator; all prior evidence retained, no timing claim. N01 reproduced same-class Accelerate Float/Double binary division failures for least-subnormal divisors; root approved direct native coordinate division and expanded IEEE/alias/boundary matrix. No new task closure.
+
+- Environmental recovery:568 missing tracked worktree files, including.git/Package.swift, restored missing-only fromHEADf7bfea1;4 surviving intended document edits preserved. Cause not established. Canonical Git metadata/commits intact. Both worker archives independently report no missing base paths (Q01778,N01845). Unaccepted Q01v4 and N01source snapshots copied outside/tmp into canonicalworkspace .stabilization-recovery/2026-09-23. Q01v4 fixedscratch/streaming source review passed; repeated linked Release probe shows all22rows0allocations/0requestedbytes and identicalv2resultbits. Final Debug/Release/ASan review remains pending.
+
+- Q01 revision4 independently ACCEPTED and exact7files imported after root verified completepatch,270/274codefileinventory,all845workerartifacthashes,unchangedsharedbase. FinalDebug/Release each17XCTest+50SwiftTesting;ASan10+7 pass. NUM-03/04/05 andEX-01/04 closed;SER-08 remains stagedS03. Measured allocation regressions resolved with0events/bytes inall22v4probe rows,identicalv2resultbits; no latencyclaim. N01 full22filediff nowunderindependentreview whilefinalchecksrun.
+
+- Q01 integrated locally at8f7b828. E03 atomicconfiguration transaction implementation dispatched to reused /root/q01_implementation in isolatedbase8f7b828 archive/private/tmp/vectorcore-stabilization-E03-implementation, disjointfromN01. Reviewer/root continueN01verification.
+
+- N01 independently ACCEPTED asCorestagedrepair and exact22filesimported afterrootcompletepatch/hash/271-to276codeinventory verification. FinalDebug/Release each100functions10suites incl24diagnosticchildren;ASan33exercised+2explicitnoops pass. NUM-01/02closed;API-39 remainsdownstreamstaged. Noexistingtestexpectationschanged. Rootwillcheckcombined N01/Q01integration beforeclaimingcombinedsuccess.
+
+- N01 integrated locally at 84f42d0. R02 dispatched to reused /root/n01_implementation in an isolated archive of that revision. E03 continues on separate configuration files. Combined integration milestone04 is running from source 84f42d01489a526b8ae40bd77fe7618c0de33f34 with a fresh build scratch; no further source import until it finishes.
+
+- E03 revision 2 passed independent review and root complete reconstruction: all five files, 243/246 code-file inventory and 35 evidence hashes match. Four global scenarios now execute in isolated bounded children, resolving interference with routing tests; Debug/Release and the combined routing run pass. Import is waiting for the current root integration build, not for further implementation. N02 dispatched to /root/q01_implementation at base 84f42d0 in its separate archive; accepted N01 files are preserved outside the explicitly owned methods.
+
+- Milestone 04 completed on accepted N01/Q01 plus the reviewed EX06 test/CI repair: Debug and Release each pass 25 XCTest tests and 260 Swift Testing functions in 28 suites. Root retained 274 shape/unsafe-memory child captures and exact commands/hashes in milestone-04-verification.json. EX06 closes the observed unbounded API class, with Python runtime RED/GREEN and a mechanical CI gate; Swift timeout branches are source-reviewed rather than claimed as forced runtime coverage. The sole existing expectation migration is O04 normalize diagnostic wording. E04 root design candidate is under independent review; its baseline allocation profile is retained.
+
+- E03 accepted and exact five files imported after milestone 04 finished. API-03 closes with atomic synchronous actor publication, complete BatchOperations value rollback, public Swift 6 capture migration and process-isolated global tests. Root verified the full patch, all archive changes, backup bytes and 35 evidence hashes. No configuration routing/numeric policy changed. E04 ownership/budget/fallback/scoped API brief is independently approved and ready for an implementation slot.
+
+- E03 integrated locally at 9038f2e. EX07 independently accepted: benchmark CLI driver is safe to import during unittest discovery, with its executable assertion body unchanged. Full Python CI discovery passes 28 tests; explicit CLI validation against the real milestone 04 Release binary passes. Source/evidence hashes are retained. This does not substitute import success for executed benchmark coverage.
+
+- R02 accepted and exact three files imported after independent review and root reconstruction. API-09/API-10 close: transactional update witness, duplicate rejection, monotonic checked IDs, one-lock binding snapshots and metric execution outside the lock. Debug/Release each pass 80 reported functions in five suites; actual reentrant children and public Swift 6 positive/negative migration consumers are retained. The full 248/250 code-file inventory, frozen backup and all final evidence hashes match. No score policy or downstream execution claim.
+
+- R02 integrated locally at ae0fd90. E04 dispatched to /root/n01_implementation from that complete base archive, with exclusive pool/OperationContext scope and the independently approved ownership/budget/fallback brief. Actor handles remain borrowed; MemoryPool handles retain late-owner lifetime. Typed pool source migration and explicit cached-byte budget are authorized. Final allocation profile comparison remains a root responsibility.
+
+- N02 accepted and exact four files imported after independent review and root reconstruction. NUM-14/NUM-15 close with finite-aware equality, consistent widened distance accuracy and staged safeLog input/domain policy. Final Debug and Release each pass seven functions in two suites. All 27 evidence artifacts, eight command-log records, full code inventory and canonical backups match. Two optimized compiler failures are retained; a reproduced, faithful test-only subscript workaround leaves production code and flags unchanged.
+
+- N02 integrated locally at 1c55a85. N03 dispatched to /root/q01_implementation from that complete accepted archive, with exclusive statistics-only BatchOperations/SyncBatchOperations ownership. E04 continues on disjoint pool files. New E05, S03 and Q03 contracts passed independent design review and are ready for future slots; their exact recording, decoder and reentrant-calibration policies are preserved in the approved briefs.
+
+- E02 scheduling design independently approved after a mechanical 30-site task-submission/caller inventory. Root resolved phase-local worker limits, nested suppression, cooperative cancellation, ordered identity reduction, truthful synchronous executeBatch behavior and deletion of unused internal engines. Live custom-factory traps join the scoped repair. Dispatch waits for R03/N03/E04 integration. R03 global configuration fixtures now require isolated bounded child processes, incorporating the demonstrated E03 suite-interference finding. E04 source review accepted v1; final validation and allocation repeat remain pending. N03 v1 is under independent review after root reconstruction and byte-identical fixture regeneration.
+
+- N03 accepted and exact seven files imported after independent final review. NUM-06 closes with shared centered Double population statistics, full-count NaN propagation and chunk-index merge order across the public async and internal synchronous routes. Final Debug/Release each pass eight functions in one suite. Root verified the full 256/261 code-path inventory, regenerated Decimal fixtures byte-for-byte and checked all 16 evidence artifacts plus canonical backups. No settings activation or broader scheduling claim.
+
+- N03 integrated locally at a558253. E05 dispatched to /root/q01_implementation from that complete accepted archive with exclusive AutoTuning ownership and only a necessary Operations calibration-call migration permitted. E04 v2 source/allocation evidence is independently accepted; final runtime package awaits adjudication. Root allocation probe verified 133 linked artifacts and removed cache-size allocation growth while retaining explicit bookkeeping/timing limitations.
+
+- E04 final v2 accepted and exact 16 files imported. API-05/06/32/37 and EX-05 close with actor-owned allocation teardown, fresh lease identities, strict return-time physical byte caps, awaited scoped release, checked fallback alignment/binding and maintained MemoryPool cached bytes. Debug/Release each pass 48 reported functions; ASan covers 46 valid functions/63 invocations with rejection no-ops excluded. Root verified all 264 worker evidence files and canonical copies, full reconstruction, 132 public linked artifacts and exact child associations. Three linked Release allocation repetitions remove cache-size growth while retaining bookkeeping allocations; no timing or downstream claim.
+
+- E04 integrated locally at 076f60b. R03 dispatched to /root/n01_implementation from a complete archive of that revision, with matrix semantics and logical SoA output bounds as exclusive scope. E05 continues independently. Combined milestone 05 will cover the five accepted task patches since milestone 04; no production imports while those checks run.
+
+- Milestone 05 passed on committed source 076f60b: Debug and Release each pass 25 XCTest tests plus 331 Swift Testing functions in 35 suites. Source hashes were rechecked unchanged across both runs. Root retained 322 printed S01/O04/E03/E04 child captures and exact source/command/log/executable association; other bounded children remain supported by their actual passing parent assertions, not an invented per-child inventory. E05 and R03 are not yet imported.
+
+- O03 and O05 designs independently accepted. O03 uses exclusive enum-owner mutation and measured actual Release allocation controls, preserving default managed negative controls and provider dispatch. O05 removes unused escaped slices/disabled move-only code and replaces three public FP16 pointer getters with explicit scoped unsafe borrows; generic return types do not enforce nonescape. No gate activation, supported-use UAF reproduction or GPU claim.
+
+- E05 final v1 accepted and exact three files imported. API-29 closes with one-lock state, callbacks/clock/logging outside the lock, nonblocking provisional same-key fallback, manual-wins publication, throwing cleanup and safe arithmetic fallback. Both actual baseline deadlocks now complete. Debug/Release each pass eight reported functions plus 21 isolated child scenarios, seven separate Operations controls and public Swift 6 typechecks. Root verified the 261/263 code inventory, all 151 worker artifacts/canonical copies and 63 child associations; the unavailable original RED bundle hash is explicitly qualified. No tuner quality or hard callback-deadline claim.
+
+- E05 integrated locally at 6d47ec5. O03 dispatched to /root/q01_implementation from that complete archive; exclusive HybridStorage/DimensionStorage/resize/temp-result scope. R03 v1 is frozen for independent source review and final runtime checks. O05 remains designed but waits for accepted O03; E02 waits for accepted R03.
+
+- R03 final v2 accepted and exact six files imported. API-14/15/16 close with supplied-metric diagonals, true cosine similarity and logical-prefix-only zero-query SoA writes. Debug/Release each pass 77 functions in 16 suites and 45 actual configuration children; focused ASan covers three functions/five invocations, and the public Swift 6 consumer compiles and runs. Root verified all 167 worker artifacts/canonical copies, 974 build artifacts, 133 linked public artifacts, source reconstruction and 90 final child associations. V2 adds only three mechanically verified test-reference comments to tested v1. E02 prerequisites are now accepted.
+
+- R03 integrated locally at 433efec. E02 dispatched to /root/n01_implementation from a complete archive of that accepted revision. The approved contract bounds library worker submissions, suppresses nested fan-out, preserves ordered reductions and adds cooperative cancellation. O03 continues on disjoint storage files.
+
+- O03 actual linked Release baseline confirms copying in default-managed DimensionStorage too: a direct concrete ten-write measurement allocates ten 40-byte owners plus ten 2,048-byte payloads. Root approved the same enum-owner repair for that managed branch while preserving the historical OWN-26 source-fixture result and rejecting blanket extrapolation. Baseline/final linked evidence remains required.
+
+- Q02 precision/tuning contract independently approved: actual adaptive results are validated against the direct FP32 baseline; shape-only quantization suggestions are explicitly heuristic; mixed selection never calibrates implicitly; resource controls become operative profile/payload filters with explicit no-feasible errors; full mode cannot be weakened; persistence is versioned and opt-in. Breaking migrations and failure/cancellation publication state are specified. NUM-21 peak-allocation characterization remains a separate evidence obligation, not an invented production target.
+
+- E06 live-settings design independently approved, pending accepted E02: validate complete updates atomically, use one snapshot per async operation, wire six fields to documented scopes and replace unsafe chunk rounding. General nearest threshold deliberately activates six optimized helpers and requires fresh public-route verification; hardware worker cap and N03 merge order remain unchanged. Synchronous sample stays configuration-independent.
+
+- L01 numerical factorization design independently approved. Swift QR/SVD/eigen use widened working arithmetic with finite public-result validation and independent range/orthogonality fixtures. Local C workspace arithmetic/query conversion is checked, while NUM-35 vendor-internal extreme-shape safety remains qualified. No arbitrary production envelope or performance target is introduced.
+
+- September 24 recovery restored 90 absent tracked files from exact c250b27 blobs; the tracked diff is clean. Their September 19 history is consistent with temporary-directory age cleanup, but the cause is not established. Existing/untracked work was untouched; the recovery inventory is also retained in the canonical repository. O03 worker integrity independently confirms all 274 frozen files remain intact.
+
+- O03 final v1 accepted and exact eight files imported. OWN-12 and bounded OWN-22 close with exclusive enum ownership, truthful uniqueness, throwing restoration and preserved provider dispatch. Debug/Release each pass 53 tests in nine suites; valid ASan passes eight matrices. Root independently verifies 627 linked allocation rows, including 268 zero-allocation unique rows and 47 exact shared-detach controls, all 34 worker artifacts and 268 linked object/module artifacts. OWN-26 historical source-fixture evidence remains qualified separately from the newly measured managed-client defect. No timing or production-envelope claim.
+
+- Q04 range-work design independently approved: validate endpoints before count, preserve compact output, return on valid empty range and map only requested storage handles. Requires accepted Q03 and serialized MixedPrecisionKernels ownership; actual linked before/after allocation evidence is mandatory.
+
+- O03 integrated locally at 94b7344. O05 dispatched from a complete archive of that revision under canonical .stabilization-recovery/2026-09-24/workspaces/O05 to avoid age-based temporary-source removal. Separate temporary build scratches remain disposable; source/evidence backups remain canonical. E02 stays isolated and is undergoing final validation and independent source review.
+
+- E02 v1 production source independently accepted; Debug/Release each pass 107 Swift Testing functions in 14 suites plus seven XCTest cases, with final valid ASan/public consumer checks also passing. Package acceptance is withheld for a repeated EX06 test-harness timeout/status-access pattern. Root authorized a test-only v2 repair, deliberate bounded timeout control and repository-wide conservative forbidden-pattern scanner; production source remains frozen.
+
+- L02 PCA design independently approved, pending accepted L01. The model exposes the retained Double mean and applies identical widened subtraction in fit/single/batch transforms; Float panel/projection limits remain explicit. Oversampling clamps before addition, including Int.max, and checked PCA shape/count boundaries precede allocation/BLAS. KNN shared flatten gains only count/Int-byte checks; its numerical policy is unchanged.
+
+- L03 UMAP design independently approved, pending accepted L02: dimensionless log-parameter curve fitting with explicit convergence/Float-coefficient fidelity, scale-aware Double smooth-kNN bandwidth with documented tie/floor limits, finite config/initialization/SGD boundaries, checked schedule/count arithmetic and whole-CSR offset preflight. Numeric schedule limits are representability constraints, not latency targets. Exhaustive Float Gram cancellation remains qualified NUM-27 context.
+
+- O05 final v2 accepted and exact13 files imported. OWN-15/16/17 close through dormant internal-route deletion and synchronous scoped FP16 borrowing. Debug/Release each63 tests, ASan23 valid tests, all three independent public migrations and eight scanner cases pass. Root verified complete source inventory,59 worker artifacts, canonical backups and actual runtime associations; only the Python scanner changed after v1 Swift tests. OWN-24 remains qualified ownership-contract context.
+
+- O05 integrated locally at a97b886; Q03 diagnostics dispatched from that complete immutable-base archive under canonical workspaces/Q03. This serializes MixedPrecisionKernels ownership and retains both rounding-boundary and actual TSan obligations.
+
+- E02 v5 independently accepted for focused source/runtime evidence and18 files imported, with root-recorded removal of one extra EOF newline from each of two files. Debug/Release each110 Swift Testing functions plus7 XCTest cases,79 retained children each; ASan9 valid functions; external public consumer and scanner7 pass. Root verifies679 worker artifacts/canonical copies,989 build artifacts,134 public artifacts and486 versioned child associations. Shared combined milestone remains pending before E02 closure/E06 dispatch.
+
+- V02 benchmark selection/provenance/comparison design independently approved, including exact four-build optional-C route driver for V03. EX08 matching benchmark allocator cleanup and EX09 bounded runtime metadata acquisition remain source-established assigned repairs. No production benchmark speed or downstream envelope target is introduced.
+
+- Milestone06 passes final integrated Debug and Release: each446 SwiftTesting functions/50 suites plus25XCTest, with307 code hashes unchanged and75 retained children per configuration (R0345/E0420/E0210). E02 closes API-04/27/28/42/48; its two root EOF-only cleanups are covered by these builds and independent review. Isolated Q03 remains excluded. E06 prerequisites are now accepted.
+
+- E06 dispatched from accepted combined base545d819 in canonical workspaces/E06. Live configuration gates/partitioning may now change only under its approved contract and required public optimized-route coverage. Q03 remains isolated on disjoint diagnostics/constructor-hook scope.
+
+- Q03 accepted and imported byte-identically: one locked recorder state, rounded-output classification and finite signed-zero ranges. Actual baseline produced146 assertion issues and a TSan race; final Debug/Release each35 reported functions (one no-op excluded) with3 actual children, fixed TSan actual child clean. Full source/evidence/canonical reconstruction and independent review complete. API-21/NUM-18 closed; Q04 is now ready. Broader combined validation remains a separate milestone.
+
+- Q03 committed9c035ef7; Q04 dispatched from that accepted integration in canonical workspaces/Q04. Its ownership is the nine FP16 candidate-range wrappers, shared validation and adjacent docs only; diagnostics and conversion cores remain fixed controls.
+
+- V04 design accepted after resolving deliberate V02 A/B family exceptions separately from exact cross-run boundary identity. It requires explicit setup scope, consumed outputs, Release code/allocation evidence and qualified process-memory snapshots, plus a finite claim ledger after numerical dependencies. No production target is selected. L04 source/work inventory is retained; corpus budgets and downstream scope remain undecided under the user's deferral.
+
+- Milestone07 focused combined Q03/E02/O05 Debug and Release pass:56 reported SwiftTesting functions/8 suites each,310 unchanged code hashes and13 retained actual child scenarios per build (E0210/Q033). Initial sandbox cache failure retained separately. This is focused integration evidence, not the entire suite. R04 caller obligation reconciled with E02's deleted dormant nearest code; P01 candidate and B01 source inventory retained for review.
+
+- E06 v2 accepted and11files imported byte-identically. API-02 closes with validated atomic publication, per-call snapshots, live defaults/thresholds and safe logical partitions. Debug/Release broad v1 each83SwiftTesting+7XCTest and78retained children;v2 diagnostic-only reruns7functions+4children each;ASan9in-process+14actual scenarios;public consumer/typechecks/scanner pass. Root verifies387worker artifacts,178child associations and1001current build entries. Historical v1 Debug/Release bundle bytes were overwritten by v2;one-line print-only delta and133identical production artifacts/config explicitly bridge that evidence, without relabeling it.
+
+- Q04 v1 accepted and five files imported byte-identically. NUM-22 closes: endpoints validated before subtraction, output capacity checked before writes, valid empty returns immediately, and only requested FP16 handles are mapped. Debug/Release each22reported functions plus45actual rejection children;valid ASan matrices and scanner pass. Independent288row identical-build allocation comparison confirms empty0/0 and nonempty byte reduction8*(N-count), with existing core allocations retained. Root verifies470worker artifacts/canonical copies and complete321/325source reconstruction.
+
+- E06 committed394ee07 and Q04 committed101b374. L01 factorization and Q02 precision/tuning work dispatched from complete canonical archives of101b374 on disjoint owned files. Root will run a focused combined configuration/range/diagnostics integration checkpoint while workers establish their independent baselines.
+
+- Milestone08 focused combined Debug and Release pass at101b374:58reported SwiftTesting functions/8suites and81actual retained children/config (E0619,E0210,E034,Q033,Q0445). Root and independent reviewer verify317unchanged source hashes,348capture/metadata/buffer files and canonical host/bundle copies. Initial sandboxcache/runner setup failures retained separately; no full-suite or new sanitizer claim. P02/D02 source inventories retained; no downstream or production budget decision made.
+
+- R04 and N04 current-source designs independently accepted; R04/R05/N04 marked ready subject to exclusive ownership. N04 exact-total1 cutoff fixtures independently verified with rational/Float-bit evidence. D02 inventory independently accepted without an implementation contract; unsupported-device metadata, unused hooks and generic C sum semantics remain explicit decisions.
+
+- L01 v3 production/source independently accepted pending final runtime. Root reconstructs297base/303final files and verifies exact dyadic multirotation fixtures; v4 test-only scalar subnormal tolerance refinement authorized after preserving v3 binaries. Q02 baseline semantic and measured-work probes complete; implementation underway. D02 root candidate now explicitly disposes unused hooks, dimension gates, device placeholders and generic C overflow; independent design review pending, downstream and unexecuted architecture claims remain staged.
+
+- D02 design independently accepted with N02/safeLog gate reachability and actual ARM compile-target/x86 runtime feature-query documentation clarified. Root separates its local Core implementation prerequisites from D01 downstream acceptance; API-38 sibling compatibility remains staged. No production API change is imported yet.
+
+- L01 finalv4 accepted and12files imported byte-identically. NUM-08/09 close with Double workingQR/JacobiSVD/eigen, finite publication and checkedlocalCworkspace arithmetic; NUM-35 vendorinternals remain qualified. Fullv3Debug/Release36reportedfunctions+4children each, finalv4affected14+4each, ASan34valid+4directchildren, actualCsanitizers/publicSwift6/scanner7pass. Root verifies69workerrecords,303finalsourceentries,60471versionedbuildmanifestentries includingaliases,24ordinarychildassociations and130publiclinkedobjects. Tightenedv4oracle is not attributed to earlierv3ASan.
+
+- L01 committed ed95f951; L02 PCA centering/sketch arithmetic dispatched from that complete accepted archive in canonicalworkspaces/L02. Q02 continues separately; no broader integration milestone is repeated before another source change warrants one.
+
+- Q02 frozenv1 production independently and root source-reviewed; full328base/335final reconstruction passes. Acceptance remains pending required semantic controls, stale-test-claim migration and final sealed runtime. No source imported.
+
+- September29 integration recovery restored5744missing tracked files from retained localHEAD0df4d9a after the temporary checkout lost its Git link and file contents. Six surviving files were preserved first; no differing retained tracked file was overwritten, and Git source/index diffs are empty. Canonical recovery retains the archive, sourcecheck and reports. Cause is consistent with temporary cleanup but not established. Worker source/evidence archives remain canonical; lost intermediate Q02 development03 evidence is reported history only and will not count toward acceptance.
+
+- P02 root candidate selects single-query-compatible CPU batch default, explicit caller-selected Gram tiles with named logical temporary payload and direct construction of final pairwise rows. Provider witnesses remain authoritative. Independent architecture constraints are recorded; complete design review still pending. Adds accepted P01 as an implementation prerequisite, while API-25 real contiguous consumer and TOOL-10 production-scale acceptance remain staged.
+
+- P02 design independently accepted after explicit throwing-search cancellation and validation precedence were added. CPU perQuery default and caller-tiled Gram are separate numerical contracts; logical payload excludes final results/runtime/BLAS, and pairwise row construction explicitly changes GEMM geometry. Requires P01/V02/V04; no downstream packing API or production-scale closure inferred. Q02v3 and L02v2 exact frozen sources independently/root accepted pending final runtime/evidence.
+
+- L02 final v2 accepted and six files imported byte-identically. API-20 sketch overflow closes; NUM-10 demonstrated centering loss is repaired while Float-panel numerical limits remain qualified. Debug/Release each37reportedfunctions and2actualchildren; ASan13+9functions and2directchildren; strictpublic consumer/scanner pass. Root and independent reviewer rehash40worker records, versioned build artifacts and all host/bundle/runtime associations. The public model mean deliberately migrates to Double.
+
+- Q02 final v3 accepted and17files imported byte-identically. NUM-16/17/19/20/24 close; NUM-21 hidden calibration work is removed but peak-live profiling remains staged after retained authorized attach failure. Final Debug/Release each24XCTest+36SwiftTesting, bounded17contract reruns and ordinary public consumers pass. Root verifies1519canonical artifacts and recomputes all six matched allocation/work rows; independent review confirms coverage counts and host/bundle associations. L02 committed6ac9c8a; focused combined validation is next.
+
+- Q02 committed813255c. V02 benchmark selection/provenance and S03 decoded-invariant work dispatched from complete canonical archives of that accepted revision, with disjoint ownership and versioned canonical evidence. Root starts focused milestone09 across tuning, PCA, factorization controls and adjacent FP16 diagnostics/range behavior; no shared source edits while builds run.
+
+- S03 Ruling: correct the brief’s unavailable NormalizationHint<INT8> combination to generic/optimized/Dynamic hint coverage, retaining all standalone/nested INT8 decoders. Current source requires IndexableVector and built-in INT8 lacks that conformance; adding one would expand this decoder repair. If the applicability inventory is wrong, the cost is a missing wrapper test, not a production API change; independent review checks the inventory. Actual RED safely reproduces four TopK parallel-count decode mismatches.
+
+- Milestone09 independently accepted at813255c: Debug/Release each24XCTest+96reportedSwiftTesting/18suites and9actualchildren (L014,L022,Q033). All346source hashes unchanged; canonical4340Debug/2879Release build artifacts and host/bundle associations verified. This is focused tuning/PCA/factorization/adjacentFP16 integration, with Q04valid-only coverage. Initial sandboxcache failure and historical debug-command remap remain explicit.
+
+- S03 finalv1 accepted and6files imported byte-identically. API-18 closes; SER-08 combined coverage completes accepted S01/Q01 boundaries without duplicate defect credit. Debug/Release each77reportedSwiftTesting+1XCTest, with3legacy comment-only methods explicitly excluded from exercised coverage; new6functionmatrix and4base-generatedfixtures execute. Root/reviewer verify25sealedrecords,315/320source reconstruction and all4345RED/4345Debug/2882Release artifacts. B01 is now ready; it owns the legacy serialization stubs.
+
+- S03 committede0e0e74. R04 bounded-heap/legacy-neighbor membership dispatched from that complete accepted archive in canonical2026-09-29/workspaces/R04, with MinHeap-only production ownership. V02 continues separately in benchmark/support/compiled-feature scope. B01, L03 and remaining small ready contracts remain queued; no repeat of milestone09 or S03 checks without a new interaction.
+
+- Independent ledger check at6e77379 verifies29acceptedCore/stagedtasks, their ancestor integration revisions and121existing closure evidence links; the43task dependency graph is acyclic. The dated work-queue snapshot retains14remaining tasks and explicit downstream/scale decisions. R04’s new Process fixture must also pass the existing7test child-process scanner; this verification refinement does not expand production ownership.
+
+- Resume bookkeeping: added CURRENT_HANDOFF.md to distinguish current implementation from the historical September18 recovery note. Restored milestone08 in state.json from its already accepted verification/review; no new runtime or source claim and no tests rerun.
+
+- B01 post-S03 readiness independently confirmed: all 15 serialization stubs still present, ownership/contracts unchanged, exact existing suite filters and shape-child accounting recorded. October 2 continuation retains both isolated workers: R04 unchanged-base RED build underway; V02 implementation continues with its seven retained runtime REDs and final comparator/driver contracts pending. No duplicate build or implementation dispatch.
+
+- October 2 build capture: direct approved Swift invocations resolved stalled shell-wrapper approvals, but V02 development diagnostics exceeded the returned-output cap. Root prepared a canonical file-capture driver, independently reviewed and checked with 23 argument controls; full output and versioned command/status records remain file-backed. First actual driver invocation/approval is pending a coherent V02 build. Partial development output is retained as partial evidence only.
+
+- R04 final v1 accepted and two files imported byte-identically. API-17/API-26 close with correct bounded membership, nonnegative lazy capacity and shared legacy NaN/index ordering. Debug/Release each report 72 functions across four suites (one parent no-op) and three actual rejecting children; scanner seven checks pass. Root/reviewer verify all 26 worker records, versioned build bytes and nine child associations. Baseline hang/setup failures remain distinct.
+- Reviewed build-capture driver now approved and exercised on V02 development-02: complete 82,631-byte compiler log and exit1 retained. This was a compilation failure, with no runtime tests; V02 continues with that exact source snapshot and failure evidence preserved.
+
+- R04 committed 1d6b3b3. B01 dispatched from that complete canonical archive under October2/workspaces/B01; independent post-S03 readiness and exact suite names accompany the approved brief. Empty Dynamic binary RED precedes the narrow framing repair and replacement of serialization stubs. V02 continues its third captured development build in a disjoint workspace.
+
+- V02 Ruling: preserve dense seeded matrix inputs and strict thresholds, replacing only an unsupported always-pass test guarantee with independently verified statistics/classification from an internal post-timing output observer. Actual diagnostic confirms positive self-distance residuals; root checks 27 pairs, nine input hashes and 160 linked objects, including exact rational references. Width768 differs from the prior measured run, so tests must not pin a portable residual/failure. Cost if wrong: strict matrix runs remain honestly rejected until a separate numerical policy/repair is selected. No kernel or numerical-closure claim.
+
+- B01 Ruling: allow one comment-only correction in VectorShapeContractTests where the old text says binary excludes zero; leave its positive-count guard and behavior unchanged. The empty-frame repair makes that claim stale, and dedicated B01 tests own empty coverage. Cost if wrong: documentation adjustment only, with full diff reviewed.
+
+- October2 V02 frozenv1 source independently reviewed and fully reconstructed against5842archive files/346base→356final code entries. One blocker: invalid symmetric/nonzero-zeroPoint consumer fixture cannot reach fallback; correct fixture without weakening decoder. Debug v1 reported20XCTest+1SwiftTesting with zero failures, with parent no-op qualifications and immediate child/CSV retention required. No V02 import or final acceptance.
+
+- B01 actual frozen RED completed exit1: three empty DynamicVector routes fail invalidDimension0 while nonempty golden/direct-slice control passes. Full338935-byte compiler/test log SHA bad6de79724933d986c39da5f66e9028b3c4ed730af61c0b963b3ba5f11e8963 retained; production GREEN follows. Earlier approval-wait attempts were unexecuted, not test failures. The reusable capture-driver prefix is now explicitly saved.
+
+- V02 Ruling: root/reviewer identify a second source validation gap: failed conditional casts can silently ignore supplied malformed correctness. Require explicit optional absence/null versus a valid status/statistics object and positive integral sample/iteration counts; no arbitrary cap or legacy-absence rejection. Expand the owned comparator fixture table across malformed-shape/count classes with actual RED, retaining v1/v2 unchanged. Cost if wrong: malformed external reports now reject with invalid-input status, as required by the comparison contract.
+
+- V02 v3 source independently accepted after three-file correction (public fixture/comparator/reporting table); other28ownedfiles equalv1. Root fullreconstruction passes. Actual comparatorRED86rows has20falseaccepts; finalreporting131cases includingCSVpass. Debugv1 andReleasev3 each20XCTest+1SwiftTestingentrypass (two parentno-opentries qualified), with Swiftproduction/testbytes unchanged; bothCLIselection matrices51casespass. Fouractualbuildcells and validASan/finalsealedruntime stillpending.
+
+- B01 v1 source independently accepted,16ownedchanges; root verifies5934→5943completearchive/321→329codefiles and independently rebuilds threegoldens with explicit reflectedMSBCRC+zlib (16/28/80bytes). Debug reports51functions/7suites (one parentno-op) and126actualS01children, immediatelycaptured. Release/validASan/publicconsumers/finalsealedruntime remainpending; no importyet.
+
+- B01 finalv1 accepted and16files imported byte-identically. SER01/02/06 close; SER04/05 explicit representation/protocol dispositions and SER07 preservedframingcoverage recorded; SER03 remainsunmeasured. Debug/Release each51reportedSwiftTesting(50exercised+1parentno-op)+1XCTest and126actualS01children, ASan7, publicSwift6positive/fournegatives, two7checkscanners/goldens pass. Root/reviewerverify16324sealedentries/allfourbuilds/252captures; per-childargv/PIDsampling limitationexplicit.
+
+- V02v6 source accepted after tooling corrections: v3successfulcompilefounddSYMasduplicateexecutable; v5publicconsumer failedcompile on internaltypevisibility/complexexpression. v6publicwrapper/typedloopfixture preflight passes36routes/10tails againstretainedDebugCoffobjects. Source/kernelbytesunchanged; ASan2actualcontrols pass. Freshfourcellsv6running, no completedmatrixclaim.
+
+- B01 committed17c1af9. V02 v6DebugCoffcell passes36publicroutes/10tails; actualDebugConcompile exposes16visibilityerrors in existinginlinableINT8helpers. Root authorizesonly3@usableFromInline annotations in2Interopfiles after independent source review; helpersstayinternal, bodies/defaultgates/numericsunchanged. ABIvisibility is intentional. Add focusedConDebugReleasequantization regressions; freshfourcellsv7+ required beforeacceptance. Existingtest-onlyFP32smokeroute remains distinct and uncredited.
+
+- L03 dispatched from accepted17c1af9 as completeverified5992-file canonical archive. OwnsonlyUMAP/FuzzySimplicialSet/KNNGraph production; PCAreadonly. Independentnumericalreferences and actualRED precedeimplementation; NUM27Gramcontext staysqualified. V02narrowInteropvisibilityrepair proceeds ondisjointfiles.
+
+- V02 v7 source independently accepted and root reconstruction passes: exactly three visibility annotations in two new owned paths, all earlier 31 owned files unchanged. C-on Debug/Release each actually execute ten XCTest and three Swift Testing functions (one parent no-op), with 100 Q01 child captures per configuration retained. The original nine-method prediction was incomplete and is superseded by observed execution. Final four-cell v7 Debug C-off/C-on pass; Release cells remain pending. L03 unchanged-production RED build launched with independent exact-input curve/smooth references.
+
+- L03 actual unchanged-production RED completes exit1 with independent curve-scale SSE and smooth-membership failures, accepted infinite configuration, three signalling boundary children and one bounded15second Int.max-epochs timeout. Baseline captures/build bytes retained; approved repair proceeds.
+
+- V02 final sourcev7/seal2 accepted and33files imported byte-identically. TOOL03/05/06/09/12 and EX08/09 close within recorded scope. Fouractual Debug/Release×Coff/on cells pass144publicroutes/40tails,10XCTest+3SwiftTesting(oneparentnoop)+100children perConconfiguration;51CLIselection and13V01commands/config,132reportingchecks,2validASancontrols pass. Root/reviewer verify10312sealedentries, versionbridges and independentnumeric/reporting references. NUM27matrixqualification and two missinghistoricalDebugwritefailurecaptures remainexplicit. V03readiness and lazyXCTestadapter handoffaccepted; V04followsV03.
+
+- V02 committed53976c1. V03 dispatched from complete verified6027-file archive ofthat revision underOctober2/workspaces/V03. Bindingbrief95413b3 includespost-Q02 XCTestlazyadapter; exactacceptedfourbuilddriver, existing sanitizer-bodyaudit and semanticCIpolicy remainrequired. L03 continuesfrom17c1af9 withdisjointownership.
+
+- V03 actualsource-derived deterministicRED and three unchanged-validator mutationacceptances retained. Inventoryfound3additionalMinimalTests.Vector512Tests measurebodies; rootauthorizesidenticalwrappermigrationand29body mechanicalinventory. L03v2compiled38functions/9suites; new13contractfunctions/9childrenpass, existingfitQuality reportsnonstationarity. Actualsolvertraceunderinvestigation; no numericalthreshold/testrelaxationauthorized.
+
+- L03 v2 actual Swift trace establishes separately rounded SSE rejection of a step meeting the unchanged1e-8 gradient criterion. Root authorizes compensated per-sample strict objective change, independently reviewed in frozenv3. ExistingfitQuality and two exact non-dyadic reference controls pass in v3Debug39functions/9suites with9boundedchildren; Release/ASan/public pending. The v2 failure and diagnostics remain retained.
+- V03 root permits only Q03 isolatedConcurrency outerparent49s to encompass its unchanged45s child+<=2s cleanup. Otherbody15s deadlines unchanged. Root reinstalls pinnedSwiftLint0.65.1 through approvedinstaller; archivechecksum and binaryversion verified and bytes retained canonically.
+
+- Milestone10 independently accepted at production53976c1: Debug/Release each20XCTest and22SwiftTesting/3suites, with1XCTest+2SwiftTesting parentnoops qualified; all41V01+3R04 child captures/config retained. Root/reviewer verify370 unchanged sources,4393Debug/2898Release artifacts, loadedhosts and84captures/config. Offline retention/verification parser assumptions corrected against existing data, no reruns or product changes. Focused S03/R04/B01/V02 integration only.
+- V03 actual pinnedlint exposes178 errors; root authorizes exact19-file/50-error baseline cleanup:49 line wraps and one behavior-preserving childProbe mutation helper extraction, plus B01 generator emitted layout. No lint exclusions or relaxed thresholds; no numerical source changes.
+
+- R05 dispatched from verified6063-file archive of0fe4953 (accepted production53976c1), independent of pending L03 integration. Scope is metric-aware optional relevance scoring, removal of the metric-free computedScore property, and selected-result witness callbacks outside the collection lock. Breaking migration already authorized; no downstream score-calibration claim.
+
+- October2 user-requested pause: all new implementation/builds stopped at durable boundaries. L03 final v3 independently accepted and root source/reference/lint/evidence checks pass, but its 11 files remain unimported. V03 v3 source accepted with final runtime pending; the legacy five-to-seven required-job test migration remains pending. R05 actual dot-score RED reproduced seven issues; the six-path draft is preserved uncompiled/unverified. All workers report no active processes. PAUSE_HANDOFF.md and canonical worker handoffs are authoritative on resume; 32 accepted Core patches/11 remaining.
+- Root corrected benchmark-entry accounting: BenchmarkContractSwiftTestingEntry is a real serialization assertion, not a no-op. V02 benchmark runs have one XCTest no-op and one real Swift Testing entry; milestone10 has one XCTest and one Swift Testing no-op. Offline milestone verification reran successfully without any test/source/binary changes; historical sealed reports preserved with an explicit erratum.
+
+- October3 resume (explicit user "resume"; new root session in Claude Code). Host rebooted: /private/tmp integration worktree was lost; branch tip af0a980 and all commits intact in the canonical object DB; pause archive integration-af0a980.tar rehashed to 5e97026f… (match). Worktree pruned and re-added at the same path; 6,101 tracked files, clean. October2 worker workspaces L03/V03/R05 intact.
+- Ruling: Worker model mapping — POLICY.md pins gpt-6-astra/medium, which is unavailable in this Claude Code session. Implementers and scoped re-reviews use Claude Sonnet 5.5; independent reviews of production numerical/concurrency diffs use Claude Opus 5.5. No nested delegation; at most two implementers plus a reviewer; root owns integration/index/commits — unchanged. Recorded, not silent. Cost if wrong: user wanted model parity with prior evidence; redirect re-runs only reviews/implementations dispatched after this entry.
+- Ruling: Toolchain change — the host is now macOS 27 / Xcode 27.0 (27A266a) / Swift 6.4 (swiftlang-6.4.0.34.1); all accepted evidence through V02/L03 was Swift 6.3.3. Prior source acceptances stand; every new build/test record states its toolchain; no 6.3.3/6.4 parity is claimed. SwiftPM 6.4 defaults to the swiftbuild build system (native deprecated). Cost if wrong: evidence comparability across the toolchain boundary is weaker than within it.
+- L03 final v3 imported byte-identically (11 paths; all preimages unchanged since 17c1af9; post-copy hashes equal L03-v3-manifest.json). Closure closes NUM-11/12/13/25/28 and the UMAP half of NUM-26 against named tests; NUM-27 remains qualified. First Swift 6.4 integration run of the L03 focused filter failed to COMPILE (Debug and Release, exit 1) before any test ran — evidence 2026-10-03/L03-integration.
+- New root task T01 (outside the 43-task catalog): Xcode 27 SDK Foundation now exports `ProgressReporter`, colliding with public `VectorCoreBenchmarking.ProgressReporter` ("ambiguous for type lookup", Benchmarks/VectorCoreBench/Core/BenchmarkCase.swift). Public product defect for any consumer importing Foundation + VectorCoreBenchmarking on the new SDK; main/0.3.3 is equally affected. Hosted CI pins Xcode 16.2/26.3 and cannot observe it.
+- Ruling: T01 precedes all further builds and lands on integration first; V03 (owns 6 of the 11 referencing files) and R05 are then rebased onto it in fresh git-worktree workspaces under 2026-10-03/workspaces. Rename rather than module-qualify: a deprecated typealias with the old name would still collide. Breaking rename authorized by POLICY. Cost if wrong: one mechanical rename re-applied into V03's owned files during its rebase.
+- L03 committed 9f5fda2. Workspaces for resumed tasks are git worktrees (detached) under .stabilization-recovery/2026-10-03/workspaces; worker index/commit operations remain prohibited. T01 dispatched from 9f5fda2 (brief 2026-10-03/T01/brief.md): rename to BenchmarkProgressReporter, all-target Swift 6.4 Debug/Release build, focused L03 + milestone10 filters under swiftbuild, Swift 6.2 (CLT) compile, and mechanical class lock Scripts/ci/check_sdk_name_collisions.py (RED on base, GREEN on fix); CI wiring deferred to V03 ownership.
+- V03 rebased: all 62 frozen-v3 paths (47 changed/14 added/1 deleted, derived by blob comparison against 53976c1 because frozen-v3/full.patch is not git-apply format) copied onto 9f5fda2 with zero preimage conflicts; every path byte-identical to frozen-v3/final-inventory.json.
+- Ruling: V03 v4 legacy required-check migration — JOBS becomes the exact seven-ID workflow needs order; a new parity test binds JOBS to ci.yml required.needs and its check_required.py argv (closes the drift class); run_gate uses v03_process.run (15 s, file-backed, expected=None); all negative cases retained across seven jobs; duplicate-key fixture complete except the duplicate. Single-file v4 delta (brief 2026-10-03/V03/v4-brief.md), dispatched concurrently with T01 (disjoint files, no Swift builds). Cost if wrong: one test file revision.
+- R05 pause draft (six paths) carried onto 9f5fda2 with zero preimage conflicts; all six hashes match pause-draft/manifest.json. R05 dispatch waits for T01 (needs a compiling base); its files are disjoint from T01 and V03.
+- V03 v4 round 1 DONE: only test_check_required.py changed; discovery 57 OK (v3 56 + parity test); module 7 OK; JOBS mutation fails parity test and restored file rehashes identically (report 2026-10-03/V03/v4-report.md). Parity parse is regex over ci.yml (no existing helper) and fails loudly on format change.
+- Ruling: Close the unbounded-subprocess class in CI Python — test_child_process_bounds.py only inspected .wait()/.communicate(), so subprocess.run without timeout (the legacy instance V03 v4 just fixed) passed it. V03 v4 extended: new detector rule for subprocess.run/call/check_call/check_output lacking a non-None timeout, negative-control test, and deadlines on the six current sites (consumer_smoke swift build 1800 s, --show-bin-path 600 s, test_consumer_smoke/test_hooks 60 s). T01's new checker must also comply. Cost if wrong: a CI runner slower than 30 min on the release consumer build fails visibly and the constant is adjusted.
+- V03 v4 round 2 DONE: 5-file delta from v3 (92+/11-); discovery 59 OK (+2: subprocess rule and detector negative control); bounds module 9 OK; the rule found exactly the six expected sites, now bounded; mutation at test_hooks.py:105 fails the rule and the restored file rehashes identically. Latent gap: `from subprocess import run` form is not detected; no such import exists in Scripts/ci today. v4 hashes in 2026-10-03/V03/v4-sha256.txt. Independent scoped review dispatched (package v4-review-package.diff).
+- V03 v4 source ACCEPTED (independent scoped review: Spec PASS, Quality APPROVED, 0 Critical/0 Important; 2026-10-03/V03/v4-review.md). Root resolved both cannot-verify items: the five v4 hashes check; root rerun of full discovery = 59 tests OK, exit 0 (V03/v4/root-verify-discovery.*); check_ci_contracts.py exposes no needs/required parser.
+- V03 v4: minor (deferred): regex workflow parse requires inline needs and single-line run; fails loudly on a format change, never silently.
+- V03 v4: minor (deferred): the subprocess rule covers only the attribute form; `from subprocess import` and aliased imports are undetected (none exist today); Popen sites are outside the four-function rule.
+- V03 v4: minor (deferred): per-command evidence is recorded in report/text files rather than the requested per-command JSON; process-only deviation.
+- V03 final Debug/Release/CLI/four-cell/ASan/TSan gates wait for the T01 rebase (V03 owns 6 of the files T01 renames in).
+- T01 DONE_WITH_CONCERNS (report 2026-10-03/T01/report.md): rename to BenchmarkProgressReporter + CHANGELOG Unreleased entry; no other Swift 6.4 compile errors in any target; Swift 6.4 Debug/Release focused L03 = 39 functions/9 suites + 9 children each, milestone10 = 20 XCTest + 22 Swift Testing each, all pass under default swiftbuild (no child-harness layout problem; native diagnostic unnecessary); Swift 6.2 (CLT) library+bench build passes; checker RED on base / GREEN on fix; lint 126 serious before and after; bounds scanner OK.
+- Ruling: VectorCore.Logger vs os.Logger (found by the new checker, pre-existing since macOS 11) — not renamed in T01; disposition owned by D02 (public API/downstream migration); D03 keeps its approved Logger-signature preservation; one justified allowlist entry is the interim. Cost if wrong: downstream files importing os and VectorCore keep qualifying Logger until D02.
+- Ruling: Release `swift build --build-tests -c release` failure is a brief-command error (@testable needs -enable-testing, which swift test adds) under both build systems; the only CI build-tests use is Debug Intel. No product defect. Cost if wrong: none to source.
+- Ruling: Program builds proceed on the default swiftbuild build system — every child-process harness exercised so far works under it, and native is deprecated. Cost if wrong: a later harness may need a layout fix or a per-command native pin.
+- L03: minor (deferred): UMAPRangeContractTests.boundedPublicRejections routes child captures to <grandparent>/L03/children when the package's parent directory is named "workspaces" (otherwise .build/L03-children) — evidence-routing heuristic embedded in a shipped test; harmless to CI.
+- T01 review: Spec FAIL / CHANGES REQUESTED (0 Critical, 2 Important, 5 Minor; 2026-10-03/T01/review.md). Important: allowlist reason does not name D02; failed symbol-graph dump with --scratch-path can fall back to stale graphs.
+- Ruling: T01 minors 3 (unverified iOS 27 CHANGELOG claim) and 4 (unverified stdlib-shadowing docstring claim) enter the fix loop as required. The user's claim-discipline rule makes unverified factual claims defects. Minors 5 (allowlist keying doc + stale-entry warning) and 6 (xcrun return code) are bundled because they are cheap. Minor 7 (swift.actor in KINDS) stands: actors are top-level types. Root adds a sentinel self-check for SDK extraction, so an incomplete Foundation surface cannot pass as "no collisions"; this resolves the reviewer's main cannot-verify item. Cost if wrong: one extra small fix round.
+- T01: fix round 1/5 dispatched to the original implementer.
+- T01 fix round 1 returned DONE: 3 files (checker, allowlist, CHANGELOG; 50+/22-). GREEN exit 0 with all per-module sentinels passing (Foundation URL/Data/Date/UUID/AttributedString/ProgressReporter; Swift Array/String; Accelerate DSPComplex/BNNSFilter; simd simd_float4/simd_quatf; Dispatch DispatchQueue/DispatchTime; os Logger/OSAllocatedUnfairLock); RED exit 1 on a pristine 9f5fda2 copy; a bogus sentinel exits 2; bounds scanner 7 OK. Every checker run now dumps into a fresh per-run directory (cost: full package build per run). Scoped re-review dispatched (2026-10-03/T01/fix1-package.diff).
+- T01 scoped re-review: all 7 findings ADDRESSED, no new breakage (reports/T01-rereview-1.md). T01: fix round 1/5 (7 addressed, 0 open).
+- T01: minor (deferred): the stale-allowlist warning and xcrun/no-graph error paths have no automated test (T01 barred new Scripts/ci/tests files); fold into the V03/V04 CI wiring of the checker.
+- T01: minor (deferred): with --scratch-path, per-run run-* directories accumulate (each run is a full rebuild); CHANGELOG has one over-long line.
+- T01 ACCEPTED and imported: 15 paths byte-identical to the reviewed worktree (patch sha256 c3a7f38b…). Closure closes T01-TOOLCHAIN-01; Logger collision qualified with owner D02.
+- T01 committed e6e1bae. Ruling: T01's Swift 6.4 runs (L03 focused 39/9+9 children; milestone10 20 XCTest + 22 Swift Testing; Debug/Release) count as integration evidence for e6e1bae — the T01 worktree tree ea74a20 equals e6e1bae outside Docs/superpowers (git diff empty), so the code is identical; no duplicate rebuild. This also closes the L03 Swift 6.4 re-validation that 9f5fda2 could not compile. Cost if wrong: none to source; one focused rerun.
+- R05 worktree moved to e6e1bae (detached checkout; six disjoint draft paths carried over unchanged).
+- V03 v4 rebased into a fresh worktree workspaces/V03-v4 at e6e1bae (old V03 worktree retained as fallback): the 67-path v4 patch was applied 3-way. The only textual conflict (DistanceBench.swift) and all six T01/V03 overlaps were set to V03-v4's bytes with whole-word ProgressReporter→BenchmarkProgressReporter applied. Proof: for each overlap, T01's own change is exactly that substitution of 9f5fda2 (verified), and every merged file equals sub(V03-v4). The other 61 paths are byte-identical to V03-v4. No old-name references remain.
+- Ruling: The V03 rebase delta needs no separate review — it is a mechanically proven identity (sub(V03-v4) with T01 a pure rename), stronger than a reading review. Cost if wrong: the final-gate builds would fail to compile, which is immediately visible.
+- Dispatch: V03 final gates (execution only, frozen source; brief 2026-10-03/V03/final-gates-brief.md) and R05 resumed implementation (brief R05.md + 2026-10-03/R05/resume-addendum.md) run concurrently; their files are disjoint. V03 load rule: re-run a deadline-bounded body once in isolation before calling a timeout a defect.
+- R05 resumed implementation DONE_WITH_CONCERNS (2026-10-03/R05/report.md): pause draft compiled and passed unchanged; Swift 6.4 focused Debug/Release = 71 tests/4 suites each, all pass; R05 public Swift 6 consumer plus old-property negative control pass in both configurations; bounds scanner 7 OK; lint 0 errors, 2 new warnings in the new test file. GREEN vs RED: same IDs [2,1,0] and distances [-2,-1,-0.5]; scores now [0.8807971, 0.7310586, 0.62245935] (root check: logistic 1/(1+e^d) values correct) vs RED [-1, Inf, 2]. No mutation evidence. The driver depends on the swiftbuild product layout. Independent Opus review dispatched (package R05/review-package.diff, 9 files 596+/9-).
+- N04 dispatched (approved brief unchanged + 2026-10-03/N04/dispatch-addendum.md) from 0d0bf76 in workspaces/N04; mutation evidence required. Runs concurrently with the V03 final gates (two implementers) and the R05 review (reviewer seat).
+- V03 final gates on v4 (Swift 6.4, default swiftbuild): NEEDS_CONTEXT. Gate 6 (Release CLI contracts) PASS; gate 7 (7 representative extended bodies, strict off, each ran once) PASS. Gates 1/3/4 failed before any body ran ("Expected one loaded test bundle": drivers assume the native MacOS/VectorCorePackageTests layout); gate 5 failed (executable parent dir must equal "debug", swiftbuild uses "Debug"); gate 2 failed in Release build --build-tests (@testable needs -enable-testing). So 0/77 ASan and 0/39 TSan bodies executed. Freeze: all 6127 source files unchanged; the drivers' runs created untracked Scripts/ci/__pycache__/*.pyc (no .gitignore rule). Evidence 2026-10-03/V03/final-v4/.
+- Ruling: V03 v5 makes the gate drivers build-system-agnostic instead of pinning the deprecated native system: product discovery from `swift build --show-bin-path`, accepting exactly the native single-bundle and swiftbuild per-target layouts and failing on missing/ambiguous products; per-target association checks; -Xswiftc -enable-testing for Release --build-tests with identical flags on --skip-build; optional --swift-build-system pass-through; .gitignore Python bytecode; synthetic-tree unit tests for both layouts. Rationale: the drivers had never run end to end, and Xcode 27 (swiftbuild default) is where CI is headed, so pinning native only defers the same breakage. Cost if wrong: one more driver revision if CI's Xcode 26.3 native layout differs from 6.4's --build-system native, which is the proxy used here.
+- Ruling: Gate 6/7 v4 evidence carries to v5 — v5 changes only Scripts/ci drivers/helpers/tests and .gitignore, none of which gates 6/7 execute; root will prove the path-disjointness at v5 freeze. Cost if wrong: rerun two cheap gates.
+- V03 v5 dispatched to the original V03 implementer (brief 2026-10-03/V03/v5-brief.md).
+- R05 independent review (Opus): Spec PASS, Quality CHANGES REQUESTED (0 Critical, 1 Important, 6 Minor; 2026-10-03/R05/review.md). The reviewer verified the producer/lock trace and ran its own lock-placement mutation, which the reentrancy test caught. Its 80-digit Decimal reference shows production at 0 ULP at every inverse and logistic point. Important I1: the new test routes child captures by the parent-directory name "workspaces" (fails at /workspaces/<repo>, writes outside the repo under ~/workspaces).
+- Ruling: I1 is the second occurrence of the L03 pattern (UMAPRangeContractTests.swift:372, earlier logged as a deferred L03 minor and upgraded now). Fix both instances (temporary-directory captures, as in R02) and close the class with a new policy test, test_swift_test_output_paths.py, rejecting `lastPathComponent ==`/`!=` and the literal "workspaces" in Tests/**/*.swift, with RED proven on both original files. L03's test file is granted to R05 for this fix; no active task owns it. Cost if wrong: a lexical rule may need a narrow exception for a future legitimate path comparison.
+- Ruling: R05 minors M1 (false Float-overflow rationale; claim discipline), M2 (oracle copies production at maxFinite; exact signed-zero/tiny endpoints; ULP-below tolerance), M3 (negative control rejects either property shape), M5 (document the Equatable observable change in migration + CHANGELOG) and M6 (two new lint warnings) enter fix round 1. M4 (R05 driver swiftbuild-only, L03 driver native-only) is deferred until V03 v5's shared product-discovery helper integrates; both fixture drivers then migrate. Cost if wrong: the fixture drivers stay layout-coupled until then (neither is CI-wired).
+- R05: fix round 1/5 dispatched to the original implementer.
+- Root correction: resuming R05 for fix round 1 made three concurrent implementers (N04, V03 v5, R05), exceeding the POLICY cap of two. R05 is limited to edits and Python-only checks and returns EDITS_READY; its Swift verification resumes when N04 or V03 v5 frees a slot.
+- R05 fix round 1 edits READY (no Swift run yet): I1 temp-dir captures in R05 and L03 tests; the new policy test test_swift_test_output_paths.py (4 tests) is RED on both original files (each flagged by both rules: UMAPRangeContractTests:372, the R05 pause-draft SearchResultScoreContractTests:320); policy discovery in the R05 workspace 44 OK / 1 env-gated skip (the base lacks V03's tests); lint 0 errors, no new warnings. Swift verification queued for the next free build slot.
+- N04 DONE_WITH_CONCERNS (2026-10-03/N04/report.md): RED on unchanged production = 16566 issues across the public route and both entropyFast routes; GREEN focused EntropyRangeContractTests|VectorEntropySuite 30/30 Debug and Release; mutations (absolute-input cutoff; NaN propagation removed) each fail named tests; lint: one pre-existing for_where warning (VectorMath.swift:76, untouched). Root checks: the only entropy caller outside N04's files is the owned VectorMath forwarding; spike -0 → +0 is the brief's exact positive-zero contract. Independent Opus review dispatched (4 files, 389+/106-).
+- R05 resumed for fix round 1 Swift verification in N04's freed build slot (two implementers: V03 v5, R05).
+- R05 fix round 1 verified by the implementer: R05 focused 71/4 suites Debug+Release; L03 focused 39/9 suites + 9 children Debug+Release (unchanged acceptance); public driver + strengthened negative control pass both configs (the driver's own diagnostic expectation was corrected once). Captures land under the system temp directory. The pycache artifact was excluded from the package. Scoped re-review dispatched (R05/fix1-package.diff, 7 files 112+/21-).
+- D03 dispatched (approved brief unchanged + 2026-10-03/D03/dispatch-addendum.md) from 596774c in workspaces/D03: caller inventory first, behavioral RED, then mutations (message evaluated before the gate; lock held around the message closure). Temp-directory capture rule carried in from the R05 I1 class ruling.
+- Concurrency now: implementers V03 v5 + D03 (cap 2); reviewers N04 (Opus) + R05 scoped re-review run concurrently. Both are read-only, with at most one minimal mutation build; this is a deliberate stretch of the single reserved reviewer seat, recorded here.
+- R05 scoped re-review: I1, I1-class, M1, M2, M3, M5, M6 all ADDRESSED; M4 deferred per ruling; no new breakage. R05: fix round 1/5 (7 addressed, 0 open).
+- Ruling: Re-review note N1 (the M1 replacement comment "single final rounding to Float") is accurate as written: exactly one rounding to Float follows the Double evaluation, so it is not a false claim. Parked as a minor. Cost if wrong: a one-line comment tweak.
+- R05: minor (deferred): temporary capture directories (R05-children, L03-children) are never removed; the OS reaps them.
+- L03: the deferred minor on parent-directory capture routing is RESOLVED by the R05 I1-class fix and the new policy rule.
+- R05 ACCEPTED and imported: 12 paths byte-identical (patch sha256 2fac71da…); no preimage changed since e6e1bae. Closure closes API-11 and records the I1 class lock. The pycache artifact was excluded.
+- R05 committed cd13e1c. Cross-task check: R05's new output-path policy rule finds no violations in V03-v4's owned test files or in N04. V03-v4's base still carries the pre-fix L03 test, but V03 does not own it, so the import keeps the fixed integration version. At V03 integration, run policy discovery on the merged tree because the totals combine.
+- N04 independent review (Opus): Spec PASS, Quality CHANGES REQUESTED (0 Critical, 1 Important, 7 Minor; 2026-10-03/N04/review.md). Important: VectorMath.swift:498 claims ln D for any uniform vector, which is false for D >= 2^23 under the retained cutoff.
+- Ruling: N04 Minors 1/3/4/5 (false or inaccurate comments, silent premise skip, brief's finite-before-residual rule) are claim-discipline defects and are fixed in round 1. Minors 2 (table rows assert got > 0) and 6 (drop the unneeded @usableFromInline) are bundled as cheap. Minor 7: the legacy approximate non-power-of-two invariance tests are retained per the brief and labeled approximate. Cost if wrong: one extra fix round.
+- Root resolved N04's cannot-verify items: root staged the index for packaging; root's grep found no entropy callers or -0 assertions outside N04's files in any test target; full-suite coverage comes from the milestone gate after integration; compensation is verified by inspection (unobservable at tested widths; not required to be mutation-tested).
+- N04: minor (deferred): Sources/VectorCore/Types/VectorData.swift:141 still says "Shannon entropy measure" for a stored field. It is outside N04's write set; route to the D02 public-doc disposition.
+- N04: fix round 1/5 dispatched as edits only (EDITS_READY); Swift verification waits for a build slot (V03 v5 and D03 hold both).
+- N04 fix round 1 edits READY: all 8 items edited; lint 0 errors (only the pre-existing VectorMath.swift:76 for_where). Uncompiled; Swift verification is queued for the next free build slot.
+- V03 v5 round 1 NEEDS_CONTEXT (v4-report.md "v5" section). New Scripts/ci/swiftpm_products.py: bin-path discovery, --swift-build-system, Release -Xswiftc -enable-testing, .gitignore bytecode rules. Under swiftbuild/6.4: gate 1 perf-debug PASS (22 cases), gate 2 perf-release PASS (22 cases); gate 3 ASan failed at row 74/77 and gate 4 TSan at 35/39 (ExecutionSchedulingContractTests/preCancelledThrowingRoutesAndExecute cancels its own test task, so Swift 6.4 Testing reports "was cancelled", not "passed"); gate 5 build modes failed at its native-object-layout link/forward step. Native confirmations: perf-debug and build modes PASS. First end-to-end driver runs exposed and fixed two latent defects: /usr/bin/swift strips DYLD_* (the dyld evidence was always empty; now uses the xcrun toolchain swift) and the XCTest host check targeted a launcher shim. Policy discovery 75 tests, 2 failures, both from the validate_github.rb sha256 pin of check_benchmark_build_modes.py.
+- Permission boundary: the implementer's attempt to re-pin validate_github.rb was DENIED by the harness permission system (an integrity control). Root does NOT perform it on the worker's behalf; it is surfaced to the user. Ruling: restore check_benchmark_build_modes.py byte-identically to v4 so the existing pin stays valid; no integrity-control change. Cost if wrong: the build-modes driver stays native-layout-coupled until the user approves a re-pin.
+- Ruling: Gate 5 runs the restored v4 driver under Command Line Tools Swift 6.2 (native default, closest local proxy to CI's Xcode 26.3). Swiftbuild support for the build-modes driver is deferred to V04 or the Xcode-27 CI migration, which needs explicit user approval of the pin change. Cost if wrong: no local Swift 6.4 evidence for gate 5.
+- Ruling: Swift 6.4 "was cancelled" is fixed in the test, never by accepting "cancelled" in verify_body. preCancelledThrowingRoutesAndExecute runs its pre-cancelled routes in a self-cancelling child Task; assertions unchanged; V03 already owns the file. Rationale: under 6.4, cancelling the test's own task reports the test cancelled and can mask failures. Cost if wrong: one test-body revision.
+- V03 v5 round 2 dispatched to the same implementer: ASan/TSan reruns to completion, gate 5 under CLT 6.2, policy discovery.
+- D03 DONE_WITH_CONCERNS (2026-10-03/D03/report.md): no pre-existing logging tests; RED on unchanged production = 10 gated cases evaluated their message; GREEN: Debug 'Logging(Contract|PublicConsumer)Tests|FP16DiagnosticsBoundaryTests' 22 tests/3 suites, Release 'Logging(Contract|PublicConsumer)Tests' 15 tests/2 suites (asymmetric filters noted for review); public-consumer child 25 cases, mismatches 0; reentrancy child exit 0; mutations: message evaluated before the gate caught by the matrix (10 failures), lock held around the message caught by the bounded child at its 15.009 s deadline; scanner 7 OK; lint 0. Implementer-flagged limits: VectorError fallback laziness and gated timer formatting rest on adjacent code; the test sink replaces the OSLog/console backend. Independent Opus review dispatched (3 files 493+/28-).
+- N04 resumed for fix round 1 Swift verification in D03's freed slot (implementers: V03 v5 round 2, N04).
+- USER AUTHORIZATION (2026-10-03, in conversation: "how can i give you approval? Im happy to"): the user approves re-pinning the validate_github.rb sha256 pin for Scripts/ci/check_benchmark_build_modes.py. Scope: only to independently reviewed driver bytes, performed in the root session where the harness prompt is visible to the user. Not yet exercised; the driver is currently restored to its v4 pinned bytes.
+- N04 fix round 1 verified: focused 30/30 Debug and Release; edits compile. Root's mutation instruction was mis-aimed (the absolute-input cutoff never fires on the total-1 cutoff table; it still failed 4 other tests with 3996 issues). The implementer added a dominant-term-drop mutation (p < 0.99999), which fails normalizedCutoffTable (32 issues), tinyCoordinateStaysInDenominator and testEntropy_UlpThreshold_IgnoresNearZero, proving the new got > 0 rows bite. One no-op mutation attempt was retained under aborted/. Scoped re-review dispatched (N04/fix1-package.diff, 4 files 29+/7-).
+- N04 scoped re-review 1: all 8 items ADDRESSED; the dominant-term-drop mutation is adequate proof for item 3; the stride permutation is a verified bijection for all tested D and is runtime-asserted. One new Minor: VectorMath.swift:500 "tested widths 1...1536" overstates a discrete tested set. N04: fix round 1/5 (8 addressed, 0 open).
+- Ruling: the overstated "1...1536" coverage claim is a claim-discipline defect (user rule), so it enters fix round 2 as a comment-only edit with no rebuild. Cost if wrong: one trivial round.
+- N04: fix round 2/5 dispatched (fix1 state staged in N04's private index as FIX_BASE).
+- N04 fix round 2 (comment-only) verified mechanically by root: every changed line is a /// comment; the named test uniformMagnitudesReturnLogD exists, and testedDims is exactly [1,4,8,63,64,65,128,1536]. Ruling: a mechanically proven comment-only diff whose claim was checked against source needs no reviewer seat. Cost if wrong: none to behavior. N04: fix round 2/5 (1 addressed, 0 open).
+- N04: minor (deferred): the public entropyFast name implies speed while the large path is now an unmeasured scalar loop; docs make no speed claim. Route to V04 (honest timing claims).
+- N04 ACCEPTED and imported: 4 paths byte-identical; no preimage changed since 0d0bf76. Closure closes NUM-07.
+- N04 committed 3639cc4. Milestone 11 started (root, background): first whole-suite correctness run on Swift 6.4 at 3639cc4 (L03, T01, R05, N04 integrated since milestone 10), VECTORCORE_TEST_EXTENDED=0, Debug then Release, swiftbuild; evidence 2026-10-03/milestone11. Uses the second build slot alongside V03 v5 round 2.
+- D03 independent review (Opus): Spec PASS, Quality CHANGES REQUESTED (0 Critical, 1 Important, 3 Minor; 2026-10-03/D03/review.md). Lock discipline, laziness on the wrappers, timer and seams were all verified correct. Important I1: the VectorError fallback laziness is untested, and the report's "not observable" claim is false (the reviewer's public-API spy shows gated 0 with D03 vs 2 at baseline).
+- Ruling: D03 fix round 1 takes I1 (spy test plus baseline RED and claim corrections), M1 (ownership exception for exactly one stale doc line, VectorError.swift:92, under the brief's "fix examples to actual APIs"), M2 (remove the blanket thread-safe claim and nonexistent "output options"; claim discipline) and M3 (document the timer's rejected-call no-formatting contract with its adjacent-code derivation; a spy is impossible without a new seam). Cost if wrong: one extra round.
+- Program-level open concern (from the D03 review): child-process helpers (D03's d03RunChild and the pre-existing FP16DiagnosticsBoundaryTests helper) copy every parent argument except the filter. Under CI's `swift test --xunit-output`, a child may inherit and rewrite the parent's xunit path. This is a pre-existing class, unexercised locally. Owner: V04, after V03 (CI execution); verify against CI's actual invocation before claiming a defect.
+- Program-level qualification: all Oct-3 evidence is Swift 6.4/Xcode 27 (plus CLT 6.2 builds where noted). Compilation on CI's Xcode 16.2/26.3 matrix stays unverified until hosted CI runs (consistent with V03's no-hosted-CI boundary).
+- D03: fix round 1/5 dispatched as edits only (EDITS_READY); the reviewed state is staged as FIX_BASE.
+- V03 v5 round 2 DONE: check_benchmark_build_modes.py restored to v4 bytes (sha equals the validate_github.rb pin 2fa77d12…, untouched); policy discovery 75 OK; preCancelledThrowingRoutesAndExecute now cancels a child Task and reports passed. Gates on Swift 6.4 swiftbuild: ASan 77/77 bodies, 132 s; TSan 39/39 entries, 332 s (Q03 parent 12.6 s of its 49 s budget, child exit 0). Gate 5 build modes: 4/4 cells under CLT Swift 6.2 (native), 291 s. Gates 1/2 (perf debug/release, 22 cases each) passed in round 1. No timeouts, no new log-format differences. Scoped review of the v5 delta dispatched (V03/v5-review-package.diff, 8 files 333+/29-).
+- Ruling: After review, the V03 final seal re-runs gates 1/2/6/7 on the final v5 bytes, because round 2 changed a compiled Swift test file; gates 3/4/5 already ran on final bytes. Cost if wrong: about 10 minutes of build time.
+- MILESTONE 11 RESULT (3639cc4, Swift 6.4): FAIL. XCTest: all three bundles pass (MinimalTests, ComprehensiveTests, BenchmarkContractTests; 101 cases). The ComprehensiveTests Swift Testing process dies with SIGTRAP in Debug and Release at AffineQuantizationCore.swift:19 requireFinite (fatalError), reached by legacy QuantizedKernelsTests.testNaNInfinityHandling feeding NaN/±Inf in-process. Q01 (8f7b828) made nonfinite input a precondition and this legacy test was never migrated; no earlier milestone ran the whole suite. Diagnostic Debug run with that test skipped: 1431 tests in 196 suites, 2 issues: ArbitraryDimensionTests.swift:99 (Dim384 direction ratio approxEqual) and QuantizedKernelsTests.swift:4631 (binary distribution collapses to one quantized value).
+- Ruling: Root task T02 created (outside the 43-task catalog) to root-cause the three milestone-11 failures under systematic debugging: classify each as (a) legacy test vs accepted contract, (b) wrong tolerance with a derived bound, or (c) production regression, which STOPs for a root decision. Whole-suite Debug and Release must reach exit 0. Implementer on Opus, a deliberate escalation from the Sonnet mapping, because numerical root-cause judgment against prior contracts is needed. Cost if wrong: higher cost for one task.
+- Concurrency: implementers D03 (fix-1 Swift verification) + T02; reviewer V03 v5.
+- V03 v5 independent review: Spec PASS, Quality APPROVED (0 Critical, 0 Important, 5 Minor; 2026-10-03/V03/v5-review.md); the reviewer's policy discovery run is 75 OK.
+- Ruling: V03 v5 Minor 4 (comments assert "/usr/bin/swift strips DYLD_*" and "xcrun xctest is a launcher shim" as fact with no test) is a claim-discipline defect: mark them as observed on Swift 6.4/Xcode 27 with the evidence (0 vs 6045 dyld lines). Minors 1 (sanitizer gate lacks a no-rebuild assertion), 2 (add an explicit `was cancelled` rejection test) and 3 (use one resolved swift binary for show-bin-path and runs) are bundled as cheap hardening. Minor 5 (build-modes driver not agnostic, per ruling) is documented in the closure; no code. V03 v5 fix round 1 is queued until an implementer slot frees (D03, T02 active). The final seal then re-runs gates 1/2/3/4/6/7 on the final bytes (the sanitizer driver changes); gate 5 carries (v4 driver bytes, bench product unaffected). Cost if wrong: roughly 15 minutes of gate time.
+- D03 fix round 1 verified: the same filter 'Logging(Contract|PublicConsumer)Tests|FP16DiagnosticsBoundaryTests' gives 23 tests/3 suites in both Debug and Release (asymmetry closed); the new vectorErrorFallbackDescriptionIsLazy test passes. Its RED was captured on an eager-seam mutation of the current code, because the pristine base has no seam; this complements the reviewer's pristine-base public-API check (gated=2). Scoped re-review dispatched (D03/fix1-package.diff, 3 files 47+/6-).
+- V03 v5 fix round 1 dispatched to the original implementer in D03's freed slot (implementers: T02 + V03).
+- D03 scoped re-review: I1, M1 (exactly one VectorError.swift doc line), M2, M3 and the same-filter rule all ADDRESSED; the mutation RED is adequate; no new breakage. D03: fix round 1/5 (5 addressed, 0 open).
+- D03: minor (deferred): the M3 timer doc lists invalid-threshold and gated-debug rejections but not the elapsed-below-threshold non-emission. The list is incomplete, not false.
+- D03 ACCEPTED and imported: 4 paths byte-identical; no preimage changed since 596774c. Closure closes API-31.
+- D03 committed baf8bbb.
+- V03 v5 fix round 1 DONE: claim wording marks the DYLD/launcher observations as Swift 6.4/Xcode 27 with evidence; check_no_rebuild is shared in swiftpm_products.py and used by the sanitizer --skip-build runs (scanned against all 232 round-2 ASan/TSan logs, no false positives); a new `was cancelled` rejection test and a no-rebuild unit test; swift resolved once via xcrun (60 s timeout). Policy discovery 77 OK. Not yet exercised by real gates; the final seal is the first full run. Scoped re-review dispatched (V03/v5-fix1-package.diff, 5 files 56+/27-).
+- V03 v5 scoped re-review 1: all 4 items ADDRESSED, no new breakage; unit suite 77 OK. V03 v5: fix round 1/5 (4 addressed, 0 open). V03 FINAL SOURCE ACCEPTED (v3 + v4 + v5). Final bytes are staged in V03-v4's private index.
+- V03 final seal dispatched to the gate executor (brief 2026-10-03/V03/final-seal-brief.md): gates 1-4, 6, 7 and policy on the final bytes; gate 5 carries with proven driver-pin identity.
+- V03 final seal (final v5 bytes; 2026-10-03/V03/final-v5-report.md): gate 1 perf debug 22, gate 2 perf release 22, gate 3 ASan 77/77, gate 4 TSan 39/39 (Q03 parent 10.9 s of 49 s), gate 6 CLI contracts PASS, gate 7 extended strict-off 7/7 once each, gate 8 policy 77 OK; gate 5 carried (driver sha 2fa77d12… equals the validate_github.rb pin; CLT 6.2 4/4). Freeze: 6130 files byte-identical. The executor's stray freeze file was relocated into evidence; the workspace was verified clean. Root verification: 240 per-body sanitizer logs contain 0 rebuild lines.
+- V03 ACCEPTED and imported: 71 paths byte-identical (no preimage changed since e6e1bae). Merged-tree policy discovery: 81 OK (1 env-gated skip). Pinned SwiftLint on the merged tree: 0 errors. Closure closes TOOL-04 and TOOL-11 (local-execution boundary stated: hosted CI not run).
+- V03 committed dbd0833. V04 is unblocked (V01, V02, V03 accepted; the L01/L02/Q02/Q04/O02/O03/O05 sign-off prerequisites are all accepted).
+- T02 DONE_WITH_CONCERNS (root-recorded report 2026-10-03/T02/report.md; the harness refused the subagent's report write, so the implementer returned the text and root saved it verbatim, which is the intended flow and not a control bypass). All three milestone-11 failures are LEGACY tests; no production regression. (1) testNaNInfinityHandling contradicts Q01's nonfinite precondition; Q01's filter never selected EdgeCasesErrorHandlingTests. Migrated to the throwing route with exact construction-rule indices, citing Q01ChildContracts.namedRejectionMatrix. (2) The direction ratio failed because N01 made normalization correctly rounded (base 2.056 ulp max / 0 of 384 correct; head 0.499 ulp / 384 of 384) and the 1e-5 absolute tolerance is about 0.02 ulp at ||x|| ≈ 4353. Replaced with the derived 4u(1+2^-20)||x|| bound. (3) The "Nearly constant" {0.5, 0.5001} pair is sub-resolution under Q01's documented zero-inclusive calibration (0.051 step). Separation-aware assertion from Q01's endpoint criterion. Whole suite at 3639cc4+T02: Debug and Release exit 0, 0 issues (XCTest 128 executed/101 not skipped; Swift Testing 1432/196 suites + 1).
+- Ruling: CLASS CLOSURE for "a legacy test outside the accepting task's focused filter contradicts its contract" (second occurrence, both Q01): from now on root runs the whole suite (VECTORCORE_TEST_EXTENDED=0, Debug and Release) on the integrated tree before committing every production-contract task, in addition to the task's focused gates. Rationale: focused filters cannot see legacy contradictions, and the whole suite is the mechanical detector (about 5 minutes Debug + 1 minute Release). Cost if wrong: about 6 minutes per integration.
+- T02: minor (deferred): approxEqual's default absolute tolerance of 1e-5 (TestSupport.swift:8) is a latent hazard for magnitudes of about 100 or more [unverified class]; dead pre-Q01 (max-min)/255 branches at QuantizedKernelsTests.swift:309 and QuantizedKernelsComprehensiveTests.swift:205; any fatalError in one Swift Testing test kills the whole ComprehensiveTests process. Route to a test-hygiene follow-up (T03 candidate).
+- T02 independent review dispatched (Opus; T02/review-package.diff, 2 files 127+/109-).
+- T02 independent review (Opus): Spec PASS, Quality APPROVED (Minors only). All three classifications were confirmed independently: the reviewer's exact simulation of the production normalization route reproduces the head ratio histogram (200 x 0x45880796, 184 x 0x45880797; 384/384 correctly rounded); Q01/N01 code matches frozen hashes; namedRejectionMatrix ran in both whole-suite logs; margins were recomputed (Binary 127.5x, Spike 127.5x, Nearly constant 39.22x).
+- CORRECTION to the earlier class-closure entry (review Minor-6): milestone 11 exposed THREE instances across TWO tasks (Q01 x2: NaN trap, degenerate distribution; N01 x1: direction ratio, despite N01.json "No existing test expectations changed"), not "both Q01". The whole-suite ruling stands.
+- Ruling: extend the whole-suite class closure with review gap (a): 18 Swift Testing + 27 XCTest tests are EXTENDED-gated and never ran under the gate (five exercise INT8(from:) with explicit params). Since V03, strict perf is off by default, so an EXTENDED=1 run is correctness-only. Milestone 12 therefore adds a serial VECTORCORE_TEST_EXTENDED=1 whole-suite run (strict off). Gaps (b) (a trap masks later results; a static precondition-route scan is a heuristic complement) and (c) (print-only legacy code cannot catch contract drift, e.g. "Very small range" now decodes to 1 value) are deferred to the T03 test-hygiene scope. Cost if wrong: one extra milestone run.
+- Ruling: T02 fix round 1 takes Minor-2 (per-ratio |ratio_i − norm| ≤ 2u(1+2^-20)·norm over all 384 indices, which detects a revert to the pre-N01 route; the pairwise check is kept) with a negative-control mutation, plus claim-discipline Minors 3/4/5. The report's false Minor-1 phrasing is annotated in the recorded report and excluded from any closure. Cost if wrong: one round.
+- T02: fix round 1/5 dispatched (reviewed state staged as FIX_BASE).
+- V04 phase 1 DONE_WITH_CONCERNS (2026-10-03/V04/phase1-inventory.md, 1156 lines; workspace unchanged at dbd0833). Design: MeasurementBoundary schema 3 (timingScope + 10 inclusion flags, catalog-supplied); declared-only pairing keeping 36/18 pair counts; opt-in `--suites boundary` with companions (AoS FP32, SoA FP32 and AoS FP16 at 512/768/1536 supported; SoA FP16 squared-Euclidean unavailable); matrix consumer moves from 2 diagonal entries to a u64 bit-fold of all outputs; memory probe (36 children + 2 controls; Mach task_info + malloc_zone_statistics); allocation probe linking O03 unchanged; claim ledger with M1-M7 mutation fixtures; phases A→B→C→E→F→D. Newly found: handle-stride memory assertions in two more test files plus one in T02's file; 39 discarded-result timed statements; SWIFT_RELEASE_MODE/VECTORCORE_ENABLE_SIMD never defined (performancePrecondition always enforced, releaseOnly dead, isReleaseMode/isSIMDEnabled always false); claim-bearing runtime strings; normalize.success consumes only unit[0].
+- Ruling: V04 phase-1 questions ruled in 2026-10-03/V04/rulings.md. Recommendations accepted except Q6, which is OVERRULED: partially consumed multi-element outputs (normalize.success) migrate to the full fold, because the brief says "consume the numerical result"; error-outcome and scalar sinks get accurate full-consumption labels. Q7: missing/legacy boundaries are waivable only with the override; present-but-different boundaries (including scope) are never waivable. Q10 handle-stride class closed with a lexical guard (the QuantizedKernelsTests instance waits for T02 integration). Q11 runtime claim strings are ledgered as retained-unverified (owner D02). Q13 Performance_Guide benchmarking section is in scope. Q14 comment-only in V04, plus a caller inventory of the undefined-flag APIs flagged to root for reachability. Q16 build-modes driver goes to T03. Q18 unit is ns per declared operation (brief wording). Q20 deadlines approved. Cost if wrong (Q6): normalize.success timings are not comparable to pre-V04 baselines (the identity change makes this explicit).
+- V04 phases A+B dispatched (Sonnet implementer; inventory + rulings; checkpoint stop after B). Concurrency: implementers T02 fix round 1 + V04 A/B. T03 (CI tooling) waits for a free slot; V04's conflict table confirms V04 does not touch check_benchmark_build_modes.py.
+- T02 fix round 1 returned (root-recorded in T02/report.md): per-ratio check added (admits exactly 0x45880796/0x45880797); the NEGATIVE CONTROL (normalization reverted to base) fails only the per-ratio check at 76 of 384 indices, while pairwise checks pass; Minors 3/4/5 done. Alone runs 6/6 pass; Release whole suite pass. FINDING: 1 of 6 Debug whole-suite runs trapped (ComprehensiveTests Swift Testing process, signal 5, about 18 s, no message, no crash report); 5 reruns (4 with the backtracer) passed. Not attributable to T02's pure-arithmetic edits; cause unknown. Scoped re-review dispatched (T02/fix1-package.diff, 45+/23-).
+- Ruling: root task T04 created to root-cause the intermittent message-less SIGTRAP (brief 2026-10-03/T04/brief.md): in-flight reconstruction, repetition with the Swift backtracer (finite budget of about 75 minutes), parallel vs --no-parallel, targeted TSan, and a static audit for message-less trap sources. A production race STOPs for a root decision. Priority over T03, because it threatens whole-suite gate reliability and may be a real production race. Starts on the T02-integrated tip so the known deterministic trap cannot mask it. Opus. Cost if wrong: investigation time on a toolchain flake.
+- T03 scope addition (third instance of the capture-path class): HeapMembershipContractTests.negativeCapacity writes child captures to <package>/.build/R04-child-captures unless R04_CAPTURE_DIRECTORY is set; test_swift_test_output_paths does not catch this pattern. T03 moves the default to the temporary directory and generalizes the policy rule (no test-written paths under the package tree).
+- T02 scoped re-review: Minors 2/3/4/5 ADDRESSED; bound arithmetic recomputed (per-ratio 1.0627 ulp admits exactly 0x45880796/0x45880797); the negative control was verified from its log; nothing in the diff can plausibly cause a trap. T02: fix round 1/5 (4 addressed, 0 open).
+- T02 ACCEPTED and imported by 3-way merge: QuantizedKernelsTests.swift had V03's 10-line delta since 3639cc4. PROOF1: merged-vs-HEAD changed lines equal T02's delta exactly. PROOF2: merged-vs-T02-final equals V03's delta exactly. ArbitraryDimensionTests is byte-identical. Closure records the three milestone-11 dispositions.
+- T02 committed 2f526e6. T04 (intermittent message-less SIGTRAP investigation) dispatched on 2f526e6 (Opus).
+- V04 phases A+B DONE_WITH_CONCERNS (2026-10-03/V04/phaseAB-report.md). Phase A RED on actual builds: the footprint report prints 16/8 handle strides and "50% saved" at every width (payload is 2048/1024 at 512D; the 2:1 comes from the stored scalarCount: Int); the matrix body consumes only output[0] and output[N*N-1] (diagonal), so a middle or off-diagonal flip is invisible to it but changes the u64 fold; reports and the comparator have no boundary identity. Phase B GREEN: BenchmarkContractTests 33/0 Debug and Release; --ab-only pairs 36/18 (in-process and a real 108-case CLI run); V01 guards 28/14/28; reporting 218 rows (86 new); selection 54; discovery 81 OK; Sources/VectorCore and check_benchmark_build_modes.py untouched; lint 0 errors, +77 warnings in touched files.
+- Ruling: V04 mem.copy/mem.fill (multi-element writes, single-element sink) keep `escaped-pointer-retention-v1`: writes through an escaped pointer are observable state the optimizer must preserve, which is not the elidable-computation case Q6's stop rule targets; the limitation is ledgered. Pre-existing correctness-gate misses (matrix zero-reference diagonal; generic euclidean2 at 1.04e-6 vs 1e-6) are identical before and after, routed to P02 (batch accuracy). New lint warnings on V04-touched lines are fixed in the fix round (same standard as the other tasks). Observer access (package vs public for the phase-D standalone probe) is decided at phase D; consider swiftc -package-name before widening to public. Cost if wrong: the copy/fill timings carry a stated retention limitation.
+- V04 A+B independent review dispatched (Opus; V04/phaseB-review-package.diff, 25 files +1691/-229).
+- T03 dispatched (Sonnet) from b92e76e (brief briefs/T03.md): build-modes driver made layout-agnostic (root performs the validate_github.rb re-pin under the user's approval after review; the implementer must not touch the pin); L03/R05 fixture drivers moved to swiftpm_products; checker error-path tests and macOS CI wiring; --xunit-output child-inheritance investigation (STOP if real); R04 capture default to the temporary directory plus a generalized package-tree write rule; dead pre-Q01 branches removed; approxEqual magnitude inventory (report only). It avoids V04-owned files. Concurrency: implementers T04 + T03; reviewer V04 A/B.
+- T04 investigation DONE (Opus; the full report was returned as text, and evidence is in 2026-10-03/T04/). ROOT CAUSE reproduced twice with backtraces (full-A-04, full-A2-02; frame 0 at QuantizedKernelsTests.swift:1217:49, brk #1 after subs/cset/tbnz overflow check; identical code at the original T02 trap binary): MemoryCompressionTests.testMemoryFootprintReduction computes `info.resident_size - baselineMemory` as UInt64 on whole-process RSS while Swift Testing runs tests in parallel. When concurrent tests free more than it allocates, RSS falls, the subtraction underflows, and the overflow check traps with no message. Deterministic standalone reproduction (rssprobe, 3/3); the signed Int64(clamping:) variant survives. 3 traps in 12 Debug whole-suite runs; 0 in 10 focused runs. Classification (b), a test defect; no production code is on the crashing frame. Static audit of the in-flight paths found no production race or misuse; calibration shows os_unfair_lock misuse gives SIGKILL (excluded). The missing crash report is ReportCrash "Log limit exceeded". Side defect: orphaned E02 "watchdog" children (ignore SIGTERM, loop forever) survive a parent crash.
+- Root action: verified and killed two orphaned E02 watchdog children (pids 73515, 78027: swiftpm-testing-helper, E02_CHILD=watchdog, ppid 1, about 2 h old, 0% CPU) left by the crashed milestone-11 runs.
+- Ruling: T04 fix (2026-10-03/T04/fix-brief.md), test-only: delete the non-asserting whole-process RSS block at QuantizedKernelsTests:1197-1223; delete the dead measureMemoryUsage (second UInt64 instance, MixedPrecisionKernelsTests:2398); remove BatchKernels_SoATests' whole-process RSS-growth assertion (same family; false-failure risk under parallel load, and it would reach the milestone-12 EXTENDED=1 run; V04's isolated-process probe owns memory facts); bound the E02 watchdog child's own lifetime (exit on getppid()==1 or after a 120 s ceiling, keeping parent-observed semantics); CLASS CLOSURE with a new test_process_memory_deltas.py rejecting unsigned process-memory deltas (negative/positive controls, RED on the originals). Verification includes a 6-run Debug trap-regression loop. Shared-file coordination: T03 edits a different hunk of QuantizedKernelsTests (3-way proof at integration); V04 rebases before its MixedPrecisionKernelsTests phase-E edits. Cost if wrong: one more investigation if the trap persists.
+- T04 fix dispatched (Sonnet; 2026-10-03/T04/fix-brief.md) on the T04 worktree (2f526e6). Implementers: T03 + T04-fix.
+- V04 A+B independent review (Opus; root-recorded 2026-10-03/V04/phaseB-review.md): Spec FAIL (narrow), Quality CHANGES REQUESTED. 0 Critical, 3 Important: I1 FP16 routeInternalAllocation marked notApplicable while the route allocates a per-call handle array (SoA and zeroFail flags unverified, and the schema has no "unverified" value); I2 the name-keyed Boundaries table can drift from the bodies (letter, not intent); I3 the statistic is per-invocation, contrary to ruling Q18. 14 Minor. Verified correct: Q7, pairing families, fold, matrix perturbation, Phase A RED actual, guards, sink confinement.
+- Ruling: V04 fix round 1 (2026-10-03/V04/fix1-rulings.md): I1 add an `unverified` inclusion state (honest encoding), FP16 included, SoA/zeroFail unverified, audit all allocation flags, phase D resolves the unverified ones; I2 body-fingerprint plus consumer-token guards (mechanical class closure); I3 per-operation statistic (Q18). All Minors are included except M8 (phase C). M13: reduce child work before any recorded 30 s CLI deadline. New lint warnings fixed. The fix round is QUEUED until an implementer slot frees (T03 and T04-fix active). Cost if wrong: a schema-3 vocabulary change before release (none released yet).
+- T03 DONE_WITH_CONCERNS (root-recorded 2026-10-03/T03/report.md): build-modes driver layout-agnostic, with gate 5 at 4/4 under BOTH Swift 6.4 swiftbuild and CLT 6.2 native; new driver sha 57b8522c… (the validate_github.rb pin is untouched; the expected 2 pin failures remain until root re-pins; a pin simulation validates rc 0); L03/R05 fixture drivers on the helper under both layouts; checker error-path tests (16) and CI step in the `platforms` job plus validator rule; xunit inheritance is NOT a current defect (the parent writes last; 17/17 and 200/200 intact), recorded as a latent invariant across about 25 helpers; R04 capture moved to the temporary directory, and the policy rule is generalized to `.build` literals and #filePath-derived write paths (RED on the original lines); dead pre-Q01 branches removed with unreachability proofs; approxEqual inventory of 15 sites above |x| ≈ 107 that pass only because their results are exact integers.
+- ROOT-ATTRIBUTED DEFECT (root's own T01 fix-round-1 instruction): the checker's Foundation sentinel set includes ProgressReporter, which exists only in Xcode 27 SDKs; T03 wired the step into the `platforms` job on Xcode 26.3, so the step would exit 2 and break CI. It must be fixed before T03 is accepted (portable sentinels, verified on an older SDK). Pending the independent T03 review (dispatched; Sonnet) before the fix round. V04 fix round 1 dispatched in T03's freed slot (implementers: T04-fix + V04).
+- T03 independent review (root-recorded 2026-10-03/T03/review.md): Spec FAIL, Quality CHANGES REQUESTED. C1: the ProgressReporter sentinel is absent on Xcode 26.3, so the CI step would always exit 2. ROOT CONFIRMED with the CLT MacOSX26.0.sdk (0 files mention ProgressReporter vs 5 in the Xcode 27 SDK). I1 SDK scope and 30-min budget; I2 swiftbuild real-build intermediates are not proven untouched; I3 path-policy false negatives; I4 native-layout class remains in 5 more CI helpers with no guard. Minors M1-M4. Verified: gate-5 C-route semantics equal; dead-branch proofs hold; xunit "parent writes last" is a convention, not enforced, and native CI is unverified.
+- Ruling: T03 fix round 1 (2026-10-03/T03/fix1-rulings.md): portable sentinels verified by running the checker on SDK 26.0 (CLT) and 27; the checker moves to a NON-required `sdk-names` job (required set unchanged; validator rule, not pin), falling back to a recorded 45-min platforms timeout; before/after hashes of the swiftbuild intermediates and side files plus a no-real-path-argument assertion; the path policy strengthened with per-pattern negative controls and documented as a heuristic; the native-layout class closed by migrating O03/Q04/Q02 runners, the E03 driver and the B01 driver, plus test_no_native_layout_literals.py; M1/M2/M4; the xunit convention documented; approxEqual scope doc comment (no call-site changes). QUEUED for the next implementer slot (T04-fix and V04 active). Root still owes the validate_github.rb re-pin to the final reviewed driver bytes (user-approved).
+- V04 A+B fix round 1 DONE: I1 (Inclusion.unverified; FP16 allocation included; SoA and zeroFail unverified; all flags audited), I2 (18 body fingerprints plus a closed-vocabulary consumer-token check over 95 case sites, each with negative controls; comment corrected), I3 (per-sample-average-ns-per-operation with median/mean/p90/stddev/RSD; V02 per-invocation fields and raw samples kept), M1-M7, M9-M12, M14, runtime check; M13 solved by splitting the pair-count children (9 children, slowest 2.6 s of 15 s, no deadline raised); lint 0 new warnings (total 5612 < baseline 5676). Acceptance rerun: BenchmarkContractTests 42/0 in Debug and Release; pairs 36/18 in-process and CLI (108 results); V01 28/14/28; reporting 268 rows, selection 60; discovery 81 OK. Scoped re-review dispatched (Opus; V04/fix1-package.diff, 19 files +1533/-389).
+- T03 fix round 1 dispatched in V04's freed slot (implementers: T04-fix + T03).
+- T04 fix DONE (root-recorded 2026-10-03/T04/fix-report.md): RSS block deleted, dead helper deleted, EXTENDED-gated RSS-growth assertion removed (signed informational print kept), E02 watchdog child self-bounded (orphan self-exit proven; parent still observes SIGTERM-ignore -> SIGKILL, cleanupReaped=true), test_process_memory_deltas.py (RED on originals). Trap loop: 0/6 full Debug runs (1449 tests); whole suite Debug and Release pass; discovery 90 OK. Statistical honesty: 0/6 alone is weak evidence at the 0.25 baseline rate (P ≈ 0.18 by chance); confidence rests on the backtrace-proven faulting line being deleted and the class guard proving no other unsigned RSS delta remains. Independent review dispatched.
+- T04 fix independent review: Spec PASS, Quality APPROVED (Minors only). Verified: exact deletion scope (no assertion removed except the approved RSS-growth one); dead helper confirmed by an independent grep; no other live unsigned counter arithmetic in the tree (BatchKernels getMemoryUsage converts to Int); the E02 change cannot exit early while the parent lives, and the 120 s ceiling is far above the parent's ~17 s worst case; trap-loop and whole-suite logs credible (the r-* Release logs were failed scratch-path attempts and the valid ones are r2-*). The reviewer also flags 0/6 as weak alone (~18% by chance); the deletion of the faulting line is the stronger justification.
+- Ruling: T04 fix round 1 takes the vacuous-scan guard (assert files scanned > 0), docstring scope for the parenthesised-operand miss plus a `-=` control, and claim-discipline wording on the E02 comment, plus a re-run of the orphan self-exit check with real exit evidence (the original orphan.out held only the startup banner). Cost if wrong: trivial.
+- T04: fix round 1/5 dispatched (T04 fix implementer; implementers T03 + T04).
+- T04 fix round 1 root-verified (scoped): the Swift delta is comment-only (E02 claim marked unverified-by-automated-test, deadline cited); the policy test adds a non-vacuous per-root scan assertion, documents the parenthesised-operand miss, and adds a -= control (10/10 OK); orphan2 evidence records creation, PPID 1, and disappearance 0.17 s later from the watchdog loop. T04: fix round 1/5 (4 addressed, 0 open).
+- T04 ACCEPTED and imported: 5 paths byte-identical; no preimage changed since 2f526e6. Closure closes the intermittent SIGTRAP, the unsigned-RSS-delta class, and the E02 orphan defect.
+- T04 committed f3967db; closure text repaired in 827eb8e (an unquoted heredoc's backticks had been executed as command substitution; N04/D03 closures scanned clean).
+- T03 fix round 1 DONE: C1 portable sentinels, run for real on SDK 26.0 (CLT, exit 0, 58 s) and 27 (exit 0, 22 s); non-required `sdk-names` job (required set unchanged; validator rules plus mutations; pin untouched); I2 before/after snapshot of 688 (swiftbuild) / 144 (native) real-build files plus assert_isolated; I3 path policy strengthened (multi-line joins, function/property taint, more write APIs, relative paths; per-pattern negative controls; heuristic scope documented); I4 eight native-layout helpers migrated (5 named plus 3 found by the new guard) and passing under both layouts, plus test_no_native_layout_literals.py; M1/M2/M4; xunit convention doc; approxEqual doc. New driver sha f300477f…. Discovery 136 tests, only the 2 expected pin failures. Limitations: E03 positive on CLT times out (toolchain slowness, 27 s vs 15 s; layout proven by the negative case); Xcode 26.3 itself is untested (26.0 proxy). Root packaging slip: zsh did not word-split the new-file list for `git add -N`, so the first round-1 package omitted 2 new files; root reconstructed the reviewed tree c27a437 from the review package in a temporary index and regenerated a COMPLETE round-1 delta (c27a437 -> 7338630, 22 files incl. E03RunTypecheck.py and test_no_native_layout_literals.py).
+- Ruling: T03 fix round 2: package-module sentinels in the checker. The CLT run exposed that a partial package graph (nonzero dump exit, 24 vs 254 names) still reported "no collisions", and our modules had no sentinels. A missing package sentinel exits 2; unit tests; re-run under CLT and Xcode 27 (CLT may legitimately exit 2 on its partial graph). Cost if wrong: one small round.
+- V04 A+B fix-1 scoped re-review (Opus): I1, I3 and all minors ADDRESSED (the per-operation statistic recomputed with 0 mismatches over 108 real results; all allocation flags audited against source; 18 fingerprints reproduced by an independent Python port; negative controls bite). I2 NOT ADDRESSED (narrow): F1 Important, mem.alloc's `static let` allocator closures run inside timed bodies but are not fingerprinted (dropping deinitialize leaves the hash unchanged); F2 a phantom symbol (computed var `statistics`) is silently accepted because only an all-missing list fails; F3 comment overclaims; N4 note overclaims; M4 residual: a present sentinel schemaVersion ("unknown") is treated as legacy and is waivable. Invariants 36/18 and 28/14/28 hold.
+- Ruling: V04 fix round 2 (2026-10-03/V04/fix2-rulings.md): fingerprint every non-func body helper (re-audit all families) with a negative control; fail on any missing listed symbol; correct the comments; a present-but-unparseable schemaVersion is a non-waivable hard error; CLASS CLOSURE for warmup/timed divergence (2 occurrences) with a mechanical equivalence guard; cheap nits. Baselines staged BEFORE resuming (V04 tree 5e97f3a; T03 tree 7338630). Implementers: V04 + T03.
+- T03 fix round 2 DONE: PACKAGE_SENTINELS (VectorCore: Vector, DynamicVector, Vector512Optimized, DistanceMetric, VectorError, EuclideanDistance; VectorCoreBenchmarking: BenchmarkProgressReporter, JSONWriter, BenchResult, EnvCapture, RunFilters), verified against real extractions (a first set including VectorCoreVersion exited 2, a true positive of the self-check, and was corrected). A nonzero dump exit can pass only with every package sentinel present; 24 unit tests. Real runs: CLT/SDK 26.0 exit 0 (dump exit 1; Benchmarking 24 own names, missing exactly the 229 re-exported VectorCore names, which are checked via VectorCore's complete 229-name graph); Xcode 27 exit 0. Driver sha unchanged f300477f…; discovery 140 tests with only the 2 expected pin failures.
+- Ruling: accept the round-2 design (a re-export-only partial Benchmarking graph hides no collision; own-type incompleteness exits 2); no re-export sentinel, avoiding an unverifiable 26.3 false failure. Cost if wrong: a CLT-style partial graph passes, but only for names already checked through VectorCore.
+- T03 scoped re-review of rounds 1+2 dispatched over the complete delta c27a437 -> 14fb97c (fix12-package.diff, 22 files).
+- T03 rounds 1+2 scoped re-review: ALL items ADDRESSED, no new breakage. A pin simulation with f300477f… passes all 11 validator tests including the 3 sdk-names mutations; the pin line is unchanged; the driver sha is verified. I2 snapshot detects mutations post hoc (688 swiftbuild / 523 native files unchanged); I4 guard non-vacuous with a justified allowlist; O03 split preserves semantics. Two Minors: the xunit convention comment overclaims "every helper" (ExecutionBoundaryTests uses a fixed argument list); the round-2 premise that VectorCore's graph is complete has one counterexample (VectorCoreVersion, public, absent from the extracted graph on both toolchains; current risk nil).
+- Ruling: T03 fix round 3 closes the graph-omission class mechanically: cross-check extracted package names against a source scan of public top-level declarations (an omission exits 2 unless allowlisted with a reason); investigate why VectorCoreVersion is dropped; fix both overclaiming comments; nits (forUpdating/creat controls, an in-repo approxEqual reference, the tautological validator line). Round-2 state staged before resuming (T03/fix3-base-tree.txt). Cost if wrong: one small round.
+- T03 fix round 3 DONE: root cause for VectorCoreVersion's absence: the symbol-graph extractor silently drops top-level types named `<Module>Version…` (clang-style version-symbol filter); reproduced in an isolated package (VectorCoreVersion/VersionNumber/Version2 dropped, VectorCoreVers kept). Class closed: a source cross-check (lexical scan of public|open top-level type declarations vs the extracted graph; an unallowlisted omission exits 2; a (module, name) allowlist with reasons, one entry, the extractor filter; a stale entry warns); 33 checker tests; completeness claims corrected. Real runs: CLT/26.0 exit 0 (55 s), Xcode 27 exit 0 (21 s); the only omission is the allowlisted one. xunit comment reworded (most helpers; ExecutionBoundaryTests named as the exception). Nits done. Discovery 149 tests, only the 2 expected pin failures. Root mechanical checks: round-3 Swift changes comment-only; pin line unchanged; driver sha unchanged f300477f…. Scoped re-review dispatched (T03/fix3-package.diff, 6 files).
+- V04 A+B fix round 2 DONE: allocator closures became named funcs listed in the memory fingerprint (all 18 families re-audited; deinit/alignment mutation changes the hash); any missing listed symbol fails; computed-var support (statistics fingerprinted); coverage comments exact (blackHole/Harness/library kernels outside); N4 reworded; M4 sentinel/null/bool/non-integer/>3 schema are unwaivable errors (22 new rows); NEW warmup/timed equivalence guard over 89 units (one listed exception: the allocateOnce/acquire value argument; `sum` renamed `total` in 9 SoA/FP16 helpers) with 5 negative controls; nits. Acceptance: BenchmarkContractTests 44/0 Debug and Release; pairs 36/18 in-process and CLI (108); V01 28/14/28; reporting 303 rows, selection 60, discovery 81 OK; lint 0 new warnings.
+- Root check: the V04 agent reported that the harness switched its working directory to the T03 worktree mid-task (it worked by absolute path). Root verified that the T03 tree is byte-identical to its round-3 tree 0e9012f, so there was no cross-workspace modification. Scoped re-review dispatched (V04/fix2-package.diff, 10 files).
+- T03 round-3 scoped re-review: all items ADDRESSED, no new breakage (exp-version reproduction checked: VectorCoreVers kept, three <Module>Version* names dropped; the lexical scan's misses are false-negative-only, so they cannot fail CI; the #if-branch declarations resolve on any Apple SDK; the validator line is non-vacuous). Non-blocking: the allowlist reason claims "reproduced in isolation on Xcode 27 and CLT 6.2", but the kept isolated reproduction is a single run.
+- Ruling: that overstated reason text is a claim-discipline defect, fixed in T03 round 4 (wording only: the real-tree omission on both toolchains vs a single-toolchain isolated reproduction). Round-3 tree 0e9012f staged before resuming. T03: fix rounds 1-3 complete (all addressed).
+- T03 fix round 4 root-verified: a wording-only change to the allowlist reason (the real-tree omission was observed on both toolchains; the isolated reproduction ran once on Xcode 27, per the XcodeDefault artifacts). T03: fix rounds 1-4 complete, 0 open.
+- T03 ACCEPTED and imported: 28 paths; QuantizedKernelsTests.swift 3-way merged with T04. PROOF1 merged-vs-HEAD equals the T03 delta and PROOF2 merged-vs-T03 equals the T04 delta (30 changed lines each, including blank lines; the first PROOF2 attempt failed only because of an asymmetric blank-line filter in root's proof script, which was corrected and re-run). The other 27 paths are byte-identical. Closure records 7 dispositions.
+- V04 A+B fix-round-2 scoped re-review: ALL items ADDRESSED, no new breakage. The warmup/timed guard covers exactly 89 units (178 harness calls) with an exact-count assertion and 6 negative controls; the sum→total rename is behavior-neutral; no computed-var false matches; manifest verified (27/27). Minor residuals: the `aligned` wiring line is unhashed; latent stored-var match risk; schemaVersion 3.0 is accepted as 3. V04 PHASES A+B ACCEPTED.
+- ROOT RE-PIN (user-approved 2026-10-03, scoped to reviewed bytes): Scripts/ci/validate_github.rb:183 pin changed 2fa77d12… -> f300477f37f05cd9dedce983231a4debfede5311fb8ba0fea2b4e1f7c4963752, which equals the sha256 of the independently reviewed check_benchmark_build_modes.py (T03 rounds 1-4). Performed in the root session as a single isolated edit. Merged-tree policy discovery after the re-pin: 159 tests OK (1 skip), 0 failures.
+- T03 committed 4beeea8; re-pin committed 631ed4b (merged policy: 159 OK, 0 failures).
+- V04 A+B integration attempt: 27 paths, no preimage conflicts, byte-identical import. But merged policy discovery showed 1 failure: T03's path policy flags BenchmarkSelectionContractTests.swift:470 `CSVWriter.write(..., to: path)` as "write location derived from #filePath". Root analysis: a FALSE POSITIVE from T03's documented per-file by-name taint limitation (legitimate #filePath READS of the Suites sources for fingerprinting at ≈:655/:856 taint colliding names); the CSV path comes from V02_CSV_OUTPUT or temporaryDirectory. This is the first time the documented limit fired on real code; it was caught by the pre-commit merged policy run. Root reverse-applied the A+B patch exactly (integration clean at 631ed4b).
+- Ruling: resolve by renaming in V04's test (the designed fail-closed resolution), done by the V04 implementer so integrated bytes stay reviewed bytes, in a REBASED workspace workspaces/V04-c (631ed4b + A+B patch, conflict-free; staged A+B tree 81b8880 as the baseline). Deferred tooling follow-up: scope the path policy's taint to function/statement bodies so common names (path/url/root) cannot collide across functions; owner is the next tooling batch. Cost if wrong: further name-collision false positives until scoping lands, each resolved by a rename.
+- V04 fix round 3 dispatched (rebase + rename) in V04-c.
+- V04 fix round 3 DONE in V04-c: renaming alone did NOT clear the policy flag. T03's _mentions also counted ARGUMENT LABELS (cases:, metadata:, name:, unavailable:) of the write call as mentions of names tainted file-wide by legitimate #filePath reads. The implementer therefore relocated BenchmarkBoundaryDriftContractTests (+ the warmup/timed extension) and the split-out BenchmarkSinkConfinementContractTests into the existing BenchmarkContractTests.swift (no writes there). Results: policy 159/0 failures; BenchmarkContractTests 44/0 in Debug and Release. ROOT VERIFIED the relocation mechanically: 335 non-comment lines removed equal 335 added, except the 4-line path→csvOutputPath rename and the class-split structural lines (import/class header/brace); the Benchmarks edits are comment-only. V04 fix round 3 ACCEPTED (beyond "rename only", accepted by ruling below). V04 A+B final tree 5393c50 (patch AB-final-631ed4b.patch, sha 0b6d3027…).
+- Ruling: accept the relocation as an interim resolution (semantics-preserving; mechanically proven), and create root task T05 to make the path policy label-aware (argument labels and member names are not mentions) and scope-aware (body-local taint), with the exact V04 shape as a must-pass control and all true-positive controls retained. A guard that forces code reorganization is too coarse. Cost if wrong: code organization constrained by the heuristic until T05 lands.
+- V04 A+B integration is HELD until milestone 12 finishes (it is building and testing in the integration checkout; no source edits under a running gate). Milestone 12 (631ed4b: Debug EXT=0, Release EXT=0, Debug EXT=1) is running.
+- Dispatched: V04 PHASE C in V04-c (2026-10-03/V04/phaseC-dispatch.md; baseline A+B staged) and T05 (workspaces/T05 @631ed4b; brief 2026-10-03/T05/brief.md). Implementers: V04 + T05.
+- MILESTONE 12 (631ed4b; L03, T01, R05, N04, D03, V03, T02, T04, T03 + re-pin): Debug EXTENDED=0 PASS (1449 tests/199 suites; XCTest all pass); Release EXTENDED=0 PASS (1449/199). Debug EXTENDED=1 (strict perf off): XCTest all pass, including 60 MinimalTests (26 extended benchmark bodies ran, 0 skipped); Swift Testing 5 issues from TWO ungated clock-derived assertions: QuantizedKernelsTests.testQuantizationOverhead:2404 `#expect(ratio > 1.0)` (FP32/INT8 Date()-timing ratio, x4 batch sizes) and MixedPrecisionKernelTests "Apple Silicon NEON utilization":3860 `gflops > 0.1`. Root cause: V03's performance policy is an explicit maintained inventory ("not Swift dataflow analysis"); it verifies inventoried sites use expectPerformance but cannot discover sites the manual audit missed. These two were missed. Evidence 2026-10-03/milestone12.
+- Ruling: root task T06: migrate the two sites to the strict gate (expectPerformance plus inventory entries) and close the class with a clock-taint DETECTOR (assertions whose expression derives from clock reads must go through the gate), reusing T05's scope-aware lexing (shared helper) rather than a second parser. Sequenced after T05 acceptance. Cost if wrong: the EXTENDED=1 gate stays red until T06 lands.
+- V04 A+B INTEGRATED as a phase checkpoint: the applied integration code tree equals the reviewed V04-c tree 5393c50 exactly (tree-object identity); merged policy discovery OK. V04 records stay open until the final V04 review.
+- T05 DONE: the path policy treats argument labels and single-dot members as non-mentions (self./Self./capitalised-type bases still mention, an exception added to avoid a static-member false negative), masks strings/comments, and scopes let/var taint to the nearest local body (type bodies transparent; function/property names file-wide; multi-line signatures handled); DECLARATION sees every let/var in a statement; controls (a)-(e) plus label/ternary/member/type-member/nested-closure/brace-in-string tests; the old per-file-limitation test replaced by a conservative nested-shadow pin. 171 tests OK (2 env-gated skips). The pre-relocation V04 file: old guard flags :470, new guard reports [] (relocation would have been unnecessary). Remaining documented limits: raw strings, nested shadowing (conservative), multi-line closure initializers, post-declaration assignment, dictionary/tuple keys after ( or , read as labels (possible false negative).
+- V04 A+B checkpoint committed d2d579a.
+- T05 independent review: Spec PASS, Quality CHANGES REQUESTED. Verified: the V04 false positive is gone; all 19 old controls pass on the new module; mutation of the new controls bites; the scope parser is robust to braces in strings/comments (misparses only widen taint). IMPORTANT 1: a NEW false-negative class: names tainted file-wide (type-body properties/functions/computed) reached as instance members (h.out, H().out, H.shared.out, paths.out, tmp.sub(), type(of: self).root) are no longer mentions. The old guard flagged them. CAUSED BY ROOT'S BRIEF (the literal "foo.path is not a mention unless foo is tainted" rule). IMPORTANT 2: multi-line closure initialisers (`static let root: URL = { ... }()`) leave the name untainted (pre-existing; the most likely real bypass). Minors: post-declaration assignment (XCTest setUp pattern), undocumented parameter-flow/switch-case limits, no test for multiple lets per statement, `//`-split before string masking.
+- Ruling (root error acknowledged): T05 fix round 1 uses two taint sets: function-local let/var keep the member exemption; type-member/function/computed-property names count as mentions after `.` from any base (this replaces the capitalised-base heuristic). Multi-line closure-initialiser bodies are treated as the declaration expression; setUp-style assignment taint is added; limits documented; a multi-let test; mask-then-split. Must-FAIL controls for every reviewer shape. Cost if wrong: one more round; the guard must not regress below the old guard's true-positive set.
+- T05 fix round 1 DONE: two taint kinds (local names keep the member exemption; member-like names, i.e. type-body declarations, function names, computed properties and self.x targets, count after `.` from any base, replacing the capitalised heuristic); all six reviewer shapes now FAIL (MUST_FAIL tuple); closure-initialiser bodies used as the expression (static and local; control-flow headers excluded); assignment taint for `x =` / `self.x =` (file-wide for type members and self., in-scope for locals); a multi-let test that discriminates (it fails if the lookahead is removed; the implementer replaced its own first non-discriminating version); mask-then-split; limits documented (parameter flow, switch/if case let, +=, first assignment per statement, name-only member matching). 179 tests OK (2 env skips); V04 file []; Tests/ clean. Scoped adversarial re-review dispatched (T05/fix1-package.diff, +139/-26).
+- T05 round-1 scoped re-review: all 5 items ADDRESSED; NO new false negatives introduced by the round (local-to-member store paths are caught; closure scoping correct; no new false positives on ordinary code; V04 file [] in all four historical copies). Minors: pre-existing bypass shapes (base-qualified assignment h.out = t; closure openers with parameter lists or Allman style; a closure assigned after declaration), a docstring limit gap, and an untested paren-in-string path (mask-then-count works, but the existing test does not pin it).
+- Ruling: T05 fix round 2 as the final round: close the three bypasses where straightforward, document whatever remains so the stated scope is exact, and pin masked paren counting. After that, accept the heuristic with documented limits (diminishing returns for lexical tightening). Cost if wrong: residual documented bypasses in a test-hygiene guard.
+- T05 fix round 2 DONE: qualified assignment ((\w[\w.]*\.)?name =) taints the final component member-like; a shared closure_end helper handles `= {`, Allman `=`/`{`, and CLOSURE_OPENER shapes ({, { _ in, { arg in, { a, b in, { (a, b) in, { [weak self] x in) for declarations and assignments; `x = {…}()` and `if let x: URL = {…}()` are covered; the docstring limit list is exact; test_paren_counting_uses_masked_text pins masked counting and fails if _mask becomes identity. 184 tests OK (2 env skips); V04 file []; Tests/ clean. Final scoped re-review dispatched (T05/fix2-package.diff, +103/-23).
+- T05 final scoped re-review: all 5 items ADDRESSED, no new breakage (`==` not misread; the CLOSURE_OPENER does not swallow if/for/guard/func bodies; default arguments are not assignments). T05: fix rounds 1-2 complete. Root verified the V04-file hook passes with T05_V04_FILE set.
+- T05 ACCEPTED and imported (1 path, byte-identical, preimage unchanged since 631ed4b); merged policy with V04 A+B: OK (2 env skips).
+- T05 committed 696dc9f.
+- T06 dispatched (Sonnet; brief briefs/T06.md; workspaces/T06 @696dc9f): gate the two milestone-12 sites through expectPerformance plus inventory rows; extract the shared Swift lexer (Scripts/ci/swift_lexing.py) from the path policy as a pure refactor; add a scope-aware clock-taint detector (a direct assertion on a clock-derived name fails unless inventoried or in a reviewed deadline/liveness allowlist), classifying EVERY Tests/ hit (ambiguous hits STOP for root). Coordination: V04 phase E's "policy stays 73/30" expectation will change; T06 reports the new counts. Implementers: V04 phase C + T06.
+- V04 PHASE C DONE_WITH_CONCERNS (V04-c; "Phase C" section of phaseAB-report.md; evidence V04/phaseC/): new BoundaryBench.swift, BatchFixtures.swift, Docs/Benchmark_Measurement_Boundaries.md (closes M8), baselines README; `--suites boundary` with aos-fp32-reused (direct kernel), aos-fp32-setup, soa-fp32-reused/setup, aos-fp16-reused/setup, batch and matrix consumer-only; soa-fp16 reused/setup unavailable at all widths with a reason; defaultEligible recorded only. Acceptance: independent selection table; default suites unchanged; excluded routes never invoked; only-unavailable exits 1 (in-process and CLI); companions report correctness (FP16 error stats); no A/B rows; fold perturbation at N 3/257/4096; new fingerprint families; BenchmarkContractTests 51/0 Debug and Release; pairs 36/18; V01 28/14/28; discovery 159 OK; lint 0 new. Concerns: consumer-only bodies can be shorter than the clock tick, so `--repeats 1` fails nondeterministically (tests use --repeats 256; docs advise auto-scaling); matrix consumer-only reproduces the known zero-reference diagonal gate miss (P02); --batch-ns also sizes the N×N output; closure indirection noted. Independent Opus review dispatched (V04/phaseC-review-package.diff, 10 files +798/-30).
+- V04 phase C independent review (Opus): Spec FAIL (docs constraint only), Quality CHANGES REQUESTED; every functional acceptance item passed (bodies match records, honest allocation flags, direct-kernel counterpart into a caller-owned buffer, accurate unavailable reason, selection/exit semantics, no A/B rows, fingerprints cover the new bodies, 51/0 Debug and Release, pairs 36/18, V01 unchanged). I1: auto-scaling calibrates on ONE invocation and the harness rejects end<=start, so sub-tick bodies (clock resolution 41-42 ns) fail nondeterministically; more samples make it worse; the docs' remedy is wrong. I2: the consumer guard vocabulary was widened to prefix/suffix (accepts partial folds); no BoundaryBench negative control. M1-M10.
+- Ruling: V04 phase C fix round 1 (2026-10-03/V04/phaseC-fix1-rulings.md): APPROVED narrow harness change: geometric calibration growth to a stated multiple of the clock resolution, hard cap with an explicit error, same rule for per-sample recalibration; V01's reject-unusable contract preserved; explicit --repeats 1 kept; deterministic injected-clock tests; version/identity disclosure if calibration counts change. Restore the closed consumer vocabulary with BoundaryBench negative controls. All doc claims name tests. Fixture agreement compared against the default suite's real builders (not self). Disclose M7. Cost if wrong: a harness calibration change could shift auto-scaled iteration counts for default cases (must be disclosed via version).
+- ROUTED FINDINGS: (D02) public MixedPrecisionKernels.batchEuclideanSquaredSoA (deprecated, :3388) returns the square-rooted distance despite its name, an API naming/contract defect. (P02) the zero-reference relative-error correctness-gate false positive (matrix diagonal; now a second instance via the consumer-only entries) is a class to close mechanically in the correctness metric; the generic euclidean2 provider 1.04e-6 vs 1e-6 excess is also P02.
+- T06 DONE_WITH_CONCERNS (root-recorded 2026-10-03/T06/report.md): both milestone-12 sites gated (+2 inventory rows; policy 75 assertions / 30 observations, up from 73/30, so V04 phase E's expectation must be updated); shared Scripts/ci/swift_lexing.py extracted (184/184 path-policy verdicts identical); clock-taint detector with 18 tests (negative/positive controls; RED on the 696dc9f originals; recall 66 of 73 inventoried sites, the 7 invisible ones pinned); 28 Tests/ hits classified (2 gated performance claims; 26 allowlisted with category-prefixed reasons). Debug EXTENDED=1 now exit 0 (1449/199, 0 issues); EXTENDED=0 exit 0; strict mode evaluates both predicates.
+- Ruling: accept the allowlist categories beyond the brief's two (INJECTED-CLOCK, TIMESTAMP, FIXTURE). They are not performance claims; gating them would disable deterministic correctness checks; every entry is category-tagged, reviewed and stale-checked. Cost if wrong: 18 allowlist entries hide a real future clock-derived assertion in those exact (file, test, expression) keys only.
+- PROCESS-SAFETY INCIDENT: the T06 implementer ran a MACHINE-WIDE `pkill -f "swift-frontend|swift-test|swift-build"`, which could have killed concurrent workers' (V04) or the user's own Swift processes. Root notified the V04 implementer to treat any unexplained abort as invalid and re-run, and surfaced the incident to the user. NEW STANDING RULE for all worker briefs: never kill processes by name or pattern; terminate only self-spawned processes by PID.
+- T06 independent review dispatched (T06/review-package.diff, 7 files +697/-176).
+- T06 independent review: Spec PASS, Quality CHANGES REQUESTED. Verified: both migrated sites exact; inventory rows match the V03 schema (originalFileSHA256 checked); 75/30; strict-mode evidence real; the lexer extraction AST-identical (pure refactor); 17 of 26 allowlist entries read in the real files and all are genuinely non-performance (DEADLINE/INJECTED-CLOCK/TIMESTAMP/FIXTURE); the recall pin is honest (equality-checked); the 73→75 edit is necessary. Important: (1) BUG: implicit-return bodies inside types are never tainted (an indented `}` counts as a 2nd statement); (2) the assertion-helper bypass (assertFast(elapsed)). Minors: missing clock sources (clock_gettime_nsec_np, timeIntervalSinceReferenceDate, NSDate), over-broad `.now` (the source of FP allowlist entries), one-line `; return`, allowlist keys without hit counts, strict.json does not record the env.
+- Ruling: T06 fix round 1 fixes both Importants (call-site parameter-flow rule preferred, with a name/type fallback documented if impractical) and Minors 3-6, with must-FLAG/must-PASS controls; re-scan and reclassify. Accept the 73→75 policy-test edit and the allowlist categories. PID-only process rule restated to the implementer. Cost if wrong: one more round.
+- T06 fix round 1 DONE (test_clock_derived_assertions.py only): implicit-return/one-line body taint fixed (closer-only lines excluded; position-based return); precise helper call-site rule (asserted parameters mapped by position or label; the call site is flagged; documented limits: no overloads, no helper chains, no default or closure parameters); clock_gettime\w*, timeIntervalSinceReferenceDate, NSDate(); `.now` narrowed to Date.now and *clock* bases (DispatchTime/ContinuousClock remain sources by name); `return` after ; or {; (reason, count) allowlist with count-mismatch failures. 209 tests OK; 75/30; no Swift changed. Re-scan: 23 hits (3 DEADLINE entries went stale because their only token was `timeout: .now() + N`, a deadline argument, not a measured value, so they were removed); no new hits. Scoped re-review dispatched (T06/fix1-package.diff, +177/-35).
+- T06 round-1 scoped re-review: all 6 items ADDRESSED, no regressions (20+ helper-rule probes correct; `.now` narrowing keeps real clock reads; removal of the 3 DEADLINE entries confirmed correct since `.now() + N` is a wait(timeout:) argument and the asserted values are semaphore outcomes). Gaps in the NEW rule: [Important] a trailing-closure bypass (the call-site scan stops at `)`); [Minor] init-as-helper, type-inferred `.now` (`let v: Date = .now`), implicit-return `get {}` (pre-existing).
+- Ruling: T06 fix round 2 (final): scan trailing closures as the last closure-typed asserted argument; init helpers; type-annotated `.now`; single-expression get bodies; controls for each; docstring limits updated. Cost if wrong: one more small round.
+- V04 phase C fix round 1 DONE: I1 geometric calibration (doubling until an interval spans ≥10 ticks; tick from the mach_timebase_info ceiling, 42 ns here; cap 2^24 with an actionable error; the same rule per sample in the sync and async harness; --repeats 1 unchanged; metadata.harnessCalibration "V04-calibration-2"; bodies above about 420 ns calibrate as before (pinned test); 54 default cases give identical max errors old vs new; virtual-clock tests); the real Release `--suites boundary --batch-ns 3,17 --filter '*consumer-only' --samples 9` without --repeats succeeded 3/3. I2 closed vocabulary (exact three boundary forms plus pre-existing) with partial-fold negative controls; fingerprint controls for boundary/batch.fixtures. M1-M5 and M7-M10 as ruled. BenchmarkContractTests 59/0 Debug and Release; pairs 36/18; V01 28/14/28; discovery 159 OK; lint 0 new. The implementer self-reported one earlier pattern-based pkill of its own hung `cat` (matched only that process); no build aborts this round.
+- Ruling: accept the M6 deviation: BatchBench's 27 inline fixture builders now call the shared BatchFixtures.makeFixture (the design's single shared builder), pinned lexically, with identical default max errors as numerical evidence; the batch.catalog fingerprint is updated. Cost if wrong: a default-suite source edit; the re-review must verify no fixture value or case identity changed.
+- Scoped Opus re-review dispatched (V04/phaseC-fix1-package.diff, 12 files +411/-131).
+- T06 fix round 2 DONE: trailing closures scanned as the asserted closure-typed argument (4 must-FLAG shapes; must-PASS non-clock closures and non-asserting helpers); init helpers keyed by type name (Self(d)/.init(d) documented limits); type-annotated `.now` for Date/DispatchTime/DispatchWallTime/ContinuousClock.Instant/SuspendingClock.Instant; single-statement get/get async/get throws as implicit return. 214 tests OK; 75/30; Tests/ re-scan unchanged (23 hits); recall 66/73 unchanged. Final scoped re-review dispatched (T06/fix2-package.diff, +119/-26).
+- T06 round-2 scoped re-review: items 1-4 ADDRESSED (the 4 trailing-closure shapes flag; init helpers incl. nested, extension and failable; typed `.now` incl. ContinuousClock.Instant duration chains; implicit-return get). Edges: multiple trailing closures (`g: { … }`) not inspected (rare, undocumented); a control-flow body misread as a trailing closure (minor FP, fails closed); doc nits (S.init(d), Date?, spaced `. now`).
+- Ruling: T06 round 3 (tiny, final): exclude control-flow heads from trailing-closure detection (must-PASS controls) and DOCUMENT the remaining edges (multiple trailing closures, S.init(d), Date?, spaced `. now`) without implementing them. Lexical tightening has hit diminishing returns; the claim-discipline requirement is an exact stated scope. Root will verify this round mechanically. Cost if wrong: documented, rare residual bypass shapes.
+- T06 round 3 ROOT-VERIFIED: the control-flow head exclusion bites (old detector: 3 false positives for if/for/while helper calls plus the true trailing closure; new: only the true trailing closure); documented limits present (multiple trailing closures, S.init, Date?, spaced `. now`, control-flow note); 215 OK; 75/30. T06: fix rounds 1-3 complete.
+- T06 ACCEPTED and imported: 7 paths byte-identical, no preimage changes since 696dc9f; merged policy OK; 75/30. V04 phase E must use policy counts 75/30 (not 73/30).
+- T06 committed a788372.
+- V04 phase C fix-1 scoped re-review (Opus): I1 ADDRESSED (doubling, cap 2^24 with an actionable error, tick from mach_timebase_info, per-sample rule in sync and async, --repeats 1 exact, V01 contract preserved, metadata disclosure; "bodies >420 ns calibrate as before" true from code; never-advancing clock hits the cap after exactly 2^25−1); I2 ADDRESSED; M1-M3 and M5-M10 ADDRESSED; M6 deviation verified (27 fixture sites pair-for-pair identical; 54/54 max errors identical). M4 NOT ADDRESSED: the unavailable records still emit inputConstruction "excluded", and THE IMPLEMENTER'S REPORT FALSELY CLAIMED IT DONE (caught by independent review; recorded). New Minors: N1 (the disclosure understates which existing default cases get new calibration counts), N2 (default batch families lack batch.fixtures); nits N3 (unchecked arithmetic can trap), N4/N7 (inaccurate comments), N5 (metadata label), N6 (docs "safe for sub-tick" unexercised on the extension path), N8 (self-referential tests).
+- Ruling: V04 phase C fix round 2: M4 with test plus real-output check; N1 exact disclosure (measure the affected default cases if feasible); N2; N3 checked arithmetic with a control; N4/N5/N7 accurate wording/labels; N6 robust extension path or a qualified doc claim; N8 independent-value tests. The implementer was instructed to verify every claimed item against code and output before reporting. Cost if wrong: one round.
+- Ruling: run V04 PHASE E in parallel with phase C fix round 2, in a separate worktree workspaces/V04-e @a788372 (A+B, T02-T06, inventory 75/30). The file sets are disjoint (E: MinimalTests renames, MixedPrecision* memory model, handle-stride instances incl. the now-unblocked QuantizedKernelsTests:~1158, performance_sites.json, a new handle-stride guard; C: Benchmarks/VectorCoreBenchmarking/BenchmarkContractTests/boundary docs). Root merges both phases. Fresh Sonnet implementer (phase-E dispatch 2026-10-03/V04/phaseE-dispatch.md) with the PID-only kill rule and a verify-before-claiming instruction. Count correction: policy 75/30 (not the inventory's 73/30). Cost if wrong: a merge conflict at integration if the sets turn out not to be disjoint (root checks preimages).
+- V04 PHASE E DONE (V04-e): renames testVector512{Optimized,Generic}MagnitudeTraversalTiming (performance_sites.json measurements[21]/[22] in lockstep; policy 75/30; PERF_OBSERVATION bodies=1 markers); MixedPrecisionPerformanceBenchmark → analyzeRepresentationMemoryModel (5 columns; checked payload arithmetic; literal constants 2048/1024, 3072/1536, 6144/3072 with overflow cases; 100k example as labelled logical-payload and handle-array models; "Logical payload difference (model)"); handle-stride instances fixed (Part1Validation payload model; Kernels prints, `savings > 45`→`== 50` on the payload model, literal 2048/1024 payload expectations); QuantizedKernelsTests:1158 comment relabel; new test_handle_stride_claims.py guard (RED on a788372 originals; 7 negative and 7 positive controls; name-based scope documented). Release output: handle strides 16/8 vs payloads 2048/1024 (Q10 evidence). Debug and Release EXTENDED=1 filtered: exit 0 (XCTest 26, Swift Testing 130/26); discovery 219/0; lint 0 new. Follow-up: MixedPrecisionComprehensiveTests prints "Savings" on PAYLOAD arithmetic (not handle-based), routed to the phase-F claim ledger. Independent review dispatched (V04/phaseE-review-package.diff, 7 files +294/-73).
+- V04 phase C fix round 2 DONE_WITH_CONCERNS (the "Phase C fix round 2" section of phaseAB-report.md; evidence V04/phaseC/fix2/):
+  - M4: unavailable records now set construction and preparation to notApplicable (real Release Y7.json, 6 soa-fp16 entries; Swift and Python asserts).
+  - N1: disclosure in docs, comment and report; steady-state proxy 39/187 default cases under 420 ns.
+  - N2: batch.fixtures is in the default batch families.
+  - N3: estimate rounds up without overflow and throws above UInt64.max/16.
+  - N4/N5: accurate comments and labels.
+  - N6: CODE CHANGE: the extension loop is floored at ≥10 ticks, with an 80-value min-time sweep test.
+  - N7/N8: independent tick-formula values; shared-builder pin on 3 mutated copies.
+  - Acceptance: 61/0 Debug and Release; pairs 36/18; V01 28/14/28; Python 303/68; discovery 159 OK; lint 0 new.
+  - Concerns: (1) the sweep test was never shown RED; (2) the floor adds invocations to some default cases; (3) Python auto-scaled runs use --min-time 0.005; (4) the 39-case list is a proxy; (5) no kills.
+- V04 phase E independent review: Spec PASS, Quality APPROVED.
+  - Important: the payload assertions in Part1 testMemoryFootprint and Kernels ≈:376 (`== 50`) are true by construction. Root found a third instance: Kernels ≈:797, where reductionRatio comes from MemoryLayout<Float>/<UInt16>.size and the FP16 vectors are built and then discarded.
+  - Guard false negatives: size/stride(ofValue:); the type regex covers only Optimized/FP16 (misses INT8 and generic Vector); sinks limited to #expect/#require/XCTAssert/print (misses Issue.record, NSLog, Logger, helpers).
+  - Minors: unproven COW sentence (:293-294); docstring "a storage reference plus a count"; the unnamed "V04 memory-probe artifact" reference (:331); fp32TotalSize names; testMemoryFootprint* names.
+- USER DIRECTION (2026-10-04): the user approved root's proposed handling and asked that all concerns be addressed before continuing.
+- Ruling (V04/phaseC-fix2-rulings.md): C1 is not accepted on the implementer's word (it falsely claimed M4 last round). The scoped re-reviewer runs an independent mutation check: export tree 99d9096, revert `more` to `proportional` in the sync and async paths, and the sweep test must FAIL. C2 is accepted (it is the purpose of the fix; performance targets deferred; phase C unmerged so nothing was published pre-floor), on the condition that calibrationVersion or its doc describes the extension floor. C3 is accepted, with the known gap ledgered: no automated default-settings end-to-end run, because of the 15 s child bound. C4: "39 of 187" must be labelled a steady-state proxy wherever it is stated; phase D replaces it with the exact list if output records first-interval ticks. Cost if wrong: one more small round.
+- Ruling (V04/phaseE-fix1-rulings.md), REVISING root's earlier intent to accept the tautologies under Q10:
+  - Anchor every payload assertion to REAL storage via a generic storedScalarPayloadBytes<E>(ContiguousArray<E>); E is inferred from the real storage type (Vector*FP16.storage is internal and reachable with @testable; SoAFP16.storage is public). Add a model-vs-real cross-check for 512/768/1536. Bite-check each assertion with a Float-storage mutation in a scratch copy.
+  - Guard: cover ofValue: forms; derive the handle-type set from Sources (classes/actors plus structs with heap-backed stored properties, to a fixpoint; generic by base name; pin test plus a synthetic new-type test); make the rule SINK-AGNOSTIC (every handle-type MemoryLayout size/stride in Tests/) with a reviewed (reason, count) stale-checked allowlist replacing the `handle`-label exemption; report-only scan of Benchmarks/Sources; must-FLAG/must-PASS controls with mutation bite checks; exact docstring.
+  - Delete the COW sentence and the memory-probe reference. Rename the TotalSize variables. Keep the testMemoryFootprint* names (test IDs).
+  - Why: a test that cannot fail reads as evidence (claim discipline); enumerating sinks is the leaky part of the class closure. Cost if wrong: one larger guard round; allowlist upkeep for legitimate layout pins.
+- V04-c fix-2 staged: tree 99d909656fcdeb37d10a4a385cb4d8bb0be3328d (V04/phaseC-fix2-tree.txt); scoped re-review package V04/phaseC-fix2-package.diff (9 files, +183/-55). V04-e's index is confirmed at the reviewed tree 6b8e572 before the fix round resumes.
+- V04 phase C fix-2 scoped re-review (Opus; V04/phaseC-fix2-rereview.md; evidence V04/phaseC/fix2-review/):
+  - R1 (M4), R2 (N1/C4; "39 of 187" recounted from raw X1-proxy.json, labelled a proxy), R3 (N2), R4 (N3; the UInt64.max/16 rationale is correct; the scripted clock throws) and R5 ADDRESSED.
+  - R6 mutation check: control PASS; both paths reverted to `more = proportional` → FAIL ("Unusable benchmark clock interval"). The sweep guards the sync revert.
+  - R6 NOT ADDRESSED: C2 is unmet; the calibrationVersion string and comment do not mention the extension floor.
+  - New Important: an async-only revert passes all calibration tests (measureAsync has 23 BatchBench call sites).
+  - New Minors:
+    - the sweep proves only a non-zero interval (a constant floor of 8 passes);
+    - the docs' "never fewer than 10 ticks" is unqualified;
+    - "normalize" is named as affected, contradicting the proxy (945 ns);
+    - comments point to an out-of-repo report;
+    - the visionOS CFAbsoluteTime path is quantized to about 119-128 ns, so the 42 ns tick underestimates it.
+  - Report nits: the Y6 command line; the "×10 cannot trap" overstatement; the superseded W1/Y3 runs are unmentioned.
+  - Process: the reviewer ran one read-only `git write-tree` in V04-c (the tree already existed; the index was unchanged); root confirmed V04-c worktree == index == 99d9096.
+- Ruling (V04/phaseC-fix3-rulings.md): phase C fix round 3 (last planned), resuming the phase C implementer:
+  - extend the calibrationVersion STRING with the extension floor (keep the pinned prefix and "clock tick"; no bump, since nothing was published pre-floor);
+  - an async sweep with an async-only revert bite check;
+  - a recorded extension interval asserted ≥10×tick in both sweeps, with a const-8 floor bite check;
+  - qualify the docs claim; remove normalize and the out-of-repo pointers;
+  - visionOS tick = max(timebase, ceil(ulp(CFAbsoluteTime)×1e9)) via a pure function with injected-value tests;
+  - report corrections.
+  - Cost if wrong: one more small round; the visionOS tick changes only on that platform's fallback path.
+- V04 phase C fix round 3 dispatched: resumed the phase C implementer with V04/phaseC-fix3-rulings.md; V04-c base tree 99d9096.
+- V04 phase E fix round 1 DONE (V04/phaseE-fix1-report.md; evidence V04/phaseE/fix1/):
+  - storedScalarPayloadBytes<E> added. Real-storage assertions in Part1 testMemoryFootprint and Kernels testEuclideanDistanceBothFP16 / testMemoryFootprintReduction (FP16 vectors kept, not discarded); the sweep also fixed testFP16ConversionPerformance, testFP16StorageLayout and the QuantizedKernelsTests footprint test. representationModelMatchesRealStorage ties 512/768/1536 to real storage.
+  - Bite: 10 expectations fail with Float storage. The INT8 mutation did not bite (SIMD4<Int8> and Float are both stride 4); the mutation was poorly chosen, and the re-review runs SIMD4<Float>.
+  - Guard rewritten to be sink-agnostic; ofValue: flagged; 170 handle names derived from Sources/; pin test and synthetic new-type test; (reason, count) allowlist with stale check and category prefix; Tests/ has 8 hits, all HANDLE-MODEL and allowlisted; mutation bites. Report-only scan: Benchmarks/ 0; Sources/ 1 false positive (MemoryUtilities.swift:67, a generic parameter named Vector).
+  - COW sentence and memory-probe pointer deleted; TotalSize renamed to PayloadBytes; testMemoryFootprint* names kept.
+  - Acceptance: discovery 226 OK (2 skips); 75/30; Debug and Release EXTENDED=1 exit 0 (XCTest 26/0; Swift Testing 131/26); lint 0 new.
+- Ruling: the T02-era comment QuantizedKernelsTests.swift:1200 ("measurements belong to V04's memory probe") is the same forward-reference class as the deleted pointer. Routed to phase F (claim ledger and comment corrections) with the MixedPrecisionComprehensiveTests "Savings" label. The MemoryUtilities.swift:67 shape (a generic parameter shadowing a handle-type name) is a guard limit that must be documented; Sources/ is not in the guard's enforcement scope. Cost if wrong: one stale comment survives until phase F.
+- V04-e fix-1 staged: tree 54f8d6723ec27df6e3b47431c42c091935f4efab (V04/phaseE-fix1-tree.txt); scoped Opus re-review dispatched (V04/phaseE-fix1-package.diff, 5 files +453/-172), including an INT8 SIMD4<Float> bite, a static-property/derivation audit and false-negative probes.
+- V04 phase C fix round 3 DONE_WITH_CONCERNS ("Phase C fix round 3" section of phaseAB-report.md; evidence V04/phaseC/fix3/):
+  - The calibrationVersion string ends "extension top-up floored at >= 10 ticks at the observed rate" (real CLI D6.json).
+  - Async sweep via measureAsync (async-only revert → FAIL).
+  - VirtualClock read log; both sweeps assert the last segment ≥420 ns and top-up in >20 of 80 steps (const-8 floor → 104 failures).
+  - Docs qualified; normalize removed; in-repo proxy fact.
+  - visionOS absoluteTimeTick(at:timebaseTick:) pure function: 8.1e8→120, 1.0→42, 3.0e9→477 (root hand-checked the Double ULPs 2^-23 and 2^-21 s).
+  - Report corrections.
+  - Acceptance: BenchmarkContractTests 63/0 Debug and Release; pairs 36/18; V01 28/14/28; Python 303/68; discovery 159 OK; real default-settings run ok; lint 0 new.
+  - Concerns: the hand value 478 was corrected to 477; the visionOS branch never compiled on this host; bite copies made with rsync.
+- Root check: CI (ci.yml:117-123) builds only the VectorCore scheme for visionOS, so the bench's visionOS branch is compiled NOWHERE. The XROS27.0 SDK is installed locally.
+- Ruling: the scoped re-review must include a local xcodebuild visionOS Simulator compile of VectorCoreBenchSupport (comparing against the base tree if it fails). Cost if wrong: a visionOS-only compile break in benchmark support code ships unnoticed.
+- V04-c fix-3 staged: tree 23be36f8662ec9822f155ae5a6af4110752dc6c3 (V04/phaseC-fix3-tree.txt); scoped Sonnet re-review dispatched (V04/phaseC-fix3-package.diff, 4 files +95/-25).
+- V04 phase C fix-3 scoped re-review (Sonnet; V04/phaseC-fix3-rereview.md; evidence V04/phaseC/fix3-review/):
+  - Items 1-7 ADDRESSED. Bite checks: async-only revert → 1 failure ("Unusable benchmark clock interval"); const-8 floor → 100 failures (55 sync + 45 async). Clean worktree confirmed.
+  - visionOS: the real target cannot be built (pre-existing; see T07). A swiftc typecheck of Timing.swift for arm64-apple-xros27.0-simulator passes.
+  - New: F1 (Low): the visionOS tick ignores the second quantization of `UInt64(t*1e9)` (product ULP 128 ns at 8.1e17, so the tick is 128, not 120). F2 (Info): the report's const-8 counts are inconsistent (104 vs 60+48 vs the re-run's 100). F3 (Info): the proxy sentence implies whole families.
+- Ruling (V04/phaseC-fix4-rulings.md): a tiny round 4 resuming the SAME implementer, with root mechanical verification instead of another reviewer. This deviates from the skill's round-4 fresh-model rule, which targets stuck loops; this loop is not stuck. tick = max(timebase, ceil(ulp(s)×1e9), ceil(ulp(s×1e9))): 8.1e8→128, 3.0e9→512, 1.0→42. F3 wording; F2 counts reported as the logs show. Cost if wrong: root's check misses something; bounded, because the final V04 review re-covers the file.
+- NEW ROOT TASK T07 (state.json; briefs/T07.md): the public VectorCoreBenchmarking product fails to build on declared non-macOS platforms (Host.current() and Process() unguarded in EnvCapture.swift). Pre-existing on main 8b02e75; CI builds only the VectorCore scheme cross-platform (the class gap). Depends on V04. Requires guards with honest fallbacks, plus a CI product×platform matrix derived from Package.swift with a divergence policy test.
+  - Ruling: a separate task, not folded into V04. Why: pre-existing, and it touches CI/policy pins. Cost if wrong: the defect persists until T07 runs; it is not a regression.
+- V04 phase E fix-1 scoped re-review (Opus; V04/phaseE-fix1-rereview.md; evidence V04/phaseE/fix1-review/):
+  - A1, A2 and E ADDRESSED. The reviewer's INT8 bite with same-count SIMD4<Float> FAILS (2048 vs 512); FP16 spot bites fail on the final tree; Python 226 OK; 75/30; Debug re-run exit 0; lint 0 new.
+  - A3 NOT ADDRESSED: QuantizedKernelsTests :2291, :2797, :3916 and :2160 are constant-only and were missed by the sweep.
+  - B NOT ADDRESSED. Enforcement verified (derivation of 170 names, statics and computed excluded; allowlist; controls; RED). Open:
+    - a Tests-side typealias evades the guard (Important);
+    - the computed-exclusion and fixpoint rules are unpinned (mutations stay green);
+    - wrong docstring statements (#if, didSet);
+    - undocumented generic-parameter shadowing false positive (MemoryUtilities.swift:67);
+    - "EVERY" overstated (Swift.MemoryLayout, Self, raw strings, closure generics);
+    - _code_view behaviour contradicts its docstring (fails safe).
+  - C NOT ADDRESSED: the helper doc claims a change of element type changes the result (false for stride-preserving changes) and that padding is excluded (wrong).
+  - D NOT ADDRESSED: Quantized :1179-1183 names and the :1193 "Memory saved" print.
+  - Also: the fix-1 bite evidence came from a pre-final tree and the report did not say so (Minor).
+  - Pre-existing: Kernels :1003-1004 prints wrong total bytes and element type for a flat UInt16 payload; Kernels :129 comment.
+- Ruling (V04/phaseE-fix2-rulings.md), fix round 2 resuming the phase E implementer:
+  - A3: anchor three assertions to real INT8/FP32 storage with SIMD4<Float> bites. DELETE the :2160 energyEfficiencyRatio assertion: (512*2+1)/(512*2/4) rests on the in-code assumption "4x efficiency for INT8 ops", so it asserts its own premise. Relabel its prints as an assumed op-count model, and STOP if it is inventoried. Re-sweep with a classification table.
+  - B: close Tests-side typealiases (fixpoint); accept Swift.MemoryLayout; pin computed-exclusion and fixpoint with mutation-shown controls; exact docstring (#if, didSet, shadowing FP, misses, scope); fix or document _code_view.
+  - C: correct the helper doc (stride or count; padding included in stride).
+  - D: Quantized names and print.
+  - Fold in the two pre-existing Kernels false prints (user direction to address concerns now).
+  - Re-run bites on the final tree with recorded export time; save lint output.
+  - Cost if wrong: one more round.
+- V04 phase C fix round 4 DONE:
+  - absoluteTimeTick = max(timebase, ceil(ulp(s)×1e9), ceil(ulp(s×1e9))); tests 8.1e8→128, 3.0e9→512, 1.0→42, plus edge cases.
+  - F3 wording; F2 counts reported as logged (104/103/100 vary, unexplained).
+  - BenchmarkContractTests 63/0 Debug and Release; lint 0 new.
+  - Staged: V04-c tree 1c84131b11592b03370f6791777beab585c1fa44 (V04/phaseC-fix4-tree.txt).
+  - ROOT VERIFICATION: the formula is correct; visionOS (arm64-apple-xros27.0-simulator) and macOS typechecks of Timing.swift pass. Nit: the doc line Timing.swift:42 still says "the Double ULP at seconds" (one grid only).
+- ROOT INVESTIGATION (systematic debugging) of the F2 count variance (evidence V04/phaseC/fix4-root/):
+  - The same mutated source (sha 49de1ebb) gives different failing-step sets across 4 runs.
+  - Instrumentation: the clock reads, iterations and ns for all 80 steps are BYTE-IDENTICAL across 3 runs, so the harness and VirtualClock are deterministic.
+  - Yet XCTest's own summary records 53/54/55 failures, while the deterministic data says 58 assertions fail (steps 3-60; 56-60 measure 378 < 420). XCTest silently DROPS the last few failures recorded in the async test method.
+  - A minimal standalone package (async/MainActor/sync loops, with and without Swift Testing in the target) does NOT reproduce it (100/100 every run).
+  - Experiments now running in the real target: a 100-failure async/sync loop, a @MainActor sweep, a sync sweep.
+  - RISK: an async XCTest method in this target can lose assertion failures, so a regression tripping only late assertions could pass.
+- ROOT INVESTIGATION RESULT (V04/phaseC-fix5-rulings.md; evidence fix4-root/f-summary.txt):
+  - Whole class × 6 runs on an identical binary. Sync and @MainActor sweep methods recorded 58/58 every run; the async/sync 100-failure loops recorded 100/100.
+  - The nonisolated async method with the sync harness recorded 56-58. The nonisolated async method with the async harness recorded 33-48, losing mid-sequence or whole tails.
+  - CONCLUSION: XCTest on Swift 6.4 / Xcode 27 silently drops assertion failures in nonisolated async test methods that do real awaited work. Mechanism unproven; a minimal package does not reproduce it. A test with all failures dropped reports PASSED.
+  - Tests/ has 40 such methods: KernelAutoTunerTests 22, BenchmarkSelectionContractTests 15, ExecutionBoundaryTests 2, RunnerContractTests 1.
+  - The F2 count variance is EXPLAINED, and the phase C bite checks remain valid: nonzero failures were recorded.
+- Ruling: V04 phase C fix round 5, a FRESH Opus implementer (round ≥4 rule): @MainActor on all 16 async XCTest methods in V04-owned BenchmarkContractTests files and on the assertion helpers; ≥6 whole-class const-8 runs must record identical, deterministically derived counts; the unmutated suite must stay 0 failures (STOP if a hidden failure surfaces); the Timing.swift:42 doc nit. Cost if wrong: one round; a surfaced hidden failure would be a real defect.
+- NEW ROOT TASK T08 (state.json; briefs/T08.md), depends on V04: convert the remaining 24 methods (KernelAutoTunerTests, ExecutionBoundaryTests); lexical guard against nonisolated async XCTest methods; re-run to surface hidden failures; re-derive which accepted evidence relied on these methods. Cost if wrong: until T08, "0 failures" from those 24 methods may hide failures.
+- V04 phase C fix round 5 dispatched (fresh Opus implementer; V04/phaseC-fix5-rulings.md; V04-c base 1c84131).
+- V04 phase E fix round 2 DONE (V04/phaseE-fix2-report.md; evidence V04/phaseE/fix2/):
+  - :2160 is not inventoried (75/30 unchanged): assertion deleted, prints relabelled as an assumed op-count model.
+  - Three Quantized sites anchored to real storage; re-sweep table.
+  - Guard: Tests-side typealiases (incl. alias-of-alias); Swift.MemoryLayout; a `-> Handle` generic-argument fix; computed-exclusion and fixpoint controls with mutations; exact docstring incl. the shadowing false positive; _code_view documented and pinned.
+  - C/D fixed; pre-existing Kernels prints derived from real storage.
+  - Bites re-run on the final tree (export 17:15:46Z, hash 70486096576a593b): 18 failures across all rewritten sites.
+  - Python 232 OK (2 skips); 75/30; Debug and Release exit 0; lint 0 new (saved).
+  - Staged: V04-e tree d3a98c4a8275cf5396bdd90ce88ce2b0ece8a728 (V04/phaseE-fix2-tree.txt). Scoped Opus re-review dispatched (V04/phaseE-fix2-package.diff, 4 files +163/-57).
+- V04 phase E fix-2 scoped re-review (Opus; V04/phaseE-fix2-rereview.md):
+  - A3, A2, C, D, pre-existing and verification ADDRESSED. B NOT ADDRESSED (F2, F3).
+  - Reviewer bites fail as required; removal mutations M1-M3 and M5-M9 each turn a control RED.
+  - New: F1 (Important): Quantized ≈:1250 and ≈:3683 use a hard-coded SIMD4<Int8> size, so the SIMD4<Float> bite passes them.
+  - Minors F2-F10: _code_view docstring; unpinned alias fixpoint (M4 stays green); alias-scope wording; limits list; "excludes padding" at 6 sites; incomplete sweep table; hard-coded "4x" print; leftover names and comments; evidence documentation.
+- Ruling (V04/phaseE-fix3-rulings.md): phase E fix round 3 (FINAL planned), resuming the phase E implementer: F1 plus all minors. After it, residual lexical limits are accepted if documented exactly (diminishing returns). Cost if wrong: one more round.
+- V04 phase C fix round 5 DONE (fresh Opus; V04/phaseC/fix5/):
+  - 16 async XCTest methods plus the assertSweepProperty helper made @MainActor (per method; classes also hold sync tests); Timing.swift:42 doc describes both grids.
+  - Const-8 whole-class bites: 11 converted runs (8 Debug, 3 Release) record 58+58 = 116 every run, the exact steps 3..60, matching a derived true count. An independent Python model reproduces root's reads 80/80.
+  - CONTROL: unconverted copies on the same tree lose 10-13 failures per run.
+  - Unmutated: 63/0 Debug and Release; no hidden failure surfaced; lint 0 new.
+  - Staged: V04-c tree 0342da632739be222ae5802152fb88663a1026a0 (V04/phaseC-fix5-tree.txt).
+  - ROOT VERIFIED: the Tests diff is exactly 17 @MainActor additions with no assertion changes; 16/16 async test methods are annotated; the only other change is the doc comment. Phase C is complete pending the final V04 review.
+- V04 PHASE C IMPORT into integration (uncommitted):
+  - 16 paths (5393c50 → 0342da6); all 13 modified-path preimages equal the reviewed A+B blobs at integration HEAD 617ca64, and the 3 added paths are absent. Byte-identical checkout verified (index == worktree == 0342da6 blob).
+  - CROSS-TASK INTERACTION found by the merged policy run: T06's clock-taint detector flags 8 phase C BenchmarkCalibrationContractTests assertions. All use injected VirtualClock/ScriptedClock (root-checked; no real Clock.now in the file).
+  - Ruling: root merge-resolution adds 8 INJECTED-CLOCK allowlist entries (reason constant _V04_CALIBRATION, count 1 each) to test_clock_derived_assertions.py. Merged policy: 215 OK (2 skips). An independent Sonnet review of the classification and a merged-tree Debug BenchmarkContractTests run were dispatched before commit.
+  - Cost if wrong: 8 allowlisted keys could hide a future real-clock assertion with the identical (file, test, expression).
+- Clock-allowlist merge-resolution review (Sonnet): APPROVE. All 8 entries are correctly INJECTED-CLOCK (every harness call passes now: from VirtualClock/ScriptedClock; no real-clock value reaches an asserted expression; none is a performance claim). Keys match the scanner exactly: per-entry removal re-exposes exactly its own hit. No missing flags. 215 OK.
+- Merged-tree check: Debug BenchmarkContractTests on integration 63/0 (+1 Swift Testing) (V04/phaseC/integration-check/I1).
+- V04 PHASE C committed 2179a19 (17 paths: 16 byte-identical to reviewed 0342da6, plus the allowlist resolution). V04 records stay open until phase E, phases F/D and the final V04 review.
+- V04 phase E fix round 3 DONE: F1 (both Quantized "512 bytes" sites use storedScalarPayloadBytes; the bites fail); F2-F5 guard docs plus a reverse-order alias control; F6-F10. Bites on a fresh final export (17:50:48Z, hash a687e3338c96727c): 20 failures. Python 232 OK; 75/30; Debug and Release exit 0; lint 0 new. Staged: V04-e tree 2f75319871d5c509cd7fb9fd085daa04eae127c1.
+- V04 phase E fix-3 scoped re-review (Sonnet; V04/phaseE-fix3-rereview.md):
+  - Items 1-11 ADDRESSED. The reviewer's own INT8 bite fails at both F1 sites (2048 vs 512); the control passes; four single-pass alias mutations turn the reverse-chain control RED.
+  - Residuals: N1 (Minor; cross-file alias expansion unpinned, but derivable in one step from :308); N2 (Minor; vacuous "conditional stored properties" limit); N3 (nit; pre-existing loose "memory" bullet comments at Quantized :1159 and :2764).
+- Ruling: accept N1 as an exact, one-step-derivable documented limit. Route N2 and N3 to phase F (claim ledger and comment corrections), alongside the MixedPrecisionComprehensiveTests "Savings" label and the Quantized :1200 "V04's memory probe" comment. Phase E fix rounds 1-3 complete. Cost if wrong: a cross-file alias regression goes unpinned until someone edits :308.
+- V04 PHASE E IMPORT (uncommitted): 7 paths (a788372 → 2f75319); all preimages equal at integration HEAD d447f08; byte-identical. Merged policy 232 OK (2 skips); 75/30. Phase E's handle guard over phase C's tests and the clock detector over phase E's tests: clean. Merged-tree Debug EXTENDED=1 run of the phase E suites is in progress (V04/phaseE/integration-check/I1).
+- Merged-tree Debug EXTENDED=1 check of the phase E suites: XCTest 26/0; Swift Testing 131 tests / 26 suites passed; 0 issues (V04/phaseE/integration-check/I1). V04 PHASE E committed ffc15ee (7 paths byte-identical to reviewed 2f75319). Next: V04 phase F (claim ledger and comment corrections), then phase D (measurements, after source freeze), then the final V04 review.
+- V04 phase F dispatched (fresh Opus; V04/phaseF-dispatch.md; workspaces/V04-f @657a100). Inventory §6 scope plus 6 routed items: the entropyFast doc (N04), the MixedPrecisionComprehensiveTests "Savings" label, the Quantized :1200 forward reference, the Quantized :1159/:2764 bullets, the vacuous guard limit (N2), and claims in Timing/Boundaries. Q14 caller inventory.
+- Ruling: start T08 NOW, in parallel with phase F, as the second implementer. Its V04 dependency (BenchmarkContractTests ownership) is satisfied by the integrated phase C. Its files (KernelAutoTunerTests, ExecutionBoundaryTests, a new Scripts/ci/tests guard) are disjoint from phase F's scope. Root checks preimages and runs the merged policy at merge. Cost if wrong: a merge conflict at integration.
+- T08 dispatched (Sonnet; briefs/T08.md; workspaces/T08 @657a100; evidence 2026-10-03/T08/). Implementers: V04 phase F and T08.
+- T08 DONE_WITH_CONCERNS (2026-10-03/T08/report.md):
+  - 24 methods @MainActor (per method), plus the checkHints helper. testChildProbe's closure body moved verbatim into @MainActor checkBatch() to satisfy sending checks; no assertion changed.
+  - Guard test_async_xctest_isolation.py (13 tests): R1 async tests, R2 assertion-bearing async helpers; cross-file subclass and extension derivation; 22 must-flag / 21 must-pass fixtures; RED on 657a100 (22+2 R1, 1 R2) and on 1c84131 (16); mutation switches bite.
+  - unittest 245 OK (2 skips); lint 0 new. Debug ×4 and Release ×1: 31/31 pass, so no hidden failure surfaced.
+  - Item 5: earlier evidence ran these files in milestones 11/12, T02, T06, E01/E02/E06 and milestones 02-06; no conclusion changes, since the current files pass.
+  - Concerns: no full-suite re-run; historical file versions are not re-run; the mechanism is unproven; lexical limits.
+- Ruling: concern 1 is covered by the planned whole-suite milestone gate (Debug, Release, EXTENDED=0/1) after V04 and T08 integrate. Historical file versions are superseded; current versions passing is the relevant conclusion. Cost if wrong: an old task's evidence could have hidden a failure in a since-changed file version; that failure is not present today.
+- T08 staged: tree ed9a77ddd8ca4eb4cacd6b14e7d7be93897fce50 (T08/tree.txt). Independent Opus review dispatched (T08/review-package.diff, 3 files +457/-34), including setUp/tearDown async gap probes.
+- T08 independent review (Opus; T08/review.md): Spec FAIL, Quality CHANGES REQUESTED.
+  - Conversion verified correct: annotation-only; checkBatch equals the old closure body, with the restore guarantee intact; self capture safe (@unchecked Sendable, non-escaping); forced failure at EB:192 recorded 8/8 in 6/6 runs; Debug ×2 and Release ×1 re-runs pass. setUp/tearDown async is covered by R2 (no live instances).
+  - C1 (Critical): the original-instance tests ERROR in CI's shallow checkout (git show check=True on loose tree 1c84131); the sibling guards skip. CI repository-checks would go red.
+  - I1: six false-negative shapes: extension XCTestCase members (live instance MockErrorTestExtensions.swift:56), multi-line inheritance, generic base, @concurrent, parameter lists containing ')', and an inexact docstring.
+  - I2: item-5 list errors (Q02 and T03 logs 5-7 executed; milestone 09 omitted); the conclusion overreaches.
+  - Minors M1-M4.
+- Ruling (T08/fix1-rulings.md): fix round 1, resuming the T08 implementer: skip-when-unavailable plus inline pre-conversion fixtures; prove 0 errors in a shallow/out-of-repo checkout; fix I1 1-5 (MockErrorTestExtensions gets @MainActor, not deletion) and the docstring; correct I2 and reword ("superseded by current-tree evidence"); M1-M4. Cost if wrong: one more round.
+- Ruling (mechanical closure for the C1 class): every milestone gate from now on includes `python3 -B -m unittest discover -s Scripts/ci/tests` in an OUT-OF-REPO export of the candidate tree, so a policy test that silently depends on local git objects fails at the gate instead of in CI. Cost: about 1 minute per gate.
+- Out-of-repo gate applied retroactively to integration tip ea5037d (git archive to a non-repo directory): unittest discover 232 OK (skipped=4; the 2 extra skips are the history-based checks skipping correctly). The committed tree is CI-safe; the C1 defect is confined to T08's uncommitted guard.
+- T08 fix round 1 DONE:
+  - C1: history checks skip when unavailable; inline pre-conversion fixtures prove RED. unittest 249: 0 failures, 0 errors in an out-of-repo export (6 skips), a --depth 1 clone (6 skips) and in-repo (2 skips).
+  - I1 1-6: extension XCTestCase members checked, and MockErrorTestExtensions.swift:56 is @MainActor; multi-line headers; generic bases; @concurrent treated as nonisolated; balanced-paren parameter lists; docstring.
+  - I2: list corrected (Q02, milestone 09, T03 5-7 executed) and conclusion reworded.
+  - M1-M4: Release ×2 31/31; lint 0 new.
+  - Staged: T08 tree c6fe48202a3349f9ec8bac76375080f6dfdb5359. Scoped Sonnet re-review dispatched (T08/fix1-package.diff, +218/-49).
+- T08 fix-1 scoped re-review (Sonnet; T08/fix1-rereview.md): all items ADDRESSED. Out-of-repo export 249 OK / 0 errors; probes confirm every previously missed shape is flagged; I2 list confirmed against logs; exclusions hide no real assertion. Low: N1 (XCTSkipIf flagged; fails safe), N2 (stale report text), N3 (empty lint evidence files; the reviewer's own pinned run agrees).
+- Ruling: accept N1 as a documented fail-safe limit. N2: root annotated the report section as superseded. N3: the reviewer's pinned SwiftLint run is the lint evidence. T08 ACCEPTED.
+- T08 imported (4 paths byte-identical to c6fe482; preimages equal 657a100 at integration HEAD). Merged policy 249 OK in-repo (2 skips) and out-of-repo (6 skips). Committed aa930de; closures/T08.json written.
+- Ruling: start T07 NOW, in parallel with phase F. Its files (EnvCapture.swift, ci.yml, a new policy test) are disjoint from phase F's comment-only scope. Integrating T07 BEFORE phase D's source freeze means the measured source includes it. validate_github.rb (:146 pins `xcodebuild -scheme VectorCore …`) is permission-gated in this program: the implementer must not edit it and must propose an exact diff; root then reviews and asks the user before applying. Cost if wrong: phase D waits for T07.
+- T07 dispatched (Sonnet; briefs/T07.md; workspaces/T07 @5e21d26; evidence 2026-10-03/T07/). Implementers: V04 phase F and T07.
+- T07 DONE_WITH_CONCERNS (2026-10-03/T07/report.md):
+  - RED: VectorCoreBenchmarking fails on all 5 CI destinations (EnvCapture Host/Process at :140/:187/:192/:200 on iOS/tvOS/watchOS/visionOS). Mac Catalyst ALSO fails for the VectorCore scheme: NormalizationCore.swift:39 Float16 is unavailable on x86_64 Catalyst (N01, 84f42d0).
+  - Fix: #if os(macOS) guards with honest fallbacks ("host-unavailable", `.unavailable(reason)`); NormalizationCore guarded with the nativeFloat16Supported condition. GREEN: both schemes × 5 destinations.
+  - macOS metadata byte-identical before and after (cwd with and without git).
+  - CI: the pinned VectorCore line is untouched; a new loop over `package_products.py --exclude VectorCore`; test_platform_ci_coverage.py (12 tests). validate_github.rb passes UNCHANGED; an optional hardening line was proposed and not applied.
+  - unittest 261 OK in-repo and out-of-repo; Debug BenchmarkContractTests 63/0; lint 0 new.
+  - Concerns: an accidental `git stash`/`pop` in its worktree (root verified the stash list is empty and both worktrees hold their own changes); the Float16 fix is beyond the brief; the Intel step is unverified.
+- ROOT Intel check (T07/intel-check/X2): `swift build --build-tests --triple x86_64-apple-macosx14.0` on the T07 tree FAILS in 4 program-added TEST files (Float16 unavailable on x86_64 macOS): MixedPrecisionRangeWorkTests (101b374), NormalizationRangeContractTests (84f42d0+), NumericalPolicyContractTests (1c55a85+) and NumericalReferenceFixtures (84f42d0+; N01HalfVector [Float16]). None of these is on main. The INTEGRATION BRANCH WOULD FAIL CI's platforms job (Intel and Catalyst steps) since N01, 2026-09-23. X1 (tip export) was refused by the capture driver as a non-canonical workdir; the N01 source error is demonstrated by T07's Catalyst RED.
+- Ruling: NEW ROOT TASK T09 (briefs/T09.md): make CI's Intel build-tests and Catalyst steps green by guarding Float16-specific test code with the library's condition (narrowly; no non-Float16 assertion weakened; lost Intel coverage listed); full platform matrix; arm64 whole suite Debug and Release with the guarded tests still running. Base: the T07 candidate commit 6e217b0 (a dangling commit-tree of 6f856b6 on 5e21d26; no ref moved). Dispatched (Sonnet; workspaces/T09). Implementers: V04 phase F and T09.
+- Ruling (MECHANICAL CLOSURE, the "local gates do not replay CI" class): every milestone gate from now on replays EVERY required CI job (validate_github.rb REQUIRED_JOBS: test, lint, repository-checks, consumer, platforms, benchmark-contracts, sanitizers) locally, including the Intel x86_64 build-tests and the xcodebuild product × destination matrix, plus the out-of-repo policy run. T09 item 5 produces the job-by-job replay commands. Why: two CI-breaking regressions (N01 Float16, the T08 shallow-checkout error) slipped past local gates that ran only native arm64 suites. Cost: a longer milestone gate.
+- Independent Opus review of T07 dispatched (T07/review-package.diff, 5 files +285/-1).
+- V04 PHASE F DONE_WITH_CONCERNS (V04/phaseF-report.md; evidence V04/phaseF/ with MANIFEST.json):
+  - Built: check_claim_ledger.py (R1-R8 plus Q14 caller-inventory and Q17 recorded-site rules), claim_ledger.json and test_claim_ledger.py (27 tests). 19 regions (§6.1, plus OutputFold Q21, Timing/Boundaries, SoA.swift for Q11). 567 tier-A statements; 759 entries (retained 232, corrected 245, unverified 83, not-a-claim 129, tombstones 70).
+  - All 6 routed items done.
+  - Mutations M1-M7 and the controls behave as designed.
+  - Comment-only proof on 16 production files by two methods.
+  - Debug/Release builds pass; whole suite EXTENDED=0 exit 0 (XCTest 174, Swift Testing 1452/199); 60 named tests pass; Python 259 OK; 75/30; lint 0 new.
+  - New tests: the Q14 pin test (sync XCTest) and a magnitudeSquared overflow test.
+  - Q14: the four flag helpers had zero callers; flagged to D02. Same class found: NATIVE_FLOAT16_SUPPORTED never defined (the native FP16 conversion branch is dead and untested) and PERFORMANCE_METRICS never defined.
+  - Concerns: SoA region beyond §6.1; an OPEN CLASS of payload arithmetic labelled memory savings/reduction outside the regions (QuantizedKernels, KernelAutoTuner, TriangularMatrix, three test files); design choices; 23 Boundaries entries cite the drift guard; an inaccurate BatchBench warmup comment left unedited; convertBatchNEON NaN payload differences.
+  - Staged: V04-f tree 8c696dd031a416df82e3bfe4655fbe23b11ae822 (28 files, +21156/-618; the ledger JSON is 19415 lines). Independent Opus review dispatched (V04/phaseF-review-package-src.diff without the JSON, plus the full package).
+- ROUTED (pending ruling after review):
+  - D02: OptimizationAttributes flag helpers (releaseOnly never runs, isReleaseMode/isSIMDEnabled always false, performancePrecondition always enforced) and the dead NATIVE_FLOAT16_SUPPORTED/PERFORMANCE_METRICS paths (delete or test).
+  - P02: convertBatchNEON NaN payload consistency.
+- T07 independent review (Opus; T07/review.md): Spec PASS, Quality CHANGES REQUESTED.
+  - Verified: EnvCapture guards and honest fallbacks; macOS compiles code identical to base; metadata cmp-identical; NormalizationCore guard matches stdlib Float16 availability. halfWideningAndScalarMagnitude discriminates: with isNativeHalf forced false it fails, so the arm64 Float16 branch is still taken. Reviewer re-ran the matrix: RED on base (visionOS, Catalyst, generic macOS), GREEN on fix for both schemes and all destinations. Validator passes unedited; Python 261 OK out-of-repo.
+  - I1 (Important): the CI product loop `for p in $(python3 …)` is fail-open (reproduced rc 0).
+  - I2 (Important, root's): unguarded Float16 is a repeated class (f4d5b49 on main, 84f42d0, 1c55a85, 101b374) with no mechanical check; Intel still fails after T07 in 4 test files.
+  - Minors M1-M7 (cache reuse for the CI time budget; fail-closed parser; two comment overclaims; OS-family marker off macOS; generic-macOS matrix cells; a duplicate test; no validator hardening).
+- Ruling (T07/fix1-rulings.md): T07 fix round 1, resuming the T07 implementer: fail-closed loop (`products="$(…)"; test -n`) with policy-regex negative controls and an experiment; reuse the per-platform cache; fail-closed parser; comment fixes; an OS-family marker off macOS only (re-prove macOS byte-identity); M5/M6; M7 recorded as no validator change. Never git stash.
+- Ruling (I2 class closure): T09 gains a lexical policy test, test_float16_availability_guard.py: every Float16 token in Sources/Tests/Benchmarks must be inside an #if excluding x86_64 macOS/Catalyst; inline RED fixtures; passes out-of-repo; bite checks. Together with the milestone CI-replay gate (Intel + Catalyst builds), this closes the class at two levels. Cost if wrong: the lexical form may need tuning for equivalent guard spellings.
+- T09 DONE_WITH_CONCERNS (T09/report.md):
+  - Narrow Float16 guards in 6 test files. Two were outside the brief (FP16DiagnosticsBoundaryTests, StorageBorrowContractTests) and surfaced across Intel iterations i1 → i2 → i3 GREEN. Rejection tests kept on Intel via UInt16(0x4000) (root checked: equals Float16(2).bitPattern).
+  - Platform matrix 10/10 exit 0. arm64 EXTENDED=0 Debug and Release exit 0 (Swift Testing 1451/199), with the guarded tests shown running.
+  - New test_float16_availability_guard.py: branch-condition evaluation (unsatisfiable on x86_64 macOS and Catalyst; unknown atoms treated adversarially); 18 must-flag / 14 must-pass; 5 rules bite; 22 findings on the pre-fix files; live tree 0; out-of-repo pass. Python 266 OK; validator rc 0.
+  - Reachability: the FP16 range kernels, direct FP16 kernels plus SoA FP16 and toFP32, and validateConversion round-trips have no Intel test. "The software conversion path used on Intel has no behavioral test on any host."
+  - CI replay table: repository-checks, platforms and the arm64 test step were run; lint, consumer, benchmark-contracts, sanitizers and perf-smoke are replayable but not run; Xcode 16.2/26.3 are not installed (CLT 6.2 proxy available).
+  - Staged: T09 tree 1b7f4756619e493e86b2281e083b2fc0b5960ba1 (7 files +378/-1; no overlap with T07's files). Independent Opus review dispatched, including an FP16 conversion-path determination for routing (phase F found NATIVE_FLOAT16_SUPPORTED never defined).
+- T07 fix round 1 DONE:
+  - I1: fail-closed `products="$(…)"; test -n` (a failing lister gives rc 1 vs the old rc 0); the policy regex requires it, with negative controls and a unit test running the real step body.
+  - M1: cache reuse; validator unedited and passes.
+  - M2: the parser raises on count mismatch, non-literal names, concatenation, chaining and non-single arrays.
+  - M3: comments fixed. M4: off-macOS OS-family prefix; macOS metadata cmp-identical.
+  - M5: matrix 12/12. M6: test replaced. M7: no validator hardening.
+  - unittest 264 OK in-repo and out-of-repo; lint 0 new.
+  - Staged: T07 tree 802edad2f9754820916c9bbbe0b60ebb2879ca51. Scoped Sonnet re-review dispatched (T07/fix1-package.diff, 5 files +100/-16).
+- T07 fix-1 scoped re-review (Sonnet; T07/fix1-rereview.md): all items ADDRESSED. The real step body with a failing or empty lister exits 2/1 before xcodebuild; parser fail-closed probes pass; macOS-only branch semantics are unchanged; iOS and Catalyst builds pass; 264 OK. Low: N1 (deliberate-edit bypasses), N2 (non-.library( helper spellings), N3 info.
+- Ruling: accept N1/N2 as documented closure limitations (deliberate edits; accidental regressions are closed). T07 ACCEPTED.
+- T07 imported (5 paths byte-identical to 802edad; preimages equal 5e21d26). Merged policy 264 OK in-repo and out-of-repo; validator passes. Committed 23959c9; closures/T07.json written. NOTE: the integration tip still fails CI's Intel build-tests until T09 lands.
+- V04 phase F independent review (Opus; V04/phaseF-review.md): Spec PASS, Quality CHANGES REQUESTED.
+  - Comment-only proven independently by a token and literal lexer AND swiftc -dump-parse parse-tree identity (16/16); no runtime string changed (Q11 holds). Counts confirmed; 60 named tests pass; M1-M7 confirmed; 259 OK.
+  - Important:
+    - I-1: forbidden-phrase rule 4 matches 0 files (plain paths are not expanded).
+    - I-2: V04-C-0495 cites a non-discriminating test.
+    - I-3: the drift guard is cited as note evidence (4 drift-only, about 18 flag-only).
+    - I-4: the payload-as-memory-savings class is still open (about 33 sites).
+    - I-5 (outside F): the child-process harness respawns without bound.
+  - Minors M-1..M-10.
+- Ruling (V04/phaseF-fix1-rulings.md): fix round 1 covers I-1..I-4 (I-4 closed mechanically with a glob forbidden-phrase rule over Sources/Tests/Benchmarks plus relabels; Sources runtime strings untouched) and M-1..M-10. SoA region ratified; design choices accepted (a narrowed). NaN payload → P02/D02. Q14 flags → D02. Only one `--filter` per swift test until T10.
+- The phase F implementer FAILED on resume ("Prompt is too long", context exhausted, 978k tokens). Root verified the V04-f worktree is untouched (== 8c696dd). A FRESH Opus implementer was dispatched for fix round 1, with the report as its tooling map.
+- Root process check: 0 orphaned xctest/swiftpm-testing-helper processes (ppid 1) after the reviewer's PID cleanup.
+- NEW ROOT TASK T10 (briefs/T10.md): 18 test files rewrite only the first --filter and kill only the direct child. Shared helper (strip all selection args, child marker, process-group kill) plus lexical guard. Depends on T09 (overlapping files).
+- T09 independent review (Opus; T09/review.md): Spec FAIL (narrow), Quality CHANGES REQUESTED.
+  - Verified: a CLEAN Intel build is green; arm64 unchanged (the only non-#if change is UInt16(0x4000) = 2.0 in binary16); matrix 10/10; 266 OK; the guard bites.
+  - (1) Important: 3 tests (plus part of finiteRangeMatrix) compile out Float16-free assertions on Intel unnecessarily; bit constants suffice.
+  - (2) Important: the reachability statement is wrong. NATIVE_FLOAT16_SUPPORTED is undefined everywhere, so the native scalar converters are dead and the SOFTWARE converters run on every host (exercised on arm64). Only convertBatchNEON and detectOverflow use native Float16 (arm64).
+  - (3) Important: guard false negatives (Float16 in any string interpolation; os(OSX); CFloat16/simd_half).
+  - (4) Important: the CI-replay table is inaccurate (the CLT proxy cannot build XCTest tests; Linux jobs; a missing step; lint version and install; global env; Xcode pins).
+  - Minor: 5 surviving checker mutants (2 unsafe); stale comment; a new line_length warning; "oracle" wording; no CI job compiles tests for Catalyst.
+- Ruling (T09/fix1-rulings.md): fix round 1, resuming the T09 implementer, covering items 1-6.
+- ROUTED → P02: a host-independent pure-function FP16 converter test (exhaustive 65,536-pattern decode, round-trip, RNE ties). Recorded precondition for D02/V04-F: do NOT enable NATIVE_FLOAT16_SUPPORTED before it lands (otherwise the native-Float16 oracles become native-vs-native and the software converter runs untested on x86_64 only).
+- Implementers: V04 phase F fix round 1 (fresh Opus) and T09 fix round 1.
+- T09 fix round 1 DONE:
+  - Float16-free assertions are back on Intel: finiteRangeMatrix via Float16-free q04HalfBits/q04HalfValue; exceptionalSameCoreParity and the StorageBorrow kernels/ownedSoA via literal bits; two arm64-only tests pin the helpers and literals against native Float16.
+  - Reachability corrected: no Intel-present source path loses all compile-time test sources; the remaining Intel loss is assertion-level.
+  - Guard: code_view scans interpolations as code; os(OSX); _Float16/CFloat16/simd_half tokens; the 5 former surviving mutants are named rules with bite controls, plus an every-rule-has-a-mutation test.
+  - CI-replay table corrected.
+  - Clean Intel build-tests exit 0; arm64 Debug EXTENDED=0 1453/199 pass; 268 OK in-repo and git-less; iOS and Catalyst exit 0; pinned SwiftLint 0.65.1 (repo install script) 0 new.
+  - Staged: T09 tree d28323919918607bd3a5a33935f2765de59d274d (3 files +215/-52; no T07-file overlap). Scoped Sonnet re-review dispatched.
+- T09 fix-1 scoped re-review (Sonnet; T09/fix1-rereview.md): all 6 items ADDRESSED.
+  - Every bit constant and helper value was re-derived with struct.pack('<e'). The reviewer's clean Intel build exits 0. 19 extra probes: no new false positives. The 5 former surviving mutants are killed (2 remaining are equivalent). 268 OK.
+  - Low: the reviewer created an untracked dir workspaces/T09/T09/fix1-review/build-intel. Its delete was DENIED by the permission classifier; root did not delete it on its behalf (permission-laundering rule) and surfaced it to the user.
+- T09 ACCEPTED and imported (7 paths byte-identical to d283239; preimages equal 6f856b6 at integration HEAD). Merged policy 268 OK in-repo and out-of-repo. Merged-tree Intel build-tests exit 0, 0 errors (T09/integration-check). Committed 3f32f5a; closures/T09.json written. The integration branch's Intel and Catalyst CI regression is fixed.
+- Next: T10 (child-process harness) is unblocked. V04 phase F fix round 1 is running.
+- T10 dispatched (Opus; briefs/T10.md; workspaces/T10 @4464e4a; evidence 2026-10-03/T10/). Overlap with phase F: ExecutionBoundaryTests (phase F's Q14 pin test); keep T10's edits there minimal; root 3-way merges. Implementers: V04 phase F fix round 1 and T10.
+- V04 phase F fix round 1 DONE_WITH_CONCERNS (fresh Opus; "Fix round 1" in V04/phaseF-report.md; evidence V04/phaseF/fix1/):
+  - I-1: literal paths; zero-match and stale-exemption failures; per-rule mutations (rule 4 bites).
+  - I-2: new discriminating test testMagnitudeRoundsOnceFromTheWidenedSum (exact-rational expected bits; fails on Float accumulation and on round-before-sqrt).
+  - I-3: evidence.bodyPin/flagTests; 23 entries now unverified-contract, with explicit Boundaries doc wording; a class guard.
+  - I-4: 49 test plus 4 Sources relabels; rule 5 over Sources/Tests/Benchmarks (positive claims only); 2 Sources runtime strings exempted by fingerprint and routed to D02 (V04-R-0007).
+  - M-1..M-10 done. M-4: excludeLiterals narrowed (42 newly visible literals, none tier-A); Q14 defining-file gap closed. M-9: hasNEON/platformName pinned.
+  - Comment-only (10 prod) and label-only (4 tests) proven by both methods. Ledger 0 problems; 761 entries. Python 272 OK. 75/30. Debug/Release builds. Whole suite EXTENDED=0 exit 0 (Swift Testing 1453). Lint 0 new.
+  - Implementer CORRECTED two premises in the rulings:
+    - M-5: no test checks the quiet-NaN bit.
+    - M-8: with -DNATIVE_FLOAT16_SUPPORTED, all 7 FP16DiagnosticsBoundaryTests still pass (native branch compiled, confirmed by disassembly).
+    So NaN encodings are unpinned → ROUTED to P02/D02 (V04-R-0008), joining the exhaustive converter test.
+  - Open adjacent class: qualitative "efficient/efficiency" and unmeasured performance labels outside the regions.
+  - Staged: V04-f tree 3312c3fa1bf86e4d12a2562694dabedf2d88f2fb (19 files +1643/-711). Scoped Opus re-review dispatched.
+- Ruling (concern 3): ROUTE the qualitative-performance-label class outside the V04 regions to P01 (performance claims), whose scope covers performance wording; P01 should extend claim-ledger regions or rules accordingly. Why: no saving or quantity is asserted, so it is outside V04's TOOL-07/08 records. Cost if wrong: unverified qualitative wording persists until P01.
+- Root amended V04/phase1-inventory.md §6.4 R5 wording list (+"not established") per concern ruling (d).
+- V04 phase F fix-1 scoped re-review (Opus; V04/phaseF-fix1-rereview.md):
+  - ADDRESSED: comment-only and label-only (stricter dump-parse normalization catches hex-literal edits); I-1; I-2 (bits re-derived; a different mutation fails); I-3 ruled items; M-1..M-10 (the M-5/M-8 corrections hold); M-4; concern (a); verification (272 OK; 0 problems; 61 cited tests pass; manifest hashes match).
+  - NOT ADDRESSED: I-4's mechanical closure. N-1 (Important): escape-leading literals bypass rule 5 and R6 (`print("\nMemory savings: 50%")` passes).
+  - Minor: N-2 (raw-reference comparison), N-3 (rule 5 catches 22/50 positive forms; disclaimer false positives), N-4 (`paths: []`), N-5 (screen gaps for $/\Z/\A), N-6 (excludeLiterals hides forbidden phrases), N-7/N-8 (two new false comments in MixedPrecisionKernelTests), N-9 (two wording qualifiers).
+- Ruling (V04/phaseF-fix2-rulings.md): fix round 2 (FINAL planned), resuming the fix-1 implementer, covering N-1..N-9. Residual lexical phrasings are accepted after this round if exactly documented (diminishing returns). Cost if wrong: one more round.
+- T10 DONE_WITH_CONCERNS (report returned as text because the harness blocks subagent report files; root saved its transcription at 2026-10-03/T10/report.md, with evidence in T10/):
+  - Shared ChildProbeLauncher: posix_spawn with its own pgroup; strips ALL selection args and report sinks, then exactly one probe filter; nested-launch marker; waitid WNOWAIT then group sweep then reap; deadline group kill; never its own group. 11 contract tests.
+  - 23 sites migrated (the brief's 18 plus 4 the grep missed, plus ExecutionBoundary runChild).
+  - Guard test_child_probe_launch_policy.py: R1 spawn, R2 selector literals, R3 invariants, R4 floor; 72 findings on the pre-fix tree. test_child_process_bounds now scans posix_spawn/launchChildProbe files.
+  - BEFORE: runners 1→13 in 0.53 s, generation 6, orphans left; an earlier attempt reached about 1,450 processes. KEY FACT: Foundation Process already puts each child in its own pgid, so the old kill(pid) never reached grandchildren.
+  - AFTER: the multi-filter runs and the whole Debug suite exit 0 (Swift Testing 1464/200; XCTest 0 failures), ≤6 live, generation ≤1, 0 orphans. Python 277 OK in-repo and git-less; lint 0 new.
+  - Concerns: the RunnerContractTests exception is pinned (migrating it changes BENCHMARK_TEST_SOURCES pinned by check_ci_contracts.py); non-semantic child changes (no xunit inheritance, stdin /dev/null, default signals); temp-file cleanup of attributable files only; about 1.4 GB of build dirs in the evidence directory.
+  - Root check after T10: 0 live test runners, 0 orphans.
+  - Staged: T10 tree 206fc55ca3d1316cf23f6437d42efe5f534e560b (27 files +1012/-421). Independent Opus review dispatched (it re-runs a bounded multi-filter test with a safety sampler).
+- V04 phase F fix round 2 DONE_WITH_CONCERNS ("Fix round 2" in V04/phaseF-report.md; evidence V04/phaseF/fix2/):
+  - N-1: escape-neutralized matching (fingerprints unchanged); all 4 ruled fixtures fail.
+  - N-2: resolved-reference comparison plus bodyPinDescribers ["V04-C-0602"].
+  - N-3: rule 5 rewritten, with a 62 must-fail / 21 must-pass table in the ledger (catches all 50 reviewer positives; all 15 disclaimers pass).
+  - N-4: empty paths fail. N-5: screens validated against fixtures. N-6: forbidden-phrase literals are never excluded. N-7/8/9: comments fixed and rebound.
+  - Comment-only proven by both methods (the 2 Swift files are fully equal). Python 280 OK in-repo and git-less. 75/30. Focused Debug 82/0. 29 probes as expected. Lint 0 new.
+  - Concerns: (1) "zero-copy" is tier-A, not forbidden, so still excludable; (2) rule 5's trailing negation lets an explicitly hedged claim pass; (3) discover takes about 78 s.
+- Ruling: (1) accept as a documented limit and route to P01 (performance wording); banning "zero-copy" outright could forbid a true, testable borrowing claim. (2) accept: an explicitly hedged claim is a permitted unverified contract under claim discipline. (3) accept.
+- Staged: V04-f tree 1d5e45fe55cadf2b975c854de816abac723fbd4c (6 files +458/-76). Scoped Sonnet re-review dispatched.
+- T10 independent review (Opus; T10/review.md): Spec PASS, Quality CHANGES REQUESTED.
+  - Launcher verified correct: spawn attributes; WNOWAIT → group sweep under lock → reap, with no PID-reuse window (the zombie holds the pgid); deadline signalling under the lock only while unreaped; no own- or foreign-group path; no leaks; a loud nested refusal.
+  - All 23 migrations are assertion-identical (mechanically diffed). Dropping xunit from children is safe (CI uploads only the parent's).
+  - Reviewer's runs: 5-filter run peaks at 1 runner, 0 orphans; self-tests 11/11; removing the group sweep makes exitedChildLeavesNoGroupMember fail; 277 OK out of repo.
+  - I-1 (Important): TimeoutAssertionPatternTests is vacuous (15→0 sites), and the launcher accessors use preconditionFailure, so a failed cleanup crashes the parent.
+  - Minors: M-1 refusal order not enforced; M-2 RunnerContract argv pin bypassable by argv mutation; M-3 fallback signal when pid≤1; M-4 stale evidence (70 not 72) and comments; M-5 unlocked fallback reap; M-6 multi-test selectors accepted; M-7 guard gaps and naming; M-8 the launcher refuses parents without --test-bundle-path and CI's Xcode 16.2/26.3 argv shapes are unverified.
+  - Concern 1: pin plus route (migrating would not fix EnvCapture leaf orphans, since a Foundation Process child leads its own pgid).
+- Ruling (T10/fix1-rulings.md): fix round 1, resuming the T10 implementer: I-1 (non-crashing accessors plus .timedOut detector with a floor); M-8 as ROOT PRIORITY (empirical CLT Swift 6.2 argv capture via a swift-testing-only scratch package; tolerant derivation; diagnosable failure on an unknown shape; Swift 6.0 recorded as unverified locally); M-1..M-7. Concern 1: pinned, with a follow-up routed (a shared test-support target for the launcher, then migrate RunnerContractTests). The reviewer's 484 MB build-multi is left for workspace cleanup.
+- V04 phase F fix-2 scoped re-review (Sonnet; V04/phaseF-fix2-rereview.md): N-1..N-9 all ADDRESSED.
+  - Escape variants caught (\u{4D}, \0, \t, raw strings, """). Alternate re-citation spellings fail R8. Rule 5: 50/50 positives caught, 15/15 disclaimers pass. Screens validated. Forbidden literals are non-excludable.
+  - Comment-only by both methods. Only V04-C-0495/-0497 fingerprints changed (rebound). 280 OK; 0 problems; 75/30.
+  - New: F-2 (Minor→Important: the trailing-negation exemption accepts a negation about someone else); F-1 (line continuation in """ splits claims); F-3 (empty-string screen fails open; non-string fixtures crash); F-4 (new comment says "above", should be "below").
+- Ruling: tiny fix round 3, resuming the fix-1/2 implementer, root-verified mechanically: F-2 (the hedge must end the clause; 5 must-fail fixtures), F-3 (empty screen fails R8; non-string fixtures become R8 problems), F-1 (join line continuations), F-4 (comment-only), plus the zero-copy limit in Maintaining.md. Why not accept as limits: F-3 is fail-open, F-4 is a false comment, F-2 defeats the rule's intent. Cost: a small round.
+- V04 phase F fix round 3 DONE: F-2 hedge must end the clause (5 loophole phrases now must-fail; 69/23 table); F-3 empty or non-string screen and malformed fixtures → R8 (no traceback); F-1 line continuation joined; F-4 comment "below"; Maintaining.md documents the zero-copy limit, the hedge rule and continuations. 283 OK in-repo and git-less.
+- ROOT VERIFICATION of fix round 3 (tree e36f0f52502e197c40aa3cb513b1c9569c369659): the Swift diff is exactly one comment word; on a git-less export the ledger check reports 0 problems; an injected "saves 50% memory, which is not verified by competitors" fails R7 (rc 1); an injected "(not verified)" hedge passes; unittest OK (skipped=4). V04 PHASE F COMPLETE (fix rounds 1-3); residual lexical limits documented.
+- V04 PHASE F IMPORT (uncommitted): 34 paths. 33 are byte-identical to e36f0f5 (preimages equal 657a100). ExecutionBoundaryTests.swift is 3-way merged (base 657a100; T08 @MainActor/checkBatch versus phase F's Q14 pin test): 0 conflicts both directions; the two-direction composition is IDENTICAL; each side's changed-line content is preserved exactly. Merged tree: ledger check 0 problems; unittest OK in-repo (2 skips) and out-of-repo (6 skips); 75/30. Merged ExecutionBoundaryTests run in progress.
+- Merged ExecutionBoundaryTests on integration: 8/0, including the Q14 pin test (V04/phaseF/integration-check/eb).
+- V04 PHASE F committed 3f9bf63 (33 paths byte-identical to reviewed e36f0f5, plus the verified 3-way merge of ExecutionBoundaryTests). V04 source is now FROZEN for phase D measurement, pending T10 (test-only; does not touch Sources/Benchmarks).
+- ROUTED from phase F (root ledger):
+  - D02: OptimizationAttributes flags; NATIVE_FLOAT16_SUPPORTED/PERFORMANCE_METRICS dead paths; the two Sources runtime strings with memory-saving claims (V04-R-0007).
+  - P02: NaN-encoding pins and convertBatchNEON payload consistency (V04-R-0008); the exhaustive FP16 converter test (from T09).
+  - P01: qualitative "efficient" labels outside the regions; "zero-copy" excludability.
+- Ruling: split V04 phase D. Part 1 (D1 Release build plus hashes, D2 emitted-code inspection, D4 allocation-event probe; not timing-sensitive) is dispatched NOW on the frozen source (workspaces/V04-d @04660cc). Part 2 (D3 timing records, D5 process-memory probe; noise-sensitive) is dispatched only after root confirms no other worker is building (after T10's fix and review). The Q20 deadlines (12/10/10 min; 15 s per child plus ≤2 s cleanup) were already approved. T10 is test-only and cannot change the measured source. Cost if wrong: part 1 evidence would need a re-run if the source changed (it cannot).
+- V04 phase D part 1 dispatched (Opus; V04/phaseD-dispatch.md). Implementers: T10 fix round 1 and V04 phase D part 1.
+- T10 fix round 1 DONE_WITH_CONCERNS (root transcription appended to T10/report.md; evidence T10/fix1/):
+  - I-1: optional accessors, reaped() throws; .timedOut detector with floor 20. Bite 15/0 → 28/1 → 28/0; the round-0 finding was a REAL instance in the launcher's own self-test.
+  - M-8: EMPIRICAL argv capture shows CLT Swift 6.2 and Xcode 27 Swift 6.4 both use the swiftpm-testing-helper --test-bundle-path shape. Tolerant derivation; unknown shapes fail with the argv printed. Swift 6.0 (Xcode 16.2) unverified locally.
+  - M-1..M-7 fixed (order enforcement with a runtime bite; argv pin; no signal for pid≤1; bite count 70; locked fallback; single-test selector validation; R1 tokens).
+  - Self-tests 13/13; 10-filter and whole Debug suite exit 0 with 0 orphans and gen ≤1; Python 280 OK in-repo and git-less; lint 0 new.
+  - Staged: T10 tree 5b49aede91015d36b8a91ff03a4e8805ee90f7eb (20 files +460/-126). Scoped Opus re-review dispatched (light runs only; phase D part 1 is measuring).
+- V04 phase D PART 1 DONE_WITH_CONCERNS ("Part 1" in V04/phaseD-report.md; evidence V04/phaseD/, part1-manifest.json):
+  - D1: Release build rc 0; per-source and artifact hashes (vectorcore-bench f4652a6c…).
+  - D2: 207 inspection commands; zero prfm; detailed per-anchor facts (provider closure context allocation; SoA 4-way kernel with 4 fmla chains; tiled path swift_slowAlloc above 64 candidates; matrix anchors present; FP16 range_euclid2_mixed_core has swift_slowAlloc(16) next to fp16ToFp32_simd8, no fcvt).
+  - D4: 82 children all exit 0; collector unchanged; controls pass.
+    - Zero timed-window events for the reused/consumer-only/dot/dist/mem.copy cases.
+    - SoA N8192: 32 × 4096 B per invocation (tiled).
+    - FP16 reused: 262,145 allocations per invocation.
+    - Matrix: 4N+5. Generic provider: 3 per candidate.
+  - Proposed resolutions are in D4-resolutions.json (not applied; source frozen).
+  - Concerns: direct xcrun swiftc/clang for the probe (the driver supports only build/test); extra probe sets; count comparison R vs 2R; the FP16 notes understate allocation; CLI correctness flags (maxRel 1.2-1.3e-6 at N4096, matrix diagonal, missing validation).
+- Ruling (V04/phaseD-resolve-rulings.md): a RESOLVE ROUND before Part 2.
+  - Apply the D4 resolutions to the boundary metadata (fix-1 ruling I1 assigned this to phase D). SoA is size-dependent: per-case flags if the schema is per case; otherwise keep unverified with a measured note, and invent no schema state.
+  - Correct the FP16 notes factually. Update the claim ledger and the contract tests.
+  - Prove no measured body changed (drift guard unchanged); rebuild D1 for new hashes.
+  - Accept the direct xcrun compiles (bounded, recorded) and the R vs 2R count comparison (§5.2's attribution design, not a timing subtraction).
+  - Cost if wrong: one more metadata round.
+- ROUTED:
+  - P01: FP16 range_euclid2_mixed_core heap-allocates per SIMD8 conversion (262,145 per invocation); provider closure context per call; generic provider 3 per candidate; matrix 4N+5; normalize allocations.
+  - P02: maxRel 1.2-1.3e-6 at N4096 (sequential/generic provider), joining the euclidean2 tolerance class; matrix diagonal; "Missing validation" policy review.
+- Phase D resolve round dispatched (fresh Opus; workspaces/V04-d @04660cc).
+- T10 fix-1 scoped re-review (Opus; T10/fix1-rereview.md): ALL items ADDRESSED.
+  - Verified: 28 launcher-result sites all fail on nil; bite 15/0 → 28/1 → 28/0; reaper reorder identical in behaviour; fallback has no deadlock or busy-spin (10 ms poll); no own- or foreign-group signal; the PID-reuse window is reachable only via a foreign reaper (not in these tests).
+  - M-8 captures re-confirmed (CLT 6.2.0 Testing 1085 and Xcode 6.4 Testing 2084 use the same helper shape). Process evidence confirmed. The reviewer's self-tests: 13/13, 0 orphans. Python 280 OK in the export and git-less.
+  - Concern 3: anchoring `(^|\.)Suite/test\(` is feasible on 6.2 and 6.4; the marker bound is sufficient for safety.
+  - Minors: N-1 (a -X pass-through can carry a selector; a fixture pins two --filters); N-2/N-3/N-6 (header overclaims: the unreaped-only signal caveat; "exactly one test" is a shape check; 6.2 verified via the CLT proxy); N-4/N-5/N-8 (test and guard pins, LIMITS); N-7 (report wording: the round-0 instance was lexical, likely short-circuited at runtime).
+  - Process note: the reviewer ran one `git write-tree` in workspaces/T10 (the index mtime changed; staged entries unchanged, still 5b49aed).
+- Ruling: tiny T10 fix round 2 (resume the implementer; root-verified): N-1, N-2, N-3, N-4, N-5, N-6, N-8. Anchoring is ROUTED as a follow-up with the shared-test-support item (needs Swift 6.0 ID-format verification and a zero-match failure). N-7: root annotates the report wording. Why not accept as limits: N-2/N-3/N-6 are comment overclaims (claim discipline) and N-1 contradicts the launcher's own contract.
+- T10 fix round 2 DONE and ROOT-VERIFIED (tree 3620ff5): N-1 -X selector values refused; N-2 UNVERIFIED CONTRACT restored; N-3 selector check documented as a SHAPE check (no overclaim); N-4 diagnostic asserted; N-5 single_spawn_caller invariant plus LIMITS; N-6 CLT-proxy wording; N-8 assumption comment. Python git-less OK.
+- T10 ACCEPTED and imported: 26 paths byte-identical to 3620ff5; ExecutionBoundaryTests 3-way merged (base 4464e4a, with phase F's pin test versus T10's runChild): 0 conflicts both ways, composition identical, both change sets preserved. Merged tree: ledger 0 problems; unittest OK in and out of repo; ExecutionBoundaryTests 8/0; ChildProbeLauncherTests 13/13; 0 orphans. Committed b0a0f97; closures/T10.json written.
+- From now on, multi-filter swift test is safe again (T10 landed). The "one --filter" rule is LIFTED for trees containing b0a0f97.
+- V04 phase D RESOLVE ROUND DONE_WITH_CONCERNS ("Resolve round" in V04/phaseD-report.md; evidence V04/phaseD/resolve/):
+  - 28 case IDs resolved at D=512 in Boundaries.AllocationProbe.resolutions: 21 notApplicable, 7 included.
+  - SoA recorded per (D,N): N4096 notApplicable, N8192 included; unprobed N keep unverified with a measured-threshold note.
+  - FP16 notes state 262,145 (reused) and 266,243 (setup) events per invocation; the swift_slowAlloc(16) link is marked as an inference.
+  - 22 new ledger entries (unverified contracts naming record paths, sha256 and dates; out-of-repo artifacts cannot be dated-artifact evidence). Ledger 783 entries, 0 problems.
+  - testAllocationFlagsDoNotOverclaim strengthened (independent 28-ID table; iff catalog check).
+  - Drift guard unchanged (bodyFingerprints block byte-identical); Release rebuild shows identical code for all library and Suites objects (AppMain/Boundaries metadata only). New D1 hash a34b8991….
+  - BCT 63/0; Python 322 OK in-repo and git-less; lint 0 new; note cross-check 217/217.
+  - Ruling needed and GIVEN: the generic provider rows stay unverified on BOTH sides of the euclidean2_vs_euclidean A/B pair, because resolving one side breaks the pair (demonstrated by a failing test). Both sides carry the measured note. ACCEPTED; probing the non-squared side is routed to P01 with the allocation items.
+  - Concerns: 512-only staleness vs library changes (routed: P01 re-probe after kernel changes); boundary identity changes for resolved cases (intended); the Benchmark_Measurement_Boundaries.md doc does not describe per-case resolution (for the final V04 review).
+  - Staged: V04-d tree f8df2f174ca4385e219ce4f64f9b3fd2e86c2c27 (3 files +885/-121). Independent Sonnet review dispatched (no timing workloads).
+- Resolve-round independent review (Sonnet; V04/phaseD-resolve-review.md): Spec PASS, Quality APPROVED.
+  - All 28 values recomputed from the D4 manifests and matching. SoA threshold confirmed in source (tileWidth 256; tile above 8 MiB). Generic pair numbers verified. FP16 arithmetic verified; the inference is labelled. No assertion weakened; the 28-ID table is independent. Bodies unchanged. Ledger 0 problems; 322 OK in and out of repo; BCT 63/0.
+  - Minors (for the final V04 review fix dispatch):
+    - Docs/Benchmark_Measurement_Boundaries.md:26-27 "unverified = no measurement has resolved it yet" is now untrue for the generic pair; the doc does not describe per-case resolution or out-of-repo records.
+    - The note-iff check runs over the quick catalog; the per-ID loop checks only a generic record prefix.
+- Resolve round imported and committed e022cf9 (3 paths byte-identical to f8df2f1; preimages equal 04660cc). Merged tree: ledger 0 problems; unittest OK in and out of repo.
+- V04 MEASURED SOURCE IS NOW FINAL for phase D part 2 (D3 timing, D5 memory).
+- Quiet-machine check before phase D part 2: no swift/xctest/xcodebuild processes, but load average about 30, driven by the SYSTEM daemon mediaanalysisd (pid 1106, about 305% CPU, running 21 h; not ours, never signalled).
+- Ruling: run part 2 now with full disclosure instead of waiting indefinitely. Every D3/D5 manifest records uptime and the top-5 CPU consumers before and after each driver run; the report states the contention plainly. Why: phase D sets no thresholds and derives no speedups (raw samples), so the records stay honest with conditions disclosed; D5 process memory is largely contention-independent. A quiet-machine D3 re-run is offered to the user (pausing mediaanalysisd is the user's choice). Cost if wrong: noisier timing samples; P01 takes its own measurements anyway.
+- Verified: V04-d tree f8df2f1 has Sources/Benchmarks/Package.swift byte-identical to integration e022cf9.
+- V04 phase D PART 2 dispatched (resumed the part 1 implementer): D3 timing (§5.4) and D5 memory (§5.1), sequential, with Q20 deadlines and Q18 units; first-interval ticks if exposed. Root holds all other dispatches until it finishes.
+- V04 phase D PART 2 DONE_WITH_CONCERNS ("Part 2" in V04/phaseD-report.md; index V04/phaseD/part2-manifest.json):
+  - Fresh Release build: per-file source hashes equal the resolve build; __TEXT,__text identical for all 5 artifacts (byte hash differs by embedded path).
+  - D3: 24 cases at 512D, 9 raw samples each, Q18 statistic with unitsPerInvocation, thermal nominal; 10.6 s (deadline 600 s). First-interval ticks are UNAVAILABLE (the harness does not expose them, and fixed repeats skip calibration), so the phase C "39 of 187" stays a proxy. 4 SoA-FP16 entries are unavailable as expected.
+  - D5: 36 cases plus 2 controls; markers ordered; task_info OK; bit-exact values; distinct storage counts correct. 64 MiB control: +67,108,864 B in-use. No-dataset control: zero deltas. The per-zone high-water field returned 0 (recorded as returned).
+  - Conditions disclosed in every manifest: mediaanalysisd about 250-330% CPU; load about 44/32/22 (D3) and 28/32/24 (D5).
+  - Concerns: D3 under contention (quiet re-run offered to the user); D5 probe compiled with xcrun swiftc (bounded, recorded); CLI correctness flags (routed to P02); D3 JSON `gitSHA` records the MAIN CHECKOUT HEAD, not the measured source.
+- Ruling: the `gitSHA` field is a benchmark-metadata honesty defect (EnvCapture records the git HEAD of the run's cwd repository). It goes into the final V04 review fix list: label or derive it honestly (for example "cwd repository HEAD at run time"), or record the source identity. Phase D is complete; evidence integrity rests on the per-file source hashes in P2-build-manifest.json.
+- V04 FINAL REVIEW: packages per V04 commit (excluding the ledger JSON) in V04/final-review/ (d2d579a A+B, 2179a19 C, ffc15ee E, 3f9bf63 F, e022cf9 D-resolve); 32 V04-scope files +5564/-476 across dbd0833..e022cf9. Dispatched on the most capable model.
+- V04 FINAL REVIEW (Opus; V04/final-review.md): Spec FAIL (narrow), Quality CHANGES REQUESTED.
+  - Confirmed: rows A/B/C/E/F/D hold in the integrated tree; each phase's final tree equals its integrated commit apart from the two known integration edits; phase F comment-only re-proven (19/19); the 28 D4 resolutions, 24 D3 and 38 D5 records recompute; measured source = HEAD (185 files); calibration constants match the docs. Release BenchmarkContractTests 63/0 (first Release run since F and D-resolve). Ledger 0 problems; 331 OK.
+  - I-1 (Spec): Q13 was ruled IN SCOPE but ROOT NEVER ASSIGNED IT to a §10.1 phase row (a root planning error, acknowledged). Docs/Performance_Guide.md has a rejected CLI syntax, a nonexistent compare script, and unbacked ns figures and multipliers; OWN-23 stays open until fixed.
+  - I-2: the `unverified` definition is stale in the doc AND the public API comment.
+  - I-3: provenance fields (gitSHA, swiftVersion, runtimeToolchain) are run-time cwd/PATH observations, not the measured source or build compiler; NUM-23 requires reproducible provenance.
+  - I-4: the resolved-note test checks only a generic prefix, and the Boundaries comment overclaims.
+  - Minors: M-1 stale line citations; M-2 MeasurementBoundary.swift not a ledger region; M-3 CHANGELOG gaps and historical retracted claims; M-4 vectorCoreLibraryBytes reports the executable (same class as I-3); M-5 in-repo report record incomplete; M-6 scope of resolved values.
+  - Nits: N-1 125/3 → 42 ns qualifier; N-2 D3 repeat-rule wording.
+  - Per-record recommendation: TOOL-07 close-with-limitations after I-2/3/4; TOOL-08 close-with-limitations now; API-43 close-with-limitations now; NUM-23 after I-3; OWN-23 keep open until I-1.
+- Ruling (V04/final-fix-rulings.md): the ONE final fix dispatch (skill rule) covers I-1..I-4 plus M-1, M-2, M-3, M-4 (closing the I-3 class instance), M-6 and N-1. I-1 gets a mechanical closure (forbidden-phrase or region coverage for Performance_Guide.md and README). I-3 is fixed by LABELLING the field semantics plus a "Run identity" doc paragraph; capturing source identity is not possible for uncommitted measured trees (executableSHA256 routed as a follow-up). No measured note text changes, except the M-1 reason text, with an identity-change statement. Root closure actions: M-5, N-2.
+- Final fix dispatched (fresh Opus; workspaces/V04-final @ae76b23).
+- V04 FINAL FIX ROUND DONE_WITH_CONCERNS ("Final fix round" in V04/phaseD-report.md; evidence V04/final-fix/):
+  - I-1: Performance_Guide rewritten with the real CLI and comparator; ns figures and multipliers deleted; other false statements fixed. The ledger reads .md; Rule 6 (times, multipliers, "% faster" in the guide and README unless hedged or artifact-cited) flags 11 pre-fix and 0 now. The guide is a ledger region (42 statements plus 24 tombstones).
+  - I-2: both definitions rewritten; "Measured resolutions" section; Maintaining sentence.
+  - I-3: provenance doc comments (runtimeToolchain documented as a REQUIRED-EQUAL comparator key, correcting root's "informational"); "Run identity" section.
+  - I-4: hand-written 28-ID table with record set and observation literals; negative controls; a mutation proof (3 note mutations → 6 failures, where the old test passed).
+  - M-1 plus Rule 7 (no File.swift:NNN citations in benchmark sources and docs). M-2: MeasurementBoundary.swift is a region. M-3: CHANGELOG Unreleased entries plus dated corrections. M-4: isVectorCoreLibraryImage matches by file name (test plus live check). M-6, N-1.
+  - Identity: only the soa-fp16 unavailable route/reason change; no measured case (demonstrated by running both binaries).
+  - Debug/Release BCT 64/0; ledger 0 problems (878 entries, 21 regions, 7 rules); 339 OK in-repo and git-less; lint 0 new.
+  - Concerns: runtimeToolchain is a required-equal key (accepted); the implementer added claim_ledger.json to test_no_native_layout_literals' allowlist; the comparator has no automated test; 5 stale line citations remain in Tests/ (outside Rule 7); a large guide rewrite.
+- Root check of concern 2: under swiftbuild, `.build/release` → out/Products/Release (a symlink exists in the D1 build), so `.build/release/vectorcore-bench` is valid in both layouts. The layout policy guards object-layout paths (VectorCore.build/*.o). The allowlist exception is ACCEPTED if justified in-file.
+- Staged: V04-final tree 6322ad5be73dceebab3dd5ff2ca3ef172f31d4ed (15 files +3121/-718). Scoped Opus re-review dispatched (runs 3 guide CLI examples, a mutation bite, and a citation-class count for routing).
+- V04 final-fix scoped re-review (Opus; V04/final-fix-rereview.md): EVERY ruled item ADDRESSED; all verification reproduced.
+  - 38 guide statements sampled; CLI examples run on a real Release build (positional form rejected rc 1; documented forms work); comparator exit codes match main().
+  - Rule 6 flags exactly the 11 pre-fix statements; tombstones absent.
+  - I-4: 18 cases recomputed from raw D4; a one-word note mutation → exactly 1 expected failure.
+  - Token diffs confirmed. Citation count: Sources 0, Benchmarks 0, Tests 5 real stale (plus 4 log-location strings).
+  - New: F-1 (Minor: the guide's exit-2 list omits non-empty `failures`; the documented CI recipe ALWAYS exits 2 on this tree because of the P02 1.04e-6 failures and the noop "Missing validation"); F-2 (Minor: Rule 6 is lexical, so spelled-out multipliers in README pass); F-3..F-8 nits.
+  - Per-record recommendation: ALL FIVE close with limitations (OWN-23 now closable).
+- Ruling (residual adjudication): a tiny CLOSURE POLISH round, resuming the final-fix implementer, ROOT-VERIFIED: F-1 (complete the exit-2 list plus an honest note and a verified workaround if one exists), F-3..F-7 wording, the 5 stale Tests citations fixed plus Rule 7 extended to Tests/ comments (closing the class), F-8 conditional live assertion.
+  - This deviates from the skill's "one fix dispatch" for final reviews. Why: the residuals are inaccurate or incomplete doc and comment claims, which claim discipline requires fixing rather than filing; they are low risk; the substance is already approved.
+  - F-2 (README spelled-out multipliers) is ROUTED to P01 with the qualitative-wording class.
+  - Cost if wrong: one extra small round.
+- V04 closure polish round DONE and ROOT-VERIFIED (tree aa2e8c4): F-1 exit-2 list plus a known-issue note plus a verified --exclude workaround (--max-rel-error 2e-6 is insufficient: 6 failures at 1536 remain); F-3..F-7 wording; the 5 stale Tests citations replaced with symbols and Rule 7 extended to Tests comments (commentOnlyPaths; LoggingContractTests strings legal); F-8 dladdr-conditional live assertion. Git-less: ledger 0 problems, unittest OK.
+- Root ruling: V04-C-0607 (fixture-injected note "never paired or compared"; the comparator accepts that scope) is left as a CLOSURE LIMITATION and routed to D02 (runtime-text owner, Q11); changing the note changes boundary identity.
+- V04 final rounds imported (17 paths byte-identical to aa2e8c4; preimages clean) and committed fcb6c34. Merged: ledger 0 problems; unittest OK; 75/30; validator OK.
+- V04 ACCEPTED. closures/V04.json closes TOOL-07, TOOL-08, API-43, NUM-23 and OWN-23 WITH LIMITATIONS (per final review and re-review); evidence cited by sha256 (M-5); N-2 corrected; routed items listed for P01/P02/D02. Process notes record the root Q13 planning miss and the polish-round deviation.
+- NEXT: the milestone gate (whole suite Debug, Release, EXTENDED=0/1, plus the local CI-replay of all REQUIRED_JOBS and the out-of-repo policy run), then P01.
+- MILESTONE 13 GATE dispatched (Sonnet; milestone13/dispatch.md): the first full LOCAL CI REPLAY of all REQUIRED_JOBS (test debug/release, lint pinned 0.65.1, repository-checks, consumer, platforms incl. Intel triple and the product × destination matrix, benchmark-contracts, sanitizers address/thread), literally from ci.yml with local substitutions (Xcode 27 vs CI 16.2/26.3 disclosed), plus Debug EXTENDED=1, the out-of-repo policy run and the claim-ledger check, on integration 13c6678. Failures are recorded, not fixed.
+- MILESTONE 13: GATE PASS (milestone13/report.md) at ea14ae5 (13c6678 + docs). Integration checkout unchanged.
+  - repository-checks: 342 OK; validator OK.
+  - test debug and release: memory pool OK; swift test 1468 tests / 200 suites passed, 0 XCTest failures; performance gates OK.
+  - lint: SwiftLint 0.65.1 exit 0, 0 serious. consumer: 8 programs. platforms: VectorCore and VectorCoreBenchmarking × 5 destinations plus the Intel compile, all 0.
+  - benchmark-contracts: PASS. sanitizers: address 77, thread 39 complete.
+  - Debug EXTENDED=1: 1468/200 passed (76 → 0 skipped lines, so the gate took effect).
+  - Out-of-repo Python 342 OK (skipped 6 = the 4 known history-based skips plus 2 env-gated). Claim ledger 0 problems.
+  - Divergences: Xcode 27 vs CI 16.2/26.3 (only 2 of 4 test cells); repository-checks on macOS; Intel compile-only.
+- Program status: V04 and T01-T10 accepted. Remaining in dependency order: P01 (unblocked by V04), P02, D02, then D01/L04 (which need user workload and downstream decisions).
+- ROUTING CORRECTION (root error): reading the P01/P02 briefs showed both are NARROW (P01: full-coordinate hashing, a streaming top-k selector, bounded batch temporaries, Operations validation; P02: CPU batch search policy and a bounded Gram workspace). Root's earlier "P01 performance / P02 numerics" routing of V04 findings was wrong.
+- Ruling: three new root tasks:
+  - T11: benchmark correctness-gate policy (principled tolerance, zero-reference class, missing validation; the CI recipe must exit 0 without --exclude).
+  - T12: FP16 range-kernel per-conversion heap allocation, exhaustive converter test, unified NaN policy, dead native branch.
+  - T13: claim-ledger coverage extension, after P01.
+  The matrix 4N+5 allocations stay on P02 (Gram workspace). Provider-closure, generic and normalize allocations are recorded as unassigned follow-ups (not defects by themselves). closures/V04.json routing corrected with a process note.
+- Ruling (sequencing): P01 phase 1 (refreshed path/caller inventory, required by its brief before edits; the design inventory predates E06/R04/S03/T08/T10) plus T11 run in parallel (disjoint: TopK, VectorMath, Batch/Operations, hash bodies vs benchmark correctness policy). T12 next (MixedPrecisionKernels, disjoint from P01). T13 after P01 (both touch the ledger).
+- P01 phase 1 dispatched (Opus; read-only inventory refresh plus phase table mapping EVERY brief requirement, lesson from V04's unassigned Q13; workspaces/P01 @2240d2e). T11 dispatched (Opus; derived-bound tolerance, zero-reference class closure, missing-validation policy; workspaces/T11 @2240d2e). Implementers: P01-phase1 and T11.
+- P01 phase 1 DONE_WITH_CONCERNS (P01/phase1-inventory.md, 763 lines, sha 2cc50d51…; read-only).
+  - Frozen hashes match the S03/E06/R04/I02/T10 closures. E06 rewrote BatchOperations (the old inventory is stale there). Vector512Optimized's hash doc is ledger entry V04-C-0500. S03 owns the TopKResult decoding block. R04's KNearestHeap uses orderedAscending. The CI sanitizer manifest pins TopKNaN test names.
+  - Mandated proofs: BatchKernels.range_* write out[i − lowerBound], so 256-candidate tiles restarted at each range's lower bound give bit-identical scores (structural; parity tests remain the gate). completeMap caps tasks at C but returns one value per logical chunk. TopKBuffer push at zero capacity TRAPS today; mergeTopK allocates a fresh buffer.
+  - E06 observations: none needs editing under the recommended design.
+  - Phase table A (RED, structural check, base probes) → B hashing → C TopKBuffer → D selector/VectorMath → E Operations → F BatchOperations → G evidence → Review; every brief requirement ID mapped (§6.3).
+- Root rulings (P01/rulings.md) on Q1-Q18: all accepted. Q2 mirrors the completeMap grouping (base task counts preserved). Q13 hash loop `for block in _storage` + dimension. Q17 STRENGTHENED: Phase F re-derives the two TopKNaNWrapperTests ParallelHeuristic premises and proposes any migration to root first (no renames; CI pins them). Phase G re-checks every §6.3 ID (the V04 Q13 lesson).
+- P01 PHASE A dispatched (resumed the phase-1 implementer): REDs gated out of the default run (for example P01_RED=1); a structural hash check (RED now); base Release D4/D5/D3 probes with conditions recorded. Implementers: P01 phase A and T11.
+- P01 PHASE A DONE_WITH_CONCERNS (P01/phaseA-report.md; evidence P01/phaseA/):
+  - 5 new files (tests, support, structural check); no production edits.
+  - REDs, gated by P01_RED=1 (default runs skip all 18; CI stays green), fail on the base in Debug and Release: 40 issues, all RED assertions. Hash collapse at 384/512/768/1536 (60 → 1 value); VectorMath k=0 makes 5 metric calls; negative k traps after work; NaN/order law; strategy neighbours; Operations cold-key 200 calls vs 100, provider never entered, tuning published; zero-capacity push trap; validation repeated per query. Controls pass.
+  - Structural check test_optimized_hash_coverage.py: RED on the sampled hash; mutations bite; 351 OK out of repo.
+  - Probes: 856 children (255 alloc ×2, 91 memory, 255 timing); collector unchanged; contention recorded.
+  - Concerns: timings under load; base Operations routing depends on per-child calibration; P01BaselineRedTests spans phases C and E; new files untracked.
+- Staged: P01 tree a9c7876437ebf6bf79cf54fbd7f3c72ebbfadd08 (5 files +769). Independent Sonnet review dispatched.
+- Note: the P01 implementer's context is at about 700k tokens. Ruling: phases B+ use FRESH implementers with the inventory, rulings and phase reports as their map (avoids the V04-F context exhaustion).
+- P01 phase A review (Sonnet; P01/phaseA-review.md): Spec PASS, Quality APPROVED.
+  - The reviewer's RED re-run gave the same 18 tests and 40 issues; all REDs fail for the right reason against an independent oracle; gating, bounded children and probes (601 cases) verified.
+  - The structural check rejects 9 of 11 bypass probes. 2 pass: an if-wrapped loop and a shadowed _storage.
+  - Minors: M1 the zero-capacity RED encodes the guard design (phase C must reconcile); M2 the two bypasses; M3 no T18 statement; M4 P01Summarize.py missing from the tools table; M5 the collector path is hard-coded to workspaces/P01; M6 corpora have 57-60 rows; M7 capture handle and temp hygiene.
+- Ruling: phase A accepted. M2, M6, M7 and the RedTests split go into phase B. M1 into phase C. M3 and M4 are root notes for phase G. M5 is accepted (phase G runs in workspaces/P01).
+- P01 PHASE B dispatched (FRESH Sonnet; P01/phaseB-dispatch.md): the ruled full-block hash for 384/512/768/1536 plus dimension; docs and ledger (V04-C-0500); remove the hash RED gate; enable the structural real-source test; fold in M2/M6/M7; split P01BaselineRedTests. Implementers: P01 phase B and T11.
+- P01 PHASE B DONE (P01/phaseB/ B1-B9):
+  - The four hash bodies are the ruled full-block loop plus dimension (Q13); the DEBUG assert and sampled subscripts are dropped; equality, storage, COW and the I02 key are unchanged.
+  - Identical docs at all four widths; V04-C-0500 corrected (fingerprint 9ba42bad…); ledger 0 problems.
+  - OptimizedHashContractTests ungated: 170 tests / 11 suites pass in Debug and Release. Remaining REDs still fail: 32 issues = 40 − 8 hash.
+  - Structural check hardened (depth 0, H6 shadowing, if-wrapped/if-false/conditional-dim/shadow fixtures).
+  - P01BaselineRedTests split into TopKBuffer (C) and Operations (E) suites, with per-phase P01RedGate flags. M7 capture hygiene. 354 OK in-repo and git-less. Lint 0.
+- Staged: P01 tree 10482ea4fc9f2f35240a28955182059976b0142d (11 files +210/-117). Independent Sonnet review dispatched.
+- P01 phase B review (Sonnet; P01/phaseB-review.md): Spec PASS, Quality APPROVED.
+  - Verified: one diff hunk per vector file; the ±0 control covers every block, lane and width; ledger 0 problems with no new entries needed; the reviewer's run 22/3 green; B3/B4 32 issues match per test; the split gates are correct; the structural check flags if/nested/defer/do/where/prefix/shadow (self._storage a harmless FP).
+  - Minors: (1) early return/throw before the loop accepted; (2) shadow-rule gaps (tuple, backtick, closure parameter, for-in); (3) acceptedContract "P01-Q13" unresolved (for T13); (4) gate flags alias isEnabled; (5) a stale VectorMath test comment.
+- Ruling: phase B accepted. Minors 1-2 go into phase C, 5 into phase D, 3 into T13, 4 accepted.
+- P01 PHASE C dispatched (fresh Sonnet; P01/phaseC-dispatch.md): zero-capacity guard (lift the topKBuffer gate); mergeIn(from:) per Q5 with oracle-based class tests; no caller changes yet; structural-check minors.
+- T11 DONE_WITH_CONCERNS (root transcription T11/report.md; evidence T11/):
+  - ROOT CAUSE: legitimate FP32 rounding judged against an UNDERIVED 1e-6. Derived per-route worst-case γ-bounds (generic γ_{D+9}; optimized D/16+7/8; SoA D/4+5; vDSP D+3; +N−1 for the summed statistic; composed with the γ64 reference error). Recorded maxRel reproduced exactly.
+  - Zero-reference: relErr = |c−r| / max(|r|, 1); matrix routes use absolute-error gates; 3 mechanical tests.
+  - Per-case validation policy: noop/mem.alloc/pool/fill declared N/A; dot/normalize/mem.copy still fail (fingerprinted bodies). Ratchet of 12 derived plus 20 empirical routes.
+  - CI recipe: 0 correctness failures (was 18). The recipe also needed --samples 5 (one sample has no median, so it always exited 2). The comparison now exits 1 from timing noise on the busy host.
+  - BCT 74/0 Debug and Release; drift guard unchanged; Python 342 OK; ledger 0 problems; lint 0 new.
+  - Concerns: thresholds are much looser (8e-6..2.5e-4); per-distance held to the summed bound; unverified vDSP/cblas assumptions; 20 empirical routes (dist.dot.768.generic at 8.65e-7 of 1e-6); dot/normalize/mem.copy validation needs fingerprint changes.
+- Root rulings (provisional, pending review):
+  - ACCEPT --samples 5 plus the missing-statistic exit-2 note (a real defect; matches benchmarks.yml).
+  - ACCEPT exit 1 from timing noise as the comparator working correctly (not a correctness failure); the guide should say regression comparisons need a quiet host.
+  - SENSITIVITY: decided after the Opus review assesses whether a sound per-distance bound is feasible without fingerprint changes.
+- Staged: T11 tree 21383ce7b180a13a9adb78c025d6cfd76eca430c (9 files +936/-115). Independent Opus numerics review dispatched.
+- P01 PHASE C DONE_WITH_CONCERNS (P01/phaseC/):
+  - pushIfBetter `guard k > 0` (zero capacity is a no-op; negative still traps); capacity contract documented; topKBuffer gate lifted.
+  - mergeIn(from:) per Q5 (keeps self, pushes src's live entries; preconditions direction, policy, k ≥ src.k; disjoint-index contract; no zero-allocation claim). mergeTopK unchanged.
+  - TopKBufferContractTests: oracle-based matrix (>10,000 cases: 3 policies × 2 directions × n 0..9 × 24 seeds × partitions × k set × caps); precondition-trap children; mutation (drop last source entry) → 25,591 issues.
+  - REDs: 30 issues (28 VectorMath + 2 Operations); phase C green. H7 early-exit rule with fixtures; LIMITS documented. Focused Debug and Release 90/12 suites pass; Python 356 OK; ledger 0 problems; lint 0.
+- Staged: P01 tree 1986fb56969bcec606eca1303ee4b1613e77b59b (5 files +376/-4). Sonnet review dispatched.
+- P01 phase C review (Sonnet; P01/phaseC-review.md): Spec PASS, Quality APPROVED.
+  - Every TopKBuffer method is zero-capacity safe; mergeIn iterates live src entries through pushIfBetter (same NaN ordering); preconditions trap in children; the oracle is independent; the matrix covers the brief list.
+  - The reviewer's own mutation build → 25,591 issues. No caller changed. REDs 30. 356 OK.
+  - Minors: the repeatedMerges comment is inaccurate; the smallerValue mismatch helper has no multiplicity check; LIMITS "(verified to pass)" is untested.
+- Ruling: phase C accepted; minors go into phase D.
+- P01 PHASE D dispatched (FRESH Opus; P01/phaseD-dispatch.md): the shared score-by-index helper (small k streaming, once-per-candidate in-order callbacks, min(k,N), numeric-before-NaN, exact tie policies, generic witnesses authoritative); VectorMath.nearestNeighbors adopts the common law (k≤0/empty → [] with no calls; no negative-k trap); docs plus CHANGELOG "Breaking"; selector oracle tests; lift the vectorMath gate; heapSelectSmallK removal deferred (Q8); STOP-and-propose for any existing-test migration.
+- T11 review (Opus; T11/review.md): Spec PASS (item 4 met in substance), Quality CHANGES REQUESTED.
+  - Independently confirmed: all rounding counts and bounds, M cancelling, the composition, +N−1, B = 1 exact, and the root cause (exact binary32 emulation reproduces maxRel).
+  - Sensitivity: systematic defects are still caught (×6..×1100 margin). A single small dropped term is missed 5–48% at CI sizes, and per-distance checks are held to the observation bound. The N≈3,600 crossover makes a dropped candidate at N=10000 undetectable by any sound FP32-sum gate.
+  - I-1 overreaching comment; I-2 guide silent on exit 1; M-1..M-7 minors.
+- Ruling: spec item 4 is MET IN SUBSTANCE. Exit 2 and correctness failures are closed; exit 1 is the comparator detecting timing noise on a loaded host. Why: timing is not determinized by tolerance, and perf is deferred. Cost if wrong: a recipe note after the quiet-host re-run.
+- Ruling: derived thresholds ACCEPTED as the gate. No sound tighter per-distance bound exists without changing fingerprinted bodies (combining = max). FOLLOW-UP, bundled with the dot/normalize/mem.copy validation fingerprint re-record: separate per-distance and observation stats, plus a bitwise in-order check for the sequential provider; the non-gating maxRel drift report also goes to follow-up. Cost if wrong: small single-term defects pass CI until then (disclosed via I-1).
+- T11 FIX ROUND 1 dispatched (resumed implementer abba4ceb68eb66522; T11/fix1-rulings.md): I-1, I-2 (+V04-C-0786), M-2 doc, M-3 fail-closed ratchet plus negative control, M-4 regex plus fixtures, M-5 override label truth plus test, M-6, M-7. Implementers: P01 phase D and T11 fix 1.
+- T11 FIX 1 DONE_WITH_CONCERNS (T11/report.md "Fix round 1"; T11/fix1/):
+  - I-1 reworded (largest term and smallest candidate shown caught; small single-term defects can pass, with the review's miss rates cited as single-host and not test-verified);
+  - I-2 exit-1 sentence (single-host, unverified); M-6 Accelerate order marked unverified; M-7 wording;
+  - M-2 the 512 optimized-Euclid per-distance outputs are not gated (doc);
+  - M-3 the route ratchet covers every route and fails closed (11 unvalidated routes pinned, suites must record no comparison);
+  - M-4 regex check with 8 bypass and 4 must-pass fixtures;
+  - M-5 overrides replace their own kind only, and the reason names each threshold's source, with a new test;
+  - ledger V04-C-0785/0786 rebound with history.
+  - Verification: BCT 75/0 in Debug and Release; drift guard unchanged; ledger 0 problems; 342 OK in-repo and git-less; lint 0; mutation copy gives 4 failures in 3 tests.
+- Staged: T11 tree 89ad15e08f13abb6a09f56977a720770ee8a655f (4 files +192/-40 over 21383ce; package T11/fix1-review-package.diff, identical to the implementer's diff). Scoped Sonnet re-review dispatched (T11/fix1-rereview.md).
+- T11 fix-1 scoped re-review (Sonnet; T11/fix1-rereview.md): APPROVED, all 8 ADDRESSED; Debug BCT 75/0 from the export, drift guard pass, ledger 0 problems. Root verified the guide's "four pairs, 2 to 7" figure (compare5=2, compare-1=7, -2=2, -3=2; all rc 1; all parallel/automatic).
+- T11 MERGED as c4305e5: byte-identical import of 9 files; all preimages equal 2240d2e; merged tree = reviewed 89ad15e apart from the ledger docs. Ledger 0 problems; unittest 342 OK in-repo and git-less. Closure closures/T11.json (4 records; limitations: sensitivity, combined per-distance, unverified Accelerate assumption, 20 empirical routes, dot/normalize/mem.copy). Follow-up routed: per-distance/observation split, bitwise sequential check, drift report (bundled with the dot/normalize/mem.copy fingerprint work); dot absolute scale to P02.
+- T11: complete.
+- P01 PHASE D DONE_WITH_CONCERNS (P01/phaseD-report.md):
+  - selectByScore(count:k:tieBreaker:score:) plus the pinned usesSmallKStrategy predicate; clamp before allocation; small-k single scan into TopKBuffer; large-k builds N pairs then sortSelectLargeK; Int indices throughout.
+  - Callers: array/generic select, nearestWithMetric (nearest/batchNearest), VectorMath.nearestNeighbors (.smallerIndex; k≤0/empty → [] with no calls).
+  - TopKSelectorOracleTests: 13 tests, an independent oracle plus a 15-row table, exhaustive permutations, 8 mutations all caught. The same oracle passes on the phase C tree, so only VectorMath changes; no existing-test migration.
+  - Docs and CHANGELOG Breaking entry ([NaN,1,0]: [0,2,1] → [2,1,0]); vectorMath gate lifted; phase C minors folded in.
+  - Debug and Release 142/19 suites; P01_RED=1 leaves 2 issues (Operations only); 357 OK in-repo and git-less; ledger 0 problems; lint 0 new. heapSelectSmallK last caller is BatchOperations.swift:816 (phase F); kept per Q8.
+  - Concerns: the implementer ran one GIT_OPTIONAL_LOCKS=0 write-tree, which only re-emitted 1986fb5 (benign, disclosed); phaseB/C-report.md were missing. ROOT transcribed both hand-backs into P01/phaseB-report.md and P01/phaseC-report.md.
+- Staged: P01 tree 69a22f173d1ed5cd648874cc6caf8d6a8506ed6b (8 files +774/-75; same file set as the implementer's D10 package). Independent Opus review dispatched (P01/phaseD-review.md).
+- T12 workspace created: workspaces/T12, detached at integration 6e69662 (after T11).
+- Ruling (sequencing): T12 starts now. Why: T11 is merged (the shared BenchmarkContractTests and ledger now have a single base), and T12's FP16 scope is disjoint from P01 except the ledger and CHANGELOG, which 3-way merge. Cost if wrong: one ledger merge.
+- T12 PHASE 1 dispatched (Opus; T12/phase1-dispatch.md): read-only inventory of every FP16 conversion path; evidence-based root cause of the 16 B allocations (emitted code plus the D4 probe); proposals (a) allocation fix and bit-identity fixtures, (b) one NaN policy, (c) the NATIVE_FLOAT16 branch (D02 ownership), (d) the exhaustive converter test plan, (e) boundary-note and ledger impact plus the re-probe plan, (f) a phase plan mapping every brief item; Release D4 baseline. Implementers: T12 phase 1 (P01 phase D is in review).
+- P01 phase D review (Opus; P01/phaseD-review.md): Spec PASS (every item), Quality CHANGES REQUESTED (doc only).
+  - Verified: 122/14 suites pass in Debug and Release on the export; the new helper vs the old array code shows 0 index or score-bit differences over 5,652 cases (including smallerValue); 5 mutations all caught (large-k re-score, small-k −0 drop, tie-policy ignored, bare `<` sort, built-in Euclid substitution); [NaN,1,0] → [2,1,0] (base [0,2,1]); S03 block byte-identical; heapSelectSmallK's last caller is BatchOperations:816; phase C minors fixed.
+  - I1: "before any ordering work" is false on small k (heap work runs between callbacks), at TopKSelection:263, :287 and VectorMath:393. m1: "all of the above is exercised" overclaims (no-array and no-ceiling are source-only). m2: "ties broken by position" is false under smallerValue. m3: the disclosed write-tree.
+- Ruling: m3 accepted as disclosed (it re-emitted 1986fb5; no harm); no further index-writing git commands. I1/m1/m2 → fix round 1.
+- P01 PHASE D FIX 1 dispatched (resumed implementer a5487360a89b815ce; P01/phaseD-fix1-rulings.md): comment-only, with token-diff proof plus a focused Debug run. Implementers: T12 phase 1 and P01 phase D fix 1.
+- P01 PHASE D FIX 1 DONE (P01/phaseD-report.md "Fix round 1"; P01/phaseD-fix1/): I1 at all three docs; m1 split into test-observed laws vs source-only properties (no count-sized array, no Int32 ceiling); m2 per-policy tie rule with a TieBreaker cross-reference. The CHANGELOG never had the phrase. Token diff identical (3154/3154, 1505/1505; controls behave); Debug focused 42/3 pass; ledger 0 problems; lint 0 new.
+- Staged: P01 tree aba1c260814180d52e711da289689905b55f6e55 (2 files +27/-13, all `///`).
+- Ruling: root performed the scoped re-review directly. Why: a 40-line doc-only diff, fully read; the TieBreaker cross-reference was checked against TopKSelection.swift:15-33; a root-independent check found every non-/// line identical in both files. Cost if wrong: a doc wording slip caught at the P01 final review.
+- P01 phase D: ACCEPTED (tree aba1c26).
+- P01 PHASE E dispatched (FRESH Opus; P01/phaseE-dispatch.md, index aba1c26): a private validated worker plus late-row rejection; generic small-k through no-hint parallelReduce, with heaps of min(k, range.count) and mergeIn (Q5); direct routes with local capacity min(k, range.count) and no work on empty ranges; Cosine 768/1536 kept on the fused path with bit parity; the operations RED gate lifted (cold-key fresh children, VC_AUTOTUNE* removed); CHANGELOG Breaking (Q6); route observations in a new P01 file using e06IsolatedScenario; valid-path ASan; STOP-and-propose for existing-test migrations (TopKNaNWrapperTests premise is phase F). Implementers: T12 phase 1 and P01 phase E.
+- T12 PHASE 1 DONE_WITH_CONCERNS (T12/phase1-report.md; T12/phase1/; no source edits):
+  - ROOT CAUSE: the module-internal `UnsafeRawPointer.loadUnaligned(as:)` in BinaryFormat.swift:213-225 shadows the stdlib and allocates, copies and frees 16 B per call. 168 sites in 54 functions; all 5,112,576 attributed 16-B events trace through :217.
+  - Counterfactual (extension deleted in a scratch copy): range kernels go from 262,145 to 1 event per invocation; outputs are byte-identical over 450 sections (the comparison is sensitive: the flag build changes 42).
+  - Baseline D4 reproduces V04 (512: 262,145/266,243); 768 gives 393,217/397,315 and 1536 gives 786,433/790,531; default optimized-fp16 rows are reachable at 512N8192/768N8192/1536N4096.
+  - Proposals: (a) delete both shadows plus a lint; (b) canonical NaN policy (encode sign|0x7E00, decode 0x7FC00000; only the arm64 NEON chunk path changes); (c) delete the dead native branch (T12 owns the flag); (d) exhaustive Float16-free tests, RED-first on the NEON NaN pin; (e) notes, literals, ledger and re-probe; (f) P2/P3/P4.
+  - Concerns: BinaryFormat is outside the FP16 file (B01-frozen); SIMDExtensions sum() is a second stdlib shadow; probe executables were compiled with xcrun swiftc; ledger churn.
+- Root rulings (T12/phase1-rulings.md): (a)-(f) ACCEPTED.
+  - B01 FREEZE OVERRIDE: B01's brief keeps unaligned-load code unchanged "unless actual independent regression evidence establishes a new defect and root approves it". The evidence is met; the override is scoped to deleting the two extensions, and B01 suites must stay green. Cost if wrong: a B01 regression, caught by B01's suites.
+  - CLASS CLOSURE: SIMDExtensions sum() ×2 is a second stdlib-member shadow, so the lint covers the class (curated stdlib member list per type) with a pinned allowlist for sum() (rounding in ~104 call sites; semantic review ROUTED as a follow-up).
+  - (c) T12 owns NATIVE_FLOAT16_SUPPORTED; the V04 closure routing is to be amended (the item leaves D02).
+  - Probe executables via xcrun swiftc/clang: accepted (V04 D4 practice; one bounded, PID-tracked process each).
+- T12 PHASE 2 dispatched (FRESH Opus; T12/phase2-dispatch.md): delete both shadows; emitted-code and fixture bit identity; D4 re-probe; class lint test_no_stdlib_member_shadows.py; Boundaries.swift notes, BCT literals and ledger; boundary-identity statement; CHANGELOG Fixed; Intel compile. Implementers: P01 phase E and T12 phase 2.
+- P01 PHASE E DONE_WITH_CONCERNS (P01/phaseE-report.md; P01/phaseE/):
+  - Private validatedNearest worker (batch validates once).
+  - streamNearest: one no-hint parallelReduce, heaps of min(k', range.count), one call per candidate, a cancellation check before each call, no calibration.
+  - Direct routes use capacity min(k, range.count) and skip empty ranges; combinePartialHeaps applies Q5; mergeBuffers removed (no caller).
+  - CHANGELOG Breaking; operations gate lifted; new P01OperationsFixtures, SelectionTests (6) and RouteTests (4, isolated children, e06IsolatedScenario unedited).
+  - Debug and Release 220/30 suites plus 8 XCTest (§5 E2/E3/E8/E9/E10 unedited); P01_RED=1 shows 0 issues; valid-path ASan clean (in-process); 10/11 mutations caught (1 equivalent); 357 OK in-repo and git-less; ledger 0 problems; lint 0.
+  - Cold key: 100 calls, no publication (base 200, published). Batch validation reads per row: 1 (base 2/4). Cosine 768/1536: PARTIALLY changed (fused, calibration kept, bit parity).
+  - Concerns: (1) ASan breaks ChildProbeLauncher children ("Interceptors are not working"); (2) concrete-overload vs witness 2-ulp divergence (pre-existing); (3) fused cosine ranks NaN/±inf first (pre-existing); (4) one equivalent mutant; (5) a cancellation check added per metric call (base: a cancelled n=64 search completed); (6) markdown docs left to T13/D02.
+- Staged: P01 tree d9dad62e0bb5103a5855e4f371b9096ea035f73b (7 files +1541/-29). Independent Opus review dispatched (P01/phaseE-review.md), with a focus on the cancellation addition against E02.
+- Root verified concern 3 from source: CosineKernels.swift:33 `max(-1, min(1, similarity))` with Swift min(1, NaN) = 1, so distance 0; ∞/∞ = NaN, so likewise. Verified concern 2: OptimizedDistanceMetrics.swift has public non-witness overloads (Euclid/Cosine/Dot/Manhattan/Chebyshev × 512/768/1536).
+- Ruling: NEW ROOT TASKS. T14 (overload/witness bit consistency, plus the SIMD sum() shadow review routed from T12) and T15 (cosine NaN/∞ → distance 0, one exceptional policy across all cosine paths). Both after P01 and T12, before D02. Why: pre-existing defects outside P01's exclusive scope (kernels and metrics are frozen for P01); T15 is a correctness defect that defeats the Top-K NaN contract. Cost if wrong: re-sequencing only.
+- Routed: concern 1 → T10 launcher follow-up (propagate the sanitizer runtime environment, e.g. DYLD_INSERT_LIBRARIES, to children under ASan/TSan; no current CI impact, since milestone 13's sanitizer replay passed). Concern 6 → T13 scope (Docs/HowTo_NearestNeighbor.md, Docs/API_Overview_Map.md).
+- T12 PHASE 2 DONE_WITH_CONCERNS (T12/phase2-report.md; T12/phase2/):
+  - BinaryFormat.swift: both shadow extensions deleted (sha 579a5835… → d6e5edd2…; token diff = deletion only).
+  - Boundaries.swift fp16Reused/fp16Setup/fp16DefaultRow ("probed") rewritten from the re-probe; fp16Code deleted; flags stay included.
+  - BCT hand literals plus a matcher with negative controls plus default-row checks. Ledger: 0692/0694/0705/0706/0709 rebound, 0707/0708 tombstoned. New lint test_no_stdlib_member_shadows.py. CHANGELOG Fixed.
+  - Before → after: aos-fp16-reused 262,145/393,217/786,433 → 1; setup → 4,099; optimized-fp16 524,289/786,433 → 1. The 1,016-B per-window event is attributed to swift_task_alloc in the harness loop. 16-B slowAlloc sites 168 → 0.
+  - 450 kernel sections byte-identical (e5314bff…) and 160 serialization sections identical. Debug and Release focused: 289 Swift Testing plus 17+75 XCTest. Intel build-tests compile. 351 OK in-repo and git-less. Ledger 0 problems; lint 0 new.
+- ROOT PREMISE CORRECTED (C1): root's ruling text said the serialization reads (BinaryFormat:70/86/102) went through the shadow. Emitted code and probes show they bind to the stdlib BitwiseCopyable overload (the buffer-pointer shadow had no callers; decode allocation counts unchanged). The implementer correctly wrote the CHANGELOG as "serialization unaffected". Root's error was a source-only inference stated as fact. Lesson: label overload-resolution inferences as unverified.
+- Rulings: C2 (MARK header removed with its extension) accepted as part of the deletion. C3 (one fewer ucvtf #10 in 5 functions) accepted: a 10-bit integer converts to float exactly, and the fixtures are byte-identical. C4/C5/C6/C8 accepted. C7 is a closure action (the new BinaryFormat hash supersedes B01's).
+- Staged: T12 tree 84913cc9f579383402fc93fec8ba043d1a9fd4d8 (6 files +668/-120). Independent Opus review dispatched (T12/phase2-review.md; focus on toolchain compatibility with Swift 6.0/Xcode 16.2 and 26.3, lint bypasses, literal independence).
+- P01 phase E review (Opus; P01/phaseE-review.md): Spec PASS (all 10), Quality CHANGES REQUESTED (docs and tests only).
+  - The reviewer's export: Debug and Release 103/15 suites pass. The mutation claim was reproduced, plus 3 extra mutations caught.
+  - CANCELLATION: KEEP the per-call check (consistent with E02's before/after-callback rule; the built-in provider outcome is unchanged; sequential mid-scan makes 6 calls instead of 4097).
+  - I1: the cancellation docs are unconditional, but a pre-cancelled large-k generic search and cancelled small-k cosine768 return complete results. M1: calibration-scope qualifiers. M2: P01PlanProvider is not actually conforming. M3: tier-A statements in Operations rose 21→31 (not a region). M4: no drift guard between scoresWithBatchKernels and computeDistances type tests.
+- Rulings (P01/phaseE-fix1-rulings.md):
+  - Cancellation KEPT.
+  - M2: the fixture must truly CONFORM (the brief requires conforming fixtures), or be split.
+  - M3: a disposition table in the report satisfies the dispatch clause; regioning Operations.swift and the CHANGELOG is T13's scope (added to the T13 brief). Cost if wrong: T13 finds a gap cheaply.
+  - I1/M1/M4 must be fixed.
+- P01 PHASE E FIX 1 dispatched (resumed implementer ac86595678a27ebf4). Implementers: P01 phase E fix 1. T12 phase 2 is in review.
+- STALL INCIDENT (2026-10-04 22:54 → 2026-10-05): the P01 phase E fix-1 implementer and the T12 phase 2 reviewer were both killed by the 600 s stream watchdog. Each was blocked on a foreground Release swift test while an unrelated iOS Simulator test host (another project; not touched) held load average 38. The T12 reviewer's build reached [255/266] after 90 minutes.
+  - Their processes exited on their own (verified by ps); nothing was killed.
+  - The P01 worktree had no edits after its last good Debug run (X6: 46/7 suites pass; token diff comment-only X3).
+  - Transient index.lock: absent on inspection; the retry succeeded.
+- Ruling: the standing worker rule now requires run_in_background for swift builds and tests (added to the phase F and T12 phase 3 dispatches; memory saved). Root re-runs lost verification itself and resumes agents only for write-ups.
+- Staged: P01 phase E fix-1 tree c528c8fced9580156e67991eaa7d4c47774e3bc9 (5 files +371/-92). Root runs Release (R1) plus unittest in-repo and git-less (R2) in the background. The implementer was resumed for the report section only. The T12 reviewer was resumed to finish (background builds).
+- P01 PHASE E FIX 1 DONE (P01/phaseE-report.md "Fix round 1", written by the resumed implementer):
+  - I1: per-route cancellation docs, with new tests per route. M1: qualifiers.
+  - M2: P01PlanProvider now conforms; P01UncheckedProviderProbe is separate.
+  - M3: tier-A table (Operations 21→35, CHANGELOG 83→84, every row mapped). M4: a 40-case route-matrix drift test.
+  - Token diff comment-only; FX1-FX3 mutations caught.
+- ROOT RUNS on the staged c528c8f:
+  - R1 Release focused (7 suites) 46/46 pass, rc 0, equal to the implementer's Debug X6 (46/7);
+  - R2 unittest 357 OK in-repo and 357 OK git-less; ledger 0 problems.
+- Scoped Sonnet re-review dispatched (P01/phaseE-fix1-rereview.md).
+- P01 phase E fix-1 scoped re-review (Sonnet; P01/phaseE-fix1-rereview.md): APPROVED, all 5 ADDRESSED (M4: the 5 direct-route cases are covered behaviourally, as documented).
+  - Verified: the Operations diff is comment-only; all 15 new or changed tier-A statements are in the M3 table (re-derived from the ledger listing); Debug 11/2 suites from the export; R1 and R2 confirmed.
+  - Minors: Operations.swift:102-103 route-4 provider-branch claim untested; :397-398 unreflowed comment.
+- Ruling: P01 phase E ACCEPTED (tree c528c8f). Both minors are folded into phase F as a COMMENT-ONLY exception to its Operations.swift constraint, proved by token diff. Cost if wrong: a comment tweak at the final review.
+- P01 PHASE F dispatched (FRESH Opus; P01/phaseF-dispatch.md, index c528c8f):
+  - small-k entry split via usesSmallKStrategy; generic serial and parallel heaps over a pure Q2 partition helper with completeMap and per-chunk logical observations;
+  - optimized 256-tile scratch over the existing range kernels through the §3.1 per-score-sink seam; B10 bit-parity gate first; root admission kept;
+  - nonthrowing cancellation (no throwing check copied); Q17 TopKNaNWrapperTests premise STOP-and-propose; E1-E10 unedited; heapSelectSmallK per Q8;
+  - ASan in-process, TSan if feasible; 5 targeted mutations; background builds (stall rule).
+  - Implementers: P01 phase F. T12 phase 2 is in review.
+- T12 phase 2 review (Opus, resumed after the stall; T12/phase2-review.md): Spec PASS (every item), Quality APPROVED.
+  - Toolchain: the remaining loadUnaligned sites bind to @_alwaysEmitIntoClient stdlib overloads with no @available (15.2 and 26.0 SDK interfaces), so there is no platform-floor impact. SIMD8 is BitwiseCopyable in the 6.0.3 interface. SILGen was checked with 6.2 against the 6.0.3/6.2/6.4 stdlibs and with 6.4: `ldr q0` and 0 allocations at -O and -Onone, arm64 and x86_64. The Swift 6.0 compiler binding is inferred (not installed).
+  - Minors: M1 the literal matcher accepts an extra leading digit (a CLASS: also at :442 and :494-533); M2/M3/M4 CHANGELOG labels.
+  - Disclosure: one write-tree (it printed 84913cc). Root verified, without writing, that the index equals 84913cc and the worktree equals the index.
+- Ruling: T12 phase 2 ACCEPTED (tree 84913cc). M1-M4 are folded into phase 3; M1 is a class fix (anchor every site, plus negative controls). Standing dispatch rule: confirm staged trees with `git diff --cached --quiet <sha>`, never write-tree (third occurrence of this slip across agents).
+- T12 PHASE 3 dispatched (FRESH Opus; T12/phase3-dispatch.md, index 84913cc): exhaustive Float16-free sync tests RED-first; the ruled NaN policy (only the NEON chunk path changes, else STOP); delete the NATIVE_FLOAT16 branch with ledger tombstones; CHANGELOG Changed/Removed; the M1 class fix plus M2-M4 wording; mutations; Intel compile; background builds. Implementers: P01 phase F and T12 phase 3.
+- T12 PHASE 3 DONE_WITH_CONCERNS (T12/phase3-report.md; T12/phase3/):
+  - FP16ConverterExhaustiveTests: 15 sync tests, no Float16 (65,536 decode; 63,490 round trip; 190,464 RNE; NaN pins on 14 encode and 8 decode paths). RED on 84913cc: only nanEncodePlatformBatchChunks fails (6,139/6,153 NaN inputs; 0x7fc12345 → 0x7e09), 14/15 pass. GREEN 15/15.
+  - The only behaviour change is the arm64 chunk lane (isNaN → scalar encoder). Dead NATIVE_FLOAT16 branch deleted.
+  - Ledger: 4 tombstones, 6 rebinds, new 0787/0788. M1 class fix: containsCountLiteral at every site with leading- and trailing-digit controls (10 controls RED with the plain matcher → GREEN). M2-M4 wording.
+  - Debug and Release 304/57 suites; 450 sections identical; all-2^32 non-NaN digest unchanged; non-canonical NaN 16,744,448 → 0; 4/4 mutations; Intel compile; 351 OK in-repo and git-less; ledger 0 problems; lint 0 new; no flag reference remains.
+  - Concerns: C1 V04-R-0008 plus D02 text; C2 stale guard docstring; C3 dead private fp16ToFp32_bulk; C4 x86_64 batch path never executed; C5 default FP environment only; C6 perf unmeasured; C7 M1 extended to the ≈420 site; C8 lint-driven helper split; C9 out-of-repo evidence labelled.
+- Staged: T12 tree cb5941f5aa9fb6e81a71830a057459df85c48c06 (phase 3: 5 files +892/-169; whole task 6e69662→cb5941f: 8 files +1544/-273).
+- Ruling: COMBINE the phase 3 review with T12's FINAL whole-task review. Why: phases 1-2 were each reviewed independently and phase 3 is the last code phase; one Opus reviewer covers phase 3 depth plus cross-phase and brief coverage. Then ONE final fix dispatch (including C1-C3 if confirmed). Cost if wrong: a cross-phase issue surfaces at milestone gating.
+- T12 phase 3 plus final review dispatched (Opus; T12/phase3-review.md; includes one bounded Rosetta attempt for C4).
+- P01 PHASE F DONE_WITH_CONCERNS (P01/phaseF-report.md; P01/phaseF/):
+  - BatchOperations small/large-k entry split; small-k streaming (route selection, a pure partition plan, 256-tiles, per-worker heaps, in-order merge). The large-k path and every computeDistances_* helper are token-IDENTICAL; heapSelect lost its unreachable small branch.
+  - heapSelectSmallK deleted (Q8; no caller or test). Operations item-11 comment-only.
+  - New P01BatchFixtures, P01BatchTilingParityTests and P01BatchRouteTests. No CHANGELOG or ledger change (no observable change claimed).
+  - Debug and Release 238/32 suites plus XCTest 8/0 and 36 children at status 0; E1-E10 unedited (E2 submitted equal to base); ASan in-process 24/24 plus 13 bodies clean; TSan parity plus 13 bodies at 0 warnings; 5/5 mutations; 357 OK in-repo and git-less; ledger 0 problems; lint 0.
+  - B10 PARITY: 0 bit mismatches over 396,180 per-candidate comparisons (360 layouts: 6 routes × finite/root-tie/exceptional × N∈{1100,1101} × 9 chunk sizes plus serial), in Debug, Release, ASan and TSan.
+  - Concerns: (1) no ASan child isolation; (2) Q17 premises "true", but the pinned tests still assert ParallelHeuristic and install Operations.computeProvider (neither routes Batch), so migration needs a ruling; (3) Euclidean pair and tail kernels are bit-equal on the fixtures (tile misplacement is caught by the tile log instead); (4) seams smallKScores/smallKTrace; (5) model not measured (phase G); (6) the heapSelect name; (7) stale docs → T13/D02; (8) 2.8 GB scratch.
+- Staged: P01 tree 2fced71ee3b58818c2259206a84f7e9bb7f67816 (6 files +1478/-35). Independent Opus review dispatched (P01/phaseF-review.md), with a Q17 judgment and an exact migration proposal if the asserted premises are vacuous. Implementers: none active (T12 is in final review).
+- T12 phase 3 plus FINAL review (Opus; T12/phase3-review.md): Spec PASS (every phase 3 item plus final brief coverage), Quality APPROVED. 0 Critical, 0 Important, 5 Minor:
+  - M1 MixedPrecisionFactory encode paths not NaN-pinned or listed;
+  - M2 the CHANGELOG Removed entry overclaims (explicit -D builds did compile the branch);
+  - M3 the Catalyst compile claim is unverified;
+  - M4 stale line-number names in the Float16 guard lint;
+  - M5 bookkeeping (V04-R-0008; V04 routing, ALREADY amended on integration 84a0662; B01 hash supersession → closure).
+  - C3: delete fp16ToFp32_bulk (0 callers). C5: isNaN is a bit test (wording only).
+  - C4: Rosetta is unavailable (installing it would be a host change, not done). The verbatim convertBatchAVX2 loop body ran natively over 2^32: 0 mismatches, every NaN canonical.
+- Ruling: C4 residual (x86 code generation only) ACCEPTED as a documented limitation.
+- T12 FINAL FIX dispatched (resumed implementer aca76d5580564b24c; T12/final-fix-rulings.md items 1-7). This is the ONE final fix dispatch; residuals are then adjudicated by root.
+- P01 phase F review (Opus; P01/phaseF-review.md): Spec PASS on 1-6 and 8-11, FAIL on 7 (Q17); Quality CHANGES REQUESTED (production code and new tests APPROVED as is).
+  - Reviewer runs: token-identical large-k, helpers and Operations; parity 0/396,180 in Debug (238/32) and Release (63/7).
+  - I1 (Q17): the pinned batchSerialHeapAndSortKeepNaNsLast and batchParallelHeapAndSortPreserveGlobalIndices assert ParallelHeuristic and install Operations.computeProvider, neither of which routes Batch. DEMONSTRATED vacuous: they pass with the parallel gate inverted (Q17B). An exact migration (BoundedExecution.$observation plus BatchOperations.$smallKTrace observations) passes on 2fced71 and fails under Q17B.
+  - Minors: M1 comments cite the out-of-repo inventory; M2 SmallKPlan nested exception; M3 heapSelect name; M4 Euclidean parity blind to tile misplacement (covered by the tile log).
+- Root verified that sanitizer_bodies.json and sanitizer_expected_bodies.txt key these ids by id, filter and displayName only (no body hash), so the migration keeps the CI pins.
+- Ruling: ACCEPT the reviewer's exact Q17 migration (names unchanged; drop ParallelHeuristic and the inert provider wrappers). Why: Q17 STRENGTHENED, demonstrated vacuity. Cost if wrong: one CI sanitizer body revisit. M1/M2 fix; M3/M4 accepted with one-line docs.
+- P01 PHASE F FIX 1 dispatched (resumed implementer ac35e89f459b24e32; P01/phaseF-fix1-rulings.md). Implementers: P01 phase F fix 1 and T12 final fix.
+- T12 FINAL FIX DONE (T12/phase3-report.md "Final fix round"; T12/final-fix/): items 1-7.
+  - Factory encode paths pinned plus policy and ledger 0690; the factory mutation is caught only by the new pins (6,139/6,153 per width).
+  - CHANGELOG Removed reworded ("never enabled by default"); Catalyst claim dropped; guard-lint names de-numbered (62 fixture values unchanged); V04-R-0008 resolved per the routed-list convention.
+  - fp16ToFp32_bulk deleted (0163-0165 tombstoned); item 7 needed no source change.
+  - Debug and Release 251/53; 450 sections identical; Intel compile; 351 OK in-repo and git-less; ledger 0 problems; lint 0 new.
+- Staged: T12 tree 816a71b6d8ef97a3ded8fcb4fc0ce42b35f837fa (5 files +91/-95). Scoped Sonnet re-review dispatched (T12/final-fix-rereview.md). Root pre-checked the merge: no non-ledger path changed on integration since 6e69662, and all 9 T12 preimages equal HEAD.
+- P01 PHASE F FIX 1 DONE (P01/phaseF-report.md "Fix round 1"; P01/phaseF-fix1/):
+  - I1: the exact reviewer bodies, byte-identical to the probe; 8 names unchanged; ParallelHeuristic and inert wrappers dropped; manifests untouched.
+  - M1: in-repo citations. M2: nested/serial exception. M3: heapSelect doc. M4: parity doc plus a Euclidean tripwire `#expect(differing == 0)` (disclosed addition).
+  - BatchOperations comment-only (8292 tokens). Debug and Release 238/32 plus 8/0 plus 36 children; TSan replay of both CI rows 1/1 with 0 warnings; Q17B: exactly the two migrated bodies fail (5 issues), control 8/8; 357 OK in-repo and git-less (ci_contracts and validate_github pass); ledger 0 problems; lint 0 new.
+  - Concern: batchSelectionPreservesInputEdgeBehavior keeps an inert Operations.$computeProvider wrapper (results-only assertions); for adjudication at P01's final review.
+- Staged: P01 tree 307441cb547c7057a9073741ae3ef1d135da6ad1 (3 files +77/-31). Scoped Sonnet re-review dispatched (P01/phaseF-fix1-rereview.md). Implementers: none active.
+- T12 final-fix scoped re-review (Sonnet; T12/final-fix-rereview.md): APPROVED, all 8 ADDRESSED, no new issues; Debug 22/2 from the export; 351 OK; ledger 0 problems.
+- T12 MERGED as d7f4f3d: byte-identical import of 9 files; all preimages equal 6e69662; merged tree = reviewed 816a71b apart from the ledger docs. Ledger 0 problems; unittest 351 OK in-repo and git-less. Closure closures/T12.json (6 records; the BinaryFormat hash d6e5edd2 SUPERSEDES B01's frozen 579a5835 under ruling (a); limitations: x86 batch path never executed, default FPCR only, Swift 6.0 binding inferred, no Catalyst test build).
+- T12: complete.
+- P01 phase F fix-1 scoped re-review (Sonnet; P01/phaseF-fix1-rereview.md): APPROVED, all 5 ADDRESSED. Migrated bodies byte-identical to the probe; Q17B fails exactly the two; tripwire deterministic. Concern 2 (the inert $computeProvider wrapper in batchSelectionPreservesInputEdgeBehavior): remove at P01's final review.
+- P01 phase F: ACCEPTED (tree 307441c).
+- P01 PHASE G dispatched (FRESH Opus; P01/phaseG-dispatch.md; frozen tree 307441c): measurement only; phase A probe sets plus new route cases; raw before/after; focused Debug and Release; in-process ASan; §6.3 re-check; M3/M4. Host load average 57 (the user's iOS Simulator) at dispatch, so the wait-then-disclose rule applies.
+- Ruling (scheduling): NO other implementer builds while P01 phase G measures. Why: phase G needs one measurement process at a time, and the host is already loaded by the user's simulator workload; our own builds would contaminate the timing and memory records. Cost if wrong: idle wall-clock during phase G. T13/T14/T15 wait for P01 anyway.
+- P01 MERGE DRY-RUN (scratch only; P01 tree 307441c on integration d435a83+): overlap is CHANGELOG.md and claim_ledger.json only. git merge-file gives 0 conflicts for both. A full merged scratch tree parses the ledger JSON, and check_claim_ledger reports 0 problems.
+- Ruling (milestone): after the P01 merge, run MILESTONE 14, a full local CI replay (all REQUIRED_JOBS, as milestone 13). Why: P01 is the first merge combining library changes from three tasks (T11 benchmarks, T12 FP16/BinaryFormat, P01 selection/Operations/Batch/hash) since milestone 13. Cost: one full replay.
+- P01 PHASE G DONE_WITH_CONCERNS (P01/phaseG-report.md; P01/phaseG/, compare/compare.md):
+  - Frozen tree 307441c confirmed at 9 checkpoints (439-file inventory a639435b…; canonical tarball).
+  - Allocation: 313/344 cases final ≤ base; 31 flagged.
+  - Focused Debug and Release 390/39 plus XCTest 8/0 (45 children as expected); in-process ASan 20 runs clean with 396,180 parity comparisons, 0 mismatches; ledger 0 problems; 357 OK in-repo and git-less; lint 0 new.
+  - §6.3: 92/95 done; T19/A8 for review; T16 gap (thermal not recorded in the window).
+  - Host: 1-minute load 3.3–4.8 in the window (5/15-minute averages 10.5–16.6, falling); disclosed.
+- ROOT COMPARISON (P01/phaseG-root-comparison.md):
+  - 22 small-k parallel Batch flags are EVENTS-only: +≈17 events (≈ one per worker heap or tile), with bytes ≈332 KB → ≈117 KB (optimized N=4096) and ≈271 KB → ≈34 KB (generic). This is the intended trade, consistent with B17 on bytes.
+  - 6 large-k flags on unchanged code and 3 Operations bytes-only flags are within the BASE G variance.
+  - B17 statement written (measured, one host, no allocation-free claim).
+  - The retained 16·N+32 B per-call request: root attributes it BY LAYOUT (Vector512Optimized stores _storage plus `public let scalarCount: Int = 512`, so stride 16, so the [V]→[VectorDOptimized] cast copy is 16N+32). Inference, not a measured allocation site. Pre-existing, outside B17 (a temporary copy of input handles). ROUTED to P02 (avoid the cast copy when V is concrete; a computed scalarCount halves handle stride; measure first).
+- P01 FINAL whole-task review dispatched (Opus; P01/final-review.md; whole diff 2240d2e→307441c, 26 files +5401/-174): cross-phase coherence, brief coverage (T19/A8), closure text for OWN-07/API-23/API-45 and API-24 partial, claim discipline, defect-class closures (incl. the inert $computeProvider wrapper residual), root's phase G comparison, merge readiness with T11/T12.
+- P01 FINAL REVIEW (Opus; P01/final-review.md): Spec FAIL on one sub-item (brief Tests ¶2, T8/B3: the four direct Euclidean widths and squared admission), Quality CHANGES REQUESTED.
+  - Verified: focused Debug 390/39 from the export; 357 OK; ledger 0 problems; layout probe (stride 16 for all four optimized types; an unspecialized [V]→[Vector512Optimized] cast builds a new buffer).
+  - I1: a review mutant switching all 7 direct Euclidean routes to ROOT admission (bits unchanged) passes the whole extended filter.
+  - I2: inert $computeProvider wrappers at TopKNaNWrapperTests:9 and P01BatchRouteTests ≈428/452; no guard.
+  - M1 CHANGELOG lacks the hash-change entry; M2 storage-model doc omits the handle copy; M3 wrong test citation at TopKSelectionKernels:67; M4 root's B17 statement needs corrections; M5 stale historical doc → T13.
+  - Closure text proposed: OWN-07/API-23/API-45 CLOSE; API-24 PARTIAL. No semantic T11/T12 interaction; the merged unittest count should be 366.
+- ROOT ACKNOWLEDGEMENT: the inventory §6.1 T8 "4 direct Euclidean" item was never placed in any phase acceptance check and no ruling removed it. Root planning miss (same class as V04 Q13). Lesson: when ruling a phase table, cross-check EVERY §6.1 sub-item against the phase acceptance column, not just the ID list.
+- M4 applied by root (P01/phaseG-root-comparison.md: dated correction; original kept). M5 → T13.
+- P01 FINAL FIX dispatched (FRESH Opus; P01/final-fix-rulings.md): I1 direct-Euclidean admission suite (root-tie fixtures, 7 routes, seq/par; reviewer mutant must fail); I2 wrapper removal plus lexical guard; M1 CHANGELOG hash entry; M2/M3 docs. Production comment-only by token diff, so phase G evidence stays valid.
+- P01 FINAL FIX DONE (P01/final-fix-report.md):
+  - I1: P01DirectEuclideanAdmissionTests (root-tie fixtures; 4 nearestEuclidean widths plus 3 Operations widths under 4 providers; plus finite Double-reference and exceptional parity). The reviewer's RA1+RA2 mutant now fails with 192 issues (all 7 routes, all 6 tied k boundaries).
+  - I2: 3 inert wrappers removed; guard test_inert_provider_wrappers.py (premises P1-P3, rule W1, LIMITS, mutation controls).
+  - M1 CHANGELOG hash entry (one-host BASE G→FINAL G medians, 16.6×–63.7×); M2/M3 docs (/// only).
+  - Debug and Release 71/10 suites; TSan CI-row replay clean; 368 OK in-repo and git-less; ledger 0 problems; lint 0 new.
+  - Concern: a seed change (42→8) after a near-tie precondition failure (for the re-reviewer).
+- Staged: P01 tree 2d4f1cf3a9a520583e4b5f2e68010472f63de686 (7 files +626/-26). Scoped Sonnet re-review dispatched (P01/final-fix-rereview.md).
+- Merge dry-run re-run on 2d4f1cf: overlap still only CHANGELOG and claim_ledger, 0 conflicts; integration TopKNaNWrapperTests == base (clean replacement); merged ledger 0 problems; the new guard passes on the merged tree.
+- P01 final-fix scoped re-review (Sonnet; P01/final-fix-rereview.md): APPROVED, all ADDRESSED. Seed change 42→8 judged fixture-only (minimum gap 4× the 2·tol margin; deterministic inputs). Debug 10/2 from the export; 368 OK.
+- P01 MERGED as a5b2189: 26 files imported byte-identically (preimages = 2240d2e); CHANGELOG and claim_ledger 3-way merged with identical results in both directions. The merged tree differs from integration exactly in P01's 28 files and from P01's tree only in T11/T12 files. Ledger 0 problems; unittest 377 OK in-repo and git-less (as predicted).
+- Closure closures/P01.json: OWN-07, API-23, API-45 CLOSED; API-24 PARTIAL (P02); corrected B17 statement; limitations; routed items (P02 cast class and scalarCount; T13 docs and regions; T14; T15; T10 sanitizer env).
+- P01: complete.
+- MILESTONE 14 dispatched (Sonnet; milestone14/dispatch.md, derived from milestone 13 plus the 2026-10-05 lessons): full local CI replay of every REQUIRED_JOB, plus Debug EXTENDED=1, out-of-repo policy (expect 377) and ledger, at ddca07e (T11 c4305e5 + T12 d7f4f3d + P01 a5b2189). Host load 3.9 at dispatch.
+- Ruling (sequencing): T13, T14 and T15 are unblocked but HELD until milestone 14 reports. Why: (a) a gate failure may change their base; (b) concurrent builds add load that can flake the EXTENDED whole-suite run (memory: full-suite perf flake). Cost if wrong: idle wall-clock for the gate's duration.
+- Next order after the gate: T15 (correctness; cosine NaN→0) and T14 (overload/witness bits) as phase-1 inventories in parallel (disjoint: CosineKernels vs OptimizedDistanceMetrics/SIMDExtensions, to be confirmed by inventory); T13 (docs/ledger) after them, since T13 regions files T14/T15 touch. Then P02 → D02.
+- PAUSED 2026-10-05 at user request ("after you find a good pausing point, please stop, and give me an update"). Pausing point: every task accepted so far is merged and closed; no implementer is running. The milestone 14 gate (read-only) is still running in the background, and its report lands at milestone14/report.md. Resume requires a user instruction. On resume: read the milestone 14 report first; on PASS, dispatch the T15/T14 phase-1 inventories (drafted; set <TIP>).
+- MILESTONE 14: GATE PASS (milestone14/report.md). All 39 steps exited as expected; 0 failures.
+  - test debug and release: 1556/213 Swift Testing plus 75 XCTest, 0 failures.
+  - lint: 0 serious. consumer: 8/8. platforms: 5+5 destinations plus Intel compile. benchmark-contracts: PASS. sanitizers: address 77, thread 39.
+  - extras: EXTENDED=1 1556/213; out-of-repo unittest 377 OK; ledger 0 problems.
+  - Divergences as milestone 13. Host load 3.9–9.35. The mid-run HEAD move was root's docs-only pause commits (progress.md/state.json).
+  - Program remains PAUSED; next on resume: the T15/T14 phase-1 inventories.
+- RESUMED 2026-10-05 by explicit user instruction ("resume - please continue with the diligence of independant review - stop when the decision involving me is active"). Stop condition: the first task that needs a USER decision (D01/L04 per the plan; check D02 and P02 for user-decision gates before dispatching each).
+- Workspaces created at integration baa99b5: workspaces/T15 and workspaces/T14.
+- T15 PHASE 1 dispatched (Opus; T15/phase1-dispatch.md): cosine implementation inventory, exceptional-value probe through every implementation and selection route, proposals (a)-(f) including the phase plan with failing checks for every sub-clause.
+- T14 PHASE 1 dispatched (Opus; T14/phase1-dispatch.md): overload/witness inventory, bit-agreement probe, sum() semantics and replacement impact (scratch copy), proposals (a)-(e).
+- Implementers: T15 phase 1 and T14 phase 1 (both read-only plus probes). Both workers were told to report the Cosine-overload overlap for root coordination.
+- T14 PHASE 1 DONE (T14/phase1-report.md; read-only, 444 hashes unchanged):
+  - 30 public concrete overloads (distance plus batchDistance; Euclid/Cosine/Dot/Manhattan/Chebyshev × 512/768/1536). 18 differ in bits from the witness (Euclid 1-3 ulp plus NaN payloads; Dot most pairs incl. a zero sign and NaN vs −∞ at 768; Cosine 1 ulp plus SEMANTIC differences: zero/tiny/NaN give 0.0 vs 1.0). Manhattan and Chebyshev (12) agree. P01's dot1536 value reproduced exactly. Deterministic (3 runs, -O/-Onone, Debug/Release). Binding confirmed by SIL.
+  - Callers (compiler-verified): 84 overload sites (45 benchmarks, 39 tests, 0 Sources); 22 generic sites (15 Sources).
+  - NEW: search APIs do not use the witness. Euclid search matches the overload on 100% of rows (witness 72-92%); Dot512 Operations.findNearest returns overload bits for k<n and witness bits for k=n (score depends on k); Cosine512 search uses 4 arithmetics.
+  - sum(): same lane order as the stdlib; only the start differs (+0 vs −0). 113 call sites; 69/3,341 probed public outputs change (+0 → −0, all FMA dot routes whose products underflow); full-suite delta with the shadow removed: 0 tests change.
+  - Recommendations: Euclid/Dot route the witness to EuclideanKernels/DotKernels, then remove the 12 overloads; Manhattan/Chebyshev remove 12 (bit-identical); Cosine hold for T15 (do NOT route the witness to CosineKernels before T15); removing all 30 builds with 0 errors; D02 gets the symbol list. (b) bit-equality test (5×3×24) plus a registry guard. (c) keep sum(), document plus pin. (d) interactions: T15, P01 dot expectations, DistanceBench fingerprints.
+  - Concerns: "same metric, different path" is wider (cosine has ≥6 implementations; pairwiseDistances GEMM not probed); removal is silent (calls rebind to the witness), so rerouting must land first; NaN-payload pins forbidden; 3 GB scratch.
+- Root: T14 rulings deferred until T15 phase 1 reports (cosine ownership is shared).
+- T15 PHASE 1 DONE (T15/phase1-report.md; read-only, 2,013 hashes unchanged):
+  - 40 cosine bodies; 20 let NaN reach the clamp (10 through the helper, 10 with their own copy of the clamp); the other 20 differ (SoA NaN→2 or 0/2 by batch size; FP16 → 1; GEMM/preNorm helpers/INT8 already NaN).
+  - Probe: fused routes rank NaN/±∞ first at distance 0 (Ops/Batch 512-1536, nearestCosineFused512, per-query findNearestBatch); generic witness routes rank ±∞ first and NaN at 1.0; GEMM correct.
+  - CFA (scratch): 2,004 finite rows bit-identical, 1,308 NaN/∞ rows → NaN, 38/38 selections rank last, full debug suite: only the 2 defect-pinning tests fail.
+  - Extra findings: VectorProtocol.cosineDistance returns negative distances (no clamp); both-zero inconsistent (0 on 14 families, 1 on 29); Chebyshev ignores NaN, Hamming treats NaN as bit 0; the huge-vector test uses 9e38 = +∞.
+- Root rulings (T15/phase1-rulings.md): P1 plus extension; canonical .nan; P3a both-zero 1.0; P3c pin divergences plus follow-up; P4 domain plus follow-up (F22 divergence documented); P5 in scope; delete internal NormCache (zero callers), fix public no-caller APIs; remove SoA early-outs (ASan required); Chebyshev/Hamming NaN FIXED IN T15 (class rule); align the benchmark oracle. C1: the ∞ fixtures corrected; ONE E06-frozen assertion (BatchConfigurationContractTests:445) migration approved as the intended break.
+- Root rulings (T14/phase1-rulings.md): Euclid/Dot reroute the witness to the kernels, THEN remove (order mandatory); Manhattan/Chebyshev remove; COSINE overloads deferred to T14 PHASE 3 after T15 merges (routing the witness to CosineKernels earlier would arm the NaN→0 defect); bit-equality class test with a counted cosine pending list plus a registry guard; keep sum() plus pin plus lint reason; P01 dot expectations move together (STOP if semantic); re-probe dist.*.optimized D4; GEMM probe report-only (P02 owns); D02 symbol diff.
+- OWNERSHIP SPLIT (binding): in DistanceMetrics.swift, T15 edits only the CosineDistance/ChebyshevDistance/HammingDistance structs and T14 only the EuclideanDistance/DotProductDistance structs; T14 alone edits OptimizedDistanceMetrics.swift and SIMDExtensions. Root 3-way merges.
+- T15 PHASE 2 and T14 PHASE 2 dispatched (fresh Opus each). Implementers: T15 phase 2 and T14 phase 2.
+- T14 PHASE 2 DONE (T14/phase2-report.md; T14/d02-symbol-diff.txt):
+  - Witnesses rerouted (Euclid/Dot `as?` → kernels for 512/768/1536); 24 non-cosine overloads removed (cosine block and factory byte-identical); sum() docs; MetricWitnessEquivalenceTests, SIMDSumSemanticsTests, test_metric_overload_registry.py; T12 lint SUM_REASON updated; CHANGELOG Changed/Removed; the p01Witness comment.
+  - RED on baa99b5: 308 issues (Euclid/Dot, incl. 42 Dot512 k-dependence scores and the P01 replay) → 0 after the reroute with overloads present (overload = witness = search) → 0 after removal (probe byte-identical, 45,961 lines).
+  - Bench: the D4 unverified-b set (16 cases incl. dist.*.512.optimized) has 0 events before and after; records identical; T11 fingerprints 20/20 unchanged.
+  - Full Debug EXTENDED=0 1568/216; Release targeted 272/28 plus 75 XCTest; Intel compile; 385 OK in-repo and git-less; ledger 0 problems; lint 0 new; 5 mutations caught; D02 diff exactly 24 symbols removed.
+  - Concerns: (1) edited Docs/HowTo_NearestNeighbor.md outside the list (the "~1e-3 relative" GEMM claim is refuted); (2) GEMM findNearestBatch self-distances 0.011-0.021 and near-row relative error 1.0 (P02); (3) cosine 66 pending cases; (4) no platform/consumer/sanitizer replay; (5) up to 6 `as?` casts per unspecialized call; (6) 9.4 GB scratch.
+- Staged: T14 tree c6350cba83152fc39d26db75a0a0bdd63b59f4ec (10 files +1285/-311). Independent Opus review dispatched (T14/phase2-review.md).
+- T14 phase 2 review (Opus; T14/phase2-review.md): Spec PASS on 1-10, FAIL on 11 (CHANGELOG); Quality CHANGES REQUESTED (wording/guard only; NO code defect; its own 4 mutants were caught; Debug and Release 69/10; 385 OK).
+  - I1: the CHANGELOG is contradicted by measurement (Dot search scores DID change: 768/1536 every k, 512 k=n and Batch; up to 1.54% / 163,840 ulp; one dot768 −∞→NaN moving a row from best to last; GEMM excluded).
+  - I2: four "search = witness" claims ignore GEMM.
+  - M1 HowTo enableMatrixRouting wording; M2 guard bypasses (backticks, where-clause, blank line); M3 P01 dot route-parity checks lost discrimination (undisclosed); M4 out-of-repo label; M5 report figures.
+  - GEMM: Important and data-dependent (near-duplicate top-10 overlap 1/10; self-match first in 5/8; duplicates 0.0146).
+- Rulings (T14/phase2-fix1-rulings.md): the Dot change itself ACCEPTED (overflow/cancellation artifacts; one arithmetic per type); I1/I2/M1/M2/M4/M5 fix; M3 assess and close with a non-arithmetic route observation in T14's file (no P01 assertion edits). GEMM accuracy plus the handle-cast class ADDED to the P02 brief as REQUIRED items.
+- T14 PHASE 2 FIX 1 dispatched (FRESH Opus; the phase 2 implementer's context is full). Implementers: T15 phase 2 and T14 fix 1.
+- T15 PHASE 2 DONE, pending rulings (T15/phase2-report.md; T15/phase2/):
+  - Policy applied across the cosine implementations (CosineKernels, BatchKernels, TopKSelectionKernels, SoA [early-outs removed], MixedPrecision, TransformOperations, DistanceMetrics Cosine/Chebyshev/Hamming structs only, VectorProtocol, ArraySIMDProvider, Vector*Optimized); NormCache deleted; DoubleRef aligned (no fingerprint change).
+  - Ledger 8 rebinds plus 3 new (0789-0791); CHANGELOG; Numerical_Behavior and HowTo cosine lines; T1/T2/registry plus test_cosine_registry.py.
+  - RED (baa99b5): T1 24/27 routes fail (GEMM control), T2 1,586 cells, guard 3 unregistered and 16 unguarded clamps → GREEN in Debug, Release and ASan.
+  - Finite identity: 1,954 finite rows, 0 unexpected differences (ruled changes only: 47 P2, 141 P3a, 4 P5); 1,379 non-finite rows → NaN (all 0x7FC00000); 38/38 selections rank NaN last.
+  - 392 OK in-repo and git-less; ledger 0 problems; lint 0 new; 4/4 mutations; Intel compile.
+  - UNAPPROVED PROPOSAL (phase2/proposal/proposed-test-migrations.diff): the P3a flips (CosineKernelsTests:110/168, StorageBorrowContractTests:98, E06 BatchConfigurationContractTests:401/431) plus a TEST-ONLY workaround for a Release-only lost store (MatrixMetricContractTests literal array → repeating:).
+  - Concerns: P3a on tiny-tiny (helper zero class); array-provider similarity NaN for overflow-domain inputs; TransformOperations needed the fix after all; THIRD instance of the NaN-swallowing class (VectorProtocol.chebyshevDistance via lInfinityNorm); T14 overlaps (Chebyshev overload, cosine registry, ledger IDs); xcodebuild matrix and full Release not run; 5.6 GB scratch.
+- Root rulings so far:
+  - P3a assertion flips APPROVED (they are exactly the ruled both-zero 0→1).
+  - The lost-store workaround is NOT approved yet. Root reviewed the test (valid Swift: var literal plus withUnsafeMutableBufferPointer plus rebasing) and the kernel (plain out[j] stores) and cannot distinguish a compiler bug from library UB (SoA lanePointer typed-pointer binding). A dedicated Opus investigation was dispatched (T15/lost-store-investigation/; minimize; SIL/IR; memory-binding audit; verdict COMPILER BUG / LIBRARY UB).
+- Staged: T15 tree ff00d7b30c6b95ee677e6cd73b110fe00ca92272 (26 files +2156/-257). Independent Opus review dispatched (T15/phase2-review.md; lost store out of its scope; includes the min/max NaN-class sweep). Running: T14 fix 1, T15 review, lost-store investigation.
+- T14 PHASE 2 FIX 1 DONE (T14/phase2-report.md F1.1-F1.10; T14/phase2-fix1/):
+  - Sources comment-only (token diff over 134 files; 0 code-token changes); P01 files unchanged (sha256).
+  - I1 CHANGELOG rewritten to measurement (Euclid search unchanged only on Ops/Batch findNearest; TopKSelection/VectorCollection/distanceMatrix/per-pair pairwise moved ≤3 ulp).
+  - I2 GEMM exclusions plus an installed-BatchKernelProvider exception; M1 HowTo bullets (code-based); M2 guard 5 rules, 6 fixtures, 12/12 mutation controls; M4/M5.
+  - M3: P01 identifies dot512 only at k≥n/10, so a non-arithmetic MetricDotRouteObservationTests was added (cancelled 512 completes; 768/1536 throw, under P01UncheckedProviderProbe); the mutant fails exactly w512/w1536; no P01 edits.
+  - Debug and Release 45/9; 385 OK in-repo and git-less; ledger 0 problems; lint 0 new.
+  - Concern: the capture driver did NOT detach in their runs (returned at child exit). Root note: driver behaviour differs by invocation; agents must handle both.
+- Staged: T14 tree 4971cbfbbea397a0846e79775e1199d21062234d (6 files +203/-49). Scoped Sonnet re-review dispatched (T14/phase2-fix1-rereview.md).
+- T14 phase 2 fix-1 scoped re-review (Sonnet; T14/phase2-fix1-rereview.md): APPROVED, all ADDRESSED, no code change confirmed; Debug 9/3 from the export; 385 OK. One Minor ("up to 3 ulp" is witness-measured, not route-measured) is folded into T14 phase 3.
+- T14 PHASE 2 ACCEPTED and MERGED as 819d3fe (V04 per-phase precedent): byte-identical import, all preimages equal baa99b5, merged tree = reviewed 4971cbf apart from the ledger docs; ledger 0 problems; 385 OK in-repo and git-less. T14 remains in_progress (phase 3: cosine overloads, witness and search alignment after T15 merges).
+- LOST-STORE INVESTIGATION (Opus; T15/lost-store-investigation/report.md, root-transcribed because the harness refused the subagent's Write): verdict COMPILER BUG, NOT library UB.
+  - Library audit: SoA memory bound and accessed only as SIMD4<Float>; no rebinding, mutating() or bitcast; bounds and exclusivity OK.
+  - Minimization to pure Swift: an @inline(never) callee taking `inout UnsafeMutablePointer` writes through it; the caller re-reads, and -O forwards the stale value. Bisected to SIL RedundantLoadElimination; callee effect summaries for indirect pointer args miss the write.
+  - Upstream: swiftlang/swift PR #92580 (merged 2026-09-24) plus backports #92630/#92631/#92632; issue #92562 (rdar://188227399). The fix's coverage of our form is unverified.
+  - ROOT VERIFIED: the minimal reproducer prints 0 at -O, 1 at -Onone, and 1 with RLE disabled (Swift 6.4, swiftlang-6.4.0.34.1).
+  - Client exposure: none of 11 public-API client shapes reproduced it (public APIs take the buffer by value). Risk is in client code with out-of-line closures plus literal-initialized arrays re-read afterwards. One Sources site has the literal shape (MixedPrecisionKernels.swift:3307-3311 adaptiveEuclideanDistance; probed correct today; a miscompile there would silently fall back to FP32).
+- Rulings:
+  - Library: no change for the kernels.
+  - Test fix: use the investigator's W2 (read values through the buffer INSIDE the closure; independent of the bug's trigger) instead of the `repeating:` workaround; a comment cites swiftlang/swift#92562/#92580.
+  - Harden adaptiveEuclideanDistance (return the value from inside the closure; a comment cites the issue) — defensive, because a miscompile there would be undetectable by tests.
+  - Class closure: (a) a Release-only canary test with the pure-Swift Array form that records the current toolchain behaviour and must be revisited when the toolchain is fixed (implementer designs the conditionals; it must not fail Debug); (b) a lint for "literal-initialized array + withUnsafeMutableBufferPointer + direct element read after the closure" over Sources AND Tests, with fixtures and LIMITS.
+  - EXTERNAL BUG FILING (comment on #92562 / Feedback Assistant) is OUTWARD-FACING: NOT done by root; the ready-to-file text is in the report §7 and will be surfaced to the user.
+- T15 phase 2 review (Opus; T15/phase2-review.md): Spec PASS; Quality CHANGES REQUESTED.
+  - I1: the guard counts a commented registry entry (an unguarded clamp kernel passes; reproduced).
+  - I2: the CHANGELOG Chebyshev claim is false for the concrete overloads (true after T14's removal).
+  - m1 R2 is body-level only; m2 finite identity is not in-repo; m3 INT8 unreachable branch; m4 cosineMixedCore domain; m5 Vector<D>.chebyshev; m6 Guides teach the removed idiom; m7 stale E06 comment; m8 apply the proposal hunk by hunk.
+  - Min/max class: lInfinityNorm (VectorProtocol and Vector<D>) still drops NaN; provider reductions and statistics go to a follow-up.
+- REBASE: T15 phase 2 rebased by root onto integration bc30506 (which has T14 phase 2) in a new worktree workspaces/T15b.
+  - 23 files imported (preimage = baa99b5); DistanceMetrics.swift and HowTo 3-way merged clean in both directions.
+  - CHANGELOG conflict (both appended to ### Changed) resolved as the UNION: all 69 T14 lines and 48 T15 lines present, 0 base lines dropped.
+  - Rebased tree e32495b8dda0902e5dc1316ff6da091e092a90d7 differs from T15's tree only in T14's 10 files and from integration only in T15's 26 files.
+- T15 FIX 1 dispatched (FRESH Opus; T15/phase2-fix1-rulings.md):
+  - Step 0: verify the rebase.
+  - Approved P3a hunks; W2 test fix; adaptiveEuclideanDistance hardening; lost-store lint plus a version-gated Release canary; I1/I2/m1-m4/m6/m7.
+  - Concern 3 clarified (each implementation's own zero class).
+  - Min/max class: fix lInfinityNorm, VectorProtocol Chebyshev and Vector<D>.
+- NEW ROOT TASK T16 (briefs/T16.md): the reduction NaN contract (provider max/min/maximumMagnitude, Swift vs vDSP; element statistics) plus a lexical guard; after T15 and T14 phase 3, before P02/D02.
+- P02 PHASE 1 dispatched (Opus; P02/phase1-dispatch.md; workspaces/P02 at 26cb85b; read-only): inventory refresh against the current tip (the design inventory predates P01/T11-T15); reconcile the brief with landed work and the root-added items (GEMM accuracy: documented plus a failing test; the cast class plus scalarCount); root-decision list; a phase plan splitting EVERY sub-clause with failing checks; a USER-DECISION gate check (API-25/TOOL-10 stay staged). Implementers: T15 fix 1 and P02 phase 1.
+- P02 PHASE 1 DONE (P02/phase1-report.md; read-only, 447 hashes unchanged):
+  - MatrixDistance, BatchKernelProvider and the GEMM/pairwise bodies are unchanged since 101b374; P01 rewired the fallback.
+  - 45 array-cast expressions (39 as?, 3 is, 3 as!); failing casts also copy; Q=7 gives 7 copies per call.
+  - GEMM Q8/N256 rows differ from findNearest in 12/12 cells; offset-1000 returns index 0 at 0.0 (true 0.125); enableMatrixRouting=false changes nothing.
+  - scalarCount is not in Codable/Equatable/Hashable (it is in Mirror).
+  - 16 root decisions. USER-DECISION GATE: PASS (API-25/TOOL-10 stay staged; nothing blocks).
+- Root rulings (P02/phase1-rulings.md): RD1-RD16 accepted/authorized as recommended. Key points:
+  - RD5/RD9/RD11 authorize edits to accepted/frozen files with token-diff or bit-identity proofs.
+  - RD6 is an empty-allowlist cast guard; RD7 scalarCount becomes computed in its own phase after T15.
+  - RD11 migrated GEMM tests must OBSERVE the .gram route (Q17 lesson).
+  - RD12 editing phases start after T15, T14 phase 3 and T16 merge.
+  - RD14 Int clamps are outside the NaN class.
+  - Lost-store design rules R-LS1-5 are binding.
+- T16 PHASE 1 dispatched (Opus; T16/phase1-dispatch.md; workspaces/T16 at caac039; read-only): reduction NaN inventory and probe (Swift vs vDSP providers, statistics), contract proposal, lexical guard design (Float/Double only; coordinate with T15's guard), phase plan with failing checks. Implementers: T15 fix 1 and T16 phase 1.
+- T15 FIX 1 DONE (T15/phase2-report.md "Fix round 1"; T15/phase2-fix1/):
+  - Step 0 on the rebased tree: no T14×T15 interaction failure (763/124 Debug; the only 8 issues are the approved-unapplied P3a pins).
+  - Applied: the P3a hunks plus the m7 comment; the W2 test fix (cites #92562/PR #92580); adaptiveEuclideanDistance hardened (reads inside the closure, pinned by AdaptiveReducedResultTests); the cosineMixedCore domain doc; m3 INT8 .nan; both lInfinityNorm bodies propagate NaN; .notNaN pins flipped plus Vector<Dim512> and concrete Chebyshev rows; I1 comment stripping plus must-fail fixtures; m1 wording; test_lost_store_reads.py lint; LostStoreCanaryTests (version-gated; on 6.4.0 Release it recorded the known issue, reading a stale 2.0); ledger V04-C-0792; CHANGELOG, Numerical_Behavior and two Guides.
+  - Full Debug 1,578/222 with 0 issues; focused Release 802/129 with 0 issues; ASan 77 with 0 reports; Intel compile; M1-M4 caught; 408 OK in-repo and git-less; ledger 0 problems; lint 0 new.
+  - Concerns: the canary's ≥6.4.1 and <6.4 branches cannot compile here (only 6.4.0 is installed); the T14 "Removed" Chebyshev-bits wording needs qualifying (→ T14 phase 3); 7 test call sites with the lost-store shape were allowlisted, with a W2 rewrite proposal.
+- Ruling: the lost-store test rewrite proposal is APPROVED as the class closure (W2; meaning kept). These frozen files are superseded (record hashes in the T15 closure): BatchKernels_SoATests (T04/V03), MatrixMetricContractTests (E02/E06/R03/T10/V03), MixedPrecisionPhase3Tests (I02), QuantizedMetricRangeTests (Q01/V03), R03Consumers/PublicMatrix.swift (R03). The allowlist is to be emptied; the R03 consumer CI step and the EXTENDED getMemoryUsage test must be run. Resumed implementer a14ee84c7096c615d for the addendum.
+- T16 PHASE 1 DONE (T16/phase1-report.md; read-only, 402 hashes unchanged):
+  - 83 reduction sites: 47 drop NaN in T16 scope across 23 functions (19 public); 3 are T15's; 2 rely on undocumented vDSP behaviour; 28 safe; 3 Int (out of scope).
+  - Providers: the Swift providers keep NaN only at element 0; vDSP propagates except in the scalar tail and n≤3 (all-NaN length 1-3 gives ∓∞); they disagree on 207-251 of 411 fixtures per reduction.
+  - Counterfactual: 4,630 NaN-free arrays bit-identical; NaN in every NaN cell; cost about +8-11% (Swift) and 1.7-2.8× (Accelerate), one loaded host.
+- Root rulings (T16/phase1-rulings.md):
+  - PROPAGATE NaN, with S1/Z1/E1/I1 and the first-NaN index; explicit in-source NaN scans on Accelerate (no undocumented vDSP reliance); the guard per (d).
+  - C2: element-wise min/max and clip/clamped IN T16; delete 2 internal zero-caller analyzers.
+  - C5 BINDING: every modified closure returns its result from inside.
+  - Phase 2 after T15 and T14 phase 3 merge.
+- T15 addendum extended by root: harden T15's own lInfinityNorm bodies (they read a captured var after the closure) and extend the lost-store lint to the captured-scalar shape (message queued to a14ee84c7096c615d).
+- T15 FIX 1 ADDENDUM DONE (T15/phase2-report.md F1.9; T15/phase2-fix1/addendum/):
+  - The approved rewrites were applied with 2 deviations: whitespace in QuantizedMetricRangeTests for lint; MatrixMetricContractTests `defer` capture → returns values plus a Result from the closure (same assertions).
+  - The lint allowlist for the original shape is now only the canary.
+  - C5: VectorProtocol.lInfinityNorm returns from inside (Vector<D> has no closure). The lint was extended to the captured-var shape: 77 hits, 3 fixed, 74 justified under 46 tagged keys by a one-host probe (no captured-var shape lost its store in Release; the known shapes did).
+  - The R03 consumer (manual swiftc step, outside the driver) prints MIGRATION_COMPLETE; the EXTENDED testLargeBatchSize passes.
+  - Affected suites Debug and Release 248/36 (1 known issue: the canary); 410 OK in-repo and git-less; ledger 0 problems; lint 0 new.
+  - Concern: re-tag the QuantizedKernels.calibrate min/max capture under T16 (ruling: yes, T16 phase 2 re-tags it).
+- Staged: T15 fix-1 tree d591acb6ab34816b2f3ea09df9dd8db15a27e513 (21 files +914/-72 over the rebased e32495b). Scoped OPUS re-review dispatched (T15/fix1-rereview.md; breadth includes production hunks, frozen rewrites, canary and lints).
+- T15 fix-1 Opus re-reviewer STALLED TWICE (stream watchdog, no output; no processes left; partial evidence in T15/fix1-rereview/ev: Debug focused 112/23 passed; Release and git-less unittest incomplete). Host load average 25 at the first stall.
+- Ruling: SPLIT the scoped re-review into two fresh agents with narrow scopes and small-output instructions: A (Opus) = production hunks plus lost-store work (W2, canary design incl. CI 6.0/6.2 risk, lint and allowlist sampling, Release runs) → T15/fix1-rereview-A.md; B (Sonnet) = Step 0, items 1/5-12, frozen-file rewrites plus the sha256 table, docs and claims, git-less unittest and ledger → T15/fix1-rereview-B.md. Why: one agent over a 1,760-line diff plus long reports stalled twice. Cost if wrong: one more dispatch.
+- T15 fix-1 re-review B (Sonnet; T15/fix1-rereview-B.md): APPROVED, all items ADDRESSED; git-less 410 OK; ledger 0 problems; P3a hunks equal the proposal's + lines; 7 sha256 values match. Note: the T14 "Removed" Chebyshev-bits wording (→ T14 phase 3).
+- T15 fix-1 re-review A (Opus; T15/fix1-rereview-A.md): APPROVED, no Critical or Important.
+  - 5 Sources hunks, all ruled; W2 (including the Result deviation) is equivalent; canary PASS (CI 6.0/6.2 risk low; Release records 2.0 vs 1 under the 6.4.0 gate); lint PASS.
+  - Minors: M1 four comments assert the upstream fix as fact (unverified); M2 lint gaps and a fixture mislabel; M3 LIMITS inaccuracy; M4 comment inaccuracy; M5 the 74-entry allowlist rests on an out-of-repo probe (2 shapes unprobed).
+- Ruling: the phase 2 review plus re-reviews A and B constitute T15's whole-task review (phase 2 holds all of T15's code). ONE final fix (Sonnet; T15/final-fix-rulings.md): M1/M4 claim discipline; M2/M3 LIMITS and labels; M5 moves the K1-K5 captured-var shapes (plus the 2 unprobed) into LostStoreCanaryTests as version-gated assertions, so the allowlist cites an in-repo test.
+- External bug filing (#92562 comment / Feedback Assistant) remains for the USER (outward-facing). Note: CI will fail the canary on a 6.4.1+ toolchain if the backport does not cover this form (intended signal).
+- T15 FINAL FIX DONE (Sonnet; T15/phase2-report.md "Final fix"): M1/M4 comments (upstream fix marked unverified); M2/M3 LIMITS and fixture label; M5 K1-K8 captured-var shapes moved into LostStoreCanaryCapturedVarTests (all kept their store on 6.4.0 Release, so plain #expect). Root verified: Sources diff comment-only (0 non-comment lines); 4 files.
+- T15 ACCEPTED and MERGED as e2414e3: the final tree fd0ebba imported byte-identically (integration had no non-ledger change since the rebase base bc30506). Ledger 0 problems; 410 OK in-repo and git-less. Closure closures/T15.json (5 records; frozen supersession for 6 test files; limitations; routed: P3c and P4 follow-ups, T14 phase 3, T16, USER lost-store bug filing).
+- T15: complete.
+- Workspaces created at integration 553d7f1 (after the T15 merge): workspaces/T14c and workspaces/T16b.
+- T14 PHASE 3a dispatched (Opus; T14/phase3-dispatch.md): the cosine agreement matrix per optimized type; ONE-arithmetic proposal (options i/ii/iii, bits changed, kernels touched, P01 parity constraint); the 6-overload removal plan; phase 2 residual wording; STOP for a root ruling.
+- T16 PHASE 2 dispatched (Opus; T16/phase2-dispatch.md): Step 0 re-probe; 2a RED (exceptional table plus guard); 2b GREEN (propagate NaN with minimal checks plus Accelerate scans; C2 extensions; analyzer deletion; C5 closures; calibrate re-tag); finite identity. Implementers: T14 phase 3a and T16 phase 2.
+- T14 PHASE 3a DONE (T14/phase3-report.md; read-only):
+  - 4 cosine arithmetics (A CosineKernels FMA; B BatchKernels pair loop; C Top-K DotKernels×3; D vDSP witness).
+  - NEW determinism defects: score depends on candidate POSITION (pair B ≠ tail A; N parity and chunk size change bits; all 8 cosine range helpers) and on k at 512 (129/1187); B is asymmetric.
+  - Exceptional alignment confirmed except P3c tiny.
+  - Recommendation (iii-A): A everywhere (2,462 bits changed, 0 for direct calls; P01 parity stays exact).
+- Root rulings (T14/phase3a-rulings.md):
+  - (iii-A) ACCEPTED.
+  - P01 migrations (a) retire fused≠witness while KEEPING a non-arithmetic route identification, (b) cosine pair≠tail → ==0, (c) the 512 references C→A: APPROVED.
+  - The tiny-vector change accepted for optimized types (partial P3c).
+  - Concern 3 class closure: FIX cosine 384 plus the 4 preNorm range helpers, plus a pair==tail closure test over EVERY public range helper.
+  - Intel _fmaf cost recorded as an unmeasured risk (perf deferred; platform floor unchanged).
+  - VectorProtocol.cosineDistance (5th arithmetic) → follow-up.
+  - Mandatory ordering: reroute and kernels → GREEN with overloads present → remove → registry/guard/table → CHANGELOG.
+- T14 PHASE 3b dispatched (resumed implementer ad99007686857ef1f). Implementers: T14 phase 3b and T16 phase 2.
+- DISK: the host disk was 99% full (14 GB free; T16 flagged it). Root deleted 157 SwiftPM build-scratch directories (70.5 GB; manifest in current-handoff/build-scratch-deleted-2026-10-06.txt) belonging ONLY to ACCEPTED tasks (T11, T12, P01, T15, T14 phases 1-2, milestones 13/14). Each was verified to be a real directory under the evidence root, selected by SwiftPM scratch markers. V04 (cited evidence paths), active tasks (T14 phase 3, T16, P02) and all logs/records/tarballs were KEPT. Now 85 GB free. Build products are reproducible from source; evidence logs and hashes remain.
+- T16 PHASE 2 DONE (T16/phase2-report.md; T16/phase2/):
+  - Step 0: the probe delta (499 rows) lies only in the T15-owned lInfinityNorm APIs; 0 in T16 scope.
+  - Changed: 5 SIMD providers, VectorProtocol, SIMDStorage, Operations, VectorCoreOperations, MixedPrecisionValidation/QuantizedKernels (2 analyzers plus QuantizationError deleted), QuantizationSchemes; new ReductionNaN.swift, T16 fixtures/registry/table tests, test_reduction_nan_guard.py.
+  - RED: an independent probe predicted 73/107 rows and 36,575 cells; RED matched exactly → GREEN 0 in Debug and Release.
+  - Finite identity: 259,408/259,786 bit-identical; the 378 others are exactly the ruled E1 240 / I1 126 / Z1 12.
+  - Full Debug 1,591 plus 75 XCTest; Release 301/48; Intel compile; 9/9 mutations; 428 OK in-repo and git-less; ledger 0 problems; lint 0 new.
+  - Performance disclosed: Swift +6-10%, Accelerate 2.1-2.7× for n≥1536, element-wise min 1.4×.
+  - Concerns: lost-store lint allowlist edits (calibrate re-tag; 2 stale min/max entries removed; SIMDStorage key re-tag); element-wise returns canonical .nan (no payload pinned); Accelerate clip relies on the documented vDSP_vclip formula (one host); profiler rows not in ASan.
+- Rulings: concern 1 APPROVED (it only tightens the lint); concern 3 accepted (canonical .nan, consistent with T15); concern 4 accepted as documented (other platforms → follow-up).
+- Staged: T16 tree 68bcbe0b66042257e9166c520bd4933c61a9a792 (phase 2). Independent Opus review dispatched (T16/phase2-review.md).
+- T14 PHASE 3b DONE (T14/phase3-report.md "Phase 3b"; T14/phase3/3b/):
+  - (iii-A) in the mandated order: the CosineDistance witness → CosineKernels for 512/768/1536; new CosineKernels fusedSquaredNorm/fusedCandidate/fusedPair and DotKernels dotPair; ALL 8 cosine range helpers' pair loops (fused and preNorm × 384-1536) rewritten as the blocked A form; Top-K cosine 512 → A; the 6 cosine overloads removed (only the factory remains).
+  - Tests: cosine un-pended, MetricCosinePositionTests, BatchKernelsRangeClosureTests plus guard test_range_helper_closure.py; P01 migrations (a)/(b)/(c) exactly as approved, with (a) still identifying the route via the ledger and calibration; T15 table/registry updated.
+  - RED (553d7f1): 77 cosine issues → GREEN 0 with the overloads present and after removal (probe bits byte-identical).
+  - Full Debug 1,588 plus 75 XCTest; Release targeted 0 issues; Intel compile; 3 mutations caught; 419 OK in-repo and git-less; ledger 0 problems; lint 0 new (34 resolved); D02 diff 6 removed; D4 re-probe 16/16 unchanged.
+  - Concerns: (1) the p01Witness doc comment is now false (APPROVED fix; sent back with removal of the unused import simd); (2) route-identity gap: in serial n=64 fusedRoute cases nothing non-arithmetic separates the fused kernel from a metric.distance substitution, since the bits are now identical by construction (disclosed; for review); (3) Intel _fmaf cost (ruled risk); (4) the T15 table missed the 768 pair-loop mutant but 5 other checks caught it.
+- T14 phase 3b addendum (B12): the p01Witness comment corrected (approved; comment-only); unused import simd removed. Debug 24/7; 419 OK git-less; ledger 0 problems; lint 0 new.
+- Staged: T14 phase 3 tree b9be6fcf3ef9b02a568867a9d6504c558c6cf117 (17 files +896/-496; 2,429-line diff).
+- Ruling: phase 3 review SPLIT from the start (stall lesson): A (Opus) kernels and arithmetic (bit identity of the rewritten loops, witness reroute, Top-K C→A, preNorm, P01 parity, removal, Release runs plus a B-mutant) → T14/phase3-review-A.md; B (Sonnet) tests/registries/guards/CHANGELOG (the P01 migrations exactly, concern 2 route-identity judgment, closure tests, T15 table/registry, wording, git-less 419) → T14/phase3-review-B.md. Together they form T14's final whole-task review for phase 3 (phase 2 was reviewed and merged). Running: T16 review, T14 reviews A and B.
+- T14 phase 3 review B (Sonnet; T14/phase3-review-B.md): APPROVED with I1. The P01 migrations are exact (only 4 P01 files changed; route still identified non-arithmetically); the registry and pending list are empty; closure tests cover 21 public plus 4 internal helpers at 6 positions; 419 OK git-less; ledger 0 problems.
+  - I1: the CHANGELOG "one arithmetic" omits VectorProtocol.cosineDistance(to:).
+  - Minors M1-M3. Concern 2 judgment: acceptable without a trace seam (bits identical by construction; only perf would be invisible).
+- T14 phase 3 review A (Opus; T14/phase3-review-A.md): Spec PASS 9/9; Quality CHANGES REQUESTED for wording only.
+  - All 8 helpers are bit-exact at slot 0, slot 1 and the tail; the witness reroute is correct; Top-K 512 k-independence 15 cases; preNorm position-independent; P01 parity 0/600 differences; D02 diff 6 removed.
+  - Mutations: pair loop → B caught (7 issues); a subtle slot-1 change caught by the closure test for all 8.
+  - I1: the Intel _fmaf disclosure omits the rerouted witness (previously vDSP) and range_topk_cosine_fused_512. Minors M1 (wrong suite and no-power claim in a CosineKernels comment), M2 (an unnecessary @usableFromInline).
+- T14 FINAL FIX dispatched (fresh Sonnet; T14/final-fix-rulings.md): A-I1/B-I1 wording, A-M1 comment, A-M2 attribute removal (the only non-comment Sources change), B-M2 make the mutation fixture bite, B-M3 remove the stale status.
+- T16 phase 2 review (Opus; T16/phase2-review.md; also T16's whole-task review): Spec PASS 9/9; Quality CHANGES REQUESTED.
+  - It independently re-derived RED (107 rows, 73 red, 36,575 cells) and finite identity (259,408 plus 378 = E1/I1/Z1); 3 new mutants caught; 428 OK; ledger 0 problems; QuantizationError was internal (no public removal); only test_lost_store_reads ALLOWED changed.
+  - I-1: the guard misses 5 realistic shapes (accumulator-left fold, argmin with assignment first, max(by:) trailing closure, fmax/fmin, pointwiseMax/Min); one live finite-guarded fold (SwiftLinearAlgebraProvider:309) is unregistered.
+  - M-1 clip doc wording; M-2 empty input relies on undocumented vDSP N==0; M-3 zero-caller proof note.
+  - Process: the reviewer ran write-tree in T16b (5th occurrence); root verified the index still equals 68bcbe0.
+- T16 FIX 1 dispatched (fresh Sonnet; T16/fix1-rulings.md): widen the guard (5 shapes, fixtures, mutation controls; register :309 exempt; fix any real NaN-dropping hit); M-1 doc; M-2 explicit `guard count > 0` on the Accelerate paths; M-3 note. Running: T14 final fix and T16 fix 1.
+- T14 FINAL FIX DONE (Sonnet): A-I1/B-I1 wording (all _fmaf paths named, with the basis and follow-up scope; VectorProtocol.cosineDistance named); A-M1 comment; A-M2 the @usableFromInline removal (root verified it is the ONLY non-comment Sources change); B-M2 the mutation fixture now bites; B-M3 stale status removed. 24/6 Debug; 419 OK in-repo and git-less; ledger 0 problems.
+- T14 PHASE 3 MERGED as 2cccd8c: the final tree 1b12b4d imported byte-identically (integration had only docs commits since 553d7f1); 419 OK in-repo and git-less; ledger 0 problems. T14 ACCEPTED; closure closures/T14.json.
+- T14: complete.
+- T16 FIX 1 DONE (Sonnet; T16/phase2-report.md "Fix round 1"): the guard widened (8 new must-flag fixtures; 19/19); real-tree hits 5 (2 EXEMPT, 2 literal clamps excluded as NaN-preserving, 1 Int property); M-2 6 `guard count > 0` on Accelerate; M-1/M-3 docs. Debug 357/63 plus 5 XCTest; Release T16Reduction; 107 cells 0; 429 OK in-repo and git-less; ledger 0 problems. Staged 6ded6219001bf627e4e2893e0581edc7582772dd.
+- T16 fix-1 scoped re-review (Sonnet; T16/fix1-rereview.md): CHANGES REQUESTED. All items PASS except a REGRESSION: the new _F2 lookbehind misses leading-dot chain lines (`.max() ?? 0` on its own line), which the old guard caught (no live instance). Minor: F7 misses parenthesised and negated conditions (pre-existing; not in LIMITS).
+- Ruling (residual adjudication): the regression is Important (a class guard must not lose coverage), so it goes back to the same implementer for a narrow fix (leading-dot plus fixtures; F7 gaps fixed if cheap, else listed in LIMITS). ROOT verifies the residual fix directly (no further review cycle). Overlap with integration for the T16 merge: CHANGELOG.md only.
+- T16 residual fix DONE: the _F2 leading-dot regression fixed and F7 parenthesised/negated forms caught (fixtures; 19/19); real-tree delta none. ROOT VERIFIED directly: all 5 reviewer shapes flag, the implicit-member control does not; guard 19/19.
+- T16 MERGED as 614c670: 19 files imported (preimage = 553d7f1); CHANGELOG 3-way merged with identical results in both directions; the merged tree differs from integration exactly in T16's files and from T16's tree only in T14 phase 3 files. Ledger 0 problems; unittest 438 OK in-repo and git-less (as predicted: 410 + 9 + 19). T16 ACCEPTED; closure closures/T16.json.
+- T16: complete.
+- MILESTONE 15 dispatched (Sonnet; milestone15/dispatch.md): full local CI replay at 858ac7f (T14 p2 819d3fe, T15 e2414e3, T14 p3 2cccd8c, T16 614c670) plus EXTENDED=1, out-of-repo unittest (expect 438), ledger; the canary's known issue is expected; disk guard (stop below 15 GB; 78 GB free at dispatch); host load 2.65.
+- HOLD: T13 and P02 wait for the milestone 15 report (a gate failure could change their base; concurrent builds could flake the EXTENDED run).
+- Ruling: T13 PHASE 1 may run DURING milestone 15. Why: it is read-only, Python and grep only, with no Swift builds, so it cannot flake the gate. Cost if wrong: negligible.
+- T13 PHASE 1 dispatched (Opus; T13/phase1-dispatch.md; workspaces/T13 at 7d8fc6b): label inventory, Rule 6 extension, zero-copy decision, region proposals (Operations/CHANGELOG/README/T11-T16 Sources), docs reconciliation (HowTo, API_Overview_Map, the dated verification doc superseded note), the routed-items table, root decisions plus a phase plan with failing checks.
+- T13 PHASE 1 DONE (T13/phase1-report.md; read-only, ledger 0 problems before and after):
+  - Labels outside regions: Sources 268/296 (68 files), README 1, CHANGELOG 38, maintained docs 39, dated records 1,009; the proposed label rule hits 137 live.
+  - Concerns: the V04 numeric-claim class is still open on Vector384/768/1536Optimized plus 4 others; the UnifiedVectorBuffer header contradicts its own body; HowTo:207 is false for smallerValue; HowTo:52/141/182 stale; README has no live multiplier (latent gap); size and P02 conflict risk.
+- Root rulings (T13/phase1-rulings.md): RD1-RD14 accepted.
+  - The label rule plus 137 rewordings; 6S fixes the 19 hits including the V04 sibling class; zero-copy becomes forbidden (Extractor test flip approved).
+  - CHANGELOG [Unreleased] region; regions for Operations/README/Vector384-1536/API map/HowTo (229 entries); TopKSelection and VectorMath deferred (rules cover their labels).
+  - The contracts table plus R8; the dated superseded note with its hash check.
+  - T13 phase 2 merges BEFORE P02 edits; one final compile check added.
+- T13 PHASE 2 dispatched (Opus; 2A rules plus comment rewording, 2B regions/contracts/docs; workspaces/T13). Running: milestone 15 and T13 phase 2.
+- MILESTONE 15: GATE PASS (milestone15/report.md). Every required job passed; 0 failures; the canary known issue recorded by design. EXTENDED=1 1594/227; out-of-repo 438 OK; ledger 0 problems. Divergences as milestone 14, plus the Benchmarking platform builds re-run separately (runner slip; all exit 0). Load ≤10.2; disk 69 GB free at the end.
+- P02 PHASES A+B dispatched (Opus; P02/phaseAB-dispatch.md; workspaces/P02b at 56afcdc): A re-baselines the phase 1 probes on the post-T16 tip plus RED-first D1-D4 and API-41 tests (NEW test files only); B adds pure components in NEW files (BatchSearchCPUStrategy, GramPlan, exactArray, TopKBuffer.drainWorstFirst) with unit tests and mutations; R-LS1-5 binding. Phases C-G (editing Operations/BatchOperations/Vector*) wait for the T13 merge (RD12). Implementers: T13 phase 2 and P02 phases A+B.
+- T13 phase 2 implementer STALLED (stream watchdog) while starting the 2B ledger generator (likely composing one very large file). Worktree intact (62 modified files: 2A rules and rewording, part of the 2B docs); no processes left; disk 68 GB free. RESUMED with instructions to write the generator in small pieces (about 150 lines per call), keep outputs small and background long commands.
+- Lesson recorded for future dispatches: ask for large generated artifacts in small chunks (the stall watchdog also fires on long single-response generation, not only on long foreground commands).
+- T13 PHASE 2 DONE (after resume; T13/phase2-report.md):
+  - Rules 8 (labels), 9 (6S), 10 (zero-copy) plus the Rule 6 extension, with fixtures (37/29, 23/16, 25/34, 5/5); mutation independence.
+  - CHANGELOG [Unreleased] section-scoped region; contracts table (10 IDs) plus R8; 244 new entries (886→1,130), incl. Operations 36, README 13, Vector384/768/1536 26/29/29, API map 19, HowTo 48, CHANGELOG 43, 13 tombstones.
+  - 52 Sources files comment-only (masked-source proof); all live hits disposed except the D02 exemption; docs reconciled; the dated note.
+  - Debug build-tests compile rc 0. Two EXISTING tests failed only on count pins (rule count 7→10; README R7 count), and a patch was proposed.
+- Ruling: count-pin patch APPROVED (pure count/scope consequences of RD1/RD4/RD5/RD7; README R6 on the pass fixtures is expected because README is now a region). ROOT applied it (patch -p1; 14 lines) and verified: ledger 0 problems; unittest 460 OK in-repo and git-less.
+- Staged: T13 tree eb72c9d56ce2cd02864e5f1247797a808029dbfa (62 files). SPLIT review dispatched from the start (diff about 9.5K lines): A (Opus) checker/rules/ledger/contracts/patch → T13/phase2-review-A.md; B (Sonnet) Sources comment-only proof plus rewording quality plus docs → T13/phase2-review-B.md. Running: P02 phases A+B, T13 reviews A and B.
+- T13 review B (Sonnet; T13/phase2-review-B.md): APPROVED. An independent lexer confirms all 52 Sources files comment-only with identical string literals; about 45 rewordings true; Vector384-1536 claims corrected; zero-copy 17 (15 Sources plus 2 docs); docs true; the dated-note hash verified. Lows: the report table count; the TieredStorage header condition; hardware-claim comments outside the vocabulary.
+- T13 review A (Opus; T13/phase2-review-A.md): APPROVED (Spec PASS, Quality PASS). All fixtures re-run through the checker are real; 8 hedge bypasses tried (none hides a live statement); section region, contracts plus R8, 15 sampled entries, 36 closure sha prefixes and 13 tombstones all correct; the approved patch is byte-identical and forced by the rulings; 460 OK git-less.
+  - Minors: M1 sentence end after `.**`/`.)`; M2 `no … guarantee` hedge too loose; M3/M4 LIMITS; M5 Unicode hyphens (U+2011) evade rules 8/9/10 and "zero-copying"; M6 3 untested R8 branches; M7 Operations:414 "below k" should be "at most k".
+- T13 FINAL FIX dispatched (Sonnet; T13/final-fix-rulings.md): M5 hyphen folding plus zero-copying; M1 boundary; M2 hedge; M3/M4 LIMITS (the noun forms and hardware-comment vocabulary ROUTED); M6 fixtures; M7 plus the TieredStorage header (comment-only plus ledger); the report count. ROOT verifies directly. Running: P02 phases A+B and T13 final fix.
+- P02 PHASES A+B DONE (P02/phaseAB-report.md): 11 NEW files only (4 Sources, 7 Tests); 460 existing files byte-identical; nothing wired.
+  - A: probes re-baselined (the RED observation reproduces: Q8/N256 rows differ in 12/12 cells; offset-1000 gives 0.0 vs the true 0.125; enableMatrixRouting=false gives identical output; 20 cosine per-query lines changed by T14/T15; cast inventory still 45); new D4 (90 cases) and pairwise-geometry baselines. RED: 9 tests, 6 fail (D1-D4 plus 2 P8 sequential controls), 3 provider-precedence controls pass; 34 issues; Debug equals Release.
+  - B: BatchSearchCPUStrategy (public), GramPlan (internal; Int128 oracle over 20,000 inputs; overflow fixtures), exactArray (0 allocations; shares the buffer), TopKBuffer.drainWorstFirst (sorted oracle). 23/4 suites in Debug and Release; 13/13 mutants caught; strict-concurrency consumer type-check; 438 OK; ledger 0 problems; lint 0; Intel compile.
+  - Concerns: the drain cost is not CI-asserted (an external probe gives 4.60 vs 15.78); exactArray differs from `as?` for [T?] and empty foreign arrays (pinned; phase E must audit each site); the public enum has no user yet (doc says so).
+- Staged: P02 tree a4d2d16728fbb803563b2462d287627bd3629348 (11 files +1650). Independent Opus review dispatched (P02/phaseAB-review.md). Running: T13 final fix and the P02 A+B review.
+- T13 FINAL FIX DONE (Sonnet): hyphen folding (6 code points) plus zero-copying; the sentence boundary after closing characters; the guarantee hedge tightened; R8 branch fixtures; LIMITS plus routed V04-R-0011/0012; Operations 'at most k' (V04-C-0893 corrected); the TieredStorage condition; the report count. 19 new fail fixtures (old patterns miss them all); 464 OK in-repo and git-less; ledger 0 problems; comment-only proof.
+- ROOT verified directly: T13FinalFix 3/3; end-to-end on an export: a README plant with a U+2011 'zero‑copy' and a '**Not verified.**' bypass both raise R7 (rules 10 and 8).
+- T13 MERGED as ecbb39a: the final tree ef0d758 imported byte-identically (integration had only docs commits since 7d8fc6b); ledger 0 problems; 464 OK in-repo and git-less. T13 ACCEPTED; closure closures/T13.json.
+- T13: complete.
+- P02 phases A+B review (Opus; P02/phaseAB-review.md): Spec PASS; Quality CHANGES REQUESTED.
+  - F1 Important (test-only): a planner precedence mutant (budget check before the result-count overflow check) survives, because every overflow fixture uses cap Int.max.
+  - Minors: F2 "not bit-identical" → "not guaranteed"; F3 a misleading nonpositive-input message; F4 an assertion comparing values that share a buffer; F5 the Int128 oracle silently skipped below macOS 15.
+  - Phase E cast advice: no site relies on Optional or empty-array as? semantics, but the `guard n > 0` check (BatchOperations:251), the count gate (Operations:342) and the identity checks must stay AHEAD of the converted casts.
+- Ruling: F1-F5 are folded into the START of P02 phase C (test-only plus wording in phase B files; phase C's review re-checks them). The phase E advice becomes BINDING.
+- Root slip (recorded): an unquoted heredoc made the shell run a backticked `guard n > 0` as a command, garbling one ledger line and creating an empty untracked file ./0 in the integration checkout. Root removed the file (0 bytes, verified) and repaired the line. Lesson: quote heredoc delimiters ('EOF') for ledger text containing backticks.
+- P02 rebased for phase C: workspaces/P02c at integration 29b5bba (T13 merged); the 11 A+B files staged as ac64ade (no clash on the tip).
+- P02 PHASE C dispatched (Opus; P02/phaseC-dispatch.md):
+  - Step 0: the phase B review fixes F1-F5 (F1 precedence mutant must be caught).
+  - Then: the cpuStrategy parameter (.perQuery default via P01's worker; provider precedence before CPU validation); delete the implicit Q≥8/N≥256 gate; enableMatrixRouting documented (RD3).
+  - The .gram serial tiled engine (GramPlan precedence/errors, MatrixDistance active-row refactor with bit-identity proof RD9, a tile seam, cancellation checkpoints, drainWorstFirst, RD16 ties, RD1 bound docs, RD13 cosine registry).
+  - D1-D4/API-41 RED→GREEN; RD11 migrations with route observations; CHANGELOG Breaking; Operations region ledger.
+  - Implementers: P02 phase C.
+- D02 PHASE 1 dispatched (Opus; D02/phase1-dispatch.md; workspaces/D02 at 74ceae1; read-only): inventory refresh (the design reports predate most tasks; compiler-verified references); the newly reachable set after removing the Storage gate; a routed-items table (V04 runtime strings and flags, Logger collision, T14 symbol diffs, VectorProtocol.cosineDistance, SIMDMemoryUtilities, the MixedPrecision runtime text, the T12 flag confirmation); P02 overlap and sequencing; root decisions; a phase plan with failing checks; a USER-DECISION gate check. Implementers: P02 phase C and D02 phase 1 (read-only).
+- D02 PHASE 1 DONE (D02/phase1-report.md; read-only; scratch-copy compiles):
+  - Hooks and device: removing bufferProvider/Configuration/8 discovery members builds clean.
+  - Storage gate: removing it leaves 2 duplicate collisions (isFinite, clamped), plus 5 vanishing synthesized members and the IndexableVector.isNormalized overlap; builds clean after the fixes.
+  - Symbols: −32 (hooks/device); −83/+59 (gate; 59 mangled-name changes, source-compatible). C: 13 implemented, all defined; 18 proposed, undefined.
+  - Routed items 19 (11 fix in D02, 9 of them outside the exclusive scope; 4 already resolved; 1 Logger decision; 1 T14 narrative; 2 no change).
+  - USER-DECISION GATE: PASS.
+  - Host load reached 105-314 (system mediaanalysisd/photo services plus builds); one build took 959 s vs 42 s idle, so no timing means anything.
+- Root rulings (D02/phase1-rulings.md): RD-R0 (the routed fixes as phase 5 after the P02 merge), RD-S1..S3, RD-D1, RD-C1..C5, RD-T1, RD-R2..R8, RD-W1, RD-P1 accepted.
+  - Phases 2-4 now, on P02-disjoint files (proof required); ledger and CHANGELOG deltas staged as patches; VectorCore.swift deferred to phase 5.
+  - HOST-LOAD COURTESY rule: wait if the 1-minute load is above about 40, then proceed and disclose.
+- D02 PHASES 2-4 dispatched (Opus). Implementers: P02 phase C and D02 phases 2-4.
+- P02 PHASE C DONE pending one ruling (P02/phaseC-report.md; P02/phaseC/):
+  - Step 0: F1-F5 fixed (mutant MA now caught); 25/4 suites Debug and Release.
+  - Production: the Operations cpuStrategy parameter (.perQuery default, .gram explicit; gemmFindNearestBatch/gemmBatchRun deleted); new GramBatchSearch.swift (admission, engine, task-local seam, cancellation checkpoints); MatrixDistance active-row refactor (RD9: 700 probe records byte-identical); docs (RD1 bound).
+  - RED→GREEN: D1-D4 plus the P8/P8-P9 scheduling tests (34 issues) now pass.
+  - RD11 migrations each observe .gram via the tile seam (T15 operationsBatchGEMM, TopKNaN, BatchKNNGEMM; the gram.* rows bit-equal to gemm.*); R03 deferred to phase D.
+  - Full Debug 1,647 plus 186 XCTest with ONE failure (P-1); Release focused 327/76; ASan 77/14 clean; Intel build; 7/7 mutants; 469 OK in-repo and git-less; ledger 0 problems; lint 0 new.
+  - Proposal P-1: the P01 test lateMalformedRowsAreRejectedBeforeAnyWork compares the #function literal 'findNearestBatch(queries:in:k:metric:)' (Debug); one token must add 'cpuStrategy:'. P-2: a stale GEMM comment in BatchKernelProviderTests. P-3: test_lost_store_reads cites the deleted gemmBatchRun.
+- Staged: P02 phase C tree edb74c29736cc5559ac80c6645fcedeb7fb402f0.
+- Ruling: P-1 APPROVED (a mechanical consequence of the brief's required final parameter; the assertion's intent, error identity, is unchanged); P-2/P-3 APPROVED (comment and example text). NOT YET APPLIED: per the user's instruction (2026-10-06) root pauses once the running agents complete; the fixes are applied on resume, before the phase C review.
+- Ruling (concern 3): merge phase C TOGETHER WITH phase E (the cast remedy), per RD rulings; until then the per-query default repeats the 16·N+32 B handle copy per query.
+- D02 PHASES 2-4 DONE_WITH_CONCERNS (D02/phase2-4-report.md; evidence D02/phase2-4/; worktree only, index untouched at 74ceae1, mtime 17:07:44):
+  - Phase 2 (C contract): INT8 accumulation made overflow-defined through the private `common/vc_int8_accum.h` (`static inline`). UBSan RED at base (vc_scalar.c:48, vc_arm64.c:158 SDOT, :192 NEON fallback), then 0 reports. LLVM IR: 7 nsw adds, then 0. The all-declared-symbols consumer goes from 18 undefined to linking. Exported C symbols are unchanged (21). The base produced correct values (113 oracle cases), so the defect was the UB itself.
+  - Phase 3 (Storage gate): 18 gates removed; the isFinite/clamped duplicates collapse; entropyFast is deprecated (renamed: entropy). The value-only custom-dimension consumer goes from 34 errors to calling all 61 formerly gated symbols (count guard). Negative consumers give exactly one error per line. Seven ruled test migrations.
+  - Phase 4 (device/factory/witness): ComputeDevice discovery and DeviceCapabilities removed; isSupportedByCore and coreSupportedDevices added. A witness/static matrix covers all 77 protocol members (symbol-graph count guard). Provider hook spy tests added.
+  - Verification: full Debug (EXTENDED=0) 1625/238 Swift Testing plus 3 XCTest bundles, 0 failures (the first run failed at compile on a lint-refactor syntax slip and was repaired; logs kept). Focused 242 Debug and Release; final Release re-run 89; VC_USE_C_KERNELS 138; Intel --build-tests; Python 477 in-repo and git-less; SwiftLint 0 new. Public symbols 4143 → 4096, all explained.
+  - Staged patches (D02/phase2-4/patches): CHANGELOG blocks, ledger ops (V04-R-0001/0009 resolved; D02-C-0001..0007), the apply script and reference diffs (`git apply --check` OK on 74ceae1), phase5-staged-docs.md. Scratch ledger reports 0 problems with and without the patches.
+- ROOT INDEPENDENT CHECKS (2026-10-06):
+  - `git diff --cached --quiet` passes; the index mtime is unchanged.
+  - The 47 worktree paths equal 02-changed-files-final.txt; VectorCore.swift, CHANGELOG.md and claim_ledger.json are untouched.
+  - DISJOINTNESS RE-DERIVED at file level: 03-disjointness-final.json counts D02 as 36, because `git status` without -uall collapses new directories. Root recomputed with -uall: 47 D02 files against 34 actual P02c files gives 0 intersections. Integration since 74ceae1 is docs-only (3 commits), with 0 overlap.
+  - Run records: full-debug-v2 rc 0 with "1625 tests in 238 suites passed"; release-final, release-focused, debug-focused, ckernels, intel and p2 all rc 0.
+  - The cited test D02CosineAndWitnessTests.indexableIsNormalizedWitness exists (D02WitnessDispatchMatrixTests.swift:548).
+- Ruling (concern 1, PROVISIONAL pending the D02 review): ACCEPT the IndexableVector.isNormalized witness change. Why:
+  - It is unavoidable without an API change; the old witness returned `false` for every Vector<D>, which is honest only as "unknown".
+  - The new value is the real check (|‖v‖²−1| < 1e-6), which is breaking but authorized, pinned and disclosed.
+  - The downstream consequence (a sibling index may take dot-product cosine for such inputs, |Δcos| on the order of 1e-6; zero vectors never qualify) is ADDED TO THE D01/L04 USER DECISION PACKET; it is not decided by root.
+  - Cost if wrong: reverting needs a rename of Vector.isNormalized (also breaking).
+- Ruling (concern 2): the CI gate check_benchmark_build_modes.py runs at the D02 merge gate. Root runs it in the background, with a scratch path, before the merge. Why: it builds outside the capture driver. Cost if wrong: none; it is a gate, not a change.
+- Ruling (concern 3): the x86_64 AVX2 INT8 path stays cross-compiled and disassembled only; NUM-32 stays staged for x86. This is the same user-facing optional item as the Rosetta install.
+- Ruling (concern 4): the V04-C-0995 re-wording and the Operations.swift hook table plus its lexical guard go to D02 phase 5 (after the P02 merge), as staged.
+- Ruling (concern 6): APPROVED for phase 5: convert the remaining entropyFast call sites in the N04 tests and the reachability consumer to `entropy`. This is a mechanical consequence of RD-R4, and test intent is unchanged. Negative StaticDimension.value stays out of scope (routed).
+- Next on resume:
+  - apply P02 P-1..P-3, then the P02 phase C review (split A/B);
+  - the D02 phases 2-4 review (split: A = phase 2 C plus phase 3 gate; B = phase 4 plus patches); the two run concurrently, read-only, in different workspaces;
+  - then P02 D..G, milestone 16, D02 phase 5 and merge;
+  - STOP at D01/L04.
+- RESUMED 2026-10-06 by the user: "ignore rosetta for now. lets continue with the 5 remaining tasks, and we will talk about the compiler bug afterwards".
+  - Ruling: the Rosetta/x86 runtime items are set aside (x86 FP16 and AVX2 INT8 stay compiled and disassembled only; NUM-32 stays staged for x86). Why: user instruction. Cost if wrong: x86 runtime defects stay unobserved until CI.
+  - The lost-store upstream filing is deferred to a discussion after the program.
+  - The plan, in order: (1) apply P-1..P-3, then the P02 phase C and D02 phases 2-4 reviews; (2) P02 D-G, review, merge; (3) milestone 16; (4) D02 phase 5 plus the build-modes gate, then merge; (5) STOP at D01/L04.
+- P02 P-1..P-3 APPLIED by root in the workspaces/P02c worktree:
+  - P-1 from proposal-p01/proposal.diff (one token);
+  - P-2: the BatchKernelProviderTests comment becomes "The provider must win over every CPU route." The @Test display name is untouched, since names may be CI-pinned;
+  - P-3: Operations.gemmBatchRun is dropped from the test_lost_store_reads LIMITS examples.
+  - Checks: ledger 0 problems; the lost-store lint 8/8 OK; P01OperationsSelectionTests plus BatchKernelProviderTests Debug 13/2 pass (P02/phaseC/root-pfix).
+- STAGING BLOCKED: the auto-mode permission classifier denied root's `git add`/`git write-tree` in the D02 worker workspace ("Modify Shared Resources": the worktree index and object store belong to the canonical repo). Root does NOT work around this.
+  - Ruling: from now on, a review subject is the WORKTREE frozen by a sha256 manifest (P02/phaseC-review-freeze.sha256 with 33 files; D02/phase2-4-review-freeze.sha256 with 48), with read-only diff packages. Reviewers export with rsync and verify with `shasum -c`. The P02c index stays at edb74c2, the phase C tree without P-1..P-3; the D02 index stays at 74ceae1.
+  - Why: the denial forbids the outcome, and a manifest gives detect-only freezing without writing to the repo.
+  - Cost if wrong: drift is detected rather than prevented; the check is repeated at review end and at merge.
+  - The user is told at the next report.
+- REVIEW WAVE dispatched (5 concurrent; shared rules in R/review-rules-2026-10-06.md; --jobs 3 each):
+  - P02 phase C A (Opus: production engine, package 1906 lines);
+  - P02 phase C B (Opus: route tests, migrations, docs, ledger; 1612 lines);
+  - D02 A1 (Opus: phase 2 C contract; 1876 lines);
+  - D02 A2 (Opus: phase 3 Storage gate plus isNormalized; 2118 lines);
+  - D02 B (Sonnet: phase 4 plus staged patches, including a composition check of the patches over P02c's CHANGELOG and ledger; 1589 lines).
+- D02 REVIEW B (Sonnet; D02/phase2-4-review-B.md): CHANGES REQUESTED for I1 only.
+  - Freeze manifest OK at the start, at the end, and on the workspace.
+  - Patches are merge-ready: `git apply --check` OK on 74ceae1. apply_d02_phase2_4.py applies over P02c's CHANGELOG and ledger, and the checker reports 0 problems with all of P02c's changed files overlaid. The non-zero intermediate counts were P02-owned regions only.
+  - Hook spy mutation caught; 16/5 suites pass in Debug and Release; 477 Python tests OK git-less.
+  - I1 (Important, root-confirmed at test_d02_surface_guards.py:165): the 77-member witness guard compares the matrix rows to the FROZEN protocol-members-base.tsv. A new `public extension VectorProtocol` member passed all 13 guards. Ruling: FIX. Derive the member set from the CURRENT sources with a git-less lexical scan of the VectorProtocol requirement block and the public `extension VectorProtocol` members (masked comments and strings). Compare it to both the TSV and the matrix rows. Add a must-fail fixture plus a tree-copy control that adds a member. Why: the user rule on closing a class mechanically; a frozen list only detects edits to itself. Cost if wrong: one Python test.
+  - M1: FIX. Add RD-R6 exceptional pins for both-zero (1.0), -inf and NaN in both operands.
+  - M2: FIX. Make phase5-staged-docs.md claim only what the tests pin, or add pins for the statistics→magnitude and PCA→qrThin hooks.
+  - M3: FIX. Mark the isNormalized item "Breaking:" in its CHANGELOG block, and add the RD-R2 removals (SoA.memoryEfficiency, estimatePerformanceGain; still in the tree) to the phase 5 item list with their CHANGELOG lines. The Changed-section placement follows the repo convention and is accepted.
+  - M4: NO CHANGE. Docs/beta-evolution-2/OptimizationPlan.md is a dated historical planning record, not a live contract.
+  - M5: the two test comments describe post-phase-5 state. Ruling: they must be true at the D02 merge, so add them to the phase 5 checklist; if phase 5 is cut, reword them. Cost if wrong: two comments.
+- P02 PHASE C REVIEW A (Opus; P02/phaseC-review-A.md): APPROVED. Spec PASS 11/11.
+  - Freeze 33/33 OK at the start and at the end, on both the workspace and the export; the index equals edb74c2.
+  - Mutations 7/7 caught: re-runs MA, M1 and M4; own mutants R1 (RD16 reversed), R2 (a checkpoint removed), R3 (stride n for ldc) and R4 (capacity passed to BLAS on tail tiles).
+  - Core filter 55/8 passes in Debug and Release; T15|T16 Release passes; lost-store lint 8 OK; lexical test 5 OK.
+  - RD9 probes map to every public MatrixDistance entry. Edges checked by probe: partial tiles, k ≥ N, Int.max, Q1/N1, and the limit at and one below.
+  - Root's question: merging C without E carries no risk beyond performance. The ruling stands anyway (C..F merge together after G), since phases D-F are in flight.
+  - RA-1 (Minor): the seam records m, n, k, lda, ldb, ldc and heap capacity from caller locals, NOT from the BLAS call or the heap. P02GramRouteTests:160-161 and :194-199 therefore cannot fail on a wrong BLAS argument; mutant R4 was caught only by the padding and parity tests. Ruling: FIX in phaseDEF step 0. Bind each BLAS argument to a single `let` that is passed to BOTH cblas and the recorder, and take the heap capacity from the heap itself. Add a mutation that changes a BLAS argument expression and is caught by the seam assertion. Why: the claim rule (the seam doc says it observes the call). Cost if wrong: a small refactor in GramBatchSearch.
+  - RA-2 (Minor, with probe evidence): the Euclidean bound at BatchSearchCPUStrategy.swift:50-52 omits its no-overflow/underflow hypothesis.
+    - Underflow: ĝ = 0 against a true 5.12e-58.
+    - Overflow (512 × 1e20): an exact duplicate scores NaN under .gram (∞ − ∞) and ranks LAST, while .perQuery gives 0 and ranks it first.
+    - Ruling: FIX in step 0. State the domain hypothesis, add an underflow term or caveat, and state that overflow in ‖q‖² or ‖c‖² gives NaN or ∞, which ranks last under the NaN-last law. Pin the overflow case with a test the doc names. Why: the claim rule; the behaviour is inherent to the Gram formulation of an explicit opt-in, so it is documented, not changed. Cost if wrong: doc plus one test.
+- P02 PHASE C REVIEW B (Opus; P02/phaseC-review-B.md): CHANGES REQUESTED for I1 (a doc sentence).
+  - Freeze 33/33 OK at the start and at the end.
+  - RD11 migrations PASS: every migrated test fails under a silent-fallback mutant.
+  - No unapproved test changes. Route tests are non-vacuous; the RD3 child test fails under 3 mutants.
+  - Ledger PASS: the generator reproduces it byte for byte from ac64ade.
+  - Runs: Debug 97/20, Release 38/5, Python 469 in-repo and git-less, guards 49 OK.
+  - Reviewer note: the P02c index ≠ ac64ade. This is INTENDED: root staged phase C as edb74c2 before the 2026-10-06 pause, as recorded above.
+  - The reviewer saw 1-minute load ~356 from other sessions; it waited until below 40.
+  - I1: FIX. HowTo_NearestNeighbor.md:93 "builds no full queries × candidates score matrix" is false when the tiles cover both sets (Int.max gives one Q×N tile). Reword it: score blocks are at most r×c, and one block equals the full Q×N when r ≥ Q and c ≥ N. Add a ledger entry if the checker treats it as a claim.
+  - m1: NO CHANGE. Row provenance is pinned by selectionMatchesSortedTileScores and the RD13 gram.* rows; the RD11 migrations stay minimal. Cost if wrong: none, since the class is caught.
+  - m2: NO CHANGE. The default route at Q8/N256 is observed by P02PerQueryRouteTests; the Q4 control is legacy.
+  - m3: FIX. Re-link T15CosineRegistry's operationsBatchGEMM T1 route to the .gram cosine site (RD13 scope).
+  - m4: FIX. Add a NEW test: provider precedence over a FEASIBLE .gram (512 Euclidean and cosine), where the provider is called once and its reply is verbatim.
+  - m5: FIX. Remove the inert $computeProvider wrapper in the migrated TopKNaN GEMM test body (RD11 body scope; Q17 class). The name stays.
+  - m6: phase D, already planned. BatchOperations.swift:41-46 must not name the deleted routing gate.
+  - m7: FIX. Qualify the CHANGELOG's offset-1000 "returned 0.0" as a one-host Accelerate observation, and name the test.
+  - m8: FIX. Rename the Performance_Guide "Pitfall 3" heading to match its body.
+  - m9: FIX, as the class closure. test_gram_route_lexical C2 requires EXACTLY ONE `gramBatch(` call, directly inside `case let .gram` (the reviewer verified this on both trees). Add the respelled-gate evasion (`queries.count > 7 && vectors.count > 255` routing to gram) as a must-fail fixture.
+- P02 phaseDEF dispatch step 0 = RA-1, RA-2, I1, m3, m4, m5, m7, m8 and m9; m6 goes in phase D. Dispatching the Opus implementer now. D02 reviews A1 and A2 are still running, and the D02 fix round waits for them.
+- P02 PHASES D/E/F (with phase C step 0) DISPATCHED (Opus; P02/phaseDEF-dispatch.md). Pre-dispatch: workspace matches phaseC-review-freeze (0 non-OK); index edb74c2.
+- D02 REVIEW A1 (Opus; D02/phase2-4-review-A1.md): APPROVED. Spec PASS on 1-8 and 10; the 9 runs are as expected.
+  - Freeze 48/48 OK at the start and at the end; `diff -rq` export vs workspace is empty; the index is clean.
+  - Semantics: modulo 2^32 through uint32_t, matching the brief. The base vs subject differential is byte-identical over 20,000 non-overflowing cases × 3 entries × 4 builds. A probe forcing every SDOT and NEON accumulator lane to wrap gave 45/45, UBSan clean.
+  - The RED reproduces exactly. IR: 7 signed-overflow adds, then 0.
+  - C surface: the 18 undefined declarations are removed; exports stay at 21, confirmed 3 ways.
+  - D02CContract.py is not discovered by CI (test*.py pattern) and spawns no swift.
+  - CKernels.swift is comment-only (MASKED_EQUAL, 553 tokens).
+  - Mutants caught: SDOT signed add (UBSan plus IR) and scalar saturation (oracle).
+  - Runs: D02CContract 8/3 in Debug and Release. The C-kernels Quantized run passes 104/23, with object-level proof that the C route ran. The load spiked to ~354; the reviewer waited.
+  - Concern 2 by analysis: nothing in phase 2 can break check_benchmark_build_modes.py. Root still runs it at the merge gate.
+- Rulings on A1 Minor (fix round unless noted):
+  - M1 FIX: committed fixtures that make individual SDOT lanes wrap (2^21 and 2^22 lanes), in d02_int8_harness.c and in the Swift test.
+  - M2 FIX: add `-mcpu=generic` to the NEON-fallback build and assert no `sdot` in the neon objects.
+  - M3 FIX: an independent 128-bit oracle for the block-fits expectation (d02_helper_tests.c:54).
+  - M4 FIX: the IR-scan regex also matches `add nuw nsw` (D02CContract.py:387).
+  - M5 FIX: VectorCoreC.h:98-100 names its evidence (D02CContractTests and the UBSan script for the executed paths; AVX2 "IR scan + disassembly, not executed"). The CKernels.swift:37-38 alignment claim is corrected, or marked unverified.
+  - M6 ROUTED: the stale "scaffold"/"stub" comments in the untouched vc_features.c:1 and vc_dispatch.c:31 join the C claim-rule follow-up (RD-C4's routed extension).
+  - M7 FIX: report text only. §1.3's x86 instruction count is 133 after the change, and 136 is the base count.
+- D02 REVIEW A2 (Opus; D02/phase2-4-review-A2.md): CHANGES REQUESTED. Freeze 48/48 OK at the start and at the end.
+  - PASS: gate removal (RD-S2 equivalence re-derived); entropyFast (token-identical bodies); the 7 migrations (exactly +9/−20); the symbols (59 re-mangled; 6 USRs checked); runs 67/12 in Debug and Release; consumers 61/61; guards 13/13 git-less.
+  - Reachability: 399 edge checks across 50 members × {V0, V1, V5, V7, V16, V17, V100, V1025, DimMisleading} against independent references.
+  - C1: root's provisional isNormalized ruling is CONFIRMED. "Unavoidable without an API change" is TRUE: redeclaration is invalid, `@_implements` is ambiguous, `@_disfavoredOverload` inverts the concrete answer, and a constraint is a gate again. No in-repo consumer changes behaviour, and the witness test is non-vacuous.
+  - I1 (Important; root-confirmed at VectorCoreOperations.swift:41-56): at width 0, `minElement()`/`maxElement()` read `array[provider.minIndex(array)]`. The provider returns 0 for empty input, so the read is out of range and traps. This is a DORMANT defect ARMED by the gate removal: no built-in dimension has width 0. The Reachability consumer skips it with `if n > 0` (Reachability.swift:69). Phase 1 §2.2 missed it.
+    - Ruling: an explicit documented precondition (`D.value > 0`, with a clear message), pinned by a ChildProbeLauncher trap test. Do not change the return type.
+    - Why: it is the minimal honest contract for a degenerate width, matches the existing preconditions, and leaves all built-in callers unaffected. An Optional return would break every caller to serve width 0.
+    - Cost if wrong: a later API change to an Optional return.
+    - CLASS CLOSURE (user rule): a degenerate-width table covering EVERY one of the 61 formerly gated public symbols at V0 and V1. Each row gives the expected outcome: value, NaN, empty or trap (traps run in a child). A count guard ties the table to gated-public-base.tsv. The consumer's silent skip becomes a call that the table covers.
+  - I2 (Important): the R1 count guard and consumer are vacuous for the 6 names with same-name VectorProtocol fallbacks (l1Norm, lInfinityNorm, manhattanDistance, chebyshevDistance, isFinite, isNormalized). A re-gated member still compiles, and the reviewer's mutants pass.
+    - Ruling: FIX with a BINDING check. Prove that each consumer call binds to Vector's own member, at USR/mangled level: for example, `swiftc -emit-silgen` function_ref names, or undefined symbols in the -Onone object. Re-gating l1Norm and isFinite must FAIL it.
+    - Also mask comments and strings in the count guard (A2-M3).
+  - I3 (Important): the concern 1 disclosure misses D-generic code (`func f<D: StaticDimension>(_ v: Vector<D>)`). There, isNormalized changes for built-ins too, and l1Norm, lInfinityNorm, manhattan and chebyshev now run Vector's provider-backed members instead of the VectorProtocol fallback. The phase 1 claim "Generic code is unaffected" (phase1-report:136) is incomplete.
+    - Ruling: FIX the disclosure in the CHANGELOG block, the Vector.isNormalized doc and a report addendum. The phase 1 report is evidence and stays unedited; the correction is an addendum.
+    - Add a test pinning that D-generic and concrete readings are bit-identical for those 5 members on built-in dimensions (the new contract: one arithmetic per type, as in T14).
+    - The D01 packet item is widened to D-generic code.
+  - Minor rulings:
+    - M1 FIX docs (sparsity is NaN at width 0; linspace's "to inclusive" holds for n ≥ 2), pinned in the degenerate table.
+    - M2 FIX: StaticDimension documents its `value` domain (≥ 0, with the degenerate behaviours in the table; negative undefined).
+    - M3 is folded into I2.
+    - M4 FIX: the "every member is available" wording excepts the Dim2/3/4-only members, in Dimension.swift:12-13 and the CHANGELOG block.
+    - M5 FIX the wording (6 concrete calls).
+    - M6 FIX the IndexableVector doc and the IntegrationProtocolsTests.swift:387 comment (comment-only; approved).
+    - M7 FIX the claims next to touched lines: Dim32 "optimized storage" (false, heap), the Dim384/Dim3072 SIMD claims, and the vDSP names the code never calls. Use the claim-ledger generator.
+    - M8 FIX: the consumers resolve swiftc with `xcrun --find swiftc`, not PATH.
+- D02 FIX ROUND 1 = B-I1, B-M1/M2/M3; A1-M1/M2/M3/M4/M5/M7; A2-I1/I2/I3 and A2-M1..M8. Rulings file: D02/fix1-rulings.md. Resuming the D02 implementer (rounds 1-3 resume per protocol).
+- D02 FIX ROUND 1 dispatched (resumed D02 implementer; D02/fix1-rulings.md). Concurrent: P02 phases D-F in P02c.
+- D02 FIX ROUND 1 DONE_WITH_CONCERNS (report: D02/phase2-4-report.md "Fix round 1"; evidence: D02/fix1/).
+  - All rulings were applied, and each new check fails on its mutation before passing.
+  - Runs: focused 168/27 in Debug and Release; full Debug 1630/239 with 0 XCTest failures; Python 481 in-repo and git-less; ledger 0 problems with and without the patches.
+  - Composition check over P02c's 42 files (read-only snapshot with hashes) plus the patches: 0 problems. Lint 0 new.
+  - Binding check: 61/61 clean, and on the mutant it fails exactly the 4 re-gated members.
+  - 50 worktree files (20 touched this round; new: D02DegenerateWidthTests.swift).
+  - ROOT CHECKS: the index is clean. The changed-files-final (50), src-manifest-build1 (490) and src-manifest-full (490) manifests all match the workspace. The baseline export phase2-4-review-B/src matches the phase 2-4 freeze. Re-review package D02/fix1-rereview-package.diff (2026 lines); patch hashes in D02/fix1-patches.sha256.
+  - Concern 1 (Release drops precondition messages): ACCEPT. `precondition` is idiomatic for programmer errors and -O omits messages by design. The test checks the message under DEBUG and the trap plus no-return in Release. Cost if wrong: Release users see a trap without the text.
+  - Concern 2 (the SILGen binding check needs a built module, so it runs in the evidence runner, not CI): ACCEPT. Root runs it at the D02 merge gate together with check_benchmark_build_modes.py. CI still catches a re-gate through the lexical storage-gate guard (test_no_storage_gate_in_sources_or_tests), so the binding check is defence in depth.
+  - Concern 3 (the lexical member scan misses macro-added or `extension VectorCore.VectorProtocol` members): ACCEPT as LIMITS, with phase 5's regenerated symbol-graph comparison as the backstop. That backstop must be in the phase 5 checklist; the re-review checks it.
+  - Concern 5 items are merge-gate or phase 5 items, as recorded.
+- D02 FIX 1 SCOPED RE-REVIEW dispatched (Opus).
+- D02 FIX 1 RE-REVIEW (Opus; D02/fix1-rereview.md): CHANGES REQUESTED.
+  - PASS: A2-I1 (61-symbol table; count guard bites; 11 rows match an independent oracle); A2-I2 (SILGen binding fails on the reviewer's own marker-protocol re-gates); all 16 ruled Minors; scope (50 files vs 74ceae1; 20 round files); patches; runs 137/21 in Debug and Release; binding 61/61; Python 481 git-less.
+  - Freeze 50/50 and patches 7/7 OK throughout.
+  - RR-I1 (Important; root-confirmed at D02WitnessDispatchMatrixTests.swift:609-620): genericOverDimensionEqualsConcrete checks provider calls only in aggregate (`calls.contains("abs")`), so re-gating l1Norm plus chebyshev passes it. CHANGELOG and D02-C-0003 cite it as per-member evidence. Ruling: FIX per member, with a mutation per member.
+  - RR-I2 (Important): root's concern 3 backstop (a phase 5 symbol-graph comparison) is not written into phase5-staged-docs.md. It is a timing gap: the ruling postdated the implementer. Ruling: FIX as a concrete phase 5 step.
+  - RR-M1 FIX (lane-wrap comments: the wrap happens at 2^22+33). RR-M2 FIX (the member scan covers same-line attributes, typealias members and the qualified extension spelling; LIMITS updated).
+- D02 FIX ROUND 2 dispatched (resumed implementer; D02/fix2-rulings.md).
+- P02 PHASES D/E/F (+ step 0) DONE_WITH_CONCERNS (P02/phaseDEF-report.md; evidence P02/phaseDEF/; index untouched at edb74c2; the worktree matched the agent's 6293-file freeze when root checked):
+  - Step 0: RA-1 (GemmArguments; mutants MS0a-c are now caught by the seam assertions themselves); RA-2 (domain hypothesis plus an overflow test); I1, m4 (providerPrecedesFeasibleGram), m5, m7, m8 and m9 (C2 requires exactly one gramBatch call inside case .gram, plus the respelled-gate fixture). The RD9 probe is byte-identical after the refactor. Debug and Release 330/76.
+  - D: P02PairwiseRowTests (per-row bits = prepared/into; NaN rows at N256; complete under cancellation). R03: 45 child scenarios. Lexical C7 goes RED to GREEN; mutant MD1 (flat N×N) is caught.
+  - E: the inventory refreshed to 39 sites (45 minus 6 deleted in C); all are converted to exactArray, with a token-diff proof per file and every guard ahead (39/39). test_no_array_conditional_casts: 39 to 0, with an EMPTY allowlist. ME1 and ME2 are caught.
+  - F: computed scalarCount. P02HandleLayoutTests covers stride = ContiguousArray stride, Mirror, and JSON and B01 golden bytes. MF1 is caught by the stride and Mirror tests, while the goldens still pass (the bytes are unchanged).
+  - Final: focused 717/129 in Debug and Release (1 designed T15 canary known issue). Full Debug 1658/239 plus XCTest, 0 failures. Python 480 in-repo and git-less; ledger 0 (generator byte-reproducible); lint 0 new (5457 = 5457). 25 files (22 M, 3 A).
+- Rulings on the concerns:
+  - P-4 (m3, a change to the existing T15 registry and test): APPROVED and APPLIED by root (patch -p0 from proposal-p4/proposal.diff). It adds `.tableAndSelection`; registryCoverage checks both lists, so nothing is weakened. test_cosine_registry OK and the ledger has 0 problems; T15 Debug run (root-p4): see below.
+  - R03's added per-cell exact-equality observation: ACCEPT. It is RD11's required route observation; only cosine distinguishes the geometries on integer fixtures, and MD1 is caught by the 12 cosine scenarios.
+  - Phase E's comment updates (BatchOperations.findNearest doc, ArrayIdentity doc): ACCEPT, as required by the claim rule.
+  - The frozen-hash supersessions (MatrixDistance, the 4 Vector*Optimized files, BatchOperations, MatrixMetricContractTests, MixedPrecisionKernels) are recorded for closure.
+  - No live "2:1 handle ratio" claim exists, which is noted.
+  - The Swift Testing console drops per-test lines, so `--xunit-output` is the per-test record; noted for later dispatches.
+  - The D02 composition check over the final P02 tree is a root step at the D02 merge.
+  - The 4.8 GB of phaseDEF scratch is deleted after the P02 merge.
+- P02 D-F REVIEW (split): baseline = the phase C reviewed export; subject = the worktree, frozen by P02/phaseDEF-review-freeze.sha256 (28 entries).
+  - A (Opus): step 0 and phase D; package 1567 lines.
+  - B (Opus): phases E and F, docs and ledger; package 1068 lines.
+  - Phase G is dispatched AFTER this review, so measurements run on reviewed code.
+  - root-p4 T15 Debug after P-4: rc 0, 7 tests in 3 suites passed (P02/phaseDEF/root-p4/t15-debug.log).
+- P02 D-F REVIEWS A and B dispatched (Opus, concurrent).
+- D02 FIX ROUND 2 DONE_WITH_CONCERNS (report: "Fix round 2"; evidence D02/fix2/):
+  - RR-I1: the per-member provider assertions bite on all 6 mutants, each at its own member, in CI.
+  - RR-I2: the backstop is written into phase5 §4 and passes (graph=77 scan=77 tsv=77 rows=77); it FAILS a typealias'd-extension mutant (graph=78).
+  - RR-M1: comments fixed. RR-M2: the scan finds the 3 spellings it used to miss and drops 2 false positives.
+  - Runs: D02 36/12 in Debug and Release; Python 482 in-repo and git-less; ledger 0 with and without the patches; lint 0 new.
+  - Still 50 files: 5 modified this round, plus phase5-staged-docs.md.
+  - ROOT CHECKS: the index is clean; fix2 changed-files-final has 0 non-OK; the patch hashes 0 non-OK; the baseline export fix1-rereview/src matches the fix1 manifest. Re-review package: D02/fix2-rereview-package.diff (495 lines).
+  - Concern 1 (root's ruling asked for line citations in test comments, but claim-ledger R7 forbids file:line in test comments): ACCEPT symbol citations. Root's ruling conflicted with R7; line numbers stay in the report.
+  - Concern 2: the backstop runs in the merge-gate evidence runner (needs a built module). ACCEPT, consistent with the round 1 ruling.
+  - Concern 3 (stale incremental state after copying pristine files back): noted for phase 5. Use a fresh scratch per mutant.
+  - Concern 4: the stray __pycache__ dirs (gitignored, from Python runs without -B) were removed. No reviewed file was affected.
+- D02 FIX 2 SCOPED RE-REVIEW dispatched (Sonnet; a small diff).
+- DISK: free space fell to 21 GB (5 concurrent reviewers' scratch). Root deleted 30 verified SwiftPM build-cache dirs (each holds workspace-state.json or a triple dir) of FINISHED agents only: P02 phase C impl and reviews, the phase AB review, D02 reviews A1/A2/B and the fix1 re-review. Evidence logs and source exports were kept; no running agent's paths were touched (checked against the process list). Manifest: current-handoff/build-scratch-deleted-2026-10-06b.txt. Free space is now 35 GB.
+- D02 FIX 2 RE-REVIEW (Sonnet; D02/fix2-rereview.md): APPROVED, no findings.
+  - RR-I1: the reviewer re-ran mut-gate-l1-cheb with a fresh scratch, and it FAILS at the l1Norm and chebyshev assertions.
+  - RR-I2: the backstop goes green at 77/77/77/77 and red at graph=78.
+  - RR-M1: re-derived. RR-M2: fixtures in place.
+  - No regression: only the 5 round files plus phase5 doc changed; the patch hashes are 7/7.
+  - Runs: D02 36/12 in Debug and Release; Python 482 git-less. Freeze 50/50 on the export and the worktree.
+- D02 PHASES 2-4: ACCEPTED (pending phase 5).
+  - The accepted worktree is frozen by D02/fix2/changed-files-final.sha256 (50 files), and the staged patches by D02/fix2/patch-hashes.sha256.
+  - Phase 5 (VectorCore.swift, the Operations hook table and guard, V04-C-0995, the RD-R2 removals, the phase5 checklist with the symbol-graph backstop, the post-phase-5 test comments) runs AFTER the P02 merge.
+  - Merge gate (root): check_benchmark_build_modes.py, the SILGen binding check, the symbol-graph backstop, and the composition check over the final P02 tree.
+- P02 D-F REVIEW A (Opus; P02/phaseDEF-review-A.md): APPROVED, Spec 7/7.
+  - Freeze 28/28 at the start and at the end; the index is edb74c2.
+  - Step 0 closed: RA-1 (MS0a caught by the seam itself), RA-2, I1, m3/P-4, m4, m5, m9 (the helper-reached evasion is caught).
+  - Phase D: the reviewer's own token diff confines every change to gemmPairwiseTyped. A Release edge probe is bit-exact at N = 1, 2, 3, 255, 256, 257 and 600 (N > D). E06 is byte-unchanged.
+  - RD9 bits probe sha 73ecf59b: identical.
+  - Mutants: MD1 plus 3 of the reviewer's own are caught. Runs: Debug 131/26, Release 134/27, E06 3, Python guards 33.
+  - A-1 (Minor; SECOND occurrence of the "seam claims to observe the BLAS call" class, after RA-1): GramBatchSearch.swift:56-60 says "a wrong BLAS argument shows here", but swapping arguments.n for arguments.ldc at MatrixDistance.swift:305 leaves the seam silent; only the padding and parity tests catch it.
+    - Ruling: FIX (class closure). Reword the doc to what the seam actually sees (the GemmArguments binding). ADD a lexical pin that the single cblas_sgemm call passes the GemmArguments fields in BLAS order, with a must-fail fixture for a swapped field.
+  - A-2 (Minor; SECOND evasion of lexical C2, after m9): a backtick-escaped call and an unapplied function reference both evade the guard. The backtick gate compiles and 137 tests pass with it.
+    - Ruling: FIX (class closure). C2 counts the token `` `?\bgramBatch\b`? `` in any use (call, reference or escaped) and requires exactly one, inside `case let .gram`. Add must-fail fixtures for both spellings, and keep the docstring at :19-20 true.
+  - A-3 (Minor): the R03 comment at MatrixMetricContractTests.swift:270-271 overclaims a geometry observation for Euclidean on integer fixtures. Ruling: FIX the wording. A cheap non-integer fixture is optional, at the implementer's discretion. Cost if wrong: none; rowsEqualPreparedIntoPerRow catches MD1 in 12/12.
+  - O-1 (observation): Euclidean GEMM pairwise is not bitwise symmetric (0.4-3.6% of pairs, before and after D), against the doc at BatchOperations.swift:246. Ruling: FIX the doc in phase G step 0 (no bitwise-symmetry claim for Euclidean GEMM; cosine per-row symmetry only if a named test pins it). This is a pre-existing false claim, found now.
+  - O-2: the X11/R13 evidence is the new completeResultUnderCancellation (the existing cancelled tests never reach GEMM). Record it in the phase G report.
+- P02 D-F REVIEW B (Opus; P02/phaseDEF-review-B.md): CHANGES REQUESTED for two text and guard defects.
+  - Phase E and phase F are correct. The inventory is 39 by an independent scanner. The expression-only check passes on the reviewer's own token diff. Guard order: ALL 39 sites checked. Semantics: no Optional, bridged or class conformer is reachable.
+  - Mutants ME1, ME2, MF1 and MB1 are caught. Runs 464/97 in Debug and Release (XML: 0 failures). Python 480 in-repo and git-less. The ledger generator reproduces byte for byte. Freeze 28/28.
+  - I1 (Important): test_no_array_conditional_casts misses four LIVE compiling forms: pattern casts (`case let c as [T]`, `if case let c as [T] = …`), a parenthesized target `as? ([T])`, and a cast inside string interpolation. None is in LIMITS, and line 8 claims it "fails on any new one".
+    - Ruling: FIX (class closure). Add patterns and must-fail fixtures for all four, and scan inside interpolation segments.
+    - Also probe `as? Swift.Array<…>` and a typealias'd target. Each form is either caught or listed in LIMITS, and line 8 is qualified to what is covered.
+  - I2 (Important; root-confirmed at VectorSerialization.swift:70,72): CHANGELOG:75-78 and V04-C-1033 say the binary encoding "did not read the stored field". It DOES read scalarCount; the bytes are unchanged because the computed value equals the former stored value.
+    - Ruling: FIX the wording to the true reason, naming the golden tests, and regenerate V04-C-1033 through the generator.
+  - m1: FIX the false positives on `areas?[0]` and `deltas![0]` with a left word boundary for as?/as!, plus must-pass fixtures.
+  - m2: FIX. Add the "empty array of another type" difference to the ArrayIdentity doc and LIMITS, noting that the pairwise `n > 0` guard shields it.
+  - m3: FIX. CHANGELOG:100-102 names its test, or is scoped to library types; client types whose arrays cast element-wise are disclosed.
+  - m4: FIX. CHANGELOG:85-86 adds RD10's disclosure that total requested bytes can rise when D > N; phase G measures it.
+  - n1: FIX. The 16·count+32 figure becomes past tense, qualified as measured with the former 16-byte handle.
+  - n2: FIX. Add the out-of-scope-path must-pass fixture that the docstring claims.
+- P02 phase G dispatch step 0 = D-F review A (A-1, A-2, A-3, O-1, O-2) plus B (I1, I2, m1-m4, n1, n2). The final P02 review (C-G) acts as the scoped re-review of these. Dispatching a fresh Opus implementer.
+- P02 PHASE G DISPATCHED (fresh Opus; P02/phaseG-dispatch.md, step 0 = the D-F review fixes). Pre-dispatch: workspace matches phaseDEF-review-freeze (0 non-OK); index edb74c2; load 2.8; 31 GB free.
+- P02 PHASE G DONE_WITH_CONCERNS (P02/phaseG-report.md; evidence P02/phaseG/; the index is edb74c2; root-verified: the workspace matches phaseG/freeze/tree-sha256.txt, 6296/6296).
+  - Step 0: every D-F finding is fixed.
+    - A-1 closure: new lexical pin C8 (cblas_sgemm gets the GemmArguments fields in BLAS order; the same binding reaches gemmCrossTerm and the trace).
+    - A-2 closure: C2 counts every gramBatch token.
+    - B-I1: the cast guard covers pattern casts, parenthesized targets and interpolation; the residual limits are pinned by fixtures.
+    - The reviewers' own probes go RED to GREEN. Focused 717/129 in Debug and Release; Python 488.
+  - Measurements: base 29b5bba (git archive), final and baa99b5, with identical flags and hashes recorded. Timing ran at load ≤ 2.85; nothing was deferred.
+    - S-cast: −1 × (16·N+32) request per call in 54/54 cases, with identical bits.
+    - S-batch: the Q×N buffer is gone.
+    - S-pair: requested bytes fell in 18/18, including D > N.
+    - S-gram: planner = formula = observed in 76/76.
+    - S-layout: stride 16 → 8.
+  - The CHANGELOG's unverified items are replaced by measured one-host results (V04-C-1031..1035 regenerated).
+  - The strict Swift 6 consumer (Tests/P02Consumers plus P02RunConsumers.py) runs positive and fails the negative with exactly 1 error. Baseline: both fail at 29b5bba.
+  - H2 symbol diff: the only additions are BatchSearchCPUStrategy and cpuStrategy; MatrixDistance, Configuration and BatchKernelProvider are unchanged; the other deltas are scalarCount (let → computed) and doc text.
+  - O1/O2: 51 paths, all mapped; 0 VectorIndex or Benchmarks paths; 0 intersection with D02's 50 files; the MatrixDistanceBench hash is unchanged.
+  - Gates:
+    - full Debug 1658/239, 0 failures;
+    - focused 717/129 in Debug and Release;
+    - ASan 77/15;
+    - Intel build OK;
+    - Python 488 in-repo and git-less, guards 173;
+    - ledger 0 problems;
+    - lint 0 new.
+  - 51 files vs 29b5bba (24 A, 27 M).
+- Rulings on the concerns:
+  - PERFORMANCE: on this host, `.perQuery` (the new default) is up to 22.6× slower at Q64/N4096, and per-row pairwise is 1.6-8.7× slower. ACCEPT: the brief and RD1/RD10 chose accuracy and bounded memory over speed, and POLICY defers performance targets; no speed claim is made. This is ADDED TO THE D01/L04 USER PACKET as a downstream workload item (`.gram` stays an explicit opt-in) and is raised to the user at the next report. Cost if wrong: the user may want `.gram` defaults or a pairwise fast path reinstated.
+  - Accelerate's per-call allocations at some .gram tile shapes are excluded by design and disclosed: ACCEPT.
+  - Witness casts cost +43 ns per call (RD8, measure-only): ROUTED to the T14 owner follow-up.
+  - The lexical guards' residual limits are pinned by fixtures: ACCEPT. No exhaustiveness mutant (a language guarantee, and the baseline shows the check bites): ACCEPT. The optional R03 non-integer fixture was not added: ACCEPT.
+  - The D02 composition re-check over the phase G freeze is a root step at the D02 merge. The ~1 GB of phaseG snapshots are deleted after the merge.
+- FINAL P02 REVIEW (3 concurrent; freeze P02/final-review-freeze.sha256, 52 entries = 51 files plus Package.swift):
+  - A (Opus): step 0 re-review; P02/final-review-A-step0.diff, 1227 lines.
+  - C (Opus): a whole-P02 Sources holistic pass vs 29b5bba; P02/final-review-A-sources-whole.diff, 1770 lines.
+  - B (Sonnet): the phase G evidence and docs; P02/final-review-B-*.diff, 754 lines.
+- FINAL P02 REVIEWS A, B and C dispatched (concurrent).
+- STALL (2026-10-06 ~23:25-23:34): all three final P02 reviewers were killed by the stream watchdog at about the same time: A mid-read, B waiting on a foreground unittest, C launching a build. The 1-minute load spiked to 98. A simultaneous stall points to a session-wide cause, not the agents' instructions.
+  - B's orphaned `unittest discover` finished on its own: 488 OK, rc 0 (final-review-B/py-unittest.log).
+- RESUMED 2026-10-07 on the user's "continue":
+  - Root re-checked: the P02c worktree matches final-review-freeze (0 non-OK); the index is edb74c2; the D02 worktree matches its fix2 freeze (0 non-OK); no builds are running; load ~7; 28 GB free.
+  - All three reviewers were resumed with their context, with tighter slice and background rules.
+- FINAL P02 REVIEW B (Sonnet; P02/final-review-B.md): CHANGES REQUESTED for I1 only. Freeze 0 non-OK.
+  - PASS:
+    - method (hashes, identical flags, max load 2.85 in the timing window, byte-identical tools, the O03 hash, 3 numbers spot-checked against raw data);
+    - consumer (re-run: 0 problems; not discoverable by unittest);
+    - symbols (MatrixDistance 11/11, Configuration 8/8, BatchKernelProvider 5/5 unchanged);
+    - ownership (51 paths cross-checked; 0 intersection with D02);
+    - docs, and the ledger (0 problems, byte-reproducible).
+  - I1 (Important): the CHANGELOG Breaking entry for the `.perQuery` default (V04-C-1032, CHANGELOG:46-66) never says it is SLOWER. One-host measurements: Q64/N4096 Euclid 1536 22.6× (2.53 → 57.3 ms), Euclid 512 15.9×, Q8/N256 Euclid 2.8-4.3×; cosine at Q8 and all Q7 shapes are faster.
+    - Ruling: FIX. One plain sentence with those one-host figures and evidence, plus a pointer to `.gram` as the explicit opt-in. Regenerate V04-C-1032 through the generator.
+    - Why: an honest Breaking disclosure; omitting a known 16-23× regression is a misleading claim by omission. Cost if wrong: none.
+  - M4 FIX: refresh the stale limitation text in V04-C-1032/1034/1035 in the same generator pass.
+  - M5 FIX: the pairwise slowdown sentence gives the 1.6-8.7× range.
+  - M2 FIX: the PublicBatchStrategy.swift comment names ParameterOrder.swift.
+  - M3 NO CHANGE: the [0.3.0] historical section describes that release; the [Unreleased] Breaking entry records the removal.
+  - M6 ACCEPT: the baseline consumer RED rests on recorded provenance with the expected diagnostics.
+- FINAL P02 REVIEW A (Opus; P02/final-review-A.md): APPROVED, Spec 7/7.
+  - A-1/C8, A-2/C2 and B-I1 are real closures: every prior evasion now fails, plus 3 new spellings (Self.gramBatch, key-path, Array<Float>?/[T]!).
+  - The step 0 Sources changes are comment-only (0 code tokens; the mutant control shows 59). Guards 24 OK; discover 488 git-less; ledger 0. Freeze 52/52.
+- Residual rulings (FINAL cycle: one fix dispatch, then root adjudicates):
+  - SHARED-LEXER CLASS (second occurrences). FA-2: the shared Swift masker blanks code inside string interpolation, so C2 misses a gramBatch call in `"\(…)"`; the reviewer showed a default search taking the Gram route with the guard green. This is the 2nd guard blinded by interpolation masking, after B-I1's local workaround. FA-3: backtick-escaped identifiers evade the cast guard (`` `Array`<T> ``, `` Swift.`Array`<T> ``); this is the 2nd backtick evasion, after A-2's local fix. FN-2: a raw string with an odd quote count hides the rest of its line (pre-existing).
+    - Ruling: FIX AT THE SHARED LEXER (class closure for every guard), not per guard. Interpolated expressions stay as code; only literal text is masked (including raw and multi-line strings, nested interpolation, `\#(…)` in raw strings). Provide an identifier normalization that removes backtick escapes, used by the guards that match identifiers. Fix raw-string quote counting.
+    - Ownership ruling: root AUTHORIZES the shared lexer file for P02's final fix; it is shared CI tooling with no other owner in flight, and D02's 50 files do not include it.
+    - Required: lexer unit tests for each form; then re-run EVERY guard suite on the P02 tree AND on a read-only copy of the D02 worktree, and triage every NEW hit (a true positive is fixed or ruled; a false positive means a lexer fix). Remove B-I1's local interpolation workaround if the lexer subsumes it.
+    - Why: the user's class rule; a lexer that hides code is the root cause. Cost if wrong: new guard hits to triage now, not later.
+  - FA-1 FIX: C8 rejects any other binding of `blas` in the function (var, a for-in, a closure parameter, case-let, a shadowing `let` in a nested scope), and the claim at GramBatchSearch.swift:61-63 matches what is pinned.
+  - FA-4 FIX: the shield sentence (ArrayIdentity.swift:15, guard docstring :51) names the 3 SoAFP16.init sites' `VectorType.self ==` guard.
+  - FN-1 FIX: the P02GramRouteTests.swift:122-124 comment states what the seam records (the GemmArguments binding).
+  - Shared-lexer scope (root-measured): `Scripts/ci/swift_lexing.py` has 17 users in the P02 tree, including check_claim_ledger.py and the T13-T16 guards. The D02 tree adds test_d02_surface_guards.py and D02RunConsumers.py.
+    - The final fix must re-run ALL of them on both trees, and show that the claim ledger's fingerprints are unchanged (0 problems on P02, and on D02 with the patches).
+    - Any new hit in a D02 file is recorded for D02 phase 5, which runs after the P02 merge, and is NOT edited in P02.
+- FINAL P02 REVIEW C (Opus; P02/final-review-C.md): APPROVED (holistic pass).
+  - Cross-phase invariants hold: the validation/provider/strategy order is the same in all 3 docs and the code; exactArray routes are unchanged for every VectorCore type; scalarCount agrees with every reader. No residue; all 87 test refs in the docs resolve.
+  - Public API: only the brief's additions. Concurrency and memory are clean. RD15 errors carry their context; no partial output.
+  - Runs: Debug and Release 349/69; ASan 33/5 with 0 reports. The one ASan failure is the known child-probe limit (the child aborts on ASan interceptors) and the test passes in Debug and Release. Freeze 52/52.
+  - Rulings:
+    - M1: qualify the docs and CHANGELOG; the P01 predicate is NOT changed.
+    - M2: merged with FA-4.
+    - M3: FIX. The Gram path builds GemmArguments from GramPlan's checked Int32 values (single source of truth); RD9 is re-proved.
+    - N1, N2, N4, N5: FIX (text). N3: NO CHANGE.
+- P02 FINAL FIX dispatched (resumed phase G implementer; P02/final-fix-rulings.md). It covers B-I1/M2/M4/M5; A-FA-1/FA-4/FN-1 plus the shared-lexer class (FA-2/FA-3/FN-2, with the blast radius on both trees); C-M1/M3/N1/N2/N4/N5. A scoped re-review and root adjudication follow, then the merge.
+- P02 FINAL FIX DONE_WITH_CONCERNS ("Final fix" in P02/phaseG-report.md; evidence P02/final-fix/). Root-verified: the workspace matches final-fix/freeze-sha256.txt (0 non-OK); the index is edb74c2.
+  - B-I1: the slowdown is stated plainly, with one-host figures and evidence plus the `.gram` pointer. Also B-M5, C-N1, and B-M4 (limitations rewritten).
+  - The ledger is byte-reproducible with 0 problems (V04-C-0881/1032/1034/1035 revised).
+  - Lexer: raw-string quote counting is fixed for all users. `_unbacktick` is added. `_mask(keep_interpolations=True)` is OPT-IN, and the Gram and cast guards opt in. test_swift_lexing.py covers 17 forms both ways, and the cast guard's local workaround is removed. FA-2, FA-3 and FN-2 go from unseen to caught.
+  - FA-1: C8 accounts for every `blas` token (7 fixtures plus a control). FA-4/C-M2, C-M1 (qualified; predicate unchanged) and C-M3 (GramPlan.gemmArguments from the checked Int32 values; RD9 sha 73ecf59b unchanged). FN-1, N2, N4, N5 and B-M2.
+  - Gates: full Debug 1658/239, 0 failures; focused 243/55 in Debug and Release; Python 493 in-repo and git-less; lint 0 new.
+  - 53 files vs 29b5bba: phase G's 51 plus swift_lexing.py and test_swift_lexing.py. 0 intersection with D02.
+  - Blast radius with the shipped lexer: 0 new hits outside P02 on both trees. The ledger has 0 problems and its fingerprints are identical under both lexers; D02's count guard returns [].
+  - With an exploratory keep-by-default lexer, 4 hits outside P02/D02: a clock-policy false positive; the Float16 guard's mutation control would go vacuous; the inert-provider guard's L5 limit would close; and a TRUE POSITIVE in the T15 lost-store lint at NumericalStabilityTests.swift:369.
+- Ruling (the deviation: interpolation-keeping is opt-in, not the default): ACCEPT.
+  - Why: guards differ in whether interpolated code is in scope (the clock policy deliberately excludes message strings), so a per-guard opt-in is the correct design. The class closure holds for the two guards that hit it (C2 and the cast guard).
+  - Cost if wrong: other guards stay blind to interpolated code until they opt in, which T17 addresses.
+- Ruling: NEW ROOT TASK T17 "interpolation-aware lint adoption", run AFTER the P02 merge (it depends on the new lexer API) and BEFORE milestone 16:
+  - (1) The T15 lost-store lint opts in (keep_interpolations). Fix NumericalStabilityTests.magnitudeDiagnostic per W2 (root-confirmed: `maxComponent` is mutated inside withUnsafeBufferPointer and read after, in the diagnostic interpolation), returning the value from inside the closure.
+  - (2) The Float16 availability guard and the inert-provider guard each opt in or record why not, with their controls and limits updated.
+  - (3) The clock policy keeps the default, with the reason documented in its LIMITS.
+  - Why: a true positive of the Swift 6.4 lost-store class is a live latent defect (an -O build can print a stale diagnostic), and the user's class rule applies. Cost if wrong: a small task.
+- FF-P1/P2/P3 are folded into T17. C8's remaining lexical limits (an alias inside gemmCrossTerm, wrappers elsewhere) are stated limits: ACCEPT.
+- P02 FINAL-FIX SCOPED RE-REVIEW dispatched (Opus; package P02/final-fix-rereview-package.diff, 1532 lines; 14 files vs the phase G freeze).
+- P02 FINAL-FIX RE-REVIEW (Opus; P02/final-fix-rereview.md): APPROVED, Spec 7/7. No Critical or Important findings.
+  - The CHANGELOG figures match compare.md (22.59×, 15.90×, 2.75-4.34×; pairwise 1.61-8.69×). The generator is byte-reproducible.
+  - Lexer: the default mode differs from phase G only on raw-string lines (P02: 3/319; D02: 4/305). test_swift_lexing has 3 mutants caught.
+  - FA-1: 7 new shadowing mutants are caught. C-M3: no trapping Int32 on the Gram path; RD9 re-run by the reviewer, sha 73ecf59b.
+  - Scope: 14 files vs G; 53 vs 29b5bba; 0 vs D02. Runs: 40/5 in Debug and Release; Python 493 git-less; ledger 0. Freeze 6297/6297.
+- ROOT ADJUDICATION OF THE RESIDUALS (applied by root in the P02c worktree; evidence P02/root-residuals/):
+  - F1 FIX. Root-checked against Operations.findNearest routes 2 and 3: a client type whose query casts but whose array fails exactArray took route 2's Top-K heaps (k < N) or a BatchKernels helper (k ≥ N) before P02. It is now scored per candidate into a full N-score array. The CHANGELOG is corrected, and V04-C-1035 is revised through the root generator p02rr_ledger.py.
+  - F2 FIX (comment-only; masked code tokens are equal, 1983): the trapping GemmArguments init's one caller is the public entries' array wrapper (root-grepped); the Gram route uses GramPlan.gemmArguments.
+  - N1 FIX: "slower in most measured cases"; V04-C-1032 is revised.
+  - N2 FIX: the test is renamed to `…_with_interpolations`.
+  - N3 FIX: a vacuous assertion is removed (_mask already blanks string and comment text).
+  - N4 FIX: stale untracked __pycache__ removed.
+  - N5 NO CHANGE (the exact 11-token count catches a duplicate gramTileRecord).
+  - Checks: the ledger has 0 problems, and the generator reproduces it byte for byte from the pre-image (git-less copy).
+  - The post-residual freeze is P02/root-residuals/freeze-sha256.txt (6297) with changed-files-final.txt (53; 4 hashes updated).
+  - Git-less Python on the post-residual tree: 493 OK (skipped=6), rc 0 (P02/root-residuals/py-gitless.log).
+- P02 MERGED as 1544ab4: a byte-identical import of 53 paths (the import script checks the manifest, the changed list, the preimage vs 29b5bba and a clean worktree; post-image hashes are verified and the composition equals the changed list exactly).
+  - The merged tree differs from the P02c worktree only in the 2 root ledger files.
+  - Git-less gate on the merged export: Python 493 OK, ledger 0 problems (P02/merge/gitless-gate.log).
+  - Closure: closures/P02.json. state.json: P02 accepted.
+- NEXT: T17 (dispatch drafted: R/T17/dispatch.md; plain-copy workspace of 1544ab4), then milestone 16, then D02 phase 5 and its merge, then STOP at D01/L04.
+- T17 WORKSPACE HAZARD (root-found, corrected before dispatch):
+  - A plain copy under R/ (.stabilization-recovery/…) sits INSIDE the user's main checkout, so `git rev-parse` there resolves to the parent repo. Root removed that copy (its own, untouched) and re-created it at /private/tmp/vectorcore-ws-T17, outside every repo (git-less confirmed; manifest R/T17/00-base-sha256.txt, 6298 files).
+  - Impact on earlier evidence, root-checked: NONE. The guards walk the filesystem and use git only for `git show <rev>:<path>` baseline lookups, which skip when the revision is unavailable and reach the same objects in the parent repo when it is. Merge gates ran git-less in the session scratchpad (/private/tmp), outside any repo.
+  - Rule from now on: plain-copy workspaces live under /private/tmp, outside every repository.
+- T17 DISPATCHED (Sonnet; R/T17/dispatch.md).
+- T17 PARTIAL (implementer, Sonnet).
+  - Python is done: the lost-store lint opts in (4 must-fail, 2 must-pass, RED → GREEN). NumericalStabilityTests.magnitudeDiagnostic is fixed per W2: the lint goes from one hit to 0 and the diagnostic text is unchanged.
+  - Float16 guard: does NOT opt in (its own code_view already sees interpolation; opting in would make its mutation control vacuous), recorded and pinned. Inert-provider guard: opts in, closing L5. Clock policy: keeps the default, with a LIMITS line.
+  - Discover 495 OK git-less; ledger 0 problems. 5 files changed (T17/changed-files-final.txt; full-tree freeze T17/freeze-sha256.txt).
+  - BLOCKER: capture_swift.py refuses a workdir outside RECOVERY or the integration checkout, so the Swift run did not happen.
+- Ruling (the capture-driver policy): do NOT loosen the driver; its allowlist is a deliberate safety policy. Split by tool:
+  - Swift runs in a copy under R/, which the driver accepts and SwiftPM is unaffected by the parent repo; P02c and D02 built there throughout.
+  - The git-less Python gate runs in a /private/tmp export outside every repo.
+  - Applied to T17: root runs Debug and Release NumericalStability on R/T17/swift-tree, which matches T17/freeze-sha256.txt (0 mismatches).
+  - Applied to D02 phase 5: its dispatch now puts the workspace at R/workspaces/D02p5 (no git commands there), with the git-less gate in /private/tmp/vectorcore-gitless-D02p5.
+  - Cost if wrong: one extra rsync per task.
+  - Root Swift runs on R/T17/swift-tree: NumericalStability Debug rc 0 and Release rc 0, 43 tests in 10 suites each (T17/root-swift). magnitudeDiagnostic runs only on failure paths, so the evidence is compiling in both configurations plus the suites passing.
+- T17 REVIEW dispatched (Sonnet; R/T17/review-package.diff, 408 lines).
+- T17 REVIEW (Sonnet; R/T17/review.md): APPROVED, Spec 7/7. Freeze 0 mismatches.
+  - The opt-in fixtures bite. The Float16 no-opt-in decision is verified: opting in makes its control vacuous.
+  - The inert-provider full outputs are IDENTICAL on the real tree before and after.
+  - The per-test diff with the baseline guards swapped back is exactly the intended additions.
+- ROOT ADJUDICATION OF THE T17 RESIDUALS (applied by root in /private/tmp/vectorcore-ws-T17):
+  - M1 FIX. `components` in magnitudeDiagnostic is also computed inside its closure and returned (W2). The comment is reworded so it no longer over-claims: the lint flags the maxComponent assignment form; `components` follows W2 as a precaution; the upstream miscompile is the mutable-pointer form.
+  - M2 FIX. test_interpolated_code_is_seen is split into 3 tests. With the opt-in mutated off, both interpolation tests fail independently.
+  - M3 FIX. The clock pin gains the LIMITS example's direct `Date()` form. With the opt-in mutated on, the pin fails.
+  - Checks: the touched guard suites pass (OK); the ledger has 0 problems. The Swift Debug/Release re-run and the git-less discover are pending.
+  - T17 residual checks: Swift NumericalStability Debug and Release rc 0 (43/10 each; T17/root-swift-2); git-less discover 497 OK (skipped=6). Final freeze T17/freeze-final-sha256.txt (6298) and changed list T17/changed-files-final2.txt (5 M).
+- T17 MERGED as 2da89d3: a byte-identical import of 5 paths (preimage vs 5b7df5e OK; composition exact; the merged tree differs from the T17 copy only in the root ledger file). Git-less gate 497 OK; ledger 0 problems. Closure: closures/T17.json.
+- NEXT: milestone 16 (the full CI replay on 2da89d3 plus this ledger commit). Dispatch: R/milestone16/dispatch.md.
+- MILESTONE 16 DISPATCHED (Sonnet; R/milestone16/dispatch.md; HEAD cf47327 = P02 1544ab4 + T17 2da89d3). Root first deleted 31 verified SwiftPM caches of finished work (manifest current-handoff/build-scratch-deleted-2026-10-07.txt); free space went 21 → 36 GB.
+- D02 PHASE 5 WORKSPACE PREPARED by root (I/O only, while M16 runs; the agent dispatch waits until M16 is done so its builds do not load the gate):
+  - R/workspaces/D02p5 = integration cf47327, plus D02's 50 accepted files overlaid (source and overlay both 0 non-OK against the fix2 manifest), plus the staged patches applied (patch hashes 0 non-OK). The claim ledger has 0 problems.
+  - Preimage: all 50 D02 paths are unchanged in integration since 74ceae1 (M paths equal; the 24 A paths are absent at HEAD).
+  - apply_d02_phase2_4.py keeps the ledger's current non-ASCII formatting (ensure_ascii = raw.isascii() = False).
+  - Manifests: D02/phase5/00-base-sha256.txt (6323) and 00-integration-cf47327-sha256.txt (6299; the .git gitlink and M16's .build/R04-child-captures logs are excluded). The difference is exactly D02's 24 added files.
+- MILESTONE 16: GATE PASS (Sonnet; R/milestone16/report.md; cf47327 = P02 + T17; Xcode 27 / Swift 6.4).
+  - All REQUIRED jobs rc 0:
+    - repository-checks: 497 OK;
+    - test: Debug 1658/239, and Release 1658/239 with 1 known issue (the LostStoreCanary withKnownIssue, by design); performance_gates 22 complete in both;
+    - lint: 0 serious;
+    - consumer: 8 programs;
+    - platforms: VectorCore and VectorCoreBenchmarking ×5 destinations each, plus the Intel build;
+    - benchmark-contracts: including build_modes COMPLETE;
+    - sanitizers: ASan 77 bodies, TSan 39.
+  - Extras:
+    - Debug with EXTENDED=1: 1658/239;
+    - git-less export in /private/tmp: 497 (git rev-parse fails there);
+    - ledger 0 problems;
+    - P02RunConsumers: P02_CONSUMERS_FINAL_COMPLETE;
+    - P02 ASan via check_sanitizers' mechanism (`--sanitize address --disable-xctest`): 41/6 clean.
+  - The dispatched `-Xswiftc -sanitize=address` variant failed only in SwiftPM's uninstrumented XCTest discovery helper ("Interceptors are not working"), the known ASan spawned-process limit (milestone 14). Superseded by the CI mechanism.
+  - Root-verified: the three 1658/239 summary lines are in the logs with 0 failure markers; the capture records are rc 0 except that ASan variant.
+  - Divergences: Xcode 27 instead of CI's 16.2/26.3; repository-checks ran on macOS; perf-smoke and sdk-names (not required) were not run.
+- Integration commit note: root's ledger commit 2e5debd landed during M16 (progress.md only; the code is identical to cf47327). Root held further commits until the gate ended.
+- NEXT: D02 phase 5 (workspace prepared; dispatch R/D02/phase5-dispatch.md).
+- Root deleted milestone 16's 7 verified SwiftPM caches (3.7 GB; manifest current-handoff/build-scratch-deleted-2026-10-07b.txt). runner-temp and the result dirs are KEPT as report evidence. Free space: 29 GB.
+- D02 PHASE 5 DISPATCHED (fresh Opus; R/D02/phase5-dispatch.md; workspace R/workspaces/D02p5).
+- D02 PHASE 5 STALL (watchdog, ~23:24, while composing guard additions; load 48). Root checked: 24 files edited and evidence in progress; no running processes. RESUMED with instructions: small edits, a load wait, and a scope check. Boundaries.swift (Benchmarks) was edited, but RD-R3 says V04-C-0607 is a LEDGER-ONLY rebind: revert it if that is the reason, otherwise cite the ruling; every changed file maps to a ruling in the report.
+- INCIDENT (2026-10-08 ~00:29, found ~01:03 when a ledger commit failed with "not a git repository"): the integration checkout in /private/tmp LOST its `.git` gitlink file and 73 tracked files. Branch, objects and worktree metadata were intact (tip e85ebc5).
+  - Root-verified damage: every one of the 73 deleted tracked files is an EMPTY blob (0 bytes: old placeholder logs under Docs/audits/…/validate_execution_api and the execution reports/). No content file and no ledger was lost; the only other difference was root's own uncommitted progress.md append.
+  - Cause, from the evidence (not log-confirmed; the system log showed nothing for the window): the macOS /tmp cleaner, which works on access time. The deleted set is exactly the files that nothing had read since the Oct 3 checkout: the empty files (rsync reads no content) and the gitlink (excluded from every rsync). Every non-empty file was read by root's rsyncs on Oct 7 and survived. The D02 phase 5 agent is excluded: its scripts never reference the integration path, and their only delete is the ruled SIMDMemoryUtilities removal in its own workspace.
+  - Restore (writes only inside the checkout; no write to the shared repo): the gitlink was re-created pointing at the existing worktree metadata, and the 73 empty files were re-created. `git status` is clean apart from progress.md, and HEAD is e85ebc5.
+  - Exposure: the cleaner can recur on files unread for about 3 days. RECOMMENDATION FOR THE USER: relocate the integration worktree out of /private/tmp (`git worktree move` writes repo metadata, so it is the user's call). Until then, root re-checks `git status` before each integration step.
+- D02 PHASE 5 SECOND STALL: after the resume the agent made NO tool progress (no file or evidence touched after 23:30). Diagnosis: a single overlong response generation (composing the guard additions in one go), not host load. Ruling: do NOT resume it a third time. A FRESH Opus agent continues from the workspace state, with a hard cap of about 80 lines per Write/Edit and one file per response.
+  - The stalled agent's state: work items largely applied (phase5/scripts/apply_p5_*.py; 24+ files edited; negative consumers written); full-debug rc 0 (before the later edits); full-debug-v2 never recorded (it died with the agent); no report written.
+- Ruling (proposal P5-P1..P3, test_claim_ledger.py; the workspace still has the ORIGINAL): APPROVED.
+  - Two tests (`callerInventory` and `test_q14_new_caller_of_a_gated_helper_fails`) used `releaseOnly`, which RD-R8 deletes; they switch to `performanceCritical`, another Q14-gated helper, so the intent is unchanged.
+  - The stale-exemption test becomes `test_memory_rule_has_no_exemption_and_fails_the_old_runtime_text`, because RD-R2 rewords the runtime text and so removes its exemption. It now asserts there is no exemption, and that restoring the old text fails R7 in MixedPrecisionKernels.swift.
+  - Why: these are mechanical consequences of root rulings RD-R8 and RD-R2, and each test keeps its rule. Cost if wrong: none.
+- D02 PHASE 5 CONTINUATION DISPATCHED (fresh Opus; R/D02/phase5-continuation-dispatch.md: an inventory first, then P5-P1..P3, the Boundaries.swift scope check, the guard additions in small edits, and FULL verification on the final tree).
+- D02 P5 continuation cut off by HOST SLEEP ('Your computer went to sleep mid-response'), before any write. Resumed with its context. Note: host sleep plausibly explains the simultaneous watchdog stalls of 2026-10-06 ~23:30, and the daily /tmp cleaner commonly runs after wake (consistent with the 00:29 incident). Integration checked clean at 5656dd8.
+- 2026-10-09: the host slept again mid-response (a second cut-off before any write). The user is back ('continue'). Root computed the edits-so-far inventory itself (R/D02/phase5/01-root-inventory.txt: 25 paths vs the phase 5 base) and resumed the continuation agent with it, so its first action is a small write. Integration checked clean at 89368c6.
+- D02 PHASE 5 DONE (continuation agent; R/D02/phase5-report.md; freeze D02/phase5/freeze-sha256.txt, 6326 files, root-verified 0 non-OK; changed-files-final: 72 vs cf47327 = 43 M, 28 A, 1 D).
+  - Items 1-6 are done. The symbol-graph backstop is 77/77/77/77. SILGen binding 61/61; the build modes are complete; the C contract RED/GREEN has 0 problems; the lexer triage finds no new D02 hit. P5-P1..P3 are applied.
+  - Verification on the final tree: full Debug 1694 Swift Testing plus 185 XCTest, 0 failures; focused Release 529, plus D02 36/12; Intel build rc 0; Python 519 in the copy and git-less; ledger 0 problems; lint 0 new. The symbol diff (121 removed, 61 added) is explained.
+- Ruling P5-P4 (V04-C-0607): APPROVE the comment-only sentence in Benchmarks/VectorCoreBench/Core/Boundaries.swift (4 doc lines; the runtime note is unchanged; root-checked).
+  - Claim-ledger R5 (check_claim_ledger.py ~1002-1010) explicitly lets a runtime string literal carry its unverified wording in the adjacent comment. The intent of RD-R3 (do not change the runtime text) holds; root's "ledger-only" wording was imprecise.
+  - Cost if wrong: none.
+- Other concerns noted: no XCTest xunit file (the counts come from the log); the Python skip names were inferred.
+- D02 PHASE 5 REVIEW dispatched (split):
+  - baseline = R/D02/phase5-review-base, root-reconstructed from integration, the fix2 files and the patches; it matches 00-base-sha256.txt except the root ledger;
+  - A (Opus): Sources, guards and consumers, 17 files, 1046 lines;
+  - B (Sonnet): docs, CHANGELOG, ledger, README and the merge-gate evidence, 8 files, 411 lines.
+- D02 PHASE 5 REVIEW B (Sonnet; D02/phase5-review-B.md): APPROVED, Spec 7/7. Freeze 6326 OK at the start and at the end.
+  - CHANGELOG: every phase 5 removal is listed; the V04-C-0995 re-wording keeps P02's merged text.
+  - Ledger: 0 problems; the generator re-run in a copy is BYTE-IDENTICAL; 19 tombstones and 6 new entries.
+  - Gate evidence re-checked: the backstop is 77s; binding 61/61; build modes 4/4; C contract RED/GREEN; symbol diff recomputed independently, 121/61, all explained.
+  - Changed list: 72 paths, independently re-derived. Git-less discover 519 OK.
+  - Rulings:
+    - M1 FIX: the CHANGELOG Logger bullet qualifies the `import struct VectorCore.Logger` behaviour as "checked with the Swift 6.4 compiler" (CI also builds with Xcode 16.2), and the ledger is regenerated.
+    - M3 FIX: D02-C-0011's "defines only VC_SWIFTPM_DEBUG and VC_SWIFTPM_RELEASE" must not say "only" (Package.swift also defines ACCELERATE_NEW_LAPACK on the C target).
+    - M2 NO CHANGE (cosmetic; the checker has no owner field).
+    - M4 ACCEPT as a ruling refinement: RD-R5's qualification is documented as `import struct VectorCore.Logger`, because the qualified spelling `VectorCore.Logger` resolves to the `VectorCore` enum; the LoggerNegative and LoggerQualification consumers pin this.
+    - M5 ACCEPT (the limitations disclose the evidence-consumer basis).
+- D02 PHASE 5 REVIEW A (Opus; D02/phase5-review-A.md): CHANGES REQUESTED (item 4 FAIL). Freeze 6326 OK.
+  - PASS: all 13 removed public symbols are exactly the ruled set; every negative consumer line fails as expected; nothing behaves differently after the hook and Configuration removals (no reader at the base). The rewordings, Logger and the existing-test changes pass. Focused runs: 393/82 plus XCTest 10, in Debug and Release. Consumers complete; binding 61.
+  - I1 (Important): the hook table at Operations.swift:47 lists only `divide` for Vector.softmax(); the code calls `max` first, and the probe recorded ["max","divide"]. Phase 5 dropped it when copying the staged table. Nothing caught it: the guard checks the hook column only, and the route test checks `.contains("divide")`.
+  - M1: the table has no rows for chebyshevDistance (via lInfinityNorm), Operations.pca or Operations.umap (via PCAModel.fit/svdThin), and does not state lInfinityNorm's NaN early return.
+  - Ruling: FIX, with a CLASS CLOSURE (I1 and M1 are two instances of table-vs-code drift): exact spy op lists in D02ProviderHookRouteTests, the missing rows plus spy tests, and a git-less cross-check that the table rows EQUAL the tests' exact op lists, with must-fail fixtures.
+  - M3 FIX: a new synthetic-exemption test restores the coverage of the checker's exemption code, which P5-P1..P3 removed.
+  - M4 FIX: the removed-members guard scans all of Sources (re-adding configuration elsewhere currently passes).
+  - M5 FIX: the VectorCore.swift:29-30 doc states both paths.
+  - Observation FIX: cite RD-R0 (item 16), not RD-R8, for the SIMDMemoryUtilities deletion.
+  - M2 ACCEPT (same as B-M4).
+- D02 PHASE 5 FIX ROUND 1 dispatched (resumed continuation agent; D02/phase5-fix1-rulings.md). It covers A-I1, A-M1, A-M3, A-M4, A-M5, the A observation, B-M1 and B-M3.
+- D02 PHASE 5 FIX ROUND 1 DONE (report: "Fix round 1"; freeze D02/phase5/fix1/freeze-sha256.txt, root-verified 0 non-OK; still 72 paths vs cf47327; 7 changed in fix 1).
+  - The softmax row is fixed. The class closure (exact expectRow lists plus a git-less table-vs-test cross-check, 37 = 37 rows) found a THIRD table error: the PCA sketch path calls `qrThin` 5 times, then `svdThin`. The missing rows and the NaN note are added.
+  - A-M3: a new synthetic-exemption test. A-M4: the removed-members guard covers all VectorCore enums and extensions. A-M5, the RD-R0 citation, B-M1 and B-M3 are fixed.
+  - The ledger is regenerated (D02-C-0008/0011/0013, V04-R-0010, new D02-C-0014). 0 problems.
+  - Runs: focused 140/27 plus XCTest 7, in Debug and Release; full Debug 1694+2 Swift Testing plus 185 XCTest, 0 failures; Python 523 in the copy and git-less; consumers 10/10; backstop 77s; binding 61/61.
+- Root moved the byte-identical import script out of the (now retired) session scratchpad into R/build-tools/import_task.py (sha d887d58c…).
+- D02 PHASE 5 FIX-1 SCOPED RE-REVIEW dispatched (Sonnet; 755-line package).
+- D02 FIX-1 RE-REVIEW (Sonnet; D02/phase5-fix1-rereview.md): APPROVED, no findings (one nit: W6 TYPE_HEAD misses an `extension VectorCore.Foo` spelling; NO CHANGE). Freeze OK.
+- D02 MERGED as 93e08c4: a byte-identical import of 72 paths (43 M, 28 A, 1 D) vs cf47327. The manifest, the changed list, the preimage vs cf47327 and a clean worktree were checked; the composition is exact; the merged tree equals the D02p5 copy except the root ledger. Git-less gate: 523 OK; ledger 0 problems.
+  - Tool fix: import_task.py now skips '#' header lines in the manifest (the fix1 freeze had a header that produced a false mismatch). New sha 363b1bc6…
+  - Closure: closures/D02.json. state.json: D02 accepted.
+- NEXT: milestone 17 (the full CI replay plus the D02 checks on the merged tree), then STOP at D01/L04 with the user decision packet.
+- MILESTONE 17: GATE PASS (Sonnet; R/milestone17/report.md; HEAD 04a6ea1 = D02 93e08c4 + P02 + T17). Pre-flight: git clean and .git present, and still clean afterwards.
+  - All REQUIRED jobs rc 0:
+    - repository-checks: 523;
+    - test: Debug 1694/251 plus XCTest 185, and Release 1694/251 with 1 known issue (the LostStoreCanary withKnownIssue, by design); performance_gates 22 in both;
+    - lint: 0 serious;
+    - consumer: 8;
+    - platforms: VectorCore and VectorCoreBenchmarking ×5 each, plus Intel;
+    - benchmark-contracts: including build_modes COMPLETE;
+    - sanitizers: ASan 77, TSan 39.
+  - Extras:
+    - Debug with EXTENDED=1: 1694/251;
+    - git-less discover: 523;
+    - ledger 0 problems;
+    - D02RunConsumers final: binding 61/134 refs, 0 unbound; backstop 77s;
+    - D02CContract RED/GREEN, problems 0;
+    - P02RunConsumers COMPLETE;
+    - P02 ASan (CI mechanism) 41/6 clean.
+  - Root-verified the three 1694/251 summary lines in the logs and that every capture record is rc 0.
+  - Divergences: Xcode 27 instead of CI's 16.2/26.3; repository-checks ran on macOS.
+- PAUSED 2026-10-09 by user instruction ("lets take a pause after this agent ends"). The program stands at the D01/L04 USER DECISION STOP. The decision packet is current-handoff/D01-L04-decision-packet.md.
+- RESUMED 2026-10-16 on user decisions (answers to root's 12 open questions):
+  - (1) D01 is HANDED OFF: a new agent will port the consuming products (VectorIndex, VectorAccelerate). Root's scope stays fully on VectorCore. Root KEEPS NOTING the required downstream upgrades.
+  - (2) I01 and N01 are closed as Core-accepted; their downstream validation is handed off.
+  - (3) The downstream-upgrade list uses the EASIEST approach, with a baseline of EVERYTHING after 0.3.3 ("encompass all changes").
+  - (4) isNormalized: either direction is acceptable "as long as we preserve the actual working version". Root ruling: KEEP the merged behaviour (it is tested, and a rename would break as well).
+  - (5) The `.perQuery` default is CONFIRMED.
+  - (6) L04 needs a conversation. The use case: text documents (a sentence to thousands of words), N = 50-5000 documents.
+  - (7) L04 cancellation only if the lift is minimal (nice-to-have).
+  - (8) Open a PR after L04 completes; more cleanup may follow.
+  - (9) Move the integration worktree into /Users/goftin/dev.
+  - (10) The compiler-bug filing waits until after the new baseline.
+  - (11) The routed VectorCore follow-ups are done after this PR closes and before the 0.4.0 tag.
+  - (12) The optional quiet-machine timing re-run happens BEFORE the PR. Delete T09 build-intel. The machine is open for about 3 hours.
+- INCIDENT 2 (found 2026-10-16): after 5 idle days the macOS /tmp cleaner emptied the whole /private/tmp integration worktree (all 6327 tracked files and the gitlink; the directory was 0 B). Branch and objects were intact at 5d5894b; nothing untracked or modified existed (the pause state was clean).
+  - Fix (user-approved): `git worktree repair` re-wrote the gitlink, then `git worktree move` moved it to /Users/goftin/dev/vectorcore-integration-2026-09-18 (registration name unchanged), then `git checkout -- .` restored all 6327 files. Status is clean at 5d5894b.
+  - The INTEGRATION constants in capture_swift.py and import_task.py are updated to the new path. The new location is deliberately not next to VectorCore, so `../VectorIndex`-style paths do not resolve to the real siblings.
+- T09 workspaces/T09/T09/fix1-review/build-intel is deleted (user-approved).
+- D01: HANDED OFF (status `handed-off`); root keeps docs/downstream-upgrades. I01 and N01 move from accepted-staged to accepted.
+- QUIET-MACHINE TIMING RE-RUN DONE (Sonnet; R/timing-rerun-2026-10-16/report.md). Records only, no claims. Root held R/HOST_QUIET.lock for the duration and removed it on completion.
+  - A, V04 D3/D5 on integration fa19bc9, load 2.7-3.1 (vs ~44 when first recorded):
+    - D3: 24/24 cases quiet; run 2 within 3.9% of run 1.
+    - D5: 38/38 children pass. The fp32 handle-model column is now 8·N (P02's computed scalarCount), and the malloc high-water mark is still 0.
+    - The quiet D3 medians are NOT uniformly lower than the loaded record. Many batch cases are 30-45% higher (e.g. batch.euclidean2.512.N257.optimized.sequential 66.45 → 90.96 ns/op). Root note (an UNVERIFIED hypothesis, not attributed by measurement): the tree changed between V04 and now (P02's batch, pairwise and cast changes, T14/T16) behind unchanged boundary identities, so this compares different code as well as different load.
+    - 4 aos-fp16 cases changed identity, so they are not comparable.
+  - B, P01 time mode on the original objects (2240d2e/307441c):
+    - the median base/final ratio is 1.289 and 1.323 quiet (the original executables, twice) and 1.271 rebuilt, vs 1.312 loaded: the P01 evidence HOLDS;
+    - per case, quiet/loaded is 0.999-1.004 at the median; the noise floor is ±5-8%.
+    - The rebuilt objects are not byte-identical to P01's; the original executables were used as the same-object measurement.
+- L04 USER DECISIONS (2026-10-16 conversation):
+  - (1) Vectors are PER CHUNK. Root advice, recorded: per chunk for search; for document-level UMAP/PCA, consider per-document mean-pooled vectors (N ≤ 5000). Both supported. Implied scale: 50-5000 documents × ~1-20 chunks gives N up to ~100,000.
+  - (2) D = 768 is ideal; 384, 768 and 1536 are all supported.
+  - (3) All algorithms (PCA exact and randomized, KNN graph, UMAP) for different use cases.
+  - (4) Above the measured envelope: document as "not measured"; no refusal and no admission control.
+  - (5) NO cancellation in L04.
+- Ruling (L04 scope): MEASURE AND DOCUMENT; no algorithm redesign.
+  - Measure Release time, peak RSS and malloc max-in-use, against the analytic payload, for PCA (exact and randomized), KNNGraph.bruteForce and UMAP across N ∈ {50, 500, 5000, 25000, 100000} × D ∈ {384, 768, 1536}, with seeded reproducibility checks. Document a one-host measured envelope in the API docs and Performance_Guide, with "not measured" stated above it. Ledger through the generator.
+  - Any crash, pathological memory or nondeterminism found: STOP and report for a root ruling; do not fix in-line.
+  - Why: the user's workload is about 1000× below the audit's 150M-edge illustration, and measuring is cheaper than redesigning; this closes NUM-29/30 honestly.
+  - Cost if wrong: a later redesign task, for example an approximate kNN, if the measurements show minutes-plus at 100k.
+- L04 DISPATCHED (Opus; R/L04/dispatch.md).
+- DOWNSTREAM UPGRADE LIST DONE (Opus; R/downstream-upgrades/): DOWNSTREAM_UPGRADES.md, 126 rows (compile-breaking 18, signature 12, behaviour 51, ABI 8, performance 10, new API 13, benchmarking/C 14) plus 10 limitation rows. Range v0.3.3 (fca4b60) to fa19bc9.
+  - Coverage (check_coverage.py PASS, root re-ran it): 199/199 removed or changed public Swift symbols covered (90 removed, 109 changed) with 0 exceptions; 18/18 removed C declarations; 21/21 CHANGELOG Breaking lines mapped.
+  - Imported by root to Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/DOWNSTREAM_UPGRADES.md (outside the claim regions; the checker reports 0 problems). It is a living list: root appends L04 and later rows.
+  - FINDING: CHANGELOG `[Unreleased]` is INCOMPLETE. It covers #41, #46, T01, R05, V04, T11-T16, P01, P02 and D02, and omits the earlier program tasks (S01-S03, O01-O05, I01-I02, R01-R04, E01-E06, N01-N04, Q01-Q04, L01-L03, B01, D03, V01, V02). Several of those break public API (e.g. PCAModel.mean → [Double]; TypedBufferPool init and handles; the KernelAutoTuner/MixedPrecisionAutoTuner reshape; Operations.centroid/statistics now throw; BatchOperations.updateConfiguration is async throws; search metrics take `any DistanceMetric<Float>`; SoAFP16Cache512.shared is removed).
+  - Ruling: NEW ROOT TASK T18, "CHANGELOG reconciliation since v0.3.3", BEFORE the PR and AFTER the L04 merge (both edit CHANGELOG and the ledger; sequenced to avoid a preimage conflict). Every row of sections 1-4 of DOWNSTREAM_UPGRADES must map to a CHANGELOG `[Unreleased]` line, checked by a git-less script; the ledger goes through the generator.
+    - Why: a PR or release whose CHANGELOG omits public breaks misleads users (the claim rule).
+    - Cost if wrong: one docs task.
+  - Notes, no change now:
+    - VectorCoreVersion.version still reads "0.3.3"; the bump belongs to the 0.4.0 release step (after the follow-ups, per the user).
+    - The D02 re-mangle count differs across sources (59/61/62 keys); T18 states the symbol-diff figure in the CHANGELOG.
+    - The symbol diff covers arm64 macOS only; Intel/Catalyst-only declarations come from source (row CB-14).
+- L04 STOP S1 (real defect, root-confirmed): exact PCA (`oversampling: Int.max`) and the public LAPACK `svdThin` throw "sgesdd returned an invalid workspace query" on near-square inputs (R < ⌊11r/6⌋, LAPACK path 5; e.g. 500×384 and 500×768 in the user's grid).
+  - Cause: `vc_la_query` (Sources/VectorCoreC/common/vc_lapack_workspace.h) returns INVALID_QUERY when the vendor's answer is below the REFERENCE minimum (4k²+7k), which the vendor legitimately undercuts on path 5. Introduced by ed95f95.
+  - It contradicts the PCAConfig.oversampling doc ("Int.max ... selects the exact fallback") and the file header; their test is 240×8 and never reaches path 5.
+  - Ruling: a NEW ROOT TASK T19 fixes the class (never reject a positive finite query for being below the reference minimum; allocate max(query + headroom, minimum); every caller of vc_la_query and vc_la_integer_query), with a RED→GREEN shape-sweep test across the path-5 boundary (tall and wide, svdThin plus exact PCA, eigen/QR spot shapes). Dispatched (Opus; R/T19/dispatch.md). It builds only after L04's timing windows release the lock.
+- L04 rulings:
+  - Resume the grid now, recording the S1 cells as "throws (S1)".
+  - After T19 merges, overlay T19's files and re-measure ONLY the PCA-exact row, then write the docs.
+  - H1 APPROVED: ru_maxrss is the primary peak, plus a sampled lower bound of size_in_use/phys_footprint (max_size_in_use reads 0 on this host).
+  - K = 49 at N = 50 and DynamicVector inputs are APPROVED. caffeinate -i around the grid driver is APPROVED.
+  - Root created R/HOST_QUIET.lock on L04's behalf; L04 deletes it after its last timing window.
+- Sequence to the PR: L04 grid → T19 (review, merge) → L04 PCA-exact re-measure plus docs, then review and merge → T18 CHANGELOG reconciliation → milestone 18 → PR.
+- L04 GRID MEASUREMENT DONE (R/L04/report.md §4-7; runs/grid-1-summary.txt): 247 child processes in 62 windows, all quiet (max load 5.07), wrapped in caffeinate -i. The lock was released 19:48:08.
+  - Every algorithm was measured to N = 100k at D 384/768/1536. The ONLY gap is the S1 cells: PCA exact at N = 500, D 384 and 768, "throws (S1)" 5/5. No case neared the 15-minute cap.
+  - Reproducibility PASS: all 60 working cases give identical digests across separate processes.
+  - At N = 100k, D = 768 (median; peak RSS): PCA exact 2.15 s / 1585 MiB; randomized 0.76 s / 997 MiB; kNN 44.9 s / 740 MiB; UMAP (PCA init) 83.1 s / 1262 MiB. The largest peak is PCA exact at 100k×1536: 3079 MiB.
+  - At N = 5k, D = 768: UMAP 4.5 s; kNN 0.07 s. At N = 25k: UMAP 12.0 s; kNN 2.4 s.
+  - No existing doc claim is contradicted beyond S1. The kNN malloc increase (+405 MiB) matches the formula (404 MiB).
+  - A new S1 site, Docs/Linear_Algebra_and_Projection.md:66-67, was routed to T19 (message sent).
+  - Concerns recorded:
+    - kNN time grows faster than N² between measured points, so the docs say not to extrapolate;
+    - the synthetic 50-cluster data may differ from real chunk graphs;
+    - the sampler thread adds slight timing interference;
+    - the UMAP phase split is derived from separate cases.
+- T19 DONE (Opus; R/T19/report.md):
+  - Shape sweep RED → GREEN: 108/179 cells failed on the base for each of svdThin and exact PCA, and 0 after, in Debug and Release. The reported cells and the sketch path are fixed. Eigen and QR were never RED through Swift (Accelerate's answers were not below the floors); the C fixtures give their RED.
+  - Callers fixed: sgeqrf, sorgqr, sgesdd, ssyevd (float plus integer; a one-line vc_lapack.c LIWORK fix). The exported symbols are unchanged (21).
+  - Full Debug 1701/252, 0 failures; focused 81/16 in Debug and Release; Intel build; Python 523 in the copy and git-less; ledger 0 problems; lint 0 new. 7 files changed.
+  - Rulings:
+    - Fixture proposal (the L01 C fixtures assert the defect): APPROVED, a mechanical consequence and the C-level class RED/GREEN.
+    - Uncited doc lines 58-60: FIX.
+    - Eigen/QR not RED through Swift: ACCEPTED.
+    - The larger path-5 allocation (4k²+7k floats): ACCEPTED.
+  - INCIDENT: this session's SourceKit-LSP indexer wrote R/workspaces/T19/.build/index-build (455 MB) at 19:34:51-19:35:21, while L04 held the lock. Load went 2.65 → 4.46 during umap-pca N100k D384, and the raised load carried into pca-exact and pca-rand N100k D768.
+    - Ruling: L04 re-times those 3 cells along with its PCA-exact re-measure.
+    - LESSON: the editor/LSP indexer is a hidden load source in quiet windows (it indexes newly created workspace files). Record it in the quiet-host protocol.
+- T19 rulings applied: the fixtures are RED on the base and GREEN on the fixed shim (ASan/UBSan; the original fixtures abort on the fixed shim at the lines encoding the defect, as a control). Doc lines 58-60 now cite the tests. 9 files (8 M, 1 A). Ledger 0 problems; git-less 523 OK. Root verified the T19 freeze (0 non-OK) and the integration preimage of all 9 paths (0 diffs).
+- PARALLEL, lock-coordinated:
+  - L04 re-measure on T19's fix (root holds R/HOST_QUIET.lock for L04): overlay the 9 T19 files hash-checked, then the whole PCA-exact row plus the 3 LSP-disturbed cells, then the docs written ON TOP OF T19's edits.
+  - The T19 independent review (Opus; R/T19/review-package.diff, 623 lines) reads now and builds only after the lock clears.
+- POWER-MODE FINDING (user, 2026-10-16 ~20:15): the laptop was in LOW POWER MODE during today's runs. ROOT-CONFIRMED from evidence: today's V04 D3 reports record `lowPowerMode: enabled`; the Oct 4 originals record `disabled`.
+  - CORRECTION: root's earlier hypothesis that the 30-45% slower quiet D3 medians came from code changes since V04 is WITHDRAWN. Low-power mode explains them.
+  - The user has switched to high power (`pmset -g`: powermode 2, AC power).
+  - Ruling (scope of the invalidation):
+    - TIMING columns taken in or near low power are INVALID as evidence: today's timing re-run (A: V04 D3; B: P01 time mode) and L04 grid-1 and grid-2 timings.
+    - P02 phase G (Oct 7) and P01 phase G did NOT record the power mode, so their timing (including the CHANGELOG's 22.6×/15.9×/2.8-4.3× and pairwise 1.6-8.7× figures) is UNVERIFIED with respect to power mode.
+    - UNAFFECTED: every correctness result (unit suites, M16/M17 CI replays, T19 sweeps), memory/RSS figures, digests and reproducibility.
+  - Re-runs, all at high power, sequential under the lock:
+    - (1) the L04 full grid (grid-3); then docs from grid-3;
+    - (2) the V04 D3/D5 plus P01 time-mode quiet re-run;
+    - (3) the P02 S-batch/S-pair timing re-measure, to confirm or correct the CHANGELOG figures.
+  - NEW BINDING POWER GUARD in every timing protocol: record `pmset -g` powermode and the AC/battery state before and after each window; time only when powermode is 2, on AC power, with the 1-minute load below 8.
+- T19 REVIEW (Opus; R/T19/review.md): Quality APPROVED, Spec CHANGES REQUESTED (claims).
+  - The C fix is verified: both helpers use max(answer + headroom, minimum); every check kept; the 4 callers pass the allocated counts; no other caller; exports 21 = 21.
+  - The reviewer's revert goes RED on the same 108/108/3/6/2 cells. Fixtures RED on the base and GREEN on the fix; two extra mutants are RED.
+  - Runs: 52/11 in Debug and Release; Python 523 git-less; the ledger is byte-reproducible.
+  - I1 (Important): the CHANGELOG Fixed bullet and T19-C-0001 imply a v0.3.3 defect. ed95f95 is in no tag, and v0.3.3 rejected nothing. Ruling: FIX the wording ("introduced after v0.3.3 in this cycle; v0.3.3 unaffected").
+  - m1 FIX: the per-case tolerance is ≤ gap/4 (the r = 500 and 1000 reported cells could miss a shift).
+  - m2 FIX: also cite sketchBoundariesAndProviderIdentity in the Linear_Algebra doc route sentences.
+  - m3 FIX: the C comment cites a test or the reference-LAPACK minimum, or states an unverified contract.
+  - ROUTED to the pre-0.4.0 follow-ups: `sketchBoundariesAndProviderIdentity` HANGS (an Int.max power-iteration loop) instead of failing when the exact branch is removed.
+  - INCIDENT: the reviewer's runs continued 20:19:31-20:22:55, after the lock was re-created for L04 grid-3. L04 was told to treat overlapping windows as disturbed and re-run them.
+- T19 FIX ROUND dispatched (resumed implementer): text fixes now with NO builds; the m1 Swift run waits for root's signal after both high-power timing runs.
+- T19 FIX ROUND (text) DONE:
+  - I1: the CHANGELOG says "introduced after v0.3.3, fixed before release" (v0.3.3 verified unaffected via read-only git; T19-C-0001 regenerated).
+  - m1: per-case tolerance min(2e-3, gap/4), with a `worst=` margin print. NOT YET COMPILED; it waits for root's signal after the timing runs.
+  - m2: route sentences cite sketchBoundariesAndProviderIdentity.
+  - m3: the C comment cites the T19 tests for the observed domain, and reference sgesdd.f's path-5 minimum (3k²+7k < 4k²+7k) for the reason; the vendor's sufficiency is an unverified contract.
+  - Ledger 0 problems; git-less 523 OK. Still 9 files, 5 with new digests.
+  - The edits were made with Python scripts, so the SourceKit-LSP indexer was not triggered.
+- Sequencing ruling: L04 STOPS after grid-3, before the docs. After T19 is merged, L04 re-bases its workspace on the post-T19 integration tree (verifying that the measured library sources are byte-identical to its overlay), then writes the docs from grid-3. This avoids a CHANGELOG/ledger/doc preimage conflict with T19's revised files.
+- Order: L04 grid-3 → the high-power timing agent (V04/P01/P02) → the T19 m1 Swift run plus lint → the T19 scoped re-review → T19 merge → L04 docs, review and merge → T18 → M18 → PR.
+- L04 GRID-3 (HIGH POWER) DONE, 20:23-20:51 (R/L04/report.md §10-13; runs/grid-3-final.jsonl):
+  - All 128 window snapshots show powermode 2 on AC. 5 load-gate waits; 2 windows exceeded load 8 mid-window and were re-run (grid-3b, < 4.6).
+  - No overlap with the reviewer interval: L04 stopped its own driver by PID and relaunched at 20:23:14.
+  - 62 cases, 247 runs, 0 failures. Digests are identical across repetitions, and match grid-1 (60 common cases) and grid-2 (17).
+  - The S1 cells now succeed: PCA exact at 500×768 takes 0.025 s.
+  - At N = 100k, D = 768: PCA exact 2.14 s / 1585 MiB; randomized 0.76 s / 996 MiB; kNN 44.4 s / 740 MiB; UMAP (PCA init) 85.5 s / 1262 MiB. Largest peak: PCA exact at 100k×1536, 3080 MiB.
+  - Grid-1 vs grid-3 median time ratio is 1.001, so low power changed little for L04 or was not on during grid-1 (grid-1 did not record it). Grid-3 is authoritative.
+  - installd (PackageKit) appeared in the top-5 CPU in 74/128 snapshots, up to 250%; noted in the conditions.
+- Rulings on L04's requests:
+  - The new in-repo dated record `Benchmarks/WorkloadEnvelope/RESULTS.md` (modelled on TopKNaNContract/RESULTS.md, for the ledger's dated-artifact rule; the harness stays out of the repo): APPROVED.
+  - Revising V04-C-0742 (the Performance_Guide intro "makes no speed claim") to carve out the measured record, through the generator: APPROVED.
+  - About 30 ledger entries for the table rows: ACCEPTED.
+  - L04 stays stopped until T19 merges. Then it re-bases on post-T19 integration, discards its pre-ruling doc edits, writes the docs from grid-3, and verifies.
+- The user extended the session by about 2 hours ("test away").
+- T18 DISPATCHED in STAGED mode (Opus; R/T18/dispatch.md), in parallel with the timing run:
+  - deliverables: changelog-blocks.json, apply_t18.py, t18_ledger.py and check_changelog_coverage.py (every DOWNSTREAM_UPGRADES row in sections 1-4 maps to a CHANGELOG line);
+  - verified on a scratch copy; root applies it to the real tree after L04 merges.
+  - Load courtesy: no builds and no discover while R/HOST_QUIET.lock is held.
+- HIGH-POWER TIMING RE-RUN DONE (Sonnet; R/timing-rerun-2026-10-16/highpower/report.md): 39/39 windows at powermode 2, on AC, load ≤ 5.31; lock 03:52-04:03Z.
+  - A, V04 D3/D5: 48/48 reports `lowPowerMode: disabled`. High power matches the Oct 4 record (N257 optimized.sequential 66.98 and 67.70 vs 66.45 ns/op). The low-power run was about 1.3× slower, confirming the user's finding. D5 38/38.
+  - B, P01: the median base/final ratio is 1.294 and 1.275, vs 1.312 loaded and 1.289/1.323 low-power: HOLDS within about 3%. The `operations` set spreads 1.21 vs 1.10 between repetitions.
+  - C, P02 (final/base, original executables):
+    - 22.6× → 23.39/23.94×: holds.
+    - 15.9× → 15.35/13.70×: only approximately.
+    - Q8/N256 2.75-4.34× → 2.81-4.43 and 2.84-4.30: holds.
+    - Cosine Q8 and Q7 faster: holds (cosine 1536 Q7 0.997 in run 2).
+    - Pairwise 1.61-8.69× → 1.567-8.392 and 1.613-8.303: the pattern holds, but the upper end is 3-4.5% lower.
+    - The Oct 7 absolute medians match within a few percent, which suggests normal power then; this is unproven.
+  - Ruling: the CHANGELOG P02 figures (V04-C-1032/1034) are revised to rounded values with observed ranges across both one-host records, named. This is added to T18's staged patch as an explicit replace operation plus a ledger revision.
+- Signals sent: T19 runs the m1 Swift tests, lint and the full suite now (lock free). T18 may run discover now.
+- T19 m1 VERIFICATION GREEN:
+  - Per-case tolerance passes everywhere in Debug and Release with identical margins; the worst is svdThin-reported at 0.0233 of tolerance (5.8e-6 vs 2.5e-4 at r = 1000).
+  - Focused 25/6; full Debug 1701/252, 0 failures. Lint 0 new (5456 = 5456, compared by file, rule and message).
+  - The freeze is unchanged (6329; 9 files).
+- T19 FIX-ROUND SCOPED RE-REVIEW dispatched (Sonnet; R/T19/fix-rereview-package.diff, 387 lines).
+- T19 FIX-ROUND RE-REVIEW (Sonnet): APPROVED. I1 verified against v0.3.3 via read-only git; the m1 one-index-shift mutant FAILS; the m3 arithmetic holds; still 9 files; ledger 0.
+- T19 MERGED as 4c552d9: a byte-identical import of 9 paths (preimage vs 9e70a23 OK; composition exact; only the root ledger differs). Git-less gate 523 OK; ledger 0 problems. Closure: closures/T19.json.
+- DOWNSTREAM_UPGRADES updated by root (T18 concerns 1-2 plus two class checks over the v0.3.3/head symbol graphs):
+  - NEW CB-19: BufferError.invalidRequest(size:) breaks exhaustive switches. It is the ONLY new case on any of the 52 enums that existed at v0.3.3.
+  - NEW BH-52: defaulted requirements DistanceMetric.relevanceScore(for:) and VectorCollection.search(query:k:metric:) capture a same-signature client method as the witness. They are the ONLY new requirements on any of the 33 pre-existing public protocols, and both are defaulted.
+  - BH-04: the name is corrected to OptimizedDistanceMetrics.create(named:).
+  - check_coverage.py PASS. Root re-imported the doc to the ledger folder.
+- T18 STAGED DONE (Opus; R/T18/): 33 new [Unreleased] entries (Added 1, Changed 31 with 14 Breaking, Fixed 1), plus the ruled P02 figure revision (V04-C-1032/1034, as rounded values with ranges across the 2026-10-07 and 2026-10-16 records).
+  - On the scratch tree: ledger 0 problems (29 new T18-C entries); coverage 89/89 (to be updated to 91/91 for CB-19 and BH-52); git-less 523 OK.
+  - Concerns 3-9 ACCEPTED. A mapping update for the new rows is in progress, followed by an independent T18 review and application after the L04 merge.
+- T18 ROUND 2 DONE:
+  - Coverage 91/91 in sections 1-4 (CB-19 → T18-C11; BH-52 → CL-16 plus a new T18-C32 stating the witness-capture effect); sections 5-7 37/37.
+  - 34 blocks (Added 1, Changed 32, Fixed 1) plus the 2 ruled P02 replacements. Ledger 0 problems (29 added, 2 revised; idempotent). Git-less 523 OK.
+- T18 INDEPENDENT REVIEW dispatched (Opus): checks every block against closures and reports, source spot-checks, pure-insertion apart from the 2 ruled replacements, the coverage negative test, script robustness, and release scoping.
+- L04 rebase plus docs in progress (signalled after the T19 merge).
+- L04 DOCS DONE (Opus; R/L04/report.md §12-17). Re-based on integration 7bb489a.
+  - Measured code = shipped code: 149/150 Sources byte-identical; vc_lapack_workspace.h differs in comments only (masked tokens equal).
+  - 7 files: A Benchmarks/WorkloadEnvelope/RESULTS.md (the dated record, sha 027d26c0); M CHANGELOG, Performance_Guide and the ledger; PCA, KNNGraph and UMAP .swift as doc comments only.
+  - Ledger: V04-C-0742 revised; L04-C-0001..0030 added; 0 problems.
+  - Gates: focused 79/17 in Debug and Release; full Debug 1701/252; Python 523 in the copy and git-less; lint 0 new (5401 = 5401). Root-verified the freeze (0 non-OK).
+- L04 REVIEW dispatched (Sonnet; R/L04/review-package.diff, 424 lines): numbers vs grid-3, claim discipline, doc-comment-only, ledger, scope.
+- T18 REVIEW (Opus; R/T18/review.md): CHANGES REQUESTED.
+  - Checks 2-6 PASS: the P02 figures recompute exactly; pure insertion apart from R1/R2 (released sections byte-identical); the coverage negative test fails as it should; the scripts refuse bad states; the ledger generator is idempotent; release scoping is correct. 34 blocks checked, 15 against source.
+  - I1 (Important): C06 lacks "Breaking:" (cosineSimilarityMatrix flips sign vs v0.3.3; the pairwise diagonals are no longer 0).
+  - Ruling: FIX ALL (I1 plus M1-M10). LABEL CONVENTION (root):
+    - silent result change → "Breaking:";
+    - rebuild-required but source-compatible → "Breaking (source-compatible):";
+    - memory layout → "Breaking (binary layout):".
+    Applied to C13, C12, C17 and A01 (M3), and to C23 and C20 (M4).
+  - Other fixes: M1 the create(named:) return type; M2 -1000 "as in 0.3.3"; M5 the O03 wording; M6 drop the causal rebuild claim; M7 the async throws/throws details; M8 '\n\n' joins; M9 rewrap; M10 qualify "every record" (cosine 1536 Q7 0.997); refresh the stale docstring.
+- Root corrected DOWNSTREAM_UPGRADES rows SG-05 (create(named:) returns an optional; create(_:)/createMetric() verified non-optional in source) and BC-14 (-1000 already returned by v0.3.3's vc_lapack.c; L01 only documented it). check_coverage PASS; re-imported to the ledger folder.
+- T18 FIX ROUND dispatched (resumed implementer).
+- L04 REVIEW (Sonnet; R/L04/review.md): CHANGES REQUESTED (wording).
+  - PASS: numbers (742/742 recomputed from grid-3-final, 0 mismatches); Swift doc-comment only; measured code = shipped code; ledger 0 (V04-C-0742 history kept; RESULTS.md sha matches); scope 7 files.
+  - Rulings, all FIX:
+    - MEDIUM: limit "kNN faster than N²" to the 5k→25k and 25k→100k intervals (500→5k was sub-quadratic).
+    - The kNN/UMAP doc-comment figures gain High Power and synthetic-data qualifiers, plus "do not extrapolate".
+    - Reword "does not refuse" to cite the documented representability checks.
+    - Publish the fused-edge counts F for all N.
+    - Rewrap the long line.
+  - Root verifies the fix round DIRECTLY (all text; mechanical checks), to stay inside the user's window.
+- T18 FIX ROUND DONE, ROOT-VERIFIED DIRECTLY:
+  - The deliverable hashes match (4/4).
+  - The blocks contain every ruled fix: C06/C20/C23 "Breaking:"; C13 binary layout; C12/C17 source-compatible; C04 optional return; C27 "as in 0.3.3"; C16 wording; C24 async throws/setOverride; A01 causal phrase removed; M10 qualifier; '\n\n' join.
+  - The agent's scratch run: ledger 0 problems; coverage 91/91 and 37/37; git-less 523 OK; a second apply refused.
+  - A01 stays in Added (V02 is additive ABI visibility only) with a general rebuild reference: ACCEPTED.
+- T18 is ACCEPTED (staged). It is applied to integration after the L04 merge, with apply, generator, check_claim_ledger, coverage and the git-less gate run on the real tree.
+- L04 FIX ROUND ROOT-VERIFIED: the kNN super-quadratic claim is scoped to the two largest intervals (500→5k stated as sub-quadratic); High Power and synthetic qualifiers; the representability-check wording; F for all N; rewrapped. Swift is doc-comment-only (0 non-/// diff lines); RESULTS.md sha 2dbc6c26; ledger 0; freeze 0 non-OK.
+- L04 MERGED as 08a3be7: 7 paths (preimage vs 7bb489a OK; composition exact; only root ledger-folder files differ).
+- T18 APPLIED and MERGED as 3f59a28 on the post-L04 tree: 2 replacements plus 34 blocks; ledger 33 → 0 after the generator (29 added, 2 revised); coverage 91/91 and 37/37. Root-verified the CHANGELOG diff: the removed lines are exactly the two ruled P02 passages; everything else is pure insertion.
+- Combined git-less gate after L04 and T18 (T18/merge/gitless-gate.log): 523 OK; ledger 0 problems.
+- Closures: closures/L04.json and closures/T18.json. state.json: L04 and T18 accepted.
+- NEXT: milestone 18 (the final full CI replay), then the PR.
+- MILESTONE 18 DISPATCHED (Sonnet; R/milestone18/dispatch.md; HEAD d6bec09).
+- PR DECISIONS (user, 2026-10-16, via question):
+  - SLIM PR: a fresh branch from main with the final tree; the raw evidence stays local.
+  - INCLUDE Docs/audits and Docs/reviews.
+- Root rule for "slim": keep every Markdown record in the ledger folder (root .md, state.json, briefs/, closures/, reports/*.md) plus every file a kept record, the claim ledger, the CHANGELOG or Docs/*.md references (computed to a fixed point). Drop the rest.
+  - The claim ledger references only closures (41), briefs (8) and progress.md; no script or test reads the ledger folder.
+  - Result: keep 1176 files (16.1 MB), drop 4416 (129.6 MB; .log 3047, .json 838, .buffer 225, .py 147, .diff 54, .swift 41). The drop list is R/pr-slim-drop.txt.
+- The PR body is drafted at R/pr/PR_BODY.md; M18 results are filled in on completion.
+- MILESTONE 18: GATE PASS (Sonnet; R/milestone18/report.md; HEAD d6bec09 = T19 4c552d9 + L04 08a3be7 + T18 3f59a28 on top of milestone 17; the docs-only c5486b0 landed mid-run, progress.md only).
+  - All REQUIRED jobs rc 0:
+    - repository-checks: 523 OK;
+    - test: Debug 1701/252, and Release 1701/252 with 1 known issue (the LostStoreCanary withKnownIssue, by design); performance_gates 22 in both;
+    - lint: 0 serious;
+    - consumer: 8;
+    - platforms: VectorCore and VectorCoreBenchmarking ×5 each, plus Intel;
+    - benchmark-contracts: including build_modes COMPLETE;
+    - sanitizers: ASan 77, TSan 39.
+  - Extras: git-less discover 523; ledger 0 problems; CHANGELOG coverage 91/91; D02RunConsumers final and D02CContract red/green; P02RunConsumers final; P02 ASan 41/6 (re-run after the agent killed a sleep-stalled first attempt).
+  - Host caveat: the machine was on Battery Power and repeatedly entered system sleep during the run (powermode 2 at all 21 snapshots). No timing figure comes from M18.
+  - The extra Debug EXTENDED=1 run recorded 3 issues in ChildProbeLauncherTests.deadlineKillsTheWholeGroup: timedOut true, cleaned false (no reap within the 2 s SIGKILL cleanup budget), and the grandchild not gone within 3 s. The test took 89.5 s there, against 3.0 s alone, where it passes. The first extended attempt also showed R03 childTimeout and watchdogRejectsTimedOutChild issues before stalling under suspension.
+  - ROOT CONFIRMATION (2026-10-17; R/milestone18/confirm-2026-10-17/): the whole suite Debug EXTENDED=1 STRICT_PERF=0 under `caffeinate -i` (PreventUserIdleSystemSleep 1 at start and end; still on Battery Power; powermode 2; 1-minute load peaked about 47 during the R03 scenarios), on HEAD c5486b0 (code identical to d6bec09), reusing the M18 debug scratch: rc 0 in 5 min 24 s. Swift Testing 1701 tests in 252 suites passed (260.5 s); XCTest 75 tests, 0 failures; 0 recorded issues. deadlineKillsTheWholeGroup and deadlineTerminatesTheWholeGroup passed (75.7 s each), watchdogRejectsTimedOutChild passed (44.2 s), configurationScenarioRunsInFreshProcess passed 45/45 (128.6 s).
+  - Ruling: M18 is the final gate and passes — every REQUIRED job is rc 0, and the only failures are in an extra run, in fixed-budget child-process tests, under host sleep — cost if wrong: a real launcher-cleanup defect ships in test-only code (not library code), and CI's Debug job would surface it.
+  - Routed before the 0.4.0 tag: the child-probe tests' fixed cleanup and deadline budgets (2 s and 3 s; R03 child deadline). The class is time-bounded child-process assertions under host suspension or throttling; the cause is not proven.
+- state.json: milestones 16, 17 and 18 recorded (they had been ledgered in progress.md only); T18 integration_revision filled (3f59a28; it held a placeholder).
+- NEXT: the slim PR (worktree /Users/goftin/dev/vectorcore-0.4.0-baseline, branch stabilization/0.4.0-baseline from main 8b02e75).
+- SLIM PR OPENED (user-authorized, 2026-10-16: "we should open a pr after this is complete"; slim, with Docs/audits and Docs/reviews): https://github.com/gifton/VectorCore/pull/56
+  - Branch stabilization/0.4.0-baseline (worktree /Users/goftin/dev/vectorcore-0.4.0-baseline): one commit 0317984 on main 8b02e75. Its tree = integration aaf1d83 minus the 4,416 paths in R/pr-slim-drop.txt; 1,917 files, 26.2 MB.
+  - Built with `git read-tree -u --reset aaf1d83` plus `git rm -f --pathspec-from-file` (GIT_LITERAL_PATHSPECS=1).
+  - Root verification (R/pr/verify/summary.txt; R/pr/verify_slim.sh):
+    - composition EXACT against the integration ls-tree minus the drop list (mode, object, path);
+    - 0 drop paths present; worktree clean;
+    - check_claim_ledger 0 problems;
+    - CHANGELOG coverage 91/91 and 37/37 against the slim tree's own DOWNSTREAM_UPGRADES.md;
+    - Python 523 OK in-repo (skipped 2) and in a git-less export (skipped 6);
+    - credential-pattern scan of the diff: 0 hits.
+  - The PR body (R/pr/PR_BODY.md) carries the M18 result, the confirmation run, and the follow-up list, including the child-probe fixed budgets.
+  - CI on the PR (Xcode 16.2 and 26.3) is the authority for the toolchains not run locally; its status is recorded on completion.
+- PR #56 CI RUN 1: 14 of 20 checks failed (R/pr/ci-run1/). Root cause analysis:
+  - A. Swift 6.0 (Xcode 16.2) and 6.2 (Xcode 26.3) report "unable to type-check this expression in reasonable time" at:
+    - CSVWriter.swift:71 (every build job, including sanitizers, platforms, benchmark contracts and the SDK-collision symbol-graph build);
+    - BatchConfigurationContractTests.swift:397 (Xcode 16.2 Release).
+  - The CSVWriter failure stopped most builds before the test targets compiled.
+  - B. Repository checks (ubuntu-24.04) was cancelled at timeout-minutes 5, with 15 of 38 test modules started.
+  - The class: the program's 309 commits were never compiled by CI's toolchains; local gates used only Xcode 27 / Swift 6.4, the only toolchain installed.
+  - Swift 6.4's `-warn-long-expression-type-checking=100` scan (T20/slow-expr-scan.plain.log) flags neither failure. The four slowest expressions it does flag come from main, where CI passes. So the local heuristic does not predict this class.
+  - Ruling: fix only the CI-proven failures and let CI's toolchain matrix be the class closure — the local compiler cannot predict old-solver limits — cost if wrong: one more CI round per hidden instance.
+- T20 (root-created) ACCEPTED and MERGED as 80bfba2: 3 files via import_task (manifest, preimage vs e713d90 and composition OK).
+  - Changes: CSVWriter row built from typed parts; the BatchConfigurationContractTests ranking formula uses typed Double locals; repository-checks timeout 5 → 20.
+  - Workspace validation:
+    - Debug 1701/252 plus XCTest 75, 0 failures;
+    - Release vectorcore-bench plus test_benchmark_contracts.py PASS;
+    - git-less 523 OK; ledger 0 problems;
+    - SwiftLint: 0 serious, unchanged.
+  - Independent Sonnet review: APPROVE; one wording nit applied (T20/review-report.md).
+  - Closure: closures/T20.json.
+- NEXT: re-sync the PR branch to the integration tree minus the drop list, then push for CI run 2. More old-toolchain errors in test files may surface now that builds get past the benchmark target.
+- PR #56 CI RUN 2 (head 583feb5): 10 pass, 10 fail.
+  - Now passing: Repository checks (3m39s), SDK type-name collisions, documentation consumers, SwiftLint, benchmark contracts, Perf Smoke, CodeQL.
+  - Every failure was a compile error in Tests/: 11 distinct sites (R/pr/ci_errors.py over R/pr/ci-run2/).
+    - Type-checker timeouts: P01OperationsFixtures:133 and P02BatchFixtures:25 (6.0 and 6.2); D02WitnessDispatchMatrixTests:488 inside #expect (6.0).
+    - 8 bare `+` passed as parallelReduce's @Sendable combine (6.0).
+    - The xcodebuild platform builds (iOS/tvOS/watchOS/visionOS/Catalyst) had 0 errors; the Intel build-tests failed only on the two fixtures.
+  - Root slip (P-R2): my first summary grepped only file-located errors and missed the D02 #expect error; the round-2 reviewer caught it. Closed mechanically with R/pr/ci_errors.py (both diagnostic forms, UNRESOLVED on anything else, negative-control tested).
+- T20 ROUND 2 MERGED as e0cc335: 5 test files via import_task (preimage vs 19ed36d and composition OK).
+  - unit(): typed steps with 0x1p53; bit-identical over 1,400,004 values.
+  - D02: a typed count in the #expect.
+  - `{ $0 + $1 }` at 8 sites; no public API change (combine was already @Sendable on main).
+  - Validation: Debug 1701/252, 0 issues; git-less 523; ledger 0; SwiftLint unchanged.
+  - Review: CHANGES (the D02 site), then APPROVE.
+  - Closure closures/T20.json updated for both rounds.
+- NEXT: re-sync the PR branch and push for CI run 3. It is the first run expected to compile everything on 16.2 and 26.3, so toolchain-specific test failures may still appear.
+- PR #56 CI RUN 3 (head 10e6006): 17 pass, 3 fail (both Xcode 16.2 test cells, plus the CI Required roll-up).
+  - Every target compiled on 16.2 and 26.3. Both 16.2 cells passed every test (Swift Testing 1703; XCTest 185, 0 failures).
+  - Each then failed in check_performance_gates.py: "Representative test did not execute: measured-profile".
+  - Cause: after XCTest ran the representative, Swift 6.0's Swift Testing runner printed `Test run with 0 tests passed`, which the gate's `'0 tests passed' in log` misread. Swift 6.2+ prints `... in 0 suites passed`.
+  - Class: a parser written against one toolchain's rendering. Latent second instance: check_sanitizers.verify_body required the `in N suites` form.
+- T20 ROUND 3 MERGED as 6749bb4: 5 Scripts/ci files via import_task (preimage vs 0ab068c and composition OK).
+  - Both checks now use swiftpm_products.swift_testing_runs / xctest_executed.
+  - New test_test_output_counts (both renderings, the failing log shape, and a control keeping the former check); test_sanitizer_log gains 6.0 cases.
+  - Validation: new tests GREEN, and RED on the base; git-less 531 OK; ledger 0; check_performance_gates debug 22 and check_sanitizers address 77, both on Swift 6.4.
+  - Review: APPROVE, with two comment nits applied. The reviewer found no other summary parsers in Scripts/ci.
+- NEXT: re-sync the PR branch and push for CI run 4. Also update the PR body's Verification section (policy tests are now 531, plus the CI rounds).

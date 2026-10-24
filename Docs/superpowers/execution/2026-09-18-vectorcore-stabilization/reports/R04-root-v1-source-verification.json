@@ -1,0 +1,22 @@
+{
+  "base_revision": "e0e0e74b5128419482d1e1993d58c2184adc01ba",
+  "base_archive_files": 5891,
+  "base_source_files": 320,
+  "frozen_source_files": 321,
+  "changed": [
+    "Sources/VectorCore/Operations/MinHeap.swift",
+    "Tests/ComprehensiveTests/HeapMembershipContractTests.swift"
+  ],
+  "patch_sha256": "a5dffcd7c82cad065528e1f32e66196cd8cf518cc2336a36fa5f5fa3f15e0049",
+  "manifest_sha256": "3d23fef927e410d2c0c2b74f052826e6209d9e11c58928e75d3d426fae52b38c",
+  "checks": [
+    "immutable archive hash",
+    "full base/final source hash inventories",
+    "byte-exact complete patch reconstruction",
+    "canonical/shared source records",
+    "all frozen files equal worker source",
+    "all unowned archive files unchanged",
+    "owned integration paths still equal base before import"
+  ],
+  "scope": "Source reconstruction only; runtime and independent review remain separate."
+}

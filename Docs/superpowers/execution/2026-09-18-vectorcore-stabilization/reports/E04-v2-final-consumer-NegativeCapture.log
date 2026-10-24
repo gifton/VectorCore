@@ -1,0 +1,24 @@
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/E04Consumers/NegativeCapture.swift:5:64: error: capture of 'value' with non-Sendable type 'NonSendableCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+1 | import VectorCore
+2 | final class NonSendableCapture { var value = 0 }
+  |             `- note: class 'NonSendableCapture' does not conform to the 'Sendable' protocol
+3 | func rejected(_ provider: any BufferProvider, _ typed: TypedBufferPool<Float>) async throws {
+4 |     let value = NonSendableCapture()
+5 |     let _: Int = try await provider.withBuffer(size: 1) { _ in value.value }
+  |                                                                `- error: capture of 'value' with non-Sendable type 'NonSendableCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+6 |     let _: Int = await typed.withBuffer(count: 1) { _ in value.value }
+7 | }
+
+/private/tmp/vectorcore-stabilization-E04-implementation/Tests/E04Consumers/NegativeCapture.swift:6:58: error: capture of 'value' with non-Sendable type 'NonSendableCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+1 | import VectorCore
+2 | final class NonSendableCapture { var value = 0 }
+  |             `- note: class 'NonSendableCapture' does not conform to the 'Sendable' protocol
+3 | func rejected(_ provider: any BufferProvider, _ typed: TypedBufferPool<Float>) async throws {
+4 |     let value = NonSendableCapture()
+5 |     let _: Int = try await provider.withBuffer(size: 1) { _ in value.value }
+6 |     let _: Int = await typed.withBuffer(count: 1) { _ in value.value }
+  |                                                          `- error: capture of 'value' with non-Sendable type 'NonSendableCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+7 | }
+8 | 
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>

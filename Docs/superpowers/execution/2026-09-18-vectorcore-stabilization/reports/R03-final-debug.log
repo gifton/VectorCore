@@ -1,0 +1,358 @@
+[0/1] Planning build
+Building for debugging...
+[0/5] Write sources
+[1/5] Write swift-version--58304C5D6DBC2206.txt
+[3/7] Emitting module VectorCore
+[4/7] Compiling VectorCore BatchKernels_SoA.swift
+[4/9] Write Objects.LinkFileList
+[6/9] Linking vectorcore-bench
+[7/9] Applying vectorcore-bench
+[8/9] Linking VectorCorePackageTests
+Build complete! (6.32s)
+Test Suite 'Selected tests' started at 2026-09-23 13:16:12.649.
+Test Suite 'VectorCorePackageTests.xctest' started at 2026-09-23 13:16:12.650.
+Test Suite 'VectorCorePackageTests.xctest' passed at 2026-09-23 13:16:12.650.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-09-23 13:16:12.650.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite "R03 matrix metric and logical output contracts" started.
+􀟈  Suite "Mixed Precision Comprehensive Tests" started.
+􀟈  Suite "BatchKernels SoA" started.
+􀟈  Suite "Operations Tests" started.
+􀟈  Suite "Quantized Kernels" started.
+􀟈  Test pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Suite "Batch Processing" started.
+􀟈  Test executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Suite "Batch Operations Tests" started.
+􀟈  Suite "Numerical Accuracy" started.
+􀟈  Test similarityDoesNotClampNonfiniteScoresIntoFiniteRange() started.
+􀟈  Suite "Register Blocking" started.
+􀟈  Test isolatedConfigurationChild() started.
+􀟈  Suite "Integration Tests" started.
+􀟈  Suite "SoA Memory Layout" started.
+􀟈  Suite "Core SoA Functionality" started.
+􀟈  Test zeroQuerySoASuffixBehavioralRegression() started.
+􀟈  Suite "Edge Cases and Error Handling" started.
+􀟈  Test safeSoAInsufficientCapacityPreservesOutputAndError() started.
+􀟈  Test soaLogicalOutputMatrix(dimension:) started.
+􀟈  Suite "Performance Comparison" started.
+􀟈  Test configurationScenarioRunsInFreshProcess(scenario:) started.
+􀟈  Test convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test testFindNearest_EqualDistances_SetEquality() started.
+􀟈  Test case passing 1 argument count → 0 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 2 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test case passing 1 argument count → 0 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test matrixDiagonalAndSimilarityBehavioralRegression() started.
+􀟈  Test case passing 1 argument count → 100 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 1 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test case passing 1 argument count → 99 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 31 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test case passing 1 argument count → 101 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test case passing 1 argument count → 2 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Suite "Integration with Vector Operations" started.
+􀟈  Test case passing 1 argument count → 32 to executionMatrixSerialParallelMetricParity(count:) started.
+􀟈  Test testDistanceMatrix_SymmetricZeroDiagonal() started.
+􀟈  Suite "Tiled Kernel Equivalence (Issue 1.2)" started.
+􀟈  Test testFindNearest_CustomMetric_Manhattan() started.
+􀟈  Test testNormalize_ReturnsUnitVectors() started.
+􀟈  Test testFindNearest_KGreaterThanCount_Clamps() started.
+􀟈  Test testFindNearestBatch_Basic() started.
+􀟈  Test testCentroidBasic() started.
+􀟈  Test case passing 1 argument count → 1 to pairwiseAllBuiltInAndConfiguredMetrics(count:) started.
+􀟈  Test testFindNearest_BasicTopKOrder() started.
+􀟈  Test testFindNearest_ParallelMatchesSyncBaseline() started.
+􀟈  Test testStatistics_BasicMeanAndMagnitudes() started.
+􀙟  Test testMediumBatchSize() skipped.
+􀙟  Test testLargeBatchSize() skipped.
+􀟈  Test testSmallBatchSize() started.
+􀟈  Test "Batch dot FP16 correctness" started.
+􀟈  Test "Batch operations preserve query precision" started.
+􀟈  Test testConcurrentBatchProcessing() started.
+􀟈  Test "Batch dot mixed precision correctness" started.
+􀟈  Test testVaryingBatchSizes() started.
+􀟈  Test case passing 1 argument dimension → 512 to soaLogicalOutputMatrix(dimension:) started.
+􀟈  Test testBatchConsistency() started.
+􀟈  Test case passing 1 argument dimension → 768 to soaLogicalOutputMatrix(dimension:) started.
+􀟈  Test case passing 1 argument count → 0 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument count → 2 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument count → 1 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test case passing 1 argument dimension → 1536 to soaLogicalOutputMatrix(dimension:) started.
+􀟈  Test case passing 1 argument scenario → "512-euclidean-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􀟈  Test case passing 1 argument count → 32 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test testNumericalStability() started.
+􀟈  Test case passing 1 argument count → 31 to convenienceReturnsSimilarityIncludingZeroRows(count:) started.
+􀟈  Test testFloatingPointPrecision() started.
+􀟈  Test testCumulativeErrors() started.
+􀟈  Test testConsistencyAcrossPlatforms() started.
+􀟈  Test testBlockingEfficiency() started.
+􀟈  Test testBlockingCorrectnessWithOddSizes() started.
+􀟈  Test testTwoWayBlocking() started.
+􀟈  Test testIntegrationWithCaching() started.
+􀟈  Test testBlockingWithDifferentDimensions() started.
+􀟈  Test testIntegrationWithVectorTypes() started.
+􀟈  Test testRealWorldWorkloads() started.
+􀟈  Test testIntegrationWithBatchOperations() started.
+􀟈  Test testSoAAccessPatterns() started.
+􀟈  Test testSoALaneProcessing() started.
+􀟈  Test testSoAConversionFromAoS() started.
+􀟈  Test testSoAMemoryAlignment() started.
+􀟈  Test testEuclideanSquaredDistance1536() started.
+􀟈  Test testEuclideanSquaredDistance512() started.
+􁁛  Test isolatedConfigurationChild() passed after 0.002 seconds.
+􀟈  Test testDotProduct512() started.
+􀟈  Test testDotProduct768() started.
+􀟈  Test testEuclideanDistance512() started.
+􀟈  Test testEuclideanSquaredDistance768() started.
+􀟈  Test testZeroVectors() started.
+􀟈  Test testDenormalizedValues() started.
+􀟈  Test testCosineDistance1536() started.
+􀟈  Test testInfiniteAndNaNValues() started.
+􀟈  Test testCosineDistance768() started.
+􀟈  Test testMemoryAlignment() started.
+􀟈  Test testDotProduct1536() started.
+􀟈  Test testEuclideanDistance1536() started.
+􀟈  Test testCosineDistance512() started.
+􀟈  Test testEuclideanDistance768() started.
+􀟈  Test testExtremeValues() started.
+􀟈  Test testEmptyBatch() started.
+􀟈  Test testScalingWithBatchSize() started.
+􀙟  Test testCacheLocalityImprovements() skipped.
+􀙟  Test testSoAvsAoSPerformance() skipped.
+􀟈  Test testSIMDUtilization() started.
+􀟈  Test testQuantizedCachingIntegration() started.
+􀟈  Test testQuantizedBatchOperations() started.
+􀟈  Test testQuantizedPipelineIntegration() started.
+􀟈  Test testQuantizedOptimizedVectorIntegration() started.
+􀟈  Test tiledEuclid1536MatchesFourWayBitwise() started.
+􀟈  Test tiledDot512MatchesFourWayBitwise() started.
+􀟈  Test tiledEuclid512MatchesFourWayBitwise() started.
+􀟈  Test tiledEuclid768MatchesFourWayBitwise() started.
+􀟈  Test largeBatchRoutesThroughTilingAndMatchesReference() started.
+􀟈  Test tiledCosineFused768MatchesFourWayBitwise() started.
+􁁛  Test testFindNearest_EqualDistances_SetEquality() passed after 0.019 seconds.
+􁁛  Test testFindNearest_CustomMetric_Manhattan() passed after 0.019 seconds.
+􁁛  Test testNormalize_ReturnsUnitVectors() passed after 0.034 seconds.
+Batch query precision preservation:
+  Mean error (mixed): 0.058273%
+  Mean error (fp16):  0.058273%
+􁁛  Test testDistanceMatrix_SymmetricZeroDiagonal() passed after 0.097 seconds.
+􁁛  Test testCentroidBasic() passed after 0.097 seconds.
+􁁛  Test testFindNearestBatch_Basic() passed after 0.128 seconds.
+􁁛  Test zeroQuerySoASuffixBehavioralRegression() passed after 0.129 seconds.
+􁁛  Test safeSoAInsufficientCapacityPreservesOutputAndError() passed after 0.168 seconds.
+􁁛  Test testFindNearest_BasicTopKOrder() passed after 0.168 seconds.
+􁁛  Test testFindNearest_KGreaterThanCount_Clamps() passed after 0.168 seconds.
+􁁛  Test testStatistics_BasicMeanAndMagnitudes() passed after 0.174 seconds.
+  [perf] empty-batch ×100: 0.0002460479736328125s (gate < 0.001)
+􁁛  Test testNumericalStability() passed after 0.214 seconds.
+Quantized Caching Integration:
+Quantized Vector Integration with OptimizedVector Protocol:
+  Vector512Optimized integration:
+    Quantization params: scale=0.007874014, zero=0
+    Dequantization successful: true
+    Round-trip error: 0.0019210794
+
+  Batch operation integration:
+R03_CHILD_CAPTURE 512-euclidean-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-euclidean-default-255-FB9600C4-A61B-46A2-B8D0-9455F084D9C6.log
+􁁛  Test testFloatingPointPrecision() passed after 0.339 seconds.
+    Batch quantization: 10 vectors
+    Euclidean distance: 5.7422304
+    Dot product: 350.7673
+
+  Type system integration:
+    Storage size: 512 bytes
+    Expected: 512 bytes
+
+  SIMD operation compatibility:
+    SIMD4 lanes: 128
+    Total elements: 512
+
+  Protocol compliance verified:
+    ✓ Quantization from OptimizedVector
+    ✓ Dequantization to OptimizedVector
+    ✓ Batch operations support
+    ✓ Distance metric computation
+    ✓ Storage efficiency
+    ✓ SIMD compatibility
+  Cache hits: 30
+  Cache misses: 0
+  Hit rate: 0.75
+  Memory saved: 76800 bytes
+  Sequential access time: 0.04100799560546875 ms
+  Random access time: 0.008106231689453125 ms
+  FP32 memory: 102400 bytes
+  INT8 memory: 25600 bytes
+  Compression ratio: 4.0x
+Quantized Batch Operations:
+  Batch size: 100
+  Top-5 overlap: 5/5
+  Similarity matrix computed for 10x10
+  [perf] document search: 0.04982304573059082s (gate < 1.0)
+􁁛  Test testSmallBatchSize() passed after 0.884 seconds.
+􁁛  Test testFindNearest_ParallelMatchesSyncBaseline() passed after 0.884 seconds.
+􁁛  Test testConsistencyAcrossPlatforms() passed after 0.883 seconds.
+􁁛  Test "Batch operations preserve query precision" passed after 0.884 seconds.
+􁁛  Test testBatchConsistency() passed after 0.884 seconds.
+􁁛  Test testTwoWayBlocking() passed after 0.883 seconds.
+􁁛  Test testCumulativeErrors() passed after 0.884 seconds.
+􁁛  Test "Batch dot FP16 correctness" passed after 0.884 seconds.
+􁁛  Test testIntegrationWithCaching() passed after 0.883 seconds.
+􁁛  Test "Batch dot mixed precision correctness" passed after 0.884 seconds.
+􁁛  Test testSoALaneProcessing() passed after 0.883 seconds.
+􁁛  Test testSoAAccessPatterns() passed after 0.883 seconds.
+􁁛  Test testBlockingWithDifferentDimensions() passed after 0.883 seconds.
+􁁛  Test testSoAMemoryAlignment() passed after 0.883 seconds.
+􁁛  Test testEuclideanSquaredDistance512() passed after 0.883 seconds.
+􁁛  Test testEuclideanSquaredDistance1536() passed after 0.883 seconds.
+􁁛  Test testEuclideanDistance512() passed after 0.883 seconds.
+􁁛  Test testSoAConversionFromAoS() passed after 0.883 seconds.
+􁁛  Test testDotProduct512() passed after 0.883 seconds.
+􁁛  Test testDotProduct768() passed after 0.883 seconds.
+􁁛  Test testEuclideanSquaredDistance768() passed after 0.883 seconds.
+􁁛  Test testCosineDistance1536() passed after 0.883 seconds.
+􁁛  Test testInfiniteAndNaNValues() passed after 0.907 seconds.
+􁁛  Test testCosineDistance768() passed after 0.907 seconds.
+􁁛  Test testDotProduct1536() passed after 0.907 seconds.
+􁁛  Test testDenormalizedValues() passed after 0.907 seconds.
+􁁛  Test testEuclideanDistance1536() passed after 0.907 seconds.
+􁁛  Test testEmptyBatch() passed after 0.951 seconds.
+􁁛  Test testZeroVectors() passed after 0.951 seconds.
+􁁛  Test testExtremeValues() passed after 0.951 seconds.
+􁁛  Test testEuclideanDistance768() passed after 0.951 seconds.
+􁁛  Test testCosineDistance512() passed after 0.951 seconds.
+􁁛  Test testBlockingCorrectnessWithOddSizes() passed after 0.952 seconds.
+􁁛  Test testQuantizedPipelineIntegration() passed after 0.944 seconds.
+􁁛  Test testQuantizedOptimizedVectorIntegration() passed after 0.951 seconds.
+􁁛  Test testQuantizedCachingIntegration() passed after 0.952 seconds.
+􁁛  Test testQuantizedBatchOperations() passed after 0.952 seconds.
+􁁛  Test testVaryingBatchSizes() passed after 0.967 seconds.
+􁁛  Test testIntegrationWithVectorTypes() passed after 0.966 seconds.
+􁁛  Test testMemoryAlignment() passed after 0.966 seconds.
+􁁛  Suite "Numerical Accuracy" passed after 0.990 seconds.
+􀟈  Test case passing 1 argument scenario → "512-euclidean-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Suite "Operations Tests" passed after 1.370 seconds.
+􁁛  Suite "Batch Operations Tests" passed after 1.370 seconds.
+􁁛  Suite "SoA Memory Layout" passed after 1.370 seconds.
+􁁛  Suite "Core SoA Functionality" passed after 1.370 seconds.
+􁁛  Suite "Edge Cases and Error Handling" passed after 1.370 seconds.
+􁁛  Test testIntegrationWithBatchOperations() passed after 1.369 seconds.
+􁁛  Suite "Integration with Vector Operations" passed after 1.425 seconds.
+R03_CHILD_CAPTURE 512-euclidean-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-euclidean-default-256-3ED4A218-7925-4C24-81C2-263F205A33C9.log
+􁁛  Suite "Mixed Precision Comprehensive Tests" passed after 1.506 seconds.
+􁁛  Suite "Quantized Kernels" passed after 1.508 seconds.
+􁁛  Test testConcurrentBatchProcessing() passed after 1.699 seconds.
+􀟈  Test case passing 1 argument scenario → "512-euclidean-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+  [perf] SoA blocking: 1.2446179389953613s vs individual 0.24706900119781494s
+􁁛  Suite "Batch Processing" passed after 1.863 seconds.
+􁁛  Test testBlockingEfficiency() passed after 1.863 seconds.
+􁁛  Suite "Register Blocking" passed after 2.000 seconds.
+􁁛  Test tiledDot512MatchesFourWayBitwise() passed after 2.049 seconds.
+R03_CHILD_CAPTURE 512-euclidean-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-euclidean-default-257-8267C5CD-4226-4FAD-844F-9216E24C239C.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test tiledEuclid512MatchesFourWayBitwise() passed after 2.138 seconds.
+􁁛  Test convenienceReturnsSimilarityIncludingZeroRows(count:) with 5 test cases passed after 2.192 seconds.
+􁁛  Test matrixDiagonalAndSimilarityBehavioralRegression() passed after 2.192 seconds.
+􁁛  Test similarityDoesNotClampNonfiniteScoresIntoFiniteRange() passed after 2.193 seconds.
+􁁛  Test executionMatrixSerialParallelMetricParity(count:) with 5 test cases passed after 2.343 seconds.
+R03_CHILD_CAPTURE 512-euclidean-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-euclidean-disabled-257-4C61347E-46A3-4ED4-88C6-463F373F63AF.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-euclidean-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-euclidean-small-7-B5FBCFA6-A7FC-496B-BCFC-09393B871D0E.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test testRealWorldWorkloads() passed after 2.543 seconds.
+􁁛  Suite "Integration Tests" passed after 2.545 seconds.
+􁁛  Test largeBatchRoutesThroughTilingAndMatchesReference() passed after 2.529 seconds.
+R03_CHILD_CAPTURE 512-euclidean-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-euclidean-small-8-E51B0738-A7FD-4AD1-A47F-DDD195F02D24.log
+􀟈  Test case passing 1 argument scenario → "512-euclidean-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test tiledEuclid768MatchesFourWayBitwise() passed after 2.639 seconds.
+R03_CHILD_CAPTURE 512-euclidean-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-euclidean-small-9-776BCC6B-BD0D-4242-AE99-56576DD850EF.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test tiledCosineFused768MatchesFourWayBitwise() passed after 2.789 seconds.
+􁁛  Test pairwiseAllBuiltInAndConfiguredMetrics(count:) with 6 test cases passed after 2.987 seconds.
+R03_CHILD_CAPTURE 512-cosine-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-cosine-default-255-5B43EDF5-64FA-42B6-AE48-570AB4107530.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test testSIMDUtilization() passed after 3.177 seconds.
+􁁛  Test testScalingWithBatchSize() passed after 3.309 seconds.
+􁁛  Suite "Performance Comparison" passed after 3.311 seconds.
+􁁛  Test tiledEuclid1536MatchesFourWayBitwise() passed after 3.394 seconds.
+􁁛  Suite "Tiled Kernel Equivalence (Issue 1.2)" passed after 3.414 seconds.
+􁁛  Suite "BatchKernels SoA" passed after 3.415 seconds.
+R03_CHILD_CAPTURE 512-cosine-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-cosine-default-256-EC12C0AE-3F15-463E-961E-0ECD1F87BC77.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-cosine-default-257-07E8D739-F7F9-4118-8FA9-08CB3B54C6A3.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-cosine-disabled-257-81966DF1-DCA6-445C-99B2-031D69CE35BB.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-cosine-small-7-888A2F46-D043-4BFB-B370-C421D9BAE65A.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-cosine-small-8-388649BE-D804-4536-848E-77927708A810.log
+􀟈  Test case passing 1 argument scenario → "512-cosine-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-cosine-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-cosine-small-9-7CA3DC14-86EB-4A1E-95AD-035F7112A6CD.log
+􀟈  Test case passing 1 argument scenario → "512-custom-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 512-custom-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-512-custom-default-257-6169C2E4-3AEC-4B70-81A1-172E67CCC013.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-euclidean-default-255-ED20B49C-1B52-4E6E-979D-55EBDE3C6547.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+􁁛  Test soaLogicalOutputMatrix(dimension:) with 3 test cases passed after 5.441 seconds.
+R03_CHILD_CAPTURE 768-euclidean-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-euclidean-default-256-030CE3B4-44CB-41F4-9F7D-242E54E4BF13.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-euclidean-default-257-ED05581A-B1AD-4C08-BC3D-5E64F30F74C3.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-euclidean-disabled-257-B447DEB0-C283-4A02-B975-FFE222B31BAE.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-euclidean-small-7-177E66E5-9BA7-48C7-84C3-D001AF6E0444.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-euclidean-small-8-5F932552-E753-446E-A7C1-6233B3ADDA38.log
+􀟈  Test case passing 1 argument scenario → "768-euclidean-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-euclidean-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-euclidean-small-9-83A81F48-7400-444F-8222-8DBFFD36928B.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-cosine-default-255-D491A561-AA69-49E3-87BE-779205275E1A.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-cosine-default-256-04665EF9-17AF-430B-8A88-4B682D5D106A.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-cosine-default-257-DC0EF862-F38C-424E-9165-B4D06B4855C9.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-cosine-disabled-257-F19A2D15-C3AD-434C-827C-69B85B77E404.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-cosine-small-7-7595BE69-C380-40F4-AC37-A2B2DBC2EEB6.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-cosine-small-8-BFB33F2B-D3C6-4D7D-B920-23B7A2D8BC5C.log
+􀟈  Test case passing 1 argument scenario → "768-cosine-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-cosine-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-cosine-small-9-2046F170-003D-4C95-9FFE-4EFA1CA0F4CD.log
+􀟈  Test case passing 1 argument scenario → "768-custom-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 768-custom-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-768-custom-default-257-176621CC-304B-4352-9624-4D264F76F549.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-euclidean-default-255-B8F1277D-B229-4564-B7BF-85C8D64EC999.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-euclidean-default-256-2D8513F4-6CAD-400A-B044-613BF2F28AD1.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-euclidean-default-257-01B5CFB6-1D32-46F9-BA9C-C8C90573B6E9.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-euclidean-disabled-257-CA630D19-3F7F-4C3A-8A97-D533F429405B.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-euclidean-small-7-9A141687-93D3-4675-83B8-43B0049C9908.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-euclidean-small-8-70882878-C729-474D-A525-46A28DD01ED0.log
+􀟈  Test case passing 1 argument scenario → "1536-euclidean-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-euclidean-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-euclidean-small-9-9014F643-49F8-46C7-B43E-FE9528E0FC6E.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-default-255" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-default-255 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-cosine-default-255-4B706840-1C43-4363-99C8-44375BF30788.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-default-256" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-default-256 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-cosine-default-256-341DB69A-72F9-4FEF-88F5-1F4149177286.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-cosine-default-257-1F869CE7-E559-4BEA-88C9-4830F6BF5A17.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-disabled-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-disabled-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-cosine-disabled-257-411BEC79-2FBB-49F4-9DBC-290BE79A725B.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-small-7" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-small-7 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-cosine-small-7-2A0B3803-8AF9-4CEC-B304-FF0463B0F28D.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-small-8" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-small-8 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-cosine-small-8-D41CFC3F-F983-4A55-A845-E990080348A9.log
+􀟈  Test case passing 1 argument scenario → "1536-cosine-small-9" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-cosine-small-9 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-cosine-small-9-2A6A426B-383A-4A7C-8C8C-566B9C0CA022.log
+􀟈  Test case passing 1 argument scenario → "1536-custom-default-257" to configurationScenarioRunsInFreshProcess(scenario:) started.
+R03_CHILD_CAPTURE 1536-custom-default-257 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/R03-child-captures/R03-configuration-1536-custom-default-257-A875374B-20E6-4A4E-BE08-AEDE7A43A727.log
+􁁛  Test configurationScenarioRunsInFreshProcess(scenario:) with 45 test cases passed after 13.592 seconds.
+􁁛  Suite "R03 matrix metric and logical output contracts" passed after 13.593 seconds.
+􁁛  Test run with 77 tests in 16 suites passed after 13.593 seconds.

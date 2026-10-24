@@ -1,0 +1,7 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite "E04 MemoryPool boundaries" started.
+􀟈 Test guardChildProbe() started.
+E04_CHILD_STARTED:scoped-overflow-count
+VectorCore/MemoryPool.swift:132: Fatal error: MemoryPool.withBuffer requires a nonnegative representable count and valid alignment

@@ -1,0 +1,65 @@
+Building for debugging...
+[0/6] Write sources
+[2/6] Write swift-version--58304C5D6DBC2206.txt
+[4/10] Compiling VectorCore ComputeProvider.swift
+[5/10] Compiling VectorCore BoundedExecution.swift
+[6/10] Compiling VectorCore CPUComputeProvider.swift
+[7/10] Emitting module VectorCore
+[8/14] Compiling VectorCore TransformOperations.swift
+[9/14] Compiling VectorCore TriangularMatrix.swift
+[10/14] Compiling VectorCore ExecutionOperations.swift
+[11/14] Compiling VectorCore BatchOperations.swift
+[11/15] Write Objects.LinkFileList
+[12/17] Linking vectorcore-bench
+[13/17] Applying vectorcore-bench
+[15/17] Compiling ComprehensiveTests ExecutionSchedulingContractTests.swift
+[16/17] Emitting module ComprehensiveTests
+[16/18] Write Objects.LinkFileList
+[17/18] Linking VectorCorePackageTests
+Build complete! (12.36s)
+Test Suite 'Selected tests' started at 2026-09-24 22:00:43.711.
+Test Suite 'VectorCorePackageTests.xctest' started at 2026-09-24 22:00:43.712.
+Test Suite 'VectorCorePackageTests.xctest' passed at 2026-09-24 22:00:43.712.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-09-24 22:00:43.712.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite ExecutionSchedulingContractTests started.
+􀟈  Test inheritedBatchQueryRoute() started.
+􀟈  Test nestedProvidersAndLegacySuppression() started.
+􀟈  Test liveTransformsContextHintsAndFactoryIdentity() started.
+􀟈  Test sixDormantOptimizedHelpersDirectCoverage() started.
+􀟈  Test batchTransformsOrderingAndCancellation() started.
+􀟈  Test providerOrderedCoverageAndWorkerBounds() started.
+􀟈  Test reductionCombineCancellationAndRegionAcrossProvidersAndOverloads() started.
+􀟈  Test matricesStatisticsAndNonthrowingCancellation() started.
+􀟈  Test publicGenericNearestBoundaryWorkerObservation() started.
+􁁛  Test reductionCombineCancellationAndRegionAcrossProvidersAndOverloads() passed after 0.008 seconds.
+E02_GENERIC_NEAREST N=34 exceptional=false k=1 parallel=false submitted=0 limit=16
+􁁛  Test inheritedBatchQueryRoute() passed after 0.016 seconds.
+E02_GENERIC_NEAREST N=34 exceptional=false k=34 parallel=false submitted=0 limit=16
+E02_GENERIC_NEAREST N=34 exceptional=true k=1 parallel=false submitted=0 limit=16
+E02_GENERIC_NEAREST N=34 exceptional=true k=34 parallel=false submitted=0 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=false k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=false k=35 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=true k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=true k=35 parallel=true submitted=1 limit=16
+􁁛  Test nestedProvidersAndLegacySuppression() passed after 0.069 seconds.
+E02_GENERIC_NEAREST N=36 exceptional=false k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=false k=36 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=true k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=true k=36 parallel=true submitted=1 limit=16
+􁁛  Test batchTransformsOrderingAndCancellation() passed after 0.480 seconds.
+E02_GENERIC_NEAREST N=4097 exceptional=false k=1 parallel=true submitted=9 limit=16
+􁁛  Test liveTransformsContextHintsAndFactoryIdentity() passed after 0.606 seconds.
+E02_GENERIC_NEAREST N=4097 exceptional=false k=4097 parallel=true submitted=9 limit=16
+E02_GENERIC_NEAREST N=4097 exceptional=true k=1 parallel=true submitted=9 limit=16
+􁁛  Test sixDormantOptimizedHelpersDirectCoverage() passed after 1.288 seconds.
+E02_GENERIC_NEAREST N=4097 exceptional=true k=4097 parallel=true submitted=9 limit=16
+􁁛  Test publicGenericNearestBoundaryWorkerObservation() passed after 1.339 seconds.
+􁁛  Test matricesStatisticsAndNonthrowingCancellation() passed after 1.595 seconds.
+􁁛  Test providerOrderedCoverageAndWorkerBounds() passed after 2.046 seconds.
+􁁛  Suite ExecutionSchedulingContractTests passed after 2.046 seconds.
+􁁛  Test run with 9 tests in 1 suite passed after 2.047 seconds.

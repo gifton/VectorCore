@@ -1,0 +1,21 @@
+{
+  "taskBase": "84f42d01489a526b8ae40bd77fe7618c0de33f34",
+  "importBase": "74cccae76fc0386c3a31cab43d0aa922ec2d6b58",
+  "diffSHA256": "30825c993d28937ce5f7dcaa26ca5f67ebbf4d586f2293cc597a2081c8f3c7cf",
+  "baseCodeFiles": 248,
+  "archiveCodeFiles": 250,
+  "onlyChangedPaths": [
+    "Scripts/ci/tests/R02CollectionUpdateConsumer.swift",
+    "Sources/VectorCore/Integration/VectorCollection.swift",
+    "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift"
+  ],
+  "reconstruction": "Complete patch applied to exact base independently reproduces every assigned byte; current source base and full canonical frozen backup verified",
+  "validatedLogs": "Behavioral RED, final Debug/Release, public negative/positive compile/link/run, both actual child captures all match",
+  "frozenSHA256": {
+    "Scripts/ci/tests/R02CollectionUpdateConsumer.swift": "d68ceab8a603bd068392ccc9135dd938c43643f71da6f466c9eac7e662c842e5",
+    "Sources/VectorCore/Integration/VectorCollection.swift": "d3a34685dece1b4cb6bb0a0d0793248795d8980aaa52e1e2a3c5dd7ae1258aad",
+    "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift": "bfb9c6d4fa1fc88bb09df2cef90d839639ff48ee419200cc8053b5716feacbfe"
+  },
+  "evidenceArtifacts": 20,
+  "imported": true
+}

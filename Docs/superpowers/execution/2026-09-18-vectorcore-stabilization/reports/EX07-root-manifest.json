@@ -1,0 +1,42 @@
+{
+  "base": "ce6b0d396ddf8716b50eae01643b24a503aa194c",
+  "path": "Scripts/ci/tests/test_benchmark_contracts.py",
+  "baseSHA256": "daffa31653ddb75ba289c002fce871fd2c597bff7b2c3dd343f0d75be2164b4a",
+  "finalSHA256": "32feb1a8930d11104580f4fd5120d096bc405b8e2a71266ad177230852e7afb6",
+  "diffSHA256": "f3d3908a830fb90efed79c0d3087dbc902db9d8acf9b014ea13c521fada891b6",
+  "originalExecutableBodyUnchanged": true,
+  "validation": [
+    {
+      "command": "python3 -B -m unittest discover -s Scripts/ci/tests -v",
+      "redExit": 1,
+      "red": "EX06-ci-tests-final.log",
+      "greenExit": 0,
+      "green": "EX07-ci-tests-green.log",
+      "tests": 28
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "Scripts/ci/tests/test_benchmark_contracts.py",
+        "/private/tmp/vectorcore-stabilization-milestone04/arm64-apple-macosx/release/vectorcore-bench"
+      ],
+      "exit": 0,
+      "log": "EX07-cli-contracts-green.log"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "EX06-ci-tests-final.log",
+      "sha256": "5771104a72faba557d8d83fb84717c5e905d999ee6dc1908d41eb7b9ccf5f37b"
+    },
+    {
+      "path": "EX07-ci-tests-green.log",
+      "sha256": "28499f6a79289c184307ff6fbd2de87ffb2cb65bd79c291d8ecedc5a71101b55"
+    },
+    {
+      "path": "EX07-cli-contracts-green.log",
+      "sha256": "c0a2d9f2c4758f864412bbc4b469d3cba7fb61069a3a49003abedbb0a13d4863"
+    }
+  ]
+}

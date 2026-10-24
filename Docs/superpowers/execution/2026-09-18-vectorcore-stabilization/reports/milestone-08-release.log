@@ -1,0 +1,513 @@
+Building for production...
+[0/20] Write sources
+[1/20] /private/tmp/vectorcore-stabilization-milestone08/arm64-apple-macosx/release/VectorCorePackageTests.derived/runner.swift
+[4/20] Write swift-version--58304C5D6DBC2206.txt
+[5/20] Write sources
+[6/20] Compiling vc_x86.c
+[7/20] Compiling vc_features.c
+[8/20] Compiling vc_scalar.c
+[9/20] Write sources
+[13/20] Compiling vc_dispatch.c
+[14/20] Compiling vc_arm64.c
+[15/20] Compiling vc_lapack.c
+[17/21] Compiling VectorCore ThreadSafeConfiguration.swift
+/private/tmp/vectorcore-stabilization-2026-09-18/Sources/VectorCore/LinearAlgebra/MatrixMultiply.swift:44:21: warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+ 42 |             b.withUnsafeBufferPointer { bp in
+ 43 |                 c.withUnsafeMutableBufferPointer { cp in
+ 44 |                     cblas_sgemm(
+    |                     `- warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+ 45 |                         CblasColMajor,
+ 46 |                         transposeA ? CblasTrans : CblasNoTrans,
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Sources/VectorCore/Operations/MatrixDistance.swift:194:19: warning: result of call to 'withUnsafeContiguousBytes' is unused [#no-usage]
+192 |             let dstBase = dst.baseAddress!
+193 |             for (i, v) in vs.enumerated() {
+194 |                 v.withUnsafeContiguousBytes { src in
+    |                   `- warning: result of call to 'withUnsafeContiguousBytes' is unused [#no-usage]
+195 |                     memcpy(dstBase.advanced(by: i * d * stride), src.baseAddress!, d * stride)
+196 |                 }
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Sources/VectorCore/Operations/MatrixDistance.swift:241:21: warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+239 |             Y.withUnsafeBufferPointer { yb in
+240 |                 out.withUnsafeMutableBufferPointer { ob in
+241 |                     cblas_sgemm(
+    |                     `- warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+242 |                         CblasRowMajor, CblasNoTrans, CblasTrans,
+243 |                         Int32(q), Int32(n), Int32(d),
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[18/24] Compiling VectorCoreBenchmarking ABComparisons.swift
+[19/25] Compiling MinimalTests BaselineTests.swift
+[20/25] Compiling VectorCoreBenchSupport AppMain.swift
+[21/27] Compiling VectorCoreBench Entry.swift
+[21/27] Write Objects.LinkFileList
+[22/27] Linking vectorcore-bench
+[24/27] Compiling BenchmarkContractTests BenchmarkContractTests.swift
+[25/27] Compiling ComprehensiveTests AccelerateArraySIMDProviderParityTests.swift
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:42:18: warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+ 40 |         let ledger = E04AllocationLedger()
+ 41 |         var pool: SwiftBufferPool? = SwiftBufferPool(configuration: BufferConfiguration(maxPoolSize: 64, maxBufferSize: 64), allocationBoundary: ledger)
+ 42 |         weak var owner = pool
+    |                  `- warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+ 43 |         var handles: [BufferHandle] = []
+ 44 |         for _ in 0..<8 { handles.append(try await pool!.acquire(size: 64)) }
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:263:18: warning: weak variable 'weakPool' was never mutated; consider changing to 'let' constant [#WeakMutability]
+261 |         let ledger = E04AllocationLedger()
+262 |         var pool: SwiftBufferPool? = SwiftBufferPool(configuration: BufferConfiguration(maxPoolSize: 0), allocationBoundary: ledger)
+263 |         weak var weakPool = pool
+    |                  `- warning: weak variable 'weakPool' was never mutated; consider changing to 'let' constant [#WeakMutability]
+264 |         let entered = E04Gate(), finish = E04Gate()
+265 |         let task = Task { [provider = pool!] in
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:311:22: warning: weak variable 'weakReference' was never mutated; consider changing to 'let' constant [#WeakMutability]
+309 |         let referenceReleased = await typed.withBuffer(count: 1) { buffer in
+310 |             var reference: E04BodyError? = E04BodyError()
+311 |             weak var weakReference = reference
+    |                      `- warning: weak variable 'weakReference' was never mutated; consider changing to 'let' constant [#WeakMutability]
+312 |             buffer.baseAddress!.initialize(to: reference!)
+313 |             reference = nil
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift:402:18: warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+400 |         let ledger = E04AllocationLedger()
+401 |         var pool: BufferPool? = BufferPool(allocationBoundary: ledger)
+402 |         weak var owner = pool
+    |                  `- warning: weak variable 'owner' was never mutated; consider changing to 'let' constant [#WeakMutability]
+403 |         let handle = await pool!.acquire(count: 16)
+404 |         await pool!.release(handle)
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/ErrorHandlingTests.swift:625:21: note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 623 | 
+ 624 |             // Test passes if no crash occurs
+ 625 |             #expect(true)
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 626 |         }
+ 627 | 
+     :
+ 643 | 
+ 644 |             // Test passes if no crash occurs
+ 645 |             #expect(true)
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 646 |         }
+ 647 | 
+     :
+ 653 |             #else
+ 654 |             // In release builds, debug assertions should be compiled out
+ 655 |             #expect(true, "Debug assertions are compiled out")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 656 |             #endif
+ 657 | 
+     :
+ 660 |             #expect(true, "Debug validation is enabled in debug builds")
+ 661 |             #else
+ 662 |             #expect(true, "Debug validation is disabled in release builds")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 663 |             #endif
+ 664 |         }
+     :
+ 690 |             // PerformanceValidation.require(false, "Would crash")
+ 691 | 
+ 692 |             #expect(true, "Performance validation works correctly")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 693 |         }
+ 694 | 
+     :
+ 708 |             // PerformanceValidation.requireDimensionMatch(512, 256) // Would crash
+ 709 | 
+ 710 |             #expect(true, "Dimension validation is optimized for performance")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 711 |         }
+ 712 | 
+     :
+ 718 |             #else
+ 719 |             // In release builds, uses precondition for performance
+ 720 |             #expect(true, "Performance validation uses precondition in release")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 721 |             #endif
+ 722 | 
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/LinearAlgebraProviderTests.swift:346:13: warning: no 'async' operations occur within 'await' expression
+344 | 
+345 |         // Per-scope override, mirroring the simdProvider TaskLocal pattern.
+346 |         try await Operations.$linearAlgebraProvider.withValue(SwiftLinearAlgebraProvider()) {
+    |             `- warning: no 'async' operations occur within 'await' expression
+347 |             #expect(Operations.linearAlgebraProvider is SwiftLinearAlgebraProvider)
+348 |             let g = try Operations.linearAlgebraProvider.qrThin(a, rows: 6, columns: 3)
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift:139:30: warning: weak variable 'witness' was never mutated; consider changing to 'let' constant [#WeakMutability]
+137 |                 let _: Int = try pool.withBuffer(type: Payload.self, count: 1, alignment: 64) { buffer in
+138 |                     var payload: Payload? = Payload()
+139 |                     weak var witness = payload
+    |                              `- warning: weak variable 'witness' was never mutated; consider changing to 'let' constant [#WeakMutability]
+140 |                     buffer.baseAddress!.initialize(to: payload!)
+141 |                     payload = nil
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift:281:26: warning: weak variable 'old' was never mutated; consider changing to 'let' constant [#WeakMutability]
+279 |                 let s = source + sourceOffset, d = destination + destinationOffset
+280 |                 for i in 0..<3 { (s + i).initialize(to: Token(i, ledger)); (d + i).initialize(to: Token(10 + i, ledger)) }
+281 |                 weak var old = d.pointee
+    |                          `- warning: weak variable 'old' was never mutated; consider changing to 'let' constant [#WeakMutability]
+282 |                 weak var retained = s.pointee
+283 |                 alignedCopy(from: s, to: d, count: 3)
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift:282:26: warning: weak variable 'retained' was never mutated; consider changing to 'let' constant [#WeakMutability]
+280 |                 for i in 0..<3 { (s + i).initialize(to: Token(i, ledger)); (d + i).initialize(to: Token(10 + i, ledger)) }
+281 |                 weak var old = d.pointee
+282 |                 weak var retained = s.pointee
+    |                          `- warning: weak variable 'retained' was never mutated; consider changing to 'let' constant [#WeakMutability]
+283 |                 alignedCopy(from: s, to: d, count: 3)
+284 |                 #expect(old == nil)
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:136:26: warning: '9.0e38' overflows to inf during conversion to 'Float'
+134 |         let sumAA: Float = 9.0e38
+135 |         let sumBB: Float = 9.0e38
+136 |         let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+    |                          `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+137 | 
+138 |         // Confirm the product genuinely overflows (the bug's precondition).
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:135:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+133 |         // sumAA * sumBB ≈ 8.1e77 → +Inf in Float. sqrt path keeps it finite.
+134 |         let sumAA: Float = 9.0e38
+135 |         let sumBB: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+136 |         let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+137 | 
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:134:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+132 |         // ||v||² ≈ 9e38 for each; dot(a,b) ≈ 9e38 as well (parallel).
+133 |         // sumAA * sumBB ≈ 8.1e77 → +Inf in Float. sqrt path keeps it finite.
+134 |         let sumAA: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+135 |         let sumBB: Float = 9.0e38
+136 |         let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:153:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+151 |     func testCosineDistanceHugeMagnitudeOrthogonal() {
+152 |         let sumAA: Float = 9.0e38
+153 |         let sumBB: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+154 |         let dot: Float = 0.0
+155 | 
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:152:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+150 |     @Test
+151 |     func testCosineDistanceHugeMagnitudeOrthogonal() {
+152 |         let sumAA: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+153 |         let sumBB: Float = 9.0e38
+154 |         let dot: Float = 0.0
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/NumericalStabilityTests.swift:1886:32: warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1884 |     @Test("Magnitude of all-subnormal vector is finite, not NaN/Inf")
+1885 |     func testMagnitudeSubnormalVectorNotPoisoned() throws {
+1886 |         let subnormal: Float = 1e-40  // valid Float subnormal (< leastNormalMagnitude)
+     |                                `- warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1887 |         // Precondition: confirm 1/maxAbs really overflows for this input.
+1888 |         #expect((1.0 / subnormal).isInfinite, "Precondition: reciprocal must overflow to +Inf")
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/NumericalStabilityTests.swift:1908:32: warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1906 |     @Test("Normalizing all-subnormal vector does not produce NaN")
+1907 |     func testNormalizeSubnormalVectorNoNaN() throws {
+1908 |         let subnormal: Float = 1e-40
+     |                                `- warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1909 |         let v = Vector512Optimized(repeating: subnormal)
+1910 | 
+
+[#WeakMutability]: <https://docs.swift.org/compiler/documentation/diagnostics/weak-mutability>
+[26/28] Compiling VectorCorePackageTests runner.swift
+[26/28] Write Objects.LinkFileList
+[27/28] Linking VectorCorePackageTests
+Build complete! (218.01s)
+Test Suite 'Selected tests' started at 2026-09-24 23:24:08.339.
+Test Suite 'VectorCorePackageTests.xctest' started at 2026-09-24 23:24:08.340.
+Test Suite 'VectorCorePackageTests.xctest' passed at 2026-09-24 23:24:08.340.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-09-24 23:24:08.341.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite BatchConfigurationContractTests started.
+􀟈  Suite "GEMM routing in BatchOperations" started.
+􀟈  Suite StorageBorrowContractTests started.
+􀟈  Suite ConfigurationTransactionTests started.
+􀟈  Suite MixedPrecisionRangeWorkTests started.
+􀟈  Suite "FP16 range validation" started.
+􀟈  Test partitionArithmeticBoundaries() started.
+􀟈  Suite ExecutionSchedulingContractTests started.
+􀟈  Test configurationScenarioInBoundedChild(_:) started.
+􀟈  Suite FP16DiagnosticsBoundaryTests started.
+􀟈  Test configurationChild() started.
+􀟈  Test "Both infinities and NaN encodings are rejected at every boundary" started.
+􀟈  Test childProbe() started.
+􀟈  Test "FP32 range checks preserve finite endpoints and reject overflow" started.
+􀟈  Test publicGenericNearestBoundaryWorkerObservation() started.
+􀟈  Test case passing 1 argument scenario → "defaultBatch" to configurationScenarioInBoundedChild(_:) started.
+􀟈  Test fp16SoAStorageRemainsOwned() started.
+􀟈  Test invalidLimitsAndHintsPrecedeCallbacks() started.
+􀟈  Test cancelledLiveTransformsAndMatrix() started.
+􀟈  Test "Native overflow conversion preserves endpoints and signed zero" started.
+􀟈  Test fp16Borrow1536() started.
+􀟈  Test cancellationBetweenUnitsAndOriginalBodyError() started.
+􀟈  Test preCancelledThrowingRoutesAndExecute() started.
+􀟈  Test sixDormantOptimizedHelpersDirectCoverage() started.
+􀟈  Test "Finite FP16 bit patterns are accepted" started.
+􀟈  Test directFP16KernelMatrix() started.
+􀟈  Test nestedMatrixCallbackCreatesNoLibraryWorkers() started.
+􀟈  Test batchCancellationBetweenWorkUnits() started.
+􀟈  Test eachRangeHelperChecksAfterBodyBeforeNextUnit() started.
+􀟈  Test boundedRegressionChild(scenario:) started.
+􀟈  Test inheritedBatchQueryRoute() started.
+􀟈  Test counterSaturationUsesRealCommit() started.
+􀟈  Test actorModifySerializesIncrementsAndExistingControls() started.
+􀟈  Test watchdogRejectsTimedOutChild() started.
+􀟈  Test finiteRangeMatrix() started.
+􀟈  Test reductionIdentityAndOrderedAssociativity() started.
+􀟈  Test isolatedBoundaryRecords() started.
+􀟈  Test fp16Borrow512() started.
+􀟈  Test ownedDynamicSliceSurvivesSourceChange() started.
+􀟈  Test batchTransformsOrderingAndCancellation() started.
+􀟈  Test fp16Borrow768() started.
+􀟈  Test providerOrderedCoverageAndWorkerBounds() started.
+􀟈  Test case passing 1 argument dimension → 768 to "Both infinities and NaN encodings are rejected at every boundary" started.
+􀟈  Test childProbe() started.
+􀟈  Test liveTransformsContextHintsAndFactoryIdentity() started.
+􀟈  Test case passing 1 argument dimension → 512 to "Both infinities and NaN encodings are rejected at every boundary" started.
+􀟈  Test reductionCombineCancellationAndRegionAcrossProvidersAndOverloads() started.
+􀟈  Test isolatedConcurrency() started.
+􀟈  Test externalConformerLayoutMatrix() started.
+􀟈  Test suppliedRoundedBitsDriveClassification() started.
+􀟈  Test "Routed Euclidean pairwise matches the direct kernel" started.
+􀟈  Test executeBatchModeSettingsAndEmptyControl() started.
+􀟈  Test localRecordsAndStateTransitions() started.
+􀟈  Test matricesStatisticsAndNonthrowingCancellation() started.
+􀟈  Test case passing 1 argument dimension → 1536 to "Both infinities and NaN encodings are rejected at every boundary" started.
+􀟈  Test isolatedConstructors() started.
+􀟈  Test case passing 1 argument dimension → 512 to "Finite FP16 bit patterns are accepted" started.
+􀟈  Test case passing 1 argument dimension → 1536 to "Finite FP16 bit patterns are accepted" started.
+􀟈  Test case passing 1 argument dimension → 768 to "Finite FP16 bit patterns are accepted" started.
+􁁛  Test configurationChild() passed after 0.001 seconds.
+􀟈  Test case passing 1 argument scenario → "cancelSerial" to boundedRegressionChild(scenario:) started.
+􀟈  Test nestedProvidersAndLegacySuppression() started.
+􀟈  Test case passing 1 argument scenario → "defaultBound" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "factory1000" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "factory1" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "batchControl" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "shape" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "gatedCancellation" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "shortBatch" to boundedRegressionChild(scenario:) started.
+􀟈  Test case passing 1 argument scenario → "reverseAndError" to boundedRegressionChild(scenario:) started.
+􁁛  Test partitionArithmeticBoundaries() passed after 0.001 seconds.
+􁁛  Test "Native overflow conversion preserves endpoints and signed zero" passed after 0.004 seconds.
+􁁛  Test "FP32 range checks preserve finite endpoints and reject overflow" passed after 0.004 seconds.
+􁁛  Test "Both infinities and NaN encodings are rejected at every boundary" with 3 test cases passed after 0.004 seconds.
+E02_CHILD_CAPTURE gatedCancellation /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-gatedCancellation-037EBD09-7A73-4D28-97D0-6FE662E1D3B5.log
+E02_CHILD_RESULT gatedCancellation status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-gatedCancellation-037EBD09-7A73-4D28-97D0-6FE662E1D3B5.log
+􁁛  Test childProbe() passed after 0.135 seconds.
+􁁛  Test "Finite FP16 bit patterns are accepted" with 3 test cases passed after 0.135 seconds.
+􁁛  Test fp16Borrow1536() passed after 0.135 seconds.
+􁁛  Test directFP16KernelMatrix() passed after 0.135 seconds.
+􁁛  Test invalidLimitsAndHintsPrecedeCallbacks() passed after 0.135 seconds.
+􁁛  Test fp16SoAStorageRemainsOwned() passed after 0.135 seconds.
+􁁛  Test counterSaturationUsesRealCommit() passed after 0.135 seconds.
+􁁛  Test ownedDynamicSliceSurvivesSourceChange() passed after 0.135 seconds.
+􁁛  Test fp16Borrow512() passed after 0.135 seconds.
+􁁛  Test fp16Borrow768() passed after 0.135 seconds.
+􁁛  Test childProbe() passed after 0.135 seconds.
+􁁛  Test finiteRangeMatrix() passed after 0.135 seconds.
+􁁛  Test externalConformerLayoutMatrix() passed after 0.135 seconds.
+􁁛  Test suppliedRoundedBitsDriveClassification() passed after 0.135 seconds.
+E06_CHILD_CAPTURE gemm-euclideanRoutedMatchesKernel /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-gemm-euclideanRoutedMatchesKernel-D2595B53-7712-41EF-86B5-6774E0A99218.log
+E06_CHILD_RESULT gemm-euclideanRoutedMatchesKernel status=0 reason=1
+E02_CHILD_CAPTURE reverseAndError /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-reverseAndError-CAE5B724-3019-4C9F-A901-5655EBF20A7A.log
+E02_CHILD_RESULT reverseAndError status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-reverseAndError-CAE5B724-3019-4C9F-A901-5655EBF20A7A.log
+􁁛  Test executeBatchModeSettingsAndEmptyControl() passed after 0.135 seconds.
+􁁛  Test localRecordsAndStateTransitions() passed after 0.135 seconds.
+E03 actor round=0 first=100 second=100 expected=100,100
+􁁛  Test "Routed Euclidean pairwise matches the direct kernel" passed after 0.136 seconds.
+􁁛  Suite "FP16 range validation" passed after 0.136 seconds.
+􁁛  Suite StorageBorrowContractTests passed after 0.136 seconds.
+􁁛  Test nestedMatrixCallbackCreatesNoLibraryWorkers() passed after 0.136 seconds.
+E03 actor round=1 first=100 second=100 expected=100,100
+􀟈  Test exceptionalSameCoreParity() started.
+􀟈  Test "Routed Cosine pairwise matches double-precision reference" started.
+􁁛  Test nestedProvidersAndLegacySuppression() passed after 0.137 seconds.
+E02_CHILD_CAPTURE batchControl /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-batchControl-F3423067-CDA7-4658-84C7-0483B777ABF5.log
+E02_CHILD_RESULT batchControl status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-batchControl-F3423067-CDA7-4658-84C7-0483B777ABF5.log
+E03 actor round=2 first=100 second=100 expected=100,100
+􁁛  Test actorModifySerializesIncrementsAndExistingControls() passed after 0.139 seconds.
+E02_CHILD_CAPTURE shortBatch /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-shortBatch-C86FD9D7-E6A9-47BB-BF0E-ED9935CDCB00.log
+E02_CHILD_RESULT shortBatch status=5 reason=2 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-shortBatch-C86FD9D7-E6A9-47BB-BF0E-ED9935CDCB00.log
+􁁛  Test cancellationBetweenUnitsAndOriginalBodyError() passed after 0.141 seconds.
+􀟈  Test actorRollbackPreservesValueFields() started.
+􁁛  Test actorRollbackPreservesValueFields() passed after 0.001 seconds.
+E02_CHILD_CAPTURE shape /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-shape-EC78CCB9-5549-456A-B2BA-8D7E737093B4.log
+E02_CHILD_RESULT shape status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-shape-EC78CCB9-5549-456A-B2BA-8D7E737093B4.log
+􁁛  Test batchCancellationBetweenWorkUnits() passed after 0.143 seconds.
+􀟈  Test concurrentBatchIncrementsPreserveAllUpdates() started.
+􁁛  Test reductionCombineCancellationAndRegionAcrossProvidersAndOverloads() passed after 0.145 seconds.
+􁁛  Test exceptionalSameCoreParity() passed after 0.008 seconds.
+􁁛  Test liveTransformsContextHintsAndFactoryIdentity() passed after 0.146 seconds.
+􀟈  Test namedRejectionMatrix(width:metric:) started.
+􀟈  Test case passing 2 arguments width → 512, metric → 0 to namedRejectionMatrix(width:metric:) started.
+Q03 child scenario=records exit=0 timeout=false capture=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/Q03-child-records-A05A5477-98A1-4690-8DED-9605B715EAC6.log
+􁁛  Test isolatedBoundaryRecords() passed after 0.147 seconds.
+􁁛  Test cancelledLiveTransformsAndMatrix() passed after 0.147 seconds.
+􁁛  Test inheritedBatchQueryRoute() passed after 0.147 seconds.
+􁁛  Test eachRangeHelperChecksAfterBodyBeforeNextUnit() passed after 0.147 seconds.
+􀙟  Test preCancelledThrowingRoutesAndExecute() was cancelled after 0.148 seconds.
+􁁛  Test reductionIdentityAndOrderedAssociativity() passed after 0.150 seconds.
+􁁛  Test batchTransformsOrderingAndCancellation() passed after 0.151 seconds.
+E02_CHILD_CAPTURE cancelSerial /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-cancelSerial-A6D50AF7-6FE2-442E-9FBF-28A138902368.log
+E02_CHILD_RESULT cancelSerial status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-cancelSerial-A6D50AF7-6FE2-442E-9FBF-28A138902368.log
+E02_CHILD_CAPTURE defaultBound /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-defaultBound-0E174159-AFB1-4501-A1FF-4CBACC5EC2CE.log
+E02_CHILD_RESULT defaultBound status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-defaultBound-0E174159-AFB1-4501-A1FF-4CBACC5EC2CE.log
+E02_CHILD_CAPTURE factory1 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-factory1-B84A660F-6B73-4CC8-9015-56F838720DB7.log
+E02_CHILD_RESULT factory1 status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-factory1-B84A660F-6B73-4CC8-9015-56F838720DB7.log
+Q03 child scenario=concurrency exit=0 timeout=false capture=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/Q03-child-concurrency-191442C4-B842-459D-BD1D-D4672FE62445.log
+􁁛  Test isolatedConcurrency() passed after 0.160 seconds.
+E06_CHILD_CAPTURE defaultBatch /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-defaultBatch-9D18F7CE-8580-4E5E-B93A-7CA7A41EFD20.log
+E06_CHILD_RESULT defaultBatch status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "threshold" to configurationScenarioInBoundedChild(_:) started.
+E02_CHILD_CAPTURE factory1000 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-factory1000-8FEC2675-0694-4DB1-86DE-7EAF889712A5.log
+E02_CHILD_RESULT factory1000 status=0 reason=1 path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-factory1000-8FEC2675-0694-4DB1-86DE-7EAF889712A5.log
+􁁛  Test boundedRegressionChild(scenario:) with 9 test cases passed after 0.168 seconds.
+􁁛  Test sixDormantOptimizedHelpersDirectCoverage() passed after 0.169 seconds.
+􁁛  Test matricesStatisticsAndNonthrowingCancellation() passed after 0.171 seconds.
+E06_CHILD_CAPTURE generic-nearest /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-generic-nearest-EA82EBBA-AD6D-4E83-B3AA-3E3FFEC4AD3D.log
+E06_CHILD_RESULT generic-nearest status=0 reason=1
+􁁛  Test publicGenericNearestBoundaryWorkerObservation() passed after 0.173 seconds.
+Q03 child scenario=constructors exit=0 timeout=false capture=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/Q03-child-constructors-889797DB-B63D-47B7-8C8F-163D2F9DE842.log
+􁁛  Test isolatedConstructors() passed after 0.192 seconds.
+􁁛  Suite FP16DiagnosticsBoundaryTests passed after 0.193 seconds.
+E03 child increments exit=0 log=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E03-child-increments-AB3606A6-C80B-42A6-A924-AF5C1A4DCFED.log
+􁁛  Test concurrentBatchIncrementsPreserveAllUpdates() passed after 0.076 seconds.
+􀟈  Test concurrentIndependentFieldsPreserveBothTotals() started.
+E06_CHILD_CAPTURE gemm-cosineRoutedMatchesReference /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-gemm-cosineRoutedMatchesReference-093B26E2-9D08-4C63-9C20-8F38176794A2.log
+E06_CHILD_RESULT gemm-cosineRoutedMatchesReference status=0 reason=1
+􁁛  Test "Routed Cosine pairwise matches double-precision reference" passed after 0.087 seconds.
+􀟈  Test "Non-routable metric (Manhattan) falls back to the per-pair path" started.
+􁁛  Test providerOrderedCoverageAndWorkerBounds() passed after 0.229 seconds.
+Q04 capture=/private/tmp/Q04-child-512-0-negative-15CA8891-1074-4A43-B404-4CDFC3B34FFA.log
+E06_CHILD_CAPTURE threshold /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-threshold-3B62D321-F7C2-406F-A022-ED72393703D3.log
+E06_CHILD_RESULT threshold status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "chunks" to configurationScenarioInBoundedChild(_:) started.
+E03 child independent exit=0 log=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E03-child-independent-91035B26-339F-4BA5-BC47-0FEA1FA789DE.log
+􁁛  Test concurrentIndependentFieldsPreserveBothTotals() passed after 0.075 seconds.
+􀟈  Test batchRollbackPreservesEveryFieldAndErrorIdentity() started.
+E06_CHILD_CAPTURE gemm-manhattanFallsBack /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-gemm-manhattanFallsBack-85CFFD32-D89A-4F9F-BD49-822E4599C421.log
+E06_CHILD_RESULT gemm-manhattanFallsBack status=0 reason=1
+􁁛  Test "Non-routable metric (Manhattan) falls back to the per-pair path" passed after 0.078 seconds.
+􀟈  Test "DynamicVector does not route (concrete-type gate) and stays correct" started.
+E06_CHILD_CAPTURE chunks /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-chunks-9876E24C-60BC-445C-BA45-E1FA001653C1.log
+E06_CHILD_RESULT chunks status=0 reason=1
+Q04 capture=/private/tmp/Q04-child-512-0-upper-781693C5-6F0C-4B26-84CC-9CF29F0B80BF.log
+􀟈  Test case passing 1 argument scenario → "invalid" to configurationScenarioInBoundedChild(_:) started.
+E03 child rollback exit=0 log=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E03-child-rollback-27079DEF-7B03-4896-8DB7-FC72B9843230.log
+􁁛  Test batchRollbackPreservesEveryFieldAndErrorIdentity() passed after 0.074 seconds.
+􀟈  Test concurrentSnapshotsObserveCompleteTuples() started.
+E06_CHILD_CAPTURE gemm-dynamicDoesNotRoute /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-gemm-dynamicDoesNotRoute-09757863-280E-41FB-B79E-C6CB3B645CF6.log
+E06_CHILD_RESULT gemm-dynamicDoesNotRoute status=0 reason=1
+􁁛  Test "DynamicVector does not route (concrete-type gate) and stays correct" passed after 0.079 seconds.
+􀟈  Test "Routing ON and OFF agree within tolerance" started.
+E06_CHILD_CAPTURE invalid /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-invalid-1CCB3426-AF7B-477C-AB0D-430C6DFB4595.log
+E06_CHILD_RESULT invalid status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "domains" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-0-empty-98C08572-6D63-41E7-B40D-58D42C0845E0.log
+E03 child snapshots exit=0 log=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E03-child-snapshots-534B74AC-7880-4ED8-9CE4-4E0B8AF2B207.log
+􁁛  Test concurrentSnapshotsObserveCompleteTuples() passed after 0.075 seconds.
+􀟈  Test globalChildProbe() started.
+􁁛  Test globalChildProbe() passed after 0.001 seconds.
+􁁛  Suite ConfigurationTransactionTests passed after 0.444 seconds.
+E06_CHILD_CAPTURE gemm-routingToggleConsistent /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-gemm-routingToggleConsistent-EF23A91D-E543-42A9-A06F-B802E0D14E2A.log
+E06_CHILD_RESULT gemm-routingToggleConsistent status=0 reason=1
+􁁛  Test "Routing ON and OFF agree within tolerance" passed after 0.082 seconds.
+􁁛  Suite "GEMM routing in BatchOperations" passed after 0.466 seconds.
+E06_CHILD_CAPTURE domains /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-domains-667E9824-B60A-4BF3-A262-B3FFD14A9C88.log
+E06_CHILD_RESULT domains status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "linear" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-0-extreme-C8110A62-DA73-48CB-A7C8-B70AAC27978A.log
+E06_CHILD_CAPTURE linear /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-linear-3AA26E18-1732-4A57-ADA0-A57F11554697.log
+E06_CHILD_RESULT linear status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "partitions" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-0-capacity-3104E999-73AF-48BE-99F1-631074C88822.log
+􀟈  Test case passing 2 arguments width → 512, metric → 1 to namedRejectionMatrix(width:metric:) started.
+E06_CHILD_CAPTURE partitions /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-partitions-2337B177-ED18-4583-A7F3-5A17536641F8.log
+E06_CHILD_RESULT partitions status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "snapshot" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-1-negative-08E88C37-E2A5-4D2A-BE84-E92E569149F9.log
+E06_CHILD_CAPTURE snapshot /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-snapshot-819D101D-20AC-4C18-AE64-7375598BCDD5.log
+E06_CHILD_RESULT snapshot status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "routes512" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-1-upper-4EBA33FE-E0F8-4262-A467-8E5F23472C35.log
+E06_CHILD_CAPTURE routes512 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-routes512-68950DEC-1691-40A5-8A87-3C722F130DD7.log
+E06_CHILD_RESULT routes512 status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "routes768" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-1-empty-A9D4C651-7408-4DD7-98B6-737768C6B13A.log
+E06_CHILD_CAPTURE routes768 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-routes768-BE505E40-4A53-4B71-AABE-8E75E8617C41.log
+E06_CHILD_RESULT routes768 status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "routes1536" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-1-extreme-F01A8DD5-1375-4661-A02B-FBB8558B63CA.log
+E06_CHILD_CAPTURE routes1536 /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-routes1536-7518855B-0601-4A74-AF94-A63D817C4BA7.log
+E06_CHILD_RESULT routes1536 status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "pairwise" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-1-capacity-19609BFE-7DD9-47B7-AFDB-399346CAD67B.log
+􀟈  Test case passing 2 arguments width → 512, metric → 2 to namedRejectionMatrix(width:metric:) started.
+E06_CHILD_CAPTURE pairwise /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-pairwise-B55B68B2-2155-4BB6-BA1E-0EC1F72F12EC.log
+E06_CHILD_RESULT pairwise status=0 reason=1
+􀟈  Test case passing 1 argument scenario → "nested" to configurationScenarioInBoundedChild(_:) started.
+Q04 capture=/private/tmp/Q04-child-512-2-negative-BBD098C3-036D-4A77-B840-74602C5BC101.log
+E06_CHILD_CAPTURE nested /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E06-nested-4BE99D07-F6E7-4A3E-8429-119AFA2227B9.log
+E06_CHILD_RESULT nested status=0 reason=1
+􁁛  Test configurationScenarioInBoundedChild(_:) with 13 test cases passed after 1.163 seconds.
+􁁛  Suite BatchConfigurationContractTests passed after 1.163 seconds.
+Q04 capture=/private/tmp/Q04-child-512-2-upper-F655C689-47F7-4408-B139-2593C91F3950.log
+Q04 capture=/private/tmp/Q04-child-512-2-empty-097884A6-5BDC-4EC7-ABCE-221D2C2DE1DD.log
+Q04 capture=/private/tmp/Q04-child-512-2-extreme-838FFE2A-419B-4B8D-8837-D5375CEAD282.log
+Q04 capture=/private/tmp/Q04-child-512-2-capacity-35C54780-371F-4137-B9E0-BDA6DA83C921.log
+􀟈  Test case passing 2 arguments width → 768, metric → 0 to namedRejectionMatrix(width:metric:) started.
+Q04 capture=/private/tmp/Q04-child-768-0-negative-7DEA78DF-156C-4BA3-81C3-B317C0609298.log
+Q04 capture=/private/tmp/Q04-child-768-0-upper-A5036178-A0CC-43CA-869F-91B5E124E928.log
+Q04 capture=/private/tmp/Q04-child-768-0-empty-89C77131-9A27-4260-A555-C603FCF7EE16.log
+Q04 capture=/private/tmp/Q04-child-768-0-extreme-8D147EA3-B868-45A4-80DF-BFDA0B7882AF.log
+Q04 capture=/private/tmp/Q04-child-768-0-capacity-DF5848BE-C9DC-4B2B-9281-0D2C69CF3192.log
+􀟈  Test case passing 2 arguments width → 768, metric → 1 to namedRejectionMatrix(width:metric:) started.
+Q04 capture=/private/tmp/Q04-child-768-1-negative-5F64FF16-98B6-4FC5-A98A-8C8270FB5E2D.log
+Q04 capture=/private/tmp/Q04-child-768-1-upper-725A0661-C69A-43ED-8C98-223BD122C178.log
+Q04 capture=/private/tmp/Q04-child-768-1-empty-2B018768-ED43-49EC-AAA6-0BDC84C4E36C.log
+Q04 capture=/private/tmp/Q04-child-768-1-extreme-2BA82342-0A7C-4B84-923D-A3464A29B6A1.log
+Q04 capture=/private/tmp/Q04-child-768-1-capacity-362E63B7-5552-4E14-A3A7-D52DCFFC1DE7.log
+􀟈  Test case passing 2 arguments width → 768, metric → 2 to namedRejectionMatrix(width:metric:) started.
+Q04 capture=/private/tmp/Q04-child-768-2-negative-F305B159-8B50-48D1-BAFD-B6F27DFDA15E.log
+Q04 capture=/private/tmp/Q04-child-768-2-upper-36CB01E6-7C69-4752-8D69-D0A667D51BD2.log
+Q04 capture=/private/tmp/Q04-child-768-2-empty-8E21B715-13E8-4717-85AC-AB0F7E71D18E.log
+Q04 capture=/private/tmp/Q04-child-768-2-extreme-6BB97F40-8C08-435B-A469-B781093D668A.log
+Q04 capture=/private/tmp/Q04-child-768-2-capacity-705BFEAA-AD84-42F6-8E05-1692A91EEEF1.log
+􀟈  Test case passing 2 arguments width → 1536, metric → 0 to namedRejectionMatrix(width:metric:) started.
+Q04 capture=/private/tmp/Q04-child-1536-0-negative-B6CDF121-24E8-4FAD-B0CF-FB000E0B84F8.log
+Q04 capture=/private/tmp/Q04-child-1536-0-upper-DAA63E2C-F1A1-4CF8-9BFF-FABBDABF8B7D.log
+Q04 capture=/private/tmp/Q04-child-1536-0-empty-062AC9BF-52C4-4769-AF65-27981A0CF7EC.log
+Q04 capture=/private/tmp/Q04-child-1536-0-extreme-F03BE9BC-70C9-414B-BAC5-C407B9FB6F78.log
+Q04 capture=/private/tmp/Q04-child-1536-0-capacity-7447A16B-F186-433D-9F8E-5F8A6A04CA24.log
+􀟈  Test case passing 2 arguments width → 1536, metric → 1 to namedRejectionMatrix(width:metric:) started.
+Q04 capture=/private/tmp/Q04-child-1536-1-negative-F6B4A575-314D-4F1B-BB84-9A92FC53069E.log
+Q04 capture=/private/tmp/Q04-child-1536-1-upper-6BB0F013-04E9-4829-9604-B499E57F297E.log
+Q04 capture=/private/tmp/Q04-child-1536-1-empty-3EF88C80-945C-4C1F-A336-C484395E2382.log
+Q04 capture=/private/tmp/Q04-child-1536-1-extreme-E7B42A05-291D-4BAB-B996-7390109389CA.log
+Q04 capture=/private/tmp/Q04-child-1536-1-capacity-1EE724A7-2278-46C3-8661-E73234BB9FCB.log
+􀟈  Test case passing 2 arguments width → 1536, metric → 2 to namedRejectionMatrix(width:metric:) started.
+Q04 capture=/private/tmp/Q04-child-1536-2-negative-E49EA1EE-8F43-43C8-B306-AC4D54CD8B79.log
+Q04 capture=/private/tmp/Q04-child-1536-2-upper-2DDA0FED-1C82-42DC-96A2-15BA6FFAA972.log
+Q04 capture=/private/tmp/Q04-child-1536-2-empty-82D10EB4-16F9-4A30-8AF5-15BC22A09009.log
+Q04 capture=/private/tmp/Q04-child-1536-2-extreme-8DE1355D-48C8-435E-B3FD-9693FBA66968.log
+Q04 capture=/private/tmp/Q04-child-1536-2-capacity-0D08775B-6E72-4D5E-A804-DCC36D211FF0.log
+􁁛  Test namedRejectionMatrix(width:metric:) with 9 test cases passed after 3.993 seconds.
+􀟈  Test childProbe() started.
+􁁛  Test childProbe() passed after 0.001 seconds.
+􁁛  Suite MixedPrecisionRangeWorkTests passed after 4.140 seconds.
+E02_CHILD_CAPTURE watchdog /private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-watchdog-DF73AE72-2549-4D6D-BBC2-9B5B96B37B09.log
+E02_CHILD_TIMEOUT watchdog cleanupReaped=true path=/private/tmp/vectorcore-stabilization-2026-09-18/Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/reports/milestone-08-release-children/E02-watchdog-DF73AE72-2549-4D6D-BBC2-9B5B96B37B09.log
+􁁛  Test watchdogRejectsTimedOutChild() passed after 16.012 seconds.
+􁁛  Suite ExecutionSchedulingContractTests passed after 16.013 seconds.
+􁁛  Test run with 58 tests in 8 suites passed after 16.013 seconds.

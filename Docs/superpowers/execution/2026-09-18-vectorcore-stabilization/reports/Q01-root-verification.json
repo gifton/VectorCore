@@ -1,0 +1,59 @@
+{
+  "task": "Q01",
+  "base": "0dbb18c818f26edd8e28bb303a6fccedbd063a6f",
+  "reviewRevision": 4,
+  "completeDiffSHA256": "03b1df34f94d20807683da228af2d3f382ee6bd389382d0e63b136bdc03a1117",
+  "files": [
+    {
+      "path": "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift",
+      "sha256": "edd36b6c5712d37436053c4f229c294646d44813b575e8c0026cf66a28e6d913",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Quantization/QuantizationSchemes.swift",
+      "sha256": "355cb03d6f986952b90137c0d7b3cad41bab144ee20938b0eccfe4f6e1d5ae06",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Sources/VectorCore/Quantization/AffineQuantizationCore.swift",
+      "sha256": "63763233e91e29cf8bb127b746d4a1015cfcf9174169eb2508edaf7140b808fc",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift",
+      "sha256": "7db78f5043882b80387d639873d4700b812762549e67593c8f936806b7ce9dbc",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Tests/ComprehensiveTests/QuantizedMetricRangeTests.swift",
+      "sha256": "0bb7c3ed665d77a25a99b484b1d4185633ef8528513c54a30847eec995e2bd0d",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Tests/ComprehensiveTests/Q01ExactOracleFixtures.swift",
+      "sha256": "4687c0f6f9dacfae5ed82256fd0f35f1d8b16cfccd68b14a6459c6ddbb07da41",
+      "sharedBaseUnchanged": true
+    },
+    {
+      "path": "Tests/ComprehensiveTests/QuantizedKernelsComprehensiveTests.swift",
+      "sha256": "c0cd49213f7cc284c29fdc01038191a9586c58a3c52c1a60dea1ee1053b9078c",
+      "sharedBaseUnchanged": true
+    }
+  ],
+  "baseCodeFileCount": 270,
+  "archiveCodeFileCount": 274,
+  "onlyManifestedCodeChanges": [
+    "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift",
+    "Sources/VectorCore/Quantization/AffineQuantizationCore.swift",
+    "Sources/VectorCore/Quantization/QuantizationSchemes.swift",
+    "Tests/ComprehensiveTests/Q01ExactOracleFixtures.swift",
+    "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift",
+    "Tests/ComprehensiveTests/QuantizedKernelsComprehensiveTests.swift",
+    "Tests/ComprehensiveTests/QuantizedMetricRangeTests.swift"
+  ],
+  "evidenceArtifactCount": 845,
+  "evidenceMismatches": [],
+  "independentReview": "ACCEPT frozen revision4",
+  "imported": true,
+  "independentReviewSHA256": "4bc7e6d08d47f333a3a297f87993682a11214f8f393473188f148ff9981812d5"
+}

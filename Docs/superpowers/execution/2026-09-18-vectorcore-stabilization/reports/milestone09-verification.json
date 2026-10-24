@@ -1,0 +1,204 @@
+{
+  "sourceRevision": "813255cb389891590db172480667bb47d83fbdd1",
+  "sourceCount": 346,
+  "sourceSHA256": "da310f80fa32cf26fc76b61adc08cfbca61dad837fc785369cd6f6c4b3960654",
+  "configurations": [
+    {
+      "mode": "debug",
+      "xctest": 24,
+      "swiftTestingReportedFunctions": 96,
+      "swiftTestingSuites": 18,
+      "actualChildren": 9,
+      "children": [
+        {
+          "task": "L01",
+          "scenario": "overflow",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/L01/L01-overflow-1FDA54F7-4114-461E-BA5A-490BDAC57184.log",
+          "sha256": "6e450da2f57324520d718e572870a06b0d7d52a74b2fd775b2c52fb7eaf1b92b",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "ebfa7bb181f8f8a3d7994911d3f00e3d378986c336dbecfa344bc62c16a9b6a9",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L01",
+          "scenario": "lower",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/L01/L01-lower-9895690D-8D99-4B54-B46B-B95AC4B36F36.log",
+          "sha256": "ce23aa78e52727a7e7efc3f4c60e7a38c3c8c7b7fe506fa43cf0a4eda9d40c0e",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "ebfa7bb181f8f8a3d7994911d3f00e3d378986c336dbecfa344bc62c16a9b6a9",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L01",
+          "scenario": "immutability",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/L01/L01-immutability-E8DDD9A3-2BD8-4210-A0F7-35EE34716EB8.log",
+          "sha256": "d9694eb2556a787a1ef823a425f7aafc7308af9b788f0473b7cbcddb686495db",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "ebfa7bb181f8f8a3d7994911d3f00e3d378986c336dbecfa344bc62c16a9b6a9",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L01",
+          "scenario": "nonfinite",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/L01/L01-nonfinite-6FD80184-6E16-4581-B872-39D06574F1B6.log",
+          "sha256": "cb72c115449ae522e1697e54db58397a12e9517cd9f9ae4d652d202e3b8c2096",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "ebfa7bb181f8f8a3d7994911d3f00e3d378986c336dbecfa344bc62c16a9b6a9",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L02",
+          "scenario": "oversampling",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/L02/L02-oversampling-5AB62EC5-7186-4FB0-8A4E-635958BAF7D2.log",
+          "sha256": "4a802d6c8976a83a2a73b27ba18e2d18c347fcfdd358fe882f0d4bfcc092499f",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "ebfa7bb181f8f8a3d7994911d3f00e3d378986c336dbecfa344bc62c16a9b6a9",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L02",
+          "scenario": "finite",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/L02/L02-finite-4B36FAF5-E1F9-4B83-A523-FBDC0FF508B8.log",
+          "sha256": "b86831299b21c353f48c3b228305a3b63b4a4a09e4544aa81f6dbec6aa7fe729",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "ebfa7bb181f8f8a3d7994911d3f00e3d378986c336dbecfa344bc62c16a9b6a9",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "Q03",
+          "scenario": "constructors",
+          "metadata": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/Q03/Q03-child-constructors-CD7ACAD8-1B2F-4200-97AC-E096AB3E709D.json",
+          "sha256": "c7b140006a9a7172e86785f8ea9585a4e50f412c73a35fbe9a463252c215e3f9",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "Q03",
+          "scenario": "records",
+          "metadata": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/Q03/Q03-child-records-B9AE3324-044F-4C01-8BE3-E8CD6AC4B5CA.json",
+          "sha256": "b50228da451ad87ce3668d6697340c4101dbf8d76c254b7f739f5ac9b743f07f",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "Q03",
+          "scenario": "concurrency",
+          "metadata": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/Q03/Q03-child-concurrency-0F36FFD2-37EC-4391-ABC7-CB039420A0FC.json",
+          "sha256": "2b2a545554c325eb98f94268bc96429b803761b9c4d632c8165434c6a7f1d8fe",
+          "exit": 0,
+          "timeout": false
+        }
+      ],
+      "command": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug/command.json",
+      "commandSHA256": "a5a755ff5d90d9e2619d9c2d455cb12a2bafe7653b80d1f47150ff271c63c3c8",
+      "buildManifest": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/debug-build-artifacts.json",
+      "buildManifestSHA256": "e1cd10e75810cdc7890673aa638238ac498a89f963df98e9a30d6d4dfbfe77d5",
+      "buildArtifactCount": 4340
+    },
+    {
+      "mode": "release",
+      "xctest": 24,
+      "swiftTestingReportedFunctions": 96,
+      "swiftTestingSuites": 18,
+      "actualChildren": 9,
+      "children": [
+        {
+          "task": "L01",
+          "scenario": "immutability",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/L01/L01-immutability-CA437BA0-F0DB-4D56-AF38-008AC1693207.log",
+          "sha256": "4add5db57f96fef0ab086ce95dd259e8ec1399695353042bdccc5fe740ba3f94",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "564de5e66a7303df880030f14dc049fa5563ca32ff901496807b53f861091559",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L01",
+          "scenario": "lower",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/L01/L01-lower-58CEB43A-DEC1-4158-93B2-AC050A9CBFA3.log",
+          "sha256": "2b15c024e9a76e410bd933c253fefe9c37c8183fe2b18a839bad0cfa585ec764",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "564de5e66a7303df880030f14dc049fa5563ca32ff901496807b53f861091559",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L01",
+          "scenario": "nonfinite",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/L01/L01-nonfinite-D1FB892D-DBF5-4CD5-82CA-AAEFDD144009.log",
+          "sha256": "38fc7c6dcee2ecb12a3547355f0a71202bb4eecb3e047a1cb54a8d797416577a",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "564de5e66a7303df880030f14dc049fa5563ca32ff901496807b53f861091559",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L01",
+          "scenario": "overflow",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/L01/L01-overflow-FBEF89BD-0E70-4E5B-8808-FB57E6994D59.log",
+          "sha256": "bd98742f0923ce8a107c4bdea8dd43124a71ae7da4868c7967be5153457afeea",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "564de5e66a7303df880030f14dc049fa5563ca32ff901496807b53f861091559",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L02",
+          "scenario": "oversampling",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/L02/L02-oversampling-D49F6F69-9D15-4C04-9A68-EECF3D9F34C3.log",
+          "sha256": "3a476e3a9b1f7c9b95599f8ce8de35c3ccb91c0423e5eed25b13eeb062c8c998",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "564de5e66a7303df880030f14dc049fa5563ca32ff901496807b53f861091559",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "L02",
+          "scenario": "finite",
+          "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/L02/L02-finite-F8282FF2-53E6-409A-99D3-0CD36A54D244.log",
+          "sha256": "0a01e34792d991d57ce44e813a8ae01d914fb9c53f38edc3c8e54320c2c91ae4",
+          "hostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+          "loadedBundleSHA256": "564de5e66a7303df880030f14dc049fa5563ca32ff901496807b53f861091559",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "Q03",
+          "scenario": "concurrency",
+          "metadata": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/Q03/Q03-child-concurrency-12C0A878-40BA-4271-A3D1-3AD733DB6EFD.json",
+          "sha256": "5cc9ea471c008d3e16993f0807645018f6fff4471ad852028308e8562df2c4ec",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "Q03",
+          "scenario": "records",
+          "metadata": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/Q03/Q03-child-records-39E38372-04EF-4D5D-9394-7643D3FD5AE9.json",
+          "sha256": "c87232de7566c6487a64d8e3c8b57d911894d5b3b920f16c3412e4bc60a8f5af",
+          "exit": 0,
+          "timeout": false
+        },
+        {
+          "task": "Q03",
+          "scenario": "constructors",
+          "metadata": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/Q03/Q03-child-constructors-54D90FD5-18BA-4512-9548-643A5A128136.json",
+          "sha256": "12408682034edbaf9abb2c146df81d0cf2bc20ce3ed904f099db2c8f0cc76524",
+          "exit": 0,
+          "timeout": false
+        }
+      ],
+      "command": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release/command.json",
+      "commandSHA256": "10d2cafb59eba5939814525473f654f104ad2f9e2cab30daca62aea6fb7e6235",
+      "buildManifest": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-29/milestone09/release-build-artifacts.json",
+      "buildManifestSHA256": "59790939def098b9544e95b122f3eb008927416fbc63b3b0f9335fec61e877b0",
+      "buildArtifactCount": 2879
+    }
+  ],
+  "qualification": "Focused combined validation, not full suite. Reported Swift Testing functions include no-op child entries and parameterized child parents; actual children separately counted. Q04 only valid finite/exceptional range functions selected; no repeated rejection subprocess claim. No new sanitizer, public consumer or throughput claim. Initial sandbox module-cache failure retained separately. The debug artifacts snapshot includes the preceding failed command.json hash; its actual bytes are retained as sandbox-failed-command.json, while final command.json has an independent hash in this report."
+}

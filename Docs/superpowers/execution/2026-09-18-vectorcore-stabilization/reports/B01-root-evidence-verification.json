@@ -1,0 +1,47 @@
+{
+  "sealed_worker_entries": 16324,
+  "build_artifacts": {
+    "red": 4363,
+    "debug": 4363,
+    "release": 2891,
+    "asan": 4364
+  },
+  "source_files": 5943,
+  "reported_functions_per_configuration": 51,
+  "exercised_functions_per_configuration": 50,
+  "xctest_methods_per_configuration": 1,
+  "shape_children": {
+    "debug": {
+      "valid": 42,
+      "rejected": 84
+    },
+    "release": {
+      "valid": 42,
+      "rejected": 84
+    }
+  },
+  "asan_actual_functions": 7,
+  "direct_supplemental_functions_per_configuration": 7,
+  "loaded_bundles": {
+    "debug": {
+      "path": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-02/B01/build-v1-debug/arm64-apple-macosx/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
+      "sha256": "1db4ea9c91890507b5cf7feaf28adbe379470d685d1ca9380601e3e70f2e0bcc"
+    },
+    "release": {
+      "path": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-02/B01/build-v1-release/arm64-apple-macosx/release/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
+      "sha256": "65775da3c619ceb0c619684e4bb081427a467e8981806037ef4440b518a98972"
+    },
+    "asan": {
+      "path": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-02/B01/build-v1-asan/arm64-apple-macosx/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
+      "sha256": "866159db867fa4781ac62fcb8c49ef5e188674be59fe198943eedcad29b679e3"
+    }
+  },
+  "public_linked_objects": 131,
+  "public_positive_runs": 1,
+  "public_negative_typechecks": 4,
+  "scanners": [
+    7,
+    7
+  ],
+  "qualification": "No new runtime execution. Child statuses derive from successful parent assertions and retained capture contents; no independent per-child argv/PID sampling is asserted. Direct host/bundle records cover seven B01 functions only. SER-03 performance profiling remains unmeasured."
+}

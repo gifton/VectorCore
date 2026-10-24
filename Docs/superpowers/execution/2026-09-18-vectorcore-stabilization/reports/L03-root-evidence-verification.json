@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "sealed_worker_entries": 23339,
+  "index_sha256": "611e36f67884fd48a8cd5ec08ac589ad33c295d0c14be96ccd8acb6c5b96a0d9",
+  "source_files": 5997,
+  "build_inventory_counts": {
+    "red/artifacts.json": 4375,
+    "v1/artifacts-debug.json": 2731,
+    "v2/artifacts-debug.json": 4375,
+    "v3/artifacts-debug.json": 4375,
+    "v3/artifacts-release.json": 2897,
+    "v3/artifacts-asan.json": 4376
+  },
+  "ordinary_functions_per_configuration": 39,
+  "ordinary_parent_noops_per_configuration": 1,
+  "actual_children": {
+    "debug": 9,
+    "release": 9
+  },
+  "asan_distinct_functions": 12,
+  "asan_supplemental_host_proof_functions": 12,
+  "public_linked_release_objects": 131,
+  "scanner_checks": 7,
+  "qualifications": [
+    "No new runtime execution; this verifies retained source, binaries, argv, logs and statuses.",
+    "Historical RED, failed v1 compilation and v2 numerical failure remain separate from final v3 success.",
+    "Direct ASan repeats the same12 selected functions for host/preload identity, not additional distinct coverage.",
+    "NUM27 Gram conditioning, production scale/performance and downstream acceptance remain qualified."
+  ]
+}

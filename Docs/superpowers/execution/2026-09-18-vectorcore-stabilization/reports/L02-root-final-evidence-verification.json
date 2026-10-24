@@ -1,0 +1,68 @@
+{
+  "task": "L02",
+  "sourceVersion": "v2",
+  "workerIndexSHA256": "b9c341fb69703826dd5734a195dc5552c32c6d89b5b13f1bf1e504d73e6ff19d",
+  "workerRecords": 40,
+  "verifiedArtifactCounts": {
+    "L02-build-v1-debug-artifacts.json": 4238,
+    "L02-build-v2-debug-artifacts.json": 4327,
+    "L02-build-v2-release-artifacts.json": 2875,
+    "L02-build-v2-asan-artifacts.json": 4329,
+    "L02-red-artifacts.json": 8660,
+    "L02-runtime-and-source-artifacts.json": 639,
+    "L02-v2-public-artifacts.json": 133
+  },
+  "successfulSwiftTesting": [
+    {
+      "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/debug.log",
+      "functions": 37,
+      "suites": 10
+    },
+    {
+      "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/release.log",
+      "functions": 37,
+      "suites": 10
+    },
+    {
+      "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/asan.log",
+      "functions": 13,
+      "suites": 3
+    },
+    {
+      "log": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/asan-existing-pca-status.log",
+      "functions": 9,
+      "suites": 3
+    }
+  ],
+  "ordinaryChildren": [
+    {
+      "source": "red",
+      "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/red/children/L02-oversampling-020AD161-B1B8-41B9-B913-8B69BDBDF8F4.log",
+      "marker": false
+    },
+    {
+      "source": "v2",
+      "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/debug-children/L02-finite-312BE0CC-5969-4F9C-A31E-387E5CA4B69A.log",
+      "marker": true
+    },
+    {
+      "source": "v2",
+      "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/debug-children/L02-oversampling-394CC442-8602-4D99-A613-56F7E7FE5BC2.log",
+      "marker": true
+    },
+    {
+      "source": "v2",
+      "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/release-children/L02-finite-BE24F30C-F6C0-4715-B18E-661F9A875AD0.log",
+      "marker": true
+    },
+    {
+      "source": "v2",
+      "capture": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-09-24/L02/v2/release-children/L02-oversampling-7D111F95-2D52-46BC-95FE-A549AED481FA.log",
+      "marker": true
+    }
+  ],
+  "asanDirectChildren": 2,
+  "publicLinkedObjects": 130,
+  "publicArtifacts": 133,
+  "qualification": "Prior root full source reconstruction separately recorded. Counts distinguish parent no-op and parameterized parent from actual children. RED retained manifests can include build alias traversals; entry counts are not unique binaries. First ASan filter omitted some existing PCA suites; separate 9-function status run closes that scope. Failed v1 and historical chained/no-exit ASan record are not success claims. No rebuild performed."
+}

@@ -1,0 +1,57 @@
+{
+  "task": "Q03",
+  "version": "v2",
+  "base": "a97b886861c62c74a188309502da7b56e623c754",
+  "diffSHA256": "21c3cfc0ad089cf0f249f83a41b56d63f7464455d20675814d63f5406ace65fb",
+  "manifestSHA256": "45d765ecad07d46780deaaa193a008fd6bfecf46ca43b224cf729f1324c67051",
+  "completeBaseFinalInventoryVerified": [
+    284,
+    287
+  ],
+  "reconstruction": "/var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/vectorcore-Q03-root-v2-_k6yp6vt",
+  "changedFiles": [
+    "Scripts/ci/tests/Q03GenerateOracle.py",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionDiagnostics.swift",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+    "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift",
+    "Tests/ComprehensiveTests/Q03FP16Oracle.swift"
+  ],
+  "v1ToV2ChangedPaths": [
+    "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift"
+  ],
+  "allChangedSharedPathsAtTaskBase": true,
+  "canonicalFrozenSourceBackupVerified": true,
+  "oracleIndependentlyRegenerated": true,
+  "workerEvidenceIndexSHA256": "376c1a6f7b6a6eb0d1b8f2130d0da2b88a347028422201409013bd591eac7358",
+  "workerEvidenceFilesVerified": 71,
+  "retainedBaselineArtifactsVerified": 157,
+  "versionedChildAssociationsVerified": 20,
+  "finalRuntime": {
+    "debug": {
+      "canonicalArtifactsVerified": 129,
+      "actualChildren": 3,
+      "parentLog": "Q03-final-debug-v2-02.log",
+      "parentLogSHA256": "fbc183697a8c4c35f4a55220089ff78a2dd31d9c862a49de33e86e2f1805326b",
+      "helperHostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+      "loadedBundleSHA256": "9036f7a8bca102d5cd2af62631c203fb153cf10bd3cb8c8812bb5c32b317f26d"
+    },
+    "release": {
+      "canonicalArtifactsVerified": 129,
+      "actualChildren": 3,
+      "parentLog": "Q03-final-release-v2.log",
+      "parentLogSHA256": "98e90f249badcfa46a219ddd77dd08dcb2891ed4cfaaa20db7340126109c1974",
+      "helperHostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+      "loadedBundleSHA256": "c07f8ca7c999c8db5cab94aa6fe78f8b29fb027aa51f6590aeb4ee924d3af5c4"
+    },
+    "tsan": {
+      "canonicalArtifactsVerified": 129,
+      "actualChildren": 1,
+      "parentLog": "Q03-tsan-fixed-v2.log",
+      "parentLogSHA256": "a6b0a8ffe65da6749f57c6875e2b482780950419cb675bff5c7d97cc587cb049",
+      "helperHostSHA256": "da2601bc562f2e0dd0cd7e00e923aee763ce94bdbf3eddccdebf1a4b8d5d313d",
+      "loadedBundleSHA256": "7d51f9de221a0545a991ebf97763528ca1e7732af0771a953da19ae1cfa2903c"
+    }
+  },
+  "runtimeAcceptance": "Accepted after complete root reconstruction, canonical artifact verification and independent final review; broader combined milestone remains separate.",
+  "imported": true
+}

@@ -1,0 +1,47 @@
+{
+  "source_diff_sha256": "213a43e5b1c58b630322dba48573f83d9b627d41032da578f5da0abc53025633",
+  "working_directory": "/private/tmp/vectorcore-stabilization-N01-implementation",
+  "max_jobs": 6,
+  "debug": {
+    "command": "swift test --jobs 6 --scratch-path /private/tmp/vectorcore-N01-debug --filter 'DivisionRangeContractTests|NormalizationRangeContractTests|VectorNormalizationSuite|NormalizeUncheckedRegressionTests|PointerTopKRegressionTests|NormalizationHintMutationTests|VectorShapeContractTests|ProviderConformanceTests|TopKNaN' > /private/tmp/N01-debug-final-03.log 2>&1",
+    "exit": 0,
+    "tests": 100,
+    "suites": 10,
+    "log_sha256": "f354057d0aaa2c3df03531a4b6b9203fa6161eb7766eb2665464d82227c3fe92"
+  },
+  "release": {
+    "command": "swift test -c release --jobs 6 --scratch-path /private/tmp/vectorcore-N01-release --filter 'DivisionRangeContractTests|NormalizationRangeContractTests|VectorNormalizationSuite|NormalizeUncheckedRegressionTests|PointerTopKRegressionTests|NormalizationHintMutationTests|VectorShapeContractTests|ProviderConformanceTests|TopKNaN' > /private/tmp/N01-release-final-02.log 2>&1",
+    "exit": 0,
+    "tests": 100,
+    "suites": 10,
+    "log_sha256": "ce26fa018f8aa560cfc6218eb945bb8f6c052333a44ea82db18b89f1b52b1cb8"
+  },
+  "asan": {
+    "status": "complete",
+    "command": "N01_SKIP_GUARDS=1 swift test --sanitize address --jobs 6 --scratch-path /private/tmp/vectorcore-N01-asan --filter 'DivisionRangeContractTests|NormalizationRangeContractTests|NormalizeUncheckedRegressionTests|PointerTopKRegressionTests' > /private/tmp/N01-asan-final-01.log 2>&1",
+    "exit": 0,
+    "reported_test_functions": 35,
+    "suites": 4,
+    "actually_exercised_test_functions": 33,
+    "no_op_entries": [
+      "NormalizationRangeContractTests/guardChildProbe (N01_GUARD_PROBE absent)",
+      "NormalizationRangeContractTests/invalidInputsRejectInChildren (N01_SKIP_GUARDS=1)"
+    ],
+    "intentional_guard_child_cases_exercised": 0,
+    "address_sanitizer_findings": 0,
+    "log_sha256": "4a1ba89fd43fae0a9c3625fa11eabacd862ec49f3f5400941c01b02e73222f28"
+  },
+  "environment": {
+    "architecture": "arm64",
+    "macOS": "26.5.2 (25F84)",
+    "swift": "Apple Swift 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)",
+    "Float80": "unavailable on this architecture"
+  },
+  "fixture_regeneration": {
+    "command": "python3 Scripts/N01-reference-generator.py",
+    "exit": 0,
+    "before_sha256": "c9f64f73ed1d479444f56d906d37dbdabba36775e34cc54073921fd742f58c1c",
+    "after_sha256": "c9f64f73ed1d479444f56d906d37dbdabba36775e34cc54073921fd742f58c1c"
+  },
+  "final_source_hash_recheck": "All22 changed/new paths matched frozen N01-source-manifest.json after Debug/Release/ASan and oracle regeneration."
+}

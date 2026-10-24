@@ -1,0 +1,90 @@
+{
+  "swiftCommands": 10,
+  "successfulRuns": [
+    {
+      "name": "v2-debug",
+      "version": "v2",
+      "reportedFunctions": 35,
+      "suites": 8
+    },
+    {
+      "name": "v2-release",
+      "version": "v2",
+      "reportedFunctions": 35,
+      "suites": 8
+    },
+    {
+      "name": "v3-debug",
+      "version": "v3",
+      "reportedFunctions": 36,
+      "suites": 8
+    },
+    {
+      "name": "v3-release",
+      "version": "v3",
+      "reportedFunctions": 36,
+      "suites": 8
+    },
+    {
+      "name": "v3-asan",
+      "version": "v3",
+      "reportedFunctions": 34,
+      "suites": 8
+    },
+    {
+      "name": "v4-debug",
+      "version": "v4",
+      "reportedFunctions": 14,
+      "suites": 1
+    },
+    {
+      "name": "v4-release",
+      "version": "v4",
+      "reportedFunctions": 14,
+      "suites": 1
+    }
+  ],
+  "boundedChildren": 24,
+  "childGroups": {
+    "v2/debug": [
+      "immutability",
+      "lower",
+      "nonfinite",
+      "overflow"
+    ],
+    "v2/release": [
+      "immutability",
+      "lower",
+      "nonfinite",
+      "overflow"
+    ],
+    "v3/debug": [
+      "immutability",
+      "lower",
+      "nonfinite",
+      "overflow"
+    ],
+    "v3/release": [
+      "immutability",
+      "lower",
+      "nonfinite",
+      "overflow"
+    ],
+    "v4/debug": [
+      "immutability",
+      "lower",
+      "nonfinite",
+      "overflow"
+    ],
+    "v4/release": [
+      "immutability",
+      "lower",
+      "nonfinite",
+      "overflow"
+    ]
+  },
+  "directASanChildren": 4,
+  "parentNoopExcluded": "domainChild is a no-op without L01_SCENARIO in ordinary parent runs; ASan parent excludes domainChild and boundedDomain.",
+  "allLoggedInvocationsAndCanonicalHostBundlesVerified": true,
+  "asanLeakChecking": false
+}

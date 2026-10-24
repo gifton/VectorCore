@@ -1,0 +1,33 @@
+{
+  "task": "E05",
+  "version": 1,
+  "base": "a558253329933b186ba450b07a67a8a56cb4ca54",
+  "diffSHA256": "b10dda5a783949f5283b6a0d46580a76e3f33b4fcfddace46e3cbc417774a855",
+  "baseCodeFiles": 261,
+  "finalCodeFiles": 263,
+  "fullPatchReconstructionMatches": true,
+  "workerInventoryMatches": true,
+  "onlyChangedPaths": [
+    "Scripts/ci/tests/E05CalibrationConsumer.swift",
+    "Sources/VectorCore/Providers/AutoTuning.swift",
+    "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift"
+  ],
+  "sharedBaseUnchanged": true,
+  "runtimeEvidence": "Final Debug/Release8functions each;42 final child scenarios;7 Operations controls and public Swift6 typecheck per configuration verified. Historical2RED bundle hash unavailable as disclosed;19 initial GREEN retained separately.",
+  "imported": true,
+  "canonicalBackupMatches": true,
+  "workerEvidenceInventorySHA256": "640c3c4602ae651fa2c2013bd5df65a760c4d189c5d9efd1937493f23e8ed81b",
+  "workerEvidenceFilesVerified": 151,
+  "canonicalEvidenceCopiesVerified": 151,
+  "commandLogHashesVerified": 11,
+  "childAssociationsVerified": {
+    "red": 2,
+    "green-01": 19,
+    "debug-final": 21,
+    "release-final": 21
+  },
+  "finalHostAndBundleHashesVerified": true,
+  "review": "Independent FINAL v1 ACCEPT; root accepts bounded API-29 contract",
+  "reviewSHA256": "daf59c70f26b2f0190ac606dfd03d89e59277bab861669d5a456ecc027b35bb5",
+  "preImportRevision": "0eef656ba0dfef4fed68cadf4f463ee5709bb406"
+}

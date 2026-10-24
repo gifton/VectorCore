@@ -1,0 +1,63 @@
+{
+  "rawMeasurementRowsVerified": 6,
+  "sourceAndLinkAssociationsVerified": true,
+  "task": "Q02",
+  "version": "v3",
+  "workerIndexSHA256": "f3087d10f63084a90a9b17d5f6ce40c2770d38841127be6103d18dbdb1a7aba0",
+  "canonicalArtifacts": 1519,
+  "successfulTests": [
+    {
+      "label": "final-debug-v3",
+      "xctest": 24,
+      "swiftTesting": 36
+    },
+    {
+      "label": "final-release-v3",
+      "xctest": 24,
+      "swiftTesting": 36
+    }
+  ],
+  "matchedSelectionFixtures": true,
+  "probeSummaries": {
+    "selection-before-02": {
+      "runs": 15,
+      "fixtures": {
+        "Q02RunSelectionProbe.py": "627ddb3587fec3393414fccc7f73da9e85ae9d0973f90b3959c501776f685a81",
+        "Q02SelectionProbe.swift": "5b5263f735567d4e9f0b77a879d7326150e8997f6c43f389108662abba513613",
+        "Q02Allocation.c": "4659356667fee3e95028ae5df0936bd6ed423e6cc8404f26695ad21edb3a14bc"
+      },
+      "artifactCount": 136
+    },
+    "selection-after-01": {
+      "runs": 15,
+      "fixtures": {
+        "Q02RunSelectionProbe.py": "627ddb3587fec3393414fccc7f73da9e85ae9d0973f90b3959c501776f685a81",
+        "Q02SelectionProbe.swift": "5b5263f735567d4e9f0b77a879d7326150e8997f6c43f389108662abba513613",
+        "Q02Allocation.c": "4659356667fee3e95028ae5df0936bd6ed423e6cc8404f26695ad21edb3a14bc"
+      },
+      "artifactCount": 137
+    },
+    "calibration-after-01": {
+      "runs": 14,
+      "fixtures": {
+        "Q02RunCalibrationProbe.py": "0a0b22975c8d3ab140ca4f99b3c61944b01777373e477f83dac61f29306b1832",
+        "Q02CalibrationProbe.swift": "bf7199e05f4956c0ad692c6cf857957d39cd211a6fd863160549a8fd53db60f4",
+        "Q02Allocation.c": "4659356667fee3e95028ae5df0936bd6ed423e6cc8404f26695ad21edb3a14bc"
+      },
+      "artifactCount": 137
+    },
+    "public-debug-03": {
+      "runs": 3,
+      "fixtures": {},
+      "artifactCount": 137
+    },
+    "public-release-01": {
+      "runs": 3,
+      "fixtures": {},
+      "artifactCount": 137
+    }
+  },
+  "boundedDirectHostRuns": 2,
+  "boundedDirectTestsEach": 17,
+  "qualification": "Complete source reconstruction separately recorded. Final source uses preserved v3 bundles, not mutable build trees. Peak-live remains staged; no latency-distribution or speed-target claim. Lost temporary development artifacts excluded."
+}

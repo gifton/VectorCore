@@ -1,0 +1,26 @@
+{
+  "task": "Q04",
+  "before": "allocation-before-01",
+  "after": "allocation-after-02",
+  "independentRawRowsCompared": 288,
+  "uniqueKeys": 279,
+  "fixedWidthMetricCountGroups": 36,
+  "verifiedLinkedArtifactCount": 270,
+  "identicalFixtureHashes": {
+    "Q04RunAllocationProbe.py": "a9d1afa708c07d2d4a5793d57dc11a0e0a380f229ef2013bc8699706870c709e",
+    "Q04Allocation.c": "49a2eea4d4a3d33f6952d6264f593b5316fbd13f0b567858d5e860d009852c07",
+    "Q04AllocationProbe.swift": "eefbd041aa4e7668c88acfc2429fc4c80e4d860026ef2992fa2b9d1244763729"
+  },
+  "identicalTargetOnlyCompilerArguments": true,
+  "rawLogSHA256": [
+    "9f745fa89eb98d232a9abcb3bef48a48b3ec0e531c89684f04fbdc903e44d06a",
+    "4813361b2608bfe674b7a2b719ed40a8b113f59f2f84112653ce57208b14b22a"
+  ],
+  "allThreeCalibrationControlsPassed": true,
+  "emptyCalls": {
+    "events": 0,
+    "requestedBytes": 0
+  },
+  "nonemptyCalls": "same event count; requested-byte reduction exactly8*(N-count); final events/bytes independent of N/lower in all36 groups",
+  "limits": "allocation requests, not live heap/RSS; existing core temporaries remain; duplicate N3/count3/lower0 raw rows retained; after01 test-build excluded"
+}

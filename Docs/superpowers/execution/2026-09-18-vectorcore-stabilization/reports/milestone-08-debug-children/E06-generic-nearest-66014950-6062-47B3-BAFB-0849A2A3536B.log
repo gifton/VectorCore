@@ -1,0 +1,26 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite ExecutionSchedulingContractTests started.
+􀟈 Test publicGenericNearestBoundaryWorkerObservation() started.
+E06_INVOCATION {"argv":["\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/libexec\/swift\/pm\/swiftpm-testing-helper","--test-bundle-path","\/private\/tmp\/vectorcore-stabilization-milestone08\/arm64-apple-macosx\/debug\/VectorCorePackageTests.xctest\/Contents\/MacOS\/VectorCorePackageTests","-c","debug","--jobs","4","--scratch-path","\/private\/tmp\/vectorcore-stabilization-milestone08","--filter","ExecutionSchedulingContractTests\/publicGenericNearestBoundaryWorkerObservation","\/private\/tmp\/vectorcore-stabilization-milestone08\/arm64-apple-macosx\/debug\/VectorCorePackageTests.xctest\/Contents\/MacOS\/VectorCorePackageTests","--testing-library","swift-testing"],"DYLD_FRAMEWORK_PATH":"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/Frameworks:\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/PrivateFrameworks","DYLD_LIBRARY_PATH":"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/usr\/lib","scenario":"generic-nearest"}
+E02_GENERIC_NEAREST N=34 exceptional=false k=1 parallel=false submitted=0 limit=16
+E02_GENERIC_NEAREST N=34 exceptional=false k=34 parallel=false submitted=0 limit=16
+E02_GENERIC_NEAREST N=34 exceptional=true k=1 parallel=false submitted=0 limit=16
+E02_GENERIC_NEAREST N=34 exceptional=true k=34 parallel=false submitted=0 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=false k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=false k=35 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=true k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=35 exceptional=true k=35 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=false k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=false k=36 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=true k=1 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=36 exceptional=true k=36 parallel=true submitted=1 limit=16
+E02_GENERIC_NEAREST N=4097 exceptional=false k=1 parallel=true submitted=9 limit=16
+E02_GENERIC_NEAREST N=4097 exceptional=false k=4097 parallel=true submitted=9 limit=16
+E02_GENERIC_NEAREST N=4097 exceptional=true k=1 parallel=true submitted=9 limit=16
+E02_GENERIC_NEAREST N=4097 exceptional=true k=4097 parallel=true submitted=9 limit=16
+E06_COMPLETE generic-nearest
+􁁛 Test publicGenericNearestBoundaryWorkerObservation() passed after 0.060 seconds.
+􁁛 Suite ExecutionSchedulingContractTests passed after 0.060 seconds.
+􁁛 Test run with 1 test in 1 suite passed after 0.060 seconds.

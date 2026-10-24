@@ -1,0 +1,29 @@
+# L01 independent final review — v4
+
+**ACCEPT final implementation and bounded evidence.** This final verdict supplements and preserves the complete v2 source review and v3 delta review. No outstanding blocking finding remains for the approved L01 scope. NUM-35 remains qualified/staged for upstream vendor-internal arithmetic.
+
+## Final source and oracle revision
+
+Verified final patch SHA256 `93b6b21b7097e492f326097381119f991b700c3532de346eac2681efbff6e92d` and all303 canonical v4 source hashes. Compared the complete v3/v4 inventories and exact changed text: only the scalar test oracle/comment/negative control and the C workspace fixture's printf label differ. Production executable source and all public/linked/mock consumer computations are unchanged. The previous v3 header correction and rotated-spectrum tests remain present.
+
+The scalar allowance is now one subnormal Float ULP plus2e-6 relative error, replacing the overly permissive eight-ULP absolute allowance. The new zero-versus-five-minimum-subnormals predicate control rejects that false success. Orthogonality/reconstruction/eigen-residual allowances remain distinct and unchanged. The C diagnostic now correctly calls the already-asserted final cutoff eigenVectorCutoff; neither polynomial assertion changed. These are narrow test/evidence corrections, not new algorithm behavior.
+
+## Sealed evidence verification
+
+Worker confirmed sealing, also relayed by root. Independently verified all69 entries in `L01-worker-index.json`, whose SHA256 is `576754e7ef17cd13b359bc9b86eba416480c2a4b49865170b89b4c84dd578e8a`; final implementation report hash is `63ab1cd7192fa58d12dde9808e4f4ef8f9550c653f2085841d498bddb6cd6965`. Rehashed all entries of the canonical RED build inventory and seven v2/v3/v4 Debug/Release/ASan inventories, plus v1/v3/v4 C inventories. Manifest entry counts include aliases and are not distinct-file counts. Earlier v2 baseline verification covered all297 exact-base hashes; final source has twelve changed/new paths and no unrelated production edits.
+
+Read the actual Swift command records and rehashed their logs. Actual baseline execution failed four functions with18 issues after a separate sandbox ModuleCache setup failure. The v1 macro compilation failure is separately retained and is not a runtime RED. V2 Debug/Release each passed35 reported functions/eight suites. V3 full Debug/Release each passed36/eight; v4 affected Debug/Release each passed14/one. These v4 runs include the tightened scalar oracle. The v3 ordinary count comprises34 in-process functions, one parameterized child parent and one environment-guarded no-op child entry; v4 comprises12 in-process plus the same two parent entries.
+
+Independently checked all24 ordinary retained child associations: four scenarios for each v2/v3/v4 Debug/Release pair. For every child the canonical capture hash, actual invocation JSON/argv/scenario, original parent capture reference, parent exit-status record, helper hash and separately retained loaded bundle hash match. All have completion markers and status0; Foundation exit reason is recorded as1. The parent helper's timeout path throws before status access and permits only15 seconds plus bounded1+1 cleanup. The24 historical/versioned bodies are not misreported as24 new v4 scenarios; final v4 has four per configuration.
+
+V3 Swift ASan actually ran34 in-process functions with both parent/no-op symbols excluded. Four further direct instrumented child scenarios passed individually, with exact helper, loaded ASan bundle, preload runtime, argv, environment, log hashes and completion markers verified. Read the effective bounded driver: execution15 seconds and TERM/KILL cleanup1+1; no unbounded wait. Leak detection was disabled. This establishes the unchanged production/body paths under ASan, not execution of the later v4 tighter scalar assertion under ASan.
+
+V1/v3 C workspace UBSan, actual-shim mock ASan+UBSan and real Accelerate-linked ASan drivers passed with recorded compile/run status0. V4's changed workspace fixture freshly compiled and passed UBSan. Rehashed their artifacts/logs. The mock is actual shim source with controlled query/allocator boundaries; it does not establish vendor internals or real OOM recovery. Small real linked C execution is distinct from those mock tests.
+
+The ordinary Swift6 public consumer compiled/linked and ran with `L01_PUBLIC_COMPLETE`, status0. Verified all133 public artifact hashes, including all130 linked objects via immutable v3 canonical remaps; command argv contains the same130 object paths. Historical scratch directory names containing v2 do not relabel their retained v3 build contents. All corresponding production and consumer source is unchanged at final v4. Child-bound unittest discovery reports seven actual tests; the earlier empty direct-module log is expressly excluded from verification.
+
+## Accepted limits
+
+Final acceptance combines the complete v3 production/full-suite/sanitizer/consumer evidence with fresh affected v4 Debug/Release and C UBSan checks under the explicitly verified byte-equivalence mapping. Versioned sources, binaries and captures were retained before rebuilds; no historical bundle-retention gap is being silently substituted with a later binary.
+
+The numerical result contract permits Float rounding, separates exact-zero working columns from nonzero singular directions rounding to zero, and does not promise arbitrary-conditioning convergence. Double working storage increases temporary memory. Local workspace representability checks and mock cleanup are not a universal Accelerate safety proof, arbitrary allocation-success guarantee or practical corruption reproduction. No speedup, GPU, downstream workload or production envelope claim follows. No builds, source/test edits or index/commit operations were performed by this reviewer.

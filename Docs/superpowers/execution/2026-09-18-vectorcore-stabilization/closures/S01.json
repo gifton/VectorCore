@@ -1,0 +1,46 @@
+{
+  "task": "S01",
+  "status": "accepted",
+  "task_base": "99a2ac4",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "OWN-01",
+    "OWN-02"
+  ],
+  "partial_records": {},
+  "validation": {
+    "red": "4 tests /242 issues before repair; malformed accepted values inspected as metadata only",
+    "debug": "Original89 tests/16 suites passed; supplement1test/1suite passed",
+    "release": "Original89 tests/16 suites passed; supplement1test/1suite passed",
+    "address_sanitizer": "Original5valid tests and supplement1valid test passed; deliberate traps excluded; no sanitizer errors",
+    "invalid_boundary_matrix": "84 diagnostic-bearing invalid children;42 valid children across7families/6routes/3lengths, Debug+Release",
+    "post_replacement_kernel_matrix": "All3INT8 widths: toFP32, quantization, INT8 distance/dot/cosine, both mixed orders, SoA transpose/calibration and mixed/INT8 batch paths; configured Swift route",
+    "source_association": "8frozen hashes;135production-file inventory with only7assigned changes; original test body reconstructed and hash verified after append-only supplement"
+  },
+  "review": "reports/S01-review.md",
+  "evidence": "reports/S01.md",
+  "root_verification": "reports/S01-root-verification.json",
+  "frozen_sha256": {
+    "Sources/VectorCore/Protocols/VectorProtocol.swift": "1f7f9342fb19b54e32a617e2097dc86c64f6410468ea0937aaca963a8593bba7",
+    "Sources/VectorCore/Vectors/DynamicVector.swift": "9e73c784f8099b99542080df7dd294adc92fa6917cd71841df649755feef8108",
+    "Sources/VectorCore/Vectors/Vector384Optimized.swift": "65f502644348826ad10dca69d584119628df3d93ec1402117b83fe5fbca77de6",
+    "Sources/VectorCore/Vectors/Vector512Optimized.swift": "6cbbacd7abf89e522c8ebd9996e5079edf1f2658d6bb43598c70aa6dcc1dbf14",
+    "Sources/VectorCore/Vectors/Vector768Optimized.swift": "bdd28e1b0d292189cd4301a6b2af3066aa432c47d21915dc7350b9d421a8e00b",
+    "Sources/VectorCore/Vectors/Vector1536Optimized.swift": "afda99317a57d29a68a257c4d1ca8212970b6b5433efb90063ae035a2b92f3bd",
+    "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift": "50a49865eea93c40ebad69dcec44c07d56651163f43509f452f53a76ec58fe59",
+    "Tests/ComprehensiveTests/VectorShapeContractTests.swift": "eafa3a4e77625735dcf7f4484a8812df90df1e0dec5e92778cac005bde4a78b2"
+  },
+  "migration": [
+    "Fixed malformed raw/replacement/nested/inout storage now traps with required-count diagnostic in Debug/Release",
+    "INT8 malformed shape decoding now throws, preserving valid keyed wire payload and parameters",
+    "Dynamic dimension follows current storage count",
+    "Computed public storage changes backing ABI layout; valid source usage preserved"
+  ],
+  "limitations": [
+    "Q01 parameter/numerical and throwing INT8 temporary-buffer policy remain separate",
+    "Optional VC_USE_C_KERNELS implementation not compiled or activated; configured Swift entry points and shared shape boundaries covered",
+    "Third-party conformer shape/snapshot obligations cannot be mechanically enforced",
+    "Existing zero-dimensional binary decode policy remains unchanged",
+    "No latency/scale-readiness or downstream execution claim"
+  ]
+}

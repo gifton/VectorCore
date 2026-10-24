@@ -1,0 +1,1555 @@
+[0/1] Planning build
+Building for production...
+[0/6] Write sources
+[2/6] Write swift-version--58304C5D6DBC2206.txt
+[4/7] Compiling VectorCore ThreadSafeConfiguration.swift
+/private/tmp/vectorcore-stabilization-2026-09-18/Sources/VectorCore/LinearAlgebra/MatrixMultiply.swift:44:21: warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+ 42 |             b.withUnsafeBufferPointer { bp in
+ 43 |                 c.withUnsafeMutableBufferPointer { cp in
+ 44 |                     cblas_sgemm(
+    |                     `- warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+ 45 |                         CblasColMajor,
+ 46 |                         transposeA ? CblasTrans : CblasNoTrans,
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Sources/VectorCore/Operations/MatrixDistance.swift:194:19: warning: result of call to 'withUnsafeContiguousBytes' is unused [#no-usage]
+192 |             let dstBase = dst.baseAddress!
+193 |             for (i, v) in vs.enumerated() {
+194 |                 v.withUnsafeContiguousBytes { src in
+    |                   `- warning: result of call to 'withUnsafeContiguousBytes' is unused [#no-usage]
+195 |                     memcpy(dstBase.advanced(by: i * d * stride), src.baseAddress!, d * stride)
+196 |                 }
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Sources/VectorCore/Operations/MatrixDistance.swift:238:21: warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+236 |             Y.withUnsafeBufferPointer { yb in
+237 |                 out.withUnsafeMutableBufferPointer { ob in
+238 |                     cblas_sgemm(
+    |                     `- warning: 'cblas_sgemm' was deprecated in macOS 13.3: An updated CBLAS interface supporting ILP64 is available.  Please compile with -DACCELERATE_NEW_LAPACK to access the new headers and -DACCELERATE_LAPACK_ILP64 for ILP64 support. [#DeprecatedDeclaration]
+239 |                         CblasRowMajor, CblasNoTrans, CblasTrans,
+240 |                         Int32(q), Int32(n), Int32(d),
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[5/11] Compiling MinimalTests BaselineTests.swift
+[6/11] Compiling VectorCoreBenchmarking ABComparisons.swift
+[7/12] Compiling VectorCoreBenchSupport AppMain.swift
+[7/12] Write Objects.LinkFileList
+[8/12] Linking vectorcore-bench
+[10/12] Compiling ComprehensiveTests AccelerateArraySIMDProviderParityTests.swift
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/ErrorHandlingTests.swift:625:21: note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 623 | 
+ 624 |             // Test passes if no crash occurs
+ 625 |             #expect(true)
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 626 |         }
+ 627 | 
+     :
+ 643 | 
+ 644 |             // Test passes if no crash occurs
+ 645 |             #expect(true)
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 646 |         }
+ 647 | 
+     :
+ 653 |             #else
+ 654 |             // In release builds, debug assertions should be compiled out
+ 655 |             #expect(true, "Debug assertions are compiled out")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 656 |             #endif
+ 657 | 
+     :
+ 660 |             #expect(true, "Debug validation is enabled in debug builds")
+ 661 |             #else
+ 662 |             #expect(true, "Debug validation is disabled in release builds")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 663 |             #endif
+ 664 |         }
+     :
+ 690 |             // PerformanceValidation.require(false, "Would crash")
+ 691 | 
+ 692 |             #expect(true, "Performance validation works correctly")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 693 |         }
+ 694 | 
+     :
+ 708 |             // PerformanceValidation.requireDimensionMatch(512, 256) // Would crash
+ 709 | 
+ 710 |             #expect(true, "Dimension validation is optimized for performance")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 711 |         }
+ 712 | 
+     :
+ 718 |             #else
+ 719 |             // In release builds, uses precondition for performance
+ 720 |             #expect(true, "Performance validation uses precondition in release")
+     |                     `- note: '#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning (from macro 'expect')
+ 721 |             #endif
+ 722 | 
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/LinearAlgebraProviderTests.swift:346:13: warning: no 'async' operations occur within 'await' expression
+344 | 
+345 |         // Per-scope override, mirroring the simdProvider TaskLocal pattern.
+346 |         try await Operations.$linearAlgebraProvider.withValue(SwiftLinearAlgebraProvider()) {
+    |             `- warning: no 'async' operations occur within 'await' expression
+347 |             #expect(Operations.linearAlgebraProvider is SwiftLinearAlgebraProvider)
+348 |             let g = try Operations.linearAlgebraProvider.qrThin(a, rows: 6, columns: 3)
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:136:26: warning: '9.0e38' overflows to inf during conversion to 'Float'
+134 |         let sumAA: Float = 9.0e38
+135 |         let sumBB: Float = 9.0e38
+136 |         let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+    |                          `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+137 | 
+138 |         // Confirm the product genuinely overflows (the bug's precondition).
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:135:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+133 |         // sumAA * sumBB ≈ 8.1e77 → +Inf in Float. sqrt path keeps it finite.
+134 |         let sumAA: Float = 9.0e38
+135 |         let sumBB: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+136 |         let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+137 | 
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:134:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+132 |         // ||v||² ≈ 9e38 for each; dot(a,b) ≈ 9e38 as well (parallel).
+133 |         // sumAA * sumBB ≈ 8.1e77 → +Inf in Float. sqrt path keeps it finite.
+134 |         let sumAA: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+135 |         let sumBB: Float = 9.0e38
+136 |         let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:153:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+151 |     func testCosineDistanceHugeMagnitudeOrthogonal() {
+152 |         let sumAA: Float = 9.0e38
+153 |         let sumBB: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+154 |         let dot: Float = 0.0
+155 | 
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/CosineKernelsTests.swift:152:28: warning: '9.0e38' overflows to inf during conversion to 'Float'
+150 |     @Test
+151 |     func testCosineDistanceHugeMagnitudeOrthogonal() {
+152 |         let sumAA: Float = 9.0e38
+    |                            `- warning: '9.0e38' overflows to inf during conversion to 'Float'
+153 |         let sumBB: Float = 9.0e38
+154 |         let dot: Float = 0.0
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/NumericalStabilityTests.swift:1886:32: warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1884 |     @Test("Magnitude of all-subnormal vector is finite, not NaN/Inf")
+1885 |     func testMagnitudeSubnormalVectorNotPoisoned() throws {
+1886 |         let subnormal: Float = 1e-40  // valid Float subnormal (< leastNormalMagnitude)
+     |                                `- warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1887 |         // Precondition: confirm 1/maxAbs really overflows for this input.
+1888 |         #expect((1.0 / subnormal).isInfinite, "Precondition: reciprocal must overflow to +Inf")
+
+/private/tmp/vectorcore-stabilization-2026-09-18/Tests/ComprehensiveTests/NumericalStabilityTests.swift:1908:32: warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1906 |     @Test("Normalizing all-subnormal vector does not produce NaN")
+1907 |     func testNormalizeSubnormalVectorNoNaN() throws {
+1908 |         let subnormal: Float = 1e-40
+     |                                `- warning: '1e-40' underflows and loses precision during conversion to 'Float'
+1909 |         let v = Vector512Optimized(repeating: subnormal)
+1910 | 
+[11/13] Compiling VectorCorePackageTests runner.swift
+[11/13] Write Objects.LinkFileList
+[12/13] Linking VectorCorePackageTests
+Build complete! (159.06s)
+Test Suite 'Selected tests' started at 2026-09-19 10:15:53.927.
+Test Suite 'VectorCorePackageTests.xctest' started at 2026-09-19 10:15:53.928.
+Test Suite 'BenchmarkContractTests' started at 2026-09-19 10:15:53.928.
+Test Case '-[BenchmarkContractTests.BenchmarkContractTests testInvalidComparisonNeverCountsAsEvidence]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkContractTests testInvalidComparisonNeverCountsAsEvidence]' passed (0.001 seconds).
+Test Suite 'BenchmarkContractTests' passed at 2026-09-19 10:15:53.929.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'BenchmarkRunnerContractTests' started at 2026-09-19 10:15:53.929.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testActualBatchProviderReturnFamily]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testActualBatchProviderReturnFamily]' passed (15.452 seconds).
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testAllErrorStatisticsMustBeFinite]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testAllErrorStatisticsMustBeFinite]' passed (0.000 seconds).
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testBadObservationSurvivesLaterGoodResultsAndReference]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testBadObservationSurvivesLaterGoodResultsAndReference]' passed (3.211 seconds).
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testProcessFixture]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testProcessFixture]' passed (0.000 seconds).
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testProcessTable]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testProcessTable]' passed (4.020 seconds).
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testProviderObservationWeightedMerge]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testProviderObservationWeightedMerge]' passed (0.000 seconds).
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testScalarFiniteDomainAndMeasuredErrors]' started.
+Test Case '-[BenchmarkContractTests.BenchmarkRunnerContractTests testScalarFiniteDomainAndMeasuredErrors]' passed (0.000 seconds).
+Test Suite 'BenchmarkRunnerContractTests' passed at 2026-09-19 10:16:16.612.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 22.683 (22.684) seconds
+Test Suite 'ExecutionBoundaryTests' started at 2026-09-19 10:16:16.612.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testArbitraryLoopWidthsExactCoverage]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testArbitraryLoopWidthsExactCoverage]' passed (0.002 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testChildProbe]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testChildProbe]' passed (0.000 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testDangerousBoundariesInChildren]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testDangerousBoundariesInChildren]' passed (1.727 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testHintValidationBeforeEmptySequentialParallelAndNestedRouting]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testHintValidationBeforeEmptySequentialParallelAndNestedRouting]' passed (0.119 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLargeRepresentableReductionLengthsInChild]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLargeRepresentableReductionLengthsInChild]' passed (0.118 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLoopErrorsStopAtFirstInteriorAndTail]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testLoopErrorsStopAtFirstInteriorAndTail]' passed (0.001 seconds).
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testNegativeBatchRejectedBeforeDroppedWork]' started.
+Test Case '-[ComprehensiveTests.ExecutionBoundaryTests testNegativeBatchRejectedBeforeDroppedWork]' passed (0.001 seconds).
+Test Suite 'ExecutionBoundaryTests' passed at 2026-09-19 10:16:18.580.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 1.967 (1.967) seconds
+Test Suite 'VectorCorePackageTests.xctest' passed at 2026-09-19 10:16:18.580.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 24.651 (24.652) seconds
+Test Suite 'Selected tests' passed at 2026-09-19 10:16:18.580.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 24.651 (24.653) seconds
+Provider artifacts: /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/benchmark-provider-6CEACE98-0B4E-43CD-8D64-023E9550D827
+Observation artifacts: /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/benchmark-observed-0297C6B1-69DB-42DC-B826-34D51F91B217
+Process artifacts: /var/folders/_c/7_fgg5v57d56kt4wd9bcsdj40000gn/T/benchmark-contract-EE31306E-6E4F-49DE-826F-620DFD098ABE
+􀟈  Test run started.
+􀄵  Testing Library Version: 1902
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite "Top-K CPU wrapper NaN contract" started.
+􀟈  Suite "Public vector shape contracts" started.
+􀟈  Suite "Metric dispatch contract" started.
+􀟈  Suite "Provider conformance" started.
+􀟈  Test optimizedParallelEuclideanRetainsNaNsAfterNumericCandidates() started.
+􀟈  Suite "Integration Protocols" started.
+􀟈  Test optimizedParallelFiniteTiesUseOriginalIndices() started.
+􀟈  Suite "TieredStorageMutationTests" started.
+􀟈  Suite "Top-K NaN ordering contract" started.
+􀟈  Test BenchmarkContractSwiftTestingEntry() started.
+􀟈  Suite "TieredStorageOwnership singleton" started.
+􀟈  Test batchSerialHeapAndSortKeepNaNsLast() started.
+􀟈  Test gemmBatchEuclideanFormattingPreservesSelectedNaNs() started.
+􀟈  Test constrainedCollectionOverrideDispatchesThroughProtocolWitness() started.
+􀟈  Test genericOperationsSelectsNumericScoresBeforeNaNs() started.
+􀟈  Test optimizedParallelDotNegationKeepsNaNsLast() started.
+􀟈  Suite "TieredStorageOwnership" started.
+􀟈  Test factoryNamesPreserveWitnessCaseInsensitively() started.
+􀟈  Test suppliedWitnessAcrossFacades() started.
+􀟈  Test childProbe() started.
+􀟈  Test batchSelectionPreservesInputEdgeBehavior() started.
+􀟈  Test testNormalizationHint_InsertSimulation() started.
+􀟈  Test testSearchResult_Comparable() started.
+􀟈  Test testSimpleVectorCollection_BatchVectors() started.
+􀟈  Suite "Normalization hint mutation and decoding" started.
+􀟈  Test testNormalizationHint_MutationInvalidatesHint_MutableBuffer() started.
+􀟈  Test batchParallelHeapAndSortPreserveGlobalIndices() started.
+􀟈  Test testIndexableVector_Vector384Conformance() started.
+􀟈  Test testNormalizationHint_CollectionIteration() started.
+􀟈  Test testSearchResults_FromTopKResult() started.
+􀟈  Test "parallelReduce is mode-invariant for an identity initial (C5)" started.
+􀟈  Test testIndexableVector_DynamicVectorConformance() started.
+􀟈  Test testSearchResult_Codable() started.
+􀟈  Test testSearchResults_MapIDs() started.
+􀟈  Test "CPUComputeProvider .sequential conforms" started.
+􀟈  Test testNormalizationHint_CodableRoundTrip() started.
+􀟈  Test testSimpleVectorCollection_AddAndRetrieve() started.
+􀟈  Test testNormalizationHint_MutationInvalidatesHint_StorageSetter() started.
+􀟈  Test "CPUComputeProvider .automatic (parallel path) conforms" started.
+􀟈  Test literalChebyshevAndConfiguredReverseResults() started.
+􀟈  Test testSimpleVectorCollection_AutoID() started.
+􀟈  Test testNormalizationHint_StorageForwarding() started.
+􀟈  Test testSimpleVectorCollection_DimensionMismatch() started.
+􀟈  Test testSearchResults_Accessors() started.
+􀟈  Test testSearchResult_Creation() started.
+􀟈  Test testIndexableVector_IsApproximatelyNormalized() started.
+􀟈  Test testIndexableVector_NormalizedWithHint() started.
+􀟈  Test testNormalizationHint_NoDoubleWrapping() started.
+􀟈  Test testNormalizationHint_RequiredInitializers() started.
+􀟈  Test testNormalizationHint_EqualityIncludesHint() started.
+􀟈  Test testSimpleVectorCollection_AllIDs() started.
+􀟈  Test testNormalizationHint_HashableConsistency() started.
+􀟈  Test testSimpleVectorCollection_Remove() started.
+􀟈  Test throwingBulkWriteback(count:shared:) started.
+􀟈  Test testSearchResults_Creation() started.
+􀟈  Test "MockBufferProvider conforms" started.
+􀟈  Test testTypeAliases() started.
+􀟈  Test "ComputeProvider default implementations conform" started.
+􀟈  Test "AccelerationProvider laws A1/A3/A4 + type preservation" started.
+􀟈  Test testSimpleVectorCollection_RemoveAll() started.
+􀟈  Test testSearchResults_Collection() started.
+􀟈  Test "SwiftBufferPool conforms" started.
+􀟈  Test testSearchResult_ComputedScore() started.
+􀟈  Test testIndexableVector_NormalizedUncheckedWithHint() started.
+􀟈  Test testVectorCollection_EmptySearch() started.
+􀟈  Test testSimpleVectorCollection_Search() started.
+􀟈  Test testIndexableVector_WithNormalizationHint() started.
+􀟈  Test canonicalMembershipAndOrderBothDirections() started.
+􀟈  Test testIndexableVector_DefaultImplementation() started.
+􀟈  Test throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test normalBulkWriteback(count:shared:) started.
+􀟈  Test explicitTiePoliciesRespectTheirScope() started.
+􀟈  Test numericInfinityOutranksNaN() started.
+􀟈  Test "CPUComputeProvider .parallel conforms" started.
+􀟈  Test testNormalizationHint_CodableRoundTrip_DynamicVector() started.
+􀟈  Test testNormalizationHint_ConformsToIndexableVector() started.
+􀟈  Test publicDotProductMaximizesWithNaNsLast() started.
+􀟈  Test testVectorCollection_SearchCosine() started.
+􀟈  Test singletonFullMatrixImport() started.
+􀟈  Test scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test comparatorLaws() started.
+􀟈  Test existingPublicSelectionEdges() started.
+􀟈  Test testNormalizationHint_StaticConstructor() started.
+􀟈  Test testNormalizationHint_AutoDetection() started.
+􀟈  Test testNormalizationHint_Explicit() started.
+􀟈  Test emptyReservedTierBorrows(capacity:) started.
+􀟈  Test testNormalizationHint_Arithmetic() started.
+􀟈  Test exactTiesAndSignedZeroKeepOriginalPositionsAndBits() started.
+􀟈  Test matrixMutationAndConstruction(size:) started.
+􀟈  Test publicHeapEvictionAndCrossover() started.
+􀟈  Test pointerIDsAreLabelsAfterSelection() started.
+􀟈  Test publicSelectionKeepsNaNsLastAndPreservesCount() started.
+􀟈  Test fullMatrixImportsValidateShape() started.
+􀟈  Test compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test disjointMergesKeepGlobalIndicesAndDestinationPolicy() started.
+􀟈  Test heapEvictsInitialNaN() started.
+􀟈  Test matrixCopiesAndIteratorsAreSnapshots(size:) started.
+􀟈  Test tierBoundariesPreserveValues(count:) started.
+􀟈  Test nanCandidatesFillRemainingPositions() started.
+􀟈  Test compactDetachReplacementAndIteratorLifetime() started.
+􀟈  Test repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test compactCopiesAreIsolated(count:) started.
+􀟈  Test throwingCompactBorrowPreservesWritesAndIsolation() started.
+􁁛  Test BenchmarkContractSwiftTestingEntry() passed after 0.001 seconds.
+􀟈  Test emptyReservedCompactCapacityIsNotInitialized() started.
+􀟈  Test initializedElementsAreReleased(count:) started.
+􁁛  Test genericOperationsSelectsNumericScoresBeforeNaNs() passed after 0.001 seconds.
+􁁛  Test constrainedCollectionOverrideDispatchesThroughProtocolWitness() passed after 0.001 seconds.
+􀟈  Test case passing 2 arguments count → 0, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 0, shared → false to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 1, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 4, shared → false to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 4, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → false to throwingBulkWriteback(count:shared:) started.
+􁁛  Test batchSerialHeapAndSortKeepNaNsLast() passed after 0.002 seconds.
+􀟈  Test case passing 2 arguments count → 1, shared → false to throwingBulkWriteback(count:shared:) started.
+􁁛  Test factoryNamesPreserveWitnessCaseInsensitively() passed after 0.001 seconds.
+􀟈  Test case passing 2 arguments count → 513, shared → false to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 513, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2048, shared → false to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → false to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2048, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2049, shared → false to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2049, shared → true to throwingBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 0, shared → false to normalBulkWriteback(count:shared:) started.
+􁁛  Test gemmBatchEuclideanFormattingPreservesSelectedNaNs() passed after 0.002 seconds.
+􀟈  Test case passing 2 arguments count → 0, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 1, shared → false to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 1, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 4, shared → false to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → false to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 1, shared → false to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 1, shared → true to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 4, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → false to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 4, shared → false to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 4, shared → true to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → false to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → true to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 513, shared → false to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → false to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → true to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 5, shared → false to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 513, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → true to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2048, shared → false to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → false to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 513, shared → false to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2048, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 512, shared → true to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 513, shared → true to throwingReferenceWritebackLifetime(count:shared:) started.
+􁁛  Test childProbe() passed after 0.003 seconds.
+􀟈  Test case passing 2 arguments count → 2049, shared → false to normalBulkWriteback(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 513, shared → false to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2048, shared → false to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 513, shared → true to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2049, shared → true to normalBulkWriteback(count:shared:) started.
+􀟈  Test mutationsVector768Optimized() started.
+􀟈  Test mutationsGenericFixedDimensions() started.
+􀟈  Test case passing 2 arguments count → 2048, shared → true to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 1 argument capacity → 0 to emptyReservedTierBorrows(capacity:) started.
+􀟈  Test case passing 2 arguments count → 2048, shared → false to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test mutationsVector1536Optimized() started.
+􀟈  Test case passing 1 argument capacity → 5 to emptyReservedTierBorrows(capacity:) started.
+􀟈  Test decodedMetadataIsAdvisory() started.
+􀟈  Test mutationsDynamicVector() started.
+􀟈  Test case passing 2 arguments count → 2048, shared → true to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 1 argument capacity → 513 to emptyReservedTierBorrows(capacity:) started.
+􀟈  Test mutationsVector512Optimized() started.
+􀟈  Test case passing 2 arguments count → 2049, shared → false to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test mutationsVector384Optimized() started.
+􀟈  Test case passing 1 argument capacity → 2049 to emptyReservedTierBorrows(capacity:) started.
+􀟈  Test case passing 2 arguments count → 2049, shared → false to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2049, shared → true to throwingReferenceWritebackLifetime(count:shared:) started.
+􀟈  Test case passing 2 arguments count → 2049, shared → true to scalarAndBulkReuseDetachedAllocation(count:shared:) started.
+􀟈  Test case passing 1 argument size → 3 to matrixMutationAndConstruction(size:) started.
+􀟈  Test case passing 1 argument size → 4 to matrixMutationAndConstruction(size:) started.
+􀟈  Test case passing 1 argument size → 32 to matrixMutationAndConstruction(size:) started.
+􁁛  Test testSearchResult_Comparable() passed after 0.008 seconds.
+􀟈  Test case passing 1 argument size → 33 to matrixMutationAndConstruction(size:) started.
+􁁛  Test testSimpleVectorCollection_BatchVectors() passed after 0.009 seconds.
+􀟈  Test case passing 1 argument size → 64 to matrixMutationAndConstruction(size:) started.
+􀟈  Test case passing 1 argument size → 65 to matrixMutationAndConstruction(size:) started.
+􁁛  Test testNormalizationHint_InsertSimulation() passed after 0.012 seconds.
+􁁛  Test batchSelectionPreservesInputEdgeBehavior() passed after 0.012 seconds.
+􁁛  Test testIndexableVector_DynamicVectorConformance() passed after 0.012 seconds.
+􀟈  Test case passing 1 argument count → 5 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 6 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 7 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 8 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 9 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 10 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 11 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_CollectionIteration() passed after 0.012 seconds.
+􀟈  Test case passing 1 argument count → 12 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 13 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 14 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 15 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 16 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 17 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 18 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testSearchResults_FromTopKResult() passed after 0.012 seconds.
+􀟈  Test case passing 1 argument count → 19 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 20 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 21 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 22 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 23 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 0 to tierBoundariesPreserveValues(count:) started.
+􀟈  Test case passing 1 argument count → 24 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_MutationInvalidatesHint_StorageSetter() passed after 0.013 seconds.
+􀟈  Test case passing 1 argument count → 1 to tierBoundariesPreserveValues(count:) started.
+􀟈  Test case passing 1 argument count → 25 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 26 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 4 to tierBoundariesPreserveValues(count:) started.
+􀟈  Test case passing 1 argument size → 4 to matrixCopiesAndIteratorsAreSnapshots(size:) started.
+􀟈  Test case passing 1 argument count → 27 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 5 to tierBoundariesPreserveValues(count:) started.
+􀟈  Test case passing 1 argument size → 32 to matrixCopiesAndIteratorsAreSnapshots(size:) started.
+􀟈  Test case passing 1 argument count → 28 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 512 to tierBoundariesPreserveValues(count:) started.
+􀟈  Test case passing 1 argument size → 33 to matrixCopiesAndIteratorsAreSnapshots(size:) started.
+􀟈  Test case passing 1 argument count → 513 to tierBoundariesPreserveValues(count:) started.
+􀟈  Test case passing 1 argument size → 3 to matrixCopiesAndIteratorsAreSnapshots(size:) started.
+􀟈  Test case passing 1 argument size → 64 to matrixCopiesAndIteratorsAreSnapshots(size:) started.
+􀟈  Test case passing 1 argument count → 30 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 2048 to tierBoundariesPreserveValues(count:) started.
+􀟈  Test case passing 1 argument size → 65 to matrixCopiesAndIteratorsAreSnapshots(size:) started.
+􀟈  Test case passing 1 argument count → 29 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 31 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 2049 to tierBoundariesPreserveValues(count:) started.
+􁁛  Test testSearchResult_Codable() passed after 0.015 seconds.
+􀟈  Test case passing 1 argument count → 32 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 33 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 34 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test "CPUComputeProvider .sequential conforms" passed after 0.015 seconds.
+􀟈  Test case passing 1 argument count → 35 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 36 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 37 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 39 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 40 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 1 to repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test case passing 1 argument count → 38 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 41 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 4 to repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test case passing 1 argument count → 42 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_MutationInvalidatesHint_MutableBuffer() passed after 0.015 seconds.
+􀟈  Test case passing 1 argument count → 5 to repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test case passing 1 argument count → 5 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 43 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 512 to repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test case passing 1 argument count → 513 to repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test case passing 1 argument count → 44 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 6 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 2048 to repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test case passing 1 argument count → 45 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 46 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 2049 to repeatedReferenceIsReleasedOnce(count:) started.
+􀟈  Test case passing 1 argument count → 7 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSearchResults_MapIDs() passed after 0.015 seconds.
+􀟈  Test case passing 1 argument count → 47 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 48 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 8 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testIndexableVector_Vector384Conformance() passed after 0.016 seconds.
+􀟈  Test case passing 1 argument count → 49 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 9 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 50 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 10 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 51 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 11 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 52 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testSearchResults_Accessors() passed after 0.016 seconds.
+􀟈  Test case passing 1 argument count → 12 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 53 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 54 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 13 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 55 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 14 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 56 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 15 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 57 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_NoDoubleWrapping() passed after 0.016 seconds.
+􀟈  Test case passing 1 argument count → 58 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 16 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 59 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 17 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSimpleVectorCollection_AutoID() passed after 0.016 seconds.
+􀟈  Test case passing 1 argument count → 18 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 60 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 61 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 19 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testIndexableVector_NormalizedWithHint() passed after 0.016 seconds.
+􀟈  Test case passing 1 argument count → 62 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 20 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 63 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 21 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 64 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 22 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSimpleVectorCollection_DimensionMismatch() passed after 0.017 seconds.
+􁁛  Test testSearchResult_Creation() passed after 0.017 seconds.
+􀟈  Test case passing 1 argument count → 65 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 0 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 23 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 66 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 67 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 1 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 24 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSimpleVectorCollection_AllIDs() passed after 0.017 seconds.
+􀟈  Test case passing 1 argument count → 4 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 25 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 69 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 5 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 26 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 70 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 68 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 512 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 71 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 27 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 513 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 72 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test literalChebyshevAndConfiguredReverseResults() passed after 0.018 seconds.
+􀟈  Test case passing 1 argument count → 2048 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 73 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 2049 to initializedElementsAreReleased(count:) started.
+􀟈  Test case passing 1 argument count → 28 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 74 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 29 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 75 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 30 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 76 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testTypeAliases() passed after 0.018 seconds.
+􁁛  Test testNormalizationHint_StorageForwarding() passed after 0.018 seconds.
+􁁛  Test testNormalizationHint_CodableRoundTrip() passed after 0.018 seconds.
+􀟈  Test case passing 1 argument count → 77 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 31 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 78 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_RequiredInitializers() passed after 0.018 seconds.
+􀟈  Test case passing 1 argument count → 32 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 79 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 33 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 80 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 34 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 81 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 35 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 82 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 36 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testNormalizationHint_EqualityIncludesHint() passed after 0.019 seconds.
+􀟈  Test case passing 1 argument count → 83 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 37 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSimpleVectorCollection_AddAndRetrieve() passed after 0.020 seconds.
+􀟈  Test case passing 1 argument count → 84 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 38 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 85 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 86 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 39 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 87 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 88 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 40 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testNormalizationHint_HashableConsistency() passed after 0.020 seconds.
+􀟈  Test case passing 1 argument count → 89 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 41 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 90 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testSimpleVectorCollection_Remove() passed after 0.020 seconds.
+􀟈  Test case passing 1 argument count → 42 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 91 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 43 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 92 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testIndexableVector_IsApproximatelyNormalized() passed after 0.020 seconds.
+􀟈  Test case passing 1 argument count → 44 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 93 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 45 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 94 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 46 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 95 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 47 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSimpleVectorCollection_RemoveAll() passed after 0.020 seconds.
+􁁛  Test testSearchResults_Creation() passed after 0.020 seconds.
+􀟈  Test case passing 1 argument count → 96 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 48 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 49 to compactCopiesAreIsolated(count:) started.
+􁁛  Test "MockBufferProvider conforms" passed after 0.021 seconds.
+􀟈  Test case passing 1 argument count → 97 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 50 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 98 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 51 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 99 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 52 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 100 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test throwingBulkWriteback(count:shared:) with 16 test cases passed after 0.021 seconds.
+􀟈  Test case passing 1 argument count → 53 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 101 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 102 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 54 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 103 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 55 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 104 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 56 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 105 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 57 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 106 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 107 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 58 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 108 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 59 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 109 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 110 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 60 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 111 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 61 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 112 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 62 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 113 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 63 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 114 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 64 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 115 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 65 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 116 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 66 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 67 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 117 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 68 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 118 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 69 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 119 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 70 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 120 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 121 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test "AccelerationProvider laws A1/A3/A4 + type preservation" passed after 0.023 seconds.
+􀟈  Test case passing 1 argument count → 71 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSearchResults_Collection() passed after 0.023 seconds.
+􀟈  Test case passing 1 argument count → 122 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 72 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 123 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 73 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 124 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testIndexableVector_NormalizedUncheckedWithHint() passed after 0.023 seconds.
+􀟈  Test case passing 1 argument count → 74 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 75 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 125 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 76 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 126 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 77 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 127 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 128 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 78 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 79 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 129 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 80 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testSimpleVectorCollection_Search() passed after 0.023 seconds.
+􀟈  Test case passing 1 argument count → 130 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 81 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 131 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 82 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testIndexableVector_WithNormalizationHint() passed after 0.024 seconds.
+􁁛  Test testSearchResult_ComputedScore() passed after 0.024 seconds.
+􁁛  Test "SwiftBufferPool conforms" passed after 0.024 seconds.
+􀟈  Test case passing 1 argument count → 132 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 83 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 84 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 133 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 85 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 134 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 86 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 135 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 87 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 88 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 136 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 89 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 137 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 138 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 90 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testIndexableVector_DefaultImplementation() passed after 0.025 seconds.
+􀟈  Test case passing 1 argument count → 139 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 91 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 140 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 92 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 141 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 142 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 93 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 143 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 94 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 95 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 96 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 145 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 97 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 146 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 98 to compactCopiesAreIsolated(count:) started.
+􁁛  Test numericInfinityOutranksNaN() passed after 0.026 seconds.
+􀟈  Test case passing 1 argument count → 147 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 99 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 148 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 100 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 149 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 101 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 144 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 150 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 102 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 103 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 151 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 104 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 152 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 105 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 153 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 106 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 154 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 107 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testVectorCollection_EmptySearch() passed after 0.027 seconds.
+􀟈  Test case passing 1 argument count → 155 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 108 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 156 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 109 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 157 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 110 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 111 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 158 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 112 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 159 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 160 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 113 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 161 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 114 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 115 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 162 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 163 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 116 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 117 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 164 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 118 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 165 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_ConformsToIndexableVector() passed after 0.028 seconds.
+􀟈  Test case passing 1 argument count → 119 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 166 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 120 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 167 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 121 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 168 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 122 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 169 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 123 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 170 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 124 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 171 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 125 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 126 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 172 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 173 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 127 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testNormalizationHint_CodableRoundTrip_DynamicVector() passed after 0.029 seconds.
+􀟈  Test case passing 1 argument count → 174 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 175 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 129 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 128 to compactCopiesAreIsolated(count:) started.
+􁁛  Test publicDotProductMaximizesWithNaNsLast() passed after 0.029 seconds.
+􀟈  Test case passing 1 argument count → 176 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 130 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 177 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 132 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 178 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 131 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 133 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 180 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 134 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 179 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 135 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 181 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 183 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 136 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 182 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 184 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 138 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 185 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 186 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 137 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 140 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 141 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 139 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 187 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 188 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 142 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 143 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 144 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 191 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 190 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 189 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 146 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 193 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 194 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 148 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 147 to compactCopiesAreIsolated(count:) started.
+􁁛  Test testVectorCollection_SearchCosine() passed after 0.031 seconds.
+􀟈  Test case passing 1 argument count → 195 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 196 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 149 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 150 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 198 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 152 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 197 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 200 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 192 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 201 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 153 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 156 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 203 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 204 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 155 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 157 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 154 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 145 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 159 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 158 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 199 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 202 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 161 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 160 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 208 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 206 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 163 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 210 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 205 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 211 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 212 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 213 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test canonicalMembershipAndOrderBothDirections() passed after 0.031 seconds.
+􀟈  Test case passing 1 argument count → 165 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 214 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 151 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 215 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 207 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 168 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 162 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 209 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 169 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 167 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 218 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 166 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 220 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test singletonFullMatrixImport() passed after 0.031 seconds.
+􁁛  Test explicitTiePoliciesRespectTheirScope() passed after 0.032 seconds.
+􀟈  Test case passing 1 argument count → 171 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 217 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 216 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 221 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 175 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 174 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 173 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 176 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 223 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 225 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 177 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 179 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 224 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 222 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 172 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 228 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 164 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 230 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 231 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 180 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 219 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test scalarAndBulkReuseDetachedAllocation(count:shared:) with 10 test cases passed after 0.032 seconds.
+􀟈  Test case passing 1 argument count → 182 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 226 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 178 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 234 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 185 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 170 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 184 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 186 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 236 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 187 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 235 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 233 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 188 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 237 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 232 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 240 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 181 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 192 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 191 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 193 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 238 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 242 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 241 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 194 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 183 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 190 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 244 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 195 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 196 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 246 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 247 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 198 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 229 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 189 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 239 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 245 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 249 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 250 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 201 to compactCopiesAreIsolated(count:) started.
+􁁛  Test existingPublicSelectionEdges() passed after 0.033 seconds.
+􀟈  Test case passing 1 argument count → 202 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 251 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 200 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 253 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 204 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 206 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 254 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 255 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 256 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 258 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 207 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 209 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 227 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 248 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 243 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 210 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 197 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 259 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 257 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 211 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 263 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 261 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 212 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 213 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 264 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 265 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 215 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 262 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 260 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 266 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 217 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 268 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 269 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 267 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 216 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 252 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 208 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 219 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 205 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 270 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 203 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 271 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 199 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 220 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 273 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 221 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 222 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 274 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 272 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 223 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 275 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 276 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 277 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 214 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 278 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 224 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 225 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 228 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 279 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 229 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 226 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 281 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 230 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 227 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 283 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 231 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 232 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 285 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 233 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 280 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 286 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 282 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 234 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 287 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 235 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 289 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 237 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 290 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 239 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 291 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 292 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 241 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 242 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 243 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 293 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 294 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 295 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 244 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 296 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 245 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 238 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 236 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 284 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 298 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 247 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 288 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 246 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 249 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 250 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 302 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 240 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 251 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 303 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 252 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 304 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 301 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 253 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 248 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 305 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 297 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 254 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 255 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 307 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 299 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test suppliedWitnessAcrossFacades() passed after 0.037 seconds.
+􀟈  Test case passing 1 argument count → 308 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 258 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 306 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 309 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 311 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 257 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 256 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 218 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 300 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 260 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 313 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 312 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_StaticConstructor() passed after 0.036 seconds.
+􀟈  Test case passing 1 argument count → 314 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 262 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 263 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 264 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 315 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 265 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 318 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 317 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 267 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 268 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 323 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 269 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 322 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 270 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 261 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 316 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 324 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_AutoDetection() passed after 0.036 seconds.
+􀟈  Test case passing 1 argument count → 310 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 325 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 320 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 266 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 321 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 272 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 327 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 328 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 275 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 273 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 276 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 326 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 329 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 330 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 332 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 271 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 333 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 334 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 280 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 335 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 281 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 277 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 336 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 282 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 331 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 284 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 259 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 279 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 338 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 285 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 278 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 274 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 283 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 341 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 340 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 287 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 337 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 344 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 289 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 290 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 345 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 319 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 286 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 339 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 343 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 291 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 346 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 292 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 348 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 293 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 349 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 288 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 294 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 350 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 295 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 351 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 297 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 352 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 298 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 353 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 299 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 354 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 300 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 342 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 355 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 356 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 301 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 357 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 302 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 358 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 347 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 303 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 360 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 305 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 296 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 306 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 361 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 362 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 363 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 307 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 304 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 309 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 310 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 308 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 311 to compactCopiesAreIsolated(count:) started.
+􁁛  Test comparatorLaws() passed after 0.039 seconds.
+􀟈  Test case passing 1 argument count → 366 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 364 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 367 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 369 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 370 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 359 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 315 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 368 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 317 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 371 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 316 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 372 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 313 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 365 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 373 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 312 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 320 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 321 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 375 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 319 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 374 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 322 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 377 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 324 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 379 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 323 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 376 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 325 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 378 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 327 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 318 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 314 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 382 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 330 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 329 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 381 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 384 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 385 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 332 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 333 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 386 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 387 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 334 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 331 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 388 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 389 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 390 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 339 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 391 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 340 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 338 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 341 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 392 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 393 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 342 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 343 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 395 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test testNormalizationHint_Explicit() passed after 0.041 seconds.
+􀟈  Test case passing 1 argument count → 394 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 335 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 345 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 396 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 347 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 398 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 346 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 399 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 397 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 349 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 344 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 348 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 350 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 337 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 380 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 326 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 336 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 403 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 402 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 383 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 405 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 352 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 404 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 406 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 353 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 354 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 408 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 355 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 356 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 357 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 410 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 401 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 411 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 359 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 409 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 407 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 361 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 328 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 414 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 362 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 358 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 400 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 363 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 415 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 351 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 416 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 366 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 418 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 367 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 419 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 369 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 420 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 364 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 360 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 412 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 370 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 421 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 371 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 422 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 372 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 423 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 373 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 368 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 374 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 425 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 365 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 375 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 376 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 427 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 413 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 428 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 377 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 378 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 380 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 381 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 433 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 417 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 426 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 382 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 432 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 383 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 434 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 435 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 384 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 436 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 386 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 431 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 437 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 385 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 379 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 430 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 429 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 438 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 387 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 388 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 440 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 439 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 390 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 391 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 443 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 392 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 424 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 444 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 445 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 393 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 441 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 395 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 394 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 442 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 397 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 398 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 399 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 400 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 401 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 402 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 403 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 396 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 407 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 408 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 409 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 410 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 446 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 412 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 389 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 406 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 414 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 413 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 447 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 411 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 415 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 405 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 404 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 417 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 418 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 448 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 419 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 449 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 420 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 422 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 450 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 424 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 425 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 426 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 428 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 421 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 451 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 430 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 429 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 427 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 431 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 416 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 423 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 433 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 432 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 454 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 436 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 452 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 435 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 438 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 437 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 455 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 441 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 440 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 434 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 453 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 443 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 444 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 446 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 445 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 457 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 448 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 456 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 439 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 449 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 447 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 458 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 459 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 452 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 453 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 454 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 456 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 450 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 455 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 460 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 457 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 462 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 461 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 460 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 463 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 463 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 462 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 461 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 465 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 459 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 458 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 466 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 442 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 451 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 469 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 467 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 466 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 470 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 465 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 472 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 474 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 473 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 467 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 468 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 464 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 477 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 479 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 476 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 470 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 468 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 482 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 480 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 481 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 464 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 471 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 483 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 478 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 471 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 469 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 472 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 475 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 489 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 473 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 491 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 486 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 484 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 485 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 488 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 493 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 496 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 497 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 475 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 492 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 498 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 474 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 500 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 499 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 476 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 487 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 490 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 501 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 502 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 494 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 477 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 505 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 504 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 506 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 508 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 507 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 478 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 509 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 510 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 512 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 511 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 479 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 481 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 483 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 503 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 482 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 484 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 485 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 487 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 495 to compactCopiesAreIsolated(count:) started.
+􀟈  Test case passing 1 argument count → 480 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 489 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 491 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 492 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 490 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 493 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 494 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 496 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 497 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 499 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 495 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 488 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 501 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 504 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 503 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 502 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 507 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 509 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 508 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 505 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 486 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 506 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 511 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test emptyReservedTierBorrows(capacity:) with 4 test cases passed after 0.051 seconds.
+􁁛  Test testNormalizationHint_Arithmetic() passed after 0.051 seconds.
+􀟈  Test case passing 1 argument count → 500 to compactDetachesOnlyWhenShared(count:) started.
+􀟈  Test case passing 1 argument count → 512 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test exactTiesAndSignedZeroKeepOriginalPositionsAndBits() passed after 0.051 seconds.
+􁁛  Test matrixMutationAndConstruction(size:) with 6 test cases passed after 0.051 seconds.
+􀟈  Test case passing 1 argument count → 498 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test publicHeapEvictionAndCrossover() passed after 0.051 seconds.
+􁁛  Test pointerIDsAreLabelsAfterSelection() passed after 0.051 seconds.
+􁁛  Test optimizedParallelEuclideanRetainsNaNsAfterNumericCandidates() passed after 0.052 seconds.
+􁁛  Test publicSelectionKeepsNaNsLastAndPreservesCount() passed after 0.051 seconds.
+􁁛  Test fullMatrixImportsValidateShape() passed after 0.051 seconds.
+􀟈  Test case passing 1 argument count → 510 to compactDetachesOnlyWhenShared(count:) started.
+􁁛  Test optimizedParallelDotNegationKeepsNaNsLast() passed after 0.052 seconds.
+􁁛  Test disjointMergesKeepGlobalIndicesAndDestinationPolicy() passed after 0.051 seconds.
+􁁛  Test tierBoundariesPreserveValues(count:) with 8 test cases passed after 0.051 seconds.
+􁁛  Test matrixCopiesAndIteratorsAreSnapshots(size:) with 6 test cases passed after 0.051 seconds.
+􁁛  Test compactDetachReplacementAndIteratorLifetime() passed after 0.051 seconds.
+􁁛  Test nanCandidatesFillRemainingPositions() passed after 0.051 seconds.
+􁁛  Test heapEvictsInitialNaN() passed after 0.051 seconds.
+􁁛  Test repeatedReferenceIsReleasedOnce(count:) with 7 test cases passed after 0.051 seconds.
+􁁛  Test emptyReservedCompactCapacityIsNotInitialized() passed after 0.051 seconds.
+􁁛  Test throwingCompactBorrowPreservesWritesAndIsolation() passed after 0.051 seconds.
+􁁛  Test initializedElementsAreReleased(count:) with 8 test cases passed after 0.051 seconds.
+􁁛  Test normalBulkWriteback(count:shared:) with 16 test cases passed after 0.051 seconds.
+􁁛  Test throwingReferenceWritebackLifetime(count:shared:) with 14 test cases passed after 0.051 seconds.
+􁁛  Test "parallelReduce is mode-invariant for an identity initial (C5)" passed after 0.052 seconds.
+􁁛  Suite "Top-K NaN ordering contract" passed after 0.053 seconds.
+􁁛  Suite "TieredStorageOwnership singleton" passed after 0.053 seconds.
+􁁛  Suite "Metric dispatch contract" passed after 0.053 seconds.
+􁁛  Suite "Integration Protocols" passed after 0.053 seconds.
+􁁛  Test mutationsDynamicVector() passed after 0.047 seconds.
+􀟈  Test fixedStorageBoundaryMatrix() started.
+􁁛  Test mutationsVector384Optimized() passed after 0.047 seconds.
+􁁛  Suite "TieredStorageMutationTests" passed after 0.053 seconds.
+􁁛  Test mutationsVector512Optimized() passed after 0.048 seconds.
+􁁛  Test optimizedParallelFiniteTiesUseOriginalIndices() passed after 0.054 seconds.
+􁁛  Test batchParallelHeapAndSortPreserveGlobalIndices() passed after 0.053 seconds.
+􁁛  Test mutationsVector768Optimized() passed after 0.049 seconds.
+􁁛  Suite "Top-K CPU wrapper NaN contract" passed after 0.054 seconds.
+􁁛  Test compactDetachesOnlyWhenShared(count:) with 508 test cases passed after 0.052 seconds.
+􁁛  Test compactCopiesAreIsolated(count:) with 508 test cases passed after 0.052 seconds.
+􁁛  Test decodedMetadataIsAdvisory() passed after 0.049 seconds.
+􁁛  Suite "TieredStorageOwnership" passed after 0.054 seconds.
+􁁛  Test "CPUComputeProvider .automatic (parallel path) conforms" passed after 0.054 seconds.
+􁁛  Test "CPUComputeProvider .parallel conforms" passed after 0.054 seconds.
+􁁛  Test "ComputeProvider default implementations conform" passed after 0.054 seconds.
+􁁛  Suite "Provider conformance" passed after 0.055 seconds.
+􁁛  Test mutationsVector1536Optimized() passed after 0.050 seconds.
+􁁛  Test mutationsGenericFixedDimensions() passed after 0.088 seconds.
+􁁛  Suite "Normalization hint mutation and decoding" passed after 0.093 seconds.
+􁁛  Test fixedStorageBoundaryMatrix() passed after 8.259 seconds.
+􀟈  Test dynamicReplacementOwnsDimension() started.
+􁁛  Test dynamicReplacementOwnsDimension() passed after 0.009 seconds.
+􀟈  Test int8DecodingValidatesShapeAndPreservesWire() started.
+􁁛  Test int8DecodingValidatesShapeAndPreservesWire() passed after 0.007 seconds.
+􀟈  Test validFP32ConstructorsMutationAndBuffers() started.
+􁁛  Test validFP32ConstructorsMutationAndBuffers() passed after 0.021 seconds.
+􀟈  Test validINT8ConversionBuffersAndKernels() started.
+􁁛  Test validINT8ConversionBuffersAndKernels() passed after 0.012 seconds.
+􀟈  Test genericFixedAndImmutableFP16Controls() started.
+􁁛  Test genericFixedAndImmutableFP16Controls() passed after 0.011 seconds.
+􀟈  Test postReplacementMixedSoAAndCalibrationKernels() started.
+S01 configured INT8 path: Swift; VC_USE_C_KERNELS alternative uncompiled
+􁁛  Test postReplacementMixedSoAAndCalibrationKernels() passed after 0.014 seconds.
+􁁛  Suite "Public vector shape contracts" passed after 8.390 seconds.
+􁁛  Test run with 109 tests in 10 suites passed after 8.390 seconds.

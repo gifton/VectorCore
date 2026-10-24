@@ -1,0 +1,41 @@
+{
+  "base": "84f42d01489a526b8ae40bd77fe7618c0de33f34",
+  "currentBase": "ae0fd908d99b5ccacdb22749e5203f6e70cbc381",
+  "diffSHA256": "8a469f13f434291ccd855c638fd718682d506e6f2464c92caeb5e38debf3ccac",
+  "baseCodeFiles": 248,
+  "archiveCodeFiles": 249,
+  "onlyChangedPaths": [
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionValidation.swift",
+    "Sources/VectorCore/Operations/NaNInfinityHandling.swift",
+    "Sources/VectorCore/Protocols/VectorProtocol.swift",
+    "Tests/ComprehensiveTests/NumericalPolicyContractTests.swift"
+  ],
+  "frozenFiles": [
+    {
+      "path": "Sources/VectorCore/Protocols/VectorProtocol.swift",
+      "baseSHA256": "2ad1ad2175ed9c53e5993d7c7f5bf624a6d9f7e5cc945d39aefc248151752dfe",
+      "finalSHA256": "51dfb65ed655c6a108708db1fce6fe29cb7fd3502350248b04553cc132c11155"
+    },
+    {
+      "path": "Sources/VectorCore/Operations/Kernels/MixedPrecisionValidation.swift",
+      "baseSHA256": "a25023d7352dadd04c096e46f8a1147dc8b3eda66e452dc49fc1fcbc77748c66",
+      "finalSHA256": "1bc914f297e0690db37e963566dace03f232905b7ccc41558cccbca0f571825e"
+    },
+    {
+      "path": "Sources/VectorCore/Operations/NaNInfinityHandling.swift",
+      "baseSHA256": "1147a9c285398816a6088a72ef149e4df409100184ae4fbd0a4f3a389f3bc29c",
+      "finalSHA256": "652a4ae8800eb3dc141ffa6131b26cdaf2fb51debfb91b9337f273d9f91c513d"
+    },
+    {
+      "path": "Tests/ComprehensiveTests/NumericalPolicyContractTests.swift",
+      "baseSHA256": null,
+      "finalSHA256": "51e788211aeacc5575a8a711f2d931dd7f051ac22512ffeef58b3061aac1f1ee"
+    }
+  ],
+  "reconstruction": "Complete patch reproduces all declared bytes, full inventory contains only declared edits, current base and canonical backup match",
+  "compilerProbe": "Actual Release module; default test subscript witness aborts -6, explicit faithful test witness compiles0 without timeout; exact argv and source hashes retained",
+  "finalRuntimeEvidence": "Final frozen v2 Debug and Release each pass seven functions in two suites; all 27 inventory artifacts and all eight retained/decompressed command logs match",
+  "imported": true,
+  "evidenceInventorySHA256": "a9f19483b09e8493313d8b10370b4de16e77fb77f63dc0ef52f8bd32a1586a49",
+  "importVerification": "All four imported files match frozen v2 hashes; every existing shared file matched its task-base hash before import."
+}

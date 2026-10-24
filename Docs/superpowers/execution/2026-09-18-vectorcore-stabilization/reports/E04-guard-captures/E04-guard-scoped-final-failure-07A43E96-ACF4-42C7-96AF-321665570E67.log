@@ -1,0 +1,10 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite "E04 MemoryPool boundaries" started.
+􀟈 Test guardChildProbe() started.
+E04_CHILD_STARTED:scoped-final-failure
+E04_ALLOCATOR_CALLED
+E04_ALLOCATOR_CALLED
+E04_ALLOCATOR_CALLED
+VectorCore/MemoryPool.swift:141: Fatal error: MemoryPool.withBuffer final allocation failed

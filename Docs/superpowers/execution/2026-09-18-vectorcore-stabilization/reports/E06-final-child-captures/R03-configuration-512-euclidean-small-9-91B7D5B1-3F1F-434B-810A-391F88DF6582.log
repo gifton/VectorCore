@@ -1,0 +1,12 @@
+􀟈 Test run started.
+􀄵 Testing Library Version: 1902
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Suite "R03 matrix metric and logical output contracts" started.
+􀟈 Test isolatedConfigurationChild() started.
+R03_CHILD_INVOCATION {"argv":["\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/libexec\/swift\/pm\/swiftpm-testing-helper","--test-bundle-path","\/private\/tmp\/vectorcore-stabilization-E06-debug\/arm64-apple-macosx\/debug\/VectorCorePackageTests.xctest\/Contents\/MacOS\/VectorCorePackageTests","--jobs","6","--scratch-path","\/private\/tmp\/vectorcore-stabilization-E06-debug","--filter","MatrixMetricContractTests\/isolatedConfigurationChild","\/private\/tmp\/vectorcore-stabilization-E06-debug\/arm64-apple-macosx\/debug\/VectorCorePackageTests.xctest\/Contents\/MacOS\/VectorCorePackageTests","--testing-library","swift-testing"],"DYLD_FRAMEWORK_PATH":"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/Frameworks:\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/PrivateFrameworks","DYLD_LIBRARY_PATH":"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/usr\/lib","scenario":"512-euclidean-small-9"}
+R03_CONFIGURATION_BODY 512-euclidean-small-9
+R03_ROUTE_ELIGIBILITY dimension=512 N=9 metric=euclidean enabled=true threshold=8 eligible=true
+R03_CONFIGURATION_COMPLETE 512-euclidean-small-9
+􁁛 Test isolatedConfigurationChild() passed after 0.004 seconds.
+􁁛 Suite "R03 matrix metric and logical output contracts" passed after 0.004 seconds.
+􁁛 Test run with 1 test in 1 suite passed after 0.004 seconds.

@@ -1,0 +1,45 @@
+{
+  "task": "T14",
+  "status": "accepted",
+  "task_base": "baa99b5 (phase 2) / 553d7f1 (phase 3)",
+  "integration_revision": {
+    "phase2": "819d3fe",
+    "phase3": "2cccd8c"
+  },
+  "closed_records": [
+    "T14-OVERLOAD-WITNESS-DIVERGENCE",
+    "T14-SEARCH-ARITHMETIC-SPLIT",
+    "T14-COSINE-POSITION-DEPENDENCE",
+    "T14-SUM-SHADOW-REVIEW",
+    "T14-METRIC-CLASS-CLOSURE"
+  ],
+  "disposition_records": {
+    "T14-OVERLOAD-WITNESS-DIVERGENCE": "30 public concrete overloads, 18 of which differed in bits from the witness (dot1536 2 ulp, as seen in P01). Phase 2: the Euclidean/Dot witnesses were rerouted to EuclideanKernels/DotKernels for the optimized types and 24 overloads removed. Phase 3: the Cosine witness was rerouted to CosineKernels and 6 overloads removed. All 30 are gone (source-compatible; D02 symbol diffs recorded).",
+    "T14-SEARCH-ARITHMETIC-SPLIT": "Dot512 Operations scores depended on k; Cosine512 search used 4 arithmetics. Now overload = witness = every search route on every probe row (below the GEMM gates, which P02 owns; VectorProtocol.cosineDistance(to:) is a disclosed follow-up). Dot changes up to 1.54% on cancellation-heavy rows, and one overflow class −∞→NaN, disclosed.",
+    "T14-COSINE-POSITION-DEPENDENCE": "The BatchKernels pair loop (B) differed from its tail kernel (A), so a candidate's cosine bits depended on N parity, chunk size and k. All 8 cosine range helpers (fused and preNorm × 384-1536) now use the blocked form of A, bit-exact in both slots and at the tail; P01 tiled parity stays exact.",
+    "T14-SUM-SHADOW-REVIEW": "SIMDExtensions sum() kept: the stdlib lane order with a +0 start, documented and pinned by SIMDSumSemanticsTests (fails with the shadow deleted and under a tree-order mutant); the T12 lint allowlist reason updated.",
+    "T14-METRIC-CLASS-CLOSURE": "MetricWitnessEquivalenceTests (concrete/generic/existential/batch × metric × width × fixture, count guard, empty pending list), MetricSearchWitnessConsistencyTests, MetricDotRouteObservationTests (non-arithmetic route identity), MetricCosinePositionTests, BatchKernelsRangeClosureTests (pair == tail for every public range helper), test_metric_overload_registry.py (empty registry) and test_range_helper_closure.py."
+  },
+  "migrations": "P01 (root-approved): fusedRoute score-difference assertions retired (route still identified by ledger/calibration/hint observations); TilingParity cosine pair≠tail → ==0; 512 references C→A; the p01Witness comment.",
+  "validation": {
+    "phase2": "Debug full 1568/216; Release targeted; Intel compile; 385 OK; D4 16/16 unchanged.",
+    "phase3": "RED 77 cosine issues → GREEN 0 with the overloads present and after removal; full Debug 1,588 plus 75 XCTest; Release targeted; Intel compile; mutations (pair loop → B; slot-1-only; witness → vDSP; re-added overload) caught; 419 OK in-repo and git-less on the merged tree; ledger 0 problems.",
+    "reviews": "phase 2: Opus review → fix 1 → scoped Sonnet re-review APPROVED. Phase 3: 3a proposal → root rulings → 3b → split reviews A (Opus, Spec 9/9) and B (Sonnet) APPROVED with wording → ONE final fix (root verified the only non-comment Sources change is the ruled attribute removal)."
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T14",
+  "reviewed_tree": {
+    "phase2": "4971cbfbbea397a0846e79775e1199d21062234d",
+    "phase3": "1b12b4dc67f6246f7f6ff289c7fbb11b1bf950e4"
+  },
+  "limitations": [
+    "Intel x86_64 baseline: addProduct lowers to _fmaf library calls (assembly inspection); the cosine search pair loops, the rerouted witness on the optimized types and range_topk_cosine_fused_512 now pay it. Speed not measured (performance deferred; platform floor unchanged).",
+    "VectorProtocol.cosineDistance(to:) remains a separate arithmetic (follow-up).",
+    "GEMM routes excluded from bit-identity (P02 owns them).",
+    "In serial n=64 fusedRoute cases no non-arithmetic observation separates the fused kernel from a metric.distance substitution (bits identical by construction; only performance would be invisible)."
+  ],
+  "routed": [
+    "Follow-up: measure the Intel FMA cost on every listed path.",
+    "Follow-up: align VectorProtocol.cosineDistance(to:).",
+    "D02: the symbol diffs (T14/d02-symbol-diff.txt, T14/d02-symbol-diff-phase3.txt)."
+  ]
+}

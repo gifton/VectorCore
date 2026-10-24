@@ -1,0 +1,5 @@
+# EX07 — Import-safe benchmark CLI driver
+
+The existing CI unittest discovery imports every test_*.py. The V01 CLI driver executed its process assertions at import and mistook unittest's `discover` argument for a binary path. The retained full-discovery run failed before importing that module; the other 28 tests passed. This is an integration defect in the test entry point, not a benchmark result failure.
+
+The unchanged executable body now lives in main(), with a standard __main__ guard and explicit argument-count usage error. Root mechanically removed the added indentation and verified every original executable-body byte is unchanged. Final unittest discovery passes all 28 tests, and explicitly executing the driver against the actual milestone04 Release binary passes its invalid-threshold, output-failure, strict-correctness and provider-family assertions. No CLI regression is claimed merely from importing the module; CI wiring of the separate executable driver remains part of V03. Full diff, hashes and exact validation are in EX07-root-manifest.json. Independent review accepted in EX07-root-review.md; root reverified the frozen source hash before commit.

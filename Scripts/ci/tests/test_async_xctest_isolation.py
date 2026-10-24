@@ -60,12 +60,10 @@ proven beyond the named controls in this file):
 CONTROLS (all in this file): NEGATIVE: inline fixtures reproducing the pre-conversion shapes
 (KernelAutoTuner-style tests, the ExecutionBoundary `checkHints` helper, the BenchmarkContractTests
 `assertSweepProperty` sweep) are RED with exact counts and green once `@MainActor` is added, so RED
-needs no git history. When the history is available, the real pre-conversion files are also checked
-(git show 657a100: the 24 methods and 1 helper in KernelAutoTunerTests/ExecutionBoundaryTests;
-git show tree 1c84131: the 16 methods and the `assertSweepProperty` helper of BenchmarkContractTests).
-Those history checks raise unittest.SkipTest when the revision is unavailable (CI's shallow checkout,
-an export outside any repository, a loose object that was never pushed); they never error.
-Inline must-flag fixtures cover every spelling. POSITIVE: inline must-pass fixtures, and the live
+needs no git history; the live converted files with every `@MainActor` blanked are RED again
+(test_originals_flag_with_main_actor_removed). The former checks of the pre-conversion files at
+commits that exist only on a local branch skipped on every CI run and were removed (PR #56 review
+SW3-5). Inline must-flag fixtures cover every spelling. POSITIVE: inline must-pass fixtures, and the live
 tree must have zero findings while the guard demonstrably SEES at least the converted methods (lower
 bounds, so new async tests need no guard edit; every async test it sees must be isolated).
 MUTATION: disabling each rule makes its must-flag controls pass unflagged.
@@ -73,7 +71,6 @@ MUTATION: disabling each rule makes its must-flag controls pass unflagged.
 
 import importlib.util
 import re
-import subprocess
 import unittest
 from pathlib import Path
 
@@ -83,8 +80,6 @@ lexing = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(lexing)
 _mask, _Scopes = lexing._mask, lexing._Scopes
 
-INTEGRATION_COMMIT = '657a100'  # pre-conversion root tree (24 methods + 1 helper); may be unavailable (shallow clone)
-V04_BASE_TREE = '1c84131'       # pre-conversion BenchmarkContractTests (16 methods); an unreachable tree, may be unavailable
 RULES = ('derivation_fixpoint', 'method_attr', 'class_attr', 'extension_attr', 'nonisolated', 'concurrent',
          'effect_across_lines', 'helper_rule')
 
@@ -284,17 +279,6 @@ def _tests_files():
             for p in sorted((ROOT / 'Tests').rglob('*.swift'))]
 
 
-def _git_show(rev, path):
-    """File text at `rev`, or SkipTest when git, the repository, the object or the path is unavailable
-    (CI's default shallow checkout, an export outside any repository, a loose object that was never pushed)."""
-    try:
-        done = subprocess.run(['git', 'show', f'{rev}:{path}'], cwd=ROOT, capture_output=True, text=True,
-                              check=True, timeout=30)
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired, OSError) as error:
-        raise unittest.SkipTest(f'{rev}:{path} is not available in this checkout ({type(error).__name__})')
-    return done.stdout
-
-
 def _flagged(source, *extra, disabled=frozenset()):
     files = [('fixture.swift', source)] + [(f'extra{i}.swift', s) for i, s in enumerate(extra)]
     return analyze(files, disabled)[0]
@@ -490,34 +474,6 @@ class OriginalInstances(unittest.TestCase):
                                    r'\1@MainActor \2', source, flags=re.M)
                 self.assertNotEqual(converted, source)
                 self.assertEqual(_flagged(converted), [], name)
-
-    def test_negative_control_root_originals(self):
-        files = [(p, _git_show(INTEGRATION_COMMIT, p)) for p in (
-            'Tests/ComprehensiveTests/KernelAutoTunerTests.swift',
-            'Tests/ComprehensiveTests/ExecutionBoundaryTests.swift')]
-        findings, seen = analyze(files)
-        by_file = {}
-        for path, _, _, _, rule in findings:
-            by_file.setdefault((path, rule), 0)
-            by_file[(path, rule)] += 1
-        self.assertEqual(by_file, {
-            ('Tests/ComprehensiveTests/KernelAutoTunerTests.swift', 'R1'): 22,
-            ('Tests/ComprehensiveTests/ExecutionBoundaryTests.swift', 'R1'): 2,
-            ('Tests/ComprehensiveTests/ExecutionBoundaryTests.swift', 'R2'): 1,
-        })
-        self.assertEqual(len(seen), 24)
-
-    def test_negative_control_benchmark_originals(self):
-        files = [(p, _git_show(V04_BASE_TREE, p)) for p in (
-            'Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift',
-            'Tests/BenchmarkContractTests/RunnerContractTests.swift')]
-        findings, _ = analyze(files)
-        self.assertEqual(_count_by_rule(findings), {'R1': 16, 'R2': 1})
-        self.assertEqual([f[3] for f in findings if f[4] == 'R2'], ['assertSweepProperty'])
-
-    def test_unavailable_revision_skips_instead_of_erroring(self):
-        with self.assertRaises(unittest.SkipTest):
-            _git_show('0000000000000000000000000000000000000000', 'Tests/none.swift')
 
     def test_originals_flag_with_main_actor_removed(self):
         # Mechanical closure: the live converted files with every `@MainActor` blanked are RED again.

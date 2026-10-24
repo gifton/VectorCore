@@ -56,15 +56,15 @@ Limits (nothing beyond the named controls is proven):
   can only add findings, never hide one (pinned by test_code_view_is_failsafe).
 Benchmarks/ and Sources/ are scanned report-only (`--report`), not enforced here.
 
-Controls (all in this file): NEGATIVE (the original instances at a788372 via `git show`, plus inline
-fixtures for every must-flag form) must yield findings; POSITIVE must not; each rule is shown to bite by
+Controls (all in this file): NEGATIVE (inline fixtures for every must-flag form; the former check of the
+original instances at a commit that exists only on a local branch skipped on every CI run and was removed,
+PR #56 review SW3-5) must yield findings; POSITIVE must not; each rule is shown to bite by
 mutation (disabling it makes its must-flag controls pass unflagged); the live scan of Tests/ must match the
 allowlist exactly.
 """
 
 import importlib.util
 import re
-import subprocess
 import sys
 import unittest
 from collections import Counter
@@ -76,7 +76,6 @@ lexing = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(lexing)
 _mask, _Scopes = lexing._mask, lexing._Scopes
 
-BASELINE_COMMIT = 'a788372'
 CATEGORIES = ('LAYOUT-PIN:', 'HANDLE-MODEL:')
 STORAGE_BASES = {'Array', 'ContiguousArray', 'Dictionary', 'Set', 'Data', 'String', 'ManagedBuffer'}
 TYPE_DECL = re.compile(r'(?<![\w.])(final\s+class|class|actor|struct)\s+(?!func\b|var\b|let\b)(\w+)')
@@ -340,19 +339,6 @@ ALLOWLIST = {
 }
 
 
-def _baseline(path):
-    done = subprocess.run(['git', 'show', f'{BASELINE_COMMIT}:{path}'], cwd=ROOT, capture_output=True,
-                          text=True, timeout=30)
-    return done.stdout if done.returncode == 0 else None
-
-
-# Lines that MUST be found at BASELINE_COMMIT (inventory 6.7 instances and the benchmark table).
-# Hits there are by direct layout expression; the original files contained these expressions.
-ORIGINAL_INSTANCES = {
-    'Tests/ComprehensiveTests/MixedPrecisionPart1ValidationTests.swift': {153, 154},
-    'Tests/ComprehensiveTests/MixedPrecisionKernelsTests.swift': {328, 329, 370, 371, 807, 808},
-    'Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift': {302, 303, 305, 306, 308, 309, 322, 323},
-}
 
 MUST_FLAG = {
     'size(ofValue:)': ('let n = MemoryLayout.size(ofValue: v)\n', 'ofValue'),
@@ -443,15 +429,6 @@ class HandleLayoutPolicy(unittest.TestCase):
     def test_live_tests_match_the_allowlist_exactly(self):
         problems = check_files(_load_tree('Tests'), sources_handle_types(), ALLOWLIST)
         self.assertEqual(problems, [], '\n'.join(problems))
-
-    def test_negative_control_original_instances(self):
-        """RED on the pre-fix files: the inventory 6.7 layout expressions are found at their original lines."""
-        for path, required in ORIGINAL_INSTANCES.items():
-            source = _baseline(path)
-            if source is None:
-                self.skipTest(f'{BASELINE_COMMIT} not available in this checkout')
-            found = {line for line, _, _ in find_layout_uses(source, sources_handle_types())}
-            self.assertTrue(required <= found, f'{path}: required {sorted(required)}, found {sorted(found)}')
 
     def test_must_flag_controls(self):
         for label, (source, _) in MUST_FLAG.items():

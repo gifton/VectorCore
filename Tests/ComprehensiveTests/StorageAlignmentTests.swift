@@ -21,6 +21,18 @@ struct StorageAlignmentSuite {
         #expect(AlignedMemory.isAligned(ptr, to: AlignedMemory.minimumAlignment))
     }
 
+    /// A negative count, or one whose byte count overflows `Int`, throws `.invalidDimension` before any allocation
+    /// (PR #56 review: the guard had no test).
+    @Test
+    func testAllocateAlignedRejectsNegativeAndOverflowingCounts() {
+        for count in [-1, Int.min, Int.max, Int.max / 2] {
+            let error = #expect(throws: VectorError.self, "count \(count)") {
+                _ = try AlignedMemory.allocateAligned(type: Float.self, count: count)
+            }
+            #expect(error?.kind == .invalidDimension, "count \(count): \(String(describing: error))")
+        }
+    }
+
     @Test
     func testAllocateAlignedReturnsProperlyAlignedPointer_Custom() throws {
         let custom = max(AlignedMemory.minimumAlignment * 2, 32)

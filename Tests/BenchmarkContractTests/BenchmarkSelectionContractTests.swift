@@ -366,7 +366,9 @@ extension BenchmarkSelectionContractTests {
         let testImage = try XCTUnwrap(image(of: BenchmarkSelectionContractTests.self))
         let detected = EnvCapture.loadedImagePaths().filter(EnvCapture.isVectorCoreLibraryImage)
         XCTAssertEqual(!detected.isEmpty, coreImage != testImage, "\(coreImage) vs \(testImage): \(detected)")
-        if coreImage == testImage { XCTAssertTrue(EnvCapture.loadedImagePaths().contains { $0.contains("VectorCore") }) }
+        // Control: the enumeration sees the image holding this test, by the exact path dyld reports for it (the checkout
+        // directory and the per-target bundle name need not contain "VectorCore").
+        XCTAssertTrue(EnvCapture.loadedImagePaths().contains(testImage), "\(testImage) not among the loaded images")
         #endif
     }
 }

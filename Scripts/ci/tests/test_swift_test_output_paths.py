@@ -562,23 +562,6 @@ class SwiftTestOutputPathTests(unittest.TestCase):
         finally:
             swift_lexing._mask = raw
 
-    def test_v04_pre_relocation_file_is_clean_when_present(self):
-        # Evidence hook: T05_V04_FILE points at the pre-relocation BenchmarkSelectionContractTests.swift.
-        import os
-        path = os.environ.get('T05_V04_FILE')
-        if not path:
-            self.skipTest('T05_V04_FILE not set')
-        self.assertEqual(violations(Path(path).read_text(encoding='utf-8')), [])
-
-    def test_original_files_are_flagged_when_present(self):
-        # RED evidence hook: R05_ORIGINAL_TREE points at a scratch tree holding the pre-fix files.
-        import os
-        tree = os.environ.get('R05_ORIGINAL_TREE')
-        if not tree:
-            self.skipTest('R05_ORIGINAL_TREE not set')
-        flagged = scan(tree)
-        self.assertEqual(len(flagged), 2, flagged)
-
 
 if __name__ == '__main__':
     unittest.main()

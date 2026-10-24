@@ -136,12 +136,16 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        // Set override
-        try await tuner.setOverride(.cpuSoA, for: workload)
+        // Override with the FP32 strategy the heuristic does not return, so a `setOverride` that stored
+        // nothing would fail this test (PR #56 review SW3-4).
+        let heuristic = try await tuner.selectStrategy(for: workload)
+        let override: KernelStrategy = heuristic == .cpuSoA ? .cpuAoS : .cpuSoA
+        try await tuner.setOverride(override, for: workload)
 
         // Verify override is respected
         let selected = try await tuner.selectStrategy(for: workload)
-        XCTAssertEqual(selected, .cpuSoA, "Manual override should be respected")
+        XCTAssertEqual(selected, override, "Manual override should be respected")
+        XCTAssertNotEqual(selected, heuristic, "the override must be observable against the heuristic")
 
         // Cleanup: remove override to avoid influencing other tests
         await tuner.removeOverride(for: workload)
@@ -462,12 +466,15 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        // Set override for workload1
-        try await tuner.setOverride(.cpuSoA, for: workload1)
+        // Override workload1 with the strategy the heuristic does not return for it (PR #56 review SW3-4)
+        let heuristic = try await tuner.selectStrategy(for: workload2)
+        let override: KernelStrategy = heuristic == .cpuSoA ? .cpuAoS : .cpuSoA
+        try await tuner.setOverride(override, for: workload1)
 
         // workload2 should get the same override (same hash)
         let strategy = try await tuner.selectStrategy(for: workload2)
-        XCTAssertEqual(strategy, .cpuSoA, "Identical workloads should share overrides")
+        XCTAssertEqual(strategy, override, "Identical workloads should share overrides")
+        XCTAssertNotEqual(strategy, heuristic, "the shared override must be observable against the heuristic")
     }
 
     // MARK: - Strategy Count Validation

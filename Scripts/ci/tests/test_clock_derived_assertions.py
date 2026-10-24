@@ -506,22 +506,6 @@ class ClockDerivedAssertionTests(unittest.TestCase):
             self.assertEqual(text.count('expectPerformance("' + site + '",' + call), 1)
             self.assertNotIn(relative, hits)
 
-    def original_source(self, relative):
-        import os
-        import subprocess
-        revision = os.environ.get('T06_ORIGINAL_REV', '696dc9f')  # integration commit before the T06 migration
-        try:
-            return subprocess.run(['git', 'show', revision + ':' + relative], cwd=ROOT, check=True,
-                                  capture_output=True, text=True, timeout=30).stdout
-        except (OSError, subprocess.SubprocessError):
-            self.skipTest('original revision %s unavailable' % revision)
-
-    def test_original_milestone12_sites_are_flagged(self):
-        flagged = self.hits(self.original_source('Tests/ComprehensiveTests/QuantizedKernelsTests.swift'))
-        self.assertIn(('testQuantizationOverhead', 'ratio>1.0'), flagged)
-        flagged = self.hits(self.original_source('Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift'))
-        self.assertIn(('testAppleSiliconNEON', 'gflops>0.1'), flagged)
-
     def test_recall_on_inventoried_sites(self):
         """Un-gate every inventoried site (helper call -> direct assertion): the scan must see it."""
         import json

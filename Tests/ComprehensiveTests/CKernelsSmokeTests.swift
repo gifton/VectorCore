@@ -2,7 +2,7 @@ import XCTest
 @testable import VectorCore
 
 final class CKernelsSmokeTests: XCTestCase {
-    func testDot512Stub() {
+    func testDot512Stub() throws {
         #if VC_USE_C_KERNELS
         var a = [Float](repeating: 1, count: 512)
         var b = [Float](repeating: 2, count: 512)
@@ -13,8 +13,7 @@ final class CKernelsSmokeTests: XCTestCase {
         }
         XCTAssertEqual(r, 1024, accuracy: 1e-5)
         #else
-        // If C kernels are disabled, nothing to test here.
-        XCTAssertTrue(true)
+        throw XCTSkip("C kernels are not compiled into this build (VC_USE_C_KERNELS is not defined)")
         #endif
     }
 }

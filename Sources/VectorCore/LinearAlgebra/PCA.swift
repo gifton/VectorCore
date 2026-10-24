@@ -131,7 +131,10 @@ public struct PCAModel: Sendable {
     ///   These are structural bounds, not a measurement of the data's rank
     ///   (PCATests.errorContracts).
     ///   `.dimensionMismatch` for ragged input;
-    ///   `.invalidOperation` for n < 2; plus anything the active
+    ///   `.invalidOperation` for n < 2;
+    ///   `.operationFailed` when a centering, variance or factorization result
+    ///   is nonfinite or not representable as `Float` for finite input (0.3.3
+    ///   returned infinity in the variance case); plus anything the active
     ///   `Operations.linearAlgebraProvider` throws.
     public static func fit<V: VectorProtocol>(
         _ vectors: [V],

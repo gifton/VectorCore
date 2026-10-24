@@ -2184,12 +2184,12 @@
    "id": "V04-C-0038",
    "path": "Sources/VectorCore/LinearAlgebra/PCA.swift",
    "symbol": "struct PCAModel::func fit",
-   "fingerprint": "374720b98f8bf471",
-   "statement": "- throws: `vectorerror.invaliddimension` for k outside `1...min(n − 1, d)` when centered, or `1...min(n, d)` when `config.center == false`; also for invalid config. these are structural bounds, not a measurement of the data's rank (pcatests.errorcontracts). `.dimensionmismatch` for ragged input; `.invalidoperation` for n < 2; plus anything the active `operations.linearalgebraprovider` throws.",
+   "fingerprint": "8160e73e85b6879f",
+   "statement": "- throws: `vectorerror.invaliddimension` for k outside `1...min(n − 1, d)` when centered, or `1...min(n, d)` when `config.center == false`; also for invalid config. these are structural bounds, not a measurement of the data's rank (pcatests.errorcontracts). `.dimensionmismatch` for ragged input; `.invalidoperation` for n < 2; `.operationfailed` when a centering, variance or factorization result is nonfinite or not representable as `float` for finite input (0.3.3 returned infinity in the variance case); plus anything the active `operations.linearalgebraprovider` throws.",
    "kind": "comment",
-   "lineHint": 114,
+   "lineHint": 128,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "named-test",
     "reference": "Tests/ComprehensiveTests/PCATests.swift::errorContracts",
@@ -2198,9 +2198,12 @@
    },
    "acceptedContract": "L01",
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "V04 phase F review"
+    "originalStatement": "- throws: `vectorerror.invaliddimension` for k outside `1...min(n − 1, d)` when centered, or `1...min(n, d)` when `config.center == false`; also for invalid config. these are structural bounds, not a measurement of the data's rank (pcatests.errorcontracts). `.dimensionmismatch` for ragged input; `.invalidoperation` for n < 2; plus anything the active `operations.linearalgebraprovider` throws.",
+    "originalFingerprint": "374720b98f8bf471",
+    "originalSymbol": "struct PCAModel::func fit",
+    "originalRevision": "a73988e",
+    "origin": "V04 phase F review",
+    "correctedIn": "PR #56 review low-severity disclosure: PCA Float-overflow result failure (2026-10-24)"
    }
   },
   {

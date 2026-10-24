@@ -1,8 +1,0 @@
-/private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/NumericProbe.swift:7:48: warning: '1e-40' underflows and loses precision during conversion to 'Float'
- 5 | @main struct NumericProbe {
- 6 |  static func main() async throws {
- 7 |   for s: Float in [Float.leastNonzeroMagnitude,1e-40,1e-38] {
-   |                                                `- warning: '1e-40' underflows and loses precision during conversion to 'Float'
- 8 |    let v=DynamicVector([s,0]); var w=v; w /= s
- 9 |    print("divide",s,"generic",genericDivide(v,s).toArray(),"inplace",w.toArray(),"norm",genericNorm(v))
-/private/tmp/vectorcore-validated-audit-2026-09-14/validate_numerics/NumericProbe

@@ -1,6 +1,0 @@
-managed 10 writes allocations/copies 0 0 unique true
-dimension 10 writes allocations/copies 0 0 unique false
-hybrid 10 writes allocations/copies 10 10 unique false
-hybrid fill512 allocations/copies 513 512 last 42.0
-hybrid repeating512 allocations/copies 514 512 last 3.0
-dimension mutable buffer allocations/copies 0 0

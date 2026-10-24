@@ -1,4 +1,0 @@
-configuredBatch=2 observedBatches=[5]
-negativeBatchResults=[]
-100ConcurrentConfigIncrements=29
-providerMaxConcurrency=1 observedPeak=64

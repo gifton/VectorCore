@@ -1,7 +1,0 @@
-􀟈 Test run started.
-􀄵 Testing Library Version: 1902
-􀄵 Target Platform: arm64e-apple-macos14.0
-􀟈 Suite "E04 MemoryPool boundaries" started.
-􀟈 Test guardChildProbe() started.
-E04_CHILD_STARTED:internal-negative-budget
-VectorCore/BufferPool.swift:31: Fatal error: BufferPool requires nonnegative, representable cache limits

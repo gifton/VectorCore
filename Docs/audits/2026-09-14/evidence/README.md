@@ -26,7 +26,7 @@ python3 -m unittest discover -s Scripts/ci/tests
 ruby Scripts/ci/validate_github.rb
 ```
 
-The [Release log](release-baseline.log) ends with 1,144 Swift Testing tests in 168 suites passing in 22.567 seconds. XCTest reports 91 cases, 27 skipped, no failures. The Python check returned exit 0 with 25 tests in 6.818 seconds; the Ruby check returned exit 0 after validating nine YAML/template files. These are correctness/configuration checks, not controlled performance samples. Normal baseline execution did not set the extended-performance environment flag.
+The [Release log](https://github.com/gifton/VectorCore/blob/b2709f5b8c6a171a843813a968e5ca3cfa2e94d3/Docs/audits/2026-09-14/evidence/release-baseline.log) ends with 1,144 Swift Testing tests in 168 suites passing in 22.567 seconds. XCTest reports 91 cases, 27 skipped, no failures. The Python check returned exit 0 with 25 tests in 6.818 seconds; the Ruby check returned exit 0 after validating nine YAML/template files. These are correctness/configuration checks, not controlled performance samples. Normal baseline execution did not set the extended-performance environment flag.
 
 Earlier same-revision evidence is preserved in the [first-pass evidence directory](../../../reviews/2026-09-14/evidence/): Debug/Release observation clients, the original report's Debug/consumer/lint verification record, and initial reproductions. Fresh second-pass observations are identified separately in this audit. Compile logs include corrected initial client syntax errors or sandbox cache failures; these are not library defects.
 
@@ -67,10 +67,12 @@ body = struct.pack("<IHIH6I", 0x56454354, 1, 6, 0,
 expected = body + struct.pack("<I", zlib.crc32(body))
 ```
 
-This exactly matched the emitted bytes in [SerializationProbe.log](root/SerializationProbe.log). It validates the chosen framing/CRC/bit-pattern fixture, not every possible record.
+This exactly matched the emitted bytes in [SerializationProbe.log](https://github.com/gifton/VectorCore/blob/b2709f5b8c6a171a843813a968e5ca3cfa2e94d3/Docs/audits/2026-09-14/evidence/root/SerializationProbe.log). It validates the chosen framing/CRC/bit-pattern fixture, not every possible record.
 
 ## Provenance and audit checks
 
 [manifest.json](manifest.json) records reviewed revisions, host/toolchain description, tracked-file content hashes and retained evidence hashes. [validate_audit.py](validate_audit.py) checks the register schema, unique IDs, all 46 canonical labels, source paths/line bounds, dependencies, local document links and retained-file hashes. It checks the audit artifact's consistency; it is not a substitute for library correctness tests.
+
+The 46 `.log` files this evidence directory originally held were removed from the repository tree on 2026-10-23 (the repository ignores `*.log`). They are preserved unchanged at the same paths on branch `archive/pr56-build-logs` (commit `b2709f5b8c6a`), and their audit-time hashes are kept under `archived_artifacts` in manifest.json.
 
 No source, package, CI or library test file was changed by this work. The new artifacts live under `Docs/audits/2026-09-14/`; the initial review stays under `Docs/reviews/2026-09-14/`.

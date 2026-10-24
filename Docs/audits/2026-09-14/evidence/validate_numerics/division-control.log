@@ -1,5 +1,0 @@
-before [1e-40, 0.0]
-direct method [1.0, 0.0]
-operator [inf, nan]
-outofplace [inf, nan] input [1e-40, 0.0]
-scalar 1.0 0.0

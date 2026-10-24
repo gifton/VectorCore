@@ -1,7 +1,0 @@
-􀟈 Test run started.
-􀄵 Testing Library Version: 1902
-􀄵 Target Platform: arm64e-apple-macos14.0
-􀟈 Suite "E04 MemoryPool boundaries" started.
-􀟈 Test guardChildProbe() started.
-E04_CHILD_STARTED:memory-negative-per-size
-VectorCore/MemoryPool.swift:71: Fatal error: MemoryPool requires nonnegative cache limits

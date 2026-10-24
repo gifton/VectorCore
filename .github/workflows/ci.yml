@@ -22,7 +22,7 @@ jobs:
   repository-checks:
     name: Repository checks
     runs-on: ubuntu-24.04
-    # The policy suite (539 tests) ran in 197 to 239 s in four local runs on 2026-10-23 and 2026-10-24 (Apple
+    # The policy suite (542 tests) ran in 197 to 239 s in five local runs on 2026-10-23 and 2026-10-24 (Apple
     # M3 Max, Python 3.14); on PR #56 this runner was cancelled at 5 minutes with 15 of its 38 modules started.
     timeout-minutes: 20
     steps:

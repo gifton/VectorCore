@@ -1,0 +1,4313 @@
+{
+  "date": "2026-09-18",
+  "reviewed_revision": "8b02e75bca7055ae11170873d15c06f1538709b7",
+  "state": "planning-only",
+  "execution_authorized": false,
+  "agent_model": "gpt-6-astra",
+  "agent_reasoning": "medium",
+  "compatibility": "Proposed: preserve where practical; user preference pending",
+  "tasks": [
+    {
+      "id": "V01",
+      "stream": "V",
+      "title": "Strict correctness and observable benchmark failure",
+      "records": [
+        "TOOL-01",
+        "TOOL-02"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Define validation status separately from numeric error statistics; invalid/missing results must fail strict mode. Choose failure artifacts that remain JSON-encodable for nonfinite observations.",
+      "regression_design": "Table of finite match/mismatch, NaN, infinities, both length mismatch directions, missing validation and provider error; invalid destination must exit nonzero. Test CLI propagation as well as helper predicates.",
+      "test_files": [
+        {
+          "path": "Scripts/ci/tests/test_benchmark_contracts.py",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Benchmarks/VectorCoreBench/AppMain.swift",
+        "Benchmarks/VectorCoreBench/Suites/BatchBench.swift",
+        "Benchmarks/VectorCoreBench/Utils/Correctness.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "TOOL-01",
+          "criterion": "CLI-level table tests: finite matches/mismatches, NaN, infinities, both length mismatch directions, missing validation and provider failure. Each invalid case must fail strict mode and emit a parseable failure artifact."
+        },
+        {
+          "record": "TOOL-02",
+          "criterion": "Unwritable/invalid destination and invalid numeric statistics must produce nonzero exit and explicit error; successful runs must leave decodable artifacts."
+        }
+      ]
+    },
+    {
+      "id": "V02",
+      "stream": "V",
+      "title": "Benchmark selection, provenance and comparison",
+      "records": [
+        "TOOL-03",
+        "TOOL-05",
+        "TOOL-06",
+        "TOOL-09",
+        "TOOL-12"
+      ],
+      "depends_on": [
+        "V01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Separate requested settings from effective compiled/routed settings; choose explicit incompatible-baseline override and empty-selection policy.",
+      "regression_design": "Enumerate registered cases/filters and expected counts; Debug/Release plus C-on/off route sentinels; A/B pair uniqueness and hand-calculated deltas; CSV commas/quotes/newlines; seeded matrix diversity.",
+      "test_files": [
+        {
+          "path": "Scripts/ci/tests/test_benchmark_contracts.py",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/BenchmarkReportingContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Benchmarks/VectorCoreBench/AppMain.swift",
+        "Benchmarks/VectorCoreBench/Formatters/CSVWriter.swift",
+        "Benchmarks/VectorCoreBench/Suites/DotProductBench.swift",
+        "Benchmarks/VectorCoreBench/Suites/MatrixDistanceBench.swift",
+        "Benchmarks/baselines/arm64-os15.4.1-canonical.json",
+        "Benchmarks/baselines/arm64-os15.4.1-local.json",
+        "Scripts/compare_benchmarks.swift",
+        "Sources/VectorCore/Interop/CKernels.swift",
+        "Sources/VectorCoreBenchmarking/ABComparisons.swift",
+        "Sources/VectorCoreBenchmarking/CaseParsing.swift",
+        "Sources/VectorCoreBenchmarking/EnvCapture.swift",
+        "Sources/VectorCoreBenchmarking/Models.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "TOOL-03",
+          "criterion": "Build Debug/Release and C-on/C-off fixtures; metadata must identify actual settings, and observable route tests must verify enabled C dispatch. Reject incompatible runtime requests."
+        },
+        {
+          "record": "TOOL-05",
+          "criterion": "Table-driven selection test for every registered case, exact names, excludes and variant filters; expected counts and missing-baseline policy must be asserted."
+        },
+        {
+          "record": "TOOL-06",
+          "criterion": "Every supported A/B family must yield exactly one valid pair; mismatched dimensions/N/provider must not pair; check numeric delta against hand-calculated examples."
+        },
+        {
+          "record": "TOOL-09",
+          "criterion": "Changing controls must change scheduled cases/samples; filters must prevent execution; names or structured fields must preserve dim/N; seeded fixtures must have documented diversity."
+        },
+        {
+          "record": "TOOL-12",
+          "criterion": "Incompatible metadata must be rejected or explicitly overridden; round-trip labels containing commas/quotes/newlines; independently verify chosen statistic and comparison formula."
+        }
+      ]
+    },
+    {
+      "id": "V03",
+      "stream": "V",
+      "title": "Executed CI coverage and performance opt-outs",
+      "records": [
+        "TOOL-04",
+        "TOOL-11"
+      ],
+      "depends_on": [
+        "V01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Choose required executed checks using current CI capability; do not infer remote branch protection. Register tooling tests deliberately without making wall-clock speed a correctness requirement.",
+      "regression_design": "Inventory executable tests/analysis; EXTENDED=1 and STRICT_PERF=0 must remove every timing pass/fail assertion while retaining numeric checks; policy tests reject missing required jobs.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/PerfGate.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Scripts/ci/tests/test_github_policy.py",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        ".github/workflows/benchmarks.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/sanitizers.yml",
+        ".swiftlint.yml",
+        "Package.swift",
+        "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift",
+        "Tests/ComprehensiveTests/PerfGate.swift",
+        "Tests/PerformanceTests/NSWOptimizationBenchmark.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "TOOL-04",
+          "criterion": "Mechanically enumerate performance assertions; EXTENDED=1/STRICT_PERF=0 must disable every wall-clock pass/fail gate while retaining numerical checks."
+        },
+        {
+          "record": "TOOL-11",
+          "criterion": "CI inventory must map each promised test/analysis to an executed target/command; mechanical policy tests must reject missing required jobs and test/route coverage gaps."
+        }
+      ]
+    },
+    {
+      "id": "V04",
+      "stream": "V",
+      "title": "Honest timing, memory and optimization claims",
+      "records": [
+        "TOOL-07",
+        "TOOL-08",
+        "API-43",
+        "NUM-23",
+        "OWN-23"
+      ],
+      "depends_on": [
+        "V01",
+        "V02"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Specify end-to-end versus prepacked timing scope and observability of consumed outputs; distinguish payload models from measured allocations/RSS. Unverified throughput assertions receive evidence or qualified wording.",
+      "regression_design": "Retain optimized-code inspection and allocation traces for representative cases; identical work, warmups, raw samples, median/variation and exact host/toolchain. No inferred dead-code-elimination slowdown.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [
+        {
+          "task": "L01",
+          "when": "Final inventory/sign-off of robustness/performance claims about this repaired algorithm; initial measurement setup can precede it."
+        },
+        {
+          "task": "Q02",
+          "when": "Final inventory/sign-off of robustness/performance claims about this repaired algorithm; initial measurement setup can precede it."
+        },
+        {
+          "task": "O02",
+          "when": "Final inventory/sign-off of robustness/performance claims about this repaired algorithm; initial measurement setup can precede it."
+        },
+        {
+          "task": "O03",
+          "when": "Final inventory/sign-off of robustness/performance claims about this repaired algorithm; initial measurement setup can precede it."
+        }
+      ],
+      "staged_closure": "",
+      "source_references": [
+        "Benchmarks/VectorCoreBench/Suites/BatchBench.swift",
+        "Benchmarks/VectorCoreBench/Suites/MatrixDistanceBench.swift",
+        "Sources/VectorCore/LinearAlgebra/PCA.swift",
+        "Sources/VectorCore/LinearAlgebra/SwiftLinearAlgebraProvider.swift",
+        "Sources/VectorCore/Operations/Kernels/BatchKernels_SoA.swift",
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+        "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+        "Sources/VectorCore/Storage/COWDynamicStorage.swift",
+        "Sources/VectorCore/Vectors/DynamicVector.swift",
+        "Sources/VectorCore/Vectors/Vector512Optimized.swift",
+        "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift",
+        "Tests/MinimalTests/ComprehensiveBenchmarks.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "TOOL-07",
+          "criterion": "Inspect optimized code and allocation traces for representative cases; record consumer overhead, warmups, raw samples, machine/toolchain and scope. Compare only equivalent workloads."
+        },
+        {
+          "record": "TOOL-08",
+          "criterion": "Check representation payload size; profile realistic independent/shared datasets and report method, peak/retained bytes and workload."
+        },
+        {
+          "record": "API-43",
+          "criterion": "Release benchmark artifacts and emitted instruction check support each retained claim."
+        },
+        {
+          "record": "NUM-23",
+          "criterion": "Mechanical claim inventory: each guarantee has nearby one-step proof, named test, or explicit unverified-contract wording; performance records carry reproducible provenance."
+        },
+        {
+          "record": "OWN-23",
+          "criterion": "Mechanical claim inventory names evidence for each retained correctness/performance assertion; docs reflect actual call graph; no unsupported universal assertion remains."
+        }
+      ]
+    },
+    {
+      "id": "S01",
+      "stream": "S",
+      "title": "Public vector shape invariants",
+      "records": [
+        "OWN-01",
+        "OWN-02"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Approve dynamic resize semantics and fixed-width setter/constructor/decoding policy before edits. Preserve valid input compatibility; no silent truncation or padding.",
+      "regression_design": "Short/equal/long construction, replacement, nested mutation and Codable at all FP32/INT8 widths; dimension, owned count and borrowed count agree. Generic fixed and immutable FP16 controls.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/VectorShapeContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/DynamicVectorTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift",
+        "Sources/VectorCore/Protocols/VectorProtocol.swift",
+        "Sources/VectorCore/Vectors/DynamicVector.swift",
+        "Sources/VectorCore/Vectors/Vector1536Optimized.swift",
+        "Sources/VectorCore/Vectors/Vector384Optimized.swift",
+        "Sources/VectorCore/Vectors/Vector512Optimized.swift",
+        "Sources/VectorCore/Vectors/Vector768Optimized.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-01",
+          "criterion": "Mechanical matrix for all families and wrappers: short/equal/long replacement and direct collection edits; dimension/count/buffer/serialization agree; equal values hash equally; invalid shapes are rejected before memory access. Test generic protocol mutation as well."
+        },
+        {
+          "record": "OWN-02",
+          "criterion": "Each INT8 width rejects short/long raw storage and JSON storage; valid round trips preserve dimension, payload and parameters. Exercise post-construction collection mutation and all unsafe conversion/kernel entry points."
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "stream": "S",
+      "title": "Dimension guards, aggregation and factory validation",
+      "records": [
+        "OWN-06",
+        "API-13",
+        "API-19"
+      ],
+      "depends_on": [
+        "S01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Define checked failure behavior for existing throwing/nonthrowing APIs and empty fixed/dynamic aggregates. Complete validation precedes writes or unsafe reads.",
+      "regression_design": "Direct/generic +=/-=/Hadamard, short/long rows at every position, empty input, failing custom factory, zero/negative factory dimensions; preserve receiver on rejected preflight.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/OperationsValidationTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/VectorTypeFactoryTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Factory/VectorTypeFactory.swift",
+        "Sources/VectorCore/Operations/Operations.swift",
+        "Sources/VectorCore/Protocols/VectorProtocol.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-06",
+          "criterion": "Equal/short/long RHS, empty combinations and direct/generic +=/-= plus all three methods. Invalid dimensions fail before any write; subprocess tests for trapping API or recoverable errors for checked API."
+        },
+        {
+          "record": "API-13",
+          "criterion": "Short/long row at first/middle/last, empty dynamic/fixed arrays, failing custom factory; no unsafe operation before all shape checks."
+        },
+        {
+          "record": "API-19",
+          "criterion": "Zero/negative dimension with empty/nonempty values, valid multiples and mismatches; ensure throws instead of trap where documented."
+        }
+      ]
+    },
+    {
+      "id": "S03",
+      "stream": "S",
+      "title": "Decoded result and parameter invariants",
+      "records": [
+        "API-18",
+        "SER-08"
+      ],
+      "depends_on": [
+        "S01",
+        "Q01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Define valid serialized parallel arrays and derived quantization parameters; coordinate with S01/Q01 instead of duplicating their decoder fixes.",
+      "regression_design": "Both TopK array mismatch directions, valid empty/normal round trips; mechanical representation table includes INT8 widths, shape and quantization parameters.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/DecodedInvariantTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/TopKSelectionTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Integration/SearchResult.swift",
+        "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift",
+        "Sources/VectorCore/Operations/TopKSelection.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-18",
+          "criterion": "Both mismatch directions, empty valid data, normal round-trip and collection access; class-wide serialized invariant audit."
+        },
+        {
+          "record": "SER-08",
+          "criterion": "Table-driven invalid shape/derived-parameter/result-pair decoding tests across every representation; valid existing data remains compatible."
+        }
+      ]
+    },
+    {
+      "id": "O01",
+      "stream": "O",
+      "title": "Compact copy isolation and element lifetime",
+      "records": [
+        "OWN-05",
+        "OWN-10",
+        "API-47"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Repair uniqueness at the actual shared owner and destruction at the owner of initialized tail elements. Keep public triangular value semantics.",
+      "regression_design": "Every compact count 5...512, boundaries 0/1/4/5/512/513/2048/2049, public matrix sizes 3/4/32/33/64/65; copies, setAt and iterator snapshots; class sentinels release exactly once; singleton import round trip.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/TieredStorageOwnershipTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "O01 compact repair can finish independently; full OWN-05 class-wide acceptance remains open until O02 supplies standard/aligned bulk and single-detach evidence.",
+      "source_references": [
+        "Sources/VectorCore/Utilities/TieredStorage.swift",
+        "Sources/VectorCore/Utilities/TriangularMatrix.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-05",
+          "criterion": "COW tests across tier counts0,1,4,5,512,513,2048,2049 and matrix n3,4,32,33,64,65 for subscript,setAt,bulk and preexisting iterators; original unchanged and first mutation detaches once."
+        },
+        {
+          "record": "OWN-10",
+          "criterion": "Deinit/weak sentinel tests for all tiers, compact copy/detach/replacement/destruction and thrown access; each logical initialized reference released exactly once, no early destruction."
+        },
+        {
+          "record": "API-47",
+          "criterion": "Empty, singleton,2x2, ragged inputs and singleton roundtrip to zero-diagonal full matrix; no index trap."
+        }
+      ]
+    },
+    {
+      "id": "O02",
+      "stream": "O",
+      "title": "Tiered bulk writeback and mutation cost",
+      "records": [
+        "OWN-13",
+        "OWN-14"
+      ],
+      "depends_on": [
+        "O01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Choose consistent partial-write behavior on thrown mutable borrows. Repair dormant bulk writeback before routing public work through it; repair both standard and aligned tiers.",
+      "regression_design": "Normal/throwing closures at every tier boundary with shared-copy controls; unique scalar writes avoid full copies at matrix 33/64/65; shared values detach correctly. Release allocation evidence, not pointer stability alone.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/TieredStorageMutationTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Utilities/TieredStorage.swift",
+        "Sources/VectorCore/Utilities/TriangularMatrix.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-13",
+          "criterion": "Across all tier boundaries unique writes perform no full-buffer detaches; retained copy produces exactly one detach and remains unchanged. Construction traffic scales linearly with number of stored elements. Benchmark only after allocation and value-semantic checks."
+        },
+        {
+          "record": "OWN-14",
+          "criterion": "Normal and throwing closure tests at0,1,4,5,512,513,2048,2049 with retained original copies, consistent mutation policy and independent value semantics."
+        }
+      ]
+    },
+    {
+      "id": "O03",
+      "stream": "O",
+      "title": "Hybrid ownership traffic and operation temporaries",
+      "records": [
+        "OWN-12",
+        "OWN-22",
+        "OWN-26"
+      ],
+      "depends_on": [
+        "S01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Keep default generic DimensionStorage as a negative control; OWN-26 is rejected and creates no blanket rewrite. Reduce retained-owner artifacts in actual HybridStorage paths.",
+      "regression_design": "Release allocation scaling for constructor/fill/resize/scalar/bulk writes, Float16/17 and fixed widths, Double8/9/16/17, unique/shared controls and explicit hybrid/default modes.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/StorageAllocationContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/DynamicVectorTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/VectorCoreOperations.swift",
+        "Sources/VectorCore/Storage/DimensionStorage.swift",
+        "Sources/VectorCore/Storage/HybridStorage.swift",
+        "Sources/VectorCore/Vectors/DynamicVector.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-12",
+          "criterion": "Optimized allocation-scaling checks at Float16/17 and representative384/512/768/1536; unique scalar writes/fill stay bounded, shared first mutation detaches once, subsequent unique writes do not copy. No wall-clock speedup asserted until coordinated measurement."
+        },
+        {
+          "record": "OWN-22",
+          "criterion": "Allocation records for representative dimensions show fewer temporaries without changing provider call counts, shape checks or outputs."
+        },
+        {
+          "record": "OWN-26",
+          "criterion": "Default and explicit modes at Float16/17 and Double8/9/16/17; constructor,factory,scalar and buffer mutation counts measured in Release with retained-copy controls."
+        }
+      ]
+    },
+    {
+      "id": "O04",
+      "stream": "O",
+      "title": "Alignment, binding and copy destination contracts",
+      "records": [
+        "OWN-08",
+        "OWN-09",
+        "OWN-11",
+        "OWN-25"
+      ],
+      "depends_on": [
+        "S01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Choose unaligned support versus explicit preconditions, scoped binding rules, initialize/update/overlap policy and allocator fallback behavior. Investigate OWN-25 before claiming a defect or fix.",
+      "regression_design": "Float offsets 0/4/8/12 over SIMD tails; all-width round trips; nontrivial destination lifetime sentinels; allocator failure injection if feasible. Preserve Debug-only reproduced crash qualification.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/StorageAlignmentTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift",
+        "Sources/VectorCore/Storage/AlignedDynamicArrayStorage.swift",
+        "Sources/VectorCore/Utilities/MemoryUtilities.swift",
+        "Sources/VectorCore/Vectors/Vector384Optimized.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-08",
+          "criterion": "Offsets0,4,8,12 and dimensions0...5,15...17 in Debug/Release either compute correct finite unit values under supported inputs or reject consistently at a documented boundary; retain numerical reviewer coverage."
+        },
+        {
+          "record": "OWN-09",
+          "criterion": "Mechanical audit of typed-owner rebinding, scoped nonescape and alignment obligations plus constructor/read/write/COW Release round trips for all widths. Document the permitted type/layout model."
+        },
+        {
+          "record": "OWN-11",
+          "criterion": "Class/deinit and nontrivial-value tests at preferred and natural-only alignment, using only the chosen destination state. Identical lifetime behavior in both branches; overlap behavior explicitly tested if supported."
+        },
+        {
+          "record": "OWN-25",
+          "criterion": "Inject allocator failure and validate reported guarantee against returned pointer for several requested alignments; callers never rely on stronger alignment than provided."
+        }
+      ]
+    },
+    {
+      "id": "O05",
+      "stream": "O",
+      "title": "Scoped borrow and dormant transfer lifetimes",
+      "records": [
+        "OWN-15",
+        "OWN-16",
+        "OWN-17",
+        "OWN-24"
+      ],
+      "depends_on": [
+        "O03"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Prefer scoped access and retain disabled experimental gates. Decide deprecation for public escaped getters; retain documented unsafe/custom-conformer duties rather than creating unsupported safety promises.",
+      "regression_design": "Owner/snapshot lifetime through success/throw/cancellation where supported; exactly-once transfer/destruction before any gate activation. No supported-use UAF is currently reproduced.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/SoALayoutContractTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Docs/Memory_Alignment.md",
+        "Docs/SoA_Layout_Contract.md",
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+        "Sources/VectorCore/Storage/DimensionStorage.swift",
+        "Sources/VectorCore/Storage/SoA.swift",
+        "Sources/VectorCore/Storage/UnifiedStorage.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-15",
+          "criterion": "Compile-time nonescape design or scoped lifetime tests for inline/heap slices; no pointer survives its borrow. If retaining owner, prove owner retention and copy isolation."
+        },
+        {
+          "record": "OWN-16",
+          "criterion": "Gate-enabled separate fixture proves pointer survives consumed wrapper, is freed once by recipient, and nontransferred wrapper still frees correctly; audit every newly compiled branch."
+        },
+        {
+          "record": "OWN-17",
+          "criterion": "All direct kernels and callers use scoped borrows or explicit owned allocation lifetime. Temporary-expression use cannot silently escape through new safe API. Test512/768/1536 content and owner lifetime."
+        },
+        {
+          "record": "OWN-24",
+          "criterion": "Transfer identity, logical vs allocated length and frozen layout tests remain; external conformance examples assert required lane/dimension/storage consistency. New checked wrappers validate before arithmetic."
+        }
+      ]
+    },
+    {
+      "id": "I01",
+      "stream": "I",
+      "title": "Normalization hint invalidation",
+      "records": [
+        "OWN-03",
+        "API-33"
+      ],
+      "depends_on": [
+        "S01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Invalidate metadata before mutation or on every exit, including throws. Define decoded hints and external alias/custom-conformer obligations. Narrow Core repair may precede S01, but full closure requires its contract.",
+      "regression_design": "Initially valid [1,0] then replacement/subscript/storage writes and throwing buffer writes; all representations/direct/generic routes. Compare hinted/unhinted pinned Index and VA cosine consumers separately.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/IntegrationProtocolsTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/NormalizationHintMutationTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "../VectorIndex/Sources/VectorIndex/HNSWIndex.swift",
+        "../VectorIndex/Sources/VectorIndex/TypedOverloads.swift",
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Integration/KernelDistanceProviders.swift",
+        "Sources/VectorCore/Integration/IndexableVector.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-03",
+          "criterion": "Test direct vector replacement/subscript/storage, wrapper storage, successful and throwing buffer mutation on every built-in representation; after changes metadata must be cleared or recomputed. Downstream insertion/query tests compare fresh normalized reference."
+        },
+        {
+          "record": "API-33",
+          "criterion": "Mutate initially correct hints and compare hinted/unhinted insertion+queries, including HNSW live cache and VA cosine, throwing mutations."
+        }
+      ]
+    },
+    {
+      "id": "I02",
+      "stream": "I",
+      "title": "Exact cache identity and bounded retention",
+      "records": [
+        "OWN-04",
+        "OWN-18",
+        "OWN-19"
+      ],
+      "depends_on": [
+        "S01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Choose immutable equality-verified snapshots or trusted versioned identity; define zero/negative capacity and count/byte budgets. Include retained identity snapshots in accounting.",
+      "regression_design": "Change each of 512 coordinates, reorder/resize candidates, mutate retained snapshots, force digest collisions; identical input still hits. Capacity 0/1, replacements/evictions and byte accounting.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/SoAFP16CacheIdentityTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/MixedPrecisionPhase3Tests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+        "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift",
+        "Sources/VectorCore/Vectors/Vector512Optimized.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-04",
+          "criterion": "For every coordinate, reorder, count change and retained snapshot mutation, getOrCreate must match uncached conversion. Inject deliberate hash collisions to prove equality checking; repeated identical content still hits."
+        },
+        {
+          "record": "OWN-18",
+          "criterion": "Fresh empty/nonempty stores at negative,zero,one capacities have documented behavior, repeated eviction and statistics remain consistent."
+        },
+        {
+          "record": "OWN-19",
+          "criterion": "Tests with small byte budget cap retained payload; oversized entries follow explicit policy; statistics and eviction accounting agree with logical/allocated sizes. No claim of measured RSS."
+        }
+      ]
+    },
+    {
+      "id": "R01",
+      "stream": "R",
+      "title": "Requested metric witness preservation",
+      "records": [
+        "API-01",
+        "API-46"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Choose source-compatible handling of any DistanceMetric with a non-Float associated scalar; do not silently substitute Euclidean or rebuild stateful witnesses.",
+      "regression_design": "Chebyshev query [0,0], candidates [3,3] and [4,0] selects first, unlike Euclidean; every built-in, nondefault Minkowski and custom reversed metric agree with direct scores/membership through both facades. Factory name round trips.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/MetricDispatchContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/TopKSelectionTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/IntegrationProtocolsTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Integration/VectorCollection.swift",
+        "Sources/VectorCore/Operations/OptimizedDistanceMetrics.swift",
+        "Sources/VectorCore/Operations/TopKSelection.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-01",
+          "criterion": "Shared facade table for all built-ins, nondefault Minkowski, and custom reverse-order metric; score and member equality versus direct witness. Preserve provider route."
+        },
+        {
+          "record": "API-46",
+          "criterion": "Case-insensitive roundtrip for every MetricType.allCases and unknown names returnnil."
+        }
+      ]
+    },
+    {
+      "id": "R02",
+      "stream": "R",
+      "title": "Transactional collection replacement and identifiers",
+      "records": [
+        "API-09",
+        "API-10"
+      ],
+      "depends_on": [
+        "R01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Decide replacement primitive, snapshot/concurrency semantics, duplicate explicit ID and exhaustion policy; generic remove-then-add cannot promise rollback.",
+      "regression_design": "Inject every add/replacement failure while preserving old value; explicit/generated ID permutations, sparse IDs, remove/reinsert and duplicate policy. Reference collection only.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Integration/VectorCollection.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-09",
+          "criterion": "Failure injection for all thrown replacement paths preserves old data; concurrent update/search snapshot policy defined."
+        },
+        {
+          "record": "API-10",
+          "criterion": "Explicit/generated permutations, sparse IDs, repeated explicit insertion, remove/reinsert, exhausted allocator strategy. Update must use replacement primitive rather than duplicate rejection."
+        }
+      ]
+    },
+    {
+      "id": "R03",
+      "stream": "R",
+      "title": "Matrix metric semantics and logical output bounds",
+      "records": [
+        "API-14",
+        "API-15",
+        "API-16"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Define cosine zero behavior and metric-specific diagonals; keep documented symmetric-matrix scope. Write only logical output elements.",
+      "regression_design": "Built-in direct-pair oracles across N99/100 and GEMM thresholds; identical/orthogonal/opposite vectors; 512/768/1536 zero-query sentinels at N0/1/3/4/5 and tile255/256/257 with oversized/offset outputs.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/MatrixMetricContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/BatchOperations.swift",
+        "Sources/VectorCore/Operations/ExecutionOperations.swift",
+        "Sources/VectorCore/Operations/Kernels/BatchKernels_SoA.swift",
+        "Sources/VectorCore/Operations/TransformOperations.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-14",
+          "criterion": "Dimension512/768/1536, N0/1/3/4/5, tile255/256/257 and actual byte thresholds; oversized/offset outputs and zero/nonzero query sentinels."
+        },
+        {
+          "record": "API-15",
+          "criterion": "All built-ins direct-pair oracle around N99/100 and GEMM gates; include zero vectors and dot-product diagonal. Do not assume every cosine route treats zero self as0."
+        },
+        {
+          "record": "API-16",
+          "criterion": "Identical, orthogonal, opposite nonzero vectors and defined zero behavior through serial/parallel matrix gates."
+        }
+      ]
+    },
+    {
+      "id": "R04",
+      "stream": "R",
+      "title": "Bounded heap membership and legacy ordering policy",
+      "records": [
+        "API-17",
+        "API-26"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Define nonnegative capacity and legacy NaN/tie policy without silently transplanting another selector contract.",
+      "regression_design": "Bulk/stream membership for permutations, comparator orientations and capacities0/1/n/>n; ties/nonfinite policy; bounded subprocess for invalid negative capacity.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/HeapMembershipContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/MinHeap.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-17",
+          "criterion": "Bulk/stream membership for permutations, comparators, ties, capacity0/1/n/>n; bounded subprocess negative capacity rejection."
+        },
+        {
+          "record": "API-26",
+          "criterion": "NaN/tie/finite policy tests if retained; route inventory ensures high-level searches stay on intended selector."
+        }
+      ]
+    },
+    {
+      "id": "R05",
+      "stream": "R",
+      "title": "Metric-aware relevance scores",
+      "records": [
+        "API-11"
+      ],
+      "depends_on": [
+        "R01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Choose explicit score or metric metadata policy and documented range. Preserve explicitly supplied scores; no universal metric-free transform over signed distances.",
+      "regression_design": "Search-to-score monotonicity and finiteness across negative-dot pole and nonnegative distance families using actual collection producer.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/SearchResultScoreContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Integration/SearchResult.swift",
+        "Sources/VectorCore/Integration/VectorCollection.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-11",
+          "criterion": "Search-to-score monotonicity, finiteness, documented range across negative-dot pole and nonnegative families; preserve explicitly supplied score."
+        }
+      ]
+    },
+    {
+      "id": "E01",
+      "stream": "E",
+      "title": "Chunk and loop arithmetic boundaries",
+      "records": [
+        "API-07",
+        "API-08",
+        "API-44"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Specify positive batch/unroll/chunk domains, empty behavior and nonrepresentable Range.count policy before endpoint arithmetic.",
+      "regression_design": "All five CPU helpers on tiny ranges near Int.max, huge hints and exact index coverage; batch0/-1/1/>count around N999/1000; unroll widths1...17 with tails and throws. Invalid hangs/traps isolated.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/BatchOperations.swift",
+        "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+        "Sources/VectorCore/Protocols/ComputeProvider.swift",
+        "Sources/VectorCore/Providers/CPUComputeProvider.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-07",
+          "criterion": "0,-1,1,>count on N0,1,999,1000; exact-once ordered coverage when valid. Handle oversized positive endpoint addition too."
+        },
+        {
+          "record": "API-08",
+          "criterion": "All five methods, zero/nonzero/near-max lower bounds, huge hints, exact index coverage/order; test protocol defaults separately. Empty and nonrepresentable Range.count cases need a defined policy."
+        },
+        {
+          "record": "API-44",
+          "criterion": "Emitted indices/flattened ranges exactly0..<count for widths1...17, tail sizes, zero/negative rejection and throwing body. Avoid executing huge count merely to test endpoint arithmetic."
+        }
+      ]
+    },
+    {
+      "id": "E02",
+      "stream": "E",
+      "title": "Bounded scheduling and execution laws",
+      "records": [
+        "API-04",
+        "API-27",
+        "API-28",
+        "API-42",
+        "API-48"
+      ],
+      "depends_on": [
+        "E01",
+        "O01",
+        "R03"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Define outstanding-work rather than CPU-thread bounds; ordering, cooperative cancellation, nested calls and reduction identity/associativity. Keep dormant engines dormant unless deliberately adopted.",
+      "regression_design": "Active-body/enqueued-task counters for defaults, batch/map/filter, matrix builders and nested routes; exact ordered coverage, cancellation cleanup and reduction laws. Spy executeBatch routes.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Integration/MetalComputeProvider.swift",
+        "Sources/VectorCore/Operations/BatchOperations.swift",
+        "Sources/VectorCore/Operations/ExecutionOperations.swift",
+        "Sources/VectorCore/Operations/SyncBatchOperations.swift",
+        "Sources/VectorCore/Operations/TransformOperations.swift",
+        "Sources/VectorCore/Protocols/BatchKernelProvider.swift",
+        "Sources/VectorCore/Protocols/ComputeProvider.swift",
+        "Sources/VectorCore/Providers/CPUComputeProvider.swift",
+        "Sources/VectorCore/Utilities/TriangularMatrix.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-04",
+          "criterion": "Instrument active bodies and enqueued tasks for default conformers, public batches, matrix builders, nested routes; verify bound and exact ordered coverage."
+        },
+        {
+          "record": "API-27",
+          "criterion": "Cancel before start/during long chunks; bounded new work and cleanup under chosen contract; user body obligations stated."
+        },
+        {
+          "record": "API-28",
+          "criterion": "Spy range kernel shows documented calls and settings; Swift6 pointer ownership/concurrency validation before enabling parallel path."
+        },
+        {
+          "record": "API-42",
+          "criterion": "Mechanical caller map and property tests for any retained reachable engine; shape validation exhaustive before unsafe operations and reduction identity/associativity documented."
+        },
+        {
+          "record": "API-48",
+          "criterion": "Conformance tests for identity and chunk combination; documented limits for nonassociative floating-point reductions."
+        }
+      ]
+    },
+    {
+      "id": "E03",
+      "stream": "E",
+      "title": "Atomic configuration transactions",
+      "records": [
+        "API-03"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Choose actor-isolated candidate mutation and Sendable closure contract. If updates reject invalid settings, validate the whole candidate before publication; rejection preserves the complete previous configuration. E06 separately validates consumed settings before unsafe arithmetic.",
+      "regression_design": "100 concurrent increments and independent-field updates preserve all changes; rejected updates preserve every prior field under the chosen policy; external Swift6 consumer typechecks.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Configuration/ThreadSafeConfiguration.swift",
+        "Sources/VectorCore/Operations/BatchOperations.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-03",
+          "criterion": "100 concurrent increments and independent-field updates retain all changes; Swift6 consumer typecheck."
+        }
+      ]
+    },
+    {
+      "id": "E04",
+      "stream": "E",
+      "title": "Pool teardown, budgets and handle ownership",
+      "records": [
+        "API-05",
+        "API-06",
+        "API-32",
+        "API-37"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Separate cached raw buffers from checked-out handles and initialized generic elements. Define active-handle lifetime and zero-budget policy before teardown; profile MemoryPool cleanup before optimizing it.",
+      "regression_design": "Allocation/free balance after return/clear/destruction in each pool, zero/exact/mixed buckets and bursts; live-handle success/throw/cancel return once. Compile buffer-provider docs.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Core/BufferPool.swift",
+        "Sources/VectorCore/Operations/BufferPool.swift",
+        "Sources/VectorCore/Protocols/BufferProvider.swift",
+        "Sources/VectorCore/Providers/SwiftBufferPool.swift",
+        "Sources/VectorCore/Utilities/MemoryPool.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-05",
+          "criterion": "Count allocate/free for empty, returned buffers, clear then destruction, destruction without clear for each pool; initialized generic-element lifetime tested separately."
+        },
+        {
+          "record": "API-06",
+          "criterion": "Zero/exact/mixed bucket budgets; concurrent burst; no release leaves cache above cap. Verify live-handle and returned-memory accounting."
+        },
+        {
+          "record": "API-32",
+          "criterion": "Release allocation/contention profile; if changed, retained-byte invariant across type/size buckets and teardown preserved."
+        },
+        {
+          "record": "API-37",
+          "criterion": "Swift6 doc consumer compile; success/throw/cancel each releases once, owner retained through operation. Active-handle policy coordinated with teardown."
+        }
+      ]
+    },
+    {
+      "id": "E05",
+      "stream": "E",
+      "title": "Reentrant and concurrent calibration",
+      "records": [
+        "API-29"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Do not invoke arbitrary calibrators while holding a nonrecursive lock; decide single-flight/publication and same-key reentrancy policy.",
+      "regression_design": "Bounded subprocess direct reentrancy and custom metric callback; unrelated-key concurrency, duplicate publication, slow callback and failure cleanup.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Operations.swift",
+        "Sources/VectorCore/Providers/AutoTuning.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-29",
+          "criterion": "Bounded subprocess custom metric querying tuner plus direct reentrant calibrator; unrelated-key concurrency; no duplicate publication/race; slow callback policy test."
+        }
+      ]
+    },
+    {
+      "id": "E06",
+      "stream": "E",
+      "title": "Validated live operation settings",
+      "records": [
+        "API-02"
+      ],
+      "depends_on": [
+        "E01",
+        "E02",
+        "E03",
+        "N03"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Inventory effective knobs; take one validated live snapshot per operation. Re-derive all newly reachable branches before connecting previously ignored settings.",
+      "regression_design": "Behavioral spy per setting; reject zero/negative/nonfinite/huge oversubscription before division/conversion/shift/addition; rerun serial/parallel statistics and routing boundaries.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/BatchOperations.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-02",
+          "criterion": "Behavior tests per setting; reject zero/nonfinite/negative/huge oversubscription, invalid batch/chunk sizes before division, conversion, shift or addition."
+        }
+      ]
+    },
+    {
+      "id": "N01",
+      "stream": "N",
+      "title": "Range-safe division and normalization",
+      "records": [
+        "NUM-01",
+        "NUM-02",
+        "API-39"
+      ],
+      "depends_on": [
+        "S01",
+        "S02",
+        "O04",
+        "I01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Set scalar quotient, zero/nonfinite and normalization direction/unit-norm contracts by route; full norm/reciprocal representability is unnecessary. Core and VA CPU parity are separate checks.",
+      "regression_design": "Float/Double exponent sweeps over /, /=, direct divide, generic/concrete/array/pointer routes; [s,0]/s at1e-40, repeated1e-38 and greatestFinite, widths1/4/5/17 plus fixed widths. Use widened references for Float, scaled/exponent-based references for Double extremes, and explicitly finite-aware residuals. vDSP substitution is not closure.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/DivisionRangeContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Core/FallbackProvider.swift",
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Integration/VectorCoreIntegration.swift",
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Operations/AccelerateFallback.swift",
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Operations/SIMDFallback.swift",
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Operations/StableNormalization.swift",
+        "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift",
+        "Sources/VectorCore/Platform/AccelerateSIMDProvider.swift",
+        "Sources/VectorCore/Platform/ArraySIMDProvider.swift",
+        "Sources/VectorCore/Platform/SIMDProvider.swift",
+        "Sources/VectorCore/Platform/SwiftFloatSIMDProvider.swift",
+        "Sources/VectorCore/Protocols/VectorProtocol.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-01",
+          "criterion": "Provider/type/operator conformance matrix Float/Double, normal/subnormal divisors, zero numerators and tails; compare representable quotients to widened scalar reference; test /= separately from inPlaceDivide."
+        },
+        {
+          "record": "NUM-02",
+          "criterion": "Across typed/generic/pointer paths and widths/tails, assert unit norm in Double, positive alignment with original direction, zero/nonfinite policy, and unchanged-on-failure if promised. Include least subnormal,1e-38,maxFinite."
+        },
+        {
+          "record": "API-39",
+          "criterion": "Exponent-range direction/norm checks through actual Core/VA CPU paths, optional GPU separately; no false true normalization hints."
+        }
+      ]
+    },
+    {
+      "id": "N02",
+      "stream": "N",
+      "title": "Finite-aware equality and logarithm policy",
+      "records": [
+        "NUM-14",
+        "NUM-15"
+      ],
+      "depends_on": [
+        "S02"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Resolve strict safeLog ambiguity and matching-infinity/tolerance policy; do not enable dormant validators to repair their contract.",
+      "regression_design": "NaN/finite/±Inf/signed-zero cross product with negative/NaN/infinite tolerances; every log option on zero/negative/nonfinite and mixed values.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/NumericalPolicyContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionValidation.swift",
+        "Sources/VectorCore/Operations/NaNInfinityHandling.swift",
+        "Sources/VectorCore/Protocols/VectorProtocol.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-14",
+          "criterion": "Mechanical helpers matrix finite/NaN/±Inf/signedzero and invalid tolerances across dimensions; distances and vectors use consistent declared rules."
+        },
+        {
+          "record": "NUM-15",
+          "criterion": "All presets on negative/zero/NaN/±Inf/mixed vectors; if strict keeps general meaning, strict success must imply finite result."
+        }
+      ]
+    },
+    {
+      "id": "N03",
+      "stream": "N",
+      "title": "Stable batch population statistics",
+      "records": [
+        "NUM-06"
+      ],
+      "depends_on": [
+        "E03"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Use a stable serial and mergeable parallel variance design; fix the population statistic, not component covariance. Do not use raw-moment implementation as oracle.",
+      "regression_design": "Alternating10000/10001 and identical Float1e18 at999/1000/1024, shuffled orders and chunk counts against wider/scaled reference; both branches finite and accurate within specified tolerance.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/BatchStatisticsRangeTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/BatchOperations.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-06",
+          "criterion": "Both sides of999/1000 and multiple chunk counts, shuffled order, constants and large offsets; compare Double population standard deviation and assert finite results where reference is representable."
+        }
+      ]
+    },
+    {
+      "id": "N04",
+      "stream": "N",
+      "title": "Scale-invariant entropy",
+      "records": [
+        "NUM-07"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Separate normalized-probability cutoff policy from absolute input scale. Existing manualEntropy repeats the defect and cannot be the independent oracle.",
+      "regression_design": "Uniform finite nonzero scales produce log(d), zero padding and common-scale invariance around dimension64; extremes and chosen nonfinite/zero policy.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/VectorEntropyTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/VectorEntropy.swift",
+        "Sources/VectorCore/Operations/VectorMath.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-07",
+          "criterion": "Scale sweeps over finite exponent range and zero-padding across64; compare normalized Double entropy, include all-zero/nonfinite and existing tiny-probability tests."
+        }
+      ]
+    },
+    {
+      "id": "Q01",
+      "stream": "Q",
+      "title": "Quantization ranges and INT8 cosine",
+      "records": [
+        "NUM-03",
+        "NUM-04",
+        "NUM-05"
+      ],
+      "depends_on": [
+        "S01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Define calibration interval/constant behavior, finite outlier conversion and valid decoded parameters for both public APIs; cosine uses the decoded-vector mathematical reference.",
+      "regression_design": "Positive/negative/cross-zero/constant intervals, [1,2], finite1e20 outliers; all float-to-int sites; cosine self/opposite/orthogonal at widths512/768/1536 and unequal scales.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift",
+        "Sources/VectorCore/Quantization/QuantizationSchemes.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-03",
+          "criterion": "Both calibration APIs across signed/one-sided/cross-zero/constant intervals must cover endpoints within a defined quantization step; scalar/SIMD/decoded construction agree."
+        },
+        {
+          "record": "NUM-04",
+          "criterion": "Mechanical Float-to-integer conversion matrix: finite extremes/constants/outliers, NaN/Inf, scalar versus SIMD, decoded params; no process termination for supported inputs and explicit error/fallback otherwise."
+        },
+        {
+          "record": "NUM-05",
+          "criterion": "Self/opposite/orthogonal scale-family matrix all widths, asymmetric and unequal-scale cases, zero/nonfinite policy; compare to Double decoded-vector reference."
+        }
+      ]
+    },
+    {
+      "id": "Q02",
+      "stream": "Q",
+      "title": "Precision selection, accuracy and tuner provenance",
+      "records": [
+        "NUM-16",
+        "NUM-17",
+        "NUM-19",
+        "NUM-20",
+        "NUM-21",
+        "NUM-24"
+      ],
+      "depends_on": [
+        "Q01",
+        "N01",
+        "E05"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Define bound versus heuristic, absolute/relative error, zero-reference behavior, full-FP32 and resource guarantees. Immutable pool refill and calibration cost are design/profiling questions.",
+      "regression_design": "Threshold0, swapped operands, large candidate/small query, near-tie fixtures; cache every decision input and test call permutations; ordinary non-CI persistence with temporary paths and provenance.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/PrecisionSelectionContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/KernelAutoTunerTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [
+        {
+          "task": "O05",
+          "when": "Introducing mutable conversion scratch or changing borrowing/storage ownership; correcting unsupported reuse wording alone does not require it."
+        }
+      ],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/KernelAutoTuner.swift",
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionAutoTuner.swift",
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+        "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-16",
+          "criterion": "Operand reversal, high candidate/low query, threshold sweeps and near ties; prove/test conservative selection bounds and compare with defined baseline."
+        },
+        {
+          "record": "NUM-17",
+          "criterion": "Change one input at a time, compare warm/fresh answers, exercise call permutations and invalid accuracy values."
+        },
+        {
+          "record": "NUM-19",
+          "criterion": "Temporary-path persistence round trip and non-CI isolated selection test; vary constraints with same shape, require feasible or explicit no-feasible response; invalidate incompatible profiles."
+        },
+        {
+          "record": "NUM-20",
+          "criterion": "Explicit fp32Full call always returns fullFP32 or a documented error; no synthetic benchmark can weaken exact precision policy."
+        },
+        {
+          "record": "NUM-21",
+          "criterion": "Count calibration work and conversion boundaries mechanically; measure coordinated Release first-call latency/peak allocations on representative workloads; preserve error semantics."
+        },
+        {
+          "record": "NUM-24",
+          "criterion": "A consumer converts distinct successive vectors while demonstrating actual allocation reuse and correct values; otherwise remove conversion-reuse claim."
+        }
+      ]
+    },
+    {
+      "id": "Q03",
+      "stream": "Q",
+      "title": "Race-free rounding-aware FP16 diagnostics",
+      "records": [
+        "NUM-18",
+        "API-21"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Specify recording snapshots and conversion classification from actual rounded representation; consolidate both unlocked guards.",
+      "regression_design": "Rounding ties and neighbors around zero/subnormal/normal/overflow,1e-12 and65505, signed extrema; scalar/batch totals; concurrent toggling and constructors under supported TSAN.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionDiagnostics.swift",
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-18",
+          "criterion": "Scalar/batch classification same on rounding ties, adjacent FP16 normal/subnormal/zero/overflow boundaries, NaNs/infinities and positive/negative-only batches."
+        },
+        {
+          "record": "API-21",
+          "criterion": "TSAN concurrent enable/disable plus all live conversion inits; stable state/stat count policy. Eliminate both duplicated unlocked guards."
+        }
+      ]
+    },
+    {
+      "id": "Q04",
+      "stream": "Q",
+      "title": "FP16 range work proportional to requested range",
+      "records": [
+        "NUM-22"
+      ],
+      "depends_on": [
+        "Q01",
+        "Q03"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Preserve compact-output/global-index conventions while avoiding whole-candidate mapping; serialize shared MixedPrecisionKernels edits with Q02/O05.",
+      "regression_design": "All nine wrappers at empty/nonzero-start/tail ranges and sentinel outputs; vary unrelated N at fixed range, record conversion/allocation work before speed claims.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/MixedPrecisionRangeValidationTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-22",
+          "criterion": "Empty/single range retained metadata/work independent of unrelated candidate count; all widths and nonzero range starts produce correct scores/sentinels."
+        }
+      ]
+    },
+    {
+      "id": "L01",
+      "stream": "L",
+      "title": "Swift factorization range and boundary contracts",
+      "records": [
+        "NUM-08",
+        "NUM-09",
+        "NUM-35"
+      ],
+      "depends_on": [
+        "N01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Choose scaled convergence/normalization rules and dimension-aware tolerances. Keep qualified extreme LAPACK workspace investigation distinct from reproduced Swift defects.",
+      "regression_design": "Analytic golden-ratio, single-column and rectangular full-rank fixtures across exponents; finite factors, scaled spectra, normalized residuals and U/V orthogonality; explicit Swift and PCA override.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/LinearAlgebra/LinearAlgebraProvider.swift",
+        "Sources/VectorCore/LinearAlgebra/SwiftLinearAlgebraProvider.swift",
+        "Sources/VectorCoreC/common/vc_lapack.c"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-08",
+          "criterion": "Scale-equivariant spectra, orthogonality and normalized residuals for full-rank rectangular matrices; output finiteness; isolate rank-deficiency exception."
+        },
+        {
+          "record": "NUM-09",
+          "criterion": "Shared exponent sweep QR/SVD/eigen with normalized residual, orthogonality, spectrum, finiteness; include single-column and near-extreme finite vectors."
+        },
+        {
+          "record": "NUM-35",
+          "criterion": "Boundary size arithmetic tested without giant allocations; supported envelope documented and clean error outside it."
+        }
+      ]
+    },
+    {
+      "id": "L02",
+      "stream": "L",
+      "title": "PCA centering and checked sketch dimensions",
+      "records": [
+        "NUM-10",
+        "API-20"
+      ],
+      "depends_on": [
+        "L01"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Decide centering representation and model/transform compatibility before improving qualified offset behavior; validate oversampling before addition.",
+      "regression_design": "Translated representable [0,2] versus [16777216,16777218] against Double covariance; fit/single/batch transform agreement;0/normal/Int.max oversampling on tiny inputs.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/PCATests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/LinearAlgebraBoundaryTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/LinearAlgebra/PCA.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-10",
+          "criterion": "Translation/offset invariance with representable input/residual fixtures; compare Double covariance and projected sample mean; no fit/transform center mismatch."
+        },
+        {
+          "record": "API-20",
+          "criterion": "0,normal,Int.max oversampling on tiny data; correct exact fallback or documented error without overflow."
+        }
+      ]
+    },
+    {
+      "id": "L03",
+      "stream": "L",
+      "title": "UMAP calibration equations and input boundaries",
+      "records": [
+        "NUM-11",
+        "NUM-12",
+        "NUM-13",
+        "NUM-25",
+        "NUM-26",
+        "NUM-27",
+        "NUM-28"
+      ],
+      "depends_on": [
+        "L02"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Define coefficient representability/nonconvergence, checked CSR scope and optional initial-coordinate policy. Brute-force Gram cancellation is documented context, not a new hidden defect.",
+      "regression_design": "Dimensionless curve/SSE and smooth-kNN defining equations over scale families; solvable and tied/duplicate rows; floating config finiteness, malformed offsets and extreme integer options before unsafe arithmetic.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/UMAPRangeContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/UMAPTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [
+        {
+          "task": "P02",
+          "when": "Changing the exhaustive Gram reference route or its exactness policy; retaining the documented limitation does not require a new matrix implementation."
+        }
+      ],
+      "staged_closure": "",
+      "source_references": [
+        "Docs/Linear_Algebra_and_Projection.md",
+        "Docs/Numerical_Behavior.md",
+        "Sources/VectorCore/LinearAlgebra/PCA.swift",
+        "Sources/VectorCore/ManifoldLearning/FuzzySimplicialSet.swift",
+        "Sources/VectorCore/ManifoldLearning/KNNGraph.swift",
+        "Sources/VectorCore/ManifoldLearning/UMAP.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-11",
+          "criterion": "Assert b and dimensionless fitted curve/SSE invariant over scale families and check convergence; explicit failure outside supported range. Do not assert entire SGD layout is scale-equivariant."
+        },
+        {
+          "record": "NUM-12",
+          "criterion": "Multiplicative-scale tests with unequal degrees/isolated/duplicate rows; assert weights/topology and equation residual where solvable, with supported-range policy for sigma overflow."
+        },
+        {
+          "record": "NUM-13",
+          "criterion": "Table of NaN/±Inf per floating option across both overloads must throw; normal configs remain deterministic; include finite extremes to characterize policy."
+        },
+        {
+          "record": "NUM-25",
+          "criterion": "Generated small malformed-offset matrix including valid final endpoint but interior overshoot/negative/decrease must throw under chosen checked contract; valid uneven/unsorted rows remain accepted."
+        },
+        {
+          "record": "NUM-26",
+          "criterion": "Tiny fixtures atInt.max, safe bounds, zero/negative/normal values either throw documented error or produce bounded intended result without process termination."
+        },
+        {
+          "record": "NUM-27",
+          "criterion": "Near-offset fixtures compared with widened/direct reference; any refinement must not lose true nearest candidate before reranking."
+        },
+        {
+          "record": "NUM-28",
+          "criterion": "NaN/±Inf coordinate tests and large finite scale fixtures with documented result/error policy; ordinary init deterministic."
+        }
+      ]
+    },
+    {
+      "id": "L04",
+      "stream": "L",
+      "title": "Manifold and PCA memory/work envelope",
+      "records": [
+        "NUM-29",
+        "NUM-30",
+        "NUM-31"
+      ],
+      "depends_on": [
+        "L03",
+        "V04"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Select supported corpus/sample budgets and cancellation contract before redesigning documented synchronous in-memory algorithms.",
+      "regression_design": "Analytical buffers plus measured peak/retained memory, graph sorting/epoch scans and transforms on representative seeded workloads; preserve order/determinism contracts.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/UMAPTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/PCATests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/LinearAlgebra/PCA.swift",
+        "Sources/VectorCore/LinearAlgebra/SwiftLinearAlgebraProvider.swift",
+        "Sources/VectorCore/ManifoldLearning/FuzzySimplicialSet.swift",
+        "Sources/VectorCore/ManifoldLearning/UMAP.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "NUM-29",
+          "criterion": "Measured peak allocation/RSS alongside predicted payload for representative Release runs; verify identical results/order or explicitly documented numerical changes."
+        },
+        {
+          "record": "NUM-30",
+          "criterion": "Coordinated Release time/allocation profiles and result/seed reproducibility checks for any schedule or format change."
+        },
+        {
+          "record": "NUM-31",
+          "criterion": "Cancel at meaningful phases and bound latency/resources; legacy synchronous success output remains consistent."
+        }
+      ]
+    },
+    {
+      "id": "P01",
+      "stream": "P",
+      "title": "Hash quality and streaming selection work",
+      "records": [
+        "OWN-07",
+        "API-23",
+        "API-24",
+        "API-45"
+      ],
+      "depends_on": [
+        "R01",
+        "R03",
+        "R04",
+        "O03",
+        "V04"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Keep lawful hash collisions distinct from cache identity; preserve common membership/NaN/tie laws, count range and public validation when adopting streaming selection.",
+      "regression_design": "Interior-only optimized-vector variations and signed-zero controls; allocations versus N at fixed k and nearN; scalar/direct reference membership and equivalent-work Release timing.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/OptimizedHashContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/TopKSelectionTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/BatchOperations.swift",
+        "Sources/VectorCore/Operations/Kernels/TopKSelectionKernels.swift",
+        "Sources/VectorCore/Operations/Operations.swift",
+        "Sources/VectorCore/Operations/TopKSelection.swift",
+        "Sources/VectorCore/Operations/VectorMath.swift",
+        "Sources/VectorCore/Vectors/Vector1536Optimized.swift",
+        "Sources/VectorCore/Vectors/Vector384Optimized.swift",
+        "Sources/VectorCore/Vectors/Vector512Optimized.swift",
+        "Sources/VectorCore/Vectors/Vector768Optimized.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "OWN-07",
+          "criterion": "Large structured/sparse interior-varying corpus must not deterministically collapse; equal values including signed zeros retain equal hashes. Coordinate Release insertion/lookup scaling measurement before speed claims."
+        },
+        {
+          "record": "API-23",
+          "criterion": "Allocation/peak memory versus N at fixed k; exact membership/order/NaN/ties match shared selector; Release measurement before performance claims."
+        },
+        {
+          "record": "API-24",
+          "criterion": "Release allocation profiles; shared membership/order at k nearN and varied chunk sizes; public invalid inputs still validate exactly before unsafe routes."
+        },
+        {
+          "record": "API-45",
+          "criterion": "Metric spy k0 policy, k bounds, common order/member tests; Release allocation/time before performance claim."
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "stream": "P",
+      "title": "Explicit batch accuracy, memory and reusable packing",
+      "records": [
+        "API-22",
+        "API-25",
+        "API-41",
+        "TOOL-10"
+      ],
+      "depends_on": [
+        "R01",
+        "R03",
+        "N01",
+        "E06",
+        "V02",
+        "V04"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Choose exact/direct versus approximate/Gram policy, scratch budget and real consumer-backed contiguous ownership API before route changes.",
+      "regression_design": "Near-equal large-offset ranking, Q7/8 and N255/256 gates, installed-provider sentinel and fallback; real centroid consumer parity; allocation budgets include packed inputs/output and scratch.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/BatchKernelProviderTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/MatrixDistanceTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "../VectorIndex/Sources/VectorIndex/Kernels/CentroidBatchScore.swift",
+        ".github/workflows/benchmarks.yml",
+        ".github/workflows/ci.yml",
+        "Benchmarks/VectorCoreBench/AppMain.swift",
+        "Docs/Numerical_Behavior.md",
+        "Sources/VectorCore/Operations/MatrixDistance.swift",
+        "Sources/VectorCore/Operations/Operations.swift",
+        "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+        "Tests/ComprehensiveTests/BatchKernelProviderTests.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-22",
+          "criterion": "Memory budget invariants and deterministic exact-neighbor fixture; direct precision mode reproduces direct reference across gate; benchmark crossovers only after design."
+        },
+        {
+          "record": "API-25",
+          "criterion": "Real centroid consumer parity and removed candidate repacking/allocation; invalid stride/shape checks before BLAS; lifetime tests."
+        },
+        {
+          "record": "API-41",
+          "criterion": "Sentinel provider output at actual GEMM gate; default per-query and whole-batch override both exercised."
+        },
+        {
+          "record": "TOOL-10",
+          "criterion": "Publish exact hardware, inputs, routing, raw sample distribution and memory budget for chosen target scale; validate custom-provider precedence at every newly reachable boundary."
+        }
+      ]
+    },
+    {
+      "id": "B01",
+      "stream": "B",
+      "title": "Binary round trips, real tests and wire contracts",
+      "records": [
+        "SER-01",
+        "SER-02",
+        "SER-03",
+        "SER-04",
+        "SER-05",
+        "SER-06",
+        "SER-07"
+      ],
+      "depends_on": [
+        "S01",
+        "S03"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Preserve existing wire bytes/caps and explicit concrete-type precision contracts; define empty dynamic round trip. Conformances and scalar-loop optimization need separate justification.",
+      "regression_design": "Replace15 comment-only bodies and mislabeled concrete types; independent complete golden frame, NaN payload/signed-zero bits, sliced Data, CRC/length/cap boundaries and empty-after-removal; profile before optimizing.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/VectorSerializationTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [
+        {
+          "task": "V04",
+          "when": "Optimizing scalar binary conversion or publishing speed/allocation improvement; compatible round-trip fixes can proceed independently."
+        }
+      ],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift",
+        "Sources/VectorCore/Serialization/BinaryProtocols.swift",
+        "Sources/VectorCore/Utilities/BinaryFormat.swift",
+        "Sources/VectorCore/Vectors/DynamicVector.swift",
+        "Sources/VectorCore/Vectors/VectorSerialization.swift",
+        "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "SER-01",
+          "criterion": "Real default/last-element-removal empty roundtrips or explicit checked rejection; fixed-size decoders must retain dimension checks; CRC/size failures remain rejected."
+        },
+        {
+          "record": "SER-02",
+          "criterion": "Every active test named for a behavior must execute/assert that behavior. Include signed-zero/NaN payload binary bits, direct sliced Data, valid/invalid CRC and exact frame lengths."
+        },
+        {
+          "record": "SER-03",
+          "criterion": "Before/after Release measurements with allocation counts, CRC included, representative dimensions and unaligned slices; byte-for-byte equality against independent fixtures."
+        },
+        {
+          "record": "SER-04",
+          "criterion": "Examples and tests must name concrete source/destination types and expected byte sizes/precision; existing wire format compatibility preserved unless explicitly versioned."
+        },
+        {
+          "record": "SER-05",
+          "criterion": "External generic helper compile test for supported conformances; clearly define types that encode only versus fully roundtrip."
+        },
+        {
+          "record": "SER-06",
+          "criterion": "Publish independently specified full golden frame; old frames remain decodable."
+        },
+        {
+          "record": "SER-07",
+          "criterion": "Class-wide malformed framing/CRC and cap boundary tests, plus independent bits/slice regression; do not count absent streaming/compression/migration features as implemented."
+        }
+      ]
+    },
+    {
+      "id": "D01",
+      "stream": "D",
+      "title": "Pinned downstream contract validation",
+      "records": [
+        "API-34",
+        "API-35",
+        "API-36",
+        "API-40"
+      ],
+      "depends_on": [
+        "I01",
+        "N01",
+        "R01",
+        "R05"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Name supported sibling revisions and direct-vs-bridge score/precision semantics; prepare sibling-owned fixes separately. Core-only authorization does not permit sibling edits.",
+      "regression_design": "Mixed normalized/raw batch hints in both orders versus individual Flat/IVF/optimized-flat searches; compile actual integration examples and dependency combinations; CPU/GPU evidence separate.",
+      "test_files": [
+        {
+          "path": "Scripts/ci/consumer_smoke.py",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "../VectorIndex/Package.resolved",
+        "../VectorIndex/Package.swift",
+        "../VectorIndex/Sources/VectorIndex/FlatIndex.swift",
+        "../VectorIndex/Sources/VectorIndex/IVFIndex.swift",
+        "../VectorIndex/Sources/VectorIndex/TypedOverloads.swift",
+        "../future/VectorAccelerate/Package.resolved",
+        "../future/VectorAccelerate/Package.swift",
+        "../future/VectorAccelerate/Sources/VectorAccelerate/Integration/MetalComputeProvider.swift",
+        "Sources/VectorCore/Integration/VectorCollection.swift",
+        "Sources/VectorCore/Protocols/BatchKernelProvider.swift",
+        "Sources/VectorCore/Version.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-34",
+          "criterion": "Mixed normalized/raw hint batches in both orders match individual searches across Flat/IVF/optimized-flat."
+        },
+        {
+          "record": "API-35",
+          "criterion": "Direct-vs-bridge sign tests and NaN/tie policy declarations; custom metric witness remains authoritative."
+        },
+        {
+          "record": "API-36",
+          "criterion": "Compile actual cross-package integration examples at pinned versions; route map reflects real conformance."
+        },
+        {
+          "record": "API-40",
+          "criterion": "Consumer builds against intended release/main separately; do not infer platform lowering from shared protocols."
+        }
+      ]
+    },
+    {
+      "id": "D02",
+      "stream": "D",
+      "title": "Public API, device and C contract disposition",
+      "records": [
+        "API-12",
+        "API-30",
+        "API-38",
+        "OWN-20",
+        "OWN-21",
+        "OWN-27",
+        "NUM-32",
+        "NUM-33",
+        "NUM-34",
+        "TOOL-13"
+      ],
+      "depends_on": [
+        "D01",
+        "B01",
+        "E06"
+      ],
+      "status": "planned",
+      "design_checkpoint": "Document actual effective hooks, factory/storage customization and device placeholders; decide supported surface before wiring dormant hooks. Mobile benchmarking product and helper performance remain investigations.",
+      "regression_design": "External concrete/generic/provider consumers and symbol inventory; every retained runtime metadata claim backed by discovery or explicit unsupported status; C declaration/link and lane-limit checks; actual product target builds.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/ArbitraryDimensionTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/VectorTypeFactoryTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Tests/ComprehensiveTests/CKernelsSmokeTests.swift",
+          "exists": true,
+          "note": "Existing candidate"
+        },
+        {
+          "path": "Scripts/ci/consumer_smoke.py",
+          "exists": true,
+          "note": "Existing candidate"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        ".github/workflows/ci.yml",
+        "Package.swift",
+        "Sources/VectorCore/Core/Dimension.swift",
+        "Sources/VectorCore/Execution/ComputeDevice.swift",
+        "Sources/VectorCore/Factory/VectorTypeFactory.swift",
+        "Sources/VectorCore/Interop/CKernels.swift",
+        "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+        "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift",
+        "Sources/VectorCore/Operations/Operations.swift",
+        "Sources/VectorCore/Operations/VectorCoreOperations.swift",
+        "Sources/VectorCore/Operations/VectorMath.swift",
+        "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+        "Sources/VectorCore/Platform/PlatformConfiguration.swift",
+        "Sources/VectorCore/Platform/SwiftDoubleSIMDProvider.swift",
+        "Sources/VectorCore/Protocols/VectorFactory.swift",
+        "Sources/VectorCore/Protocols/VectorProtocol.swift",
+        "Sources/VectorCore/VectorCore.swift",
+        "Sources/VectorCore/Vectors/Vector.swift",
+        "Sources/VectorCoreBenchmarking/EnvCapture.swift",
+        "Sources/VectorCoreC/arm64/vc_arm64.c",
+        "Sources/VectorCoreC/common/vc_dispatch.c",
+        "Sources/VectorCoreC/common/vc_scalar.c",
+        "Sources/VectorCoreC/include/VectorCoreC.h",
+        "Sources/VectorCoreC/x86_64/vc_x86.c"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-12",
+          "criterion": "Spy provider verifies each claimed active hook; public-entry/provider matrix documents real dispatch."
+        },
+        {
+          "record": "API-30",
+          "criterion": "Invalid GPU indices, no-neural hardware and provider creation consistency under fake discovery backend."
+        },
+        {
+          "record": "API-38",
+          "criterion": "Generated public symbol diff and downstream consumer compile tests for supported surface."
+        },
+        {
+          "record": "OWN-20",
+          "criterion": "Custom dimension conformance fixtures demonstrate actual storage and intended available operations; no advertised customization point has no effect."
+        },
+        {
+          "record": "OWN-21",
+          "criterion": "Concrete-output and routing tests remain deliberate; any strategy change reruns all reachable kernels and consumer casts at every supported dimension."
+        },
+        {
+          "record": "OWN-27",
+          "criterion": "Concrete/generic/existential compatible calls obey same documented contract; spy/conformance fixtures identify selected customization points."
+        },
+        {
+          "record": "NUM-32",
+          "criterion": "All architectures/C gate configurations compare max-magnitude fixed widths and remainder counts to Int64 reference; arbitrary supported lanes must have explicit overflow behavior."
+        },
+        {
+          "record": "NUM-33",
+          "criterion": "C consumer symbol/link and nonzero-start sentinel tests; supported public declarations all link."
+        },
+        {
+          "record": "NUM-34",
+          "criterion": "Representative Release allocation/throughput and generated-code records, matched semantics, supported-platform conformance."
+        },
+        {
+          "record": "TOOL-13",
+          "criterion": "Product support matrix backed by actual target builds, or clear host-only documentation."
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "stream": "D",
+      "title": "Lazy logging and elapsed-time contract",
+      "records": [
+        "API-31"
+      ],
+      "depends_on": [],
+      "status": "planned",
+      "design_checkpoint": "Preserve logger API while evaluating messages only when emitted; select monotonic elapsed-time semantics without inventing measured overhead.",
+      "regression_design": "Disabled autoclosure evaluated zero times, enabled once; controllable clock fixture for elapsed timing behavior.",
+      "test_files": [
+        {
+          "path": "Tests/ComprehensiveTests/LoggingContractTests.swift",
+          "exists": false,
+          "note": "Proposed; not created"
+        }
+      ],
+      "conditional_prerequisites": [],
+      "staged_closure": "",
+      "source_references": [
+        "Sources/VectorCore/Logging/Logger.swift"
+      ],
+      "source_note": "Read scope, not write authorization; downstream files require a separate authorized task.",
+      "acceptance": [
+        {
+          "record": "API-31",
+          "criterion": "Disabled message spy remains unevaluated; enabled once; controllable timer clock verifies elapsed policy."
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "API-01",
+      "owner": "R01",
+      "claim": "Two search facades replace unsupported metric witnesses with Euclidean",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public TopKSelection.nearest/batchNearest and default collection search; Operations respects requested metric",
+      "qualification": "Collection probe itself shows wrong score, not rank reversal; source proves reversal for search_probe candidate set. Not a downstream VectorIndex implementation bug.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-02",
+      "owner": "E06",
+      "claim": "Batch configuration storage is disconnected from operation settings",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Contract / integration",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public BatchOperations; matrix flags alone use live settings",
+      "qualification": "findNearest uses ParallelHeuristic, not configurable general parallelThreshold. Do not imply every knob governs every API.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-03",
+        "API-07",
+        "API-08"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-03",
+      "owner": "E03",
+      "claim": "Configuration read-modify-write loses concurrent updates",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Contract / integration",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public updateConfiguration",
+      "qualification": "Actor individual access remains isolated; failure is transaction lost update, not unsynchronized stored memory.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-02"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-04",
+      "owner": "E02",
+      "claim": "Several schedulers eagerly create all child tasks",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Resource / availability",
+      "disposition": "Plan regression and repair",
+      "exposure": "ComputeProvider defaults; public BatchOperations.process/map/filter; public Dim768 cosineSimilarityMatrix and TriangularMatrix.buildParallel; downstream VA inherited batch defaults",
+      "qualification": "Task count/resource exposure, not 64 simultaneous CPU threads or measured slowdown. CPUComputeProvider own bounded chunks/nesting fix is intact. Default reduction is coarsely chunked, not per-item.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-08",
+        "API-24"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-05",
+      "owner": "E04",
+      "claim": "Cached raw actor pool allocations are not freed on owner destruction",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Resource / availability",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public scoped SwiftBufferPool and TypedBufferPool; internal BufferPool same pattern",
+      "qualification": "Proof covers returned cached allocation without active handles. It does not establish active-handle teardown policy, generic element ownership, or leak in separately repaired MemoryPool.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-06",
+      "owner": "E04",
+      "claim": "SwiftBufferPool age cleanup does not enforce maxPoolSize",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Resource / availability",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public SwiftBufferPool opt-in; Operations buffer binding currently unused internally",
+      "qualification": "No universal RSS/time claim; indefinite idle retention is source-derived. maxBufferSize remains enforced on return.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-05"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-07",
+      "owner": "E01",
+      "claim": "Nonpositive process batch sizes trap or discard work",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public throwing BatchOperations.process explicit parameter",
+      "qualification": "Int positivity is a reasonable semantic expectation, but throwing API currently has neither clear contract nor validation; rank below ordinary positive-input bugs.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-02"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-08",
+      "owner": "E01",
+      "claim": "CPU chunk endpoints overflow before clamping valid short ranges",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public explicitly parallel CPU helpers; default automatic only when gate reached; huge explicit minChunk option",
+      "qualification": "No enormous allocation is required for CPU witnesses. Do not claim tiny near-max failure for default reduction without a case that actually overflows its smaller chunk.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-09",
+      "owner": "R02",
+      "claim": "Failed collection update deletes existing value",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public MutableVectorCollection default; SimpleVectorCollection reference implementation",
+      "qualification": "SimpleVectorCollection is a small/reference utility, not actual VectorIndex storage. Prechecking dimension alone does not guarantee rollback for arbitrary add failures.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-10",
+      "owner": "R02",
+      "claim": "Explicit/generated IDs overwrite records",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "SimpleVectorCollection public insertion APIs",
+      "qualification": "Reference collection scope; integer exhaustion is design edge, not replayed production failure.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-09"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-11",
+      "owner": "R05",
+      "claim": "computedScore pole breaks negative-dot relevance",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public SearchResult fallback; actual collection searchDotProduct producer",
+      "qualification": "No reviewed downstream computedScore callers; do not claim observed ANN/GPU regression. There is no universal metric-free transform for all Float scores.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-12",
+      "owner": "D02",
+      "claim": "Advertised buffer/global configuration hooks have no active internal consumers",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public reserved-looking bindings and immutable facade",
+      "qualification": "Provider coexistence is not itself a defect. ArraySIMDProvider and pointer SIMDProvider have different legitimate scopes; API map already discloses static-kernel limitations. Extension-only vector dispatch is owned by vector reviewer.",
+      "status": "retained",
+      "audit_dependencies": [
+        "API-01",
+        "API-02"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-13",
+      "owner": "S02",
+      "claim": "Collection aggregation trusts first row before unsafe reads/forced factories",
+      "confidence": "confirmed-source",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public Operations.centroid/statistics; generic factory boundary",
+      "qualification": "No equal-dimension precondition appears at these aggregation entries. Do not transfer MatrixDistance unsafe contracts to them. Pointer overread is source proof; garbage returned by an unsanitized probe is not proof of exact read extent.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-01"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-14",
+      "owner": "R03",
+      "claim": "Zero-query SoA cosine fills oversized output suffix",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public Safe512 and dimension wrappers using shared internal routes",
+      "qualification": "Writes remain inside provided capacity; this is logical-output overwrite, not out-of-allocation memory corruption. Nonzero branches write N only; no documented requirement to overwrite scratch suffix.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-15",
+      "owner": "R03",
+      "claim": "Pairwise hard-coded zero diagonal fails built-in negative dot",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public BatchOperations.pairwiseDistances direct routes",
+      "qualification": "Directed metric N2/N100 discrepancy reproduced but pairwise docs promise symmetric output: treat arbitrary asymmetric support as contract clarification, not required fix. VectorMath pairwise explicitly documents zero diagonal.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-16",
+      "owner": "R03",
+      "claim": "cosineSimilarityMatrix returns negative off-diagonal similarity and zero diagonal",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public Array<Vector<Dim768>> convenience",
+      "qualification": "Separate from directed-metric contract. Exact rounded -1.0000001 is numeric noise; sign/diagonal error is order-one.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-04",
+        "API-15"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-17",
+      "owner": "R04",
+      "claim": "Bulk bounded heap membership differs from streaming; negative capacity loops",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public MinHeap opt-in; no evidence high-level Operations uses bulk constructor",
+      "qualification": "Implicit nonnegative capacity is reasonable but missing validation; separate P3 invalid-parameter subcase from valid bounded-selection P2. Parent/root ordering does not make heap prefix correct top-k.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-18",
+      "owner": "S03",
+      "claim": "TopKResult decoder violates parallel-array invariant",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public Codable from malformed external data",
+      "qualification": "Malformed serialized input, not valid round-trip bug. Silent zip truncation is consequence of same invariant violation.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-19",
+      "owner": "S02",
+      "claim": "Factory batch dimension zero reaches remainder by zero",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public throwing VectorTypeFactory.batch invalid dimension",
+      "qualification": "A vector dimension normally implies positivity; classify invalid-parameter validation gap rather than ordinary valid-input failure. Not all factory methods trap at zero.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-20",
+      "owner": "L02",
+      "claim": "PCA oversampling Int.max overflows before bounded sketch clamp",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public optional extreme PCAConfig; two valid one-dimensional samples",
+      "qualification": "Extreme optional knob, not default PCA numeric failure or enormous input allocation.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-21",
+      "owner": "Q03",
+      "claim": "FP16 diagnostics enabled flag is read without lock",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "Concurrent diagnostics enable/disable with public mixed-precision conversions; opt-in recording",
+      "qualification": "Source-proven conflicting access, no TSAN report. Recorders normally unreachable while always disabled; default entire library not racy from this flag.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-22",
+      "owner": "P02",
+      "claim": "Automatic batch GEMM requires full Q*N scores and can change near-neighbor ranking",
+      "confidence": "qualified",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Accuracy / scale limit",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Operations optimized Euclidean/cosine Q>=8,N>=256 unless BatchKernelProvider installed",
+      "qualification": "Already explicitly documented full allocation and cancellation/ranking limitation. Not new hidden bug or universally observed across hardware. Sequential provider and BatchOperations matrix setting do not bypass separate gate.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-23",
+      "owner": "P01",
+      "claim": "Small-k array/generic selection retains O(N) temporary distances/pairs",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public TopKSelection arrays/nearest, generic Operations and BatchOperations; pointer small-k already streams",
+      "qualification": "No measured speedup/RSS; tuple metadata not full copied vector payload in every path. Avoid Int32 count restriction when adopting pointer implementation.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-24",
+      "owner": "P01",
+      "claim": "Redundant matrix reshape, validation and oversized partial heaps increase peak work",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "GEMM pairwise, fallback batch search, optimized near-full-k search",
+      "qualification": "Source logical live allocations/complexity, not measured peak RSS after optimizer. C*k is upper-model for C concurrent chunks, not all possible schedulers.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-25",
+      "owner": "P02",
+      "claim": "MatrixDistance cannot consume downstream contiguous cache without packing",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public MatrixDistance and VectorIndex centroid batch scorer",
+      "qualification": "Existing unchecked shape/preparation/BLAS contracts are documented; do not recast malformed MatrixDistance inputs as new memory-safety findings. No copy latency measured.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-26",
+      "owner": "R04",
+      "claim": "KNearestHeap retains NaN ahead of numeric candidate",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Public legacy helper; only internal ExecutionOperations production caller",
+      "qualification": "No documented NaN-last/index tie contract here; not regression of fixed Operations/TopKSelection or their tests.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-27",
+      "owner": "E02",
+      "claim": "Schedulers do not promise or enforce prompt cancellation inside CPU chunks",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Resource / availability",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Public schedulers with noncooperative synchronous body",
+      "qualification": "Contract gap/opportunity, not proof task cancellation is universally ignored; throwing/suspending user closures can cooperate.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-28",
+      "owner": "E02",
+      "claim": "Public executeBatch autotuning claim contradicts single full-range invocation",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public CPUComputeProvider.executeBatch direct caller",
+      "qualification": "No measured runtime regression. Existing inline comment explicitly admits sequential implementation, contradicting public doc.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-29",
+      "owner": "E05",
+      "claim": "AutoTuning lock covers arbitrary calibrator and serializes unrelated keys",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Resource / availability",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public calibrator; live Operations generic/custom metric calibration unless disabled/cache already populated/cap exhausted",
+      "qualification": "Source proof, no deadlock subprocess run. Not all Operations routes calibrate: fused top-k and installed providers may bypass; cached keys bypass callback. No duration benchmark.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-30",
+      "owner": "D02",
+      "claim": "ComputeDevice runtime metadata includes placeholders",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public read-only device queries, not actual automatic GPU discovery",
+      "qualification": "CPU-only Core boundary is documented; placeholders cannot be used as actual device validation. No unsupported hardware runtime probe.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-31",
+      "owner": "D03",
+      "claim": "Disabled logger eagerly constructs messages; timer uses wall clock",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public Logger and PerformanceTimer",
+      "qualification": "No timing overhead or clock-jump failure measured; private minimumLevel field locking is sound.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-32",
+      "owner": "E04",
+      "claim": "MemoryPool recomputes pooled bytes using flatMap arrays under lock",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Repaired public MemoryPool on buffer return",
+      "qualification": "Performance hypothesis only; not regression of prior retention fix or evidence lock contention dominates.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-33",
+      "owner": "I01",
+      "claim": "Normalization hints reach real downstream query and cached inverse norm consumers",
+      "confidence": "confirmed-source",
+      "audit_priority": "P1",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "VectorIndex typed APIs; VA cosine kernels; Core wrapper defect owned separately",
+      "qualification": "No downstream build/GPU replay. VA AcceleratedVectorIndex captures hints but its doc explicitly says L2 kernel does not yet consume them, so captured metadata alone is not evidence of active L2 corruption. Cached Index damage is conditional on live cache/route.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-03"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-34",
+      "owner": "D01",
+      "claim": "VectorIndex batch query flag comes only from first query",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "VectorIndex Flat/IVF/optimized flat typed batchSearch; HNSW handles each query",
+      "qualification": "Separate downstream defect even after Core A2 fix; no executed index integration test.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-35",
+      "owner": "D01",
+      "claim": "Provider seam erases Float scalar/score conventions",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "Public BatchKernelProvider/VectorCollection; VA direct enum distance versus Core distance",
+      "qualification": "Documented deliberate direct-API semantics and provider ordering variation, not proven transparent route bug. Float-constraining seam is design suggestion with compatibility cost.",
+      "status": "retained",
+      "audit_dependencies": [
+        "API-01",
+        "API-11"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-36",
+      "owner": "D01",
+      "claim": "VectorCollection is not actual VectorIndex conformance seam",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Core small/reference collection API and local downstream snapshots",
+      "qualification": "Future-tense will implement is aspiration, but example presenting HNSW conformance does not compile against this snapshot. No claim production ANN storage belongs in Core.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-37",
+      "owner": "E04",
+      "claim": "BufferProvider example puts await in defer and handles require explicit lifetime policy",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public raw BufferHandle and BufferProvider docs",
+      "qualification": "No demonstrated valid-use UAF; VA requires keeping provider alive while handle active. Ownership/borrow docs elsewhere already state unsafe lifetime duties.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-05"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-38",
+      "owner": "D02",
+      "claim": "Public low-level implementation types create support obligations",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "Exported caches/kernels/providers/platform helpers",
+      "qualification": "Not correctness bug by visibility alone and no binary ABI stability inferred. Complete symbol graph inventory not performed here.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-39",
+      "owner": "N01",
+      "claim": "VA CPU fallbacks and Core unchecked normalization use different finite-range algorithms",
+      "confidence": "qualified",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Active VA fallback normalization and acceleratedNormalizeUnchecked fallback to Core",
+      "qualification": "Unchecked zero input violates explicit nonzero assertion and is not an additional valid-input defect. GPU parity not tested; avoid universal provider parity claim.",
+      "status": "retained",
+      "audit_dependencies": [
+        "NUM-02",
+        "OWN-03"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-40",
+      "owner": "D01",
+      "claim": "Local sibling dependency pins differ from reviewed Core main",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "Local source snapshots; no compatibility build",
+      "qualification": "Normal unreleased development, not version compatibility defect. VA stale comments about unavailable v26 enums contradict manifest, downstream docs only.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-41",
+      "owner": "P02",
+      "claim": "Existing provider tests do not cross GEMM query threshold",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "BatchKernelProvider precedence tests",
+      "qualification": "Test gap, not provider dispatch bug.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-42",
+      "owner": "E02",
+      "claim": "Dormant execution engines duplicate weak validation/reduction semantics",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Internal ExecutionOperations/SyncBatchOperations; live transform/matrix conveniences separately identified",
+      "qualification": "Do not label all ExecutionOperations dormant: public Array transforms/cosine matrix are live. Nonidentity initial conflicts with identity reduction law in existing ComputeProvider tests, so law/documentation first.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-43",
+      "owner": "V04",
+      "claim": "SoA/unrolled/prefetch throughput claims lack supplied benchmark/compiler evidence",
+      "confidence": "unverified",
+      "audit_priority": "P3",
+      "severity": "Undetermined",
+      "impact": "Investigation",
+      "disposition": "Investigate before deciding",
+      "exposure": "Public comments/helpers and batch kernel docs",
+      "qualification": "Unsupported speedup claims, not demonstrated slowdown; optimizer may remove nominal prefetch, assembly not inspected.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-44",
+      "owner": "E01",
+      "claim": "unrolledLoop arbitrary stride emits wrong indices; zero widths fail to progress",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public helper opt-in; no internal/downstream production callers established",
+      "qualification": "Original exact-source execution exists but was not independently replayed here; source one-step proof is sufficient. Zero/negative width subcase is lower-priority invalid-input validation; positive1/5/8 violates ordinary stride expectation.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-45",
+      "owner": "P01",
+      "claim": "VectorMath.nearestNeighbors fully sorts while claiming heap complexity",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public fixed Vector convenience",
+      "qualification": "Negative neighbor count has natural nonnegative precondition but missing explicit API documentation; not a new finite k wrong-ranking proof. Bare Float comparator has unspecified NaN/tie policy; do not transplant modern selector law without decision.",
+      "status": "retained",
+      "audit_dependencies": [
+        "API-23"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "API-46",
+      "owner": "R01",
+      "claim": "Named optimized metric factory cannot create dotProduct",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public OptimizedDistanceMetrics.create(named:)",
+      "qualification": "One-step mapping proof, not runtime replay. Separate from search metric witness replacement.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-47",
+      "owner": "O01",
+      "claim": "Singleton full-matrix triangular import reads nonexistent element",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public TriangularMatrix.fromFullMatrix",
+      "qualification": "Singleton input satisfies stated square-matrix requirement. Diagonal/lower-triangle omission is deliberate and is not the defect.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "API-48",
+      "owner": "E02",
+      "claim": "CPU sequential reduce ignores initial but identity is the existing provider law",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "Public CPUComputeProvider.parallelReduce",
+      "qualification": "Not a new numeric defect from nonidentity input. Current protocol comments should state identity and associativity requirements; floating-point nonassociativity means bitwise mode equivalence is not promised.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-01",
+      "owner": "N01",
+      "claim": "Scalar division computes an overflowing reciprocal even when each quotient is finite.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public vector operators, public Swift array/static providers; Accelerate provider also fails on this host.",
+      "qualification": "Do not assume vDSP_vsdiv repairs the problem: it fails on this Apple host. Direct inPlaceDivide and /= are distinct observed routes.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-02",
+      "owner": "N01",
+      "claim": "Normalization reconstructs a mismatched scale or relies on an unrepresentable norm/reciprocal.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public generic checked normalization and public pointer path; concrete optimized helpers have additional scale limits.",
+      "qualification": "Representability of the full norm or its reciprocal is unnecessary for a finite unit direction. Deep-subnormal unchanged behavior is currently an explicit implementation policy, not proof that normalization is mathematically impossible.",
+      "status": "open",
+      "audit_dependencies": [
+        "NUM-01",
+        "OWN-08"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-03",
+      "owner": "Q01",
+      "claim": "QuantizationSchemes clamps its zero point so positive/negative-only and constant intervals cannot be represented.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public opt-in QuantizationSchemes calibration.",
+      "qualification": "Independent decode is legitimate: same formula appears in analyzeQuantizationError. LinearQuantizationParams is a separate public surface and its existing tests do not establish this one.",
+      "status": "open",
+      "audit_dependencies": [
+        "NUM-04"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-04",
+      "owner": "Q01",
+      "claim": "Clamping integer conversions trap before the clamp for finite large intermediates.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public scalar quantizer and asymmetric parameter construction.",
+      "qualification": "Keep finite outliers distinct from NaN/Inf policy and from intentionally unsafe raw buffers. An Int32 clamp avoids traps but can still destroy representation for high offsets.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-05",
+      "owner": "Q01",
+      "claim": "Quantized cosine overflows the product of finite squared norms.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public INT8 methods at widths512/768/1536, opt-in.",
+      "qualification": "Not quantization noise. sqrt(qMagSq*cMagSq) overflows even with finite individual squared norms. Fixing only square-root order still leaves scale-squared/product underflow/overflow elsewhere.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-06",
+      "owner": "N03",
+      "claim": "Batch magnitude variance uses cancellation-prone raw moments above N=1000.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public BatchOperations.statistics; serial route is also inaccurate for large repeated values.",
+      "qualification": "Statistics concerns magnitudes, not component covariance. At1e18 adding1 rounds away, so those inputs really are identical. Merely replacing negative variance clamp does not repair cancellation or squared-sum overflow.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-07",
+      "owner": "N04",
+      "claim": "Entropy cutoff and Float sum violate finite scale invariance.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public Vector entropy facade, small and large routes.",
+      "qualification": "Existing tiny-probability cutoff beside a dominant1 does not justify the absolute absSum cutoff on uniform vectors.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-08",
+      "owner": "L01",
+      "claim": "Swift SVD accepts nonorthogonal columns as converged at harmless input scales.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public SwiftLinearAlgebraProvider; PCA when override selects it, default on unsupported LAPACK platforms.",
+      "qualification": "Full rank and condition number2.618: documented null-space-basis limitation is irrelevant. Reconstruction alone can pass with invalid SVD factors.",
+      "status": "open",
+      "audit_dependencies": [
+        "NUM-09"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-09",
+      "owner": "L01",
+      "claim": "Swift QR and SVD final normalization lose representable finite vectors through Float squared norms.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public Swift fallback and PCA using its QR.",
+      "qualification": "Widened norm accumulation immediately narrowed into unsafe reciprocal/alpha-beta arithmetic is insufficient for full exponent range.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-10",
+      "owner": "L02",
+      "claim": "Rounding PCA mean before centering doubles variance in a valid offset fixture.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Default LAPACK-backed centered PCA, large-offset near-constant data.",
+      "qualification": "Numerical-quality improvement under broad documented conditioning limitations, not universal relative-accuracy violation. Error term is n/(n-1)*deltaMean*deltaMean^T before further rounding.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-11",
+      "owner": "L03",
+      "claim": "UMAP output curve fit depends on units and silently returns its initial guess.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public valid minDist/spread configurations through internal fitter.",
+      "qualification": "Claim concerns kernel calibration, not stochastic layout-scale invariance: learning rate, gradient clipping and init need not rescale the whole layout.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-12",
+      "owner": "L03",
+      "claim": "Smooth-kNN bandwidth search starts at absolute1 and fails outside its fixed64-step range.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public graph-only UMAP input with finite nonnegative distances.",
+      "qualification": "Use solvable rows for equation assertions; duplicates/tied minimum can make target unattainable and are already handled by floor. Float sigma can itself become unrepresentable at extreme inputs even after bracket fix.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-13",
+      "owner": "L03",
+      "claim": "UMAP accepts infinite learning rate/spread at an existing throwing validation boundary.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public UMAPConfig used by both overloads.",
+      "qualification": "NaN generally fails current comparisons. Finiteness checks are necessary but cannot promise every huge finite learning rate yields a finite converged layout.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-14",
+      "owner": "N02",
+      "claim": "Approximate equality accepts NaN differences as equal.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public VectorProtocol approximate equality; PrecisionValidator is internal dormant helper.",
+      "qualification": "Matching infinities could be an intentional equality policy; NaN-versus-finite acceptance cannot be justified by tolerance. Negative/NaN/infinite tolerances also need explicit policy.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-15",
+      "owner": "N02",
+      "claim": "safeLog bypasses options for NaN and positive infinity.",
+      "confidence": "qualified",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Public Vector safeLog; narrower method docs conflict with general options.",
+      "qualification": "Behavior reproduced, but method-specific options documentation says non-positive values. Classify as inconsistent option semantics requiring resolution, rather than an unqualified promise of finite logarithm for every call.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-16",
+      "owner": "Q02",
+      "claim": "Adaptive distance ignores threshold and candidate range.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Explicit public adaptive API; not default Operations routing.",
+      "qualification": "Default docs disclaim universal FP16 score bounds, but ignored threshold is still ineffective API control. Representability checks on both operands alone do not enforce an arbitrary relative error bound.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-17",
+      "owner": "Q02",
+      "claim": "Quantized tuner cache excludes accuracyRequirement, making selection call-history dependent.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public opt-in singleton tuner; no automatic production consumer established.",
+      "qualification": "Counterintuitive heuristic direction is not independently a bug until accuracyRequirement units/meaning are specified. Quantized tuner lock protects dictionary access; no race alleged here.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-18",
+      "owner": "Q03",
+      "claim": "Diagnostics misclassifies underflows, rounded boundary values, and observed extrema.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Opt-in diagnostics reached by public FP16 construction.",
+      "qualification": "Swapping branches or using65504 as an overflow cutoff is insufficient; classification must follow actual rounded conversion.",
+      "status": "open",
+      "audit_dependencies": [
+        "API-21"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-19",
+      "owner": "Q02",
+      "claim": "KernelAutoTuner accepts memory/latency constraints it never uses and persists profiles without provenance.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public opt-in tuner, not automatic Operations dispatch.",
+      "qualification": "Missing hardware identity is stale-profile risk, not reproduced bad dispatch; memoryFootprint is an estimate, not allocation measurement. Tests explicitly bypass profile selection under detected CI/XCTest, so existing passes do not cover ordinary persistence path.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-20",
+      "owner": "Q02",
+      "claim": "Explicit selectMixedPrecisionStrategy maps full precision mode to nonzero tolerance.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Public opt-in low-level tuner method.",
+      "qualification": "Do not claim normal fp32Full dispatch automatically quantizes; contradictory behavior is limited to explicit mixed-selection entry point, whose docs expect cpuMixedPrecision workload.",
+      "status": "retained",
+      "audit_dependencies": [
+        "NUM-19"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-21",
+      "owner": "Q02",
+      "claim": "Mixed tuner calibrates all5 strategies synchronously on exact workload key and converts candidates inside each reduced execution.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "First opt-in MixedPrecisionAutoTuner selection for a fresh dimension/count/accuracy key.",
+      "qualification": "125 is normal-path count, not unconditional exact total. Profiles use synthetic data and end-to-end conversion cost; they cannot establish arbitrary input accuracy or preconverted serving latency. No wall-clock regression measured.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-22",
+      "owner": "Q04",
+      "claim": "FP16 range wrappers map all candidates even for small or empty ranges.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Performance / memory",
+      "disposition": "Plan regression and repair",
+      "exposure": "Nine public range FP16/mixed wrappers.",
+      "qualification": "No measured latency/allocation count; optimizer may influence realized overhead. Merely slicing without adjusting range/global output conventions can break indexing.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-23",
+      "owner": "V04",
+      "claim": "Source numerical/performance assurances exceed tests or contradict implementation.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public API comments and internal optimization documentation.",
+      "qualification": "Do not convert unsupported speed claims into claims of measured slowdown; claims of external GPU limitations remain unverified without GPU execution.",
+      "status": "open",
+      "audit_dependencies": [
+        "NUM-08",
+        "NUM-09",
+        "NUM-16"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-24",
+      "owner": "Q02",
+      "claim": "Immutable FP16 vector pool cannot refill storage for conversion of new values via a supported API.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public opt-in pool.",
+      "qualification": "It can reuse immutable values for repeated computation; claim is specifically unsupported reuse as mutable conversion destination. No allocation speed benefit measured.",
+      "status": "retained",
+      "audit_dependencies": [
+        "OWN-17"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-25",
+      "owner": "L03",
+      "claim": "CSR initializer may dereference malformed offsets before throwing validation catches them.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Malformed public KNNGraph input outside documented structural caller obligation.",
+      "qualification": "Not supported valid graph input; docs explicitly prohibit treating constructor as arbitrary parser, while source promises malformed structure throws. Frame as boundary/documentation inconsistency, not ordinary-use corruption.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-26",
+      "owner": "L03",
+      "claim": "Accepted extreme integer configuration can trap before throwing or clamping.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Explicit oversized positive PCA/UMAP options on tiny ordinary data.",
+      "qualification": "Operationally impractical settings; not ordinary-sized failure or giant allocation test. General allocation-safety disclaimer does not explain away the easily checked preallocation addition, but priority is below valid ordinary-input defects. Original UMAP report line229/241 corrected to215/225 for n*dimensions.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-27",
+      "owner": "L03",
+      "claim": "Exact brute-force kNN builder is exhaustive over computed Gram scores, not a reliable numerical distance oracle.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "Public reference KNNGraph.bruteForce.",
+      "qualification": "Documented Gram cancellation elsewhere; do not present as novel UMAP algorithm defect. Broad numerical docs apply; exact label should not imply stable reference scores.",
+      "status": "retained",
+      "audit_dependencies": [
+        "API-22"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-28",
+      "owner": "L03",
+      "claim": "UMAP initial coordinates are shape checked, not validated for finiteness or safe scale.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Explicit caller-supplied initialization.",
+      "qualification": "No all-finite or conditioning guarantee; do not generalize to ordinary random/PCA initialization.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-29",
+      "owner": "L04",
+      "claim": "UMAP and PCA expose material in-memory storage costs at large corpus/sample size.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public in-memory UMAP/PCA; default sizes/workloads determine exposure.",
+      "qualification": "F/R depend on reciprocity/pruning; staging/sort slack and ARC lifetimes vary. This is a byte model, not measured RSS. In-memory design explicitly documented.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-30",
+      "owner": "L04",
+      "claim": "Graph sorts/epoch scans and PCA per-point transforms offer concrete allocation/work opportunities.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Public synchronous algorithms; no throughput regression measured.",
+      "qualification": "Not missing ANN/GPU functionality; serial deterministic and in-memory contract is explicit.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-31",
+      "owner": "L04",
+      "claim": "Long synchronous manifold/factorization work lacks cancellation checkpoints.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Resource / availability",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Callers using synchronous APIs, including inside async tasks.",
+      "qualification": "No broken cancellation guarantee is documented. Large positive powerIterations requests more work intentionally.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-32",
+      "owner": "D02",
+      "claim": "C INT8 accumulation can exceed signed32 range only beyond supported fixed-vector dimensions.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "Generic exported C lanes API; optional Swift C INT8 call sites use fixed512/768/1536.",
+      "qualification": "Do not allege active fixed-width overflow. C intrinsic lane behavior differs from scalar C signed-overflow language semantics; no Intel/NEON overflow execution or UBSan run.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-33",
+      "owner": "D02",
+      "claim": "C header range indexing wording and proposed unimplemented declarations need precise public status.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "Public C/header and Swift wrapper interface; no current Swift link failure established.",
+      "qualification": "Header declaration of proposed symbol is API-hygiene risk, not proof a normal build fails.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-34",
+      "owner": "D02",
+      "claim": "Allocation-heavy vector helpers, unequal SIMD reduction structure and platform heuristics warrant measurement, not speed claims.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Public VectorMath helpers; internal PlatformConfiguration and mostly unused optimization helpers.",
+      "qualification": "No universal measured slowdown; no illegal instruction dispatch is proven from these width/cache hints.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "NUM-35",
+      "owner": "L01",
+      "claim": "LAPACK dimension ceiling does not by itself establish extreme workspace arithmetic safety.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Shapes far beyond documented small-panel operating envelope.",
+      "qualification": "Do not elevate to verified practical memory-corruption defect. Two Int32 dimensions multiply safely in64-bit Swift Int; workspace arithmetic is distinct.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-01",
+      "owner": "S01",
+      "claim": "Public DynamicVector and optimized FP32 storage mutations break shape invariants.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "public default representations",
+      "qualification": "Do not say every vector or every check fails: generic Vector<D> uses a count-constrained DimensionStorage; FP16 conversions explicitly check malformed FP32 storage. No out-of-bounds write was executed. Different hash values are an observed consequence, not a mathematical guarantee against incidental hash collisions.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-02",
+      "owner": "S01",
+      "claim": "INT8 raw constructors, mutable storage, and synthesized Codable permit malformed fixed storage.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "public opt-in INT8 APIs",
+      "qualification": "FP16 vectors are immutable and exact-length validated; they are not part of this shape defect. Invalid INT8 storage is observed; resulting unsafe reads are source-derived, not an executed memory fault. Synthesized decoding bypasses any future initializer-only fix.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-01"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-03",
+      "owner": "I01",
+      "claim": "NormalizationHint retains metadata after direct wrapped mutation or a throwing mutable-buffer closure.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "public wrapper; inspected downstream consumers",
+      "qualification": "The initial hint is true, so this is not caller supplying a false assertion. GPU/downstream end-to-end behavior was not executed; existing contaminated indexes needing rebuild is conditional, not established deployment state.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-01"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-04",
+      "owner": "I02",
+      "claim": "SoAFP16Cache512 treats vector hash digests as exact candidate identity.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "public opt-in cache; no default or sibling caller found",
+      "qualification": "Only the512 cache exists; 384/768/1536 key initializers are currently unused future surface. Full-coordinate hashing alone cannot turn a digest into an equality proof.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-07"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-05",
+      "owner": "O01",
+      "claim": "Compact-tier triangular matrix copies share later mutations.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "public TriangularMatrix default sizes4...32; internal compact counts5...512",
+      "qualification": "Range is derived from m=n(n-1)/2; no claim for an arbitrary configured tier. Iterator snapshot and setAt exposure follow their same stored-copy/setter paths, not independent runtime reproduction.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-10",
+        "OWN-11"
+      ],
+      "closure_requires": [
+        "O02"
+      ]
+    },
+    {
+      "id": "OWN-06",
+      "owner": "S02",
+      "claim": "Binary in-place DynamicVector routes omit dimension checks.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "public direct defaults and generic VectorProtocol operator dispatch",
+      "qualification": "Do not extend unchecked dispatch claim to concrete VectorFactory +=, which checks through +. Short RHS optimized overread is static reasoning; no Release overread was intentionally executed.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-01"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-07",
+      "owner": "P01",
+      "claim": "Optimized-vector hashes omit all but first and last eight scalar values.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Performance / memory",
+      "disposition": "Plan regression and repair",
+      "exposure": "all four public optimized vector types; no vector-keyed downstream table found",
+      "qualification": "Legal Hashable collisions are a scaling issue, not equal-values-have-equal-hash violation. O(N^2*d) is worst-case equality work for sufficiently late differences, not measured universal cost. SIMD signed zero is not an additional bug.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-08",
+      "owner": "O04",
+      "claim": "Pointer normalization documents16-byte alignment as preferred but SIMD loads require it.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "public NormalizeKernels.normalizeUnchecked pointer overload",
+      "qualification": "Report Debug trap and source alignment precondition violation, not a reproduced Release failure. Dimension<4 does not enter SIMD loads. Caller meets documented Float capacity/nonzero magnitude obligations.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-09",
+      "owner": "O04",
+      "claim": "Vector384Optimized permanently rebinds typed-owner memory where other widths restore binding.",
+      "confidence": "qualified",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Correctness / memory safety",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "normal public construction/toArray/buffer access",
+      "qualification": "Keep as binding-lifetime maintenance/contract finding. Layout compatibility is not a blanket strict-aliasing exemption; conversely merely seeing different spellings does not prove an observed miscompile. Alignment of Float-array source must be audited separately across all widths.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-10",
+      "owner": "O01",
+      "claim": "Compact generic storage does not destroy manually initialized ManagedBuffer tail elements.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Resource / availability",
+      "disposition": "Plan regression and repair",
+      "exposure": "public TriangularMatrix<T>, default compact sizes4...32",
+      "qualification": "Reference-bearing arrays/strings follow missing generic destruction by source; only class sentinel was executed. A ManagedBuffer frees allocation but does not implicitly destroy manually initialized elements.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-05"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-11",
+      "owner": "O04",
+      "claim": "alignedCopy has incompatible initialize versus update semantics across alignment branches.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "public generic utility; no production caller found",
+      "qualification": "This is an unsafe API contract gap, not proof of a fault under a clearly documented supported destination state (none is supplied). Uninitialized-destination crash was not executed. Alignment here means preferred64-byte alignment, not natural-type misalignment.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-12",
+      "owner": "O03",
+      "claim": "HybridStorage repeating construction/fill performs quadratic buffer traffic.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Performance / memory",
+      "disposition": "Plan regression and repair",
+      "exposure": "DynamicVector repeating/fill/resize above16 Float elements; explicit hybrid heap storage",
+      "qualification": "Exact count1026 belongs to the instrumented fixture; actual Release instruction path independently proves duplicated ownership/copying and quadratic element traffic. Pointer addresses staying unchanged after writes do not refute copying: two replacement allocations can reuse prior address. SIMD stubs are not used to claim numerical results. Generic DimensionStorage default heap mutation does not inherit this finding.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-05",
+        "OWN-14"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-13",
+      "owner": "O02",
+      "claim": "TriangularMatrix scalar writes copy complete standard/aligned allocations even when uniquely owned.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "High when exposed",
+      "impact": "Performance / memory",
+      "disposition": "Plan regression and repair",
+      "exposure": "public default matrix n>=33; original emphasized aligned n>=65",
+      "qualification": "Extend original exposure: standard tier513...2048 also detaches on scalar mutation, so repairing only AlignedBuffer.isUniquelyReferenced is insufficient. Address-change evidence uses integer addresses outside borrow scopes, not retained storage copies.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-05",
+        "OWN-14"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-14",
+      "owner": "O02",
+      "claim": "Dormant TieredStorage bulk access loses standard writes and inline writes on thrown closure exit.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "internal dormant mutable-buffer route; no production caller found",
+      "qualification": "No current public matrix method routes through this bulk method. It becomes a required dependency if the proposed matrix bulk-fill optimization is introduced.",
+      "status": "open",
+      "audit_dependencies": [
+        "OWN-05"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-15",
+      "owner": "O05",
+      "claim": "Internal StorageSlice returns scoped pointer without keeping its owner alive.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "internal dormant APIs; no production call found",
+      "qualification": "No supported-use UAF executed. This is distinct from DynamicVector.slice, which returns an owned vector.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-16",
+      "owner": "O05",
+      "claim": "Experimental consuming into() returns memory still freed by deinit.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Correctness / memory safety",
+      "disposition": "Plan regression and repair",
+      "exposure": "internal compile gate MOVE_ONLY_EXPERIMENTAL absent from package settings",
+      "qualification": "Not compiled in ordinary builds and not runtime-reproduced. Do not enable this gate as an optimization without rederiving all lifetime paths.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-17",
+      "owner": "O05",
+      "claim": "Public FP16 pointer getters escape ContiguousArray borrow scopes.",
+      "confidence": "qualified",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Correctness / memory safety",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "public opt-in fp16Storage getters; kernels use scoped borrows",
+      "qualification": "The getter is explicitly unsafe; do not equate pointer return with a demonstrated supported-use corruption. Retaining the array owner alone does not change the documented nonescape condition of withUnsafeBufferPointer.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-18",
+      "owner": "I02",
+      "claim": "SoAFP16Cache512 accepts nonpositive maxSize then evicts from an empty list.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "public explicit cache configuration; default100 unaffected",
+      "qualification": "Lower priority configuration boundary. Choose whether zero intentionally disables caching before testing desired policy.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-19",
+      "owner": "I02",
+      "claim": "FP16 cache caps entry count while payload bytes scale with candidates per entry.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "public opt-in512 cache",
+      "qualification": "Sizing derivation, not attempted allocation/RSS measurement; immutable COW cache values are not themselves an actor data race.",
+      "status": "retained",
+      "audit_dependencies": [
+        "OWN-04"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-20",
+      "owner": "D02",
+      "claim": "StaticDimension.Storage customization is unused by Vector<D> storage yet controls extension availability.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "public custom dimensions",
+      "qualification": "Confusing customization/API gating, not demonstrated numerical failure.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-21",
+      "owner": "D02",
+      "claim": "VectorTypeFactory optimized wording describes generic fixed-vector selection, not specialized concrete types.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "public factory",
+      "qualification": "No measured performance regression. Changing the output type can alter casts, provider routing and generic overload behavior.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-22",
+      "owner": "O03",
+      "claim": "VectorCoreOperations creates redundant arrays and temporary results.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Design/profile before optimization",
+      "exposure": "public min/max/clamp operations",
+      "qualification": "Source-visible allocation opportunities; no measured regression or speedup. Constructor cost can additionally be affected by HybridStorage finding.",
+      "status": "retained",
+      "audit_dependencies": [
+        "OWN-12"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-23",
+      "owner": "V04",
+      "claim": "Performance/robustness comments exceed evidence and overlapping storage layers obscure actual ownership.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "public docs and maintainers",
+      "qualification": "General consolidation is an opportunity, not authorization for a wholesale rewrite or proof of universal slowness. Norm arithmetic validation belongs numerical reviewer.",
+      "status": "retained",
+      "audit_dependencies": [
+        "OWN-12",
+        "OWN-13"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-24",
+      "owner": "O05",
+      "claim": "SoA/page/raw ownership, size and custom-conformer obligations are already documented.",
+      "confidence": "qualified",
+      "audit_priority": "Context",
+      "severity": "Not a separate defect",
+      "impact": "Contract / integration",
+      "disposition": "Preserve contract/control",
+      "exposure": "unsafe borrowed/transfer/custom conformer surfaces",
+      "qualification": "No additional supported-use corruption established from missing post-transfer checks, @unchecked Sendable, or ordinary checked arithmetic trapping on invalid/oversized shapes. Four built-in layouts do not prove arbitrary custom conformers.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-25",
+      "owner": "O04",
+      "claim": "AlignedDynamicArrayStorage fallback can weaken alignment while guaranteedAlignment reports the request.",
+      "confidence": "unverified",
+      "audit_priority": "P3",
+      "severity": "Undetermined",
+      "impact": "Investigation",
+      "disposition": "Investigate before deciding",
+      "exposure": "public allocation-failure fallback",
+      "qualification": "Keep a potential guarantee gap, not reproduced misalignment or corruption.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-26",
+      "owner": "O03",
+      "claim": "Reject extending HybridStorage quadratic-copy behavior to default generic DimensionStorage without evidence.",
+      "confidence": "rejected",
+      "audit_priority": "Context",
+      "severity": "Not a separate defect",
+      "impact": "Rejected inference",
+      "disposition": "No repair; retain negative control",
+      "exposure": "generic Vector<D> default storage; explicit .hybrid separately exposed",
+      "qualification": "Reject blanket claim that linspace/range/generate/geometric/sparse necessarily become quadratic for every generic fixed vector. Explicit .hybrid mode and Double inline threshold deserve dedicated coverage.",
+      "status": "retained",
+      "audit_dependencies": [
+        "OWN-12"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "OWN-27",
+      "owner": "D02",
+      "claim": "Extension-only protocol methods select static defaults in generic code.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "public generic VectorProtocol consumers",
+      "qualification": "This alone is not a measured performance defect and does not mean all extensions are wrong. Split narrow read-only protocols only where consumer needs justify change.",
+      "status": "retained",
+      "audit_dependencies": [
+        "OWN-06"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-01",
+      "owner": "B01",
+      "claim": "A valid empty DynamicVector binary encoding cannot be decoded by its own type.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Feature / result correctness",
+      "disposition": "Plan regression and repair",
+      "exposure": "Public binary round trip of default/empty dynamic values.",
+      "qualification": "The 10001 cap is a distinct intentionally tested limitation. Do not remove decoder limits as an incidental repair.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-02",
+      "owner": "B01",
+      "claim": "Serialization tests include 15 comment-only bodies and mislabeled optimized-type coverage.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Confidence in passing tests.",
+      "qualification": "This does not mean all optimized Codable code is untested elsewhere, or that Core should implement every feature mentioned by a placeholder.",
+      "status": "open",
+      "audit_dependencies": [
+        "SER-01"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-03",
+      "owner": "B01",
+      "claim": "Binary conversion has scalar loops and temporary representations; a Release allocation speedup is not yet established.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Performance / memory",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Binary encode/decode.",
+      "qualification": "Retain only a profiling candidate. Neither one heap allocation per scalar in Release nor a throughput regression was demonstrated; do not blindly replace the implementation.",
+      "status": "retained",
+      "audit_dependencies": [
+        "SER-02",
+        "TOOL-07"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-04",
+      "owner": "B01",
+      "claim": "Binary and JSON representations have different type/precision contracts.",
+      "confidence": "qualified",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Serialization of optimized FP32 and quantized vectors.",
+      "qualification": "No compressed-INT8 binary or universal JSON schema promise found. These are documentation/interoperability decisions, not demonstrated corrupt roundtrips.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-05",
+      "owner": "B01",
+      "claim": "Vectors expose binary methods without adopting the public binary protocols.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Generic BinaryCodable integrations; no internal dependent caller found.",
+      "qualification": "An integration opportunity; no existing downstream generic BinaryCodable compilation failure was claimed.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-06",
+      "owner": "B01",
+      "claim": "Header documentation describes VECT while the actual little-endian wire bytes spell TCEV.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Contract / integration",
+      "disposition": "Plan regression and repair",
+      "exposure": "External binary readers/documentation.",
+      "qualification": "Existing encoder and decoder agree and tests expect actual bytes. This is a documentation defect; changing wire bytes would be a compatibility change.",
+      "status": "open",
+      "audit_dependencies": [
+        "SER-02"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-07",
+      "owner": "B01",
+      "claim": "Decoder framing/CRC bounds and Data-slice behavior support the original limited positive assessment.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Not a separate defect",
+      "impact": "Context / guardrail",
+      "disposition": "Preserve contract/control",
+      "exposure": "Public binary decoder; context/guardrails, not an additional defect.",
+      "qualification": "No public overflow exploit, compression implementation defect or direct-slice bug found. CRC is integrity checking, not authentication. Reserved flags are read but unused; one uncompressed frame is the current contract.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "SER-08",
+      "owner": "S03",
+      "claim": "Decoded INT8 storage, quantization parameters and TopK result arrays require invariant validation.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Not a separate defect",
+      "impact": "Context / guardrail",
+      "disposition": "Preserve contract/control",
+      "exposure": "Synthesized/custom Codable construction boundaries.",
+      "qualification": "Cross-reference OWN/NUM/API rows for severity and actual effects; this row is boundary coverage, not a separate issue count.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-01",
+      "owner": "V01",
+      "claim": "Strict benchmark correctness accepts nonfinite errors, mismatched output lengths and missing validation.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P1",
+      "severity": "High when exposed",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Benchmark CLI; undermines validation of later optimizations.",
+      "qualification": "NaN JSON failure is separate from threshold acceptance. There was no injected faulty production kernel. This is a validation blocker, not a claim every benchmark value is wrong.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-02",
+      "owner": "V01",
+      "claim": "Requested benchmark output can fail to write while the CLI exits successfully.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Benchmark automation.",
+      "qualification": "The CLI experiment used a filesystem error; NaN-to-CLI exit behavior follows the same catch/control flow.",
+      "status": "open",
+      "audit_dependencies": [
+        "TOOL-01"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-03",
+      "owner": "V02",
+      "claim": "Benchmark metadata claims Release/C/size settings that do not establish the binary executed.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Debug and Release CLI metadata; provenance.",
+      "qualification": "Requested flags are not proof a C kernel actually ran. No separately compiled C-on/C-off A/B performance measurement was made.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-04",
+      "owner": "V03",
+      "claim": "Extended mixed-precision tests bypass the strict-performance opt-out.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Manual benchmarks workflow with EXTENDED=1, STRICT_PERF=0.",
+      "qualification": "No current hosted failure or compiler elimination was observed; universal speedup/dimension-order expectations are unsupported by numerical correctness.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-05",
+      "owner": "V02",
+      "claim": "Selecting optimized-only dot cases runs zero cases and succeeds.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Targeted benchmark selection.",
+      "qualification": "This is case selection/coverage loss, not a zero-duration optimized speedup.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-06",
+      "owner": "V02",
+      "claim": "Fused/pre-normalized cosine A/B pairs cannot join under their current grouping keys.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "JSON and console A/B reporting.",
+      "qualification": "Euclidean pairing is a separate path and is not invalidated by this proof.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-07",
+      "owner": "V04",
+      "claim": "Several timings lack consistent result consumption and compare different setup/allocation boundaries.",
+      "confidence": "qualified",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Benchmark/test timing paths.",
+      "qualification": "Missing consumption is proved; dead-code elimination and its timing magnitude are unverified. Different timing scopes can be intentional but must be identified before attributing speedups.",
+      "status": "retained",
+      "audit_dependencies": [
+        "TOOL-01",
+        "TOOL-03"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-08",
+      "owner": "V04",
+      "claim": "Memory-footprint output counts owning struct handles rather than heap payload.",
+      "confidence": "confirmed-reproduced",
+      "audit_priority": "P3",
+      "severity": "Low / limited exposure",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Mixed-precision footprint report and misleading timing-test names.",
+      "qualification": "No allocated-byte or RSS measurement was made; payload arithmetic excludes headers, allocator overhead and COW sharing.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-09",
+      "owner": "V02",
+      "claim": "Matrix benchmark ignores shared selection/timing controls and has only 17 distinct generated vectors.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Opt-in matrix benchmark.",
+      "qualification": "No claim that 17 distinct vectors makes numerical computation incorrect; it limits representativeness and provenance.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-10",
+      "owner": "P02",
+      "claim": "Current benchmark coverage does not establish downstream large-scale behavior.",
+      "confidence": "qualified",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Resolve contract/scope before change",
+      "exposure": "Scale-readiness validation gap; no universal throughput claim supported.",
+      "qualification": "These are coverage opportunities, not proof of a current production outage or a demand to put all workloads into every PR job.",
+      "status": "retained",
+      "audit_dependencies": [
+        "TOOL-01",
+        "TOOL-03",
+        "TOOL-07"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-11",
+      "owner": "V03",
+      "claim": "CI coverage excludes important tooling and selected safety surfaces.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Plan regression and repair",
+      "exposure": "Test/lint/CI configuration.",
+      "qualification": "No remote branch-protection settings inspected; independent checks may be required externally. Declared analyzer rules alone do not execute analysis. Do not count unregistered tests as coverage.",
+      "status": "open",
+      "audit_dependencies": [],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-12",
+      "owner": "V02",
+      "claim": "Baseline comparison ignores provenance and CSV metadata does not escape multiline/arbitrary values.",
+      "confidence": "confirmed-source",
+      "audit_priority": "P2",
+      "severity": "Medium",
+      "impact": "Validation / reporting",
+      "disposition": "Design/profile before optimization",
+      "exposure": "Benchmark artifact comparison/export.",
+      "qualification": "Historical baselines are useful records, not current guarantees. Aggregate means versus medians are choices needing explicit labeling, not inherently arithmetic errors.",
+      "status": "retained",
+      "audit_dependencies": [
+        "TOOL-03",
+        "TOOL-06"
+      ],
+      "closure_requires": []
+    },
+    {
+      "id": "TOOL-13",
+      "owner": "D02",
+      "claim": "Mobile availability of the separate benchmarking product remains unverified.",
+      "confidence": "unverified",
+      "audit_priority": "P3",
+      "severity": "Undetermined",
+      "impact": "Investigation",
+      "disposition": "Investigate before deciding",
+      "exposure": "VectorCoreBenchmarking product only.",
+      "qualification": "Do not report a confirmed mobile compile failure or extend this suspicion to the Core product.",
+      "status": "retained",
+      "audit_dependencies": [],
+      "closure_requires": []
+    }
+  ]
+}

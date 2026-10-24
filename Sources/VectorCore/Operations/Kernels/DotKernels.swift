@@ -2,7 +2,7 @@
 //  DotKernels.swift
 //  VectorCore
 //
-//  CPU-only, SIMD-optimized dot product kernels for optimized vector types.
+//  CPU-only dot product kernels over `SIMD4<Float>` lanes for the optimized vector types.
 //  Mirrors the 4-accumulator, stride-16 pattern used in optimized vectors,
 //  exposed as standalone helpers for reuse by higher-level kernels.
 //
@@ -55,6 +55,31 @@ internal enum DotKernels {
 
         let combined = (acc0 + acc1) + (acc2 + acc3)
         return combined.sum()
+    }
+
+    /// `dot(storageA: query, storageB: candidate)` for two candidates in one pass: each candidate has its own four
+    /// accumulators in `dot`'s layout (lane group g of each 16-group stride into accumulator g % 4, strides in increasing
+    /// order, a separate multiply and add) and the same `((acc0 + acc1) + (acc2 + acc3)).sum()` reduction, so each result
+    /// equals `dot` bit for bit (the `BatchKernels` pre-normalized cosine pair loops, T14 phase 3;
+    /// BatchKernelsRangeClosureTests.pairSlotsEqualTheOddTail).
+    @inline(__always)
+    static func dotPair(query q: ContiguousArray<SIMD4<Float>>, _ c0: ContiguousArray<SIMD4<Float>>,
+                        _ c1: ContiguousArray<SIMD4<Float>>, laneCount: Int) -> (Float, Float) {
+        #if DEBUG
+        assert(q.count == laneCount && c0.count == laneCount && c1.count == laneCount && laneCount % 16 == 0,
+               "Storage count mismatch")
+        #endif
+        var a0 = SIMD4<Float>(), a1 = SIMD4<Float>(), a2 = SIMD4<Float>(), a3 = SIMD4<Float>()
+        var b0 = SIMD4<Float>(), b1 = SIMD4<Float>(), b2 = SIMD4<Float>(), b3 = SIMD4<Float>()
+        for i in stride(from: 0, to: laneCount, by: 16) {
+            for g in stride(from: i, to: i + 16, by: 4) {
+                a0 += q[g] * c0[g]; b0 += q[g] * c1[g]
+                a1 += q[g + 1] * c0[g + 1]; b1 += q[g + 1] * c1[g + 1]
+                a2 += q[g + 2] * c0[g + 2]; b2 += q[g + 2] * c1[g + 2]
+                a3 += q[g + 3] * c0[g + 3]; b3 += q[g + 3] * c1[g + 3]
+            }
+        }
+        return (((a0 + a1) + (a2 + a3)).sum(), ((b0 + b1) + (b2 + b3)).sum())
     }
 
     // MARK: - Public per-dimension entry points

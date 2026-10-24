@@ -1,202 +1,137 @@
-//
-//  BufferPool.swift
-//  VectorCore
-//
-//
-
 import Foundation
 
-// MARK: - Buffer Wrapper
-
-/// Wrapper for unsafe buffer pointers to make them Sendable
-internal struct SendableBuffer: @unchecked Sendable {
-    public let buffer: UnsafeMutableBufferPointer<Float>
-
-    init(_ buffer: UnsafeMutableBufferPointer<Float>) {
-        self.buffer = buffer
+/// Borrowed metadata only; retain the pool and synchronize pointee access.
+internal struct SendableBuffer: Sendable {
+    fileprivate let id: UUID
+    fileprivate let address: UInt
+    fileprivate let count: Int
+    var buffer: UnsafeMutableBufferPointer<Float> {
+        UnsafeMutableBufferPointer(start: UnsafeMutablePointer<Float>(bitPattern: address)!, count: count)
     }
 }
 
-// MARK: - Buffer Pool
-
-/// Thread-safe pool for reusing memory buffers
+/// Pool-owned uninitialized Float storage. Clear affects cached allocations only.
 internal actor BufferPool {
-    /// Available buffers organized by size
-    private var available: [Int: [UnsafeMutableBufferPointer<Float>]] = [:]
-
-    /// Statistics for monitoring pool performance
+    private var storage: BorrowedPoolStorage
     private var stats = Statistics()
 
-    /// Maximum number of buffers to keep per size
-    private let maxBuffersPerSize: Int
+    struct Statistics: Sendable {
+        var acquisitions = 0
+        var releases = 0
+        var allocations = 0
+        var reuses = 0
+        var evictions = 0
+        var reuseRate: Double { acquisitions > 0 ? Double(reuses) / Double(acquisitions) : 0 }
+    }
 
-    /// Total memory limit in bytes
-    private let memoryLimit: Int
-
-    /// Current memory usage in bytes
-    private var currentMemoryUsage: Int = 0
-
-    // MARK: - Statistics
-
-    public struct Statistics {
-        var acquisitions: Int = 0
-        var releases: Int = 0
-        var allocations: Int = 0
-        var reuses: Int = 0
-        var evictions: Int = 0
-
-        var reuseRate: Double {
-            guard acquisitions > 0 else { return 0 }
-            return Double(reuses) / Double(acquisitions)
+    init(maxBuffersPerSize: Int = 10, memoryLimitMB: Int = 256,
+         allocationBoundary: any PoolAllocationBoundary = SystemPoolAllocationBoundary()) {
+        let (bytes, overflow) = memoryLimitMB.multipliedReportingOverflow(by: 1024 * 1024)
+        guard maxBuffersPerSize >= 0, memoryLimitMB >= 0, !overflow else {
+            fatalError("BufferPool requires nonnegative, representable cache limits")
         }
+        storage = BorrowedPoolStorage(maxCachedBytes: bytes, maxBuffersPerSize: maxBuffersPerSize,
+            maxBufferBytes: Int.max, boundary: allocationBoundary)
     }
 
-    // MARK: - Initialization
+    deinit { storage.leakActiveLeases() }
 
-    /// Initialize buffer pool with memory limits
-    /// - Parameters:
-    ///   - maxBuffersPerSize: Maximum buffers to keep for each size
-    ///   - memoryLimit: Total memory limit in MB (default 256MB)
-    internal init(maxBuffersPerSize: Int = 10, memoryLimitMB: Int = 256) {
-        self.maxBuffersPerSize = maxBuffersPerSize
-        self.memoryLimit = memoryLimitMB * 1024 * 1024
-    }
+    var cachedBytes: Int { storage.cachedBytes }
+    var activeBytes: Int { storage.activeBytes }
 
-    // MARK: - Buffer Management
-
-    /// Acquire a buffer of specified size
-    internal func acquire(count: Int) -> SendableBuffer {
-        stats.acquisitions += 1
-
-        // Check if we have an available buffer
-        if let buffer = available[count]?.popLast() {
-            stats.reuses += 1
-            return SendableBuffer(buffer)
+    func acquire(count: Int) -> SendableBuffer {
+        guard let capacity = PoolRequest.capacity(count, powerOfTwo: false),
+              let bytes = PoolRequest.byteCount(capacity: capacity, stride: MemoryLayout<Float>.stride) else {
+            fatalError("BufferPool.acquire requires a nonnegative, representable count")
         }
-
-        // Allocate new buffer
-        stats.allocations += 1
-        let memory = UnsafeMutablePointer<Float>.allocate(capacity: count)
-        let buffer = UnsafeMutableBufferPointer(start: memory, count: count)
-
-        // Update memory usage
-        currentMemoryUsage += count * MemoryLayout<Float>.size
-
-        // Evict old buffers if over memory limit
-        if currentMemoryUsage > memoryLimit {
-            evictOldBuffers()
+        guard let (lease, reused) = storage.acquire(count: count, capacity: capacity, byteCount: bytes, alignment: 16) else {
+            fatalError("BufferPool.acquire allocation or active byte accounting failed")
         }
-
-        return SendableBuffer(buffer)
+        _ = lease.allocation.pointer.bindMemory(to: Float.self, capacity: capacity)
+        PoolRequest.increment(&stats.acquisitions)
+        if reused { PoolRequest.increment(&stats.reuses) } else { PoolRequest.increment(&stats.allocations) }
+        return SendableBuffer(id: lease.id, address: lease.allocation.address, count: count)
     }
 
-    /// Release a buffer back to the pool
-    internal func release(_ sendableBuffer: SendableBuffer) {
-        let buffer = sendableBuffer.buffer
-        stats.releases += 1
-
-        let count = buffer.count
-
-        // Check if we should keep this buffer
-        let buffersForSize = available[count]?.count ?? 0
-
-        if buffersForSize < maxBuffersPerSize {
-            // Add to pool
-            available[count, default: []].append(buffer)
-        } else {
-            // Deallocate
-            deallocateBuffer(buffer)
-        }
+    func release(_ handle: SendableBuffer) {
+        let previous = storage.cachedBytes
+        guard storage.release(id: handle.id, count: handle.count, address: handle.address) else { return }
+        PoolRequest.increment(&stats.releases)
+        if storage.cachedBytes == previous { PoolRequest.increment(&stats.evictions) }
     }
 
-    /// Clear all buffers from the pool
-    internal func clear() {
-        for (_, buffers) in available {
-            for buffer in buffers {
-                deallocateBuffer(buffer)
-            }
-        }
-        available.removeAll()
-        currentMemoryUsage = 0
-    }
-
-    /// Get current statistics
-    internal func getStatistics() -> Statistics {
-        stats
-    }
-
-    // MARK: - Private Methods
-
-    /// Deallocate a buffer and update memory usage
-    private func deallocateBuffer(_ buffer: UnsafeMutableBufferPointer<Float>) {
-        buffer.baseAddress?.deallocate()
-        currentMemoryUsage -= buffer.count * MemoryLayout<Float>.size
-    }
-
-    /// Evict old buffers when memory limit is exceeded
-    private func evictOldBuffers() {
-        // Simple strategy: remove largest buffers first
-        let sortedSizes = available.keys.sorted(by: >)
-
-        for size in sortedSizes {
-            guard currentMemoryUsage > memoryLimit else { break }
-
-            if var buffers = available[size], !buffers.isEmpty {
-                let buffer = buffers.removeLast()
-                deallocateBuffer(buffer)
-                stats.evictions += 1
-
-                if buffers.isEmpty {
-                    available.removeValue(forKey: size)
-                } else {
-                    available[size] = buffers
-                }
-            }
-        }
-    }
-
-    /// Clean up all buffers - call this before deinit
-    internal func cleanup() {
-        // Clean up all remaining buffers
-        for (_, buffers) in available {
-            for buffer in buffers {
-                buffer.baseAddress?.deallocate()
-            }
-        }
-        available.removeAll()
-        currentMemoryUsage = 0
-    }
+    func clear() { storage.clear() }
+    func cleanup() { storage.clear() }
+    func getStatistics() -> Statistics { stats }
 }
 
-// MARK: - Typed Buffer Pool
-
-/// Generic buffer pool for any type
+/// Pool-owned uninitialized storage. A handle borrows memory: release it before the
+/// pool is destroyed. A lease still active at destruction is leaked, not freed, so an
+/// escaped handle never points at freed memory
+/// (`BufferPoolOwnershipTests.internalAndTypedDestructionOwnCachedAndLeakActive`).
+/// Initialize/deinitialize exactly the elements used before release; sending
+/// metadata alone does not make pointee access safe.
 public actor TypedBufferPool<Element> {
-    private var available: [Int: [UnsafeMutableBufferPointer<Element>]] = [:]
-    private let maxBuffersPerSize: Int
-
-    public init(maxBuffersPerSize: Int = 10) {
-        self.maxBuffersPerSize = maxBuffersPerSize
+    public struct Handle: Sendable {
+        fileprivate let id: UUID
+        fileprivate let address: UInt
+        public let count: Int
+        public var pointer: UnsafeMutablePointer<Element> { UnsafeMutablePointer(bitPattern: address)! }
+        public var buffer: UnsafeMutableBufferPointer<Element> {
+            UnsafeMutableBufferPointer(start: pointer, count: count)
+        }
     }
 
-    public func acquire(count: Int) -> UnsafeMutableBufferPointer<Element> {
-        if let buffer = available[count]?.popLast() {
-            return buffer
-        }
+    private var storage: BorrowedPoolStorage
 
-        let memory = UnsafeMutablePointer<Element>.allocate(capacity: count)
-        return UnsafeMutableBufferPointer(start: memory, count: count)
+    public init(maxCachedBytes: Int, maxBuffersPerSize: Int = 10) {
+        guard maxCachedBytes >= 0, maxBuffersPerSize >= 0 else {
+            fatalError("TypedBufferPool requires nonnegative cache limits")
+        }
+        storage = BorrowedPoolStorage(maxCachedBytes: maxCachedBytes, maxBuffersPerSize: maxBuffersPerSize,
+            maxBufferBytes: Int.max, boundary: SystemPoolAllocationBoundary())
     }
 
-    public func release(_ buffer: UnsafeMutableBufferPointer<Element>) {
-        let count = buffer.count
-        let buffersForSize = available[count]?.count ?? 0
-
-        if buffersForSize < maxBuffersPerSize {
-            available[count, default: []].append(buffer)
-        } else {
-            buffer.baseAddress?.deallocate()
+    internal init(maxCachedBytes: Int, maxBuffersPerSize: Int = 10, allocationBoundary: any PoolAllocationBoundary) {
+        guard maxCachedBytes >= 0, maxBuffersPerSize >= 0 else {
+            fatalError("TypedBufferPool requires nonnegative cache limits")
         }
+        storage = BorrowedPoolStorage(maxCachedBytes: maxCachedBytes, maxBuffersPerSize: maxBuffersPerSize,
+            maxBufferBytes: Int.max, boundary: allocationBoundary)
+    }
+
+    deinit { storage.leakActiveLeases() }
+
+    public var cachedBytes: Int { storage.cachedBytes }
+    public var activeBytes: Int { storage.activeBytes }
+
+    public func acquire(count: Int) -> Handle {
+        guard let capacity = PoolRequest.capacity(count, powerOfTwo: false),
+              let bytes = PoolRequest.byteCount(capacity: capacity, stride: MemoryLayout<Element>.stride) else {
+            fatalError("TypedBufferPool.acquire requires a nonnegative, representable count")
+        }
+        let alignment = max(16, MemoryLayout<Element>.alignment)
+        guard let (lease, _) = storage.acquire(count: count, capacity: capacity, byteCount: bytes, alignment: alignment) else {
+            fatalError("TypedBufferPool.acquire allocation or active byte accounting failed")
+        }
+        _ = lease.allocation.pointer.bindMemory(to: Element.self, capacity: capacity)
+        return Handle(id: lease.id, address: lease.allocation.address, count: count)
+    }
+
+    public func release(_ handle: Handle) {
+        _ = storage.release(id: handle.id, count: handle.count, address: handle.address)
+    }
+
+    public func clear() { storage.clear() }
+
+    /// The synchronous body runs on this actor. It must not escape its pointer and
+    /// must deinitialize all initialized elements before returning or throwing.
+    public func withBuffer<R: Sendable>(count: Int,
+        _ body: @Sendable (UnsafeMutableBufferPointer<Element>) throws -> R
+    ) rethrows -> R {
+        let handle = acquire(count: count)
+        defer { release(handle) }
+        return try body(handle.buffer)
     }
 }
 

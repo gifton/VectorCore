@@ -1,6 +1,6 @@
 // VectorCore: Simple Logging System
 //
-// Lightweight logging for debugging and error reporting
+// Logging for debugging and error reporting, backed by OSLog
 //
 
 import Foundation
@@ -20,8 +20,8 @@ import os.log
 ///
 /// ## Example Usage
 /// ```swift
-/// logger.log("Vector operation completed", level: .info)
-/// logger.log("Memory allocation failed", level: .critical)
+/// coreLogger.info("Vector operation completed")
+/// coreLogger.critical("Memory allocation failed")
 /// ```
 public enum LogLevel: Int, Comparable, Sendable {
     /// Detailed information for debugging purposes.
@@ -66,13 +66,12 @@ public enum LogLevel: Int, Comparable, Sendable {
 
 /// Configuration for the VectorCore logging system.
 ///
-/// `LogConfiguration` provides thread-safe configuration for controlling
-/// logging behavior, including minimum log levels and output options.
+/// Holds the minimum log level. Reads and writes of `minimumLevel` are
+/// individually serialized by an internal lock.
 ///
 /// ## Example Usage
 /// ```swift
-/// LogConfiguration.shared.minimumLevel = .warning
-/// LogConfiguration.shared.enableOSLog = true
+/// Logger.configuration.minimumLevel = .warning
 /// ```
 public final class LogConfiguration: @unchecked Sendable {
     private var _minimumLevel: LogLevel
@@ -81,7 +80,10 @@ public final class LogConfiguration: @unchecked Sendable {
     /// Minimum log level to output.
     ///
     /// Messages below this level are ignored.
-    /// Thread-safe property with internal locking.
+    ///
+    /// Reads and writes are individually serialized by an internal lock. A logging
+    /// call reads this value once and releases the lock before it evaluates the
+    /// message (see `LoggingContractTests`); a later change affects later calls only.
     public var minimumLevel: LogLevel {
         get {
             lock.lock()
@@ -104,20 +106,67 @@ public final class LogConfiguration: @unchecked Sendable {
     }
 }
 
-/// Simple logger for VectorCore
+/// One admitted log record, as handed to the backend.
+///
+/// Internal: exists so `LoggingContractTests` can observe admitted records
+/// without the OSLog/console backend. Not public API.
+struct LogRecord: Sendable, Equatable {
+    let level: LogLevel
+    let message: String
+    let location: String
+    let function: String
+    let category: String
+}
+
+/// Simple logger for VectorCore.
+///
+/// ## Message evaluation contract
+/// The `message` autoclosures of `debug`/`info`/`warning`/`error`/`critical` (and the
+/// fallback `error.description` of the `VectorError` overload) are evaluated only when
+/// the call's level is at or above `Logger.configuration.minimumLevel`, and then
+/// exactly once, outside the configuration lock. "Admitted" means this library's level
+/// gate passed and the backend call was made; OSLog's own persistence/filtering is
+/// independent and not promised. Exercised by `LoggingContractTests` (25-case matrix,
+/// reentrancy, and `vectorErrorFallbackDescriptionIsLazy` for the `VectorError`
+/// fallback) and `LoggingPublicConsumerTests`.
+///
+/// ## Naming next to `os.Logger`
+/// Apple's `os` module also declares a `Logger`, so in a file that imports both `os` and VectorCore a bare
+/// `Logger` type is ambiguous. Add `import struct VectorCore.Logger` to that file: there `Logger` names this
+/// type, and Apple's stays reachable as `os.Logger`. Spelling this type `VectorCore.Logger` in client code
+/// does not compile, because `VectorCore` resolves to the `VectorCore` enum rather than to the module. The
+/// consumers `Scripts/ci/tests/D02/LoggerQualification.swift` (the scoped import) and `LoggerNegative.swift`
+/// (the ambiguous and enum-qualified spellings) check this with the Swift 6.4 compiler.
 public struct Logger: Sendable {
     private let subsystem: String
     private let category: String
     private let osLog: OSLog
+    private let activeConfiguration: LogConfiguration
+    private let recordSink: (@Sendable (LogRecord) -> Void)?
 
     /// Shared logging configuration
     public static let configuration = LogConfiguration()
 
     /// Create a logger for a specific subsystem
     public init(subsystem: String = "com.vectorcore", category: String) {
+        self.init(subsystem: subsystem, category: category,
+                  configuration: Self.configuration, sink: nil)
+    }
+
+    /// Test seam: per-instance configuration and optional record sink.
+    ///
+    /// With `sink == nil` the actual OSLog/Debug-console backend is used. With a sink,
+    /// admitted records go to the sink instead of that backend. The public initializer
+    /// always uses the shared configuration and the actual backend.
+    init(subsystem: String = "com.vectorcore",
+         category: String,
+         configuration: LogConfiguration,
+         sink: (@Sendable (LogRecord) -> Void)?) {
         self.subsystem = subsystem
         self.category = category
         self.osLog = OSLog(subsystem: subsystem, category: category)
+        self.activeConfiguration = configuration
+        self.recordSink = sink
     }
 
     /// Log a debug message
@@ -125,7 +174,7 @@ public struct Logger: Sendable {
                       file: String = #fileID,
                       function: String = #function,
                       line: Int = #line) {
-        log(level: .debug, message(), file: file, function: function, line: line)
+        log(level: .debug, message, file: file, function: function, line: line)
     }
 
     /// Log an info message
@@ -133,7 +182,7 @@ public struct Logger: Sendable {
                      file: String = #fileID,
                      function: String = #function,
                      line: Int = #line) {
-        log(level: .info, message(), file: file, function: function, line: line)
+        log(level: .info, message, file: file, function: function, line: line)
     }
 
     /// Log a warning message
@@ -141,7 +190,7 @@ public struct Logger: Sendable {
                         file: String = #fileID,
                         function: String = #function,
                         line: Int = #line) {
-        log(level: .warning, message(), file: file, function: function, line: line)
+        log(level: .warning, message, file: file, function: function, line: line)
     }
 
     /// Log an error message
@@ -149,7 +198,7 @@ public struct Logger: Sendable {
                       file: String = #fileID,
                       function: String = #function,
                       line: Int = #line) {
-        log(level: .error, message(), file: file, function: function, line: line)
+        log(level: .error, message, file: file, function: function, line: line)
     }
 
     /// Log a critical message
@@ -157,29 +206,44 @@ public struct Logger: Sendable {
                          file: String = #fileID,
                          function: String = #function,
                          line: Int = #line) {
-        log(level: .critical, message(), file: file, function: function, line: line)
+        log(level: .critical, message, file: file, function: function, line: line)
     }
 
-    /// Log an error with VectorError
+    /// Log an error with VectorError.
+    ///
+    /// `error.description` is only computed when the call is admitted and `message`
+    /// is nil. A caller-supplied `message` has already been evaluated by the caller.
     public func error(_ error: VectorError,
                       message: String? = nil,
                       file: String = #fileID,
                       function: String = #function,
                       line: Int = #line) {
-        let errorMessage = message ?? error.description
-        log(level: .error, "\(errorMessage)", file: file, function: function, line: line)
+        log(level: .error, { message ?? error.description },
+            file: file, function: function, line: line)
     }
 
-    /// Log with specific level
+    /// Log with specific level.
+    ///
+    /// The minimum level is read once (the getter takes and releases the configuration
+    /// lock). The message closure and all formatting run after that, with no logger
+    /// lock held, so a message may read/update configuration or log recursively.
     private func log(level: LogLevel,
-                     _ message: String,
+                     _ message: () -> String,
                      file: String,
                      function: String,
                      line: Int) {
-        guard level >= Self.configuration.minimumLevel else { return }
+        let minimum = activeConfiguration.minimumLevel
+        guard level >= minimum else { return }
 
+        let text = message()
         let fileName = URL(fileURLWithPath: file).lastPathComponent
         let location = "\(fileName):\(line)"
+
+        if let recordSink {
+            recordSink(LogRecord(level: level, message: text, location: location,
+                                 function: function, category: category))
+            return
+        }
 
         // Use os_log for system integration
         let osLogType: OSLogType = {
@@ -197,11 +261,11 @@ public struct Logger: Sendable {
                level.name,
                location,
                function,
-               message)
+               text)
 
-        // Also print to console in debug builds
+        // Also print to console in debug builds (reuses the same evaluated text)
         #if DEBUG
-        print("\(level.symbol) [\(category)] \(message) (\(location))")
+        print("\(level.symbol) [\(category)] \(text) (\(location))")
         #endif
     }
 }
@@ -235,25 +299,55 @@ public let performanceLogger = Logger(category: "Performance")
 
 // MARK: - Performance Logging
 
-/// Simple performance timer for logging
+/// Simple performance timer for logging.
+///
+/// Elapsed time is measured with `ContinuousClock` from a single start `Instant`
+/// captured at initialization, so repeated `log` calls report cumulative elapsed time
+/// (not lap intervals) and are independent of civil-clock changes. No deadline or exact
+/// callback timing is promised.
 public struct PerformanceTimer {
-    private let start: CFAbsoluteTime
+    private let start: ContinuousClock.Instant
+    private let now: @Sendable () -> ContinuousClock.Instant
     private let operation: String
     private let logger: Logger
 
     /// Start timing an operation
     public init(operation: String, logger: Logger = performanceLogger) {
-        self.start = CFAbsoluteTimeGetCurrent()
+        self.init(operation: operation, logger: logger, clock: { ContinuousClock.now })
+    }
+
+    /// Test seam: supplies the clock reading. Reads once for the start, then once per
+    /// `log` call. Production uses `ContinuousClock.now`.
+    init(operation: String,
+         logger: Logger,
+         clock: @escaping @Sendable () -> ContinuousClock.Instant) {
+        self.now = clock
+        self.start = clock()
         self.operation = operation
         self.logger = logger
     }
 
-    /// Log the elapsed time
+    /// Log the cumulative elapsed time since initialization if it is at least `threshold` seconds.
+    ///
+    /// A negative or non-finite `threshold` suppresses the call (this method does not
+    /// throw), as does a negative elapsed reading. A finite zero threshold is valid.
+    /// Elapsed seconds are computed in `Double` from the Duration components
+    /// (seconds + attoseconds / 1e18), so no integer or Duration conversion of
+    /// `threshold` can trap.
+    ///
+    /// A rejected call (invalid threshold, or debug gated) does not format the message:
+    /// the threshold guard precedes formatting, the formatting lives inside the
+    /// `logger.debug` autoclosure, and debug laziness is proven by
+    /// `LoggingContractTests.messageEvaluationMatrix`.
     public func log(threshold: TimeInterval = 0.001) {
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
-        if elapsed >= threshold {
-            logger.debug("\(operation) took \(String(format: "%.3f", elapsed * 1000))ms")
-        }
+        let reading = now()
+        guard threshold.isFinite, threshold >= 0 else { return }
+        let components = start.duration(to: reading).components
+        let elapsed = Double(components.seconds) + Double(components.attoseconds) / 1e18
+        // A negative reading (only possible from a deliberately invalid test clock)
+        // fails this comparison because threshold >= 0.
+        guard elapsed >= threshold else { return }
+        logger.debug("\(operation) took \(String(format: "%.3f", elapsed * 1000))ms")
     }
 }
 

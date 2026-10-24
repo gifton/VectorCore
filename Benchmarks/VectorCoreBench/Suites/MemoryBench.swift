@@ -2,161 +2,89 @@ import Foundation
 import VectorCore
 import VectorCoreBenchmarking
 
+/// Immutable per-catalog allocation seam; normal execution uses matched AlignedMemory calls.
+struct BenchmarkAllocator: Sendable {
+    let allocate: @Sendable (Int, Int) throws -> UnsafeMutablePointer<Float>
+    let release: @Sendable (UnsafeMutablePointer<Float>, Int) -> Void
+    // The two calls below run inside the timed (and warmup) body of the mem.alloc cases, so they are named functions
+    // whose source is part of the `memory` body fingerprint (a `static let` closure pair would not be hashed).
+    static func alignedAllocate(count: Int, alignment: Int) throws -> UnsafeMutablePointer<Float> {
+        try AlignedMemory.allocateAligned(type: Float.self, count: count, alignment: alignment)
+    }
+    static func alignedRelease(_ pointer: UnsafeMutablePointer<Float>, _ initialized: Int) {
+        pointer.deinitialize(count: initialized)
+        AlignedMemory.deallocate(pointer)
+    }
+    static let aligned = BenchmarkAllocator(allocate: alignedAllocate, release: alignedRelease)
+}
+
 struct MemoryBench: BenchmarkSuite {
     static let name = "memory"
-
-    static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult] {
-        var results: [BenchResult] = []
-
-        // Pre-count all cases for progress tracking
-        var allCaseNames: [String] = []
-        for dim in options.dims {
-            allCaseNames += [
-                "mem.alloc.aligned.\(dim)",
-                "mem.copy.\(dim)",
-                "mem.fill.\(dim)",
-                "mem.pool.acquire.\(dim)"
-            ]
-        }
-        let casesToRun = allCaseNames.filter { Filters.shouldRun(name: $0, options: options) }
-        let totalCases = casesToRun.count
-        var currentIndex = 0
-
-        for dim in options.dims {
-            results += bench(forDim: dim, options: options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
-        }
-        return results
+    static func catalog(options: ValidatedOptions, progress: BenchmarkProgressReporter) -> [BenchmarkCase] {
+        catalog(options: options, allocator: .aligned)
     }
-
-    private static func bench(forDim dim: Int, options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
-        var out: [BenchResult] = []
-
-        let count = max(dim * 1024, 64)
-        let alignment = AlignedMemory.optimalAlignment
-
-        // MARK: - Aligned alloc/free per-iteration
-        do {
-            let label = "mem.alloc.aligned.\(dim)"
-            if Filters.shouldRun(name: label, options: options) {
-
-            let caseStart = Date()
-            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
-
-            Harness.warmup {
-                if let p: UnsafeMutablePointer<Float> = try? AlignedMemory.allocateAligned(type: Float.self, count: count, alignment: alignment) {
-                    p.initialize(repeating: 0.0, count: min(8, count))
-                    p.deallocate()
+    static func catalog(options: ValidatedOptions, allocator: BenchmarkAllocator,
+                        poolAcquire: @escaping @Sendable (Int, Int) -> MemoryPool.BufferHandle<Float>? = { MemoryPool.shared.acquire(type: Float.self, count: $0, alignment: $1) }) -> [BenchmarkCase] {
+        var cases: [BenchmarkCase] = []
+        for dim in options.dims {
+            let count = dim * 1024 // ValidatedOptions checked the element and byte products.
+            let alignment = AlignedMemory.optimalAlignment
+            let allocName = "mem.alloc.aligned.\(dim)"
+            cases.append(BenchmarkCase(allocName, boundary: Boundaries.record(allocName, options)) {
+                func allocateOnce(_ value: Float) throws {
+                    let pointer = try allocator.allocate(count, alignment)
+                    let initialized = min(8, count)
+                    pointer.initialize(repeating: value, count: initialized)
+                    defer { allocator.release(pointer, initialized) }
+                    blackHole(pointer[0])
                 }
-            }
-            let r = Harness.measure(name: label, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                if let p: UnsafeMutablePointer<Float> = try? AlignedMemory.allocateAligned(type: Float.self, count: count, alignment: alignment) {
-                    p.initialize(repeating: 1.0, count: min(8, count))
-                    p.deallocate()
+                try Harness.warmup { try allocateOnce(0) }
+                return [try Harness.measure(name: allocName, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { try allocateOnce(1) }]
+            })
+            let copyName = "mem.copy.\(dim)"
+            cases.append(BenchmarkCase(copyName, boundary: Boundaries.record(copyName, options)) {
+                let source = try allocator.allocate(count, alignment)
+                source.initialize(repeating: 0.5, count: count)
+                defer { allocator.release(source, count) }
+                let destination = try allocator.allocate(count, alignment)
+                destination.initialize(repeating: 0, count: count)
+                defer { allocator.release(destination, count) }
+                let copy = {
+                    alignedCopy(from: UnsafePointer(source), to: destination, count: count, preferredAlignment: alignment)
+                    blackHole(destination[1])
                 }
-            }
-            out.append(r)
-
-            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
-            currentIndex += 1
-            }
-        }
-
-        // Allocate persistent src/dst for copy/fill
-        let srcPtr: UnsafeMutablePointer<Float> = (try? AlignedMemory.allocateAligned(type: Float.self, count: count, alignment: alignment)) ?? UnsafeMutablePointer<Float>.allocate(capacity: count)
-        let dstPtr: UnsafeMutablePointer<Float> = (try? AlignedMemory.allocateAligned(type: Float.self, count: count, alignment: alignment)) ?? UnsafeMutablePointer<Float>.allocate(capacity: count)
-        srcPtr.initialize(repeating: 0.5, count: count)
-        dstPtr.initialize(repeating: 0.0, count: count)
-
-        defer {
-            srcPtr.deinitialize(count: count)
-            dstPtr.deinitialize(count: count)
-            srcPtr.deallocate()
-            dstPtr.deallocate()
-        }
-
-        // MARK: - Copy throughput
-        do {
-            let label = "mem.copy.\(dim)"
-            if Filters.shouldRun(name: label, options: options) {
-
-            let caseStart = Date()
-            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
-
-            Harness.warmup {
-                alignedCopy(from: UnsafePointer(srcPtr), to: dstPtr, count: count, preferredAlignment: alignment)
-                blackHole(dstPtr[0])
-            }
-            let r = Harness.measure(name: label, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: count, samples: options.samples) {
-                alignedCopy(from: UnsafePointer(srcPtr), to: dstPtr, count: count, preferredAlignment: alignment)
-                blackHole(dstPtr[1])
-            }
-            out.append(r)
-
-            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
-            currentIndex += 1
-            }
-        }
-
-        // MARK: - Fill throughput
-        do {
-            let label = "mem.fill.\(dim)"
-            if Filters.shouldRun(name: label, options: options) {
-
-            let caseStart = Date()
-            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
-
-            let value: Float = 0.123
-            Harness.warmup {
-                var i = 0
-                while i < count { dstPtr[i] = value; i += 1 }
-                blackHole(dstPtr[count - 1])
-            }
-            let r = Harness.measure(name: label, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: count, samples: options.samples) {
-                var i = 0
-                while i < count { dstPtr[i] = value; i += 1 }
-                blackHole(dstPtr[count - 1])
-            }
-            out.append(r)
-
-            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
-            currentIndex += 1
-            }
-        }
-
-        // MARK: - Pool acquire/return overhead
-        do {
-            let label = "mem.pool.acquire.\(dim)"
-            if Filters.shouldRun(name: label, options: options) {
-
-            let caseStart = Date()
-            progress.caseStarted(suite: Self.name, name: label, index: currentIndex, total: totalCases)
-
-            _ = MemoryPool.shared.acquire(type: Float.self, count: count, alignment: alignment)
-            MemoryPool.shared.quiesce()
-
-            Harness.warmup {
-                if let handle = MemoryPool.shared.acquire(type: Float.self, count: count, alignment: alignment) {
-                    handle.pointer[0] = 1.0
+                try Harness.warmup(copy)
+                return [try Harness.measure(name: copyName, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                                            unitCount: count, samples: options.samples, copy)]
+            })
+            let fillName = "mem.fill.\(dim)"
+            cases.append(BenchmarkCase(fillName, boundary: Boundaries.record(fillName, options)) {
+                let destination = try allocator.allocate(count, alignment)
+                destination.initialize(repeating: 0, count: count)
+                defer { allocator.release(destination, count) }
+                let fill = {
+                    for index in 0..<count { destination[index] = 0.123 }
+                    blackHole(destination[count - 1])
+                }
+                try Harness.warmup(fill)
+                return [try Harness.measure(name: fillName, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: count, samples: options.samples, fill)]
+            })
+            let poolName = "mem.pool.acquire.\(dim)"
+            cases.append(BenchmarkCase(poolName, boundary: Boundaries.record(poolName, options)) {
+                func acquire(_ value: Float) throws {
+                    guard let handle = poolAcquire(count, alignment) else {
+                        throw BenchmarkConfigurationError("Memory pool acquisition failed")
+                    }
+                    handle.pointer.initialize(to: value)
+                    defer { handle.pointer.deinitialize(count: 1) }
                     blackHole(handle.pointer[0])
                 }
-            }
-            let r = Harness.measure(name: label, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                if let handle = MemoryPool.shared.acquire(type: Float.self, count: count, alignment: alignment) {
-                    handle.pointer[0] = 2.0
-                    blackHole(handle.pointer[0])
-                }
-            }
-            out.append(r)
-
-            let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-            progress.caseCompleted(suite: Self.name, name: label, index: currentIndex, total: totalCases, durationMs: caseDuration)
-            currentIndex += 1
-            }
+                try acquire(0)
+                MemoryPool.shared.quiesce()
+                try Harness.warmup { try acquire(1) }
+                return [try Harness.measure(name: poolName, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) { try acquire(2) }]
+            })
         }
-
-        return out
+        return cases
     }
 }

@@ -1,0 +1,54 @@
+{
+  "task": "T01",
+  "status": "accepted",
+  "task_base": "9f5fda2",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "T01-TOOLCHAIN-01"
+  ],
+  "disposition_records": {
+    "T01-TOOLCHAIN-01": "Xcode 27 / macOS 27 SDK Foundation.ProgressReporter made public VectorCoreBenchmarking.ProgressReporter ambiguous ('ambiguous for type lookup'), breaking every target on Swift 6.4. Renamed to BenchmarkProgressReporter (no deprecated alias: an old-name declaration would still collide). main/0.3.3 has the same defect; hosted CI pins Xcode 16.2/26.3 and cannot observe it.",
+    "T01-CLASS-LOCK": "Scripts/ci/check_sdk_name_collisions.py intersects public top-level VectorCore/VectorCoreBenchmarking type/protocol/typealias/actor names with Foundation/Swift/Accelerate/simd/Dispatch/os on the active SDK, with per-module sentinel self-checks and a fresh symbol-graph directory per run. RED on 9f5fda2 (ProgressReporter), GREEN after the fix. Exit 0 clean / 1 collision / 2 tool failure. CI wiring deferred to V03-owned workflow scope."
+  },
+  "qualified_records": {
+    "Logger": "VectorCore.Logger vs os.Logger collision, pre-existing since macOS 11, allowlisted with owner D02 (public API disposition); D03 preserves the signature meanwhile."
+  },
+  "validation": {
+    "toolchain": "macOS 27 / Xcode 27.0 (27A266a) / Swift 6.4, default swiftbuild",
+    "build": "Debug build --build-tests exit 0; Release build products exit 0 (Release build --build-tests needs -enable-testing via swift test; brief-command error, not a product defect)",
+    "focused": "L03 filter Debug/Release 39 functions/9 suites + 9 bounded children each; milestone10 filter Debug/Release 20 XCTest + 22 Swift Testing each; all pass. Child-process harnesses work under swiftbuild.",
+    "cross_toolchain": "Swift 6.2 (Command Line Tools) library+bench build exit 0",
+    "lint": "pinned SwiftLint 0.65.1: 126 serious before and after",
+    "scanner": "test_child_process_bounds 7 OK"
+  },
+  "review": "reports/T01-review.md",
+  "rereview": "reports/T01-rereview-1.md",
+  "evidence": "reports/T01-implementation.md",
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T01",
+  "patch_sha256": "c3a7f38b05b5e012bbd07eaafe6981d305849e34d0ebab2b0f3aa4c29a8b511a",
+  "frozen_sha256": {
+    "Benchmarks/VectorCoreBench/AppMain.swift": "9f5064835e4c37b6f87739d2a6d3aa5fcc9440c8df4905630fa61acfe4789c85",
+    "Benchmarks/VectorCoreBench/Core/BenchmarkCase.swift": "5e0ecdead34e413d0005ec07ed300fb697e2bcb3c0b342e7d269dfa110b244b0",
+    "Benchmarks/VectorCoreBench/Suites/BatchBench.swift": "677e0cf77adc5f4c368226c2a51ed52973bc7095feffb13dfc48167529df0b7e",
+    "Benchmarks/VectorCoreBench/Suites/DistanceBench.swift": "f0794b6c1403ed03c6c8caee07bf388d20e84eff7707fc30f365ae3c7b3bca29",
+    "Benchmarks/VectorCoreBench/Suites/DotProductBench.swift": "75cb65708a855d91f97355727bd171ede0605b4f7c1c2505ffee9bfce441db2a",
+    "Benchmarks/VectorCoreBench/Suites/MatrixDistanceBench.swift": "6ed4ab59f4b009c36c299f0fb57ffa912882a16d16e11fc959092dae7b21ac5f",
+    "Benchmarks/VectorCoreBench/Suites/MemoryBench.swift": "71f349074a9014a3800d88a9d214c18389a72154e1c4564de928bc8a3626b0ae",
+    "Benchmarks/VectorCoreBench/Suites/NoopBench.swift": "1278c9fd9b434f85be3321455d764172780b27eaf00c72fd64d643516d9e819c",
+    "Benchmarks/VectorCoreBench/Suites/NormalizationBench.swift": "af14d07ccbe544f70a3c8118595aa3a08748d516b2ccc6e37e68100ca9c77882",
+    "CHANGELOG.md": "3d3672a9d7f7171bfaba5161a7ab6448bc42433db7c0ebcf89126d7ad913a445",
+    "Scripts/ci/check_sdk_name_collisions.py": "c447625871cd6cebbc3244e95ba4840d225ec97d45ea81506178cf17207108e8",
+    "Scripts/ci/sdk_name_collision_allowlist.json": "2c47f507913bc3658dbe9e78a4b2b081e41e021effb37ab40ab8072a528223cb",
+    "Sources/VectorCoreBenchmarking/BenchmarkProgressReporter.swift": "27b9b276f1b90a3cdacfdd97c53612304814af21d6d26fe5e678330b2ac02f27",
+    "Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift": "f6c88fe54e03448a28eb4ba01f37b545ee36fe3c927b707ec76fe38237603414",
+    "Tests/BenchmarkContractTests/RunnerContractTests.swift": "a4852774c57db7935ea1b3037c3f4ef2a476fb8981a315007db2ba45ba85d076"
+  },
+  "migrations": [
+    "VectorCoreBenchmarking.ProgressReporter renamed to BenchmarkProgressReporter (source-breaking for VectorCoreBenchmarking consumers; no alias). CHANGELOG Unreleased entry."
+  ],
+  "limitations": [
+    "Checker covers only the active SDK and the six listed SDK modules; aliased or nested-name shadowing is not analyzed.",
+    "Stale-allowlist warning and xcrun/no-graph error paths have no automated test (T01 forbade new Scripts/ci/tests files); deferred.",
+    "Each checker run rebuilds the package into a fresh directory; run-* dirs accumulate under a user-supplied --scratch-path."
+  ]
+}

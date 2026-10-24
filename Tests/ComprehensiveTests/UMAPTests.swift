@@ -3,7 +3,7 @@
 //  VectorCore
 //
 //  Correctness tests for the UMAP stack (gap report §3.3): the KNNGraph
-//  CSR contract and exact brute-force builder, the fuzzy simplicial set
+//  CSR contract and exhaustive Float Gram builder, the fuzzy simplicial set
 //  (ρ/σ smooth-kNN search, t-conorm symmetrization), the output-kernel
 //  curve fit, and the SGD layout.
 //
@@ -74,8 +74,8 @@ private enum UMAPFixtures {
         return betweenSquared.squareRoot() / max(spread, .leastNormalMagnitude)
     }
 
-    /// Direct-from-definition exact kNN (per-pair distances, full sort) —
-    /// the reference for `KNNGraph.bruteForce`'s Gram-trick path.
+    /// Direct Float differences and full sorting on the ordinary fixture —
+    /// a control for the ordinary Gram path, not an extreme-range oracle.
     static func naiveNeighbors(
         _ data: [DynamicVector], k: Int
     ) -> [[(index: Int, distance: Float)]] {
@@ -125,18 +125,18 @@ private enum UMAPFixtures {
 struct UMAPCurveFitSuite {
 
     @Test("Default (minDist 0.1, spread 1.0) reproduces umap-learn's a, b")
-    func defaultParameters() {
+    func defaultParameters() throws {
         // Reference values from umap-learn's find_ab_params on the same
         // 300-point grid: a ≈ 1.57694, b ≈ 0.89506.
-        let (a, b) = UMAPLayout.fitABParams(spread: 1.0, minDist: 0.1)
+        let (a, b) = try UMAPLayout.fitABParams(spread: 1.0, minDist: 0.1)
         #expect(abs(a - 1.57694) < 0.02, "a = \(a)")
         #expect(abs(b - 0.89506) < 0.01, "b = \(b)")
     }
 
     @Test("Fitted kernel respects the plateau and the tail for other configs")
-    func fitQuality() {
+    func fitQuality() throws {
         for (minDist, spread) in [(Float(0), Float(1)), (0.5, 1.5), (0.25, 0.7)] {
-            let (a, b) = UMAPLayout.fitABParams(spread: spread, minDist: minDist)
+            let (a, b) = try UMAPLayout.fitABParams(spread: spread, minDist: minDist)
             #expect(a > 0 && b > 0)
             func kernel(_ x: Float) -> Float {
                 x > 0 ? 1 / (1 + a * Foundation.pow(x, 2 * b)) : 1
@@ -259,7 +259,7 @@ struct FuzzySimplicialSetSuite {
     @Test("ρ and σ solve the smooth-kNN equation on a hand graph")
     func smoothDistancesHandGraph() throws {
         let graph = try UMAPFixtures.handGraph()
-        let (rho, sigma) = FuzzySimplicialSet.smoothDistances(graph)
+        let (rho, sigma) = try FuzzySimplicialSet.smoothDistances(graph)
 
         // ρ is the nearest positive neighbor distance per row.
         #expect(rho == [1, 1, 1, 2])
@@ -281,7 +281,7 @@ struct FuzzySimplicialSetSuite {
     @Test("Memberships and t-conorm symmetrization on the hand graph")
     func symmetrizationHandGraph() throws {
         let graph = try UMAPFixtures.handGraph()
-        let edges = FuzzySimplicialSet.build(graph)
+        let edges = try FuzzySimplicialSet.build(graph)
         let weights = UMAPFixtures.weightMap(edges)
 
         // 5 undirected pairs → 10 directed entries.
@@ -315,10 +315,10 @@ struct FuzzySimplicialSetSuite {
         let graph = try KNNGraph(
             pointCount: 3, rowOffsets: [0, 1, 2, 2],
             neighborIndices: [1, 0], distances: [1, 1])
-        let (rho, sigma) = FuzzySimplicialSet.smoothDistances(graph)
+        let (rho, sigma) = try FuzzySimplicialSet.smoothDistances(graph)
         #expect(rho[2] == 0 && sigma[2] == 0)
 
-        let edges = FuzzySimplicialSet.build(graph)
+        let edges = try FuzzySimplicialSet.build(graph)
         #expect(edges.count == 2)
         for e in 0..<edges.count {
             #expect(edges.heads[e] != 2 && edges.tails[e] != 2)
@@ -330,7 +330,7 @@ struct FuzzySimplicialSetSuite {
     func symmetryOnRealGraph() throws {
         let data = UMAPFixtures.clusters(seed: 71, half: 25, dimensions: 8, separation: 6, scale: 0.8)
         let graph = try KNNGraph.bruteForce(data, neighbors: 6)
-        let edges = FuzzySimplicialSet.build(graph)
+        let edges = try FuzzySimplicialSet.build(graph)
         let weights = UMAPFixtures.weightMap(edges)
 
         #expect(edges.count >= graph.edgeCount, "union can only add directions")

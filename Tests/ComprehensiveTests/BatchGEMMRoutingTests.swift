@@ -6,7 +6,8 @@
 //  GEMM (cblas_sgemm/AMX) path (beta-evolution-4, DOCUMENT-2 routing) and that the
 //  routed results match the per-pair kernels, while non-routable inputs fall back.
 //
-//  Suite is .serialized because one test toggles the process-global routing config.
+//  Each case executes in a fresh child, enables matrix routing there (the default keeps the per-pair path;
+//  PR #56 review AB1) and restores all configuration fields.
 //
 
 import Testing
@@ -29,11 +30,13 @@ struct BatchGEMMRoutingTests {
         return (0..<count).map { _ in try! Vector512Optimized((0..<512).map { _ in rng.next() }) }
     }
 
-    // N ≥ matrixRoutingMinN (256) so the GEMM path is taken.
+    // N ≥ matrixRoutingMinN (256) so the GEMM path is taken once routing is enabled.
     private let N = 300
 
     @Test("Routed Euclidean pairwise matches the direct kernel")
-    func euclideanRoutedMatchesKernel() async {
+    func euclideanRoutedMatchesKernel() async throws {
+        try await e06IsolatedScenario("gemm-euclideanRoutedMatchesKernel", filter: "BatchGEMMRoutingTests/euclideanRoutedMatchesKernel") {
+        try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
         let vs = vecs512(N, seed: 0xE1)
         let m = await BatchOperations.pairwiseDistances(vs)            // routes via GEMM
         #expect(m.count == N && m[0].count == N)
@@ -51,10 +54,13 @@ struct BatchGEMMRoutingTests {
                 #expect(abs(m[i][j] - ref) <= 0.05 + 1e-3 * ref, "i=\(i) j=\(j) got=\(m[i][j]) ref=\(ref)")
             }
         }
+            }
     }
 
     @Test("Routed Cosine pairwise matches double-precision reference")
-    func cosineRoutedMatchesReference() async {
+    func cosineRoutedMatchesReference() async throws {
+        try await e06IsolatedScenario("gemm-cosineRoutedMatchesReference", filter: "BatchGEMMRoutingTests/cosineRoutedMatchesReference") {
+        try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
         let vs = vecs512(N, seed: 0xC0)
         let m = await BatchOperations.pairwiseDistances(vs, metric: CosineDistance())
         for i in 0..<4 {
@@ -67,10 +73,13 @@ struct BatchGEMMRoutingTests {
                 #expect(abs(m[i][j] - ref) <= 2e-3, "i=\(i) j=\(j) got=\(m[i][j]) ref=\(ref)")
             }
         }
+            }
     }
 
     @Test("Non-routable metric (Manhattan) falls back to the per-pair path")
-    func manhattanFallsBack() async {
+    func manhattanFallsBack() async throws {
+        try await e06IsolatedScenario("gemm-manhattanFallsBack", filter: "BatchGEMMRoutingTests/manhattanFallsBack") {
+        try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
         let vs = vecs512(N, seed: 0x3A)
         let m = await BatchOperations.pairwiseDistances(vs, metric: ManhattanDistance())
         let metric = ManhattanDistance()
@@ -80,10 +89,13 @@ struct BatchGEMMRoutingTests {
                 #expect(abs(m[i][j] - ref) <= 1e-3, "manhattan not exact at i=\(i) j=\(j)")
             }
         }
+            }
     }
 
     @Test("DynamicVector does not route (concrete-type gate) and stays correct")
-    func dynamicDoesNotRoute() async {
+    func dynamicDoesNotRoute() async throws {
+        try await e06IsolatedScenario("gemm-dynamicDoesNotRoute", filter: "BatchGEMMRoutingTests/dynamicDoesNotRoute") {
+        try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
         let vs = (0..<N).map { k in DynamicVector((0..<64).map { Float((($0 + k) % 13) - 6) }) }
         let m = await BatchOperations.pairwiseDistances(vs)
         for i in 0..<3 {
@@ -96,15 +108,17 @@ struct BatchGEMMRoutingTests {
                 #expect(abs(m[i][j] - ref) <= 1e-2 + 1e-3 * ref)
             }
         }
+            }
     }
 
     @Test("Routing ON and OFF agree within tolerance")
-    func routingToggleConsistent() async {
+    func routingToggleConsistent() async throws {
+        try await e06IsolatedScenario("gemm-routingToggleConsistent", filter: "BatchGEMMRoutingTests/routingToggleConsistent") {
         let vs = vecs512(N, seed: 0x7B)
 
-        await BatchOperations.updateConfiguration { $0.enableMatrixRouting = false }
+        try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = false }
         let exact = await BatchOperations.pairwiseDistances(vs)        // per-pair kernels
-        await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
+        try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
         let gemm = await BatchOperations.pairwiseDistances(vs)         // GEMM
 
         for i in stride(from: 0, to: N, by: 31) {
@@ -113,7 +127,6 @@ struct BatchGEMMRoutingTests {
                         "routed vs exact diverge at i=\(i) j=\(j): \(gemm[i][j]) vs \(exact[i][j])")
             }
         }
-        // Leave the global default as shipped (routing enabled).
-        await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
+            }
     }
 }

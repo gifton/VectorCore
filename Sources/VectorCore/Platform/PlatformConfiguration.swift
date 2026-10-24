@@ -42,7 +42,8 @@ internal enum PlatformConfiguration {
         #endif
     }
 
-    /// Optimal SIMD vector width in elements for Float
+    /// SIMD vector width in Float elements assumed for the target architecture: 16 on x86_64
+    /// (an AVX-512 register), 4 on arm64 (a NEON register), 1 otherwise. Fixed at compile time.
     public static var simdVectorWidth: Int {
         #if arch(x86_64)
         return 16  // AVX-512
@@ -55,7 +56,8 @@ internal enum PlatformConfiguration {
 
     // MARK: - Memory Configuration
 
-    /// Optimal memory alignment for SIMD operations
+    /// Memory alignment in bytes, fixed at compile time: 64 on x86_64, 128 on arm64 macOS and
+    /// iOS, 16 on other arm64 platforms, 8 otherwise.
     public static var optimalAlignment: Int {
         #if arch(x86_64)
         return 64  // AVX-512 alignment

@@ -14,7 +14,7 @@ internal enum AlignmentStrategy: Sendable {
     /// Fixed 64-byte alignment (cache line)
     case cacheLine
 
-    /// Platform-specific optimal alignment
+    /// Per-architecture alignment (see the `.platform` case below)
     case platform
 
     /// Custom alignment value
@@ -158,15 +158,15 @@ extension HybridStorage {
 
 #if arch(arm64)
 extension AlignmentStrategy {
-    /// Optimal alignment for NEON SIMD operations
+    /// 16-byte alignment (the width of a NEON register)
     public static let simd = AlignmentStrategy.custom(16)
 }
 #elseif arch(x86_64)
 extension AlignmentStrategy {
-    /// Optimal alignment for AVX operations
+    /// 32-byte alignment (the width of an AVX register)
     public static let simd = AlignmentStrategy.custom(32)
 
-    /// Optimal alignment for AVX-512 operations
+    /// 64-byte alignment (the width of an AVX-512 register)
     public static let simd512 = AlignmentStrategy.custom(64)
 }
 #endif

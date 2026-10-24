@@ -1,0 +1,58 @@
+{
+  "task": "L01",
+  "status": "accepted",
+  "task_base": "101b3749bf531cfdbc42d61198b503e94af4aa5b",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "NUM-08",
+    "NUM-09"
+  ],
+  "qualified_records": {
+    "NUM-35": "Local scalar/count/byte/workspace arithmetic and sentinel handling repaired; arbitrary extreme-shape vendor-internal arithmetic remains qualified and staged."
+  },
+  "validation": {
+    "red": "Exact unchanged production plus four regression functions built, then failed with18issues; setup cache and v1 macro failures separate.",
+    "debug_release": "v3 full each36reportedfunctions/8suites, including34in-process+onechildparent+oneparentnoop, fouractualchildren; finalv4 each14affectedfunctions/1suite including12in-process+parent+noop,fouractualchildren.",
+    "asan": "v3 34validin-processfunctions plus4direct actual domain children with explicit runtime; production/body equivalent atv4, tightenedv4oracle verified only in fresh Debug/Release. Leakcheckingdisabled.",
+    "C": "v1/v3 purehelperUBSan,actualshim-mockASan+UBSan,realAccelerate-linkedASan;v4diagnostic-onlyfixture freshlypassesUBSan.",
+    "public_consumer": "Swift6strict compile/link/run;133artifactsincluding130actualReleaseobjects verified withimmutablecanonicalremaps.",
+    "oracles": "Analytic spectra, independentDouble residual/reconstruction/orthogonality; exactFraction H4 multirotation proof; signed exponent/subnormal/overflow domains.",
+    "provenance": "Root297base/303finalreconstruction;69workerrecords/canonicalcopies;60471versionedbuildmanifestentries includingaliases;24ordinarychildassociations+4directASan;303entrysourcearchive.",
+    "scanner": "Seven actual unittest/scanner checks pass atv4; initialdirectfileexecutionwith0tests explicitlyexcluded."
+  },
+  "review": "reports/L01-implementation-review-v4.md",
+  "evidence": "reports/L01-implementation.md",
+  "commands": "reports/L01-swift-commands.json",
+  "root_verification": [
+    "reports/L01-root-v4-source-verification.json",
+    "reports/L01-root-runtime-verification.json",
+    "reports/L01-root-consumer-verification.json",
+    "reports/L01-root-evidence-verification.json",
+    "reports/L01-root-build-verification-pre-v4.json",
+    "reports/L01-root-build-verification.json"
+  ],
+  "diff_sha256": "93b6b21b7097e492f326097381119f991b700c3532de346eac2681efbff6e92d",
+  "frozen_sha256": {
+    "Scripts/ci/fixtures/L01LinkedConsumer.c": "98c34b9d18c606fd46fdcac3586233431becac651f03f21271eea622a43fbbfe",
+    "Scripts/ci/fixtures/L01MockShimConsumer.c": "adcff4ae09d98cdda11adefa3df65a3f63fa1a32be12a3f55910a8eb38da0902",
+    "Scripts/ci/fixtures/L01PublicConsumer.swift": "f48d36bd38ae7b8ab16499e63bbcae2fe139cd6cda57da444a9955fcb662f202",
+    "Scripts/ci/fixtures/L01WorkspaceConsumer.c": "89f97b5cea2cb305aab62ab3d47d420a9df2a0e10f9e5620c82373ab186ce50b",
+    "Sources/VectorCore/LinearAlgebra/LAPACKLinearAlgebraProvider.swift": "2acde9052b0155dde0c7d6ac06f834117a52ce3c5e82cd959561273bb47e8050",
+    "Sources/VectorCore/LinearAlgebra/LinearAlgebraProvider.swift": "d8e3621807a3111e32c53d216585fddbc0fb6ae6279cfe466c41f2c914fa043e",
+    "Sources/VectorCore/LinearAlgebra/SwiftLinearAlgebraProvider.swift": "15d85d858bfd15eab892b95422ddf7f21159c7ac3be365a0be56496de1817fad",
+    "Sources/VectorCoreC/common/vc_lapack.c": "c8f8376e7e4a9675b6468789c682853dee8e5495fb1f6e9a22f48249843a1d95",
+    "Sources/VectorCoreC/common/vc_lapack_workspace.h": "e2a4ec0e664d5201fc0f03a2796c7a8eb86112375582d5fc1d6c3db93403b5f2",
+    "Sources/VectorCoreC/include/vc_lapack.h": "664fc37e0127d7de13b9ebd8887a5c1cbb9b5510b9769e938b21a03241eee350",
+    "Tests/ComprehensiveTests/LinearAlgebraProviderTests.swift": "185595819fe93fafeed6a9a6ec5a990085f268f5b9a1aa3532b89e4259f722ab",
+    "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift": "6f2cc55eef138c8ba137a7a584664baef1e3f407427ff1e75b8972896a96065d"
+  },
+  "migrations": [
+    "QR/SVD reject nonfinite input; eigen validates referenced lower triangle only. Both providers reject nonfinite/unrepresentable Float results with typed errors.",
+    "Public C shim rejects invalid scalar/query/local-size domains before unsafe work under documented caller pointer obligations."
+  ],
+  "limitations": [
+    "Double working storage increases temporary memory; no speed or aggregate allocation-success guarantee.",
+    "Float result spacing, exact-zero SVD basis caveat and60sweepconvergencecap remain explicit.",
+    "No giantvendor execution, actualOOMrecovery, arbitraryconditioning, downstream orGPU claim."
+  ]
+}

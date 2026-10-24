@@ -19,10 +19,10 @@ struct IntegrationProtocolsSuite {
     @Test
     func testSearchResult_ComputedScore() {
         let result = SearchResult(id: 1, distance: 0.0)
-        #expect(result.computedScore == 1.0)  // 1/(1+0) = 1
+        #expect(result.computedScore(using: EuclideanDistance()) == 1.0)  // 1/(1+0) = 1
 
         let result2 = SearchResult(id: 2, distance: 1.0)
-        #expect(result2.computedScore == 0.5)  // 1/(1+1) = 0.5
+        #expect(result2.computedScore(using: EuclideanDistance()) == 0.5)  // 1/(1+1) = 0.5
     }
 
     @Test
@@ -352,9 +352,9 @@ struct IntegrationProtocolsSuite {
             NormalizationHint<Vector512Optimized>.self, from: data
         )
 
-        #expect(decoded == original)
-        #expect(decoded.isNormalized == true)
-        #expect(decoded.cachedMagnitude == 1.0)
+        #expect(decoded != original) // Decoding preserves coordinates but clears advisory hints.
+        #expect(decoded.isNormalized == false)
+        #expect(decoded.cachedMagnitude == nil)
         #expect(decoded.toArray() == original.toArray())
     }
 
@@ -384,7 +384,7 @@ struct IntegrationProtocolsSuite {
             return (skipNorm, usedCache)
         }
 
-        // Without hint — bare vector always returns defaults
+        // Without hint — a bare Vector512Optimized returns the defaults (Vector<D> instead answers isNormalized with its own check)
         let v = try! Vector512Optimized(Array(repeating: Float(0.5), count: 512))
         let result1 = simulateInsert(id: 0, vector: v)
         #expect(result1.skippedNormalization == false)

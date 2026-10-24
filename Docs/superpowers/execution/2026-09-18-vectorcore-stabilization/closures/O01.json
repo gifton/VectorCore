@@ -1,0 +1,25 @@
+{
+  "task": "O01",
+  "status": "accepted",
+  "task_base": "ed1fd0bf8734339716e59f7a3ef237b7516b01cb",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "OWN-10",
+    "API-47"
+  ],
+  "partial_records": {
+    "OWN-05": "Compact COW accepted; O02 retains standard/aligned mutation, throwing bulk writeback and copy-cost coverage."
+  },
+  "validation": {
+    "debug": "11 functions passed; pre-warning-cleanup behavior identical",
+    "release": "11 functions, 1050 invocations passed on final snapshot",
+    "address_sanitizer": "11 functions, 1050 invocations passed on final snapshot; no diagnostics"
+  },
+  "review": "reports/O01-review.md",
+  "evidence": "reports/O01.md",
+  "limitations": [
+    "No LeakSanitizer claim",
+    "No production-scale performance claim",
+    "E01 triangular arithmetic and O02 ownership remainder stay open"
+  ]
+}

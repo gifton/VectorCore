@@ -1,0 +1,36 @@
+{
+  "task": "T07",
+  "status": "accepted",
+  "task_base": "5e21d26",
+  "integration_revision": "23959c9",
+  "closed_records": [
+    "T07-BENCHMARKING-NONMACOS-BUILD",
+    "T07-NORMALIZATIONCORE-CATALYST-FLOAT16",
+    "T07-CI-PRODUCT-PLATFORM-COVERAGE"
+  ],
+  "disposition_records": {
+    "T07-BENCHMARKING-NONMACOS-BUILD": "The public VectorCoreBenchmarking product failed on iOS/tvOS/watchOS/visionOS simulators (unguarded Host/Process in EnvCapture; pre-existing on main). It is now guarded with honest off-macOS fallbacks and an OS-family marker; macOS metadata is cmp-identical.",
+    "T07-NORMALIZATIONCORE-CATALYST-FLOAT16": "N01 (84f42d0) used Float16 unguarded in NormalizationCore, breaking the VectorCore scheme on Mac Catalyst and generic macOS (x86_64 slice). It is guarded with the MixedPrecisionKernels:4086 condition; arm64 path unchanged and discriminated by NormalizationRangeContractTests.halfWideningAndScalarMagnitude. Test-side instances: T09.",
+    "T07-CI-PRODUCT-PLATFORM-COVERAGE": "CI built only the VectorCore scheme cross-platform. A fail-closed loop now builds every Package.swift library product on every destination; test_platform_ci_coverage.py enforces it (validate_github.rb unedited)."
+  },
+  "validation": {
+    "matrix": "12/12 exit 0 (implementer); reviewer re-ran visionOS/Catalyst/iOS/watchOS/tvOS/generic macOS and RED on base",
+    "policy": "unittest 264 OK in-repo and out-of-repo on the merged integration tree; validate_github.rb passes",
+    "tests": "BenchmarkContractTests 63/0 Debug"
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T07",
+  "patch_sha256": "50d01263ac504a5cdcefcdd6e9afcf66600fd6a86222e5467772dca302d1538d",
+  "frozen_sha256": {
+    ".github/workflows/ci.yml": "23a20d9d267f4c7941a2165f4aa4b427b8a17e249dec6e0c209b531b11e3e502",
+    "Scripts/ci/package_products.py": "05129e916a10db9f9754aa3ec488082534a0aee28eca072fa2e6d5887fb78f10",
+    "Scripts/ci/tests/test_platform_ci_coverage.py": "aac3bb9ff6715d8924fdffb3eed345d5624ff1758f85ab2d3115ae61dc61dabf",
+    "Sources/VectorCore/Operations/Kernels/NormalizationCore.swift": "083f0d8458fb5a59d2c0f60d05610cd3dce13e89f8075c1ed165a47523357d4b",
+    "Sources/VectorCoreBenchmarking/EnvCapture.swift": "450264218f99d55582292773dec270e2a814faeaa63a915bf362e4967ec186c3"
+  },
+  "limitations": [
+    "Policy N1: line-based; a deliberate `set +e`, reassignment of $products, or a `shell:` override is not modelled (accidental regressions are closed).",
+    "Parser N2: products not spelled `.library(` (helper calls) are omitted; interpolated names are accepted as literals.",
+    "Off-macOS fallbacks are compile-verified only; no simulator runtime."
+  ],
+  "incident": "The implementer ran `git stash`/`stash pop` once in its worktree; root verified the shared stash list is empty and all worktrees are intact. Rule restated: never git stash."
+}

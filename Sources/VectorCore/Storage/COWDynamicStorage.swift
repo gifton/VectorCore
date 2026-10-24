@@ -1,39 +1,36 @@
 // VectorCore: Copy-on-Write Dynamic Storage
 //
-// Wrapper providing value semantics for DynamicArrayStorage
+// Value-semantics wrapper around the reference-type AlignedDynamicArrayStorage.
 //
-// This type wraps the reference-type DynamicArrayStorage to provide value semantics
-// with Copy-on-Write (COW) optimization. It enables DynamicVector to behave as a
-// value type while maintaining efficient memory usage for large vectors.
+// This type stores an AlignedDynamicArrayStorage (`storage`) and copies it on the first mutation through the
+// wrapper while it is shared (copy-on-write).
 //
 
 import Foundation
 
-/// Copy-on-Write wrapper for DynamicArrayStorage providing value semantics.
+/// Copy-on-write wrapper for AlignedDynamicArrayStorage providing value semantics.
 ///
-/// `COWDynamicStorage` transforms the reference-type `DynamicArrayStorage` into a
-/// value-type storage with Copy-on-Write semantics. This allows dynamic vectors
-/// to have predictable value semantics while avoiding unnecessary copies.
+/// `COWDynamicStorage` wraps the reference-type `AlignedDynamicArrayStorage` in a value type with
+/// copy-on-write: copies share one storage object until a mutation through the wrapper finds it shared.
 ///
 /// ## Purpose
-/// - Provides value semantics for dynamically-sized vectors
-/// - Implements COW to avoid expensive copies until mutation
-/// - Maintains compatibility with existing DynamicArrayStorage
+/// - Provides value semantics for dynamically-sized storage
+/// - Defers the element copy until the first mutation while shared
 ///
-/// ## Performance Characteristics
+/// ## Complexity
 /// - O(1) copy operations (until mutation)
 /// - O(n) copy on first mutation after sharing
-/// - No overhead for unique instances
+/// - Every mutation through the wrapper first runs the `isKnownUniquelyReferenced` check
 ///
 /// ## Implementation Details
-/// The type wraps DynamicArrayStorage and uses `isKnownUniquelyReferenced` to
-/// detect when a copy is needed, implementing the COW pattern efficiently.
+/// The type wraps AlignedDynamicArrayStorage and uses `isKnownUniquelyReferenced` to
+/// detect when a copy is needed (`makeUnique`).
 ///
 /// ## Example
 /// ```swift
 /// var storage1 = COWDynamicStorage(dimension: 1000)
-/// let storage2 = storage1  // Cheap copy (no allocation)
-/// storage1[0] = 42.0       // Triggers COW, allocates new storage
+/// let storage2 = storage1  // shares the storage object; no element copy (allocation behaviour not verified)
+/// storage1[0] = 42.0       // shared, so makeUnique copies the elements first (allocation not verified by a test)
 /// ```
 public struct COWDynamicStorage: VectorStorage, VectorStorageOperations {
     /// The underlying reference-type storage.
@@ -84,7 +81,7 @@ public struct COWDynamicStorage: VectorStorage, VectorStorageOperations {
 
     /// Ensure storage is uniquely referenced for COW.
     ///
-    /// This private method implements the Copy-on-Write mechanism. It checks if
+    /// This method implements the Copy-on-Write mechanism. It checks if
     /// the underlying storage is shared and creates a copy if needed.
     ///
     /// - Complexity: O(1) if unique, O(n) if copy needed

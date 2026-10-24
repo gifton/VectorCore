@@ -17,7 +17,7 @@ import Foundation
 /// for other platforms.
 ///
 /// ## Design Principles
-/// - All methods are static for optimal performance and inlining
+/// - All methods are static
 /// - Methods use unsafe pointers to avoid copying overhead
 /// - Stride parameter is omitted (always 1) for simplicity
 /// - Float and Double operations are handled via generic Scalar type
@@ -96,6 +96,7 @@ public protocol SIMDProvider {
     )
 
     /// Divides each element by a scalar: result[i] = a[i] / scalar
+    /// Requires count >= 0; count 0 accesses nothing. Exact aliasing is supported.
     @inlinable
     static func divideByScalar(
         _ a: UnsafePointer<Scalar>,
@@ -137,21 +138,27 @@ public protocol SIMDProvider {
 
     // MARK: - Statistical Operations
 
-    /// Finds the maximum value in the vector
+    /// Finds the maximum value in the vector. The built-in providers return NaN when any element is NaN and
+    /// -infinity for `count == 0`; the sign of a zero result is unspecified (T16 reduction NaN contract;
+    /// T16ReductionExceptionalTableTests).
     @inlinable
     static func maximum(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
 
-    /// Finds the minimum value in the vector
+    /// Finds the minimum value in the vector. The built-in providers return NaN when any element is NaN and
+    /// +infinity for `count == 0`; the sign of a zero result is unspecified (T16 reduction NaN contract;
+    /// T16ReductionExceptionalTableTests).
     @inlinable
     static func minimum(
         _ a: UnsafePointer<Scalar>,
         count: Int
     ) -> Scalar
 
-    /// Finds the maximum magnitude (absolute value) in the vector
+    /// Finds the maximum magnitude (absolute value) in the vector. The built-in providers return NaN when any element
+    /// is NaN, and +0 for a zero result and for `count == 0` (T16 reduction NaN contract;
+    /// T16ReductionExceptionalTableTests).
     @inlinable
     static func maximumMagnitude(
         _ a: UnsafePointer<Scalar>,
@@ -186,7 +193,8 @@ public protocol SIMDProvider {
         count: Int
     )
 
-    /// Clips vector elements to a range: result[i] = min(max(a[i], low), high)
+    /// Clips vector elements to a range: result[i] = min(max(a[i], low), high), so a NaN element stays NaN; the
+    /// built-in providers follow this for NaN too (T16; T16ReductionExceptionalTableTests).
     @inlinable
     static func clip(
         _ a: UnsafePointer<Scalar>,
@@ -205,7 +213,7 @@ public typealias SIMDLength = Int
 // MARK: - Default Implementations
 
 public extension SIMDProvider {
-    /// Default implementation of divideByScalar using multiplyScalar
+    /// Native per-coordinate division. Requires count >= 0; count 0 accesses nothing.
     @inlinable
     static func divideByScalar(
         _ a: UnsafePointer<Scalar>,
@@ -213,8 +221,8 @@ public extension SIMDProvider {
         result: UnsafeMutablePointer<Scalar>,
         count: Int
     ) {
-        let invScalar = 1.0 / scalar
-        multiplyScalar(a, scalar: invScalar, result: result, count: count)
+        guard count >= 0 else { fatalError("divideByScalar: count must be nonnegative") }
+        for i in 0..<count { result[i] = a[i] / scalar }
     }
 }
 

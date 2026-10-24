@@ -1,0 +1,35 @@
+{
+  "task": "T02",
+  "status": "accepted",
+  "task_base": "3639cc4 (3-way merged onto dbd0833+; V03's 10-line QuantizedKernelsTests delta composed, proven both directions)",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "T02-M11-NAN-TRAP",
+    "T02-M11-DIRECTION",
+    "T02-M11-DEGENERATE"
+  ],
+  "disposition_records": {
+    "T02-M11-NAN-TRAP": "Legacy testNaNInfinityHandling contradicted Q01's accepted nonfinite precondition (requireFinite fatalError) and killed the ComprehensiveTests Swift Testing process. Migrated to the throwing route with exact construction-rule indices; the trap path is covered by Q01ChildContracts.namedRejectionMatrix (bounded children). Classification (a).",
+    "T02-M11-DIRECTION": "Legacy absolute 1e-5 tolerance (~0.02 ulp at ||x|| ≈ 4353) failed after N01 made normalization correctly rounded (384/384). Replaced with a derived pairwise bound 4u(1+2^-20)||x|| plus a per-ratio check |ratio_i − ||x||| ≤ 2u(1+2^-20)||x|| over all 384 indices, which detects a revert to the pre-N01 route (negative control: 76/384 flagged). Classification (b); not a regression.",
+    "T02-M11-DEGENERATE": "The 'Nearly constant' pair {0.5, 0.5001} is sub-resolution (0.051 step) under Q01's documented zero-inclusive calibration. The separation-aware assertion is derived from Q01's endpoint criterion; resolvable pairs require exactly 2 decoded values. Classification (a)."
+  },
+  "validation": {
+    "toolchain": "Swift 6.4/Xcode 27 swiftbuild",
+    "whole_suite": "3639cc4+T02: Debug and Release exit 0, 0 issues (XCTest 128 executed/101 not skipped; Swift Testing 1432/196 + 1); fix1: Release pass, Debug 1 of 6 runs trapped with no message (routed to T04)",
+    "independent": "Opus review recomputed all bounds and margins and reproduced the head histogram by exact simulation",
+    "negative_control": "normalization revert fails only the per-ratio check at 76/384 indices"
+  },
+  "review": "reports/T02-review.md; T02 fix round 1 scoped re-review: all 4 addressed, no new breakage",
+  "evidence": "reports/T02-implementation.md",
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T02",
+  "patch_sha256": "1b45551621383a6cc945a2d3b4f6e3a4a8bc78fa67adc15c9faafc73fe205dec",
+  "frozen_sha256": {
+    "Tests/ComprehensiveTests/ArbitraryDimensionTests.swift": "11727d78e6191ef1211211243c4258df04dd42f7987be26ed52fb753f8ada6f1",
+    "Tests/ComprehensiveTests/QuantizedKernelsTests.swift": "cb4874f6b706c98c6f3a2197ad14667fce7e7b41ab62f110a680906ae5ddec5b"
+  },
+  "limitations": [
+    "The intermittent message-less Debug trap seen in 1 of 6 fix1 runs is unexplained and owned by T04.",
+    "Extended-gated tests are not covered by the EXTENDED=0 gate (milestone 12 adds an EXTENDED=1 run).",
+    "approxEqual default absolute tolerance hazard; dead pre-Q01 branches; print-only legacy code (T03 test-hygiene)."
+  ]
+}

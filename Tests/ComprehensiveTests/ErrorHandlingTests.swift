@@ -69,15 +69,15 @@ struct ErrorHandlingTests {
         @Test("Error context validation")
         func testErrorContext() async throws {
             let additionalInfo = ["dimension": "512", "operation": "normalize"]
+            let before = Date()
             let context = ErrorContext(additionalInfo: additionalInfo)
+            let after = Date()
 
             #expect(context.additionalInfo["dimension"] == "512")
             #expect(context.additionalInfo["operation"] == "normalize")
             #expect(context.timestamp.timeIntervalSince1970 > 0)
 
-            // Check that timestamp is recent (within last second)
-            let timeDiff = abs(context.timestamp.timeIntervalSinceNow)
-            #expect(timeDiff < 1.0)
+            #expect(context.timestamp >= before && context.timestamp <= after)
         }
 
         @Test("Error context debug vs release builds")
@@ -1717,7 +1717,7 @@ struct ErrorHandlingTests {
             // Should complete in reasonable time (< 1 second for 10k errors)
             print("  [perf] 10k error handling: \(elapsed)s (gate < 1.0)")
             if strictPerfGatesEnabled {
-                #expect(elapsed < 1.0, "Error handling took \(elapsed) seconds")
+                expectPerformance("ErrorHandlingTests.testErrorHandlingPerformance.1", elapsed < 1.0, "Error handling took \(elapsed) seconds")
             }
 
             // Test that error creation is lightweight
@@ -1725,7 +1725,7 @@ struct ErrorHandlingTests {
             _ = VectorError.invalidData("Performance test")
             let singleErrorTime = Date().timeIntervalSince(singleErrorStart)
             if strictPerfGatesEnabled {
-                #expect(singleErrorTime < 0.001, "Single error creation should be sub-millisecond")
+                expectPerformance("ErrorHandlingTests.testErrorHandlingPerformance.2", singleErrorTime < 0.001, "Single error creation should be sub-millisecond")
             }
         }
 

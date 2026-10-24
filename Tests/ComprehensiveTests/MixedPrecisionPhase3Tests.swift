@@ -18,7 +18,7 @@ struct MixedPrecisionPhase3Tests {
     func testSoACacheBasic() async {
         // Use a private cache instance (not .shared) to avoid races with other
         // tests under Swift Testing's parallel execution.
-        let cache = SoAFP16Cache512(maxSize: 100)
+        let cache = SoAFP16Cache512(maxSize: 100, maxBytes: 4_000_000)
 
         let vectors = generateTestVectors(count: 100)
 
@@ -46,23 +46,23 @@ struct MixedPrecisionPhase3Tests {
 
     @Test("SoA FP16 Cache - LRU eviction")
     func testSoACacheLRU() async {
-        let cache = SoAFP16Cache512(maxSize: 3)
+        let cache = SoAFP16Cache512(maxSize: 3, maxBytes: 4_000_000)
 
         // Fill cache to capacity
         let vectors1 = generateTestVectors(count: 10, seed: 1)
         let vectors2 = generateTestVectors(count: 10, seed: 2)
         let vectors3 = generateTestVectors(count: 10, seed: 3)
 
-        await cache.store(MixedPrecisionKernels.createSoA512FP16(from: vectors1), for: vectors1)
-        await cache.store(MixedPrecisionKernels.createSoA512FP16(from: vectors2), for: vectors2)
-        await cache.store(MixedPrecisionKernels.createSoA512FP16(from: vectors3), for: vectors3)
+        _ = await cache.getOrCreate(for: vectors1)
+        _ = await cache.getOrCreate(for: vectors2)
+        _ = await cache.getOrCreate(for: vectors3)
 
         let stats1 = await cache.statistics()
         #expect(stats1.size == 3, "Cache should be at capacity")
 
         // Add fourth item - should evict vectors1 (oldest)
         let vectors4 = generateTestVectors(count: 10, seed: 4)
-        await cache.store(MixedPrecisionKernels.createSoA512FP16(from: vectors4), for: vectors4)
+        _ = await cache.getOrCreate(for: vectors4)
 
         let stats2 = await cache.statistics()
         #expect(stats2.size == 3, "Cache should still be at capacity")
@@ -87,7 +87,7 @@ struct MixedPrecisionPhase3Tests {
     func testSoACacheHitRate() async {
         // Use a private cache instance (not .shared) to avoid races with other
         // tests under Swift Testing's parallel execution.
-        let cache = SoAFP16Cache512(maxSize: 100)
+        let cache = SoAFP16Cache512(maxSize: 100, maxBytes: 4_000_000)
 
         let vectors1 = generateTestVectors(count: 50, seed: 1)
         let vectors2 = generateTestVectors(count: 50, seed: 2)
@@ -135,14 +135,16 @@ struct MixedPrecisionPhase3Tests {
         // FP16 computation
         let queryFP16 = MixedPrecisionKernels.Vector512FP16(from: query)
         let candidateSoA = MixedPrecisionKernels.createSoA512FP16(from: [candidate])
-        var resultFP16: Float = 0
-        withUnsafeMutablePointer(to: &resultFP16) { ptr in
+        var output: Float = 0
+        // Values are read inside the closure (lost-store workaround W2; swiftlang/swift#92562).
+        let resultFP16: Float = withUnsafeMutablePointer(to: &output) { ptr in
             let buffer = UnsafeMutableBufferPointer(start: ptr, count: 1)
             MixedPrecisionKernels.batchEuclidean512(
                 query: queryFP16,
                 candidates: candidateSoA,
                 results: buffer
             )
+            return ptr.pointee
         }
 
         let isValid = PrecisionValidator.validateDistanceAccuracy(

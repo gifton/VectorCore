@@ -247,7 +247,9 @@ internal enum EdgeCaseHandler {
 
     // MARK: - Batch Operation Edge Cases
 
-    /// Handles edge cases for batch euclidean distance
+    /// Classifies a batch squared-Euclidean request before it is computed: `.empty` without candidates,
+    /// `.single` (its squared distance) for one candidate, `.computed` (each candidate's `magnitudeSquared`)
+    /// for an all-zero query, and `.needsComputation` otherwise.
     public static func handleBatchDistanceEdgeCases<V: VectorProtocol>(
         query: V,
         candidates: [V]
@@ -284,7 +286,9 @@ internal enum EdgeCaseHandler {
 
     // MARK: - Clustering Edge Cases
 
-    /// Handles edge cases for hierarchical clustering
+    /// Classifies a clustering input: throws for an empty set; `.singleCluster(0)` for one vector,
+    /// `.pairCluster(0, 1)` for two, `.allIdentical` when every squared distance to the first vector is
+    /// below 1e-10, and `.proceed` otherwise.
     public static func handleClusteringEdgeCases<V: VectorProtocol>(
         vectors: [V]
     ) throws -> ClusteringAction where V.Scalar == Float {
@@ -340,7 +344,9 @@ internal enum EdgeCaseHandler {
 
     // MARK: - Graph Operation Edge Cases
 
-    /// Handles edge cases for graph operations
+    /// Classifies a graph by node and edge counts: throws for a negative count, and, with at least two
+    /// nodes and one edge, for more than `n(n-1)/2` edges; otherwise `.emptyGraph`, `.singleNode`,
+    /// `.disconnected` (no edges) or `.normal`.
     public static func handleGraphEdgeCases(nodeCount: Int, edgeCount: Int) throws -> GraphStatus {
         guard nodeCount >= 0 else {
             throw VectorError.invalidData("Node count cannot be negative: \(nodeCount)")

@@ -1,0 +1,34 @@
+{
+  "task": "T08",
+  "status": "accepted",
+  "task_base": "657a100",
+  "integration_revision": "aa930de",
+  "closed_records": [
+    "T08-ASYNC-XCTEST-DROPPED-FAILURES",
+    "T08-ASYNC-XCTEST-CLASS"
+  ],
+  "disposition_records": {
+    "T08-ASYNC-XCTEST-DROPPED-FAILURES": "Root investigation (V04/phaseC/fix4-root): on Swift 6.4 / Xcode 27, nonisolated async XCTest methods doing real awaited work dropped recorded assertion failures nondeterministically (33-48 of 48+; mid-sequence and tail losses) on byte-identical deterministic inputs. Sync and @MainActor methods recorded all failures. All 40 such methods are now @MainActor: 16 in V04 phase C (2179a19) and 24 here, plus assertion-bearing helpers. Repeated Debug ×4 and Release ×2 runs of the converted files: 31/31; no previously dropped failure surfaced. Forced-failure check: 8/8 recorded in 6/6 runs.",
+    "T08-ASYNC-XCTEST-CLASS": "Closed mechanically by Scripts/ci/tests/test_async_xctest_isolation.py (R1 tests, R2 assertion-bearing async helpers; class, superclass and extension derivation across files; nonisolated and @concurrent never count). Inline pre-conversion fixtures prove RED without git history; history checks skip when objects are unavailable."
+  },
+  "validation": {
+    "policy": "unittest discover 249 OK in-repo (2 skips) and out-of-repo (6 skips) on the merged integration tree; a --depth 1 clone shows 0 errors (implementer and re-reviewer)",
+    "suite": "Converted files: Debug ×4 and Release ×2, 31/31. The whole-suite milestone gate follows V04.",
+    "reviews": "independent Opus review (Spec FAIL / Quality CHANGES REQUESTED: C1 CI error, I1 six false negatives, I2 evidence-list errors) → fix round 1 → scoped Sonnet re-review: all ADDRESSED; N1-N3 low"
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T08",
+  "patch_sha256": "d2add331fc9971823778f4e163ce91c22678daec4bd8523a59aca5b20198068d",
+  "frozen_sha256": {
+    "Scripts/ci/tests/test_async_xctest_isolation.py": "f4e7133595ad3a42936c3a5314c4e9bca11c639bde1af0bb4f55b98927689a18",
+    "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift": "aa65ab52aa93bd9c553e40dc64f92c432099d7e55a202c193ec5e1a3931cc13a",
+    "Tests/ComprehensiveTests/KernelAutoTunerTests.swift": "72cd00bf3424ed057f3a7dd655823ec2b83b3d26916c0eac3c8d9164ec54dc6c",
+    "Tests/ComprehensiveTests/TestHelpers/MockErrorTestExtensions.swift": "25cf95b0d4268f2daecfcfa6cb4280864256d9808f6098b9baeff1071d8f48bc"
+  },
+  "limitations": [
+    "The mechanism is unproven; the fix is empirical (main-actor isolation recorded every failure in every run). No minimal upstream reproduction.",
+    "Lexical guard with documented limits: typealias ancestry, bases outside Tests/, free-function helpers, assertions reached through closures, protocol-inferred @MainActor not credited (fails safe), Swift Testing out of scope.",
+    "N1: XCTSkipIf/XCTSkipUnless in an async helper count as assertions (fails safe).",
+    "Historical acceptances on historical trees are not re-established; they are superseded by current-tree evidence plus the whole-suite milestone gate."
+  ],
+  "incident": null
+}

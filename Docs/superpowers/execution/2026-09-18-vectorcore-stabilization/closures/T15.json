@@ -1,0 +1,51 @@
+{
+  "task": "T15",
+  "status": "accepted",
+  "task_base": "baa99b5 (rebased onto bc30506 with T14 phase 2)",
+  "integration_revision": "e2414e3",
+  "closed_records": [
+    "T15-COSINE-NAN-PERFECT-MATCH",
+    "T15-COSINE-EXCEPTIONAL-POLICY",
+    "T15-NAN-SWALLOWING-METRICS",
+    "T15-COSINE-CLASS-CLOSURE",
+    "T15-LOST-STORE-COMPILER-BUG-WORKAROUND"
+  ],
+  "disposition_records": {
+    "T15-COSINE-NAN-PERFECT-MATCH": "min(1, NaN) == 1 mapped a NaN similarity to distance 0, so NaN/±∞ rows ranked nearest on the fused routes (±∞ first on the generic routes). Every cosine implementation (40 bodies) now returns canonical .nan for NaN/±∞ on either side (dominating the zero rule) and clamps only finite overshoot. RED on baa99b5: T1 24/27 routes, T2 1,586 cells → GREEN in Debug, Release and ASan.",
+    "T15-COSINE-EXCEPTIONAL-POLICY": "Both-zero gives 1.0 on every path (each implementation's own zero class; P3a); one-zero gives 1; subnormal thresholds pinned as documented divergences (P3c); overflow domain ‖v‖² < Float.greatestFiniteMagnitude documented, with the narrower cosineMixedCore domain and F22 divergence vs MatrixDistance (P4); similarity APIs use !isFinite guards (P5); VectorProtocol.cosineDistance clamps finite overshoot. Finite identity: 1,954 rows with 0 unexpected differences (one-host probe, out of repo).",
+    "T15-NAN-SWALLOWING-METRICS": "ChebyshevDistance, HammingDistance and both lInfinityNorm bodies (so VectorProtocol.chebyshevDistance) propagate NaN; pinned by T15MetricExceptionalTableTests including concrete-typed and Vector<D> rows.",
+    "T15-COSINE-CLASS-CLOSURE": "T15CosineRegistry plus T15CosineExceptionalTableTests across every registered implementation; test_cosine_registry.py (strips comments; flags unregistered implementations, clamp idioms and helper callers; R2 is a body-level token check, T2 is the semantic check).",
+    "T15-LOST-STORE-COMPILER-BUG-WORKAROUND": "A Release-only test failure was proven a Swift 6.4.0 SIL RedundantLoadElimination bug (swiftlang/swift#92562; root reproduced it: -O prints 0, -Onone 1, RLE disabled 1), NOT library UB. W2 test rewrites (5 frozen test files superseded, sha256 in T15/phase2-report.md F1.9); adaptiveEuclideanDistance hardened; lInfinityNorm returns from inside its closure; test_lost_store_reads.py (original-shape allowlist = the canary only; 74 captured-var entries justified by in-repo LostStoreCanaryCapturedVarTests K1-K8); a version-gated LostStoreCanaryTests (records the known issue on 6.4.0 Release; asserts correct behaviour on ≥6.4.1)."
+  },
+  "frozen_supersession": {
+    "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift": "E06: P3a :401/:431, C1 :445, m7 comment (root-approved)",
+    "Tests/ComprehensiveTests/BatchKernels_SoATests.swift": "T04/V03: W2",
+    "Tests/ComprehensiveTests/MatrixMetricContractTests.swift": "E02/E06/R03/T10/V03: W2",
+    "Tests/ComprehensiveTests/MixedPrecisionPhase3Tests.swift": "I02: W2",
+    "Tests/ComprehensiveTests/QuantizedMetricRangeTests.swift": "Q01/V03: W2",
+    "Tests/R03Consumers/PublicMatrix.swift": "R03: W2",
+    "hashes": "T15/phase2-fix1/addendum/81-sha256-table.txt"
+  },
+  "validation": {
+    "suite": "Fix 1: full Debug 1,578/222 with 0 issues; focused Release 802/129; ASan 77 with 0 reports; Intel compile. Final fix: 19 tests Debug and Release.",
+    "policy": "Merged tree: ledger 0 problems; unittest 410 OK in-repo and git-less.",
+    "reviews": "Phase 1 rulings → phase 2 Opus review (Spec PASS; I1/I2 plus minors) → lost-store Opus investigation (COMPILER BUG) → fix 1 on the rebased tree plus addendum → split re-reviews A (Opus) and B (Sonnet) APPROVED → final fix (comment-only Sources; root verified).",
+    "merge": "Rebased onto bc30506 by root (3-way DistanceMetrics/HowTo clean; CHANGELOG union verified); the final tree imported byte-identically; integration had no non-ledger change since bc30506."
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T15",
+  "patch_sha256": "e869b851a833421884cb1614b73cdc64e29816f21db74d9ef46eaf600ea6e7a0",
+  "reviewed_tree": "fd0ebba12d9b17bf42ec696712b41629036fc909",
+  "limitations": [
+    "Finite bit identity rests on one-host probes outside the repo.",
+    "Lost-store evidence is one host and one toolchain (6.4.0); the canary's ≥6.4.1 and <6.4 branches were not compiled here.",
+    "The subnormal-threshold divergences are pinned, not unified (follow-up).",
+    "Overflow domain: per-pair FP32 routes return NaN where MatrixDistance returns the true distance (follow-up: scaled computation)."
+  ],
+  "routed": [
+    "Follow-up: unify cosine subnormal/tiny thresholds (P3c).",
+    "Follow-up: scaled cosine for the overflow domain (P4).",
+    "T14 phase 3: cosine overloads, witness and search arithmetic; qualify T14's Removed wording.",
+    "T16: reductions (QuantizedKernels.calibrate re-tagged).",
+    "USER: file the lost-store report (a comment on swiftlang/swift#92562 plus Feedback Assistant, citing rdar://188227399); text in T15/lost-store-investigation/report.md §7."
+  ]
+}

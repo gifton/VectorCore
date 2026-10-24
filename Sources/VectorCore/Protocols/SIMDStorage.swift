@@ -12,7 +12,7 @@ import simd
 ///
 /// This protocol enables type-safe access to SIMD storage in generic contexts,
 /// providing both buffer pointer access and subscript operations required by
-/// high-performance vector kernels.
+/// the vector kernels.
 ///
 public protocol SIMDStorage {
     /// The SIMD element type stored in this container
@@ -21,12 +21,12 @@ public protocol SIMDStorage {
     /// Number of SIMD elements in storage
     var count: Int { get }
 
-    /// Provides unsafe buffer pointer access for high-performance operations
+    /// Provides unsafe buffer pointer access to the storage
     /// - Parameter body: Closure that receives an unsafe buffer pointer to the storage
     /// - Returns: Result of the closure
     func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R
 
-    /// Provides mutable unsafe buffer pointer access for high-performance operations
+    /// Provides mutable unsafe buffer pointer access to the storage
     /// - Parameter body: Closure that receives an inout mutable unsafe buffer pointer to the storage
     /// - Returns: Result of the closure
     mutating func withUnsafeMutableBufferPointer<R>(_ body: (inout UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R
@@ -46,19 +46,23 @@ extension ContiguousArray: SIMDStorage {
 // MARK: - Protocol Extensions for Common Operations
 
 public extension SIMDStorage where Element == SIMD4<Float> {
-    /// Find minimum and maximum values across all SIMD elements
+    /// Find minimum and maximum values across all SIMD elements: (NaN, NaN) when any lane is NaN (T16 reduction NaN
+    /// contract; `SIMD4.min()`/`max()` ignore a NaN lane and `min`/`max` drop one), and (+infinity, -infinity), the
+    /// identities, for empty storage (T16 ruling I1; the earlier +-greatestFiniteMagnitude start also reported
+    /// min = greatestFiniteMagnitude for all-+infinity data). Pinned by T16ReductionExceptionalTableTests.
     func minMax() -> (min: Float, max: Float) {
-        var globalMin: Float = .greatestFiniteMagnitude
-        var globalMax: Float = -.greatestFiniteMagnitude
-
-        withUnsafeBufferPointer { ptr in
+        // The result is returned from inside the closure; no captured var is written in it and read after it
+        // (T15 lost-store class, T16 ruling C5).
+        return withUnsafeBufferPointer { ptr -> (min: Float, max: Float) in
+            var globalMin: Float = .infinity
+            var globalMax: Float = -.infinity
             for simd in ptr {
+                if any(simd .!= simd) { return (.nan, .nan) }
                 globalMin = min(globalMin, simd.min())
                 globalMax = max(globalMax, simd.max())
             }
+            return (globalMin, globalMax)
         }
-
-        return (globalMin, globalMax)
     }
 
     /// Flatten SIMD storage to a regular Float array

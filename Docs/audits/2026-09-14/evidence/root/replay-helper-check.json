@@ -1,0 +1,6 @@
+{
+  "compiler_exit": 0,
+  "run_exit": 0,
+  "stdout": "empty 0 bytes 16\nempty binary rejected VectorError.invalidDimension: Invalid dimension 0: Must be between 1 and 10000\nempty JSON dimension 0\nbinary hex 54434556010006000000000000000000000000804523c17f0000807f000080ff01000000b12ecf19\nbit patterns match true\nslice start 3 bits match true\nlarge binary rejected VectorError.invalidDimension: Invalid dimension 10001: Must be between 1 and 10000\nFP32 handle 16 FP16 handle 8\n",
+  "note": "Portable checked-in helper compiled this client against the existing Release objects. Initial sandbox compiler-cache failure resolved with approved cache access."
+}

@@ -1,21 +1,22 @@
 // VectorCore: Triangular Matrix Storage
 //
-// Efficient storage for symmetric matrices (like distance matrices)
-// storing only the upper triangle to save ~50% memory
+// Storage for symmetric matrices with a zero diagonal (like distance matrices) that keeps only the
+// strict upper triangle: n*(n-1)/2 elements instead of n² (an element count, not a measured memory saving)
 //
 
 import Foundation
 
-/// Memory-efficient storage for symmetric matrices
+/// Upper-triangle storage for symmetric matrices
 ///
-/// `TriangularMatrix` stores only the upper triangle of a symmetric matrix,
-/// reducing memory usage by approximately 50%. Perfect for distance matrices
-/// where d(i,j) = d(j,i) and diagonal elements are zero.
+/// `TriangularMatrix` stores only the strict upper triangle of a symmetric matrix with a zero
+/// diagonal, such as a distance matrix where d(i,j) = d(j,i) and d(i,i) = 0 (the numeric subscript
+/// returns zero on the diagonal and traps on a diagonal write).
 ///
-/// ## Memory Savings
+/// ## Element Count
 /// - Full matrix: n² elements
 /// - Triangular: n*(n-1)/2 elements
-/// - Savings: ~50% for large n
+/// - Ratio: just under one half for large n (an element count; the `TieredStorage` container and
+///   process memory are not measured)
 ///
 /// ## Example Usage
 /// ```swift
@@ -220,7 +221,7 @@ extension TriangularMatrix {
         let size = matrix.count
         guard matrix.allSatisfy({ $0.count == size }) else { return nil }
 
-        var result = TriangularMatrix(size: size, defaultValue: matrix[0][1])
+        var result = TriangularMatrix(size: size, defaultValue: matrix[0][0])
 
         for i in 0..<size {
             for j in (i+1)..<size {
@@ -235,7 +236,8 @@ extension TriangularMatrix {
 // MARK: - Parallel Operations
 
 extension TriangularMatrix where T: Sendable {
-    /// Fill matrix using parallel computation
+    /// Fill the strict upper triangle with bounded workers, including when cancelled.
+    /// ExecutionSchedulingContractTests verifies complete-result and nested policies.
     ///
     /// - Parameter compute: Function to compute element at (i,j)
     public static func buildParallel(
@@ -243,24 +245,16 @@ extension TriangularMatrix where T: Sendable {
         compute: @Sendable @escaping (Int, Int) async -> T
     ) async -> TriangularMatrix<T> where T: Numeric {
         var result = TriangularMatrix<T>(size: size)
-
-        await withTaskGroup(of: (Int, Int, T).self) { group in
-            // Add tasks for each element
-            for i in 0..<size {
-                for j in (i+1)..<size {
-                    group.addTask {
-                        let value = await compute(i, j)
-                        return (i, j, value)
-                    }
-                }
-            }
-
-            // Collect results
-            for await (i, j, value) in group {
-                result[i, j] = value
-            }
+        let rows = await BoundedExecution.completeMap(0..<Swift.max(0, size - 1),
+            limit: BoundedExecution.hardwareLimit, phase: "triangular.build") { i in
+            var row: [T] = []
+            row.reserveCapacity(size - i - 1)
+            for j in (i + 1)..<size { row.append(await compute(i, j)) }
+            return row
         }
-
+        for i in rows.indices {
+            for offset in rows[i].indices { result[i, i + offset + 1] = rows[i][offset] }
+        }
         return result
     }
 }

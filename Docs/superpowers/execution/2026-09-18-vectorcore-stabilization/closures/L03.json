@@ -1,0 +1,62 @@
+{
+  "task": "L03",
+  "status": "accepted",
+  "task_base": "17c1af927b6d6b9f343583e34b330ac3c351dac8",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "NUM-11",
+    "NUM-12",
+    "NUM-13",
+    "NUM-25",
+    "NUM-28"
+  ],
+  "disposition_records": {
+    "NUM-11": "Curve fit is dimensionless (300-point target, positive log parameters, bounded deterministic Double LM, true-gradient inf-norm <=1e-8, compensated strict objective change) and throws instead of publishing the initial guess. Tests: curveIndependentMinimumAndScale, curveOrdinaryNonDyadicScales, curveCoefficientPublicationDomain against independent Nelder-Mead references (L03_generate_references.py).",
+    "NUM-12": "Smooth-kNN uses a checked logarithmic bracket with Double rho/sigma and finite residual criterion; tied/infeasible rows use explicit zero pre-floor bandwidth. Tests: smoothAnalyticScaleAndTopology, smoothHighPrecisionReferenceRows (110/160-digit Decimal references), smoothTiesFloorsDuplicatesAndUnequalDegrees. Float sigma representability at extreme inputs remains qualified.",
+    "NUM-13": "Both public UMAP entry points reject nonfinite floating configuration before allocation/iteration. Test: nonfiniteConfigurationPreflight, publicFloatingAndShapeValidationMatrix. Huge finite learning rates are not promised a finite converged layout.",
+    "NUM-25": "CSR construction checks every offset against entry count and monotonicity before reading any row entry. Test: childProbe 'csr'/'csrMatrix' bounded children (19 invalid interior pairs).",
+    "NUM-26": "UMAP half closed: checked output count/bytes and exact-integer Double schedule domain validated before allocation. Tests: pureCountAndScheduleBoundaries, childProbe 'dimensions'/'vectorDimensions'/'epochs'/'vectorEpochs'/'product'. PCA half belongs to L02 scope; not re-claimed here.",
+    "NUM-28": "Supplied initial rows are shape-checked before copy; SGD rejects nonfinite intermediates before clipping/publication; public inputs unchanged. Tests: finiteSGDRangeAndInputImmutability, tinyPCAInitializationAndProviderIdentity."
+  },
+  "qualified_records": {
+    "NUM-27": "Characterized, not repaired: exhaustive Float Gram selection unchanged; near-offset fixture shows computed labels [1,0,0]/zero distances vs independent [2,2,0] on the accepting host. Robust/direct routing is P02-dependent. Test: ordinaryDeterminismAndQualifiedGramCharacterization."
+  },
+  "validation": {
+    "red": "Unchanged production: 5 reported tests, 22 issues incl. three trapped boundary children and bounded Int.max-epochs timeout.",
+    "debug_release": "Swift 6.3.3: 39 reported functions/9 suites each (one parent no-op) plus nine bounded children.",
+    "asan": "12 distinct valid functions, one suite.",
+    "public": "Separately linked Swift 6 public consumer compile/link/run passed.",
+    "integration_toolchain_note": "Imported byte-identically on 2026-10-03. The host toolchain changed to Xcode 27.0/Swift 6.4 before import; integration re-validation on the new toolchain is recorded separately (blocked first by T01 Foundation.ProgressReporter collision, unrelated to L03)."
+  },
+  "review": "reports/L03-review.md",
+  "source_review": "reports/L03-source-review-v3.md",
+  "evidence": "reports/L03-implementation.md",
+  "root_verification": [
+    "reports/L03-root-v3-source-verification.json",
+    "reports/L03-root-v3-reference-verification.json",
+    "reports/L03-root-v3-lint.json",
+    "reports/L03-root-evidence-verification.json"
+  ],
+  "diff_sha256": "0e715eada09e7ca810aeeacb18fa520f696ea8d7dcbd58476e451df37afacdfb",
+  "worker_index_sha256": "611e36f67884fd48a8cd5ec08ac589ad33c295d0c14be96ccd8acb6c5b96a0d9",
+  "frozen_sha256": {
+    "Docs/Numerical_Behavior.md": "bfd1b7d56df4a7dc8aadeb41ff188a6b039151660a3ca9954b1e466432c83aa1",
+    "Docs/Linear_Algebra_and_Projection.md": "094bb7aa706da5b77f13e8c50e13289aa572eb2dc1250cd801158f2481f696b4",
+    "Sources/VectorCore/ManifoldLearning/KNNGraph.swift": "aac866d70c007ddfe3b42ce87962472443b574aa9fbd14d5a59b587447eb6528",
+    "Sources/VectorCore/ManifoldLearning/UMAP.swift": "46b979e669f0d59475057b2ec860be883a6c9d278a7707cc59394417d71ad154",
+    "Sources/VectorCore/ManifoldLearning/FuzzySimplicialSet.swift": "eda6f27583215f785c3d684cc0b33e5b74f39a5d12e7d6133d605f4e8cdf55cc",
+    "Scripts/ci/fixtures/L03_generate_references.py": "c07493ef68410a74bace399d2a1d6716554d0c33cbb0732bc35a201ec397c2d4",
+    "Scripts/ci/fixtures/L03PublicConsumer.swift": "64c65e4f04a069d5cf2721bb0a272771f6e2a18ab33b3a3d6a215d95e0b6de33",
+    "Scripts/ci/fixtures/L03_public_driver.py": "e24891f99df592a846ee0d7176fea183e5cd28e4bee25c97dcaabea5839acd7d",
+    "Tests/ComprehensiveTests/L03Reference.swift": "870acf9d79ae08f8b89716df5606b2e7ecba828a4458121d9ed063525f444f01",
+    "Tests/ComprehensiveTests/UMAPTests.swift": "f19c18671d6c9bc4b2e06acf644314ec1e99df61aa23cedf05380c0b91b145a3",
+    "Tests/ComprehensiveTests/UMAPRangeContractTests.swift": "7e04fad9011879c84fcb444a944f670a538a0806cf327331caf707479b472c62"
+  },
+  "migrations": [
+    "Internal UMAP curve-fit/graph routines now throw on unsupported ranges and nonfinite configuration; public signatures unchanged."
+  ],
+  "limitations": [
+    "No all-finite-input layout, global optimum, whole-layout scale equivariance, stochastic convergence, cross-platform bit parity, corpus memory budget, OOM recovery, vendor extreme-shape safety, GPU or performance claim.",
+    "Runtime failure may partially mutate an internal inout optimizer buffer; no transactional internal guarantee."
+  ]
+}

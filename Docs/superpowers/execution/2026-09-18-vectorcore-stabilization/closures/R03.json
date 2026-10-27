@@ -1,0 +1,42 @@
+{
+  "task": "R03",
+  "status": "accepted",
+  "task_base": "076f60b8da6b4cad80a36be73b9506d06eb90bf9",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-14",
+    "API-15",
+    "API-16"
+  ],
+  "validation": {
+    "red": "Two actual unchanged-base regressions fail with nine issues: supplied-metric diagonals, similarity sign/self scores and three zero-query output suffix overwrites.",
+    "debug": "77 functions in 16 suites, with 45 actual isolated configuration children; no-op parent entry not credited as child coverage.",
+    "release": "Same focused counts and 45 actual children, exit 0.",
+    "asan": "Three selected valid-path functions with five invocations; no child/no-op cases, leak detection disabled.",
+    "consumer": "External Swift 6 complete-concurrency public consumer compiles, links and runs successfully.",
+    "provenance": "Full six-file v2 patch reconstructed; 268/270 source inventory, 167 worker records and canonical copies, five command logs, 974 build artifacts, 133 linked public artifacts and 90 final child associations verified. V1 runtime maps to v2 by exactly three mechanically verified documentation lines."
+  },
+  "review": "reports/R03-implementation-review.md",
+  "evidence": "reports/R03.md",
+  "commands": "reports/R03-final-commands.json",
+  "root_verification": "reports/R03-root-verification.json",
+  "diff_sha256": "b1a4d7c6ef245418ee6f41f76cb741e2f83a4f8f6a5d464a73773fad47e71ac8",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/BatchOperations.swift": "32c043f0bd3e42840a4566a4ca8b6b12c7c13686240ef7d910a445550d4b7b18",
+    "Sources/VectorCore/Operations/ExecutionOperations.swift": "650e5c465e7d26664896c5a4d20f82ce04f85fd6987eb99ce2621ae5bbfc6988",
+    "Sources/VectorCore/Operations/Kernels/BatchKernels_SoA.swift": "4af3d208472e7b23e4fb746005edfaf74a4035468f5fbb8f826e452aa2f32b31",
+    "Sources/VectorCore/Operations/TransformOperations.swift": "7bb6e2bfcf441840741dc5bbbd25e243817052c78618260d0474e8a6da607853",
+    "Tests/ComprehensiveTests/MatrixMetricContractTests.swift": "b2d6688ceb8d264385acd10fefbb7e9a9a22178cbfd51369a7ed290bbc6ef030",
+    "Tests/R03Consumers/PublicMatrix.swift": "3bf51abc7eab6bfd0411d7aa279c64d66badc6f69a009a91c3887eb5df64280d"
+  },
+  "migrations": [
+    "Matrix diagonals now equal the supplied metric self score, including negative dot and cosine zero-vector values.",
+    "cosineSimilarityMatrix returns similarity after normalization, with finite clamping; zero-vector similarity is zero.",
+    "SoA output capacity beyond the logical count is preserved."
+  ],
+  "limitations": [
+    "Custom pairwise metrics must be symmetric; no directed-metric contract.",
+    "No nearby-vector GEMM relative-error, extreme-range, performance, scheduling or downstream execution claim.",
+    "Final runtime was against v1; v2 contains only the approved three test-reference comment additions. Historical v1 backup path was renamed to R03-frozen-source-v1.tar.gz; its preserved hash was independently verified."
+  ]
+}

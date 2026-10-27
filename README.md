@@ -157,6 +157,10 @@ Apple platform compile matrix; consult its run results for coverage on a given
 commit. Simulator compilation does not establish runtime behavior on devices.
 Linux is not a supported or tested platform for this package.
 
+`VectorCoreBenchmarking` and `vectorcore-bench` are macOS host tooling, not part of
+the library's platform support; see
+[Package Boundaries](Docs/Package_Boundaries.md#products-and-hosts).
+
 VectorCore is pre-1.0. Minor releases may change APIs or numerical behavior;
 patch releases aim to preserve source compatibility but may correct documented
 bugs. Read release notes and test updates against your workload. See

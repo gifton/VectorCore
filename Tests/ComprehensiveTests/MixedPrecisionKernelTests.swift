@@ -342,7 +342,7 @@ struct MixedPrecisionKernelTests {
             #expect(backVector[1535] == 0.0 || backVector[1535] < 1e-5)
         }
 
-        @Test("FP16 storage memory efficiency")
+        @Test("FP16 stored scalar payload is half of FP32 (not process memory)")
         func testFP16StorageMemoryEfficiency() async throws {
             // Calculate theoretical memory sizes
             let dimensions = [512, 768, 1536]
@@ -356,9 +356,9 @@ struct MixedPrecisionKernelTests {
                 let fp16BytesPerElement = MemoryLayout<UInt16>.size  // 2 bytes
                 let fp16TotalBytes = dim * fp16BytesPerElement
 
-                // Verify 50% memory reduction
+                // Verify the 50% scalar payload difference (payload model, not a measured memory saving)
                 let reduction = Float(fp32TotalBytes - fp16TotalBytes) / Float(fp32TotalBytes)
-                #expect(abs(reduction - 0.5) < 0.01, "Memory reduction should be 50%, got \(reduction * 100)%")
+                #expect(abs(reduction - 0.5) < 0.01, "Scalar payload difference should be 50%, got \(reduction * 100)%")
 
                 // Test actual storage sizes
                 if dim == 512 {
@@ -392,9 +392,9 @@ struct MixedPrecisionKernelTests {
                 }
             }
 
-            // Test memory efficiency improvement factor
+            // estimateMemoryImprovement returns the scalar payload ratio (payload model, not a measured memory saving)
             let improvementFactor = MixedPrecisionKernels.estimateMemoryImprovement(vectorCount: 1000)
-            #expect(improvementFactor == 2.0)  // FP16 uses 2 bytes vs FP32's 4 bytes = 2x improvement
+            #expect(improvementFactor == 2.0)  // 4 bytes per FP32 scalar / 2 bytes per FP16 scalar = 2 (payload ratio)
         }
     }
 
@@ -1104,7 +1104,7 @@ struct MixedPrecisionKernelTests {
                 }
             }
 
-            // Test memory efficiency for large batches
+            // Stored scalar payload ratio for a large batch (payload model, not process memory)
             let largeBatchSize = 100
             var largeBatch: [Vector512Optimized] = []
             for i in 0..<largeBatchSize {
@@ -1116,7 +1116,7 @@ struct MixedPrecisionKernelTests {
             let fp32Memory = largeBatchSize * 512 * MemoryLayout<Float>.size
             let fp16Memory = largeBatchSize * 512 * MemoryLayout<UInt16>.size
             let memorySavings = Float(fp32Memory - fp16Memory) / Float(fp32Memory)
-            #expect(abs(memorySavings - 0.5) < 0.01)  // Should save ~50% memory
+            #expect(abs(memorySavings - 0.5) < 0.01)  // The scalar payload difference is 50% (payload model, not a measured saving)
 
             // Test concurrent conversion safety
             await withTaskGroup(of: [Vector512FP16].self) { group in
@@ -1316,16 +1316,17 @@ struct MixedPrecisionKernelTests {
                 candidates.append(try Vector512Optimized(values))
             }
 
-            // Convert to FP16 - this should use ~50% less memory
+            // Convert to FP16 (half the scalar payload; process memory is not measured)
             let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
-            // Calculate memory footprint
+            // Scalar payload in MB (payload model, not a memory footprint)
             let fp32MemoryMB = Float(largeBatchSize * dimension * MemoryLayout<Float>.size) / (1024 * 1024)
             let fp16MemoryMB = Float(largeBatchSize * dimension * MemoryLayout<UInt16>.size) / (1024 * 1024)
 
-            #expect(fp16MemoryMB < fp32MemoryMB * 0.51, "FP16 should use ~50% memory")
+            #expect(fp16MemoryMB < fp32MemoryMB * 0.51, "FP16 scalar payload should be ~50% of FP32")
 
-            // Process in chunks to verify memory efficiency
+            // Process in chunks of 100; each chunk allocates its own output buffer (`outputBuffer` below is unused;
+            // memory is not measured)
             let chunkSize = 100
             let outputBuffer = UnsafeMutableBufferPointer<Float>.allocate(capacity: chunkSize)
             defer { outputBuffer.deallocate() }
@@ -1615,12 +1616,12 @@ struct MixedPrecisionKernelTests {
             #expect(soa.storage.count == expectedStorageSize)
             #expect(soa.groupCount == expectedGroups)
 
-            // Verify FP16 storage is 2x more efficient than FP32
+            // Verify the FP32/FP16 scalar payload ratio is 2 (payload model, not process memory)
             let fp32StorageSize = vectorCount * dimension * MemoryLayout<Float>.size
             let fp16StorageSize = soa.storage.count * MemoryLayout<UInt16>.size
             let compressionRatio = Float(fp32StorageSize) / Float(fp16StorageSize)
             #expect(compressionRatio >= 1.9 && compressionRatio <= 2.1,
-                   "FP16 should be ~2x more efficient than FP32, got \(compressionRatio)x")
+                   "FP32/FP16 scalar payload ratio should be ~2, got \(compressionRatio)x")
 
             // Test cache-friendly sequential access patterns
             // Extracting vectors sequentially should work efficiently
@@ -2273,32 +2274,20 @@ struct MixedPrecisionKernelTests {
 
         @Test("Precision strategy selection")
         func testPrecisionStrategySelection() async throws {
-            let autoTuner = MixedPrecisionAutoTuner.shared
+            let autoTuner = MixedPrecisionAutoTuner()
             await autoTuner.clearCache()
-
-            // Test strategy selection logic for different scenarios
-            // Small dataset - should use baseline or conservative strategy
-            let smallStrategy = await autoTuner.selectOptimalStrategy(
+            let smallStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 10,
-                accuracyRequirement: 0.01,  // 0.99 accuracy = 0.01 max error
+                maximumSyntheticRelativeError: 0.01,
                 dimension: 512  // Use 512 (supported) instead of 128
             )
-            // With small dataset, any strategy is valid - just verify it returns something
-            #expect(MixedPrecisionStrategy.allCases.contains(smallStrategy), "Should return valid strategy")
-
-            // Large dataset with moderate accuracy - likely to use optimized strategy
-            let largeStrategy = await autoTuner.selectOptimalStrategy(
+            #expect(smallStrategy == .fullFP32, "Should return valid strategy")
+            let largeStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 1000,
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: 1536
             )
-            // The autotuner benchmarks strategies and picks the fastest that meets the accuracy
-            // bound. In a DEBUG build FP16/SoA carry conversion overhead with no vectorization,
-            // so fullFP32 is legitimately fastest and selected. Whether FP16 wins is therefore
-            // build-dependent (only guaranteed in release); just verify a valid strategy.
-            #expect(MixedPrecisionStrategy.allCases.contains(largeStrategy), "Should return valid strategy")
-
-            // Verify dimension-based decisions
+            #expect(largeStrategy == .fullFP32, "Should return valid strategy")
             let dimensionTests = [
                 (512, true),    // Supported dimension
                 (768, true),    // Supported dimension
@@ -2306,63 +2295,49 @@ struct MixedPrecisionKernelTests {
             ]
 
             for (dim, expectedValid) in dimensionTests {
-                let strategy = await autoTuner.selectOptimalStrategy(
+                let strategy = try await autoTuner.selectStrategy(
                     candidateCount: 100,
-                    accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                    maximumSyntheticRelativeError: 0.05,
                     dimension: dim
                 )
                 if expectedValid {
-                    #expect(MixedPrecisionStrategy.allCases.contains(strategy),
+                    #expect(strategy == .fullFP32,
                            "Dimension \(dim) should return valid strategy")
                 }
             }
-
-            // Test accuracy threshold impact
-            let highAccuracyStrategy = await autoTuner.selectOptimalStrategy(
+            let highAccuracyStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 200,
-                accuracyRequirement: 0.01,  // 0.99 accuracy = 0.01 max error
+                maximumSyntheticRelativeError: 0.01,
                 dimension: 768
             )
 
-            let lowAccuracyStrategy = await autoTuner.selectOptimalStrategy(
+            let lowAccuracyStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 200,
-                accuracyRequirement: 0.15,  // 0.85 accuracy = 0.15 max error
+                maximumSyntheticRelativeError: 0.15,
                 dimension: 768
             )
-
-            // Both should return valid strategies
-            #expect(MixedPrecisionStrategy.allCases.contains(highAccuracyStrategy))
-            #expect(MixedPrecisionStrategy.allCases.contains(lowAccuracyStrategy))
-
-            // Test SoA layout decision - all non-fullFP32 strategies use SoA
-            let soaStrategy = await autoTuner.selectOptimalStrategy(
+            #expect(highAccuracyStrategy == .fullFP32)
+            #expect(lowAccuracyStrategy == .fullFP32)
+            let soaStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 100,  // Many candidates
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: 768
             )
-            // As above, the SoA strategy only wins on throughput in release builds; in debug
-            // fullFP32 may be fastest. Verify a valid strategy rather than a build-dependent one.
-            #expect(MixedPrecisionStrategy.allCases.contains(soaStrategy), "Should return valid strategy")
+            #expect(soaStrategy == .fullFP32, "Should return valid strategy")
 
-            let fewCandidatesStrategy = await autoTuner.selectOptimalStrategy(
+            let fewCandidatesStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 10,  // Few candidates
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: 768
             )
-            // With few candidates, any strategy is valid
-            #expect(MixedPrecisionStrategy.allCases.contains(fewCandidatesStrategy))
+            #expect(fewCandidatesStrategy == .fullFP32)
         }
 
-        @Test("Block size optimization")
-        func testBlockSizeOptimization() async throws {
-            // NOTE: Block size is no longer exposed in the new AutoTuner API
-            // The auto-tuner now uses fixed blocked kernels (8-way register blocking)
-            // This test now verifies that blocked strategies are selected appropriately
+        @Test("Unprofiled lookup across sizes")
+        func testUnprofiledLookupAcrossSizes() async throws {
 
-            let autoTuner = MixedPrecisionAutoTuner.shared
+            let autoTuner = MixedPrecisionAutoTuner()
             await autoTuner.clearCache()
-
-            // Test that blocked strategies are selected for various workload sizes
             let testCases = [
                 (dimension: 512, candidateCount: 10),
                 (dimension: 768, candidateCount: 50),
@@ -2370,121 +2345,58 @@ struct MixedPrecisionKernelTests {
             ]
 
             for (dim, count) in testCases {
-                let strategy = await autoTuner.selectOptimalStrategy(
+                let strategy = try await autoTuner.selectStrategy(
                     candidateCount: count,
-                    accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                    maximumSyntheticRelativeError: 0.05,
                     dimension: dim
                 )
-
-                // Verify valid strategy is returned
-                #expect(MixedPrecisionStrategy.allCases.contains(strategy),
+                #expect(strategy == .fullFP32,
                        "Dimension \(dim) should return valid strategy")
-
-                // Blocked strategies use 8-way register blocking
-                _ = (strategy == .queryFP16Blocked || strategy == .queryFP32Blocked)
-                // For larger workloads, blocked strategies often perform better
                 if count >= 50 {
-                    // At least verify the strategy makes sense (any valid strategy is acceptable)
-                    #expect(MixedPrecisionStrategy.allCases.contains(strategy))
+                    #expect(strategy == .fullFP32)
                 }
             }
-
-            // Test with various candidate counts
             let candidateCounts = [10, 50, 100, 500, 1000]
 
             for count in candidateCounts {
-                let strategy = await autoTuner.selectOptimalStrategy(
+                let strategy = try await autoTuner.selectStrategy(
                     candidateCount: count,
-                    accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                    maximumSyntheticRelativeError: 0.05,
                     dimension: 768
                 )
-
-                // Strategy should adapt to workload size
-                #expect(MixedPrecisionStrategy.allCases.contains(strategy),
+                #expect(strategy == .fullFP32,
                        "Should select valid strategy for \(count) candidates")
             }
-
-            // Test edge cases
-            let tinyStrategy = await autoTuner.selectOptimalStrategy(
+            let tinyStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 5,
-                accuracyRequirement: 0.01,  // 0.99 accuracy = 0.01 max error
+                maximumSyntheticRelativeError: 0.01,
                 dimension: 512
             )
-            #expect(MixedPrecisionStrategy.allCases.contains(tinyStrategy), "Should handle tiny workload")
+            #expect(tinyStrategy == .fullFP32, "Should handle tiny workload")
 
-            let largeStrategy = await autoTuner.selectOptimalStrategy(
+            let largeStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 1000,
-                accuracyRequirement: 0.10,  // 0.90 accuracy = 0.10 max error
+                maximumSyntheticRelativeError: 0.10,
                 dimension: 1536
             )
-            #expect(MixedPrecisionStrategy.allCases.contains(largeStrategy), "Should handle large workload")
+            #expect(largeStrategy == .fullFP32, "Should handle large workload")
         }
 
-        // DISABLED: This test uses benchmarkStrategy() which is now private
-        // TODO: Rewrite to test public API behavior through selectOptimalStrategy()
-        // or expose a public benchmarking API if needed for testing
-        /*
-        @Test("Performance metrics collection")
+        @Test("Explicit performance metrics collection")
         func testPerformanceMetricsCollection() async throws {
-            // NOTE: The benchmarkStrategy() method is now private in the actor-based API
-            // The old PrecisionStrategy struct is also removed
-            // Internal metrics are tracked as StrategyMetrics (not publicly accessible)
-
-            // This test was verifying:
-            // 1. Benchmark metrics are collected correctly (time, accuracy, throughput)
-            // 2. FP32 has better accuracy than FP16
-            // 3. Metrics caching works
-            // 4. Edge cases (empty vectors, single vector) are handled
-
-            // To test similar behavior with the new API:
-            // - Use selectOptimalStrategy() and trust internal calibration
-            // - Test that strategies are selected consistently
-            // - Test cache behavior through repeated calls
-
-            let autoTuner = MixedPrecisionAutoTuner.shared
-            await autoTuner.clearCache()
-
-            // Test that strategy selection works and is consistent
-            let strategy1 = await autoTuner.selectOptimalStrategy(
-                candidateCount: 10,
-                accuracyRequirement: 0.05,  // 0.95 accuracy
-                dimension: 512
-            )
-
-            // Second call should use cache and return same strategy
-            let strategy2 = await autoTuner.selectOptimalStrategy(
-                candidateCount: 10,
-                accuracyRequirement: 0.05,
-                dimension: 512
-            )
-
-            #expect(strategy1 == strategy2, "Cached strategy should be identical")
-
-            // Test with different accuracy requirements
-            let highAccStrategy = await autoTuner.selectOptimalStrategy(
-                candidateCount: 10,
-                accuracyRequirement: 0.01,  // 0.99 accuracy
-                dimension: 512
-            )
-
-            let lowAccStrategy = await autoTuner.selectOptimalStrategy(
-                candidateCount: 10,
-                accuracyRequirement: 0.15,  // 0.85 accuracy
-                dimension: 512
-            )
-
-            // Both should return valid strategies
-            #expect(MixedPrecisionStrategy.allCases.contains(highAccStrategy))
-            #expect(MixedPrecisionStrategy.allCases.contains(lowAccStrategy))
+            let tuner = MixedPrecisionAutoTuner()
+            let metrics = try await tuner.calibrate(candidateCount: 2, iterations: 1, warmupIterations: 0)
+            #expect(metrics.count == 5)
+            for metric in metrics {
+                #expect(metric.measuredSamples == 1)
+                expectPerformance("MixedPrecisionKernelTests.testPerformanceMetricsCollection.1", metric.meanLatency.isFinite && metric.meanLatency > 0)
+                #expect(metric.maxRelativeError.isFinite && metric.maxRelativeError >= metric.meanRelativeError)
+            }
         }
-        */
 
         @Test("Adaptive kernel selection")
         func testAdaptiveKernelSelection() async throws {
-            // Test adaptive algorithm selection
             let query = try Vector512Optimized((0..<512).map { Float($0) * 0.01 })
-
-            // Small workload - should use regular FP32
             let smallCandidates = (0..<5).map { i in
                 try! Vector512Optimized((0..<512).map { Float($0 + i) * 0.01 })
             }
@@ -2501,8 +2413,6 @@ struct MixedPrecisionKernelTests {
             for result in smallResults {
                 #expect(result >= 0, "Distance should be non-negative")
             }
-
-            // Large workload - might use FP16/SoA
             let largeCandidates = (0..<100).map { i in
                 try! Vector512Optimized((0..<512).map { Float($0 * (i + 1)) * 0.001 })
             }
@@ -2516,9 +2426,6 @@ struct MixedPrecisionKernelTests {
             }
 
             #expect(largeResults.count == largeCandidates.count)
-
-            // Verify results are consistent. adaptiveEuclideanDistance returns the actual
-            // (non-squared) Euclidean distance, so the reference must also be the distance.
             let referenceResults = largeCandidates.map {
                 query.euclideanDistance(to: $0)
             }
@@ -2527,10 +2434,6 @@ struct MixedPrecisionKernelTests {
                 let adaptive = largeResults[i]
                 let reference = referenceResults[i]
                 if reference < 0.1 {
-                    // candidate i=9 ≈ query: the true distance (~1e-4, from FP32 construction
-                    // rounding) is far below FP16 resolution (~0.005·√512), so the FP16 path
-                    // legitimately rounds it toward 0. Relative error is ill-defined here —
-                    // check absolute error instead.
                     #expect(abs(adaptive - reference) < 0.1,
                            "Adaptive abs error too large near zero: \(abs(adaptive - reference))")
                 } else {
@@ -2538,9 +2441,6 @@ struct MixedPrecisionKernelTests {
                     #expect(relError < 0.05, "Adaptive error too large: \(relError)")
                 }
             }
-
-            // Test fallback mechanisms with incompatible vectors
-            // Create vectors that might cause SoA creation to fail
             let incompatibleCandidates: [Vector512Optimized] = []
 
             let incompatibleQuery = Vector512Optimized()
@@ -2553,8 +2453,6 @@ struct MixedPrecisionKernelTests {
             }
 
             #expect(fallbackResults.isEmpty, "Empty candidates should return empty results")
-
-            // Test with various workload sizes
             let workloadSizes = [1, 10, 50, 100, 500]
 
             for size in workloadSizes {
@@ -2571,11 +2469,6 @@ struct MixedPrecisionKernelTests {
                 }
 
                 #expect(results.count == size, "Should process all \(size) candidates")
-
-                // candidate_i is the constant vector 0.1·i; query is 0.01·d (mean ≈ 2.555).
-                // distance(i) = ‖query − 0.1·i‖ is convex in i, minimized near 0.1·i ≈ 2.555
-                // (i ≈ 25) — i.e. U-shaped, NOT monotonically increasing. Verify the single-
-                // minimum shape: non-increasing up to the minimum, non-decreasing after it.
                 if size > 1 {
                     let minIdx = results.firstIndex(of: results.min()!)!
                     for i in 1..<size {
@@ -2591,39 +2484,29 @@ struct MixedPrecisionKernelTests {
             }
         }
 
-        @Test("Memory pressure detection")
-        func testMemoryPressureDetection() async throws {
-            let autoTuner = MixedPrecisionAutoTuner.shared
+        @Test("Unprofiled lookup across count and limit")
+        func testUnprofiledLookupAcrossCountAndLimit() async throws {
+            let autoTuner = MixedPrecisionAutoTuner()
             await autoTuner.clearCache()
-
-            // Test memory usage estimation
-            // Small memory footprint - may or may not use FP16 depending on calibration
-            let smallMemoryStrategy = await autoTuner.selectOptimalStrategy(
+            let smallMemoryStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 10,
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: 512  // Use supported dimension
             )
 
             let smallMemoryMB = Float(512 * 10 * 4) / (1024 * 1024)
             #expect(smallMemoryMB < 50.0, "Small memory footprint")
-            // Any strategy is valid for small workloads
-            #expect(MixedPrecisionStrategy.allCases.contains(smallMemoryStrategy))
-
-            // Large memory footprint - likely to use FP16-optimized strategy
-            let largeMemoryStrategy = await autoTuner.selectOptimalStrategy(
+            #expect(smallMemoryStrategy == .fullFP32)
+            let largeMemoryStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 10000,
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: 1536
             )
 
             let largeMemoryMB = Float(1536 * 10000 * 4) / (1024 * 1024)
             #expect(largeMemoryMB > 50.0, "Large memory footprint")
-            // For large workloads, FP16 strategies are likely beneficial
             _ = largeMemoryStrategy != .fullFP32  // usesFP16 check
-            // Just verify a valid strategy is returned
-            #expect(MixedPrecisionStrategy.allCases.contains(largeMemoryStrategy))
-
-            // Verify strategy selection works for various memory footprints
+            #expect(largeMemoryStrategy == .fullFP32)
             let thresholdTests = [
                 (dimension: 512, candidateCount: 100),
                 (dimension: 768, candidateCount: 500),
@@ -2631,140 +2514,112 @@ struct MixedPrecisionKernelTests {
             ]
 
             for (dim, count) in thresholdTests {
-                let strategy = await autoTuner.selectOptimalStrategy(
+                let strategy = try await autoTuner.selectStrategy(
                     candidateCount: count,
-                    accuracyRequirement: 0.08,  // 0.92 accuracy = 0.08 max error
+                    maximumSyntheticRelativeError: 0.08,
                     dimension: dim
                 )
 
                 let memoryMB = Float(dim * count * 4) / (1024 * 1024)
-
-                // Verify valid strategy is selected
-                #expect(MixedPrecisionStrategy.allCases.contains(strategy),
+                #expect(strategy == .fullFP32,
                        "Valid strategy for \(memoryMB)MB workload")
             }
-
-            // Test threshold tuning with accuracy requirements
-            let highAccMemStrategy = await autoTuner.selectOptimalStrategy(
+            let highAccMemStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 1000,
-                accuracyRequirement: 0.01,  // 0.99 accuracy = 0.01 max error
+                maximumSyntheticRelativeError: 0.01,
                 dimension: 768
             )
 
-            let lowAccMemStrategy = await autoTuner.selectOptimalStrategy(
+            let lowAccMemStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 1000,
-                accuracyRequirement: 0.15,  // 0.85 accuracy = 0.15 max error
+                maximumSyntheticRelativeError: 0.15,
                 dimension: 768
             )
-
-            // Both should return valid strategies
-            #expect(MixedPrecisionStrategy.allCases.contains(highAccMemStrategy))
-            #expect(MixedPrecisionStrategy.allCases.contains(lowAccMemStrategy))
-
-            // Lower accuracy requirements may allow more aggressive strategies
-            // but we don't enforce specific behavior - just verify valid selection
-
-            // Test edge cases
-            let fewCandidatesStrategy = await autoTuner.selectOptimalStrategy(
+            #expect(highAccMemStrategy == .fullFP32)
+            #expect(lowAccMemStrategy == .fullFP32)
+            let fewCandidatesStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 1,  // Minimum candidates
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: 1536
             )
-            #expect(MixedPrecisionStrategy.allCases.contains(fewCandidatesStrategy))
+            #expect(fewCandidatesStrategy == .fullFP32)
 
-            let manyCandidatesStrategy = await autoTuner.selectOptimalStrategy(
+            let manyCandidatesStrategy = try await autoTuner.selectStrategy(
                 candidateCount: 5000,
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: 1536
             )
-            #expect(MixedPrecisionStrategy.allCases.contains(manyCandidatesStrategy))
+            #expect(manyCandidatesStrategy == .fullFP32)
         }
 
         @Test("AutoTuner thread safety")
         func testAutoTunerThreadSafety() async throws {
-            let autoTuner = MixedPrecisionAutoTuner.shared
+            let autoTuner = MixedPrecisionAutoTuner()
             await autoTuner.clearCache()
-
-            // Test concurrent strategy queries with actor isolation
-            await withTaskGroup(of: MixedPrecisionStrategy.self) { group in
-                // Launch multiple concurrent queries
-                // Note: Only using supported dimensions (512, 768, 1536)
+            try await withThrowingTaskGroup(of: MixedPrecisionStrategy.self) { group in
                 for i in 0..<10 {
                     group.addTask {
                         let dimension = [512, 768, 1536][i % 3]  // Cycle through supported dimensions
-                        return await autoTuner.selectOptimalStrategy(
+                        return try await autoTuner.selectStrategy(
                             candidateCount: 100 + i * 10,
-                            accuracyRequirement: 0.10 - Float(i) * 0.01,  // 0.10 to 0.01
+                            maximumSyntheticRelativeError: 0.10 - Float(i) * 0.01,  // 0.10 to 0.01
                             dimension: dimension
                         )
                     }
                 }
 
                 var strategies: [MixedPrecisionStrategy] = []
-                for await strategy in group {
+                for try await strategy in group {
                     strategies.append(strategy)
                 }
 
                 #expect(strategies.count == 10, "All queries should complete")
-                // Verify all strategies are valid
                 for strategy in strategies {
-                    #expect(MixedPrecisionStrategy.allCases.contains(strategy))
+                    #expect(strategy == .fullFP32)
                 }
             }
-
-            // Verify cache consistency - actor ensures thread-safe access
             let testDimension = 768
             let testCandidateCount = 200
-            let testAccuracyRequirement: Float = 0.05  // 0.95 accuracy
-
-            // Query same parameters multiple times concurrently
-            await withTaskGroup(of: MixedPrecisionStrategy.self) { group in
+            let testAccuracyRequirement: Float = 0.05
+            try await withThrowingTaskGroup(of: MixedPrecisionStrategy.self) { group in
                 for _ in 0..<5 {
                     group.addTask {
-                        await autoTuner.selectOptimalStrategy(
+                        try await autoTuner.selectStrategy(
                             candidateCount: testCandidateCount,
-                            accuracyRequirement: testAccuracyRequirement,
+                            maximumSyntheticRelativeError: testAccuracyRequirement,
                             dimension: testDimension
                         )
                     }
                 }
 
                 var results: [MixedPrecisionStrategy] = []
-                for await strategy in group {
+                for try await strategy in group {
                     results.append(strategy)
                 }
-
-                // All results should be identical (cached)
                 let first = results[0]
                 for strategy in results {
-                    #expect(strategy == first, "Cached strategies should be identical")
+                    #expect(strategy == first, "Repeated unprofiled lookup results should be identical")
                 }
             }
-
-            // Test concurrent strategy selection with different parameters
-            // Actor isolation ensures thread safety without explicit locking
-            await withTaskGroup(of: MixedPrecisionStrategy.self) { group in
-                // Multiple concurrent queries with varied parameters
+            try await withThrowingTaskGroup(of: MixedPrecisionStrategy.self) { group in
                 for i in 0..<5 {
                     group.addTask {
-                        await autoTuner.selectOptimalStrategy(
+                        try await autoTuner.selectStrategy(
                             candidateCount: 100 * (i + 1),
-                            accuracyRequirement: Float(i + 1) * 0.01,
+                            maximumSyntheticRelativeError: Float(i + 1) * 0.01,
                             dimension: 512
                         )
                     }
                 }
 
                 var strategies: [MixedPrecisionStrategy] = []
-                for await strategy in group {
+                for try await strategy in group {
                     strategies.append(strategy)
                 }
 
                 #expect(strategies.count == 5, "All concurrent queries should complete")
-
-                // All should be valid strategies
                 for strategy in strategies {
-                    #expect(MixedPrecisionStrategy.allCases.contains(strategy))
+                    #expect(strategy == .fullFP32)
                 }
             }
         }
@@ -2818,19 +2673,20 @@ struct MixedPrecisionKernelTests {
             _ = Double(bytesProcessedFP32) / fp32Time / (1024 * 1024)  // MB/s - fp32
             _ = Double(bytesProcessedFP16) / fp16Time / (1024 * 1024)  // MB/s - fp16
 
-            // FP16 should process data faster due to reduced memory transfer
-            // Note: Actual improvement depends on memory bandwidth limitations
+            // FP16 candidates carry half the scalar payload; its effect on memory traffic is not measured. The
+            // wall-clock ratio below compares different kernels (per-candidate FP32 euclideanDistanceSquared vs
+            // batched range_euclid2_mixed_1536) and is asserted only in strict-perf runs
             let speedup = fp32Time / fp16Time
 
             // Wall-clock speedup, invalid in a debug build (FP16 decode overhead isn't
             // vectorized); only assert in strict-perf runs.
             if strictPerfGatesEnabled {
-                #expect(speedup > 0.8, "FP16 should not be significantly slower: speedup=\(speedup)")
+                expectPerformance("MixedPrecisionKernelTests.testMemoryBandwidthImprovement.2", speedup > 0.8, "FP16 should not be significantly slower: speedup=\(speedup)")
             }
 
-            // Memory usage should be ~50% less
+            // The FP16 scalar payload is half of FP32 (payload model, not measured memory)
             let memoryRatio = Float(bytesProcessedFP16) / Float(bytesProcessedFP32)
-            #expect(abs(memoryRatio - 0.5) < 0.01, "Memory usage should be 50% of FP32")
+            #expect(abs(memoryRatio - 0.5) < 0.01, "FP16 scalar payload should be 50% of FP32")
 
             // Verify results are accurate.
             // Skip i == 0: query == candidates[0], so the reference distance is 0 and the
@@ -2889,7 +2745,7 @@ struct MixedPrecisionKernelTests {
 
             // Both should complete and give similar results. NOTE: batchEuclideanSoA
             // returns the actual distance (its name is a documented legacy misnomer — see
-            // MixedPrecisionKernels.swift:3318-3319), whereas range_euclid2_mixed_512 returns
+            // the doc comment of `MixedPrecisionKernels.batchEuclideanSoA`), whereas range_euclid2_mixed_512 returns
             // the *squared* distance. Compare like-for-like by sqrt-ing the reference.
             for i in 0..<vectorCount {
                 let reference = sqrt(regularResults[i])
@@ -2969,7 +2825,7 @@ struct MixedPrecisionKernelTests {
             let opsPerSecond = Double(totalOps) / pipelineTime
 
             // Should achieve reasonable throughput
-            #expect(opsPerSecond > 1e6, "Should achieve >1M ops/sec")
+            expectPerformance("MixedPrecisionKernelTests.testSIMDUtilization.3", opsPerSecond > 1e6, "Should achieve >1M ops/sec")
 
             // Test SIMD efficiency with different data patterns
             // Pattern 1: All same values (good for SIMD)
@@ -3037,12 +2893,12 @@ struct MixedPrecisionKernelTests {
             var previousThroughput: Double = 0
             for batchSize in batchSizes {
                 if let throughput = throughputs[batchSize] {
-                    #expect(throughput > 0, "Throughput should be positive")
+                    expectPerformance("MixedPrecisionKernelTests.testThroughputScaling.4", throughput > 0, "Throughput should be positive")
 
                     // Larger batches should generally have better throughput
                     // (amortizing fixed costs)
-                    if previousThroughput > 0 && batchSize <= 100 {
-                        #expect(throughput >= previousThroughput * 0.8,
+                    if strictPerfGatesEnabled && previousThroughput > 0 && batchSize <= 100 {
+                        expectPerformance("MixedPrecisionKernelTests.testThroughputScaling.5", throughput >= previousThroughput * 0.8,
                                "Throughput should scale with batch size")
                     }
                     previousThroughput = throughput
@@ -3051,7 +2907,7 @@ struct MixedPrecisionKernelTests {
 
             // Identify optimal batch size
             let optimalBatch = throughputs.max(by: { $0.value < $1.value })?.key ?? 0
-            #expect(optimalBatch >= 10, "Optimal batch size should be >1")
+            expectPerformance("MixedPrecisionKernelTests.testThroughputScaling.6", optimalBatch >= 10, "Optimal batch size should be >1")
 
             // Test parallelization benefits with concurrent processing
             let parallelBatchSize = 100
@@ -3176,11 +3032,11 @@ struct MixedPrecisionKernelTests {
             }
 
             // Verify trade-offs
-            #expect(avgLatencyMs > 0, "Single query latency should be measurable")
-            #expect(throughputVectorsPerSec > 0, "Batch throughput should be positive")
+            expectPerformance("MixedPrecisionKernelTests.testLatencyVsThroughput.7", avgLatencyMs > 0, "Single query latency should be measurable")
+            expectPerformance("MixedPrecisionKernelTests.testLatencyVsThroughput.8", throughputVectorsPerSec > 0, "Batch throughput should be positive")
 
             // Larger batches should have higher latency but better throughput
-            #expect(avgBatchLatencyMs > avgLatencyMs,
+            expectPerformance("MixedPrecisionKernelTests.testLatencyVsThroughput.9", avgBatchLatencyMs > avgLatencyMs,
                    "Batch latency (\(avgBatchLatencyMs)ms) should be higher than single (\(avgLatencyMs)ms)")
 
             // Verify sweet spot metrics
@@ -3189,12 +3045,12 @@ struct MixedPrecisionKernelTests {
                 let curr = sweetSpotMetrics[i]
 
                 // Latency should generally increase with batch size
-                #expect(curr.latency >= prev.latency * 0.9,
+                expectPerformance("MixedPrecisionKernelTests.testLatencyVsThroughput.10", curr.latency >= prev.latency * 0.9,
                        "Latency should increase with batch size")
 
                 // Throughput should improve (up to a point)
                 if curr.size <= 20 {
-                    #expect(curr.throughput >= prev.throughput * 0.9,
+                    expectPerformance("MixedPrecisionKernelTests.testLatencyVsThroughput.11", curr.throughput >= prev.throughput * 0.9,
                            "Throughput should improve with reasonable batch size")
                 }
             }
@@ -3205,7 +3061,7 @@ struct MixedPrecisionKernelTests {
             let optimalForLatency = sweetSpotMetrics.filter { $0.latency < latencyBudgetMs }
                 .max(by: { $0.throughput < $1.throughput })?.size ?? 1
 
-            #expect(optimalForLatency > 0, "Should find optimal batch size for latency budget")
+            expectPerformance("MixedPrecisionKernelTests.testLatencyVsThroughput.12", optimalForLatency > 0, "Should find optimal batch size for latency budget")
         }
     }
 
@@ -3355,7 +3211,7 @@ struct MixedPrecisionKernelTests {
             let conversionTime = CFAbsoluteTimeGetCurrent() - conversionStart
 
             if strictPerfGatesEnabled {
-                #expect(conversionTime < 0.1, "Conversion should be fast")
+                expectPerformance("MixedPrecisionKernelTests.testOptimizedVectorCompatibility.13", conversionTime < 0.1, "Conversion should be fast")
             }
             #expect(candidatesFP16.count == candidateCount)
 
@@ -3448,7 +3304,7 @@ struct MixedPrecisionKernelTests {
 
             // Wall-clock timing, invalid in a debug build; only assert in strict-perf runs.
             if strictPerfGatesEnabled {
-                #expect(fallbackTime < 1.0, "Fallback should complete in reasonable time")
+                expectPerformance("MixedPrecisionKernelTests.testFP32Fallback.14", fallbackTime < 1.0, "Fallback should complete in reasonable time")
             }
 
             // Test with dimension that might not be optimized
@@ -3484,29 +3340,28 @@ struct MixedPrecisionKernelTests {
                 largeDataset.append(try Vector512Optimized(values))
             }
 
-            // Test automatic strategy selection based on memory pressure
-            let autoTuner = MixedPrecisionAutoTuner.shared
-            let memoryStrategy = await autoTuner.selectOptimalStrategy(
+            // This unprofiled lookup returns full FP32; conversion below is explicit.
+            let autoTuner = MixedPrecisionAutoTuner()
+            let memoryStrategy = try await autoTuner.selectStrategy(
                 candidateCount: largeVectorCount,
-                accuracyRequirement: 0.05,  // 0.95 accuracy = 0.05 max error
+                maximumSyntheticRelativeError: 0.05,
                 dimension: dimension
             )
 
-            // Large dataset should select an optimized strategy
+            // A cache miss does not run calibration.
             // All strategies except fullFP32 use FP16 for candidates and SoA layout
-            _ = memoryStrategy != .fullFP32  // usesOptimization check
-            #expect(MixedPrecisionStrategy.allCases.contains(memoryStrategy),
+            #expect(memoryStrategy == .fullFP32,
                    "Large dataset should select valid strategy")
 
-            // Convert to FP16 to save memory
+            // Convert to FP16 (half the scalar payload; memory is not measured)
             let datasetFP16 = MixedPrecisionKernels.convertToFP16_512(largeDataset)
 
-            // Calculate memory savings
+            // Scalar payload difference (payload model, not a measured memory saving)
             let fp32Memory = largeVectorCount * dimension * MemoryLayout<Float>.size
             let fp16Memory = largeVectorCount * dimension * MemoryLayout<UInt16>.size
             let memorySaved = fp32Memory - fp16Memory
 
-            #expect(memorySaved == fp32Memory / 2, "Should save 50% memory")
+            #expect(memorySaved == fp32Memory / 2, "The scalar payload difference should be half of FP32")
 
             // Test stability under pressure
             let query = largeDataset[0]
@@ -3535,7 +3390,7 @@ struct MixedPrecisionKernelTests {
                 #expect(output[i] >= 0, "All distances should be computed")
             }
 
-            // Test with SoA layout for better memory efficiency
+            // Also run the SoA layout (memory is not measured)
             let soaDataset = try SoAFP16(vectors: Array(largeDataset.prefix(100)))
             let soaOutput = UnsafeMutableBufferPointer<Float>.allocate(capacity: 100)
             defer { soaOutput.deallocate() }
@@ -3682,7 +3537,7 @@ struct MixedPrecisionKernelTests {
             // Allow up to 0.02 seconds for 100 iterations (0.2ms per iteration)
             print("  [perf] single-candidate ×\(iterations): \(elapsed)s (gate < 0.02)")
             if strictPerfGatesEnabled {
-                #expect(elapsed < 0.02, "Single candidate should process quickly (\(elapsed)s for \(iterations) iterations)")
+                expectPerformance("MixedPrecisionKernelTests.testSingleCandidate.15", elapsed < 0.02, "Single candidate should process quickly (\(elapsed)s for \(iterations) iterations)")
             }
         }
 
@@ -4004,7 +3859,7 @@ struct MixedPrecisionKernelTests {
             // GFLOPS is a wall-clock throughput metric, meaningless in a debug build
             // (no vectorization/inlining). Only assert it under extended/release benchmarking.
             if ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1" {
-                #expect(gflops > 0.1, "Should achieve >0.1 GFLOPS with NEON")
+                expectPerformance("MixedPrecisionKernelTests.testAppleSiliconNEON.17", gflops > 0.1, "Should achieve >0.1 GFLOPS with NEON")
             }
 
             // Test that SIMD4 alignment is maintained
@@ -4138,7 +3993,7 @@ struct MixedPrecisionKernelTests {
             // Aligned access should be efficient
             print("  [perf] aligned range_euclid2 (\(alignedCount)): \(alignedTime)s (gate < 0.01)")
             if strictPerfGatesEnabled {
-                #expect(alignedTime < 0.01, "Aligned access should be fast")
+                expectPerformance("MixedPrecisionKernelTests.testMemoryAlignment.16", alignedTime < 0.01, "Aligned access should be fast")
             }
 
             // Test SoA alignment

@@ -1,0 +1,43 @@
+{
+  "task": "Q04",
+  "status": "accepted",
+  "task_base": "9c035ef7b927346de4744289b7de13892c89e7cb",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "NUM-22"
+  ],
+  "validation": {
+    "red": "45 actual unchanged-production invalid-input children produced63 issues: missing diagnostics, invalid empty returns, and observed writes before late rejection.",
+    "debug_release": "Each22 reported functions in6suites, one parent dispatcher no-op excluded;45 actual rejection children per configuration with named diagnostic and exact unchanged64-byte shared buffer.",
+    "asan": "Two actual valid finite/exceptional matrices pass via SwiftPM and direct helper with explicit runtime;3direct loader failures before entry retained separately.",
+    "allocation": "Same target-only Release flags and public fixture;288 raw rows,279unique keys,36fixed width/metric/count groups. Empty0events/0bytes;nonempty same events and bytes reduced exactly8*(N-count). Final requested work independent of unrelated N/lower in measured matrix.",
+    "provenance": "Root321base/325final full reconstruction;470worker artifacts and canonical copies;601retained artifacts;393final build entries;90final child associations;270baseline/final allocation link entries independently verified.",
+    "scanner": "2bounded-child checks pass."
+  },
+  "review": "reports/Q04-implementation-review.md",
+  "evidence": "reports/Q04-implementation.md",
+  "commands": "reports/Q04-command-inventory.json",
+  "root_verification": [
+    "reports/Q04-root-source-verification.json",
+    "reports/Q04-root-runtime-verification.json",
+    "reports/Q04-root-allocation-verification.json",
+    "reports/Q04-root-evidence-verification.json"
+  ],
+  "diff_sha256": "2e7aeb88e47d11b45635b4f5165d6b83dc382de8614290e28395e9ea67c5dc7b",
+  "frozen_sha256": {
+    "Scripts/ci/tests/Q04Allocation.c": "49a2eea4d4a3d33f6952d6264f593b5316fbd13f0b567858d5e860d009852c07",
+    "Scripts/ci/tests/Q04AllocationProbe.swift": "eefbd041aa4e7668c88acfc2429fc4c80e4d860026ef2992fa2b9d1244763729",
+    "Scripts/ci/tests/Q04RunAllocationProbe.py": "a9d1afa708c07d2d4a5793d57dc11a0e0a380f229ef2013bc8699706870c709e",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift": "7cff622f3b04fa0ae559d1044e6dc820cd783894bf84359078663b6e15465f3f",
+    "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift": "92d717bb51915c428fb018a04c0cec12eed1c75a8b23672a591ebb9d65b4afed"
+  },
+  "limitations": [
+    "Only nine candidate-range wrappers, shared validation and adjacent docs change production; unchanged arithmetic cores/constructors/diagnostics/borrows are controls.",
+    "Allocator measures requested bytes/events, not live heap/RSS/timing. Existing count-dependent core allocations remain.",
+    "Exceptional fixtures assert exact unchanged-core bit parity; no universal numerical accuracy or NaN-propagation claim.",
+    "Unsafe output initialization/capacity/aliasing remain caller obligations; no arbitrary pointer validation.",
+    "Exploratory after01 used test-built flags and is excluded from authoritative before01/after02 comparison."
+  ],
+  "combined_verification": "reports/milestone-08-verification.json",
+  "combined_review": "reports/milestone-08-review.md"
+}

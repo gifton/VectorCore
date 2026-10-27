@@ -1,410 +1,320 @@
-//
-//  KernelAutoTuner.swift
-//  VectorCore
-//
-//  Kernel auto-tuning framework for optimal strategy selection
-//  Based on kernel-specs/28-kernel-auto-tuning-framework.md
-//
-
 import Foundation
 import simd
-
 #if canImport(Darwin)
 import Darwin
 #endif
 
-// MARK: - 1. Kernel Strategy Enum
-
-/// Available kernel execution strategies
-///
-/// Strategies represent distinct implementation approaches, not configuration
-/// parameters. Each strategy maps to a specific kernel implementation with
-/// different performance characteristics.
-public enum KernelStrategy: String, Codable, Sendable {
-    // CPU Strategies
-    case cpuAoS             // Array-of-Structures (simple loops, minimal overhead)
-    case cpuSoA             // Structure-of-Arrays (auto-selects 2-way/4-way blocking)
-    case cpuMixedPrecision  // FP16 storage, FP32 compute (2x memory reduction)
-    case cpuQuantized       // INT8 quantized (4x memory reduction)
-
-    // Adaptive
-    case auto               // Auto-select based on workload (delegates to heuristic)
+public enum KernelStrategy: String, Codable, Sendable, CaseIterable {
+    case cpuAoS, cpuSoA, cpuMixedPrecision, cpuQuantized, auto
 }
 
-// MARK: - 2. Workload Characteristics
-
-/// Characteristics of a computation workload
+/// Resource fields filter a scalar payload estimate and a synthetic DOT mean;
+/// neither is a live-memory cap or execution deadline.
 public struct WorkloadCharacteristics: Sendable {
-    public let dimension: Int           // Vector dimension (512, 768, 1536)
-    public let batchSize: Int           // Number of candidates
+    public let dimension: Int
+    public let batchSize: Int
     public let precisionMode: PrecisionMode
-    public let memoryBudget: Int?       // Optional memory constraint (bytes)
-    public let latencyTarget: TimeInterval?  // Optional latency requirement
-
+    public let maximumEstimatedPayloadBytes: Int?
+    public let maximumProfiledMeanLatency: TimeInterval?
     public enum PrecisionMode: String, Codable, Sendable {
-        case fp32Full           // Full FP32 precision required
-        case fp16Acceptable     // FP16 error acceptable (< 0.1%)
-        case int8Acceptable     // INT8 error acceptable (< 1%)
+        case fp32Full, fp16Acceptable, int8Acceptable
     }
-
-    public init(
-        dimension: Int,
-        batchSize: Int,
-        precisionMode: PrecisionMode = .fp16Acceptable,
-        memoryBudget: Int? = nil,
-        latencyTarget: TimeInterval? = nil
-    ) {
-        self.dimension = dimension
-        self.batchSize = batchSize
-        self.precisionMode = precisionMode
-        self.memoryBudget = memoryBudget
-        self.latencyTarget = latencyTarget
+    public init(dimension: Int, batchSize: Int, precisionMode: PrecisionMode = .fp16Acceptable,
+                maximumEstimatedPayloadBytes: Int? = nil, maximumProfiledMeanLatency: TimeInterval? = nil) {
+        self.dimension = dimension; self.batchSize = batchSize; self.precisionMode = precisionMode
+        self.maximumEstimatedPayloadBytes = maximumEstimatedPayloadBytes
+        self.maximumProfiledMeanLatency = maximumProfiledMeanLatency
     }
 }
 
-// MARK: - 3. Performance Profile
+/// Exact measurement family. Decision filters are re-applied at every lookup.
+public struct KernelProfileWorkload: Codable, Sendable, Hashable {
+    public let dimension: Int
+    public let batchSize: Int
+    public let precisionMode: WorkloadCharacteristics.PrecisionMode
+    public init(dimension: Int, batchSize: Int, precisionMode: WorkloadCharacteristics.PrecisionMode) {
+        self.dimension = dimension; self.batchSize = batchSize; self.precisionMode = precisionMode
+    }
+}
 
-/// Performance profile for a specific kernel + workload combination
+public struct KernelProfileProvenance: Codable, Sendable, Equatable {
+    public let algorithmVersion: Int
+    public let operationBoundary: String
+    public let datasetVersion: String
+    public let datasetSeeds: [UInt32]
+    public let architecture: String
+    public let hardwareModel: String?
+    public let processorCount: Int
+    public let operatingSystem: String
+
+    internal static func current() -> Self {
+        #if arch(arm64)
+        let architecture = "arm64"
+        #elseif arch(x86_64)
+        let architecture = "x86_64"
+        #else
+        let architecture = "other"
+        #endif
+        var model: String?
+        #if canImport(Darwin)
+        var length = 0
+        if sysctlbyname("hw.model", nil, &length, nil, 0) == 0 && length > 1 {
+            var bytes = Array(repeating: CChar(0), count: length)
+            if sysctlbyname("hw.model", &bytes, &length, nil, 0) == 0 {
+                let value = String(decoding: bytes.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
+                if !value.isEmpty { model = value }
+            }
+        }
+        #endif
+        return Self(algorithmVersion: 1,
+            operationBoundary: "synthetic-dot-preconverted-reduced-soa-convenience-packing-v1",
+            datasetVersion: "uniform-lcg-v1", datasetSeeds: [0x5EED_0512, 0x5EED_0768, 0x5EED_1536],
+            architecture: architecture, hardwareModel: model, processorCount: ProcessInfo.processInfo.processorCount,
+            operatingSystem: ProcessInfo.processInfo.operatingSystemVersionString)
+    }
+}
+
+/// DOT benchmark metrics. Latencies are seconds per invocation; throughput is
+/// candidates per second. The synthetic mean-error score does not bound real data.
 public struct PerformanceProfile: Codable, Sendable {
     public let strategy: KernelStrategy
-    public let workload: String         // Hash of workload characteristics
-    public let throughput: Double       // Operations/sec
+    public let workload: KernelProfileWorkload
+    public let throughput: Double
     public let latencyMean: TimeInterval
     public let latencyP50: TimeInterval
     public let latencyP95: TimeInterval
     public let latencyP99: TimeInterval
-    public let memoryFootprint: Int     // Bytes
-    public let accuracy: Float          // Relative to FP32 baseline
+    /// Scalar query/candidate payload only; excludes headers, output, padding,
+    /// quantization parameters and simultaneously live calibration representations.
+    public let estimatedPayloadBytes: Int
+    public let syntheticAccuracyScore: Double
+    public let measuredSamples: Int
+    public let warmupIterations: Int
+    public let provenance: KernelProfileProvenance
     public let timestamp: Date
 
-    /// Quality score: balances throughput, latency, memory, accuracy
+    internal var hasValidMetrics: Bool {
+        strategy != .auto && throughput.isFinite && throughput > 0 && latencyMean.isFinite && latencyMean > 0 &&
+        latencyP50.isFinite && latencyP50 > 0 && latencyP95.isFinite && latencyP95 >= latencyP50 &&
+        latencyP99.isFinite && latencyP99 >= latencyP95 && estimatedPayloadBytes > 0 &&
+        syntheticAccuracyScore.isFinite && (0...1).contains(syntheticAccuracyScore) &&
+        measuredSamples > 0 && warmupIterations >= 0 && timestamp.timeIntervalSince1970.isFinite
+    }
     public var score: Double {
-        guard throughput > 0, latencyMean > 0, memoryFootprint > 0 else {
-            return -Double.infinity
-        }
-
-        // Clamp inputs to prevent extreme scores from measurement noise
-        let clampedThroughput = min(throughput, 1e9)  // 1B ops/sec max
-        let clampedLatency = max(latencyMean * 1000, 1e-3)  // 1μs min
-        let clampedMemory = max(Double(memoryFootprint) / 1_000_000, 0.001)  // 1KB min
-
-        let throughputScore = log10(clampedThroughput)
-        let latencyScore = -log10(clampedLatency)  // Lower is better (ms)
-        let memoryScore = -log10(clampedMemory)  // Lower is better (MB)
-        let accuracyScore = Double(accuracy) * 10  // 0-10 scale
-
-        return throughputScore + latencyScore + memoryScore + accuracyScore
+        guard hasValidMetrics else { return -.infinity }
+        let score = log10(min(throughput, 1e9)) - log10(max(latencyMean * 1000, 1e-3)) -
+            log10(max(Double(estimatedPayloadBytes) / 1e6, 0.001)) + syntheticAccuracyScore * 10
+        return score.isFinite ? score : -.infinity
     }
 }
 
-// MARK: - 4. Auto-Tuner Core
-
-/// Kernel auto-tuning framework
-///
-/// Automatically selects optimal kernel execution strategy based on workload
-/// characteristics, with optional profiling and persistent caching.
-///
-/// ## Usage Example
-/// ```swift
-/// let workload = WorkloadCharacteristics(
-///     dimension: 512,
-///     batchSize: 1000,
-///     precisionMode: .fp16Acceptable
-/// )
-///
-/// // Automatic selection
-/// let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
-///
-/// // Profile all strategies
-/// let profiles = await KernelAutoTuner.shared.profileWorkload(workload)
-/// ```
+/// Explicit synthetic profiling and representation-compatible selection.
+/// Default/shared instances are memory-only. A URL opts into a single-owner file;
+/// multiple instances writing that URL are not a coordinated multi-writer store.
+/// PrecisionSelectionContractTests exercises filters and publication semantics.
 public actor KernelAutoTuner {
-
-    // MARK: - Singleton
-
     public static let shared = KernelAutoTuner()
-
-    // MARK: - State
-
-    private var profileCache: [String: [PerformanceProfile]] = [:]
-    private var strategyOverrides: [String: KernelStrategy] = [:]
-    private let persistenceURL: URL?
-
-    // MARK: - Initialization
-
-    private init(persistenceURL: URL? = nil) {
-        // Disable persistence during unit tests or when explicitly requested
-        // Note: XCTestConfigurationFilePath is only set by Xcode/xcodebuild,
-        // not by `swift test`. We check multiple indicators:
-        // - XCTestConfigurationFilePath: Xcode test environment
-        // - CI/GITHUB_ACTIONS/TRAVIS: CI environments
-        // - __CFBundleIdentifier containing "test": SPM test environment
-        // - SWIFTPM_PACKAGE_DEPENDENCIES: SPM environment indicator
-        let env = ProcessInfo.processInfo.environment
-        let isXcodeTest = env["XCTestConfigurationFilePath"] != nil
-        let isCIEnvironment = env["CI"] != nil || env["GITHUB_ACTIONS"] != nil || env["TRAVIS"] != nil
-        // SPM sets __CFBundleIdentifier to package name during testing
-        let isSPMTest = (env["__CFBundleIdentifier"]?.contains("Test") == true) ||
-                        (env["__CFBundleIdentifier"]?.contains("test") == true) ||
-                        (ProcessInfo.processInfo.processName.contains("xctest"))
-        let disableCache = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || isXcodeTest || isCIEnvironment || isSPMTest
-
-        self.persistenceURL = disableCache ? nil : (persistenceURL ?? Self.defaultPersistenceURL())
-        // Note: Cannot call loadProfiles() synchronously in actor init
-        // Profiles will be loaded lazily on first access
+    public enum PersistenceStatus: Sendable { case memoryOnly, enabled, disabledUnavailableHardware }
+    public let persistenceStatus: PersistenceStatus
+    private struct Request: Hashable {
+        let family: KernelProfileWorkload
+        let payload: Int?
+        let latencyBits: UInt64?
     }
-
+    private struct Envelope: Codable {
+        let schemaVersion: Int
+        let provenance: KernelProfileProvenance
+        let profiles: [PerformanceProfile]
+    }
+    private var profileCache: [KernelProfileWorkload: [PerformanceProfile]] = [:]
+    private var strategyOverrides: [Request: KernelStrategy] = [:]
     private var profilesLoaded = false
+    private let persistenceURL: URL?
+    private let provenance: KernelProfileProvenance
+    private let hooks: TuningTestHooks?
+    internal private(set) var workCounts: TuningWorkCounts?
 
-    private func ensureProfilesLoaded() {
-        guard !profilesLoaded else { return }
-        profilesLoaded = true
-        loadProfiles()
+    /// The supplied file's parent must exist. Without a stable hardware model,
+    /// disk read/write reuse is disabled and persistenceStatus says so explicitly.
+    public init(persistenceURL: URL? = nil) {
+        let current = KernelProfileProvenance.current()
+        provenance = current; hooks = nil; workCounts = nil
+        self.persistenceURL = current.hardwareModel == nil ? nil : persistenceURL
+        persistenceStatus = persistenceURL == nil ? .memoryOnly : (current.hardwareModel == nil ? .disabledUnavailableHardware : .enabled)
     }
-
-    private static func defaultPersistenceURL() -> URL? {
-        do {
-            let appSupportURL = try FileManager.default
-                .url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-
-            return appSupportURL
-                .appendingPathComponent("VectorCore")
-                .appendingPathComponent("kernel_profiles.json")
-        } catch {
-            print("KernelAutoTuner: Error determining default persistence URL: \(error)")
-            return nil
+    internal init(persistenceURL: URL? = nil, provenance: KernelProfileProvenance,
+                  testing hooks: TuningTestHooks = TuningTestHooks()) {
+        self.provenance = provenance; self.hooks = hooks; workCounts = TuningWorkCounts()
+        self.persistenceURL = provenance.hardwareModel == nil ? nil : persistenceURL
+        persistenceStatus = persistenceURL == nil ? .memoryOnly : (provenance.hardwareModel == nil ? .disabledUnavailableHardware : .enabled)
+    }
+    private func checkpoint(_ event: TuningCheckpoint) throws {
+        workCounts?.record(event)
+        try hooks?.observer?(event)
+        try Task.checkCancellation()
+    }
+    private func family(_ workload: WorkloadCharacteristics) -> KernelProfileWorkload {
+        KernelProfileWorkload(dimension: workload.dimension, batchSize: workload.batchSize, precisionMode: workload.precisionMode)
+    }
+    private func key(_ workload: WorkloadCharacteristics) -> Request {
+        Request(family: family(workload), payload: workload.maximumEstimatedPayloadBytes,
+                latencyBits: workload.maximumProfiledMeanLatency.map { $0 == 0 ? 0 : $0.bitPattern })
+    }
+    private func availableStrategies(for workload: WorkloadCharacteristics) -> [KernelStrategy] {
+        switch workload.precisionMode {
+        case .fp32Full: return [.cpuAoS, .cpuSoA]
+        case .fp16Acceptable: return [.cpuAoS, .cpuSoA, .cpuMixedPrecision]
+        case .int8Acceptable: return [.cpuAoS, .cpuSoA, .cpuMixedPrecision, .cpuQuantized]
         }
     }
-
-    // MARK: - Strategy Selection
-
-    /// Select optimal kernel strategy for given workload
-    ///
-    /// Algorithm:
-    /// 1. Check for manual override
-    /// 2. Look up cached profile for this workload
-    /// 3. If no profile, use heuristic-based selection
-    /// 4. Return selected strategy
-    public func selectStrategy(
-        for workload: WorkloadCharacteristics
-    ) -> KernelStrategy {
-        ensureProfilesLoaded()
-
-        let workloadKey = hashWorkload(workload)
-
-        // When tuner cache is disabled (e.g., during tests), skip profile-based selection
-        // but still honor manual overrides.
-        // Note: XCTestConfigurationFilePath is only set by Xcode/xcodebuild,
-        // not by `swift test`. We check multiple indicators (same as init).
-        let env = ProcessInfo.processInfo.environment
-        let isXcodeTest = env["XCTestConfigurationFilePath"] != nil
-        let isCIEnvironment = env["CI"] != nil || env["GITHUB_ACTIONS"] != nil || env["TRAVIS"] != nil
-        let isSPMTest = (env["__CFBundleIdentifier"]?.contains("Test") == true) ||
-                        (env["__CFBundleIdentifier"]?.contains("test") == true) ||
-                        (ProcessInfo.processInfo.processName.contains("xctest"))
-        let cacheDisabled = env["VECTORCORE_DISABLE_TUNER_CACHE"] == "1" || isXcodeTest || isCIEnvironment || isSPMTest
-
-        // 1. Check override
-        if let override = strategyOverrides[workloadKey] {
+    private func validate(_ workload: WorkloadCharacteristics) throws {
+        try PrecisionTuningSupport.validateShape(count: workload.batchSize, dimension: workload.dimension)
+        if let bytes = workload.maximumEstimatedPayloadBytes, bytes < 0 {
+            throw PrecisionTuningSupport.invalid("maximumEstimatedPayloadBytes", "must be nonnegative")
+        }
+        if let latency = workload.maximumProfiledMeanLatency, !latency.isFinite || latency <= 0 {
+            throw PrecisionTuningSupport.invalid("maximumProfiledMeanLatency", "must be finite and positive")
+        }
+        for strategy in availableStrategies(for: workload) { _ = try estimate(strategy, workload: workload) }
+    }
+    private func estimate(_ strategy: KernelStrategy, workload: WorkloadCharacteristics) throws -> Int {
+        let n = workload.batchSize, d = workload.dimension
+        switch strategy {
+        case .cpuAoS, .cpuSoA:
+            return try PrecisionTuningSupport.multiply(PrecisionTuningSupport.multiply(PrecisionTuningSupport.add(n, 1, field: "batchSize"), d, field: "batchSize"), 4, field: "batchSize")
+        case .cpuMixedPrecision:
+            return try PrecisionTuningSupport.add(PrecisionTuningSupport.multiply(d, 4, field: "dimension"), PrecisionTuningSupport.multiply(PrecisionTuningSupport.multiply(n,
+                d, field: "batchSize"), 2, field: "batchSize"), field: "batchSize")
+        case .cpuQuantized:
+            return try PrecisionTuningSupport.multiply(PrecisionTuningSupport.add(n, 1, field: "batchSize"), d, field: "batchSize")
+        case .auto: throw PrecisionTuningSupport.invalid("strategy", "auto cannot be a profile or override")
+        }
+    }
+    private func valid(_ profile: PerformanceProfile, for workload: WorkloadCharacteristics) -> Bool {
+        guard profile.workload == family(workload), profile.provenance == provenance,
+              profile.hasValidMetrics, profile.score.isFinite, workload.batchSize > 0,
+              availableStrategies(for: workload).contains(profile.strategy),
+              let expected = try? estimate(profile.strategy, workload: workload) else { return false }
+        return expected == profile.estimatedPayloadBytes
+    }
+    private func feasible(_ strategy: KernelStrategy, workload: WorkloadCharacteristics) -> Bool {
+        guard availableStrategies(for: workload).contains(strategy), let bytes = try? estimate(strategy, workload: workload),
+              workload.maximumEstimatedPayloadBytes.map({ bytes <= $0 }) ?? true else { return false }
+        guard let limit = workload.maximumProfiledMeanLatency else { return true }
+        return (profileCache[family(workload)] ?? []).contains {
+            $0.strategy == strategy && valid($0, for: workload) && $0.latencyMean <= limit
+        }
+    }
+    private func noFeasible() -> VectorError {
+        VectorError(kind: .resourceUnavailable, context: ErrorContext(additionalInfo: ["reason": "noFeasibleStrategy"]))
+    }
+    /// Applies precision and both filters to overrides, profiles, and heuristics.
+    /// A latency filter requires a matching measured profile. Heuristic fallback
+    /// prefers the legacy choice, then AoS, SoA, FP16, INT8 in that fixed order.
+    public func selectStrategy(for workload: WorkloadCharacteristics) throws -> KernelStrategy {
+        try validate(workload)
+        try ensureProfilesLoaded()
+        if let override = strategyOverrides[key(workload)] {
+            guard availableStrategies(for: workload).contains(override) else {
+                throw PrecisionTuningSupport.invalid("override", "incompatible precision representation")
+            }
+            guard feasible(override, workload: workload) else { throw noFeasible() }
             return override
         }
-
-        if !cacheDisabled {
-            // 2. Check cached profiles
-            if let profiles = profileCache[workloadKey],
-               let best = profiles.max(by: { $0.score < $1.score }) {
-                return best.strategy
-            }
+        let profiles = (profileCache[family(workload)] ?? []).filter { profile in
+            valid(profile, for: workload) && feasible(profile.strategy, workload: workload) &&
+            (workload.maximumProfiledMeanLatency.map { limit in profile.latencyMean <= limit } ?? true)
         }
-
-        // 3. Fallback: heuristic-based selection
-        return selectStrategyHeuristic(for: workload)
-    }
-
-    /// Set manual override for a specific workload (persists across restarts)
-    public func setOverride(_ strategy: KernelStrategy, for workload: WorkloadCharacteristics) {
-        let workloadKey = hashWorkload(workload)
-        strategyOverrides[workloadKey] = strategy
-    }
-
-    /// Remove manual override for a specific workload
-    public func removeOverride(for workload: WorkloadCharacteristics) {
-        let workloadKey = hashWorkload(workload)
-        strategyOverrides.removeValue(forKey: workloadKey)
-    }
-
-    /// Heuristic-based strategy selection (no profiling data)
-    ///
-    /// Selection algorithm based on batch size and precision requirements:
-    /// - Small batches (N < 100): cpuAoS (minimal overhead)
-    /// - Medium batches (100 ≤ N < 1000): cpuSoA with appropriate precision
-    /// - Large batches (N ≥ 1000): cpuSoA or reduced-precision variants
-    ///
-    /// Precision modes:
-    /// - fp32Full: Always uses FP32 (cpuAoS or cpuSoA)
-    /// - fp16Acceptable: Uses cpuMixedPrecision (2x memory savings)
-    /// - int8Acceptable: Uses cpuQuantized (4x memory savings)
-    private func selectStrategyHeuristic(
-        for workload: WorkloadCharacteristics
-    ) -> KernelStrategy {
-        // Small batches (N < 100): Simple AoS is fastest
-        // Overhead of SoA transposition not worthwhile for small N
-        if workload.batchSize < 100 {
-            if workload.precisionMode == .fp32Full {
-                return .cpuAoS
-            } else {
-                // Even for small batches, mixed precision provides 2x memory savings
-                return .cpuMixedPrecision
-            }
+        if let best = sorted(profiles).first { return best.strategy }
+        guard workload.maximumProfiledMeanLatency == nil else { throw noFeasible() }
+        let preferred: KernelStrategy
+        if workload.batchSize == 0 { preferred = .cpuAoS }
+        else if workload.precisionMode == .fp32Full { preferred = workload.batchSize < 100 ? .cpuAoS : .cpuSoA }
+        else if workload.precisionMode == .fp16Acceptable || workload.batchSize < 100 { preferred = .cpuMixedPrecision }
+        else { preferred = .cpuQuantized }
+        for strategy in [preferred] + availableStrategies(for: workload) {
+            if feasible(strategy, workload: workload) { return strategy }
         }
-
-        // Medium batches (100 ≤ N < 1000): SoA starts to pay off
-        if workload.batchSize < 1000 {
-            switch workload.precisionMode {
-            case .fp32Full:
-                return .cpuSoA  // SoA with auto-selected 2-way/4-way blocking
-            case .fp16Acceptable:
-                return .cpuMixedPrecision
-            case .int8Acceptable:
-                return .cpuQuantized
-            }
+        throw noFeasible()
+    }
+    /// Overrides are process-local. Rejected setters preserve all prior state.
+    public func setOverride(_ strategy: KernelStrategy, for workload: WorkloadCharacteristics) throws {
+        try validate(workload)
+        guard availableStrategies(for: workload).contains(strategy) else {
+            throw PrecisionTuningSupport.invalid("strategy", "incompatible precision representation or auto override")
         }
-
-        // Large batches (N ≥ 1000): SoA provides best cache locality
-        // BatchKernels_SoA internally selects 4-way blocking for N ≥ 4
-        switch workload.precisionMode {
-        case .fp32Full:
-            return .cpuSoA
-        case .fp16Acceptable:
-            return .cpuMixedPrecision
-        case .int8Acceptable:
-            return .cpuQuantized
+        try ensureProfilesLoaded()
+        guard feasible(strategy, workload: workload) else { throw noFeasible() }
+        strategyOverrides[key(workload)] = strategy
+    }
+    public func removeOverride(for workload: WorkloadCharacteristics) { strategyOverrides.removeValue(forKey: key(workload)) }
+    private func sorted(_ profiles: [PerformanceProfile]) -> [PerformanceProfile] {
+        profiles.sorted {
+            if $0.score != $1.score { return $0.score > $1.score }
+            return KernelStrategy.allCases.firstIndex(of: $0.strategy)! < KernelStrategy.allCases.firstIndex(of: $1.strategy)!
         }
     }
+    internal func setProfilesForTesting(_ profiles: [PerformanceProfile], for workload: WorkloadCharacteristics) {
+        profileCache[family(workload)] = profiles; profilesLoaded = true
+    }
+    internal func profilesForTesting(for workload: WorkloadCharacteristics) -> [PerformanceProfile] { profileCache[family(workload)] ?? [] }
 
-    // MARK: - Profiling
-
-    /// Benchmark all available strategies for this workload
-    ///
-    /// Runs each strategy multiple times, collects statistics, caches results.
-    /// Uses the same test data for all strategies to ensure fair comparison.
-    public func profileWorkload(
-        _ workload: WorkloadCharacteristics,
-        iterations: Int = 100,
-        warmupIterations: Int = 10
-    ) async -> [PerformanceProfile] {
-
-        var profiles: [PerformanceProfile] = []
+    /// Explicit DOT calibration. Reduced candidates are prepared outside timing;
+    /// the SoA convenience kernel still packs per invocation. One FP32 AoS baseline
+    /// is computed before timing. Synchronous kernels are not interruptible.
+    /// Pre-commit cancellation/failure preserves profiles and overrides. Successful
+    /// profiles publish to memory before saving; a save error retains that result.
+    public func profileWorkload(_ workload: WorkloadCharacteristics, iterations: Int = 100,
+                                warmupIterations: Int = 10) async throws -> [PerformanceProfile] {
+        try validate(workload)
         let strategies = availableStrategies(for: workload)
-
-        // Generate test data ONCE for all strategies (ensures fair comparison)
-        guard let testData = generateTestData(for: workload) else {
-            print("KernelAutoTuner: Failed to generate test data for dimension \(workload.dimension)")
-            return []
-        }
-
+        try PrecisionTuningSupport.validateCalibration(count: workload.batchSize, dimension: workload.dimension,
+            iterations: iterations, warmups: warmupIterations, strategies: strategies.count)
+        try Task.checkCancellation()
+        try ensureProfilesLoaded()
+        let data = try generateTestData(for: workload)
+        try Task.checkCancellation()
+        let baseline = try executeKernel(.cpuAoS, testData: data)
+        try checkpoint(.baseline)
+        var staged: [PerformanceProfile] = []
         for strategy in strategies {
-            if let profile = await benchmarkStrategy(
-                strategy,
-                workload: workload,
-                testData: testData,
-                iterations: iterations,
-                warmupIterations: warmupIterations
-            ) {
-                profiles.append(profile)
+            var result: [Float] = []
+            for _ in 0..<warmupIterations {
+                try checkpoint(.willExecute(strategy.rawValue, true))
+                result = try executeKernel(strategy, testData: data)
+                try checkpoint(.didExecute(strategy.rawValue, true))
             }
-        }
-
-        // Cache results
-        let workloadKey = hashWorkload(workload)
-        if !profiles.isEmpty {
-            profileCache[workloadKey] = profiles
-            saveProfiles()
-        }
-
-        return profiles.sorted { $0.score > $1.score }
-    }
-
-    /// Benchmark a specific strategy
-    private func benchmarkStrategy(
-        _ strategy: KernelStrategy,
-        workload: WorkloadCharacteristics,
-        testData: TestData,
-        iterations: Int,
-        warmupIterations: Int
-    ) async -> PerformanceProfile? {
-
-        guard iterations > 0 else { return nil }
-
-        // Warmup phase
-        for _ in 0..<warmupIterations {
-            _ = try? executeKernel(strategy, testData: testData)
-        }
-
-        // Benchmark phase
-        var latencies: [TimeInterval] = []
-        latencies.reserveCapacity(iterations)
-
-        for _ in 0..<iterations {
-            #if canImport(Darwin)
-            let start = mach_absolute_time()
-            guard (try? executeKernel(strategy, testData: testData)) != nil else {
-                return nil  // Strategy failed
+            var times: [Double] = []
+            times.reserveCapacity(iterations)
+            let clock = ContinuousClock()
+            for iteration in 0..<iterations {
+                try checkpoint(.willExecute(strategy.rawValue, false))
+                let start = clock.now
+                result = try executeKernel(strategy, testData: data)
+                let elapsed = PrecisionTuningSupport.seconds(start.duration(to: clock.now))
+                try checkpoint(.didExecute(strategy.rawValue, false))
+                times.append(hooks?.latency?(strategy.rawValue, iteration, elapsed) ?? elapsed)
             }
-            let end = mach_absolute_time()
-            latencies.append(machTimeToSeconds(end - start))
-            #else
-            // Fallback for non-Darwin platforms
-            if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
-                let clock = ContinuousClock()
-                do {
-                    let duration = try clock.measure {
-                        _ = try executeKernel(strategy, testData: testData)
-                    }
-                    latencies.append(duration.timeInterval)
-                } catch {
-                    return nil
-                }
-            } else {
-                return nil  // Cannot profile on older platforms
-            }
-            #endif
+            try checkpoint(.accuracy)
+            guard times.allSatisfy({ $0.isFinite && $0 > 0 }),
+                  let error = PrecisionTuningSupport.errors(result, reference: baseline) else { continue }
+            let mean = times.reduce(0, +) / Double(iterations), samples = times.sorted()
+            let profile = PerformanceProfile(strategy: strategy, workload: family(workload),
+                throughput: Double(workload.batchSize) / mean, latencyMean: mean,
+                latencyP50: PrecisionTuningSupport.percentile(samples, 0.5),
+                latencyP95: PrecisionTuningSupport.percentile(samples, 0.95),
+                latencyP99: PrecisionTuningSupport.percentile(samples, 0.99),
+                estimatedPayloadBytes: try estimate(strategy, workload: workload),
+                syntheticAccuracyScore: 1 - min(error.mean, 1), measuredSamples: iterations,
+                warmupIterations: warmupIterations, provenance: provenance, timestamp: Date())
+            if valid(profile, for: workload) { staged.append(profile) }
         }
-
-        // Compute statistics
-        latencies.sort()
-        let mean = latencies.reduce(0, +) / Double(iterations)
-
-        // Safe percentile calculation (nearest-rank method)
-        func percentile(_ p: Double) -> TimeInterval {
-            let index = Int(Double(iterations) * p)
-            return latencies[max(0, min(iterations - 1, index))]
-        }
-
-        let p50 = percentile(0.50)
-        let p95 = percentile(0.95)
-        let p99 = percentile(0.99)
-
-        let throughput = mean > 0 ? Double(workload.batchSize) / mean : 0
-
-        // Measure memory footprint
-        let memoryFootprint = estimateMemoryFootprint(strategy, workload: workload)
-
-        // Measure accuracy (compare to FP32 baseline)
-        let accuracy = measureAccuracy(strategy, testData: testData)
-
-        return PerformanceProfile(
-            strategy: strategy,
-            workload: hashWorkload(workload),
-            throughput: throughput,
-            latencyMean: mean,
-            latencyP50: p50,
-            latencyP95: p95,
-            latencyP99: p99,
-            memoryFootprint: memoryFootprint,
-            accuracy: accuracy,
-            timestamp: Date()
-        )
+        guard !staged.isEmpty else { throw PrecisionTuningSupport.failed("calibration produced no valid profile") }
+        try checkpoint(.willPublish)
+        profileCache[family(workload)] = staged
+        try hooks?.observer?(.didPublish)
+        try saveProfiles()
+        return sorted(staged)
     }
 
     // MARK: - Kernel Execution
@@ -430,7 +340,7 @@ public actor KernelAutoTuner {
     ) throws -> [Float] {
         switch strategy {
         case .cpuAoS:
-            // Simple loop over candidates - minimal overhead
+            // One dot product per candidate (an array map)
             return data.candidates.map { candidate in
                 DotKernels.dot512(data.query512, candidate)
             }
@@ -446,7 +356,7 @@ public actor KernelAutoTuner {
             )
 
         case .cpuMixedPrecision:
-            // FP16 storage with FP32 computation (2x memory reduction)
+            // FP16 storage with FP32 computation (half the FP32 scalar payload; payload model only, not a measured memory saving)
             return data.candidatesFP16.map { candidate in
                 MixedPrecisionKernels.dotMixed512(
                     query: data.query512,
@@ -455,10 +365,13 @@ public actor KernelAutoTuner {
             }
 
         case .cpuQuantized:
-            // INT8 quantized storage (4x memory reduction)
+            guard let queryINT8 = data.queryINT8 else {
+                throw PrecisionTuningSupport.failed("missing INT8 calibration representation")
+            }
+            // INT8 quantized storage (a quarter of the FP32 scalar payload; payload model only, not a measured memory saving)
             return data.candidatesINT8.map { candidate in
                 QuantizedKernels.dotProduct512(
-                    query: data.queryINT8,
+                    query: queryINT8,
                     candidate: candidate
                 )
             }
@@ -499,9 +412,12 @@ public actor KernelAutoTuner {
             }
 
         case .cpuQuantized:
+            guard let queryINT8 = data.queryINT8 else {
+                throw PrecisionTuningSupport.failed("missing INT8 calibration representation")
+            }
             return data.candidatesINT8.map { candidate in
                 QuantizedKernels.dotProduct768(
-                    query: data.queryINT8,
+                    query: queryINT8,
                     candidate: candidate
                 )
             }
@@ -539,9 +455,12 @@ public actor KernelAutoTuner {
             }
 
         case .cpuQuantized:
+            guard let queryINT8 = data.queryINT8 else {
+                throw PrecisionTuningSupport.failed("missing INT8 calibration representation")
+            }
             return data.candidatesINT8.map { candidate in
                 QuantizedKernels.dotProduct1536(
-                    query: data.queryINT8,
+                    query: queryINT8,
                     candidate: candidate
                 )
             }
@@ -554,281 +473,201 @@ public actor KernelAutoTuner {
         }
     }
 
-    // MARK: - Helper Types
-
-    /// Dimension-specific test data (ensures type safety)
     private enum TestData: Sendable {
-        case dim512(TestData512)
-        case dim768(TestData768)
-        case dim1536(TestData1536)
+        case dim512(TestData512), dim768(TestData768), dim1536(TestData1536)
     }
-
     private struct TestData512: Sendable {
         let query512: Vector512Optimized
-        let queryINT8: Vector512INT8
+        let queryINT8: Vector512INT8?
         let candidates: [Vector512Optimized]
         let candidatesFP16: [MixedPrecisionKernels.Vector512FP16]
         let candidatesINT8: [Vector512INT8]
     }
-
     private struct TestData768: Sendable {
         let query768: Vector768Optimized
-        let queryINT8: Vector768INT8
+        let queryINT8: Vector768INT8?
         let candidates: [Vector768Optimized]
         let candidatesFP16: [MixedPrecisionKernels.Vector768FP16]
         let candidatesINT8: [Vector768INT8]
     }
-
     private struct TestData1536: Sendable {
         let query1536: Vector1536Optimized
-        let queryINT8: Vector1536INT8
+        let queryINT8: Vector1536INT8?
         let candidates: [Vector1536Optimized]
         let candidatesFP16: [MixedPrecisionKernels.Vector1536FP16]
         let candidatesINT8: [Vector1536INT8]
     }
-
-    // MARK: - Helper Functions
-
-    private func hashWorkload(_ workload: WorkloadCharacteristics) -> String {
-        "\(workload.dimension)_\(workload.batchSize)_\(workload.precisionMode.rawValue)"
-    }
-
-    private func availableStrategies(
-        for workload: WorkloadCharacteristics
-    ) -> [KernelStrategy] {
-        // Always profile FP32 strategies
-        var strategies: [KernelStrategy] = [.cpuAoS, .cpuSoA]
-
-        // Add reduced-precision strategies if acceptable
-        if workload.precisionMode != .fp32Full {
-            strategies.append(.cpuMixedPrecision)
-        }
-
-        if workload.precisionMode == .int8Acceptable {
-            strategies.append(.cpuQuantized)
-        }
-
-        return strategies
-    }
-
-    private func generateTestData(for workload: WorkloadCharacteristics) -> TestData? {
+    private func generateTestData(for workload: WorkloadCharacteristics) throws -> TestData {
         switch workload.dimension {
         case 512:
-            // Deterministic data: reproducible benchmarks + stable accuracy
-            // measurement (unseeded Float.random previously made the accuracy
-            // tests flaky). next() ∈ [0,1] → [-1,1]. The generator closure is
-            // non-escaping and called in order, so threading one rng is safe.
             var rng = SeededRNG(seed: 0x5EED_0512)
+            try Task.checkCancellation()
             let query = Vector512Optimized(generator: { _ in rng.next() * 2 - 1 })
-            let candidates = (0..<workload.batchSize).map { _ in
-                Vector512Optimized(generator: { _ in rng.next() * 2 - 1 })
+            try checkpoint(.generatedVector)
+            var candidates: [Vector512Optimized] = []
+            for _ in 0..<workload.batchSize {
+                try Task.checkCancellation()
+                candidates.append(Vector512Optimized(generator: { _ in rng.next() * 2 - 1 }))
+                try checkpoint(.generatedVector)
             }
-
-            let queryINT8 = Vector512INT8(from: query, params: nil)
-            let candidatesFP16 = candidates.map { MixedPrecisionKernels.Vector512FP16(from: $0) }
-            let candidatesINT8 = candidates.map { Vector512INT8(from: $0, params: nil) }
-
-            return .dim512(TestData512(
-                query512: query,
-                queryINT8: queryINT8,
-                candidates: candidates,
-                candidatesFP16: candidatesFP16,
-                candidatesINT8: candidatesINT8
-            ))
-
+            var fp16: [MixedPrecisionKernels.Vector512FP16] = []
+            if workload.precisionMode != .fp32Full {
+                for candidate in candidates {
+                    try Task.checkCancellation()
+                    fp16.append(MixedPrecisionKernels.Vector512FP16(from: candidate))
+                    try checkpoint(.convertedFP16(1))
+                }
+            }
+            var int8: [Vector512INT8] = []
+            var queryINT8: Vector512INT8?
+            if workload.precisionMode == .int8Acceptable {
+                try Task.checkCancellation()
+                queryINT8 = Vector512INT8(from: query, params: nil)
+                try checkpoint(.convertedINT8(1))
+                for candidate in candidates {
+                    try Task.checkCancellation()
+                    int8.append(Vector512INT8(from: candidate, params: nil))
+                    try checkpoint(.convertedINT8(1))
+                }
+            }
+            return .dim512(TestData512(query512: query, queryINT8: queryINT8,
+                candidates: candidates, candidatesFP16: fp16, candidatesINT8: int8))
         case 768:
             var rng = SeededRNG(seed: 0x5EED_0768)
+            try Task.checkCancellation()
             let query = Vector768Optimized(generator: { _ in rng.next() * 2 - 1 })
-            let candidates = (0..<workload.batchSize).map { _ in
-                Vector768Optimized(generator: { _ in rng.next() * 2 - 1 })
+            try checkpoint(.generatedVector)
+            var candidates: [Vector768Optimized] = []
+            for _ in 0..<workload.batchSize {
+                try Task.checkCancellation()
+                candidates.append(Vector768Optimized(generator: { _ in rng.next() * 2 - 1 }))
+                try checkpoint(.generatedVector)
             }
-
-            let queryINT8 = Vector768INT8(from: query, params: nil)
-            let candidatesFP16 = candidates.map { MixedPrecisionKernels.Vector768FP16(from: $0) }
-            let candidatesINT8 = candidates.map { Vector768INT8(from: $0, params: nil) }
-
-            return .dim768(TestData768(
-                query768: query,
-                queryINT8: queryINT8,
-                candidates: candidates,
-                candidatesFP16: candidatesFP16,
-                candidatesINT8: candidatesINT8
-            ))
-
+            var fp16: [MixedPrecisionKernels.Vector768FP16] = []
+            if workload.precisionMode != .fp32Full {
+                for candidate in candidates {
+                    try Task.checkCancellation()
+                    fp16.append(MixedPrecisionKernels.Vector768FP16(from: candidate))
+                    try checkpoint(.convertedFP16(1))
+                }
+            }
+            var int8: [Vector768INT8] = []
+            var queryINT8: Vector768INT8?
+            if workload.precisionMode == .int8Acceptable {
+                try Task.checkCancellation()
+                queryINT8 = Vector768INT8(from: query, params: nil)
+                try checkpoint(.convertedINT8(1))
+                for candidate in candidates {
+                    try Task.checkCancellation()
+                    int8.append(Vector768INT8(from: candidate, params: nil))
+                    try checkpoint(.convertedINT8(1))
+                }
+            }
+            return .dim768(TestData768(query768: query, queryINT8: queryINT8,
+                candidates: candidates, candidatesFP16: fp16, candidatesINT8: int8))
         case 1536:
             var rng = SeededRNG(seed: 0x5EED_1536)
+            try Task.checkCancellation()
             let query = Vector1536Optimized(generator: { _ in rng.next() * 2 - 1 })
-            let candidates = (0..<workload.batchSize).map { _ in
-                Vector1536Optimized(generator: { _ in rng.next() * 2 - 1 })
+            try checkpoint(.generatedVector)
+            var candidates: [Vector1536Optimized] = []
+            for _ in 0..<workload.batchSize {
+                try Task.checkCancellation()
+                candidates.append(Vector1536Optimized(generator: { _ in rng.next() * 2 - 1 }))
+                try checkpoint(.generatedVector)
             }
-
-            let queryINT8 = Vector1536INT8(from: query, params: nil)
-            let candidatesFP16 = candidates.map { MixedPrecisionKernels.Vector1536FP16(from: $0) }
-            let candidatesINT8 = candidates.map { Vector1536INT8(from: $0, params: nil) }
-
-            return .dim1536(TestData1536(
-                query1536: query,
-                queryINT8: queryINT8,
-                candidates: candidates,
-                candidatesFP16: candidatesFP16,
-                candidatesINT8: candidatesINT8
-            ))
-
-        default:
-            return nil  // Unsupported dimension
+            var fp16: [MixedPrecisionKernels.Vector1536FP16] = []
+            if workload.precisionMode != .fp32Full {
+                for candidate in candidates {
+                    try Task.checkCancellation()
+                    fp16.append(MixedPrecisionKernels.Vector1536FP16(from: candidate))
+                    try checkpoint(.convertedFP16(1))
+                }
+            }
+            var int8: [Vector1536INT8] = []
+            var queryINT8: Vector1536INT8?
+            if workload.precisionMode == .int8Acceptable {
+                try Task.checkCancellation()
+                queryINT8 = Vector1536INT8(from: query, params: nil)
+                try checkpoint(.convertedINT8(1))
+                for candidate in candidates {
+                    try Task.checkCancellation()
+                    int8.append(Vector1536INT8(from: candidate, params: nil))
+                    try checkpoint(.convertedINT8(1))
+                }
+            }
+            return .dim1536(TestData1536(query1536: query, queryINT8: queryINT8,
+                candidates: candidates, candidatesFP16: fp16, candidatesINT8: int8))
+        default: throw PrecisionTuningSupport.invalid("dimension", "unsupported dimension")
         }
     }
 
-    private func estimateMemoryFootprint(
-        _ strategy: KernelStrategy,
-        workload: WorkloadCharacteristics
-    ) -> Int {
-        let dim = workload.dimension
-        let n = workload.batchSize
-
-        switch strategy {
-        case .cpuAoS, .cpuSoA:
-            // FP32: 4 bytes/element
-            // Query + N candidates
-            return (n + 1) * dim * 4
-
-        case .cpuMixedPrecision:
-            // Query: FP32 (4 bytes/element)
-            // Candidates: FP16 (2 bytes/element)
-            return dim * 4 + n * dim * 2
-
-        case .cpuQuantized:
-            // INT8: 1 byte/element
-            // Note: This is simplified - actual storage includes quantization params
-            return (n + 1) * dim * 1
-
-        case .auto:
-            return 0
+    private func ensureProfilesLoaded() throws {
+        guard !profilesLoaded else { return }
+        guard let url = persistenceURL else { profilesLoaded = true; return }
+        let data: Data
+        do { data = try Data(contentsOf: url) }
+        catch let error as NSError where error.domain == NSCocoaErrorDomain && error.code == NSFileReadNoSuchFileError {
+            profilesLoaded = true; return
+        } catch { throw PrecisionTuningSupport.failed("profile read failed: \(error)") }
+        guard let envelope = try? JSONDecoder().decode(Envelope.self, from: data),
+              envelope.schemaVersion == 1, envelope.provenance == provenance else {
+            profilesLoaded = true; return
         }
+        var loaded: [KernelProfileWorkload: [PerformanceProfile]] = [:]
+        for profile in envelope.profiles {
+            let w = WorkloadCharacteristics(dimension: profile.workload.dimension, batchSize: profile.workload.batchSize,
+                precisionMode: profile.workload.precisionMode)
+            guard (try? validate(w)) != nil, valid(profile, for: w) else { continue }
+            loaded[profile.workload, default: []].append(profile)
+        }
+        profileCache = loaded
+        profilesLoaded = true
     }
-
-    private nonisolated func measureAccuracy(
-        _ strategy: KernelStrategy,
-        testData: TestData
-    ) -> Float {
-        // Compute FP32 baseline (using cpuAoS as reference)
-        guard let baseline = try? executeKernel(.cpuAoS, testData: testData) else {
-            return 0.0
-        }
-
-        // Compute with target strategy
-        guard let results = try? executeKernel(strategy, testData: testData) else {
-            return 0.0
-        }
-
-        guard results.count == baseline.count, !baseline.isEmpty else {
-            return 0.0
-        }
-
-        // Compute Mean Relative Error
-        var totalError: Double = 0
-        for (result, truth) in zip(results, baseline) {
-            let denominator = max(abs(Double(truth)), 1e-6)
-            let relativeError = abs(Double(result - truth)) / denominator
-            totalError += relativeError
-        }
-
-        let meanRelativeError = Float(totalError / Double(results.count))
-        return 1.0 - min(meanRelativeError, 1.0)  // 1.0 = perfect, 0.0 = terrible
-    }
-
-    #if canImport(Darwin)
-    private nonisolated func machTimeToSeconds(_ time: UInt64) -> TimeInterval {
-        var timebase = mach_timebase_info_data_t()
-
-        guard mach_timebase_info(&timebase) == KERN_SUCCESS else {
-            return 0
-        }
-
-        let numer = Double(timebase.numer)
-        let denom = Double(timebase.denom)
-
-        guard denom != 0 else { return 0 }
-
-        let nanos = Double(time) * numer / denom
-        return TimeInterval(nanos) / 1_000_000_000.0
-    }
-    #endif
-
-    // MARK: - Persistence
-
-    private func loadProfiles() {
-        guard let url = persistenceURL,
-              FileManager.default.fileExists(atPath: url.path) else {
-            return
-        }
-
-        do {
-            let data = try Data(contentsOf: url)
-            profileCache = try JSONDecoder().decode([String: [PerformanceProfile]].self, from: data)
-        } catch {
-            print("KernelAutoTuner: Failed to load profiles from \(url): \(error)")
-        }
-    }
-
-    private func saveProfiles() {
+    private func saveProfiles() throws {
         guard let url = persistenceURL else { return }
-
         do {
-            let data = try JSONEncoder().encode(profileCache)
-
-            let directory = url.deletingLastPathComponent()
-            try FileManager.default.createDirectory(
-                at: directory,
-                withIntermediateDirectories: true
-            )
-
+            let values = profileCache.values.flatMap { $0 }
+            let data = try JSONEncoder().encode(Envelope(schemaVersion: 1, provenance: provenance, profiles: values))
             try data.write(to: url, options: .atomic)
         } catch {
-            print("KernelAutoTuner: Failed to save profiles to \(url): \(error)")
+            throw PrecisionTuningSupport.failed("in-memory calibration published; profile persistence failed: \(error)")
         }
     }
-
-    // MARK: - Mixed Precision Integration
-
-    /// Select optimal mixed precision strategy for given workload
-    ///
-    /// When the high-level strategy is .cpuMixedPrecision, this delegates to
-    /// MixedPrecisionAutoTuner for fine-grained variant selection (standard vs blocked,
-    /// FP16 query vs FP32 query, etc.).
-    ///
-    /// - Parameters:
-    ///   - workload: Workload characteristics
-    /// - Returns: Specific mixed precision strategy
-    public func selectMixedPrecisionStrategy(
-        for workload: WorkloadCharacteristics
-    ) async -> MixedPrecisionStrategy {
-        // Map PrecisionMode to accuracy requirement
-        let accuracyRequirement: Float = switch workload.precisionMode {
-        case .fp32Full:
-            0.0001  // Very strict: 0.01% error
-        case .fp16Acceptable:
-            0.001   // Standard: 0.1% error
-        case .int8Acceptable:
-            0.01    // Relaxed: 1% error
+    /// A normal reset is memory-only and prevents reloading this instance. With
+    /// true, remove only the configured file first; deletion failure preserves all
+    /// in-memory state. Directories and unrelated files are never removed.
+    public func clearCache(removePersistedProfiles: Bool = false) throws {
+        if removePersistedProfiles, let url = persistenceURL {
+            do {
+                let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+                guard attributes[.type] as? FileAttributeType != .typeDirectory else {
+                    throw PrecisionTuningSupport.failed("profile deletion refused: configured URL is a directory")
+                }
+                try FileManager.default.removeItem(at: url)
+            } catch let error as NSError where error.domain == NSCocoaErrorDomain && error.code == NSFileReadNoSuchFileError {
+                // A missing configured file needs no deletion.
+            } catch {
+                throw PrecisionTuningSupport.failed("profile deletion failed; memory retained: \(error)")
+            }
         }
+        profileCache.removeAll(); strategyOverrides.removeAll(); profilesLoaded = true
+    }
 
-        return await MixedPrecisionAutoTuner.shared.selectOptimalStrategy(
-            candidateCount: workload.batchSize,
-            accuracyRequirement: accuracyRequirement,
-            dimension: workload.dimension
-        )
+    /// Validates both inputs, rejects resource filters (DOT profiles cannot certify
+    /// this Euclidean path), then honors full mode without consulting either tuner.
+    /// Reduced modes delegate lookup only; no calibration occurs here. The one default
+    /// limit, 0.001, applies to every precision mode (0.3.3 used a per-mode limit, ten
+    /// times looser for `.int8Acceptable`); pass the limit a workload tolerates.
+    public func selectMixedPrecisionStrategy(for workload: WorkloadCharacteristics,
+        maximumSyntheticRelativeError: Float = 0.001) async throws -> MixedPrecisionStrategy {
+        try validate(workload)
+        try PrecisionTuningSupport.validateLimit(maximumSyntheticRelativeError, field: "maximumSyntheticRelativeError")
+        guard workload.maximumEstimatedPayloadBytes == nil && workload.maximumProfiledMeanLatency == nil else {
+            throw VectorError(kind: .unsupportedOperation, context: ErrorContext(additionalInfo: ["reason": "DOT resource profiles cannot certify mixed Euclidean selection"]))
+        }
+        guard workload.precisionMode != .fp32Full else { return .fullFP32 }
+        return try await MixedPrecisionAutoTuner.shared.selectStrategy(candidateCount: workload.batchSize,
+            maximumSyntheticRelativeError: maximumSyntheticRelativeError, dimension: workload.dimension)
     }
 }
-
-// MARK: - Platform Compatibility Extensions
-
-#if !canImport(Darwin)
-@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-extension Duration {
-    var timeInterval: TimeInterval {
-        let (sec, attosec) = self.components
-        return Double(sec) + Double(attosec) * 1e-18
-    }
-}
-#endif

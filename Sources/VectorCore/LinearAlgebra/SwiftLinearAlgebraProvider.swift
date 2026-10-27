@@ -1,34 +1,13 @@
-//
-//  SwiftLinearAlgebraProvider.swift
-//  VectorCore
-//
-//  Pure-Swift LinearAlgebraProvider fallback. Algorithm choices favor
-//  implementation transparency and unconditional numerical robustness over
-//  speed — this is the portability/parity path, not the fast path:
-//
-//  - QR:    Householder reflections (LAPACK-style storage: reflectors below
-//           the diagonal, accumulated backward to form thin Q).
-//  - Eigen: cyclic Jacobi rotations. Unconditionally convergent for
-//           symmetric matrices, quadratic in the tail. O(n³·sweeps).
-//  - SVD:   Hestenes one-sided Jacobi — orthogonalizes column pairs of A
-//           directly, accumulating V; singular values fall out as column
-//           norms. Avoids forming AᵀA (which would square the condition
-//           number — significant in Float32).
-//
-//  Rank-deficiency caveat: svdThin skips normalization of zero columns rather
-//  than completing an orthonormal basis. For tall/square input this affects U;
-//  the wide-input transpose branch swaps factors, so it affects Vᵀ instead.
-//  PCA copies Vᵀ rows, so requested zero-singular-value directions can yield
-//  zero component rows. Its component-count bound does not measure data rank.
-//
-//  All matrices column-major; see LinearAlgebraProvider layout contract.
-//
+// Householder QR, cyclic symmetric Jacobi eigen, and one-sided Jacobi SVD.
+// Double working storage preserves the Float input exponent range through
+// normalization. LinearAlgebraRangeTests.sharedExponentSweep exercises the published Float boundary.
+// Exact zero SVD working columns do not receive a completed null-space basis:
+// this affects U for tall/square inputs and Vt rows for wide inputs.
+import Foundation
 
 public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
 
-    /// Hard cap on Jacobi sweeps (eigen and SVD). Jacobi converges
-    /// quadratically once rotations get small; well-posed Float32 problems
-    /// finish in < 15 sweeps. Exhaustion ⇒ throw rather than return junk.
+    // Exhaustion throws; convergence for arbitrary conditioning is not promised.
     private static let maxSweeps = 60
 
     public init() {}
@@ -37,22 +16,21 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
 
     public func qrThin(_ a: [Float], rows m: Int, columns n: Int) throws -> QRFactorization {
         try LinearAlgebraValidation.validateQR(count: a.count, rows: m, columns: n)
+        try LinearAlgebraValidation.validateFinite(a, operation: "qrThin")
 
-        var fac = a                                  // factored form: R upper, reflectors below
-        var tau = [Float](repeating: 0, count: n)
+        var fac = a.map(Double.init)                                  // factored form: R upper, reflectors below
+        var tau = [Double](repeating: 0, count: n)
 
         for j in 0..<n {
             // Householder vector for column j, rows j..<m.
-            var normSq: Float = 0
-            for i in j..<m { normSq += fac[j * m + i] * fac[j * m + i] }
-            let norm = normSq.squareRoot()
+            let norm = try Self.norm(fac[(j * m + j)..<((j + 1) * m)], operation: "qrThin")
             if norm == 0 { tau[j] = 0; continue }    // zero column: identity reflector
 
             let alpha = fac[j * m + j]
-            let beta: Float = alpha >= 0 ? -norm : norm
+            let beta: Double = alpha >= 0 ? -norm : norm
             tau[j] = (beta - alpha) / beta
-            let invScale = 1 / (alpha - beta)        // v = [1, x_tail/(alpha-beta)]
-            for i in (j + 1)..<m { fac[j * m + i] *= invScale }
+            let denominator = alpha - beta
+            for i in (j + 1)..<m { fac[j * m + i] /= denominator }
             fac[j * m + j] = beta                    // R diagonal entry
 
             // Apply H_j = I − τ v vᵀ to trailing columns.
@@ -66,14 +44,14 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
         }
 
         // Extract R (n×n upper triangle).
-        var r = [Float](repeating: 0, count: n * n)
+        var r = [Double](repeating: 0, count: n * n)
         for j in 0..<n {
             for i in 0...j { r[j * n + i] = fac[j * m + i] }
         }
 
         // Accumulate thin Q: apply H_{n-1}…H_0 to the first n identity columns,
         // backward so each reflector touches only rows/cols it acts on.
-        var q = [Float](repeating: 0, count: m * n)
+        var q = [Double](repeating: 0, count: m * n)
         for j in 0..<n { q[j * m + j] = 1 }
         for j in stride(from: n - 1, through: 0, by: -1) {
             let t = tau[j]
@@ -87,7 +65,8 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
             }
         }
 
-        return QRFactorization(q: q, r: r, rows: m, columns: n)
+        return QRFactorization(q: try Self.output(q, operation: "qrThin"),
+                               r: try Self.output(r, operation: "qrThin"), rows: m, columns: n)
     }
 
     // MARK: - Symmetric eigen (cyclic Jacobi)
@@ -100,29 +79,24 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
     ) throws -> SymmetricEigenDecomposition {
         try LinearAlgebraValidation.validateSquare(count: a.count, dimension: n)
 
-        // Symmetrize from the LOWER triangle (matches LAPACK uplo='L' contract).
-        var mat = a
+        try LinearAlgebraValidation.validateLowerFinite(a, dimension: n)
+        // Never copy ignored upper-triangle values into the working matrix.
+        var mat = [Double](repeating: 0, count: a.count)
         for j in 0..<n {
-            for i in (j + 1)..<n { mat[i * n + j] = mat[j * n + i] }
+            for i in j..<n {
+                mat[j * n + i] = Double(a[j * n + i])
+                mat[i * n + j] = Double(a[j * n + i])
+            }
         }
 
-        var vecs: [Float] = []
+        var vecs: [Double] = []
         if computeEigenvectors {
-            vecs = [Float](repeating: 0, count: n * n)
+            vecs = [Double](repeating: 0, count: n * n)
             for j in 0..<n { vecs[j * n + j] = 1 }
         }
 
-        var frobSq: Float = 0
-        for v in mat { frobSq += v * v }
-        // Overflow here would make `negligible` infinite and silently return
-        // the unrotated diagonal as the spectrum — fail loudly instead.
-        guard frobSq.isFinite else {
-            throw VectorError.invalidData(
-                "symmetricEigen input overflows Float32 Frobenius norm; rescale the matrix")
-        }
-        let negligible = Float.ulpOfOne * frobSq.squareRoot()
-
-        var converged = (n == 1)
+        let negligible = Self.epsilon(n) * (try Self.norm(mat[...], operation: "symmetricEigen"))
+        var converged = Self.offDiagonalMaximum(mat, n: n) <= negligible
         var sweep = 0
         while !converged && sweep < Self.maxSweeps {
             sweep += 1
@@ -135,9 +109,8 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
 
                     let app = mat[p * n + p]
                     let aqq = mat[q * n + q]
-                    let theta = (aqq - app) / (2 * apq)
-                    // Stable smaller root of t² + 2θt − 1 = 0.
-                    let t: Float = (theta >= 0 ? 1 : -1) / (abs(theta) + (theta * theta + 1).squareRoot())
+                    let t = try Self.rotation(delta: aqq - app, twiceOffDiagonal: 2 * apq,
+                                              operation: "symmetricEigen")
                     let c = 1 / (t * t + 1).squareRoot()
                     let s = t * c
 
@@ -165,6 +138,8 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
                 }
             }
         }
+        try Self.finite(mat, operation: "symmetricEigen")
+        converged = Self.offDiagonalMaximum(mat, n: n) <= negligible
         guard converged else {
             throw ErrorBuilder(.operationFailed)
                 .message("Jacobi eigendecomposition did not converge in \(Self.maxSweeps) sweeps (n=\(n))")
@@ -175,20 +150,20 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
         var order = Array(0..<n)
         order.sort { mat[$0 * n + $0] < mat[$1 * n + $1] }
 
-        var eigenvalues = [Float](repeating: 0, count: n)
+        var eigenvalues = [Double](repeating: 0, count: n)
         for (dst, src) in order.enumerated() { eigenvalues[dst] = mat[src * n + src] }
 
         var sortedVecs: [Float]?
         if computeEigenvectors {
-            var sorted = [Float](repeating: 0, count: n * n)
+            var sorted = [Double](repeating: 0, count: n * n)
             for (dst, src) in order.enumerated() {
                 for i in 0..<n { sorted[dst * n + i] = vecs[src * n + i] }
             }
-            sortedVecs = sorted
+            sortedVecs = try Self.output(sorted, operation: "symmetricEigen")
         }
 
         return SymmetricEigenDecomposition(
-            eigenvalues: eigenvalues, eigenvectors: sortedVecs, dimension: n)
+            eigenvalues: try Self.output(eigenvalues, operation: "symmetricEigen"), eigenvectors: sortedVecs, dimension: n)
     }
 
     // MARK: - SVD (Hestenes one-sided Jacobi)
@@ -197,30 +172,31 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
     public func svdThin(_ a: [Float], rows m: Int, columns n: Int) throws -> SingularValueDecomposition {
         try LinearAlgebraValidation.validateRect(count: a.count, rows: m, columns: n)
 
+        try LinearAlgebraValidation.validateFinite(a, operation: "svdThin")
+        let result = try Self.svdWide(a.map(Double.init), rows: m, columns: n)
+        return SingularValueDecomposition(
+            u: try Self.output(result.u, operation: "svdThin"),
+            singularValues: try Self.output(result.s, operation: "svdThin"),
+            vt: try Self.output(result.vt, operation: "svdThin"), rows: m, columns: n)
+    }
+
+    private static func svdWide(_ a: [Double], rows m: Int, columns n: Int)
+        throws -> (u: [Double], s: [Double], vt: [Double]) {
         // Hestenes wants m ≥ n (orthogonalizes columns). For wide matrices,
         // decompose Aᵀ and swap factors: A = UΣVᵀ ⇔ Aᵀ = VΣUᵀ.
         if m < n {
             let t = Self.transpose(a, rows: m, columns: n)        // n×m
-            let tDec = try svdThin(t, rows: n, columns: m)
-            let k = tDec.singularValues.count                     // = min(m, n)
-            return SingularValueDecomposition(
-                u: Self.transpose(tDec.vt, rows: k, columns: m),   // (k×m)ᵀ = m×k
-                singularValues: tDec.singularValues,
-                vt: Self.transpose(tDec.u, rows: n, columns: k),   // (n×k)ᵀ = k×n
-                rows: m, columns: n
-            )
+            let tDec = try svdWide(t, rows: n, columns: m)
+            let k = tDec.s.count                     // = min(m, n)
+            return (Self.transpose(tDec.vt, rows: k, columns: m), tDec.s,
+                    Self.transpose(tDec.u, rows: n, columns: k))
         }
 
         var u = a                                    // m×n, columns rotated toward orthogonality
-        var v = [Float](repeating: 0, count: n * n)  // accumulates right rotations
+        var v = [Double](repeating: 0, count: n * n)  // accumulates right rotations
         for j in 0..<n { v[j * n + j] = 1 }
 
-        // Rotate while any column pair has |⟨u_p,u_q⟩| > ε‖u_p‖‖u_q‖.
-        // The floor scales with √m: a naive Float32 dot of two exactly
-        // orthogonal m-vectors carries ~√m·ulp relative noise, so a fixed
-        // 1e-6 target becomes unreachable (spurious non-convergence) once
-        // m exceeds a few hundred rows.
-        let eps = Swift.max(1e-6, 4 * Float.ulpOfOne * Float(m).squareRoot())
+        let eps = Self.epsilon(m)
         var converged = (n == 1)
         var sweep = 0
         while !converged && sweep < Self.maxSweeps {
@@ -228,18 +204,19 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
             converged = true
             for p in 0..<(n - 1) {
                 for q in (p + 1)..<n {
-                    var alpha: Float = 0, beta: Float = 0, gamma: Float = 0
+                    var alpha: Double = 0, beta: Double = 0, gamma: Double = 0
                     for i in 0..<m {
                         let up = u[p * m + i], uq = u[q * m + i]
                         alpha += up * up
                         beta += uq * uq
                         gamma += up * uq
                     }
-                    if gamma == 0 || gamma * gamma <= eps * eps * alpha * beta { continue }
+                    guard alpha.isFinite, beta.isFinite, gamma.isFinite else { throw Self.failure("svdThin") }
+                    if alpha == 0 || beta == 0 || abs(gamma) / sqrt(alpha) / sqrt(beta) <= eps { continue }
                     converged = false
 
-                    let zeta = (beta - alpha) / (2 * gamma)
-                    let t: Float = (zeta >= 0 ? 1 : -1) / (abs(zeta) + (zeta * zeta + 1).squareRoot())
+                    let t = try Self.rotation(delta: beta - alpha, twiceOffDiagonal: 2 * gamma,
+                                              operation: "svdThin")
                     let c = 1 / (t * t + 1).squareRoot()
                     let s = t * c
 
@@ -256,6 +233,7 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
                 }
             }
         }
+        try Self.finite(u, operation: "svdThin")
         guard converged else {
             throw ErrorBuilder(.operationFailed)
                 .message("Hestenes SVD did not converge in \(Self.maxSweeps) sweeps (m=\(m), n=\(n))")
@@ -263,15 +241,12 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
         }
 
         // Singular values = column norms; normalize U columns.
-        var sv = [Float](repeating: 0, count: n)
+        var sv = [Double](repeating: 0, count: n)
         for j in 0..<n {
-            var normSq: Float = 0
-            for i in 0..<m { normSq += u[j * m + i] * u[j * m + i] }
-            let norm = normSq.squareRoot()
+            let norm = try Self.norm(u[(j * m)..<((j + 1) * m)], operation: "svdThin")
             sv[j] = norm
             if norm > 0 {
-                let inv = 1 / norm
-                for i in 0..<m { u[j * m + i] *= inv }
+                for i in 0..<m { u[j * m + i] /= norm }
             }
         }
 
@@ -279,9 +254,9 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
         var order = Array(0..<n)
         order.sort { sv[$0] > sv[$1] }
 
-        var sortedS = [Float](repeating: 0, count: n)
-        var sortedU = [Float](repeating: 0, count: m * n)
-        var vt = [Float](repeating: 0, count: n * n)
+        var sortedS = [Double](repeating: 0, count: n)
+        var sortedU = [Double](repeating: 0, count: m * n)
+        var vt = [Double](repeating: 0, count: n * n)
         for (dst, src) in order.enumerated() {
             sortedS[dst] = sv[src]
             for i in 0..<m { sortedU[dst * m + i] = u[src * m + i] }
@@ -289,20 +264,83 @@ public struct SwiftLinearAlgebraProvider: LinearAlgebraProvider {
             for j in 0..<n { vt[j * n + dst] = v[src * n + j] }
         }
 
-        return SingularValueDecomposition(
-            u: sortedU, singularValues: sortedS, vt: vt, rows: m, columns: n)
+        return (sortedU, sortedS, vt)
     }
 
     // MARK: - Helpers
 
     /// Column-major transpose: (rows×columns) → (columns×rows).
-    private static func transpose(_ a: [Float], rows: Int, columns: Int) -> [Float] {
-        var out = [Float](repeating: 0, count: a.count)
+    private static func transpose(_ a: [Double], rows: Int, columns: Int) -> [Double] {
+        var out = [Double](repeating: 0, count: a.count)
         for j in 0..<columns {
             for i in 0..<rows {
                 out[i * columns + j] = a[j * rows + i]
             }
         }
         return out
+    }
+
+    private static func epsilon(_ dimension: Int) -> Double {
+        let du = Double(dimension) * (Double.ulpOfOne / 2)
+        return max(1e-12, 8 * du / (1 - du))
+    }
+
+    private static func failure(_ operation: String) -> VectorError {
+        ErrorBuilder(.operationFailed).message("\(operation) produced a nonfinite working value or an unrepresentable Float result").build()
+    }
+
+    private static func finite(_ values: [Double], operation: String) throws {
+        guard values.allSatisfy(\.isFinite) else { throw failure(operation) }
+    }
+
+    private static func output(_ values: [Double], operation: String) throws -> [Float] {
+        try finite(values, operation: operation)
+        let result = values.map(Float.init)
+        try LinearAlgebraValidation.validateOutput(result, operation: operation)
+        return result
+    }
+
+    private static func norm(_ values: ArraySlice<Double>, operation: String) throws -> Double {
+        var scale = 0.0, sum = 1.0
+        for value in values {
+            guard value.isFinite else { throw failure(operation) }
+            let magnitude = abs(value)
+            if magnitude == 0 { continue }
+            if scale < magnitude {
+                let ratio = scale / magnitude
+                sum = 1 + sum * ratio * ratio
+                scale = magnitude
+            } else {
+                let ratio = magnitude / scale
+                sum += ratio * ratio
+            }
+        }
+        let result = scale * sqrt(sum)
+        guard result.isFinite else { throw failure(operation) }
+        return result
+    }
+
+    // The smaller root, evaluated after scaling both arguments, avoids an
+    // unbounded theta or theta². delta==0 chooses the positive unit root.
+    private static func rotation(delta: Double, twiceOffDiagonal off: Double,
+                                 operation: String) throws -> Double {
+        guard delta.isFinite, off.isFinite, off != 0 else { throw failure(operation) }
+        if delta == 0 { return 1 }
+        let scale = max(abs(delta), abs(off))
+        let d = delta / scale, b = off / scale
+        let magnitude = abs(b) / (abs(d) + hypot(d, b))
+        return (delta.sign == off.sign ? 1 : -1) * magnitude
+    }
+
+    private static func offDiagonalMaximum(_ matrix: [Double], n: Int) -> Double {
+        var result = 0.0
+        for j in 0..<n {
+            for i in 0..<j {
+                let value = abs(matrix[j * n + i])
+                if !value.isFinite { return .infinity }
+                result = max(result, value)
+            }
+        }
+        return result
     }
 }

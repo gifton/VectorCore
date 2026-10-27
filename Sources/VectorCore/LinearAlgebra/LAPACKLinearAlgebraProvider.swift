@@ -28,6 +28,7 @@ public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {
 
     public func qrThin(_ a: [Float], rows: Int, columns: Int) throws -> QRFactorization {
         try LinearAlgebraValidation.validateQR(count: a.count, rows: rows, columns: columns)
+        try LinearAlgebraValidation.validateFinite(a, operation: "qrThin")
         try Self.ensureAvailable()
 
         let m = Int32(rows), n = Int32(columns)
@@ -57,6 +58,8 @@ public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {
         }
         try Self.check(orgqrInfo, routine: "sorgqr")
 
+        try LinearAlgebraValidation.validateOutput(work, operation: "qrThin")
+        try LinearAlgebraValidation.validateOutput(r, operation: "qrThin")
         return QRFactorization(q: work, r: r, rows: rows, columns: columns)
     }
 
@@ -64,6 +67,7 @@ public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {
 
     public func svdThin(_ a: [Float], rows: Int, columns: Int) throws -> SingularValueDecomposition {
         try LinearAlgebraValidation.validateRect(count: a.count, rows: rows, columns: columns)
+        try LinearAlgebraValidation.validateFinite(a, operation: "svdThin")
         try Self.ensureAvailable()
 
         let m = Int32(rows), n = Int32(columns)
@@ -90,6 +94,7 @@ public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {
         }
         try Self.check(info, routine: "sgesdd")
 
+        for result in [u, s, vt] { try LinearAlgebraValidation.validateOutput(result, operation: "svdThin") }
         return SingularValueDecomposition(u: u, singularValues: s, vt: vt, rows: rows, columns: columns)
     }
 
@@ -101,6 +106,7 @@ public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {
         computeEigenvectors: Bool
     ) throws -> SymmetricEigenDecomposition {
         try LinearAlgebraValidation.validateSquare(count: a.count, dimension: dimension)
+        try LinearAlgebraValidation.validateLowerFinite(a, dimension: dimension)
         try Self.ensureAvailable()
 
         let n = Int32(dimension)
@@ -115,6 +121,8 @@ public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {
         }
         try Self.check(info, routine: "ssyevd")
 
+        try LinearAlgebraValidation.validateOutput(w, operation: "symmetricEigen")
+        if computeEigenvectors { try LinearAlgebraValidation.validateOutput(work, operation: "symmetricEigen") }
         return SymmetricEigenDecomposition(
             eigenvalues: w,
             eigenvectors: computeEigenvectors ? work : nil,
@@ -132,21 +140,28 @@ public struct LAPACKLinearAlgebraProvider: LinearAlgebraProvider {
         }
     }
 
-    /// Mirrors VC_LAPACK_UNAVAILABLE in vc_lapack.h. Re-declared here because
-    /// parenthesized negative macros don't reliably cross the Clang importer.
+    /// Mirrors VC_LAPACK_UNAVAILABLE in vc_lapack.h. Re-declared here because the Clang
+    /// importer may not import a parenthesized negative macro as a Swift constant.
     private static let unavailableCode: Int32 = -1000
 
-    private static func check(_ info: Int32, routine: String) throws {
+    // Internal visibility permits LinearAlgebraRangeTests.workspaceErrorMapping without huge allocations.
+    internal static func check(_ info: Int32, routine: String) throws {
         guard info != 0 else { return }
         if info == Self.unavailableCode {
             throw ErrorBuilder(.resourceUnavailable)
                 .message("LAPACK shim unavailable or workspace allocation failed in \(routine)")
                 .build()
         }
+        if info == -1001 {
+            throw ErrorBuilder(.operationFailed).message("\(routine) returned an invalid workspace query").build()
+        }
+        if info == -1002 {
+            throw VectorError.invalidDimension(0, reason: "\(routine) local workspace size is not representable")
+        }
         if info < 0 {
             // Illegal argument — indicates a bug in this provider, not user input.
             throw VectorError.invalidOperation(
-                routine, reason: "illegal argument at position \(-info) (provider bug)")
+                routine, reason: "illegal argument at position \(-Int64(info)) (provider bug)")
         }
         // info > 0: routine-specific algorithmic failure (e.g. D&C non-convergence).
         throw ErrorBuilder(.operationFailed)

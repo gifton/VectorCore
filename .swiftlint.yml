@@ -39,6 +39,7 @@
 included:
   - Sources
   - Tests
+  - Benchmarks
 
 excluded:
   - .build
@@ -51,9 +52,6 @@ excluded:
 
 reporter: xcode
 
-analyzer_rules:
-  - unused_declaration
-  - unused_import
 
 disabled_rules:
   # This codebase intentionally uses force-unwrap/try in hot paths

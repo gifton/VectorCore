@@ -22,7 +22,9 @@ jobs:
   repository-checks:
     name: Repository checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    # The policy suite (542 tests) ran in 197 to 239 s in five local runs on 2026-10-23 and 2026-10-24 (Apple
+    # M3 Max, Python 3.14); on PR #56 this runner was cancelled at 5 minutes with 15 of its 38 modules started.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -65,6 +67,10 @@ jobs:
           set -o pipefail
           mkdir -p test-results
           swift test -c "$CONFIGURATION" --xunit-output test-results/results.xml 2>&1 | tee test-results/output.log
+      - name: Execute strict performance opt-out contracts
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+        run: python3 Scripts/ci/check_performance_gates.py --configuration "$CONFIGURATION" --scratch-root "$RUNNER_TEMP/performance-gates" --output "test-results/performance-gates-$CONFIGURATION" --jobs 3
       - name: Upload test summaries
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -122,10 +128,76 @@ jobs:
               -derivedDataPath "$RUNNER_TEMP/platform-builds/$platform" \
               CODE_SIGNING_ALLOWED=NO build -quiet
           done
+      - name: Build every other library product for simulator and Catalyst destinations
+        # Products are enumerated from Package.swift (never a hand list); the platform list
+        # must stay equal to Package.swift's platforms (Scripts/ci/tests/test_platform_ci_coverage.py).
+        run: |
+          products="$(python3 Scripts/ci/package_products.py --exclude VectorCore)"
+          test -n "$products"
+          for product in $products; do
+            for platform in 'iOS Simulator' 'tvOS Simulator' 'watchOS Simulator' 'visionOS Simulator' 'macOS,variant=Mac Catalyst'; do
+              xcodebuild -scheme "$product" -configuration Release \
+                -destination "generic/platform=$platform" \
+                -derivedDataPath "$RUNNER_TEMP/platform-builds/$platform" \
+                CODE_SIGNING_ALLOWED=NO build -quiet
+            done
+          done
       - name: Compile library and tests for Intel macOS
         run: |
           swift build --build-tests --triple x86_64-apple-macosx14.0 \
             --scratch-path "$RUNNER_TEMP/intel-test-build"
+
+  benchmark-contracts:
+    name: Executed benchmark contracts
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+        with:
+          xcode-version: '26.3'
+      - name: Build and execute actual CLI contracts
+        run: |
+          set -euo pipefail
+          swift build -c release --product vectorcore-bench --scratch-path "$RUNNER_TEMP/benchmark-contract-build"
+          BENCH_BIN="$(swift build -c release --show-bin-path --scratch-path "$RUNNER_TEMP/benchmark-contract-build")/vectorcore-bench"
+          python3 Scripts/ci/tests/test_benchmark_contracts.py "$BENCH_BIN"
+      - name: Execute four compiled build modes and public C routes
+        run: python3 Scripts/ci/check_benchmark_build_modes.py --scratch-root "$RUNNER_TEMP/benchmark-modes" --output benchmark-contract-results/build-modes --jobs 3
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: benchmark-contracts
+          path: benchmark-contract-results/
+          retention-days: 14
+
+  sanitizers:
+    name: Instrumented contracts (${{ matrix.sanitizer }})
+    runs-on: macos-15
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, thread]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+        with:
+          xcode-version: '26.3'
+      - name: Execute pinned valid instrumented bodies
+        env:
+          SANITIZER: ${{ matrix.sanitizer }}
+        run: python3 Scripts/ci/check_sanitizers.py --sanitizer "$SANITIZER" --scratch-root "$RUNNER_TEMP/sanitizers" --output "sanitizer-results/$SANITIZER" --jobs 3
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: required-sanitizer-${{ matrix.sanitizer }}
+          path: sanitizer-results/
+          retention-days: 14
 
   perf-smoke:
     name: Perf Smoke (artifact only)
@@ -151,10 +223,27 @@ jobs:
           include-hidden-files: true
           retention-days: 14
 
+  # Non-required (not in the CI Required aggregate). Guards the CI SDK only (Xcode 26.3):
+  # a collision introduced by the Xcode 27 SDK is not detected here. It needs an Xcode 27
+  # leg, which belongs to the Xcode 27 CI migration. The check rebuilds the package once.
+  sdk-names:
+    name: SDK type-name collisions (Xcode 26.3 SDK only)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+        with:
+          xcode-version: '26.3'
+      - name: Check public type names against the Xcode 26.3 SDK
+        run: python3 Scripts/ci/check_sdk_name_collisions.py
+
   required:
     name: CI Required
     if: always()
-    needs: [test, lint, repository-checks, consumer, platforms]
+    needs: [test, lint, repository-checks, consumer, platforms, benchmark-contracts, sanitizers]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -164,4 +253,4 @@ jobs:
       - name: Reject unsuccessful or absent required jobs
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
-        run: python3 Scripts/ci/check_required.py test lint repository-checks consumer platforms
+        run: python3 Scripts/ci/check_required.py test lint repository-checks consumer platforms benchmark-contracts sanitizers

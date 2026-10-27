@@ -2,8 +2,8 @@
 //  SoA.swift
 //  VectorCore
 //
-//  Structure-of-Arrays (SoA) storage for optimized batch scoring
-//  Provides cache-friendly memory layout for vector similarity operations
+//  Structure-of-Arrays (SoA) storage for batch scoring (lane-major layout; see Docs/SoA_Layout_Contract.md).
+//  No cache or speed advantage over AoS is measured in this repository.
 //
 
 import Foundation
@@ -41,22 +41,23 @@ extension Vector1536Optimized: SoACompatible {
 
 // MARK: - SoA Container
 
-/// Structure-of-Arrays (SoA) container for optimized batch scoring.
+/// Structure-of-Arrays (SoA) container for batch scoring.
 ///
 /// Memory layout: **lane-major, then candidate index.** `buffer[lane * count + j]`
 /// stores the `SIMD4<Float>` for candidate `j` at `lane` (each lane = 4 contiguous
 /// dimensions; `lanes = dimension / 4`). The candidate axis is never padded, so the
 /// stride between lanes is exactly `count` elements.
 ///
-/// This provides superior cache locality when processing multiple candidates
-/// with the same query vector, as all candidates' data for a given lane
-/// are stored contiguously in memory.
+/// All candidates' data for a given lane are stored contiguously, so a kernel that walks the
+/// candidates of one lane reads one contiguous run. Any cache or speed advantage over AoS is
+/// not verified here.
 ///
 /// - Important: This layout is a **frozen, stable contract as of 0.3.0** — downstream
-///   GPU kernels index into a zero-copy `MTLBuffer` built from ``pageAlignedBytes``,
+///   GPU kernels index into an `MTLBuffer` created with `makeBuffer(bytesNoCopy:)` over ``pageAlignedBytes``,
 ///   so the formula, element type, and stride must not change silently. The contract is
 ///   documented in `Docs/SoA_Layout_Contract.md` and exposed programmatically via
 ///   ``layoutDescriptor`` (a ``SoALayout``); consumers should derive constants from there.
+///   The formulas are pinned by `SoALayoutContractTests` (`descriptorGoldenValues`, `elementIndexFormula`).
 public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     public let lanes: Int
     public let count: Int
@@ -164,13 +165,13 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     /// Builds the SoA structure from an Array-of-Structures (AoS) candidate set.
     ///
     /// Transforms the memory layout from [Candidate][Lane] to [Lane][Candidate]
-    /// for optimal cache performance during batch scoring operations.
+    /// (lane-major; see the type's layout notes).
     ///
     /// - Parameters:
     ///   - candidates: Source vectors in AoS layout.
     ///   - pageAligned: When true, allocates via posix_memalign with page-aligned base and
-    ///     page-rounded length, enabling zero-copy GPU import via
-    ///     `MTLDevice.makeBuffer(bytesNoCopy:)`. Access the pointer pair via `pageAlignedBytes`.
+    ///     page-rounded length, the base and length `MTLDevice.makeBuffer(bytesNoCopy:)` requires.
+    ///     Access the pointer pair via `pageAlignedBytes`.
     public static func build(from candidates: [Vector], pageAligned: Bool = false) -> SoA<Vector> {
         let N = candidates.count
         let soa = SoA<Vector>(count: N, pageAligned: pageAligned)
@@ -180,8 +181,7 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
         let lanes = Vector.lanes
         let bufferPtr = soa.buffer
 
-        // Transposition loop: Transform AoS to SoA
-        // Optimized for sequential candidate reading (cache-friendly for input)
+        // Transposition loop: AoS to SoA, reading each candidate's lanes in order
         for j in 0..<N {
             let candidate = candidates[j]
             let candidateStorage = candidate.storage
@@ -202,16 +202,16 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     /// The resulting pointer provides access to `count` contiguous SIMD4<Float> elements,
     /// representing all candidates' data for the specified lane.
     ///
-    /// This is the key optimization: all candidates for a given lane are contiguous,
-    /// enabling efficient vectorized processing with minimal cache misses.
+    /// All candidates for a given lane are contiguous (`buffer + lane * count`). Any efficiency
+    /// or cache-miss effect of that is not verified here.
     @inlinable
     public func lanePointer(_ lane: Int) -> UnsafePointer<SIMD4<Float>> {
         assert(lane >= 0 && lane < self.lanes, "Lane index \(lane) out of bounds [0..<\(lanes)]")
         return UnsafePointer(buffer + (lane * count))
     }
 
-    /// Page-aligned base pointer + page-rounded byte length for zero-copy GPU import
-    /// via `MTLDevice.makeBuffer(bytesNoCopy:)`, or `nil` if this SoA was not built
+    /// Page-aligned base pointer + page-rounded byte length for GPU import with
+    /// `MTLDevice.makeBuffer(bytesNoCopy:)`, or `nil` if this SoA was not built
     /// page-aligned (`build(from:pageAligned: true)` / `init(..., pageAligned: true)`).
     ///
     /// - Important: The `SoA` MUST outlive any `MTLBuffer` created from this pointer.
@@ -242,8 +242,8 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
     /// description of the in-memory layout (lane stride, logical vs. allocated byte counts,
     /// and the element-index formula `lane * count + candidate`).
     ///
-    /// Downstream GPU kernels (e.g. VectorAccelerate Metal shaders that index a zero-copy
-    /// `MTLBuffer` wrapping ``pageAlignedBytes``) should derive their indexing constants
+    /// Downstream GPU kernels (e.g. VectorAccelerate Metal shaders that index an `MTLBuffer`
+    /// created with `makeBuffer(bytesNoCopy:)` over ``pageAlignedBytes``) should derive their indexing constants
     /// from this single source of truth rather than hardcoding magic numbers — in
     /// particular, take the candidate count `N` from ``SoALayout/count`` and **never**
     /// reverse-engineer it from the page-rounded ``SoALayout/allocatedByteCount``.
@@ -260,16 +260,10 @@ public final class SoA<Vector: SoACompatible>: @unchecked Sendable {
         return try body(UnsafeRawBufferPointer(start: UnsafeRawPointer(buffer), count: byteCount))
     }
 
-    /// Memory footprint in bytes
+    /// Logical SoA payload in bytes (`lanes * count * 16`). It excludes the page-rounding slack in
+    /// `layoutDescriptor.allocatedByteCount` and the object itself; it is not process memory.
     public var memoryFootprint: Int {
         return bufferCapacity * MemoryLayout<SIMD4<Float>>.size
-    }
-
-    /// Memory savings compared to AoS storage (for reference)
-    public var memoryEfficiency: String {
-        let aosSize = count * lanes * MemoryLayout<SIMD4<Float>>.size
-        let soaSize = memoryFootprint
-        return "SoA: \(soaSize) bytes, AoS: \(aosSize) bytes (same, but better cache locality)"
     }
 }
 

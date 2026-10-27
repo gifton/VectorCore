@@ -1,11 +1,11 @@
 name: Sanitizers
 
+# The required `sanitizers` job in ci.yml runs the same driver on every push and pull request; this standalone
+# workflow is for manual runs and a weekly sweep (PR #56 review CI6: two identical 30-minute macOS jobs per PR).
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'
 
 permissions:
   contents: read
@@ -26,11 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - sanitizer: address
-            filter: 'MemoryPoolTests|SIMDProviderBoundsTests|SerializationEdgeCaseTests|SoAPageAlignTests|UnifiedVectorBufferTests|TopKNaNContractTests|QuantizedEuclideanOverflowRegressionTests'
-          - sanitizer: thread
-            filter: 'MemoryPoolTests|ProviderConformanceTests|TopKNaNWrapperTests'
+        sanitizer: [address, thread]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -38,16 +34,10 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
         with:
           xcode-version: '26.3'
-      - name: Run targeted instrumented tests
+      - name: Execute pinned valid instrumented bodies
         env:
           SANITIZER: ${{ matrix.sanitizer }}
-          TEST_FILTER: ${{ matrix.filter }}
-        run: |
-          set -o pipefail
-          mkdir -p sanitizer-results
-          swift test --scratch-path "$RUNNER_TEMP/sanitizer-build" \
-            --sanitize "$SANITIZER" --filter "$TEST_FILTER" \
-            --xunit-output sanitizer-results/results.xml 2>&1 | tee sanitizer-results/output.log
+        run: python3 Scripts/ci/check_sanitizers.py --sanitizer "$SANITIZER" --scratch-root "$RUNNER_TEMP/sanitizers" --output "sanitizer-results/$SANITIZER" --jobs 3
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:

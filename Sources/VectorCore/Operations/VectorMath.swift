@@ -17,10 +17,10 @@ extension Vector {
     ///
     /// Computes: cᵢ = aᵢ × bᵢ for all i
     ///
-    /// Performance characteristics:
-    /// - vDSP_vmul: Highly optimized SIMD implementation
-    /// - In-place operation on result copy
-    /// - ~10x faster than scalar loop for large vectors
+    /// Implementation:
+    /// - Copies both operands into arrays and calls `Operations.simdProvider.elementWiseMultiply`
+    ///   (the default `SwiftSIMDProvider` is pure Swift; `AccelerateArraySIMDProvider` is opt-in)
+    /// - Speed relative to a scalar loop is not measured in this repository
     ///
     /// Use cases:
     /// - Feature scaling and masking
@@ -40,7 +40,7 @@ extension Vector {
     /// Computes: cᵢ = aᵢ / bᵢ for all i
     ///
     /// Performance characteristics:
-    /// - vDSP_vdiv: SIMD-optimized division
+    /// - Calls `Operations.simdProvider.elementWiseDivide` (pure Swift by default)
     /// - Note: Division is slower than multiplication
     /// - Consider reciprocal multiplication for repeated operations
     ///
@@ -125,20 +125,19 @@ extension Vector {
 
 // MARK: - Norms
 
-extension Vector where D.Storage: VectorStorageOperations {
+extension Vector {
     /// L1 norm (Manhattan norm)
     ///
     /// Computes: Σ|xᵢ|
     ///
-    /// Performance characteristics:
-    /// - Small vectors (≤32): Direct loop to avoid allocation overhead
-    /// - Large vectors: vDSP_vabs + vDSP_sve SIMD implementation
-    /// - Optimized memory usage with single allocation
+    /// Route (not a speed claim): up to 32 elements, a scalar loop over the storage; above 32, the elements go
+    /// through `Operations.simdProvider.abs` and are summed left to right with `reduce`
+    /// (D02DimensionProviderDispatchTests, D02ProviderHookRouteTests).
     ///
     /// Mathematical properties:
     /// - Always non-negative
     /// - Triangle inequality: ||x+y||₁ ≤ ||x||₁ + ||y||₁
-    /// - Robust to outliers (linear growth)
+    /// - Grows linearly with each component's magnitude (no squaring)
     @inlinable
     public var l1Norm: Float {
         var result: Float = 0
@@ -168,18 +167,21 @@ extension Vector where D.Storage: VectorStorageOperations {
     ///
     /// Computes: max(|xᵢ|)
     ///
-    /// Performance characteristics:
-    /// - vDSP_maxmgv: Single-pass maximum magnitude
-    /// - O(n) with early termination potential
-    /// - Minimal memory overhead
+    /// Route (not a speed claim): a NaN scan, then `Operations.simdProvider.abs` and `Array.max()`; an empty vector
+    /// gives 0 (D02ProviderHookRouteTests, D02DegenerateWidthTests).
     ///
     /// Mathematical properties:
     /// - Defines hypercube neighborhoods
     /// - Dual norm to L¹ (sum norm)
     /// - Submultiplicative: ||xy||∞ ≤ ||x||∞||y||∞
+    ///
+    /// NaN propagation: `Float.nan` when any element is NaN, as `l1Norm` and `magnitude` give NaN (`Array.max()`
+    /// alone keeps or drops a NaN depending on its position). Pinned through `chebyshevDistance(to:)` by
+    /// T15MetricExceptionalTableTests.everyMetricPinsItsExceptionalClass.
     @inlinable
     public var lInfinityNorm: Float {
         let array = self.toArray()
+        if array.contains(where: { $0.isNaN }) { return .nan }
         let absArray = Operations.simdProvider.abs(array)
         return absArray.max() ?? 0
     }
@@ -206,7 +208,7 @@ extension Vector {
     ///
     /// Computes: σ² = (1/n)Σ(xᵢ - μ)²
     ///
-    /// Algorithm: Two-pass for numerical stability
+    /// Algorithm: two passes (the mean first, then squared deviations from it)
     /// 1. Compute mean μ
     /// 2. Compute sum of squared deviations
     ///
@@ -239,7 +241,7 @@ extension Vector {
 
 // MARK: - Distance Metrics
 
-extension Vector where D.Storage: VectorStorageOperations {
+extension Vector {
     /// Manhattan distance to another vector
     ///
     /// Optimized implementation that fuses operations for better performance
@@ -282,7 +284,7 @@ extension Vector {
     ///
     /// Computes: softmax(xᵢ) = exp(xᵢ - max(x)) / Σexp(xⱼ - max(x))
     ///
-    /// Algorithm: Log-sum-exp trick for numerical stability
+    /// Algorithm: subtract the maximum before exponentiating (the log-sum-exp shift)
     /// 1. Subtract maximum value to prevent overflow
     /// 2. Apply exponential function
     /// 3. Normalize by sum
@@ -305,7 +307,7 @@ extension Vector {
     public func softmax() -> Vector<D> {
         var result = self
 
-        // Find max for numerical stability
+        // Find the maximum: after subtracting it no finite shifted value is positive, so exp cannot overflow
         let array = self.toArray()
         let maxVal = Operations.simdProvider.max(array)
 
@@ -339,10 +341,8 @@ extension Vector {
     ///
     /// Computes: clamp(xᵢ, min, max) = max(min, min(max, xᵢ))
     ///
-    /// Performance characteristics:
-    /// - vDSP_vclip: Single-pass SIMD clipping
-    /// - Branch-free implementation
-    /// - In-place operation on result copy
+    /// Route (not a speed claim): the elements go through `Operations.simdProvider.clip`, and the result is a new
+    /// vector (D02ProviderHookRouteTests).
     ///
     /// Use cases:
     /// - Activation function bounds (e.g., hard sigmoid)
@@ -367,32 +367,51 @@ extension Vector {
 ///
 /// `VectorMath` provides a collection of sophisticated vector operations
 /// beyond basic arithmetic, including nearest neighbor search, clustering
-/// support, and statistical computations. All operations are optimized
-/// for performance using Accelerate framework.
+/// support, and statistical computations. Accelerate use is not verified per
+/// operation here, and `nearestNeighbors(query:in:k:using:)` does not use
+/// Accelerate: it calls the supplied metric closure and selects in Swift.
 ///
 /// ## Categories
-/// - **Nearest Neighbor Search**: Find similar vectors efficiently
+/// - **Nearest Neighbor Search**: Find similar vectors (`nearestNeighbors(query:in:k:using:)`)
 /// - **Clustering Support**: Operations for k-means and related algorithms
 /// - **Statistical Operations**: Mean, variance, and other statistics
 /// - **Matrix Operations**: Batch vector operations
 ///
 /// ## Performance Notes
-/// - Uses vDSP for optimal SIMD performance
+/// - vDSP use is not verified per operation; `nearestNeighbors(query:in:k:using:)` does not use vDSP
 /// - Operations are designed for batch processing
 /// - Consider approximate methods for very large datasets
 public enum VectorMath {
-    /// Find k nearest neighbors by distance
+    /// Find the k nearest neighbors of `query` in `vectors` under `metric`.
     ///
-    /// Algorithm: Full scan with partial sort
-    /// - O(n) distance computations
-    /// - O(n log k) for partial sort (via heap)
+    /// Order: ascending numeric distances first, then NaN distances; exact ties
+    /// (including +0 and -0, and two NaNs) keep the smaller original index. This
+    /// is the policy of `TopKSelection.select(k:from:tieBreaker:)` with the default
+    /// `.smallerIndex`. Each entry carries the candidate's original index and the
+    /// metric's value for it, unmodified (zero sign and NaN payload included).
     ///
-    /// Performance characteristics:
-    /// - Linear scan suitable for small datasets
-    /// - Consider approximate methods (LSH, HNSW) for large n
-    /// - Parallelizable across distance computations
+    /// Count and metric calls: for positive `k` and nonempty `vectors`, `metric`
+    /// runs exactly once per candidate, in increasing index order (NaN and losing
+    /// values included), and never during the final extraction or sort; on the
+    /// small-k path each distance is offered to the bounded heap as it is computed.
+    /// The result has `min(k, vectors.count)` entries (NaN distances fill it when
+    /// needed). `k <= 0`, including negative `k`, and empty `vectors` return `[]`
+    /// without calling `metric`.
     ///
-    /// Memory: O(n) for distance storage
+    /// Strategy and complexity, with n = `vectors.count` and k' = min(k, n):
+    /// - k' < n / 10 (integer division): n metric calls, a bounded heap of k'
+    ///   entries (O(n log k') comparisons), then a sort of the k' retained entries;
+    ///   O(k') working arrays.
+    /// - otherwise: n metric calls, then a sort of all n (index, distance) pairs,
+    ///   O(n log n); O(n) working arrays.
+    /// The scan is serial and does not use Accelerate.
+    ///
+    /// - Important: Changed behaviour (breaking; see CHANGELOG). Results used to
+    ///   come from a sort with `<` on the distance, which left NaN positions
+    ///   unspecified; `k == 0` called the metric for every candidate, and a negative
+    ///   `k` trapped after calling it for every candidate.
+    ///
+    /// Tested by `VectorMathNearestContractTests` and `TopKSelectorOracleTests`.
     ///
     /// Use cases:
     /// - k-NN classification/regression
@@ -404,12 +423,10 @@ public enum VectorMath {
         in vectors: [Vector<D>],
         k: Int,
         using metric: (Vector<D>, Vector<D>) -> Float
-    ) -> [(index: Int, distance: Float)] where D.Storage: VectorStorageOperations {
-        let distances = vectors.enumerated().map { index, vector in
-            (index: index, distance: metric(query, vector))
+    ) -> [(index: Int, distance: Float)] {
+        TopKSelection.selectByScore(count: vectors.count, k: k, tieBreaker: .smallerIndex) {
+            metric(query, vectors[$0])
         }
-
-        return Array(distances.sorted { $0.distance < $1.distance }.prefix(k))
     }
 
     /// Compute pairwise distances between all vectors
@@ -435,7 +452,7 @@ public enum VectorMath {
     public static func pairwiseDistances<D>(
         _ vectors: [Vector<D>],
         using metric: (Vector<D>, Vector<D>) -> Float
-    ) -> [[Float]] where D.Storage: VectorStorageOperations {
+    ) -> [[Float]] {
         let n = vectors.count
         var distances = Array(repeating: Array(repeating: Float(0), count: n), count: n)
 
@@ -462,14 +479,15 @@ extension Vector {
 
 // MARK: - Quality Metrics
 
-extension Vector where D.Storage: VectorStorageOperations {
+extension Vector {
     /// Calculate sparsity (proportion of near-zero elements)
     ///
     /// - Parameter threshold: Values with absolute value <= threshold are considered zero
-    /// - Returns: Proportion of sparse elements (0.0 = dense, 1.0 = all zeros)
+    /// - Returns: Proportion of sparse elements (0.0 = dense, 1.0 = all zeros). At width 0 the proportion is 0/0,
+    ///   so the result is NaN (D02DegenerateWidthTests; behaviour unchanged by D02, now documented).
     ///
     /// Use cases:
-    /// - Compression decisions (sparse vectors can be stored efficiently)
+    /// - Compression decisions (a sparse format stores only the nonzero entries)
     /// - Quality assessment (very sparse vectors may indicate issues)
     /// - Feature selection (identify uninformative features)
     @inlinable
@@ -485,26 +503,49 @@ extension Vector where D.Storage: VectorStorageOperations {
         return Float(sparseCount) / Float(D.value)
     }
 
-    /// Calculate Shannon entropy
+    /// Truncated entropy of the normalized magnitude distribution
     ///
-    /// Treats the vector as a probability distribution after normalization.
-    /// Higher values indicate more uniform distribution of values.
-    ///
-    /// Formula: H(X) = -Σ(p_i * log(p_i)) where p_i = |x_i| / Σ|x_j|
+    /// Treats the vector as a probability distribution $p_i = |x_i| / \sum_j |x_j|$.
+    /// Returns $\sum_{p_i > \varepsilon_{Float}} -p_i \ln p_i$ (the documented truncated entropy;
+    /// terms with $p_i \le$ `Float.ulpOfOne` are omitted, but those coordinates stay in the
+    /// denominator). The cutoff is on the normalized probability, never on the input scale.
     ///
     /// Returns:
-    /// - 0.0 for zero vectors or single-spike vectors
-    /// - Higher values for more distributed vectors
-    /// - Maximum entropy = log(n) for uniform distribution
+    /// - `+0` for all-zero (including signed-zero) or single-spike vectors
+    /// - NaN if any coordinate is NaN or infinite
+    /// - $\ln D$ for uniform nonzero magnitudes only while each $p_i = 1/D$ exceeds
+    ///   `Float.ulpOfOne` (i.e. $D < 2^{23}$); for $D \ge 2^{23}$ every term is omitted and the
+    ///   truncated entropy is `+0`. The $\ln D$ claim is tested at widths 1, 4, 8, 63, 64, 65, 128,
+    ///   1536 only, by `EntropyRangeContractTests.uniformMagnitudesReturnLogD`; the $D \ge 2^{23}$ case is
+    ///   derived from the cutoff and not exercised by a test (unverified).
     ///
-    /// Use cases:
-    /// - Measure information content
-    /// - Detect concentrated vs distributed patterns
-    /// - Feature quality assessment
+    /// For finite coordinates, with $p_i = |x_i| / \sum_j |x_j|$:
+    ///
+    /// $$H = \mathrm{Float}\Big(\sum_{p_i > \varepsilon_{\mathrm{Float}}} -p_i \ln p_i\Big)$$
+    ///
+    /// - The cutoff `p_i > Float.ulpOfOne` applies to the *normalized probability only*.
+    ///   Coordinates at or below it are omitted from the numerator sum but remain in the
+    ///   denominator. This is the documented truncated entropy, not exact Shannon entropy
+    ///   for arbitrarily small probability mass. There is no cutoff on the input sum.
+    /// - Coordinates are widened exactly to `Double`; magnitudes are summed with
+    ///   Neumaier-compensated `Double` arithmetic and entropy terms accumulate in `Double`;
+    ///   only the final result is rounded to `Float`.
+    /// - All-zero input (including signed zeros) returns `+0`. Any NaN or +/-infinity
+    ///   coordinate returns NaN. Signs do not affect finite results.
+    /// - Complexity: two passes, O(D) time, O(1) auxiliary storage.
+    ///
+    /// Verified by `EntropyRangeContractTests` (uniform ln(D) across the Float exponent
+    /// range, spikes, cutoff table, non-finite and signed-zero cases) and `VectorEntropySuite`.
+    /// The test tolerance (8 * ulpOfOne * max(1, |reference|)) is a regression bound, not an accuracy guarantee.
+    /// `entropyFast` is a deprecated spelling of this property (same computation and value).
     @inlinable
     public var entropy: Float {
-        // Use optimized implementation for better performance
-        return entropyFast
+        // Both width branches run the shared contract implementation (VectorEntropy.swift).
+        if D.value <= 64 {
+            return entropySmall()
+        } else {
+            return entropyLarge()
+        }
     }
 
     // TODO: Implement VectorQuality type
@@ -524,7 +565,7 @@ extension Vector where D.Storage: VectorStorageOperations {
 
 // MARK: - Serialization
 
-extension Vector where D.Storage: VectorStorageOperations {
+extension Vector {
     /// Base64-encoded representation of the vector
     ///
     /// Uses the binary encoding format with CRC32 checksum for data integrity.

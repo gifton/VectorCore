@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - Element-wise Min/Max Operations
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
     /// Compute element-wise minimum between two vectors
     /// - Parameter other: The other vector
@@ -34,21 +34,29 @@ public extension Vector where D.Storage: VectorStorageOperations {
     }
 
     /// Find the minimum element in the vector
-    /// - Returns: The minimum value and its index
+    /// - Returns: The minimum value and its index; the first NaN and its index when any element is NaN (T16, through
+    ///   the provider's `minIndex`; T16ReductionExceptionalTableTests)
+    /// - Precondition: `D.value > 0`. An empty vector has no minimum: the call stops with "minElement requires a
+    ///   nonzero dimension" (D02DegenerateWidthTests, child-isolated).
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func minElement() -> (value: Float, index: Int) {
         let array = Array(self)
+        precondition(!array.isEmpty, "minElement requires a nonzero dimension")
         let index = Operations.simdProvider.minIndex(array)
         return (array[index], index)
     }
 
     /// Find the maximum element in the vector
-    /// - Returns: The maximum value and its index
+    /// - Returns: The maximum value and its index; the first NaN and its index when any element is NaN (T16, through
+    ///   the provider's `maxIndex`; T16ReductionExceptionalTableTests)
+    /// - Precondition: `D.value > 0`. An empty vector has no maximum: the call stops with "maxElement requires a
+    ///   nonzero dimension" (D02DegenerateWidthTests, child-isolated).
     /// - Complexity: O(n) where n is the dimension
     @inlinable
     func maxElement() -> (value: Float, index: Int) {
         let array = Array(self)
+        precondition(!array.isEmpty, "maxElement requires a nonzero dimension")
         let index = Operations.simdProvider.maxIndex(array)
         return (array[index], index)
     }
@@ -56,18 +64,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
 
 // MARK: - Clamp Operation
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
-    /// Clamp all elements to a given range
-    /// - Parameter range: The range to clamp values to
-    /// - Returns: A new vector with clamped values
-    /// - Complexity: O(n) where n is the dimension
-    @inlinable
-    func clamped(to range: ClosedRange<Float>) -> Vector<D> {
-        let array = Array(self)
-        let clamped = Operations.simdProvider.clip(array, min: range.lowerBound, max: range.upperBound)
-        return try! Vector<D>(clamped)
-    }
+    // `clamped(to:)` is declared once, for every Vector<D>, in VectorMath.swift.
 
     /// Clamp all elements to a given range in place
     /// - Parameter range: The range to clamp values to
@@ -82,7 +81,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
 
 // MARK: - Linear Interpolation
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
     /// Linearly interpolate between two vectors
     /// - Parameters:
@@ -96,7 +95,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
         // Clamp t to [0, 1]
         let clampedT = Swift.max(0, Swift.min(1, t))
 
-        // Handle edge cases
+        // Endpoints return an operand exactly
         if clampedT == 0 { return self }
         if clampedT == 1 { return other }
 
@@ -115,7 +114,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
     /// - Note: t can be any value, allowing extrapolation
     @inlinable
     func lerpUnclamped(to other: Vector<D>, t: Float) -> Vector<D> {
-        // Handle edge cases for performance
+        // Endpoints return an operand exactly
         if t == 0 { return self }
         if t == 1 { return other }
 
@@ -144,7 +143,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
 
 // MARK: - Element-wise Operations
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
     /// Element-wise absolute value
     /// - Returns: A new vector with absolute values
@@ -170,7 +169,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
 
 // MARK: - Operator Overloads
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
     /// Element-wise minimum operator
     @inlinable
@@ -201,9 +200,7 @@ public extension DynamicVector {
         // Create arrays, perform operation, then create result
         let arr1 = Array(self)
         let arr2 = Array(other)
-        var result = [Float](repeating: 0, count: dimension)
-
-        result = Operations.simdProvider.elementWiseMin(arr1, arr2)
+        let result = Operations.simdProvider.elementWiseMin(arr1, arr2)
 
         return DynamicVector(result)
     }
@@ -220,9 +217,7 @@ public extension DynamicVector {
         // Create arrays, perform operation, then create result
         let arr1 = Array(self)
         let arr2 = Array(other)
-        var result = [Float](repeating: 0, count: dimension)
-
-        result = Operations.simdProvider.elementWiseMax(arr1, arr2)
+        let result = Operations.simdProvider.elementWiseMax(arr1, arr2)
 
         return DynamicVector(result)
     }
@@ -233,11 +228,10 @@ public extension DynamicVector {
     func clamped(to range: ClosedRange<Float>) -> DynamicVector {
         // Create array, perform operation, then create result
         let arr = Array(self)
-        var result = [Float](repeating: 0, count: dimension)
         let low = range.lowerBound
         let high = range.upperBound
 
-        result = Operations.simdProvider.clip(arr, min: low, max: high)
+        let result = Operations.simdProvider.clip(arr, min: low, max: high)
 
         return DynamicVector(result)
     }
@@ -256,7 +250,7 @@ public extension DynamicVector {
         // Clamp t to [0, 1]
         let clampedT = Swift.max(0, Swift.min(1, t))
 
-        // Handle edge cases
+        // Endpoints return an operand exactly
         if clampedT == 0 { return self }
         if clampedT == 1 { return other }
 

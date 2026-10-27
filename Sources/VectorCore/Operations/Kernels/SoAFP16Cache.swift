@@ -1,190 +1,163 @@
-//
-//  SoAFP16Cache.swift
-//  VectorCore
-//
-//  LRU cache for SoA FP16 conversions
-//  Implements Phase 3 of kernel-specs/11-mixed-precision-kernels-part2.md
-//
-
 import Foundation
 
-// MARK: - Cache Key
+/// Hashing selects a bucket; equality compares the ordered Float bit snapshot.
+private struct SoAFP16CacheKey: Hashable, Sendable {
+    let bits: [UInt32]
+    let vectorCount: Int
+    let dimension: Int = 512
+    let fingerprint: Int
 
-/// Cache key for SoA FP16 storage
-///
-/// Uses vector hashes for fast lookup while avoiding storing full vector data.
-/// This enables efficient caching of expensive SoA transposition operations.
-fileprivate struct SoAFP16CacheKey: Hashable, Sendable {
-    let vectorHashes: [Int]
-    let dimension: Int
-    
-    init(vectors: [Vector384Optimized], dimension: Int = 384) {
-        self.vectorHashes = vectors.map { $0.hashValue }
-        self.dimension = dimension
+    init(vectors: [Vector512Optimized], fingerprint: (@Sendable ([UInt32]) -> Int)?) {
+        vectorCount = vectors.count
+        // A materialized candidate array has 512 coordinates per fixed-shape vector.
+        bits = [UInt32](unsafeUninitializedCapacity: vectors.count * 512) { buffer, initializedCount in
+            var index = 0
+            for vector in vectors {
+                for coordinate in 0..<512 {
+                    buffer[index] = vector[coordinate].bitPattern
+                    index += 1
+                }
+            }
+            initializedCount = index
+        }
+        if let fingerprint {
+            self.fingerprint = fingerprint(bits)
+        } else {
+            var hasher = Hasher()
+            hasher.combine(bits)
+            self.fingerprint = hasher.finalize()
+        }
     }
-    
-    init(vectors: [Vector512Optimized], dimension: Int = 512) {
-        self.vectorHashes = vectors.map { $0.hashValue }
-        self.dimension = dimension
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(vectorCount)
+        hasher.combine(dimension)
+        hasher.combine(fingerprint)
     }
-    
-    init(vectors: [Vector768Optimized], dimension: Int = 768) {
-        self.vectorHashes = vectors.map { $0.hashValue }
-        self.dimension = dimension
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.vectorCount == rhs.vectorCount && lhs.dimension == rhs.dimension && lhs.bits == rhs.bits
     }
-    
-    init(vectors: [Vector1536Optimized], dimension: Int = 1536) {
-        self.vectorHashes = vectors.map { $0.hashValue }
-        self.dimension = dimension
-    }
-    
 }
 
-// MARK: - SoA FP16 Cache (512-dimensional)
-
-/// Thread-safe LRU cache for SoA FP16 conversions (512-dimensional)
+/// Actor-isolated LRU cache for exact 512-dimensional FP16 conversions.
 ///
-/// Caches the result of expensive AoS → SoA FP16 transpositions. This is beneficial when:
-/// - The same candidate set is queried multiple times
-/// - SoA creation overhead exceeds cache lookup cost
-/// - Memory is available for caching (typical size: ~1KB per 100 vectors)
+/// Identity includes candidate order, count and every Float bit, including signed
+/// zero and NaN payloads (SoAFP16CacheIdentityTests). The byte budget counts allocated
+/// UInt32 snapshot and UInt16 SoA capacities. It excludes dictionary/LRU metadata,
+/// transient lookup/conversion allocations and results retained only by callers;
+/// it is not an RSS limit. Returned immutable SoA storage may outlive eviction.
 ///
-/// ## Usage Example
-/// ```swift
-/// let cache = SoAFP16Cache.shared
-///
-/// // Check cache first
-/// if let cached = await cache.get(for: candidates) {
-///     // Use cached SoA
-/// } else {
-///     // Create and store
-///     let soa = MixedPrecisionKernels.createSoA512FP16(from: candidates)
-///     await cache.store(soa, for: candidates)
-/// }
-/// ```
+/// Migration: replace `shared` with an owned `SoAFP16Cache512(maxBytes: budget)`.
+/// Replace manual `store` calls with `getOrCreate(for:)`, which binds the conversion
+/// to the same candidates as its identity snapshot.
 public actor SoAFP16Cache512 {
+    private struct Entry {
+        let key: SoAFP16CacheKey
+        let soa: MixedPrecisionKernels.SoA512FP16
+        let bytes: Int
+    }
 
-    // MARK: - Singleton
-
-    public static let shared = SoAFP16Cache512()
-
-    // MARK: - State
-
-    private var cache: [SoAFP16CacheKey: MixedPrecisionKernels.SoA512FP16] = [:]
-    private var accessOrder: [SoAFP16CacheKey] = []  // LRU tracking (most recent at end)
+    private var cache: [SoAFP16CacheKey: Entry] = [:]
+    private var accessOrder: [SoAFP16CacheKey] = []
     private let maxSize: Int
+    private let maxBytes: Int
+    private let fingerprint: (@Sendable ([UInt32]) -> Int)?
+    private var usedBytes = 0
+    private var hitCount = 0
+    private var missCount = 0
 
-    // MARK: - Statistics
-
-    private var hitCount: Int = 0
-    private var missCount: Int = 0
-
-    // MARK: - Initialization
-
-    public init(maxSize: Int = 100) {
+    /// Both limits must be nonnegative. Zero in either disables retention.
+    /// Invalid limits trap at initialization with a named diagnostic in Debug/Release
+    /// (SoAFP16CacheIdentityTests.negativeLimitsRejectAtInitialization).
+    public init(maxSize: Int = 100, maxBytes: Int) {
+        guard maxSize >= 0 else { fatalError("SoAFP16Cache512 maxSize must be nonnegative") }
+        guard maxBytes >= 0 else { fatalError("SoAFP16Cache512 maxBytes must be nonnegative") }
         self.maxSize = maxSize
+        self.maxBytes = maxBytes
+        self.fingerprint = nil
     }
 
-    // MARK: - Cache Operations
+    // Collision injection exercises the actual dictionary route in
+    // SoAFP16CacheIdentityTests.collisionBucketsStillRequireAllBits.
+    internal init(maxSize: Int = 100, maxBytes: Int, fingerprint: @escaping @Sendable ([UInt32]) -> Int) {
+        guard maxSize >= 0 else { fatalError("SoAFP16Cache512 maxSize must be nonnegative") }
+        guard maxBytes >= 0 else { fatalError("SoAFP16Cache512 maxBytes must be nonnegative") }
+        self.maxSize = maxSize
+        self.maxBytes = maxBytes
+        self.fingerprint = fingerprint
+    }
 
-    /// Get cached SoA for given vectors
-    ///
-    /// - Parameter vectors: Candidate vectors
-    /// - Returns: Cached SoA if available, nil otherwise
     public func get(for vectors: [Vector512Optimized]) -> MixedPrecisionKernels.SoA512FP16? {
-        let key = SoAFP16CacheKey(vectors: vectors)
-
-        if let cached = cache[key] {
-            // Update LRU access order
-            if let index = accessOrder.firstIndex(of: key) {
-                accessOrder.remove(at: index)
-                accessOrder.append(key)
-            }
-
-            hitCount += 1
-            return cached
-        }
-
-        missCount += 1
-        return nil
+        lookup(SoAFP16CacheKey(vectors: vectors, fingerprint: fingerprint))
     }
 
-    /// Store SoA in cache
-    ///
-    /// - Parameters:
-    ///   - soa: SoA FP16 structure to cache
-    ///   - vectors: Original vectors (for key generation)
-    public func store(
-        _ soa: MixedPrecisionKernels.SoA512FP16,
-        for vectors: [Vector512Optimized]
-    ) {
-        let key = SoAFP16CacheKey(vectors: vectors)
-
-        // If key already exists, just update access order
-        if cache[key] != nil {
-            if let index = accessOrder.firstIndex(of: key) {
-                accessOrder.remove(at: index)
-            }
-        } else {
-            // Evict oldest if at capacity
-            if cache.count >= maxSize {
-                let oldestKey = accessOrder.removeFirst()
-                cache.removeValue(forKey: oldestKey)
-            }
+    private func lookup(_ key: SoAFP16CacheKey) -> MixedPrecisionKernels.SoA512FP16? {
+        guard let entry = cache[key] else {
+            missCount += 1
+            return nil
         }
+        if let index = accessOrder.firstIndex(of: entry.key) {
+            accessOrder.remove(at: index)
+        }
+        // Reuse the retained key's COW allocation, not the new lookup snapshot.
+        accessOrder.append(entry.key)
+        hitCount += 1
+        return entry.soa
+    }
 
-        cache[key] = soa
+    /// Return the exact conversion, retaining it only when both limits permit it.
+    /// Oversized entries bypass retention without evicting existing entries.
+    public func getOrCreate(for vectors: [Vector512Optimized]) -> MixedPrecisionKernels.SoA512FP16 {
+        let key = SoAFP16CacheKey(vectors: vectors, fingerprint: fingerprint)
+        if let cached = lookup(key) { return cached }
+        let soa = MixedPrecisionKernels.createSoA512FP16(from: vectors)
+        guard maxSize > 0, maxBytes > 0,
+              let bytes = Self.retainedCost(identityCapacity: key.bits.capacity, soaCapacity: soa.storage.capacity),
+              bytes <= maxBytes else { return soa }
+
+        // Subtraction avoids overflowing usedBytes + bytes; both terms are bounded
+        // by maxBytes. Every removed key has exactly one accounted entry.
+        while cache.count >= maxSize || usedBytes > maxBytes - bytes {
+            let oldest = accessOrder.removeFirst()
+            if let removed = cache.removeValue(forKey: oldest) { usedBytes -= removed.bytes }
+        }
+        cache[key] = Entry(key: key, soa: soa, bytes: bytes)
         accessOrder.append(key)
+        usedBytes += bytes
+        return soa
     }
 
-    /// Clear all cached entries
+    /// Checked payload cost; nil means the capacities cannot be represented in bytes.
+    internal nonisolated static func retainedCost(identityCapacity: Int, soaCapacity: Int) -> Int? {
+        guard identityCapacity >= 0, soaCapacity >= 0 else { return nil }
+        let identity = identityCapacity.multipliedReportingOverflow(by: MemoryLayout<UInt32>.stride)
+        let soa = soaCapacity.multipliedReportingOverflow(by: MemoryLayout<UInt16>.stride)
+        guard !identity.overflow, !soa.overflow else { return nil }
+        let total = identity.partialValue.addingReportingOverflow(soa.partialValue)
+        return total.overflow ? nil : total.partialValue
+    }
+
+    /// Remove retained entries and reset both retention and access statistics.
     public func clear() {
         cache.removeAll()
         accessOrder.removeAll()
+        usedBytes = 0
         hitCount = 0
         missCount = 0
     }
 
-    // MARK: - Statistics
-
-    /// Get cache hit rate
-    ///
-    /// - Returns: Hit rate in [0, 1] range, or 0 if no accesses yet
     public func hitRate() -> Double {
-        let total = hitCount + missCount
-        guard total > 0 else { return 0 }
-        return Double(hitCount) / Double(total)
+        let total = Double(hitCount) + Double(missCount)
+        return total > 0 ? Double(hitCount) / total : 0
     }
 
-    /// Get cache statistics
-    ///
-    /// - Returns: Tuple of (hits, misses, size, capacity)
     public func statistics() -> (hits: Int, misses: Int, size: Int, capacity: Int) {
-        return (hitCount, missCount, cache.count, maxSize)
+        (hitCount, missCount, cache.count, maxSize)
     }
-}
 
-// MARK: - Future: 768D and 1536D Caches
-
-// TODO: Implement SoAFP16Cache768 and SoAFP16Cache1536 once
-// MixedPrecisionKernels.createSoA768FP16() and createSoA1536FP16() are implemented.
-//
-// These will follow the same LRU cache pattern as SoAFP16Cache512.
-
-// MARK: - Convenience Extensions
-
-extension SoAFP16Cache512 {
-    /// Get or create SoA with automatic caching
-    ///
-    /// - Parameter vectors: Candidate vectors
-    /// - Returns: Cached or newly created SoA
-    public func getOrCreate(for vectors: [Vector512Optimized]) -> MixedPrecisionKernels.SoA512FP16 {
-        if let cached = get(for: vectors) {
-            return cached
-        }
-
-        let soa = MixedPrecisionKernels.createSoA512FP16(from: vectors)
-        store(soa, for: vectors)
-        return soa
+    /// Allocated payload capacity retained by this actor, with the exclusions above.
+    public func retentionStatistics() -> (usedBytes: Int, maxBytes: Int) {
+        (usedBytes, maxBytes)
     }
 }

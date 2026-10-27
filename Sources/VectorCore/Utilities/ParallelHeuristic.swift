@@ -21,7 +21,7 @@ enum ParallelHeuristic {
 
     // Parallel overhead model ~ constant setup + per-item overhead
     static func parallelOverheadNs(items: Int) -> Double {
-        // Calibrated overhead: ~60µs setup + ~1.3µs per item
+        // Model constants: 60µs setup + 1.3µs per item; their calibration is not verified in this repository
         60_000.0 + 1_300.0 * Double(max(items, 0))
     }
 

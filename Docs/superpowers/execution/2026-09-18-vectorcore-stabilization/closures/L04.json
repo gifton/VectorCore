@@ -1,0 +1,27 @@
+{
+ "task": "L04",
+ "status": "accepted",
+ "task_base": "7bb489a",
+ "integration_revision": "08a3be7",
+ "closed_records": [
+  "L04-MEASURED-ENVELOPE"
+ ],
+ "disposition_records": {
+  "L04-MEASURED-ENVELOPE": "Measure-and-document (user decisions 2026-10-16: per-chunk N up to 100k; D 384/768/1536; all algorithms; above-grid documented as not measured; no cancellation). One-host High Power grid (62 cases, 247 runs, every case reproducible) for exact/randomized PCA, KNNGraph.bruteForce and UMAP; dated record Benchmarks/WorkloadEnvelope/RESULTS.md (sha 2dbc6c26), Performance_Guide section, doc comments, CHANGELOG, ledger (V04-C-0742 revised; L04-C-0001..0030). STOP S1 found the LAPACK workspace-query defect (fixed by T19). NUM-29/30 closed by measurement; NUM-31 (cancellation) left out by user decision."
+ },
+ "validation": {
+  "suite": "Focused Debug/Release 79/17; full Debug 1701/252.",
+  "policy": "Ledger 0; Python 523 git-less; SwiftLint 0 new.",
+  "reviews": "Sonnet review (742/742 numbers match; wording CHANGES REQUESTED) -> fix round root-verified directly."
+ },
+ "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/L04",
+ "reviewed_tree": "manifest L04/freeze-sha256.txt (6331 files)",
+ "limitations": [
+  "Synthetic 50-cluster data; real chunk embeddings may differ in kNN graph shape and UMAP time.",
+  "One host; installd background load during grid-3 (disclosed); grid-1/2 timings superseded (low-power uncertainty).",
+  "kNN time super-quadratic over the two largest intervals only; do not extrapolate."
+ ],
+ "routed": [
+  "Optional: an approximate-kNN route if interactive UMAP at 100k+ is ever required (not needed for the stated workload)."
+ ]
+}

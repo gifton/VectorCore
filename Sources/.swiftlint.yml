@@ -194,6 +194,3 @@ redundant_optional_initialization: warning
 # ANALYZER RULES (Require compilation)
 # ============================================================================
 
-analyzer_rules:
-  - unused_declaration
-  - unused_import

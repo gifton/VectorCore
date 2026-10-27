@@ -11,11 +11,11 @@ import simd
 /// Protocol for optimized vector types with additional properties required by specialized kernels
 ///
 /// This protocol extends VectorProtocol with properties and methods specifically needed
-/// by quantization and SIMD-optimized kernels. It provides:
+/// by quantization and SIMD kernels. It provides:
 /// - Lane count information for SIMD operations
 /// - Dimension information for compile-time optimizations
 /// - Static factory methods for kernel implementations
-/// - SIMD storage access for high-performance operations
+/// - SIMD storage access for kernels
 ///
 public protocol OptimizedVector: VectorProtocol where Scalar == Float, Storage: SIMDStorage, Storage.Element == SIMD4<Float> {
 

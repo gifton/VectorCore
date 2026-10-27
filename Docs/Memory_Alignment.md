@@ -9,6 +9,7 @@ For the FP32 lane layout, see [SoA Layout Contract](SoA_Layout_Contract.md).
 | Interface | Alignment and lifetime | Ownership |
 |---|---|---|
 | Vector `withUnsafeBufferPointer` APIs | Scoped borrow; follow the concrete type's contract | Vector retains storage |
+| FP16 `withUnsafeFP16BufferPointer` | Synchronous UInt16-bit-pattern borrow; buffer/pointer must not escape | FP16 vector retains its immutable ContiguousArray during the callback |
 | `UnifiedVectorBuffer.withUnsafeContiguousBytes` | Contiguous logical Float bytes, aligned to the value's reported `alignment`; pointer must not escape the closure | Conformer retains storage |
 | `PageAlignedBuffer` | Page-aligned base and page-rounded allocation length; explicit owned-pointer access | Object owns allocation until consumed |
 | `SoA<V>` | Lane-major SIMD4 storage; page alignment is opt-in | Object owns allocation until consumed |
@@ -58,6 +59,33 @@ Allocation failure terminates via `fatalError`; this initializer is not
 throwing. See [implementation](../Sources/VectorCore/Storage/UnifiedVectorBuffer.swift)
 and [UnifiedVectorBufferTests](../Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift).
 
+## Scoped FP16 migration
+
+`Vector512FP16`, `Vector768FP16` and `Vector1536FP16` no longer expose the
+`fp16Storage` pointer getter. Use the synchronous, throwing-capable
+`withUnsafeFP16BufferPointer` method, which exposes exactly the fixed dimension
+of unchanged UInt16 bit patterns. The buffer and base pointer must not escape
+through a return value, capture, task, foreign callback or stored pointer.
+Generic return type `R` does not enforce that unsafe obligation in the compiler.
+
+For retained or asynchronous data, copy inside the callback and retain the Array:
+
+```swift
+import VectorCore
+
+let vector = MixedPrecisionKernels.Vector512FP16(
+    fp16Values: Array(repeating: 0x3c00, count: 512))
+let ownedBits: [UInt16] = vector.withUnsafeFP16BufferPointer { Array($0) }
+// ownedBits can be retained independently; no borrowed pointer leaves the callback.
+precondition(ownedBits.count == 512)
+```
+
+This is not an async borrow or an ownership-transfer operation. In contrast,
+`SoAFP16.storage` returns an owned ContiguousArray value; explicit page/SoA
+allocation access follows the separate persistent ownership rules below.
+Temporary-owner, nested and throwing callback controls are in
+[StorageBorrowContractTests](../Tests/ComprehensiveTests/StorageBorrowContractTests.swift).
+
 ## Borrowing versus transferring ownership
 
 For an asynchronous consumer, choose one ownership model explicitly.
@@ -94,10 +122,14 @@ synchronized.
 arm64/x86_64 and 16 bytes on other architectures; this is an allocation policy,
 not the OS page size or a statement about a particular processor's cache line.
 
-Supply a positive, representable element count. Alignment must be a positive
-power of two, at least `minimumAlignment` (16), and sufficient for the
-element type. The allocator checks the first two alignment constraints, but
-does not provide comprehensive count/overflow/type-alignment validation.
+Counts must be nonnegative, and the allocation byte product must be representable.
+Negative or overflowing counts throw `VectorError.invalidDimension`. Count zero
+allocates storage for one element but initializes none. Alignment must be a
+positive power of two, at least `minimumAlignment` (16), and at least the element
+type's alignment; these alignment requirements are checked preconditions.
+These bounded contracts are exercised by
+[UnsafeMemoryContractTests](../Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift).
+They do not validate later pointer arithmetic, initialization or lifetime.
 
 ```swift
 import VectorCore

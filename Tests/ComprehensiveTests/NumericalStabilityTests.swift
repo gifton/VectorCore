@@ -343,21 +343,22 @@ internal enum NumericalStabilityHelpers {
         let relError = relativeError(actual: actual, expected: expected)
         let dimension = vector.scalarCount
 
-        // Get first few components for debugging
-        var components: [Float] = []
+        // Both values below are computed inside their closures and returned (lost-store workaround W2,
+        // swiftlang/swift#92562). test_lost_store_reads.py flags the `maxComponent` assignment form (its captured-var
+        // rule); `components` (a mutating `append`, outside that lint) follows W2 as a precaution. The miscompile
+        // shown upstream is the mutable-pointer form, not this read-only one.
         let sampleCount = min(5, dimension)
-        vector.withUnsafeBufferPointer { buffer in
-            for i in 0..<sampleCount {
-                components.append(buffer[i])
-            }
+        let components: [Float] = vector.withUnsafeBufferPointer { buffer in
+            Array(buffer.prefix(sampleCount))
         }
 
         // Find max component
-        var maxComponent: Float = 0
-        vector.withUnsafeBufferPointer { buffer in
+        let maxComponent: Float = vector.withUnsafeBufferPointer { buffer in
+            var m: Float = 0
             for element in buffer {
-                maxComponent = max(maxComponent, abs(element))
+                m = max(m, abs(element))
             }
+            return m
         }
 
         var diagnostic = """

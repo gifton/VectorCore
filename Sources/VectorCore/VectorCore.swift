@@ -1,6 +1,6 @@
 // VectorCore
 //
-// Modern, high-performance vector operations for Swift
+// Vector types and operations for Swift
 //
 
 import Foundation
@@ -20,15 +20,20 @@ public typealias Timestamp = UInt64
 /// Main entry point for VectorCore functionality
 public enum VectorCore {
 
-    /// Create a vector of appropriate type based on dimension
+    /// Create a vector of the type `VectorTypeFactory` picks for `dimension`
     ///
-    /// Automatically selects the optimal storage type for the given dimension.
-    /// Common dimensions (128, 256, 512, 768, 1536, 3072) use optimized SIMD storage.
+    /// Delegates to `VectorTypeFactory.vector(of:from:)` (or `zeros(dimension:)` without data):
+    /// `Vector<DimN>` for 128, 256, 384, 512, 768, 1536 and 3072, `DynamicVector` otherwise.
     ///
+    /// - Precondition: `dimension >= 0`, and `data`, when given, has exactly `dimension` elements.
+    ///   This entry does not throw: a malformed dimension or count stops the process. With `data`, it force-tries
+    ///   the checked factory, which throws; without `data`, `zeros(dimension:)` stops at its own `fatalError` for a
+    ///   negative dimension. Use `VectorTypeFactory.vector(of:from:)`, which throws `VectorError`
+    ///   (`.invalidDimension`, `.dimensionMismatch`), to handle malformed input.
     /// - Parameters:
     ///   - dimension: The desired vector dimension
     ///   - data: Optional initial values (defaults to zero vector)
-    /// - Returns: Optimized vector for the specified dimension
+    /// - Returns: `Vector<DimN>` or `DynamicVector`, as above
     public static func createVector(dimension: Int, data: [Float]? = nil) -> any VectorType {
         if let data = data {
             return try! VectorTypeFactory.vector(of: dimension, from: data)
@@ -42,39 +47,28 @@ public enum VectorCore {
     /// - Parameters:
     ///   - dimension: Dimension of each vector
     ///   - data: 2D array where each inner array represents a vector
-    /// - Returns: Array of optimized vectors
-    /// - Throws: VectorCoreError if any vector has incorrect dimension
+    /// - Returns: One vector per row, of the type `createVector(dimension:data:)` picks for `dimension`
+    /// - Throws: The `VectorError` of `VectorTypeFactory.vector(of:from:)` for the first malformed row
     public static func createBatch(dimension: Int, from data: [[Float]]) throws -> [any VectorType] {
         try data.map { values in
             try VectorTypeFactory.vector(of: dimension, from: values)
         }
     }
 
-    /// Global configuration for VectorCore behavior
-    public struct Configuration: Sendable {
-        /// Batch processing configuration
-        public var batchOperations = BatchOperations.Configuration()
-
-        /// Memory alignment for optimal SIMD performance
-        public var memoryAlignment: Int = 64
-
-        public init() {}
-    }
-
-    /// Global configuration instance
-    public static let configuration = Configuration()
-
     /// Get version information
     public static var version: String {
         VectorCoreVersion.versionString
     }
 
-    /// Check if a dimension has optimized SIMD support
+    /// Whether `VectorTypeFactory` maps `dimension` to a fixed-width `Vector<DimN>`
+    /// (128, 256, 384, 512, 768, 1536 or 3072) instead of `DynamicVector`; the same answer as
+    /// `VectorTypeFactory.isSupported(dimension:)`. It does not refer to the `Vector*Optimized` types,
+    /// and no speed difference is measured (not verified).
     public static func hasOptimizedSupport(for dimension: Int) -> Bool {
         VectorTypeFactory.isSupported(dimension: dimension)
     }
 
-    /// Get the nearest optimized dimension
+    /// The `VectorTypeFactory.isSupported(dimension:)` width nearest to `size` (`VectorTypeFactory.optimalDimension(for:)`)
     public static func optimalDimension(for size: Int) -> Int {
         VectorTypeFactory.optimalDimension(for: size)
     }
@@ -83,7 +77,7 @@ public enum VectorCore {
 // MARK: - Convenience Extensions
 
 public extension Array where Element == Float {
-    /// Convert array to optimized vector
+    /// Convert the array with `VectorCore.createVector` (same preconditions)
     func toVector() -> any VectorType {
         VectorCore.createVector(dimension: count, data: self)
     }

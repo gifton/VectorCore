@@ -1,0 +1,50 @@
+[
+  {
+    "probe": "orchestrator_probe",
+    "exit": 0,
+    "output": "cosineSimilarityMatrix [[0.0, -1.0000001, 1.0000001], [-1.0000001, 0.0, 1.0000001], [1.0000001, 1.0000001, 0.0]]\nfinite-centroid [inf]\ndirect-mutation-hint true 1.0 2.0\nthrowing-mutation-hint true 1.0 3.0\n",
+    "error": ""
+  },
+  {
+    "probe": "vectors-probe",
+    "exit": 0,
+    "output": "mutated dynamic shape 2 3 3 equal true hashEqual false\ninplace-long [5.0, 7.0]\nnanApprox true\ninterior distinct true hashEqual true\noptimized claimed count 512 actual scalar count 4\ngeneric += long [5.0, 7.0]\ndirect optimized normalize failure(VectorError.invalidOperation: normalize failed: Cannot normalize zero vector)\ngeneric optimized normalize [inf, nan]\noptimized division tiny [inf, nan]\ntiny normalization [inf, nan]\n",
+    "error": ""
+  },
+  {
+    "probe": "search_probe",
+    "exit": 0,
+    "output": "chebyshev scores [2.5, 2.0]\nTopK chebyshev [0]\nOperations chebyshev [1]\nbulk heap [4, 2] stream heap [2, 1]\ndecoded lengths 1 0 tuples 0\nlegacy nan [(index: 0, distance: nan)]\nGEMM 0.125 direct [VectorCore.NearestNeighborResult(index: 1, distance: 0.0)] batch [VectorCore.NearestNeighborResult(index: 0, distance: 0.0)]\nGEMM 0.25 direct [VectorCore.NearestNeighborResult(index: 1, distance: 0.0)] batch [VectorCore.NearestNeighborResult(index: 0, distance: 0.0)]\nGEMM 0.5 direct [VectorCore.NearestNeighborResult(index: 1, distance: 0.0)] batch [VectorCore.NearestNeighborResult(index: 0, distance: 0.0)]\nGEMM 1.0 direct [VectorCore.NearestNeighborResult(index: 1, distance: 0.0)] batch [VectorCore.NearestNeighborResult(index: 0, distance: 0.0)]\nGEMM 2.0 direct [VectorCore.NearestNeighborResult(index: 1, distance: 0.0)] batch [VectorCore.NearestNeighborResult(index: 1, distance: 0.0)]\n",
+    "error": ""
+  },
+  {
+    "probe": "batch_probe",
+    "exit": 0,
+    "output": "stats 999 10000.0 10000.499 0.49999908\nstats 999 1e+18 1.00000624e+18 6.2534724e+12\nstats 1000 10000.0 10000.5 0.0\nstats 1000 1e+18 9.999976e+17 inf\nstats 1024 10000.0 10000.5 0.0\nstats 1024 1e+18 9.9999744e+17 inf\nentropy small 0.0 0.0\nentropy large 0.0 nan\nsuffix 1 [1.0, 1.0]\nsuffix 4 [1.0, 1.0]\nsuffix 4097 [1.0, 1.0]\nnegative batch 0\nasymmetry 2 -1.0 -1.0\nasymmetry 100 -1.0 1.0\ndot diagonal [[0.0]]\n",
+    "error": ""
+  },
+  {
+    "probe": "la_probe",
+    "exit": 0,
+    "output": "SVD Swift scale 1.0 scaled singular values [1.6180341, 0.618034] U column correlation 2.9802322e-08\nSVD Swift scale 1e-12 scaled singular values [1.4142135, 1.0] U column correlation 0.70710677\nSVD Swift scale 1e+15 scaled singular values [1.4142135, 1.0] U column correlation 0.7071068\nQR Swift scale 1e-25 q [1.0, 0.0] r [1e-25]\nQR Swift scale 1e+20 q [nan, nan] r [-inf]\nSVD LAPACK scale 1.0 scaled singular values [1.618034, 0.618034] U column correlation 0.0\nSVD LAPACK scale 1e-12 scaled singular values [1.618034, 0.618034] U column correlation 0.0\nSVD LAPACK scale 1e+15 scaled singular values [1.618034, 0.618034] U column correlation 0.0\nQR LAPACK scale 1e-25 q [-0.7071067, -0.7071067] r [-1.4142136e-25]\nQR LAPACK scale 1e+20 q [-0.7071068, -0.7071068] r [-1.4142136e+20]\nPCA mean [16777216.0] variance [4.0] projected [[0.0], [2.0]] expected mean 16777217, variance 2\n",
+    "error": ""
+  },
+  {
+    "probe": "interfaces_probe",
+    "exit": 0,
+    "output": "chebyshev expected ID2 distance2; actual [2] [2.828427]\nupdate rejected: VectorError.dimensionMismatch: Expected dimension 2, but got 1\noriginal exists after failed update false\nauto ID after explicit0 0 count 1 id0 [3.0, 4.0]\nscore -2.0 -1.0\nscore -1.0 inf\nscore -0.5 2.0\nscore 0.0 1.0\nscore 1.0 0.5\n",
+    "error": ""
+  },
+  {
+    "probe": "reduced_probe",
+    "exit": 0,
+    "output": "cache hashes equal=true, input[100]=1.0, cached[100]=0.0\nschemes input=[1.0, 2.0], scale=[0.003921569], offset=[-128.0], roundtrip=[1.0, 1.0]\nschemes input=[-10.0, -1.0], scale=[0.03529412], offset=[127.0], roundtrip=[-9.0, -0.98823535]\nschemes input=[1.5, 1.5], scale=[1e-45], offset=[-128.0], roundtrip=[3.57e-43, 3.57e-43]\nadaptive strict zero=0.0, fp32=0.0022631169\nadaptive candidate overflow=inf, fp32=1583918.9\ndiagnostics subnormal=512, underflows=0\nquantized tuner first=candidatesINT8, cached=candidatesINT8, fresh=fullFP32\nquantized cosine self 1e10=1.0\nprecision equality nan zero=true\n",
+    "error": ""
+  },
+  {
+    "probe": "ownership_format_probe",
+    "exit": 0,
+    "output": "matrix 3 original 1.0 copy 99.0\nmatrix 4 original 99.0 copy 99.0\nmatrix 16 original 99.0 copy 99.0\nmatrix 32 original 99.0 copy 99.0\nmatrix 33 original 1.0 copy 99.0\nmatrix 65 original 1.0 copy 99.0\ncompact element remains alive true\nempty binary rejected 16 VectorError.invalidDimension: Invalid dimension 0: Must be between 1 and 10000\nempty JSON restored 0\n",
+    "error": ""
+  }
+]

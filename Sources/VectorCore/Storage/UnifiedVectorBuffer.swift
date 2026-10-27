@@ -1,10 +1,15 @@
-// VectorCore: Unified Vector Buffer — the zero-copy contract
+// VectorCore: Unified Vector Buffer — the read and page-aligned buffer contracts
 //
-// beta-evolution-4, DOCUMENT-4 (S5). Provides the CPU-only memory contract that
-// lets downstream packages read VectorCore vectors — or hand them to the GPU via
-// `MTLDevice.makeBuffer(bytesNoCopy:)` — without copying. VectorCore guarantees
-// alignment and contiguity; it imports no GPU framework. The Metal side (and the
-// ownership handoff it implies) lives entirely in VectorAccelerate.
+// beta-evolution-4, DOCUMENT-4 (S5). Provides the CPU-only memory contracts that
+// let downstream packages read VectorCore vectors through a scoped contiguous view
+// (`UnifiedVectorBuffer`) and hand page-aligned memory to the GPU. Only
+// `PageAlignedBuffer` (and an `SoA` built with `pageAligned: true`) meets the
+// page-aligned base and page-multiple length that `MTLDevice.makeBuffer(bytesNoCopy:)`
+// requires (`UnifiedVectorBufferTests.pageAlignmentContract`, `lengthRounding`). The
+// optimized vector types and `DynamicVector` are not page-aligned: for that path they
+// must be copied into a `PageAlignedBuffer` (see the conformance notes at the end of
+// this file). VectorCore imports no GPU framework. The Metal side (and the ownership
+// handoff it implies) lives entirely in VectorAccelerate.
 //
 // See: Docs/Memory_Alignment.md, Docs/beta-evolution-4/DOCUMENT-4_Spec_Ecosystem_Seams.md
 
@@ -14,9 +19,11 @@ import Foundation
 
 /// A contiguous, alignment-guaranteed read view over a vector's `Float32` elements.
 ///
-/// This is the zero-copy *contract* between VectorCore and downstream packages
+/// This is the read *contract* between VectorCore and downstream packages
 /// (VectorAccelerate, EmbedKit). A conforming value exposes its elements as a
-/// contiguous, aligned byte region that a consumer can read without copying.
+/// contiguous byte region aligned to ``alignment`` for the duration of
+/// ``withUnsafeContiguousBytes(_:)``; for the optimized vector types that region is a
+/// view of their `ContiguousArray` storage (`storage.withUnsafeBytes`).
 ///
 /// The protocol describes only *reading*. The base address yielded by
 /// ``withUnsafeContiguousBytes(_:)`` is guaranteed aligned to ``alignment`` bytes,
@@ -53,8 +60,9 @@ public extension UnifiedVectorBuffer {
 
 // MARK: - Page-aligned allocation (bytesNoCopy-ready)
 
-/// A page-aligned `Float32` buffer suitable for zero-copy GPU import via
-/// `MTLDevice.makeBuffer(bytesNoCopy:length:options:deallocator:)`.
+/// A page-aligned `Float32` buffer that meets the page-aligned base and page-multiple
+/// length `MTLDevice.makeBuffer(bytesNoCopy:length:options:deallocator:)` requires
+/// (`UnifiedVectorBufferTests.pageAlignmentContract`, `lengthRounding`, `zeroInitialized`).
 ///
 /// `makeBuffer(bytesNoCopy:)` requires, on macOS, that **both** the base address and
 /// the length be multiples of the OS page size. This type satisfies both: it
@@ -62,9 +70,9 @@ public extension UnifiedVectorBuffer {
 /// allocator) and rounds the byte length up to a whole page, zero-filling the
 /// padding so the GPU never reads uninitialized memory.
 ///
-/// ## Ownership and zero-copy handoff
+/// ## Ownership handoff to a `bytesNoCopy` buffer
 ///
-/// For a true zero-copy handoff, the `MTLBuffer` outlives this object and frees the
+/// When the `MTLBuffer` created with `bytesNoCopy` outlives this object, it frees the
 /// memory through Metal's `bytesNoCopy` deallocator. To avoid a double free, call
 /// ``consumeAllocation()`` to transfer ownership: after that, this object no longer
 /// frees on `deinit`, and the caller (the Metal deallocator) becomes responsible for

@@ -15,11 +15,28 @@ import Foundation
 /// - Minimal required implementations for conformance
 /// - Rich functionality through protocol extensions
 /// - Type-safe compile-time dimension checking where possible
-/// - Efficient storage access patterns for SIMD optimization
+/// - Scoped buffer-pointer access to the storage (`withUnsafeBufferPointer`)
 ///
 /// ## Conforming Types
 /// - `Vector<D>`: Fixed-dimension vectors with compile-time safety
 /// - `DynamicVector`: Runtime-determined dimension vectors
+///
+/// ## Dispatch
+/// - The requirements below (`storage`, `scalarCount`, `init()`, `init(_:)`, `init(repeating:)`, `toArray()`,
+///   `withUnsafeBufferPointer(_:)`, `withUnsafeMutableBufferPointer(_:)`, `isFinite`, `isZero`), and the
+///   `Collection` members this protocol's extension supplies as defaults (`startIndex`, `endIndex`,
+///   `index(after:)`, `subscript(_:)`), are dynamically dispatched: a call through a generic
+///   `V: VectorProtocol` or an `any VectorProtocol` value runs the conforming type's own implementation when it
+///   declares one.
+/// - Every other member declared in an extension of this protocol (the arithmetic operators, `dotProduct(_:)`,
+///   `magnitude`, `magnitudeSquared`, `normalized()`, `normalizedUnchecked()`, `l1Norm`, `lInfinityNorm`, the
+///   distance functions including `cosineSimilarity(to:)` and `cosineDistance(to:)`, `sum`, `mean`, `min`,
+///   `max`, `zero`, `ones`, `random(in:)`, the `inPlace` mutators, `mapElements(_:)`,
+///   `isApproximatelyEqual(to:tolerance:)` and the encoders) is statically selected: generic and existential
+///   code always runs the extension's implementation, even when the concrete type declares a member with the
+///   same name; only a call on the concrete type binds to that type's own member.
+/// - D02WitnessDispatchMatrixTests checks each requirement and each extension member in concrete, generic and
+///   existential calls against a shadowing conformer.
 ///
 public protocol VectorProtocol: Sendable, Hashable, Codable, Collection
 where Element == Scalar, Index == Int {
@@ -34,7 +51,12 @@ where Element == Scalar, Index == Int {
 
     // MARK: - Required Properties
 
-    /// The underlying storage
+    /// The underlying storage.
+    ///
+    /// Conformers must keep `scalarCount`, collection count, array count and borrowed
+    /// scalar buffer counts equal. Fixed-width conformers must validate replacement
+    /// shape; dynamic conformers must update their dimension when storage is replaced.
+    /// These are obligations of each conformer, including third-party implementations.
     var storage: Storage { get set }
 
     /// Number of elements in the vector
@@ -177,8 +199,12 @@ public extension VectorProtocol {
     // MARK: - In-Place Operations
 
     /// Perform in-place addition with another vector
+    /// - Precondition: Equal scalar counts, checked before either buffer borrow.
     @inlinable
     mutating func inPlaceAdd(_ other: Self) {
+        guard scalarCount == other.scalarCount else {
+            fatalError("Dimension mismatch")
+        }
         let count = scalarCount
         withUnsafeMutableBufferPointer { dst in
             other.withUnsafeBufferPointer { src in
@@ -190,8 +216,12 @@ public extension VectorProtocol {
     }
 
     /// Perform in-place subtraction with another vector
+    /// - Precondition: Equal scalar counts, checked before either buffer borrow.
     @inlinable
     mutating func inPlaceSubtract(_ other: Self) {
+        guard scalarCount == other.scalarCount else {
+            fatalError("Dimension mismatch")
+        }
         let count = scalarCount
         withUnsafeMutableBufferPointer { dst in
             other.withUnsafeBufferPointer { src in
@@ -216,7 +246,7 @@ public extension VectorProtocol {
     /// Perform in-place scalar division
     @inlinable
     mutating func inPlaceDivide(_ scalar: Scalar) {
-        precondition(scalar != 0, "Division by zero")
+        guard scalar != 0 else { fatalError("Division by zero") }
         let count = scalarCount
         withUnsafeMutableBufferPointer { dst in
             for i in 0..<count {
@@ -226,8 +256,12 @@ public extension VectorProtocol {
     }
 
     /// Perform in-place element-wise multiplication (Hadamard product)
+    /// - Precondition: Equal scalar counts, checked before either buffer borrow.
     @inlinable
     mutating func inPlaceElementwiseMultiply(_ other: Self) {
+        guard scalarCount == other.scalarCount else {
+            fatalError("Dimension mismatch")
+        }
         let count = scalarCount
         withUnsafeMutableBufferPointer { dst in
             other.withUnsafeBufferPointer { src in
@@ -262,8 +296,10 @@ public extension VectorProtocol {
     }
 
     static func / (lhs: Self, rhs: Scalar) -> Self {
-        precondition(rhs != 0, "Division by zero")
-        return lhs * (1 / rhs)
+        guard rhs != 0 else { fatalError("Division by zero") }
+        var result = lhs
+        result.inPlaceDivide(rhs)
+        return result
     }
 
     static func * (lhs: Scalar, rhs: Self) -> Self {
@@ -343,14 +379,17 @@ public extension VectorProtocol {
 
     /// Magnitude (L2 norm) of the vector
     ///
-    /// Uses Kahan's two-pass scaling algorithm for numerical stability.
-    /// Handles large values (> sqrt(Float.max)) without overflow.
+    /// Two passes: the first finds the largest absolute component `maxAbs` (any NaN
+    /// component returns NaN, a zero vector returns 0, an infinite `maxAbs` returns
+    /// +infinity); the second sums `(x / maxAbs)²`, each term at most 1, and returns
+    /// `maxAbs * sqrt(sum)`. So components above `sqrt(Float.greatestFiniteMagnitude)`
+    /// do not overflow the squares.
     ///
     /// - Complexity: O(n) where n is the vector dimension
-    /// - Note: Approximately 20-30% slower than naive implementation,
-    ///         but prevents overflow and silent data corruption
+    /// - Note: Two passes over the data instead of one; the speed difference from a
+    ///         one-pass sum of squares is not measured in this repository.
     var magnitude: Scalar {
-        // Kahan's two-pass algorithm for numerical stability
+        // Two-pass scaled norm (see the doc comment above)
         // Phase 1: Find maximum absolute value and detect NaN early
         var maxAbs: Scalar = 0
         var hasNaN = false
@@ -364,7 +403,7 @@ public extension VectorProtocol {
         // Propagate NaN if any component is NaN
         if hasNaN { return Scalar.nan }
 
-        // Handle edge cases
+        // NaN, zero and infinite maxima
         if maxAbs.isNaN { return Scalar.nan }
         guard maxAbs > 0 else { return 0 }  // Zero vector
         guard maxAbs.isFinite else { return Scalar.infinity }  // Infinite components
@@ -388,8 +427,7 @@ public extension VectorProtocol {
 
     /// Squared magnitude
     ///
-    /// Uses the stable magnitude calculation and squares the result.
-    /// This is numerically stable but requires computing the square root.
+    /// Squares the two-pass scaled `magnitude`, so it computes a square root first.
     ///
     /// - Note: For the stable algorithm, we must compute sqrt then square it.
     ///         The naive Σ(x²) approach would overflow for large values.
@@ -398,36 +436,39 @@ public extension VectorProtocol {
         return mag * mag     // Square the stable result
     }
 
-    /// Normalized (unit) vector
+    /// Normalize finite nonzero coordinates, rejecting empty/zero/nonfinite inputs.
+    /// Output fidelity depends on the conformer's storage preserving written scalars.
     func normalized() -> Result<Self, VectorError> {
-        let mag = magnitude
-        guard mag > 0 else {
-            return .failure(.invalidOperation("normalize", reason: "Cannot normalize zero vector"))
+        let calculation = withUnsafeBufferPointer { buffer in
+            NormalizationCore.plan(count: buffer.count, get: { buffer[$0] })
         }
-        return .success(self / mag)
+        switch calculation {
+        case .failure(let error): return .failure(error)
+        case .success(let plan):
+            var result = self
+            result.withUnsafeMutableBufferPointer { buffer in
+                for i in buffer.indices { buffer[i] = plan.coordinate(buffer[i]) }
+            }
+            return .success(result)
+        }
     }
 
-    /// Normalized (unit) vector without error checking.
-    ///
-    /// This method bypasses the zero-vector check for maximum performance in hot paths
-    /// where the caller guarantees the vector is non-zero.
-    ///
-    /// - Precondition: `magnitude > 0` (asserted in debug builds only)
-    /// - Warning: Calling on a zero vector produces undefined results (NaN/Inf values)
-    /// - Complexity: O(n) where n is scalarCount
-    /// - Note: Use `normalized()` if the vector may be zero
-    ///
-    /// ## Example Usage
-    /// ```swift
-    /// // Only use when you KNOW the vector is non-zero
-    /// let embedding = model.encode(text)  // Embeddings are typically non-zero
-    /// let unit = embedding.normalizedUnchecked()
-    /// ```
+    /// Normalize with a checked precondition, including normal Release builds.
+    /// Requires finite, nonzero, nonempty input and a representable internal calculation.
+    /// Output fidelity depends on the conformer's storage preserving written scalars.
     @inlinable
     func normalizedUnchecked() -> Self {
-        let mag = magnitude
-        assert(mag > 0, "normalizedUnchecked() called on zero vector - use normalized() for safe handling")
-        return self / mag
+        let calculation = withUnsafeBufferPointer { buffer in
+            NormalizationCore.plan(count: buffer.count, get: { buffer[$0] })
+        }
+        guard case .success(let plan) = calculation else {
+            fatalError("normalizedUnchecked: requires finite nonzero input and representable calculation")
+        }
+        var result = self
+        result.withUnsafeMutableBufferPointer { buffer in
+            for i in buffer.indices { buffer[i] = plan.coordinate(buffer[i]) }
+        }
+        return result
     }
 
     /// L1 norm (Manhattan norm)
@@ -441,15 +482,20 @@ public extension VectorProtocol {
         return sum
     }
 
-    /// L∞ norm (maximum norm)
+    /// L∞ norm (maximum norm): `Scalar.nan` when any element is NaN, as `magnitude` and `l1Norm` give NaN
+    /// (`Swift.max` alone drops a NaN). Pinned through `chebyshevDistance(to:)` by
+    /// T15MetricExceptionalTableTests.everyMetricPinsItsExceptionalClass.
     var lInfinityNorm: Scalar {
-        var maxValue: Scalar = 0
+        // The result is returned from inside the closure; no captured var is written in it and read after it
+        // (T15 lost-store class, Scripts/ci/tests/test_lost_store_reads.py).
         withUnsafeBufferPointer { buffer in
+            var maxValue: Scalar = 0
             for element in buffer {
+                if element.isNaN { return Scalar.nan }
                 maxValue = Swift.max(maxValue, Swift.abs(element))
             }
+            return maxValue
         }
-        return maxValue
     }
 }
 
@@ -462,7 +508,7 @@ public extension VectorProtocol {
         (self - other).magnitude
     }
 
-    /// Squared Euclidean distance (more efficient when square root not needed)
+    /// Squared Euclidean distance: `(self - other).magnitudeSquared`
     func euclideanDistanceSquared(to other: Self) -> Scalar {
         (self - other).magnitudeSquared
     }
@@ -477,16 +523,29 @@ public extension VectorProtocol {
         (self - other).lInfinityNorm
     }
 
-    /// Cosine similarity with another vector
+    /// Cosine similarity with another vector: 0 when either magnitude is zero, NaN when either magnitude is NaN or
+    /// infinite (T15CosineExceptionalTableTests, sim.vp rows)
     func cosineSimilarity(to other: Self) -> Scalar {
-        let denominator = magnitude * other.magnitude
+        let selfMagnitude = magnitude
+        let otherMagnitude = other.magnitude
+        guard selfMagnitude.isFinite && otherMagnitude.isFinite else { return .nan }
+        let denominator = selfMagnitude * otherMagnitude
         guard denominator > 0 else { return 0 }
         return dotProduct(other) / denominator
     }
 
-    /// Cosine distance (1 - cosine similarity)
+    /// Cosine distance (1 - cosine similarity), with a finite similarity clamped to [-1, 1] so the distance stays
+    /// in [0, 2]; NaN when the similarity is not finite (T15CosineExceptionalTableTests, vpext rows)
+    ///
+    /// This is its own arithmetic: `cosineSimilarity(to:)` of this extension (`dotProduct(_:)` divided by the
+    /// product of the two `magnitude` values), statically selected. It does not call the `CosineDistance` metric
+    /// or a concrete type's cosine kernels, so its result is not promised to be bit-identical to theirs; the
+    /// difference from `CosineDistance` is bounded in D02WitnessDispatchMatrixTests
+    /// (`cosineDistanceStaysWithinTheDerivedBoundOfTheWitness`), which also pins the exceptional cases.
     func cosineDistance(to other: Self) -> Scalar {
-        1 - cosineSimilarity(to: other)
+        let similarity = cosineSimilarity(to: other)
+        guard similarity.isFinite else { return .nan }
+        return 1 - Swift.max(-1, Swift.min(1, similarity))
     }
 }
 
@@ -511,28 +570,38 @@ public extension VectorProtocol {
         return sum / Scalar(scalarCount)
     }
 
-    /// Minimum element
+    /// Minimum element: nil for an empty vector, `Scalar.nan` when any element is NaN (T16 reduction NaN contract;
+    /// `Swift.min` alone drops a NaN). The sign of a zero minimum is unspecified. Pinned by
+    /// T16ReductionExceptionalTableTests.
     var min: Scalar? {
         guard scalarCount > 0 else { return nil }
-        var minValue = Scalar.infinity
-        withUnsafeBufferPointer { buffer in
+        // The result is returned from inside the closure; no captured var is written in it and read after it
+        // (T15 lost-store class, T16 ruling C5).
+        return withUnsafeBufferPointer { buffer in
+            var minValue = Scalar.infinity
             for element in buffer {
+                if element.isNaN { return Scalar.nan }
                 minValue = Swift.min(minValue, element)
             }
+            return minValue
         }
-        return minValue
     }
 
-    /// Maximum element
+    /// Maximum element: nil for an empty vector, `Scalar.nan` when any element is NaN (T16 reduction NaN contract;
+    /// `Swift.max` alone drops a NaN). The sign of a zero maximum is unspecified. Pinned by
+    /// T16ReductionExceptionalTableTests.
     var max: Scalar? {
         guard scalarCount > 0 else { return nil }
-        var maxValue = -Scalar.infinity
-        withUnsafeBufferPointer { buffer in
+        // The result is returned from inside the closure; no captured var is written in it and read after it
+        // (T15 lost-store class, T16 ruling C5).
+        return withUnsafeBufferPointer { buffer in
+            var maxValue = -Scalar.infinity
             for element in buffer {
+                if element.isNaN { return Scalar.nan }
                 maxValue = Swift.max(maxValue, element)
             }
+            return maxValue
         }
-        return maxValue
     }
 }
 
@@ -546,14 +615,18 @@ public extension VectorProtocol {
         return try! Self(array)
     }
 
-    /// Check approximate equality with tolerance
+    /// Compare finite coordinates using an absolute, finite, nonnegative tolerance.
+    /// Nonfinite coordinates or tolerance return false; signed zeros compare equal.
+    /// Equal empty shapes compare true only with a valid tolerance. Dimensions are
+    /// checked before borrowing storage. Subtraction remains in `Scalar`; overflow
+    /// exceeds every finite tolerance. Complexity: O(n).
     func isApproximatelyEqual(to other: Self, tolerance: Scalar = 1e-6) -> Bool {
-        guard scalarCount == other.scalarCount else { return false }
+        guard tolerance.isFinite, tolerance >= 0, scalarCount == other.scalarCount else { return false }
 
         return withUnsafeBufferPointer { selfPtr in
             other.withUnsafeBufferPointer { otherPtr in
                 for i in 0..<scalarCount {
-                    if Swift.abs(selfPtr[i] - otherPtr[i]) > tolerance {
+                    if !selfPtr[i].isFinite || !otherPtr[i].isFinite || !(Swift.abs(selfPtr[i] - otherPtr[i]) <= tolerance) {
                         return false
                     }
                 }

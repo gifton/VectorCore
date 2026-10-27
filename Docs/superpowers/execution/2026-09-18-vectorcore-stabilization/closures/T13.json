@@ -1,0 +1,39 @@
+{
+  "task": "T13",
+  "status": "accepted",
+  "task_base": "7d8fc6b",
+  "integration_revision": "ecbb39a",
+  "closed_records": [
+    "T13-UNREVIEWED-QUALITATIVE-LABELS",
+    "T13-RULE6-SPELLED-OUT-FORMS",
+    "T13-ZERO-COPY",
+    "T13-REGION-COVERAGE",
+    "T13-DOCS-RECONCILIATION",
+    "T13-CONTRACT-REFERENCES"
+  ],
+  "disposition_records": {
+    "T13-UNREVIEWED-QUALITATIVE-LABELS": "Rule 8 (qualitative labels; sentence-scoped hedge escape; Unicode hyphens folded) over Sources, README and 13 maintained docs. 137 live hits reworded (129 Sources, 3 docs, 4 CHANGELOG history hedged or reworded) plus 1 D02-owned exemption with reason. Rule 9 (6S: speed multipliers, per-op times, percentages) fixed 19 hits incl. the Vector384/768/1536 '~75/150/300ns' and 'Highly optimized' claims (closing the V04 sibling class).",
+    "T13-RULE6-SPELLED-OUT-FORMS": "Rule 6 extended to 8 spelled-out multiplier and percentage forms on README and Performance_Guide (37 fail / 29 pass fixtures); 0 live hits.",
+    "T13-ZERO-COPY": "Rule 10 makes 'zero-copy' (incl. 'zero-copying' and hyphen variants) a forbidden phrase; 17 statements reworded to the bytesNoCopy mechanism; the UnifiedVectorBuffer header contradiction fixed; the Extractor test flipped (root-approved).",
+    "T13-REGION-COVERAGE": "New regions: Operations.swift (36), README (13), Vector384/768/1536Optimized (26/29/29), API_Overview_Map (19), HowTo_NearestNeighbor (48), CHANGELOG [Unreleased] section-scoped (43, with a documented release-time retire step); 244 entries in total incl. 13 tombstones. TopKSelection and VectorMath DEFERRED (their labels are covered by rules 8 and 9).",
+    "T13-DOCS-RECONCILIATION": "HowTo (smallerValue reproducibility, P01 semantics), API map (selection law, callback law, complexity, VectorMath row); the 2026-09-05 verification doc gets a dated 'superseded in part by P01' note (the doc minus the note hashes 1de36e84…); the Operations 'at most k' and TieredStorage condition comments corrected.",
+    "T13-CONTRACT-REFERENCES": "A contracts table (10 IDs) plus an R8 check that every acceptedContract resolves to a tracked source; P01-Q13 settled; negative fixtures for unknown, stale, sourceless, malformed-sectionRegions, already-whole-file and empty-contract cases."
+  },
+  "validation": {
+    "policy": "Merged tree: ledger 0 problems; unittest 464 OK in-repo and git-less.",
+    "sources": "All Sources changes comment-only (implementer masked-source proof plus reviewer B's independent lexer: identical masked source and string literals for all 52 files, then 2 more in the final fix); Debug build-tests compile rc 0.",
+    "reviews": "Phase 1 rulings → phase 2 (stalled once, resumed) → root-approved count-pin patch (applied and verified by root) → split reviews A (Opus) and B (Sonnet) APPROVED → ONE final fix (hyphen folding, sentence boundary, hedge tightening, R8 fixtures, comments) → ROOT end-to-end check (U+2011 'zero‑copy' and the '**Not verified.**' bypass both caught)."
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T13",
+  "reviewed_tree": "ef0d7588d0ba8b2e32091ff86a46e5af28385b12",
+  "limitations": [
+    "The rules are lexical; LIMITS list the uncaught forms (noun forms efficiency/robustness/reliability; inline hardware-claim comments; non-folded look-alike hyphens U+FE63/U+FF0D; branch-name exemption breadth).",
+    "The CHANGELOG notes for accepted tasks cite closure records as reviewed text (closure sha prefixes verified), not hash-pinned artifacts.",
+    "The TopKSelection, VectorMath and BatchOperations regions are deferred (BatchOperations after P02)."
+  ],
+  "routed": [
+    "V04-R-0011/V04-R-0012: vocabulary extension follow-ups (noun forms; hardware comments).",
+    "D02: VectorProtocol.cosineDistance(to:) (RD11); SIMDMemoryUtilities (RD14); the MixedPrecisionKernels runtime text exemption.",
+    "P02: BatchOperations region after P02; the V04-C-0893 'at most k' entry is now corrected."
+  ]
+}

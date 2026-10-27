@@ -34,7 +34,7 @@ public enum CaseParsing {
                 p.dim = Int(parts[2])
                 p.variant = parts[3]
             }
-        case "batch":
+        case "batch", "matrix":
             // canonical: batch.<metric>.<dim>.N<count>.<variant>[.<mode>]
             if parts.count >= 5 {
                 p.metric = parts[1]

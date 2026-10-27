@@ -75,8 +75,8 @@ ownership-transfer operations. The [SoA contract](SoA_Layout_Contract.md)
 specifies FP32 lane order, stride, and logical versus allocated byte counts.
 
 Core owns these CPU-side contracts. The GPU consumer owns buffer import,
-completion tracking, synchronization, and eventual release. “Zero-copy” at
-the import boundary does not mean that producing, packing, or converting the
+completion tracking, synchronization, and eventual release. A `bytesNoCopy`
+import at the boundary does not mean that producing, packing, or converting the
 embedding involved no earlier copy. See [Memory Alignment](Memory_Alignment.md).
 
 ### Linear algebra and neighbor graphs
@@ -90,6 +90,25 @@ the same point ordering.
 These contracts let a consumer reuse numerical work without moving index
 ownership or topic-modeling policy into Core. See
 [Linear Algebra and Projection](Linear_Algebra_and_Projection.md).
+
+## Products and hosts
+
+`VectorCore` is the library this repository supports. `VectorCoreBenchmarking` (benchmark models and utilities)
+and `vectorcore-bench` (the benchmark executable) are host tooling for measuring it. They are not part of the
+library's platform support and are not a mobile product. The deployment targets in
+[Package.swift](../Package.swift) apply to the whole package, so they say where the package resolves, not where
+the tooling is supported.
+
+| Product | macOS | iOS, tvOS, watchOS and visionOS simulators; Mac Catalyst | Linux and other hosts |
+|---|---|---|---|
+| `VectorCore` | supported; its tests run in CI | compiled in CI; runtime not verified | not supported or tested |
+| `VectorCoreBenchmarking` | the supported tooling host; built and run in CI through `vectorcore-bench` | compiles in CI; runtime not verified; not a supported tooling host | not verified |
+| `vectorcore-bench` | the supported tooling host; built and run in CI | not built | not verified |
+
+The [CI workflow](../.github/workflows/ci.yml) runs the tests on macOS (`test` job); its `platforms` job compiles
+every library product for the simulator and Catalyst destinations and compiles the package for x86_64 macOS
+without running it; its `benchmark-contracts` job builds `vectorcore-bench` and runs it
+(`Scripts/ci/check_benchmark_build_modes.py` and `Scripts/ci/tests/test_benchmark_contracts.py`).
 
 ## Compatibility and verification
 

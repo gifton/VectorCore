@@ -4,283 +4,221 @@ import VectorCoreBenchmarking
 
 struct NormalizationBench: BenchmarkSuite {
     static let name = "normalize"
-
-    static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult] {
-        var results: [BenchResult] = []
-
-        // Pre-count all cases for progress tracking
-        var allCaseNames: [String] = []
-        for dim in options.dims {
-            allCaseNames += [
-                "normalize.success.\(dim).generic",
-                "normalize.success.\(dim).optimized",
-                "normalize.zeroFail.\(dim).generic",
-                "normalize.zeroFail.\(dim).optimized"
-            ]
-        }
-        let casesToRun = allCaseNames.filter { Filters.shouldRun(name: $0, options: options) }
-        let totalCases = casesToRun.count
-        var currentIndex = 0
-
-        for dim in options.dims {
-            switch dim {
-            case 512: results += bench512(options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
-            case 768: results += bench768(options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
-            case 1536: results += bench1536(options, progress: progress, totalCases: totalCases, currentIndex: &currentIndex)
-            default:
-                fputs("[normalize] unsupported dimension: \(dim)\n", stderr)
-            }
-        }
-        return results
+    // Each case defines one `body` that both the warmup and the measurement run, so they cannot diverge.
+    // success: every coordinate of the produced unit vector is folded (u64-bitfold-sink-v1).
+    // zeroFail: the failure outcome is the result; the sink sees the failure branch (error-outcome-sink-v1).
+    static func catalog(options: ValidatedOptions, progress: BenchmarkProgressReporter) -> [BenchmarkCase] {
+        catalog512(options: options) + catalog768(options: options) + catalog1536(options: options)
     }
 
-    private static func bench512(_ options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
-        let g = Vector<Dim512>(repeating: 2.0)
-        let o = Vector512Optimized(repeating: 2.0)
-        let gz = Vector<Dim512>()
-        let oz = Vector512Optimized()
-
-        var out: [BenchResult] = []
-
-        // Success (generic)
-        do {
-            let name = "normalize.success.512.generic"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? g.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(g) { if let u = try? g.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+    private static func catalog512(options: ValidatedOptions) -> [BenchmarkCase] {
+        guard options.dims.contains(512) else { return [] }
+        var cases: [BenchmarkCase] = []
+        cases.append(BenchmarkCase("normalize.success.512.generic",
+                                   boundary: Boundaries.record("normalize.success.512.generic", options)) {
+            let vector = Vector<Dim512>(repeating: 2.0)
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit.withUnsafeBufferPointer { OutputFold.fold($0) })
+                    } else {
+                        blackHole(UInt64.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        // Success (optimized)
-        do {
-            let name = "normalize.success.512.optimized"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? o.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(o) { if let u = try? o.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.success.512.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.success.512.optimized",
+                                   boundary: Boundaries.record("normalize.success.512.optimized", options)) {
+            let vector = Vector512Optimized(repeating: 2.0)
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit.withUnsafeBufferPointer { OutputFold.fold($0) })
+                    } else {
+                        blackHole(UInt64.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        // Failure (generic)
-        do {
-            let name = "normalize.zeroFail.512.generic"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? gz.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(gz) { if let u = try? gz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.success.512.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.zeroFail.512.generic",
+                                   boundary: Boundaries.record("normalize.zeroFail.512.generic", options)) {
+            let vector = Vector<Dim512>()
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit[0])
+                    } else {
+                        blackHole(Float.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        // Failure (optimized)
-        do {
-            let name = "normalize.zeroFail.512.optimized"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? oz.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(oz) { if let u = try? oz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.zeroFail.512.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.zeroFail.512.optimized",
+                                   boundary: Boundaries.record("normalize.zeroFail.512.optimized", options)) {
+            let vector = Vector512Optimized()
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit[0])
+                    } else {
+                        blackHole(Float.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-        return out
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.zeroFail.512.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        return cases
     }
 
-    private static func bench768(_ options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
-        let g = Vector<Dim768>(repeating: 2.0)
-        let o = Vector768Optimized(repeating: 2.0)
-        let gz = Vector<Dim768>()
-        let oz = Vector768Optimized()
-
-        var out: [BenchResult] = []
-
-        do {
-            let name = "normalize.success.768.generic"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? g.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(g) { if let u = try? g.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+    private static func catalog768(options: ValidatedOptions) -> [BenchmarkCase] {
+        guard options.dims.contains(768) else { return [] }
+        var cases: [BenchmarkCase] = []
+        cases.append(BenchmarkCase("normalize.success.768.generic",
+                                   boundary: Boundaries.record("normalize.success.768.generic", options)) {
+            let vector = Vector<Dim768>(repeating: 2.0)
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit.withUnsafeBufferPointer { OutputFold.fold($0) })
+                    } else {
+                        blackHole(UInt64.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        do {
-            let name = "normalize.success.768.optimized"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? o.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(o) { if let u = try? o.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.success.768.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.success.768.optimized",
+                                   boundary: Boundaries.record("normalize.success.768.optimized", options)) {
+            let vector = Vector768Optimized(repeating: 2.0)
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit.withUnsafeBufferPointer { OutputFold.fold($0) })
+                    } else {
+                        blackHole(UInt64.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        do {
-            let name = "normalize.zeroFail.768.generic"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? gz.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(gz) { if let u = try? gz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.success.768.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.zeroFail.768.generic",
+                                   boundary: Boundaries.record("normalize.zeroFail.768.generic", options)) {
+            let vector = Vector<Dim768>()
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit[0])
+                    } else {
+                        blackHole(Float.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        do {
-            let name = "normalize.zeroFail.768.optimized"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? oz.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(oz) { if let u = try? oz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.zeroFail.768.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.zeroFail.768.optimized",
+                                   boundary: Boundaries.record("normalize.zeroFail.768.optimized", options)) {
+            let vector = Vector768Optimized()
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit[0])
+                    } else {
+                        blackHole(Float.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-        return out
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.zeroFail.768.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        return cases
     }
 
-    private static func bench1536(_ options: CLIOptions, progress: ProgressReporter, totalCases: Int, currentIndex: inout Int) -> [BenchResult] {
-        let g = Vector<Dim1536>(repeating: 2.0)
-        let o = Vector1536Optimized(repeating: 2.0)
-        let gz = Vector<Dim1536>()
-        let oz = Vector1536Optimized()
-
-        var out: [BenchResult] = []
-
-        do {
-            let name = "normalize.success.1536.generic"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? g.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(g) { if let u = try? g.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+    private static func catalog1536(options: ValidatedOptions) -> [BenchmarkCase] {
+        guard options.dims.contains(1536) else { return [] }
+        var cases: [BenchmarkCase] = []
+        cases.append(BenchmarkCase("normalize.success.1536.generic",
+                                   boundary: Boundaries.record("normalize.success.1536.generic", options)) {
+            let vector = Vector<Dim1536>(repeating: 2.0)
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit.withUnsafeBufferPointer { OutputFold.fold($0) })
+                    } else {
+                        blackHole(UInt64.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        do {
-            let name = "normalize.success.1536.optimized"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? o.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(o) { if let u = try? o.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.success.1536.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.success.1536.optimized",
+                                   boundary: Boundaries.record("normalize.success.1536.optimized", options)) {
+            let vector = Vector1536Optimized(repeating: 2.0)
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit.withUnsafeBufferPointer { OutputFold.fold($0) })
+                    } else {
+                        blackHole(UInt64.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        do {
-            let name = "normalize.zeroFail.1536.generic"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? gz.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(gz) { if let u = try? gz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.success.1536.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.zeroFail.1536.generic",
+                                   boundary: Boundaries.record("normalize.zeroFail.1536.generic", options)) {
+            let vector = Vector<Dim1536>()
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit[0])
+                    } else {
+                        blackHole(Float.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-
-        do {
-            let name = "normalize.zeroFail.1536.optimized"
-            if Filters.shouldRun(name: name, options: options) {
-                let caseStart = Date()
-                progress.caseStarted(suite: Self.name, name: name, index: currentIndex, total: totalCases)
-
-                Harness.warmup { blackHole(try? oz.normalized().get()) }
-                let r = Harness.measure(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, samples: options.samples) {
-                    withExtendedLifetime(oz) { if let u = try? oz.normalized().get() { blackHole(u[0]) } else { blackHole(Float.zero) } }
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.zeroFail.1536.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        cases.append(BenchmarkCase("normalize.zeroFail.1536.optimized",
+                                   boundary: Boundaries.record("normalize.zeroFail.1536.optimized", options)) {
+            let vector = Vector1536Optimized()
+            let body = {
+                withExtendedLifetime(vector) {
+                    if let unit = try? vector.normalized().get() {
+                        blackHole(unit[0])
+                    } else {
+                        blackHole(Float.zero)
+                    }
                 }
-                out.append(r)
-
-                let caseDuration = Date().timeIntervalSince(caseStart) * 1000.0
-                progress.caseCompleted(suite: Self.name, name: name, index: currentIndex, total: totalCases, durationMs: caseDuration)
-                currentIndex += 1
             }
-        }
-        return out
+            try Harness.warmup(body)
+            return [try Harness.measure(name: "normalize.zeroFail.1536.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)]
+        })
+        return cases
     }
+
 }

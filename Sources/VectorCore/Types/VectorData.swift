@@ -10,13 +10,13 @@ import simd
 
 /// Core vector data structure that combines a vector with its metadata.
 ///
-/// `VectorData` provides a type-safe container for vectors with associated metadata,
-/// optimized for SIMD operations. This structure represents the essential vector
+/// `VectorData` provides a type-safe container for vectors with associated metadata.
+/// This structure represents the essential vector
 /// information without storage-specific concerns, making it suitable for use
 /// across different storage backends.
 ///
 /// ## Type Parameters
-/// - `Vector`: A SIMD-optimized vector type conforming to `SIMD` and `Sendable`
+/// - `Vector`: A vector type conforming to `SIMD` and `Sendable`
 /// - `Metadata`: Custom metadata type that must be `Codable` and `Sendable`
 ///
 /// ## Example Usage
@@ -47,8 +47,7 @@ where Vector.Scalar: BinaryFloatingPoint {
 
     /// The vector data with SIMD optimization.
     ///
-    /// Contains the actual numerical data optimized for high-performance
-    /// mathematical operations using SIMD instructions.
+    /// Contains the numerical data as a `SIMD` value.
     public let vector: Vector
 
     /// Associated metadata with type safety.
@@ -69,7 +68,7 @@ where Vector.Scalar: BinaryFloatingPoint {
     ///
     /// - Parameters:
     ///   - id: Unique identifier for the vector
-    ///   - vector: The SIMD-optimized vector data
+    ///   - vector: The vector data (a `SIMD` value)
     ///   - metadata: Associated metadata for the vector
     ///   - timestamp: Creation timestamp (defaults to current time in nanoseconds)
     ///
@@ -138,7 +137,8 @@ public struct VectorQualityMetrics: Codable, Sendable {
     /// - Initialization issues
     public let sparsity: Float
 
-    /// Shannon entropy measure for information content.
+    /// Caller-supplied entropy value, stored as given: this type does not compute it. When the value comes from
+    /// `Vector.entropy`, it is that property's documented truncated entropy, not exact Shannon entropy.
     ///
     /// Higher values indicate more randomness/information:
     /// - Low entropy: Vector has redundant or predictable patterns

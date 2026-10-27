@@ -69,15 +69,15 @@ struct ErrorHandlingTests {
         @Test("Error context validation")
         func testErrorContext() async throws {
             let additionalInfo = ["dimension": "512", "operation": "normalize"]
+            let before = Date()
             let context = ErrorContext(additionalInfo: additionalInfo)
+            let after = Date()
 
             #expect(context.additionalInfo["dimension"] == "512")
             #expect(context.additionalInfo["operation"] == "normalize")
             #expect(context.timestamp.timeIntervalSince1970 > 0)
 
-            // Check that timestamp is recent (within last second)
-            let timeDiff = abs(context.timestamp.timeIntervalSinceNow)
-            #expect(timeDiff < 1.0)
+            #expect(context.timestamp >= before && context.timestamp <= after)
         }
 
         @Test("Error context debug vs release builds")
@@ -608,42 +608,9 @@ struct ErrorHandlingTests {
     @Suite("Debug Validation")
     struct DebugValidationTests {
 
-        @Test("Debug dimension assertion")
-        func testDebugDimensionAssertion() async throws {
-            // In debug builds, these would assert. We test that they compile and work
-            DebugValidation.assertDimensionMatch(expected: 512, actual: 512)
-            DebugValidation.assertDimensionMatch(expected: 128, actual: 128, message: "Custom message")
-
-            // These would fail in debug builds but are no-ops in release
-            #if !DEBUG
-            // In release builds, these won't crash
-            DebugValidation.assertDimensionMatch(expected: 512, actual: 256)
-            DebugValidation.assertDimensionMatch(expected: 128, actual: 64)
-            #endif
-
-            // Test passes if no crash occurs
-            #expect(true)
-        }
-
-        @Test("Debug index assertion")
-        func testDebugIndexAssertion() async throws {
-            // Valid index assertions (should not crash)
-            DebugValidation.assertValidIndex(0, dimension: 100)
-            DebugValidation.assertValidIndex(50, dimension: 100)
-            DebugValidation.assertValidIndex(99, dimension: 100)
-            DebugValidation.assertValidIndex(0, dimension: 1, message: "Custom bounds message")
-
-            // These would fail in debug builds but are no-ops in release
-            #if !DEBUG
-            // In release builds, these won't crash
-            DebugValidation.assertValidIndex(-1, dimension: 100)
-            DebugValidation.assertValidIndex(100, dimension: 100)
-            DebugValidation.assertValidIndex(150, dimension: 100)
-            #endif
-
-            // Test passes if no crash occurs
-            #expect(true)
-        }
+        // The former "no crash" tests of assertDimensionMatch/assertValidIndex asserted a literal true: in Debug they
+        // called only matching cases and in Release only no-ops, so they could not fail (PR #56 review SW3-3). The
+        // build-configuration test below is what they relied on.
 
         @Test("Debug validation build configuration")
         func testDebugValidationBuildConfiguration() async throws {
@@ -1717,7 +1684,7 @@ struct ErrorHandlingTests {
             // Should complete in reasonable time (< 1 second for 10k errors)
             print("  [perf] 10k error handling: \(elapsed)s (gate < 1.0)")
             if strictPerfGatesEnabled {
-                #expect(elapsed < 1.0, "Error handling took \(elapsed) seconds")
+                expectPerformance("ErrorHandlingTests.testErrorHandlingPerformance.1", elapsed < 1.0, "Error handling took \(elapsed) seconds")
             }
 
             // Test that error creation is lightweight
@@ -1725,7 +1692,7 @@ struct ErrorHandlingTests {
             _ = VectorError.invalidData("Performance test")
             let singleErrorTime = Date().timeIntervalSince(singleErrorStart)
             if strictPerfGatesEnabled {
-                #expect(singleErrorTime < 0.001, "Single error creation should be sub-millisecond")
+                expectPerformance("ErrorHandlingTests.testErrorHandlingPerformance.2", singleErrorTime < 0.001, "Single error creation should be sub-millisecond")
             }
         }
 

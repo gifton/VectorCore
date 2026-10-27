@@ -21,6 +21,23 @@ struct StorageAlignmentSuite {
         #expect(AlignedMemory.isAligned(ptr, to: AlignedMemory.minimumAlignment))
     }
 
+    /// A negative count, or one whose byte count overflows `Int`, throws `.invalidDimension` before any allocation
+    /// (PR #56 review: the guard had no test). The do/catch form is used because `#expect(throws:)` returns the error
+    /// only from Swift 6.1 on, and CI still compiles the tests with Xcode 16.2 (Swift 6.0).
+    @Test
+    func testAllocateAlignedRejectsNegativeAndOverflowingCounts() {
+        for count in [-1, Int.min, Int.max, Int.max / 2] {
+            do {
+                _ = try AlignedMemory.allocateAligned(type: Float.self, count: count)
+                Issue.record("count \(count): no error was thrown")
+            } catch let error as VectorError {
+                #expect(error.kind == .invalidDimension, "count \(count): \(error)")
+            } catch {
+                Issue.record("count \(count): unexpected error \(error)")
+            }
+        }
+    }
+
     @Test
     func testAllocateAlignedReturnsProperlyAlignedPointer_Custom() throws {
         let custom = max(AlignedMemory.minimumAlignment * 2, 32)

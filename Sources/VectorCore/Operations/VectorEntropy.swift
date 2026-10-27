@@ -1,18 +1,23 @@
-// VectorCore: Optimized Entropy Operations
+// VectorCore: Truncated entropy
 //
-// Efficient entropy calculation using SwiftSIMDProvider
+// Scale-invariant entropy of the normalized magnitude distribution. Public `entropy`
+// (VectorMath.swift, which documents the contract), the deprecated `entropyFast`, and both
+// internal branch helpers share ONE implementation so the contract cannot diverge between routes.
 //
 
 import Foundation
 
-extension Vector where D.Storage: VectorStorageOperations {
-    /// Optimized Shannon entropy calculation using SIMD operations
+extension Vector {
+    /// Deprecated spelling of `entropy`: the same computation and the same value.
     ///
-    /// This implementation uses vectorized operations for better performance
-    /// while maintaining numerical accuracy.
+    /// Both width branches run the same two-pass scalar loop (`entropyTruncatedContract`) that
+    /// `entropy` runs; no speed difference or speed figure is measured. D02 deprecated the name
+    /// (routed from N04 through V04) because it suggested a separate variant. The contract is
+    /// documented on `entropy` (VectorMath.swift).
+    @available(*, deprecated, renamed: "entropy")
     @inlinable
     public var entropyFast: Float {
-        // For small vectors, use direct calculation
+        // Both branches implement the same contract via one shared routine.
         if D.value <= 64 {
             return entropySmall()
         } else {
@@ -20,97 +25,65 @@ extension Vector where D.Storage: VectorStorageOperations {
         }
     }
 
-    /// Direct calculation for small vectors
+    /// Small-width branch; forwards to the shared implementation (kept for symbol compatibility).
     @usableFromInline
     internal func entropySmall() -> Float {
-        var absSum: Float = 0
-        var hasNonFinite = false
+        entropyTruncatedContract()
+    }
 
-        // First pass: check for non-finite and sum absolute values
+    /// Large-width branch; forwards to the shared implementation (kept for symbol compatibility).
+    @usableFromInline
+    internal func entropyLarge() -> Float {
+        entropyTruncatedContract()
+    }
+
+    /// Shared implementation of the truncated-entropy contract documented on `entropy` (VectorMath.swift).
+    ///
+    /// Range argument (not an exact-sum or universal error theorem): a finite Float magnitude
+    /// times an Int-sized count is below $2^{191}$ and the smallest nonzero Float divided by that
+    /// bound is above $2^{-340}$, so the widened sum and the Double ratios stay in Double's
+    /// normal range for nonzero ratios.
+    internal func entropyTruncatedContract() -> Float {
+        let cutoff = Double(Float.ulpOfOne)
+        var sum = 0.0
+        var compensation = 0.0
+        var allFinite = true
+
+        // Pass 1: finiteness check and Neumaier-compensated sum of magnitudes.
         storage.withUnsafeBufferPointer { buffer in
             for i in 0..<D.value {
-                let value = buffer[i]
-                if !value.isFinite {
-                    hasNonFinite = true
-                    break
+                let x = buffer[i]
+                // `isFinite` is false for NaN and both infinities (no min/max reliance).
+                guard x.isFinite else {
+                    allFinite = false
+                    return
                 }
-                absSum += Swift.abs(value)
+                let m = Swift.abs(Double(x))
+                let t = sum + m
+                if Swift.abs(sum) >= m {
+                    compensation += (sum - t) + m
+                } else {
+                    compensation += (m - t) + sum
+                }
+                sum = t
             }
         }
 
-        guard !hasNonFinite else { return .nan }
-        guard absSum > Float.ulpOfOne else { return 0.0 }
+        guard allFinite else { return .nan }
+        let total = sum + compensation
+        // Only an all-zero input has total == 0 (no cutoff is applied to the input sum).
+        guard total > 0 else { return 0 }
 
-        // Second pass: calculate entropy
-        var entropy: Float = 0
+        // Pass 2: truncated entropy terms in Double.
+        var entropy = 0.0
         storage.withUnsafeBufferPointer { buffer in
             for i in 0..<D.value {
-                let p = Swift.abs(buffer[i]) / absSum
-                if p > Float.ulpOfOne {
+                let p = Swift.abs(Double(buffer[i])) / total
+                if p > cutoff {
                     entropy -= p * Foundation.log(p)
                 }
             }
         }
-
-        return entropy
-    }
-
-    /// Vectorized calculation for large vectors
-    @usableFromInline
-    internal func entropyLarge() -> Float {
-        let provider = SwiftSIMDProvider()
-        var result: Float = 0
-
-        storage.withUnsafeBufferPointer { buffer in
-            // Convert to array for provider
-            let values = Array(buffer)
-
-            // Step 1: Compute absolute values
-            let absValues = provider.abs(values)
-
-            // Step 2: Check for non-finite values using min/max
-            let minVal = provider.min(values)
-            let maxVal = provider.max(values)
-
-            guard minVal.isFinite && maxVal.isFinite else {
-                result = .nan
-                return
-            }
-
-            // Step 3: Sum absolute values
-            let absSum = provider.sum(absValues)
-
-            // If the sum is non-finite (e.g., any element was NaN/Inf), return NaN for consistency
-            guard absSum.isFinite else {
-                result = .nan
-                return
-            }
-
-            guard absSum > Float.ulpOfOne else {
-                result = 0.0
-                return
-            }
-
-            // Step 4: Normalize to probabilities
-            let probabilities = provider.divide(absValues, by: absSum)
-
-            // Step 5: Compute entropy using log
-            // We need to compute -p * log(p) for each element
-            let logProbs = provider.log(probabilities)
-            let entropyTerms = provider.elementWiseMultiply(probabilities, logProbs)
-
-            // Handle near-zero probabilities (set to 0)
-            var cleanedTerms = entropyTerms
-            for i in 0..<cleanedTerms.count {
-                if probabilities[i] <= Float.ulpOfOne {
-                    cleanedTerms[i] = 0
-                }
-            }
-
-            // Sum all terms
-            result = -provider.sum(cleanedTerms)
-        }
-
-        return result
+        return Float(entropy)
     }
 }

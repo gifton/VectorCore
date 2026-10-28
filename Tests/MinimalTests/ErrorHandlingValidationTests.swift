@@ -109,16 +109,16 @@ final class ErrorHandlingValidationTests: XCTestCase {
         XCTAssertTrue(chainedError.description.contains("Error chain:"))
     }
 
-    func testVectorMathSafeDivision() {
+    func testVectorMathSafeDivision() throws {
         let numerator = Vector<Dim32>(repeating: 1.0)
         let validDenominator = Vector<Dim32>(repeating: 2.0)
         let invalidDenominator = Vector<Dim32>(repeating: 0.0)
 
         // Valid division should succeed
-        XCTAssertNoThrow({
-            let result = try Vector.safeDivide(numerator, by: validDenominator)
-            XCTAssertEqual(result[0], 0.5, accuracy: 1e-6)
-        })
+        let result = try Vector.safeDivide(numerator, by: validDenominator)
+        for index in 0..<32 {
+            XCTAssertEqual(result[index], 0.5, accuracy: 1e-6, "Division result at lane \(index)")
+        }
 
         // Invalid division should throw
         XCTAssertThrowsError(try Vector.safeDivide(numerator, by: invalidDenominator)) { error in

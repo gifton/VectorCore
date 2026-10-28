@@ -8,7 +8,8 @@ fixed absolute tolerances do not admit inf <= inf and are outside this rule.
 Each occurrence needs a reviewed (path, function, normalized statement) entry.
 Finite-gated entries retain named code fragments in that function; independent
 bounded-reference entries retain the reviewed function body digest. Dormant helper
-entries must remain declaration-only across Tests and Sources. New, missing or
+entries must remain declaration-only across Tests and Sources, including executable
+string interpolations (test_dormant_references_in_interpolations_require_review). New, missing or
 duplicated entries require review. Controls remove every registered finite gate,
 alter bounded bodies, activate dormant helpers and add unreviewed comparison forms.
 
@@ -65,7 +66,7 @@ def problems(sources, reviewed):
     if len(entries) != len(reviewed):
         findings.append('duplicate inventory key')
     found = Counter()
-    combined = '\n'.join(lexing._mask(source) for source in sources.values())
+    combined = '\n'.join(lexing._mask(source, keep_interpolations=True) for source in sources.values())
     for path, source in sources.items():
         if not path.startswith('Tests/'):
             continue
@@ -161,6 +162,18 @@ class RelativeOracleGuards(unittest.TestCase):
                 if entry['category'] == 'dormant':
                     activated = dict(self.sources, **{'Tests/New.swift': 'func activate() { _ = ' + entry['function'] + ' }'})
                     self.assertTrue(any('dormant oracle activated' in item for item in problems(activated, self.reviewed)))
+
+    def test_dormant_references_in_interpolations_require_review(self):
+        for entry in self.reviewed:
+            if entry['category'] != 'dormant':
+                continue
+            for expression in [r'"\(HELPER)"', r'#"\#(HELPER)"#']:
+                with self.subTest(function=entry['function'], expression=expression):
+                    source = 'func activate() { _ = ' + expression.replace('HELPER', entry['function']) + ' }'
+                    activated = dict(self.sources, **{'Tests/New.swift': source})
+                    self.assertTrue(any('dormant oracle activated' in item for item in problems(activated, self.reviewed)))
+            literal = 'func inactive() { _ = "' + entry['function'] + '" } // ' + entry['function']
+            self.assertEqual(problems(dict(self.sources, **{'Tests/New.swift': literal}), self.reviewed), [])
 
     def test_missing_and_duplicate_sites_require_review(self):
         entry = self.reviewed[0]

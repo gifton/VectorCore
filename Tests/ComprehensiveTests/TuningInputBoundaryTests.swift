@@ -23,7 +23,7 @@ import Testing
         let result = try launchChildProbe(.swiftTesting(filter: "TuningInputBoundaryTests/invalidTuningChild"),
                                           environment: environment, output: output, deadline: 10, cleanup: .kill(seconds: 2))
         let diagnostic = try String(contentsOf: url, encoding: .utf8)
-        #expect(!result.timedOut, "Child timeout: \(url.path)")
+        try #require(!result.timedOut, "Child timeout: \(url.path)")
         #expect(result.terminationReason == .uncaughtSignal)
         #expect(!diagnostic.contains("F008_INVALID_TUNING_ACCEPTED"))
         #if DEBUG

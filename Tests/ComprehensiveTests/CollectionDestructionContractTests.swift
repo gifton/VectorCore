@@ -84,7 +84,7 @@ private struct DestructionVector: IndexableVector {
                                           environment: environment, output: output, deadline: 5, cleanup: .kill(seconds: 2))
         let diagnostic = try String(contentsOf: url, encoding: .utf8)
         #expect(diagnostic.contains("F002_DEINIT_ENTERED"), "Child never exercised destruction: \(url.path)")
-        #expect(!result.timedOut, "Destructor re-entry deadlocked: \(url.path)")
+        try #require(!result.timedOut, "Destructor re-entry deadlocked: \(url.path)")
         #expect(result.terminationStatus == 0 && result.terminationReason == .exit, "\(diagnostic)")
         #expect(diagnostic.contains("F002_DESTRUCTION_COMPLETE"))
         print("F002 child \(scenario): \(url.path)")

@@ -13029,13 +13029,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "wrapper providing value semantics for dynamicarraystorage",
-    "originalFingerprint": "9120c6d06f4b4a3c",
+    "originalStatement": "value-semantics wrapper around the reference-type aligneddynamicarraystorage.",
+    "originalFingerprint": "689ca567e093694f",
     "originalSymbol": "<file>",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "wrapper providing value semantics for dynamicarraystorage",
+      "fingerprint": "9120c6d06f4b4a3c",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "value-semantics wrapper around the reference-type aligneddynamicarraystorage."
@@ -13058,13 +13065,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "this type wraps the reference-type dynamicarraystorage to provide value semantics with copy-on-write (cow) optimization. it enables dynamicvector to behave as a value type while maintaining efficient memory usage for large vectors.",
-    "originalFingerprint": "09bc9579b7055a16",
+    "originalStatement": "this type stores an aligneddynamicarraystorage (`storage`) and copies it on the first mutation through the wrapper while it is shared (copy-on-write).",
+    "originalFingerprint": "1d1345d1b0ee55e5",
     "originalSymbol": "<file>",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "this type wraps the reference-type dynamicarraystorage to provide value semantics with copy-on-write (cow) optimization. it enables dynamicvector to behave as a value type while maintaining efficient memory usage for large vectors.",
+      "fingerprint": "09bc9579b7055a16",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "this type stores an aligneddynamicarraystorage (`storage`) and copies it on the first mutation through the wrapper while it is shared (copy-on-write)."
@@ -13120,13 +13134,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "`cowdynamicstorage` transforms the reference-type `dynamicarraystorage` into a value-type storage with copy-on-write semantics. this allows dynamic vectors to have predictable value semantics while avoiding unnecessary copies.",
-    "originalFingerprint": "75ba3ccfc0b67508",
+    "originalStatement": "`cowdynamicstorage` wraps the reference-type `aligneddynamicarraystorage` in a value type with copy-on-write: copies share one storage object until a mutation through the wrapper finds it shared.",
+    "originalFingerprint": "290db10ab0ebe931",
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "`cowdynamicstorage` transforms the reference-type `dynamicarraystorage` into a value-type storage with copy-on-write semantics. this allows dynamic vectors to have predictable value semantics while avoiding unnecessary copies.",
+      "fingerprint": "75ba3ccfc0b67508",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "`cowdynamicstorage` wraps the reference-type `aligneddynamicarraystorage` in a value type with copy-on-write: copies share one storage object until a mutation through the wrapper finds it shared."
@@ -13149,13 +13170,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "- implements cow to avoid expensive copies until mutation",
-    "originalFingerprint": "52f4f1b78fc62dfd",
+    "originalStatement": "- defers the element copy until the first mutation while shared",
+    "originalFingerprint": "fc426b50bdc8b825",
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "- implements cow to avoid expensive copies until mutation",
+      "fingerprint": "52f4f1b78fc62dfd",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "- defers the element copy until the first mutation while shared"
@@ -13178,8 +13206,8 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
+    "originalStatement": "- o(1) copy operations (until mutation)",
+    "originalFingerprint": "15d86db64a2880a6",
     "origin": "V04 phase F review",
     "removedIn": "2026-10-27 VC-F001"
    },
@@ -13204,8 +13232,8 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
+    "originalStatement": "- o(n) copy on first mutation after sharing",
+    "originalFingerprint": "b9472e29be5c7b0a",
     "origin": "V04 phase F review",
     "removedIn": "2026-10-27 VC-F001"
    },
@@ -13230,13 +13258,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "## implementation details the type wraps dynamicarraystorage and uses `isknownuniquelyreferenced` to detect when a copy is needed, implementing the cow pattern efficiently.",
-    "originalFingerprint": "590ba12f4c1b713c",
+    "originalStatement": "## implementation details the type wraps aligneddynamicarraystorage and uses `isknownuniquelyreferenced` to detect when a copy is needed (`makeunique`).",
+    "originalFingerprint": "e9e7b31b33c1d5c7",
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "## implementation details the type wraps dynamicarraystorage and uses `isknownuniquelyreferenced` to detect when a copy is needed, implementing the cow pattern efficiently.",
+      "fingerprint": "590ba12f4c1b713c",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "## implementation details the type wraps aligneddynamicarraystorage and uses `isknownuniquelyreferenced` to detect when a copy is needed (`makeunique`)."
@@ -13259,13 +13294,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "let storage2 = storage1 // cheap copy (no allocation)",
-    "originalFingerprint": "1ac6be11d636fc77",
+    "originalStatement": "let storage2 = storage1 // shares the storage object; no element copy (allocation behaviour not verified)",
+    "originalFingerprint": "c048ccd000b4a399",
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "let storage2 = storage1 // cheap copy (no allocation)",
+      "fingerprint": "1ac6be11d636fc77",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "let storage2 = storage1 // shares the storage object; no element copy (allocation behaviour not verified)"
@@ -13288,13 +13330,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "storage1[0] = 42.0 // triggers cow, allocates new storage",
-    "originalFingerprint": "8c9126e3e5530848",
+    "originalStatement": "storage1[0] = 42.0 // shared, so makeunique copies the elements first (allocation not verified by a test)",
+    "originalFingerprint": "8a800d3cd34e1c43",
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "storage1[0] = 42.0 // triggers cow, allocates new storage",
+      "fingerprint": "8c9126e3e5530848",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "storage1[0] = 42.0 // shared, so makeunique copies the elements first (allocation not verified by a test)"
@@ -13394,8 +13443,8 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
+    "originalStatement": "ensure storage is uniquely referenced for cow.",
+    "originalFingerprint": "3bb432153b7a070b",
     "origin": "V04 phase F review",
     "removedIn": "2026-10-27 VC-F001"
    },
@@ -13420,13 +13469,20 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": "this private method implements the copy-on-write mechanism. it checks if the underlying storage is shared and creates a copy if needed.",
-    "originalFingerprint": "f2f4169587acdd03",
+    "originalStatement": "this method implements the copy-on-write mechanism. it checks if the underlying storage is shared and creates a copy if needed.",
+    "originalFingerprint": "6b532989fe605c3f",
     "originalSymbol": "struct COWDynamicStorage::func makeUnique",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
     "correctedIn": "V04 phase F",
-    "removedIn": "2026-10-27 VC-F001"
+    "removedIn": "2026-10-27 VC-F001",
+    "superseded": [
+     {
+      "statement": "this private method implements the copy-on-write mechanism. it checks if the underlying storage is shared and creates a copy if needed.",
+      "fingerprint": "f2f4169587acdd03",
+      "revision": "631ed4b"
+     }
+    ]
    },
    "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
    "absentPhrase": "this method implements the copy-on-write mechanism. it checks if the underlying storage is shared and creates a copy if needed."
@@ -13449,8 +13505,8 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
+    "originalStatement": "- complexity: o(1) if unique, o(n) if copy needed",
+    "originalFingerprint": "b087e0647bc18c4d",
     "origin": "V04 phase F review",
     "removedIn": "2026-10-27 VC-F001"
    },
@@ -32751,29 +32807,6 @@
     "kind": "adjacent-invariant",
     "reference": "Package.swift platform declaration; .github/workflows/ci.yml destinations",
     "domain": "Supported-platform policy; no watchOS runtime claim",
-    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
-   },
-   "acceptedContract": null,
-   "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "2026-10-27 audit repairs"
-   }
-  },
-  {
-   "id": "VC-AUDIT-F002",
-   "path": "CHANGELOG.md",
-   "symbol": "section Changelog::section [Unreleased]::section Fixed",
-   "fingerprint": "3142c4e30a7dc9ae",
-   "statement": "- collection replacement and clearing release displaced values after unlocking (vc-f002); destructor callbacks can re-enter the completed collection state (`collectiondestructioncontracttests.destructioncanreenter`).",
-   "kind": "markdown",
-   "lineHint": 1126,
-   "category": "concurrency",
-   "disposition": "retained",
-   "evidence": {
-    "kind": "named-test",
-    "reference": "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift::CollectionDestructionContractTests.destructionCanReenter",
-    "domain": "Replacement, clearing and removal destructor re-entry",
     "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
    },
    "acceptedContract": null,

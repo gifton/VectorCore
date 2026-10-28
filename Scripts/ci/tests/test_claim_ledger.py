@@ -279,7 +279,7 @@ class Mutations(TemporaryRepository):
         self.assertTrue({'R2', 'R7'} <= rules(problems), problems)
 
     def test_m4_reintroduced_removed_statement_fails_r2(self):
-        anchor = '/// - O(n) copy on first mutation after sharing\n'
+        anchor = '/// Compatibility wrapper delegating value semantics to AlignedDynamicArrayStorage.\n'
         problems = self.run_with(COW, lambda t: t.replace(anchor, anchor + '/// - No overhead for unique instances\n'))
         self.assertIn('R2', rules(problems), problems)
 

@@ -1,0 +1,902 @@
+{
+  "baseline": {
+    "physicalMemory": 51539607552,
+    "processorCount": 16,
+    "rows": [
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 3375000,
+        "count": 512,
+        "median": 0.64916,
+        "nanosecondsPerIteration": [
+          0.63916,
+          0.66082,
+          0.64334,
+          0.64918,
+          0.64584,
+          0.65834,
+          0.6525,
+          0.64916,
+          0.64584
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 0.66082,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 466650000,
+        "count": 512,
+        "median": 24.16584,
+        "nanosecondsPerIteration": [
+          25.02916,
+          24.86918,
+          24.775,
+          24.16584,
+          23.99416,
+          24.36,
+          23.54,
+          23.39334,
+          23.35834
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 25.02916,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 1350000,
+        "count": 512,
+        "median": 0.68335,
+        "nanosecondsPerIteration": [
+          0.6833,
+          0.68335,
+          0.68335,
+          0.68335,
+          0.6854,
+          0.6833,
+          0.6875,
+          0.68125,
+          0.6833
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 0.6875,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 3375000,
+        "count": 1536,
+        "median": 0.60416,
+        "nanosecondsPerIteration": [
+          0.6025,
+          0.61834,
+          0.6,
+          0.60416,
+          0.68834,
+          0.61166,
+          0.60084,
+          0.6025,
+          0.69084
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 0.69084,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 1388250000,
+        "count": 1536,
+        "median": 69.01916,
+        "nanosecondsPerIteration": [
+          68.6125,
+          69.44084,
+          71.07834,
+          67.97834,
+          67.51832,
+          68.13916,
+          72.8075,
+          69.01916,
+          69.33416
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 72.8075,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 1350000,
+        "count": 1536,
+        "median": 0.66665,
+        "nanosecondsPerIteration": [
+          0.6708,
+          0.66665,
+          0.6708,
+          0.6667,
+          0.66665,
+          0.66665,
+          0.6646,
+          0.66665,
+          0.66665
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 0.6708,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 3375000,
+        "count": 512,
+        "median": 20.67,
+        "nanosecondsPerIteration": [
+          20.81918,
+          20.67,
+          21.41334,
+          22.15332,
+          20.30916,
+          23.64416,
+          20.26668,
+          19.92584,
+          20.25334
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 23.64416,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 466650000,
+        "count": 512,
+        "median": 45.1675,
+        "nanosecondsPerIteration": [
+          45.79668,
+          45.39332,
+          44.9875,
+          45.37334,
+          44.40418,
+          45.1675,
+          44.50916,
+          49.30918,
+          44.2725
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 49.30918,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 1350000,
+        "count": 512,
+        "median": 29.50835,
+        "nanosecondsPerIteration": [
+          28.85,
+          28.8521,
+          28.8521,
+          29.08125,
+          32.5271,
+          30.18125,
+          29.55,
+          29.5479,
+          29.50835
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 32.5271,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 3375000,
+        "count": 1536,
+        "median": 19.72584,
+        "nanosecondsPerIteration": [
+          19.72584,
+          19.92166,
+          19.72584,
+          19.72584,
+          19.72584,
+          19.72582,
+          19.72668,
+          19.725,
+          19.72668
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 19.92166,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 1388250000,
+        "count": 1536,
+        "median": 90.96166,
+        "nanosecondsPerIteration": [
+          91.50082,
+          91.88416,
+          96.08418,
+          89.30832,
+          90.36834,
+          90.96166,
+          91.51334,
+          88.9,
+          89.83834
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 96.08418,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 0,
+          "netAllocatorBytes": 0
+        },
+        "checksum": 1350000,
+        "count": 1536,
+        "median": 25.6479,
+        "nanosecondsPerIteration": [
+          27.51875,
+          27.8146,
+          28.16665,
+          26.50205,
+          25.6458,
+          25.64585,
+          25.64585,
+          25.6479,
+          25.6458
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 28.16665,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 32,
+          "netAllocatorBytes": 33536
+        },
+        "checksum": 3375000,
+        "count": 512,
+        "median": 1.31918,
+        "nanosecondsPerIteration": [
+          1.61,
+          1.26332,
+          1.2625,
+          1.26334,
+          1.59666,
+          1.27,
+          1.31918,
+          1.50334,
+          1.5625
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 1.61,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 32,
+          "netAllocatorBytes": 33536
+        },
+        "checksum": 466650000,
+        "count": 512,
+        "median": 23.3125,
+        "nanosecondsPerIteration": [
+          23.04,
+          23.12,
+          23.3125,
+          24.7925,
+          24.75082,
+          24.235,
+          23.07168,
+          23.50916,
+          23.0275
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 24.7925,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 32768
+        },
+        "checksum": 1350000,
+        "count": 512,
+        "median": 135.17295,
+        "nanosecondsPerIteration": [
+          134.61455,
+          135.17295,
+          137.2917,
+          134.9479,
+          133.55,
+          147.80415,
+          135.7625,
+          135.34165,
+          134.3875
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 147.80415,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 3375000,
+        "count": 1536,
+        "median": 1.325,
+        "nanosecondsPerIteration": [
+          1.3225,
+          1.32334,
+          1.325,
+          1.325,
+          1.325,
+          1.32334,
+          1.325,
+          1.35918,
+          1.50666
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 1.50666,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 1388250000,
+        "count": 1536,
+        "median": 67.81084,
+        "nanosecondsPerIteration": [
+          68.05334,
+          67.17082,
+          67.5725,
+          70.5125,
+          67.17084,
+          72.55918,
+          67.19,
+          70.65666,
+          67.81084
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 72.55918,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 1350000,
+        "count": 1536,
+        "median": 279.9479,
+        "nanosecondsPerIteration": [
+          282.325,
+          367.3542,
+          355.75,
+          281.6021,
+          263.88335,
+          279.9479,
+          260.6021,
+          274.7708,
+          269.6458
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 367.3542,
+        "type": "COWDynamicStorage"
+      }
+    ],
+    "thermalState": 0,
+    "source_head": "84798d3fe3548ea78d4ed5da5dba4d723a85bf32",
+    "started_at_utc": "2026-10-28T07:07:32.858848+00:00",
+    "command": [
+      "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/benchmark-baseline/.build/arm64-apple-macosx/release/StorageBenchmark"
+    ],
+    "warmup_iterations": 2,
+    "sample_count": 9,
+    "context": "Sequential prebuilt Release binary run; no other audit builds active"
+  },
+  "repaired": {
+    "physicalMemory": 51539607552,
+    "processorCount": 16,
+    "rows": [
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 32,
+          "netAllocatorBytes": 33536
+        },
+        "checksum": 3375000,
+        "count": 512,
+        "median": 8.93,
+        "nanosecondsPerIteration": [
+          8.94668,
+          8.99918,
+          8.965,
+          8.96832,
+          8.92168,
+          8.93,
+          8.9225,
+          8.91582,
+          8.90916
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 8.99918,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 32,
+          "netAllocatorBytes": 33536
+        },
+        "checksum": 466650000,
+        "count": 512,
+        "median": 35.11918,
+        "nanosecondsPerIteration": [
+          35.0175,
+          33.15916,
+          33.17334,
+          33.715,
+          35.11918,
+          35.735,
+          35.79334,
+          35.2675,
+          35.28332
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 35.79334,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 32768
+        },
+        "checksum": 1350000,
+        "count": 512,
+        "median": 105.4875,
+        "nanosecondsPerIteration": [
+          115.14795,
+          108.49375,
+          108.025,
+          105.4875,
+          107.51875,
+          101.85625,
+          100.5375,
+          100.4646,
+          100.0729
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 115.14795,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 3375000,
+        "count": 1536,
+        "median": 8.53082,
+        "nanosecondsPerIteration": [
+          8.51834,
+          8.5175,
+          8.5375,
+          8.5375,
+          8.53082,
+          8.52416,
+          8.53834,
+          8.53082,
+          8.53082
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 8.53834,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 1388250000,
+        "count": 1536,
+        "median": 73.64834,
+        "nanosecondsPerIteration": [
+          79.045,
+          77.965,
+          77.7775,
+          75.03166,
+          73.64834,
+          73.39166,
+          71.98334,
+          71.67166,
+          70.19334
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 79.045,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 1350000,
+        "count": 1536,
+        "median": 226.42705,
+        "nanosecondsPerIteration": [
+          168.40625,
+          226.42705,
+          212.83335,
+          229.16875,
+          231.85625,
+          232.82295,
+          224.00835,
+          224.9625,
+          227.74375
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 232.82295,
+        "type": "AlignedDynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 40960
+        },
+        "checksum": 3375000,
+        "count": 512,
+        "median": 9.86584,
+        "nanosecondsPerIteration": [
+          11.68668,
+          9.86668,
+          9.86584,
+          9.86416,
+          9.92,
+          9.86582,
+          9.86584,
+          9.865,
+          9.865
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 11.68668,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 40960
+        },
+        "checksum": 466650000,
+        "count": 512,
+        "median": 23.81916,
+        "nanosecondsPerIteration": [
+          23.25918,
+          23.2875,
+          23.82834,
+          25.08,
+          23.81916,
+          23.25916,
+          23.35832,
+          24.53,
+          24.77668
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 25.08,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 40960
+        },
+        "checksum": 1350000,
+        "count": 512,
+        "median": 77.51875,
+        "nanosecondsPerIteration": [
+          81.05625,
+          81.23335,
+          73.5375,
+          77.51875,
+          78.01045,
+          73.4542,
+          77.95625,
+          76.02915,
+          73.9083
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 81.23335,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 114688
+        },
+        "checksum": 3375000,
+        "count": 1536,
+        "median": 10.45166,
+        "nanosecondsPerIteration": [
+          10.00084,
+          10.45166,
+          10.585,
+          10.58666,
+          10.585,
+          10.55834,
+          9.86584,
+          9.865,
+          9.86416
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 10.58666,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 114688
+        },
+        "checksum": 1388250000,
+        "count": 1536,
+        "median": 68.76834,
+        "nanosecondsPerIteration": [
+          69.3275,
+          68.36834,
+          68.76834,
+          71.4875,
+          67.76,
+          69.88834,
+          67.41168,
+          71.09832,
+          67.43582
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 71.4875,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 114688
+        },
+        "checksum": 1350000,
+        "count": 1536,
+        "median": 124.64375,
+        "nanosecondsPerIteration": [
+          118.75,
+          126.43335,
+          119.0333,
+          129.4604,
+          126.10415,
+          124.75415,
+          118.73125,
+          124.64375,
+          118.22295
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 129.4604,
+        "type": "DynamicArrayStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 32768
+        },
+        "checksum": 3375000,
+        "count": 512,
+        "median": 6.90666,
+        "nanosecondsPerIteration": [
+          7.41084,
+          7.41,
+          7.1,
+          6.90666,
+          6.90666,
+          6.90666,
+          6.90666,
+          6.90584,
+          6.90668
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 7.41084,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 32768
+        },
+        "checksum": 466650000,
+        "count": 512,
+        "median": 25.325,
+        "nanosecondsPerIteration": [
+          25.325,
+          26.16334,
+          24.4525,
+          24.4125,
+          25.345,
+          26.14334,
+          24.41416,
+          24.47834,
+          26.06584
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 26.16334,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 32768
+        },
+        "checksum": 1350000,
+        "count": 512,
+        "median": 82.22915,
+        "nanosecondsPerIteration": [
+          86.5646,
+          82.22915,
+          80.89375,
+          82.94375,
+          78.35,
+          85.50625,
+          79.2583,
+          80.1125,
+          82.94375
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 86.5646,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 3375000,
+        "count": 1536,
+        "median": 6.90666,
+        "nanosecondsPerIteration": [
+          6.90666,
+          6.90584,
+          6.9075,
+          6.90668,
+          6.90666,
+          6.90584,
+          6.90584,
+          6.90666,
+          6.90666
+        ],
+        "operation": "scalarWriteAndReadBorrow",
+        "p90": 6.9075,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 1388250000,
+        "count": 1536,
+        "median": 70.48834,
+        "nanosecondsPerIteration": [
+          70.54334,
+          69.1975,
+          70.48834,
+          73.73666,
+          68.43166,
+          70.70582,
+          69.75916,
+          68.46834,
+          71.98916
+        ],
+        "operation": "scalarWriteAndDot",
+        "p90": 73.73666,
+        "type": "COWDynamicStorage"
+      },
+      {
+        "allocatorSnapshot": {
+          "heldMutatedCopies": 16,
+          "netAllocatorBlocks": 16,
+          "netAllocatorBytes": 98304
+        },
+        "checksum": 1350000,
+        "count": 1536,
+        "median": 197.75625,
+        "nanosecondsPerIteration": [
+          194.2875,
+          210.05,
+          208.63335,
+          183.5375,
+          182.70625,
+          185.325,
+          215.6125,
+          197.75625,
+          216.6021
+        ],
+        "operation": "copyAndMutableBorrow",
+        "p90": 216.6021,
+        "type": "COWDynamicStorage"
+      }
+    ],
+    "thermalState": 0,
+    "source_head": "f6bb24e69bcce999298e7f9dd9065e311e3f8f68",
+    "started_at_utc": "2026-10-28T07:07:33.197853+00:00",
+    "command": [
+      "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/benchmark-repaired/.build/arm64-apple-macosx/release/StorageBenchmark"
+    ],
+    "warmup_iterations": 2,
+    "sample_count": 9,
+    "context": "Sequential prebuilt Release binary run; no other audit builds active"
+  },
+  "interpretation_limits": [
+    "Single host/process per revision; observations are not universal performance claims.",
+    "Copy-and-write changes semantics for the former reference classes: the baseline aliases and performs no deep copy.",
+    "Allocator snapshots report net live blocks/bytes, not allocation counts, peak RSS or total bytes allocated.",
+    "Sub-nanosecond baseline scalar loops may be highly optimized; do not interpret ratios as end-to-end application slowdowns."
+  ]
+}

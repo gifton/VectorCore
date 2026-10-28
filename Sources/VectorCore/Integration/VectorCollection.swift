@@ -282,11 +282,15 @@ public final class SimpleVectorCollection<V: IndexableVector>: MutableVectorColl
             throw VectorError.dimensionMismatch(expected: dimension, actual: vector.scalarCount)
         }
         lock.lock()
-        defer { lock.unlock() }
         guard vectors[id] != nil else {
+            lock.unlock()
             throw VectorError.indexOutOfBounds(index: 0, dimension: dimension)
         }
-        vectors[id] = vector
+        let displaced = vectors.updateValue(vector, forKey: id)
+        lock.unlock()
+        // Keep destruction outside the lock; CollectionDestructionContractTests.destructionCanReenter
+        // exercises callbacks that read and mutate the completed collection state.
+        withExtendedLifetime(displaced) {}
     }
 
     public func add(id: Int, vector: V) throws {
@@ -335,7 +339,9 @@ public final class SimpleVectorCollection<V: IndexableVector>: MutableVectorColl
 
     public func removeAll() {
         lock.lock()
-        defer { lock.unlock() }
-        vectors.removeAll()
+        let displaced = vectors
+        vectors = [:]
+        lock.unlock()
+        withExtendedLifetime(displaced) {}
     }
 }

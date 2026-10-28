@@ -1,7 +1,7 @@
 # VectorCore
 
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg?style=flat)](https://swift.org)
-[![Platforms](https://img.shields.io/badge/Platforms-macOS%2014%2B%20|%20iOS%2017%2B%20|%20tvOS%2017%2B%20|%20watchOS%2010%2B%20|%20visionOS%201%2B-blue.svg?style=flat)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-macOS%2014%2B%20|%20iOS%2017%2B%20|%20tvOS%2017%2B%20|%20visionOS%201%2B-blue.svg?style=flat)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/)
 [![CI](https://github.com/gifton/VectorCore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/VectorCore/actions/workflows/ci.yml)
@@ -147,7 +147,7 @@ consumer to follow those contracts. See
 ## Requirements and compatibility
 
 The manifest requires Swift tools 6.0 and declares these minimum deployment
-targets: macOS 14, iOS 17, tvOS 17, watchOS 10, and visionOS 1.
+targets: macOS 14, iOS 17, tvOS 17, and visionOS 1. watchOS is not supported.
 
 Deployment targets are distinct from tested configurations. The
 [September 6 verification record](Docs/verification-topk-nan-contract-2026-09-05.md)

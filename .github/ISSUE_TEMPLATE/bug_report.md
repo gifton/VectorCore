@@ -32,7 +32,7 @@ Steps to reproduce the behavior:
 ## Environment
 - VectorCore Version:
 - Swift Version:
-- Platform (macOS/iOS/tvOS/watchOS/visionOS; device or simulator):
+- Platform (macOS/iOS/tvOS/visionOS; device or simulator):
 - OS Version:
 - Xcode Version (if applicable):
 

@@ -32,10 +32,10 @@
 
 **Interfaces:** Keep private `isClose` and `arraysClose` signatures. The policy inventories explicitly documented relative-comparison syntax, checks reviewed finite gates and rejects new/unreviewed sites; it does not claim arbitrary Swift dataflow analysis.
 
-- [ ] Add a literal Float-class expectation matrix and corrupted finite-output controls to the actual helper's suite; run focused Debug and observe F009 failures.
-- [ ] Add the mechanical inventory with positive/negative controls, including missing finite-gate mutations, and observe current repeated sites fail.
-- [ ] Add the finite guard to `isClose` after exact equality, plus explicit finite checks at the five repeated live assertions. Preserve tolerance arithmetic.
-- [ ] Run affected Swift suites in Debug/Release and the Python guard; expect pass. Commit the repair and record red/green evidence.
+- [x] Add a literal Float-class expectation matrix and corrupted finite-output controls to the actual helper's suite; run focused Debug and observe F009 failures.
+- [x] Add the mechanical inventory with positive/negative controls, including missing finite-gate mutations, and observe current repeated sites fail.
+- [x] Add the finite guard to `isClose` after exact equality, plus explicit finite checks at the five repeated live assertions. Preserve tolerance arithmetic.
+- [x] Run affected Swift suites in Debug/Release and the Python guard; expect pass. Commit the repair and record red/green evidence.
 
 ## Task 2: Executed division assertion
 
@@ -43,11 +43,11 @@
 
 **Interfaces:** `testVectorMathSafeDivision() throws` directly calls the existing public `Vector.safeDivide` and checks all result lanes.
 
-- [ ] Copy the actual test into an external XCTest consumer; demonstrate that deliberate thrown/wrong-result mutations inside the current success arm still pass.
-- [ ] Replace the uninvoked closure with a direct throwing call and assertions on all 32 lanes.
-- [ ] Verify that the corrected test fails for thrown and first/interior/last-lane corruptions and passes without mutation, in Debug and Release. Commit the test repair.
+- [x] Copy the actual test into an external XCTest consumer; demonstrate that deliberate thrown/wrong-result mutations inside the current success arm still pass.
+- [x] Replace the uninvoked closure with a direct throwing call and assertions on all 32 lanes.
+- [x] Verify that the corrected test fails for thrown and first/interior/last-lane corruptions and passes without mutation, in Debug and Release. Commit the test repair.
 
 ## Integration
 
-- [ ] Run the full package suite in Debug/Release under the existing default policy, the Python policy suite, and fresh Astra review. Record existing skips/known compiler canaries accurately.
-- [ ] Update repair dispositions and preserve commands, hashes, mutation outcomes and review evidence in a separate handoff. Keep F007/F011/F012 and unsupported F003 unchanged.
+- [x] Run the full package suite in Debug/Release under the existing default policy, the Python policy suite, and fresh Astra review. Record existing skips/known compiler canaries accurately.
+- [x] Update repair dispositions and preserve commands, hashes, mutation outcomes and review evidence in a separate handoff. Keep F007/F011/F012 and unsupported F003 unchanged.

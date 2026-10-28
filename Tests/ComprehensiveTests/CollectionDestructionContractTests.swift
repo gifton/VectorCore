@@ -8,6 +8,7 @@ private final class DestructionHook: Sendable {
     deinit { callback() }
 }
 private struct DestructionVector: IndexableVector {
+    subscript(index: Int) -> Float { storage[index] }
     typealias Scalar = Float
     typealias Storage = [Float]
     var storage: [Float]

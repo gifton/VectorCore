@@ -265,8 +265,9 @@ internal enum EdgeCaseHandler {
             return .single(distance)
         }
 
-        // Check for zero query vector
-        if isZeroVector(query) {
+        // This identity requires coordinate zero, not a small norm (BatchZeroQueryContractTests).
+        let queryIsZero = query.withUnsafeBufferPointer { $0.allSatisfy { $0 == 0 } }
+        if queryIsZero {
             // All distances are just the magnitudes of candidates
             let distances = candidates.map { candidate in
                 Float(candidate.magnitudeSquared)

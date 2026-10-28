@@ -1,0 +1,234 @@
+{
+  "reviewed_at_baseline": "25b1616 plus F009 finite gates",
+  "scope": "Tests relative-oracle lexical review inventory; see test_relative_oracle_guards.py limits",
+  "sites": [
+    {
+      "function": "isClose",
+      "expression": "returndiff<=absTol+relTol*scale",
+      "path": "Tests/ComprehensiveTests/AccelerateArraySIMDProviderParityTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "guardx.isFinite,y.isFiniteelse{returnfalse}"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "testDotProduct512",
+      "expression": "#expect(abs(soaResult-refResult)<=1e-5*max(1.0,abs(refResult)),)",
+      "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(soaResult.isFinite&&refResult.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "testDotProduct768",
+      "expression": "#expect(abs(soaResult-refResult)<=1e-5*max(1.0,abs(refResult)),)",
+      "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(soaResult.isFinite&&refResult.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "testDotProduct1536",
+      "expression": "#expect(abs(soaResult-refResult)<=1e-5*max(1.0,abs(refResult)),)",
+      "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(soaResult.isFinite&&refResult.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "check",
+      "expression": "#expect(Swift.abs(v.entropy-reference)<=8*Float.ulpOfOne*Swift.max(1,Swift.abs(reference)))",
+      "path": "Tests/ComprehensiveTests/D02DimensionReachabilityTests.swift",
+      "category": "bounded-reference",
+      "body_sha256": "19ea9e3eeff16f46a7a2aa47d0a62ad9c4ca6d8643a45da878230512863d1ff0",
+      "reason": "Independent Double entropy reference from bounded test fixtures; no production output scales the bound."
+    },
+    {
+      "function": "close",
+      "expression": "returnSwift.abs(actual-reference)<=8*Float.ulpOfOne*Swift.max(1,Swift.abs(reference))",
+      "path": "Tests/ComprehensiveTests/EntropyRangeContractTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "guardactual.isFinite,reference.isFiniteelse{returnfalse}"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "close",
+      "expression": "abs(Double(actual)-expected)<=Double(Float.leastNonzeroMagnitude)+2e-6*abs(expected)",
+      "path": "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "actual.isFinite&&expected.isFinite&&"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "euclideanParity512",
+      "expression": "#expect(abs(got-ref)<=1e-2+1e-3*abs(ref),)",
+      "path": "Tests/ComprehensiveTests/MatrixDistanceTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(got.isFinite&&ref.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "otherDims",
+      "expression": "#expect(abs(o7[i*3+j]-ref)<=1e-1+1e-3*abs(ref))",
+      "path": "Tests/ComprehensiveTests/MatrixDistanceTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(o7[i*3+j].isFinite&&ref.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "dynamicVectorPath",
+      "expression": "#expect(abs(Double(out[j])-ref)<=1e-2+1e-3*abs(ref))",
+      "path": "Tests/ComprehensiveTests/MatrixDistanceTests.swift",
+      "category": "bounded-reference",
+      "body_sha256": "9fde38635409d9b6287391b42544f90f8aac3f5116d5f094c6709d3d4563f32a",
+      "reason": "Independent Double sum of squares of deterministic bounded coordinates in this test."
+    },
+    {
+      "function": "r03CheckMatrix",
+      "expression": "#expect(abs(Double(actual)-scalar)<=2e-5*max(1,abs(scalar)),)",
+      "path": "Tests/ComprehensiveTests/MatrixMetricContractTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(actual.isFinite&&direct.isFinite&&scalar.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "r03CheckMatrix",
+      "expression": "#expect(abs(actual-direct)<=2e-5*max(1,abs(direct)))",
+      "path": "Tests/ComprehensiveTests/MatrixMetricContractTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(actual.isFinite&&direct.isFinite&&scalar.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "r03RoutedMatrix",
+      "expression": "#expect(expected.isFinite&&abs(matrix[i][j]-expected)<=2e-5*max(1,expected))",
+      "path": "Tests/ComprehensiveTests/MatrixMetricContractTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(expected.isFinite&&"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "checkScores",
+      "expression": "#expect(abs(value-reference)<=1e-6+1e-6*abs(reference),)",
+      "path": "Tests/ComprehensiveTests/MetricDispatchContractTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(value.isFinite&&reference.isFinite,"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "testSubnormalHandling",
+      "expression": "#expect(abs(recon)<=abs(value)*1.1||abs(recon)<1e-4,)",
+      "path": "Tests/ComprehensiveTests/MixedPrecisionFuzzingTests.swift",
+      "category": "bounded-reference",
+      "body_sha256": "fb08ac8a4c756f5a0d756e748a6aef3ad4e05f96de891cede00eced5d5b91b87",
+      "reason": "Literal finite subnormal inputs; absolute reference times 1.1 is finite."
+    },
+    {
+      "function": "testFP16OverflowUnderflow",
+      "expression": "#expect(abs(backVector[i])<=abs(subnormalValue)*2||backVector[i]==0.0)",
+      "path": "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift",
+      "category": "bounded-reference",
+      "body_sha256": "0a59d51a5d8310d5c85c1ce7da5dc48c8783f8d57b849b39154693889b61458b",
+      "reason": "Literal finite subnormalValues; reference times 2 is finite."
+    },
+    {
+      "function": "verifyFP16Accuracy",
+      "expression": "ifabsError>tolerance&&relError>tolerance{",
+      "path": "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift",
+      "category": "dormant",
+      "body_sha256": "c9352a9acd1eeeabcb4493560404b2bb6a2cd5819797decb696724da3eca5536",
+      "reason": "Unused helper has nonfinite fall-through. Source inventory found only its declaration; this guard blocks activation until its NaN/infinity policy is repaired and tested."
+    },
+    {
+      "function": "compareMixedVsFullPrecision",
+      "expression": "ifabsError>absoluteTolerance&&relError>relativeTolerance{",
+      "path": "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift",
+      "category": "dormant",
+      "body_sha256": "33b8309f2d9907aa4f7874eb62e3b92ffdca15cc970dc686354369d04e0a5149",
+      "reason": "Unused helper has nonfinite fall-through. Source inventory found only its declaration; this guard blocks activation until its NaN/infinity policy is repaired and tested."
+    },
+    {
+      "function": "testFP16OverflowUnderflow",
+      "expression": "#expect(abs(vBack[0])<=abs(value)*2.0||vBack[0]==0)",
+      "path": "Tests/ComprehensiveTests/MixedPrecisionKernelsTests.swift",
+      "category": "bounded-reference",
+      "body_sha256": "e3a4841c1cec8003c31d78a4ed10dc5fd360eb5c8650b9848034a2e8bcb4c8d8",
+      "reason": "Literal finite underflowValues; reference times 2 is finite."
+    },
+    {
+      "function": "n01AssertFloat",
+      "expression": "#expect(abs(Double(x)-Double(reference))<=8*Double(max(reference.ulp,Float.leastNonzeroMagnitude)))",
+      "path": "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift",
+      "category": "bounded-reference",
+      "body_sha256": "21a4bcda23aeb471378702294a3b1cb5bd27e00e43321bd3280a7e1b4a037a86",
+      "reason": "Finite actual guard; reviewed NormalizationRangeContractTests callers supply bounded independent expected arrays. The helper does not intrinsically reject arbitrary nonfinite expected arrays."
+    },
+    {
+      "function": "n01AssertDouble",
+      "expression": "#expect(abs(x-reference)<=16*max(reference.ulp,Double.leastNonzeroMagnitude))",
+      "path": "Tests/ComprehensiveTests/NumericalReferenceFixtures.swift",
+      "category": "bounded-reference",
+      "body_sha256": "a3203e20db0daa3a60a1cae91d4a2bcf5f14baa387379b00ab692e40b93ab36b",
+      "reason": "Finite actual guard; reviewed NormalizationRangeContractTests callers supply bounded literal/bit-pattern expected arrays. The helper does not intrinsically reject arbitrary nonfinite expected arrays."
+    },
+    {
+      "function": "close",
+      "expression": "a.isFinite&&b.isFinite&&scale.isFinite&&abs(a-b)<=4e-6*max(1,abs(scale))",
+      "path": "Tests/ComprehensiveTests/PCACenteringContractTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "a.isFinite&&b.isFinite&&scale.isFinite&&"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    },
+    {
+      "function": "qr",
+      "expression": "residual<=1e-4*scale,orthogonality<=1e-4,lower==0else{",
+      "path": "Tests/ComprehensiveTests/T19LAPACKWorkspaceQueryTests.swift",
+      "category": "bounded-reference",
+      "body_sha256": "888ffb59d52dca7ccfb78d1ff77e66528d084f75e7b9d69ba4fb60a1c50491dc",
+      "reason": "qr.q and qr.r are explicitly finite-guarded; scale is derived from independent finite input fixtures."
+    },
+    {
+      "function": "smoothHighPrecisionReferenceRows",
+      "expression": "iffloor<row.sigma{#expect(total.isFinite&&abs(total-row.target)<=1e-5*max(1,row.target))}",
+      "path": "Tests/ComprehensiveTests/UMAPRangeContractTests.swift",
+      "category": "bounded-reference",
+      "body_sha256": "853b3ff2eb589694dfc35416faa781bf322379a2c82c6ec06ef3374f53877fe3",
+      "reason": "Explicit finite total assertion; row.target comes from seven fixed L03Reference rows with finite target 1.584962500721156 or 2."
+    },
+    {
+      "function": "near",
+      "expression": "#expect(abs(Double(actual)-expected)<=0.00001*max(1,abs(expected)))",
+      "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+      "category": "finite-gated",
+      "required": [
+        "#expect(actual.isFinite&&expected.isFinite)"
+      ],
+      "reason": "Explicit operand classification or finite assertions reject nonfinite arithmetic before this relative comparison can establish success; reviewed F009 inventory."
+    }
+  ]
+}

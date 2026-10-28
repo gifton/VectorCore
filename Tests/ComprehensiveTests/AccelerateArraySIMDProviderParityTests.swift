@@ -28,7 +28,8 @@ struct AccelerateArraySIMDProviderParityTests {
         _ x: Float, _ y: Float,
         relTol: Float = 1e-5, absTol: Float = 1e-6
     ) -> Bool {
-        if x == y { return true } // exact (covers ±inf and identical bit patterns)
+        if x == y { return true } // Includes matching infinities and signed zeros.
+        guard x.isFinite, y.isFinite else { return false }
         let diff = Swift.abs(x - y)
         let scale = Swift.max(Swift.abs(x), Swift.abs(y))
         return diff <= absTol + relTol * scale
@@ -44,6 +45,62 @@ struct AccelerateArraySIMDProviderParityTests {
             return false
         }
         return true
+    }
+
+    @Test func comparatorClassifiesNonfiniteValues() {
+        let values: [Float] = [-.infinity, -1, -0.0, 0.0, 1, .infinity, .nan]
+        let expected: [[Bool]] = [
+            [true, false, false, false, false, false, false],
+            [false, true, false, false, false, false, false],
+            [false, false, true, true, false, false, false],
+            [false, false, true, true, false, false, false],
+            [false, false, false, false, true, false, false],
+            [false, false, false, false, false, true, false],
+            [false, false, false, false, false, false, false]
+        ]
+        for i in values.indices {
+            for j in values.indices {
+                #expect(isClose(values[i], values[j]) == expected[i][j], "scalar classes \(i), \(j)")
+                #expect(arraysClose([values[i]], [values[j]]) == expected[i][j], "array classes \(i), \(j)")
+            }
+        }
+        #expect(arraysClose([], []))
+        #expect(!arraysClose([], [0]))
+        #expect(!arraysClose([0], []))
+    }
+
+    @Test func comparatorPreservesFiniteToleranceBoundaries() {
+        for (a, b): (Float, Float) in [(1, 1.25), (1.25, 1)] {
+            #expect(isClose(a, b, relTol: 0, absTol: 0.25))
+            #expect(!isClose(a, b, relTol: 0, absTol: Float(0.25).nextDown))
+        }
+        for (a, b): (Float, Float) in [(2, 4), (4, 2)] {
+            #expect(isClose(a, b, relTol: 0.5, absTol: 0))
+            #expect(!isClose(a, b, relTol: Float(0.5).nextDown, absTol: 0))
+        }
+    }
+
+    @Test func comparatorRejectsCorruptedProviderOutputs() {
+        let accel = AccelerateArraySIMDProvider()
+        let swift = DefaultArraySIMDProvider()
+        let a: [Float] = [1, 2, 3, 4], b: [Float] = [4, 3, 2, 1]
+        let scalars = [accel.dot(a, b), swift.dot(a, b), accel.sum(a),
+                       accel.magnitude(a), accel.euclideanDistanceSquared(a, b), accel.cosineSimilarity(a, b)]
+        #expect(scalars.allSatisfy { $0.isFinite })
+        let actual = accel.add(a, b), reference = swift.add(a, b)
+        #expect(arraysClose(actual, reference))
+        for replacement: Float in [.infinity, -.infinity, .nan] {
+            for value in scalars {
+                #expect(!isClose(replacement, value))
+                #expect(!isClose(value, replacement))
+            }
+            for index in actual.indices {
+                var corrupted = actual
+                corrupted[index] = replacement
+                #expect(!arraysClose(corrupted, reference))
+                #expect(!arraysClose(reference, corrupted))
+            }
+        }
     }
 
     /// Sizes spanning: scalar tail (1), sub-SIMD4 remainder (7), an exact

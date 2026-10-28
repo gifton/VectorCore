@@ -128,16 +128,16 @@ print("unclosed")
 
 
 class CompileContractTests(unittest.TestCase):
-    """The must-not-compile contracts (PR #56 review SELF1): nine negative fixtures, each with a positive control where
+    """The must-not-compile contracts: ten negative fixtures, each with a positive control where
     the fixture has one, compiled by the consumer job. The table is checked here without a compiler; the compiler run
     is the job itself."""
 
-    def test_table_names_the_nine_negatives_and_their_controls(self):
+    def test_table_names_the_ten_negatives_and_their_controls(self):
         module = load_script()
         rows = module.CONTRACTS
         negatives = {row["path"] for row in rows if row["expect"] == "fail"}
         self.assertEqual(sorted(Path(p).name for p in negatives), [
-            "B01BareConformanceNegative.swift", "DeviceNegative.swift", "HooksNegative.swift", "LoggerNegative.swift",
+            "B01BareConformanceNegative.swift", "DeviceNegative.swift", "F001StorageLetNegative.swift", "HooksNegative.swift", "LoggerNegative.swift",
             "R01MetricScalarContract.swift", "R02CollectionUpdateConsumer.swift", "R05OldPropertyNegative.swift",
             "RoutedNegative.swift", "StorageNegative.swift"])
         self.assertEqual({row["expect"] for row in rows}, {"fail", "compile", "run"})

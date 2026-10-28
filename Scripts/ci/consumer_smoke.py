@@ -34,6 +34,8 @@ _R01 = "Scripts/ci/fixtures/compile-contracts/R01MetricScalarContract.swift"
 _R02 = "Scripts/ci/fixtures/compile-contracts/R02CollectionUpdateConsumer.swift"
 _B01 = "Scripts/ci/fixtures/B01BareConformanceNegative.swift"
 CONTRACTS = (
+    {"id": "F008-public-tuning-consumer", "path": "Scripts/ci/fixtures/compile-contracts/F008TuningConsumer.swift",
+     "expect": "run", "marker": "F008_PUBLIC_TUNING_OK"},
     {"id": "F001-storage-let-negative", "path": "Scripts/ci/fixtures/compile-contracts/F001StorageLetNegative.swift",
      "expect": "fail", "errorLines": [7, 8, 9, 10], "diagnostics": ["is a 'let' constant"]},
     {"id": "F001-storage-value-consumer", "path": "Scripts/ci/fixtures/compile-contracts/F001StorageValueConsumer.swift",

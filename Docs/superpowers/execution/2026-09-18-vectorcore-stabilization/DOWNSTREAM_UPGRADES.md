@@ -14,7 +14,7 @@ Upgrade in this order. (1) Make the client compile: work through section 1 (remo
 |---|---|
 | 1. Compile-breaking | 21 |
 | 2. Signature changes | 12 |
-| 3. Behaviour changes | 66 |
+| 3. Behaviour changes | 67 |
 | 4. ABI/layout | 9 |
 | 5. Performance | 10 |
 | 6. New APIs | 14 |
@@ -172,6 +172,7 @@ These compile unchanged and return different results, throw or trap in new place
 | BH-64 | Finite interpolation uses widened arithmetic and preserves endpoint bits. | Re-baseline extreme-endpoint and signed-zero expectations using `InterpolationRangeContractTests`. | VC-F004 (043c4e7) | stated |
 | BH-65 | The squared-distance batch shortcut applies only to coordinate-zero queries. | Tiny nonzero queries now retain their identity (`BatchZeroQueryContractTests`). | VC-F005 (433ffa0) | stated |
 | BH-66 | Precision diagnostics retain Double statistics through outlier classification. | Re-baseline variance/outlier expectations for large finite inputs (`PrecisionStatisticsRangeTests`). Recommendations remain heuristic. | VC-F006 (d643292) | stated |
+| BH-67 | `OperationProgress.percentage` saturates at `Int.max` when its floating-point result cannot be represented. Ordinary truncation and percentages above 100 are preserved. | No source migration. Extreme overcomplete progress returns a capped integer (`OperationProgressSuite.testOperationProgress_PercentageRange`, `testOperationProgress_PercentageConversionBoundary`). | VC-F007 | stated |
 
 ## 4. ABI and layout: rebuild-required changes
 
@@ -339,39 +340,40 @@ CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the cur
 | CL-74 | Removed | Breaking (source-compatible): the 6 concrete `CosineDistance` overloads. | T14 phase 3 (2cccd8c) | CB-06, AB-03, BH-13 |
 | CL-75 | Removed | The native `Float16` branch of the FP16 scalar converters, never enabled by default. | T12 (d7f4f3d) | BH-18 |
 | CL-76 | Removed | Two unused internal quantization analyzers. | none | none |
-| CL-77 | Fixed | Collection replacement and clearing release displaced values after unlocking | VC-F002 (0e7e377) | BH-63 |
-| CL-78 | Fixed | Finite-endpoint interpolation widens before subtraction (VC-F004), preserving | VC-F004 (043c4e7) | BH-64 |
-| CL-79 | Fixed | Batch squared-distance shortcuts require coordinate zero (VC-F005); tiny | VC-F005 (433ffa0) | BH-65 |
-| CL-80 | Fixed | Precision diagnostics retain a Double mean, residuals and outlier threshold | VC-F006 (d643292) | BH-66 |
-| CL-81 | Fixed | `vectorcore-bench --ab-only` with an explicit suite list. | none | none |
-| CL-82 | Fixed | `vectorcore-bench` output names the build configuration. | none | none |
-| CL-83 | Fixed | Release builds check the output capacity of the FP16 SoA batch kernels and the row shapes of `MatrixDistance`. | PR #56 review AP2, CV1 | BH-54 |
-| CL-84 | Fixed | Pool teardown leaks active leases instead of freeing them, and the `MemoryPool` cleanup timer no longer depends on the width of `Int`. | PR #56 review AM1, DP1 | BH-56 |
-| CL-85 | Fixed | `ComputeProvider`'s chunk-hinted defaults call the hint-less requirements. | PR #56 review CM1, AM3 | BH-55 |
-| CL-86 | Fixed | The never-run consumer fixtures are gone, and the must-not-compile contracts now run. | none | none |
-| CL-87 | Fixed | `VectorCoreBenchmarking` builds on every declared Apple platform, and normalization builds on Intel macOS and Mac Catalyst (T07). | T07 | BC-09, BH-49 |
-| CL-88 | Fixed | `vectorcore-bench` correctness gate. | T11 (c4305e5) | BC-06 |
-| CL-89 | Fixed | Benchmark metadata `binarySizes.vectorCoreLibraryBytes`. | V04 (fcb6c34) | BC-07 |
-| CL-90 | Fixed | MemoryPool bookkeeping and lifetime. | #41 (f4d5b49; entry text 8b02e75) | BH-44 |
-| CL-91 | Fixed | FP16 portability on Intel macOS and Mac Catalyst. | #41 (f4d5b49; entry text 8b02e75) | BH-49, CB-14 |
-| CL-92 | Fixed | FP16 kernels no longer heap-allocate on each 8-lane load. | T12 (d7f4f3d) | PF-06 |
-| CL-93 | Fixed | LAPACK workspace check on near-square inputs (introduced after `v0.3.3`, fixed before release). | none | none |
-| CL-94 | Documentation | Refresh the README and core references, distinguish current contracts from | none | none |
-| CL-95 | Documentation | Correct historical matrix allocation, accuracy, and routing claims below; | #46 (8b02e75) | none (documentation) |
-| CL-96 | Documentation | Reconcile performance and robustness claims with their evidence. Benchmark | V04 (3f9bf63, fcb6c34) | none (documentation) |
-| CL-97 | Documentation | `Docs/Performance_Guide.md` uses the real `vectorcore-bench` options | V04, T11 | BC-06 |
-| CL-98 | Documentation | `Benchmarks/baselines/README.md` shows the two comparator invocations that run against the | none | none |
-| CL-99 | Documentation | `Docs/Benchmark_Measurement_Boundaries.md` defines `unverified` per case ID, | V04 (fcb6c34) | BC-07 |
-| CL-100 | Documentation | Extend the claim ledger (T13). Qualitative performance and robustness | none | none |
-| CL-101 | Documentation | VectorCoreC contracts. | D02 (93e08c4) | BC-13 |
-| CL-102 | Documentation | Dispatch of protocol members. | D02 (93e08c4) | BH-13 |
-| CL-103 | Documentation | `VectorTypeFactory.isSupported(dimension:)` | D02 (93e08c4) | BH-32 |
-| CL-104 | Documentation | Provider hooks. | D02 (93e08c4) | none (documentation; the `Operations` docs list every public entry that reads `computeProvider`, `simdProvider` or `linearAlgebraProvider`) |
-| CL-105 | Documentation | `VectorCore.createVector(dimension:data:)` and `hasOptimizedSupport(for:)`. | D02 (93e08c4) | BH-32 |
-| CL-106 | Documentation | `Logger` next to `os.Logger`. | D02 (93e08c4) | BH-51 |
-| CL-107 | Documentation | Products and hosts. | D02 (93e08c4) | BC-09 |
-| CL-108 | Documentation | `VectorQualityMetrics.entropy` | D02 (93e08c4) | BH-38 |
-| CL-109 | Documentation | Measured workload envelope for PCA, kNN and UMAP (one host). | none | none |
+| CL-77 | Fixed | `OperationProgress.percentage` saturates at `Int.max` (VC-F007). | VC-F007 | BH-67 |
+| CL-78 | Fixed | Collection replacement and clearing release displaced values after unlocking | VC-F002 (0e7e377) | BH-63 |
+| CL-79 | Fixed | Finite-endpoint interpolation widens before subtraction (VC-F004), preserving | VC-F004 (043c4e7) | BH-64 |
+| CL-80 | Fixed | Batch squared-distance shortcuts require coordinate zero (VC-F005); tiny | VC-F005 (433ffa0) | BH-65 |
+| CL-81 | Fixed | Precision diagnostics retain a Double mean, residuals and outlier threshold | VC-F006 (d643292) | BH-66 |
+| CL-82 | Fixed | `vectorcore-bench --ab-only` with an explicit suite list. | none | none |
+| CL-83 | Fixed | `vectorcore-bench` output names the build configuration. | none | none |
+| CL-84 | Fixed | Release builds check the output capacity of the FP16 SoA batch kernels and the row shapes of `MatrixDistance`. | PR #56 review AP2, CV1 | BH-54 |
+| CL-85 | Fixed | Pool teardown leaks active leases instead of freeing them, and the `MemoryPool` cleanup timer no longer depends on the width of `Int`. | PR #56 review AM1, DP1 | BH-56 |
+| CL-86 | Fixed | `ComputeProvider`'s chunk-hinted defaults call the hint-less requirements. | PR #56 review CM1, AM3 | BH-55 |
+| CL-87 | Fixed | The never-run consumer fixtures are gone, and the must-not-compile contracts now run. | none | none |
+| CL-88 | Fixed | `VectorCoreBenchmarking` builds on every declared Apple platform, and normalization builds on Intel macOS and Mac Catalyst (T07). | T07 | BC-09, BH-49 |
+| CL-89 | Fixed | `vectorcore-bench` correctness gate. | T11 (c4305e5) | BC-06 |
+| CL-90 | Fixed | Benchmark metadata `binarySizes.vectorCoreLibraryBytes`. | V04 (fcb6c34) | BC-07 |
+| CL-91 | Fixed | MemoryPool bookkeeping and lifetime. | #41 (f4d5b49; entry text 8b02e75) | BH-44 |
+| CL-92 | Fixed | FP16 portability on Intel macOS and Mac Catalyst. | #41 (f4d5b49; entry text 8b02e75) | BH-49, CB-14 |
+| CL-93 | Fixed | FP16 kernels no longer heap-allocate on each 8-lane load. | T12 (d7f4f3d) | PF-06 |
+| CL-94 | Fixed | LAPACK workspace check on near-square inputs (introduced after `v0.3.3`, fixed before release). | none | none |
+| CL-95 | Documentation | Refresh the README and core references, distinguish current contracts from | none | none |
+| CL-96 | Documentation | Correct historical matrix allocation, accuracy, and routing claims below; | #46 (8b02e75) | none (documentation) |
+| CL-97 | Documentation | Reconcile performance and robustness claims with their evidence. Benchmark | V04 (3f9bf63, fcb6c34) | none (documentation) |
+| CL-98 | Documentation | `Docs/Performance_Guide.md` uses the real `vectorcore-bench` options | V04, T11 | BC-06 |
+| CL-99 | Documentation | `Benchmarks/baselines/README.md` shows the two comparator invocations that run against the | none | none |
+| CL-100 | Documentation | `Docs/Benchmark_Measurement_Boundaries.md` defines `unverified` per case ID, | V04 (fcb6c34) | BC-07 |
+| CL-101 | Documentation | Extend the claim ledger (T13). Qualitative performance and robustness | none | none |
+| CL-102 | Documentation | VectorCoreC contracts. | D02 (93e08c4) | BC-13 |
+| CL-103 | Documentation | Dispatch of protocol members. | D02 (93e08c4) | BH-13 |
+| CL-104 | Documentation | `VectorTypeFactory.isSupported(dimension:)` | D02 (93e08c4) | BH-32 |
+| CL-105 | Documentation | Provider hooks. | D02 (93e08c4) | none (documentation; the `Operations` docs list every public entry that reads `computeProvider`, `simdProvider` or `linearAlgebraProvider`) |
+| CL-106 | Documentation | `VectorCore.createVector(dimension:data:)` and `hasOptimizedSupport(for:)`. | D02 (93e08c4) | BH-32 |
+| CL-107 | Documentation | `Logger` next to `os.Logger`. | D02 (93e08c4) | BH-51 |
+| CL-108 | Documentation | Products and hosts. | D02 (93e08c4) | BC-09 |
+| CL-109 | Documentation | `VectorQualityMetrics.entropy` | D02 (93e08c4) | BH-38 |
+| CL-110 | Documentation | Measured workload envelope for PCA, kNN and UMAP (one host). | none | none |
 
 ## Appendix B. CHANGELOG Breaking lines mapped to rows
 

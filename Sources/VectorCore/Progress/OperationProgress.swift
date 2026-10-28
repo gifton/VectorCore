@@ -17,8 +17,16 @@ public struct OperationProgress: Sendable, Equatable {
         return Double(current) / Double(total)
     }
 
+    /// Whole-number percentage, truncating `fraction * 100` toward zero.
+    /// Values above 100 are retained; unrepresentable results saturate at `Int.max`.
+    /// Tested by `OperationProgressSuite.testOperationProgress_PercentageRange`,
+    /// `testOperationProgress_PercentageConversionBoundary` and
+    /// `testOperationProgress_PercentagePreservesOvershootAndTruncation`.
     public var percentage: Int {
-        Int(fraction * 100)
+        let scaled: Double = fraction * 100
+        // Double(Int.max) rounds upward on 64-bit, so equality must saturate too.
+        if scaled >= Double(Int.max) { return Int.max }
+        return Int(scaled)
     }
 
     public var isComplete: Bool {

@@ -1123,6 +1123,13 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Fixed
 
+- **`OperationProgress.percentage` saturates at `Int.max` (VC-F007).** Extreme
+  overcomplete progress no longer traps during integer conversion. Percentages
+  above 100 and ordinary fractional truncation are preserved
+  (`OperationProgressSuite.testOperationProgress_PercentageRange`,
+  `testOperationProgress_PercentageConversionBoundary`,
+  `testOperationProgress_PercentagePreservesOvershootAndTruncation`).
+
 - Collection replacement and clearing release displaced values after unlocking
   (VC-F002); destructor callbacks can re-enter the completed collection state
   (`CollectionDestructionContractTests.destructionCanReenter`).

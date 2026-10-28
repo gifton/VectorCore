@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import VectorCore
+import VectorCore
 
 @Suite("OperationProgress")
 struct OperationProgressSuite {
@@ -96,6 +96,51 @@ struct OperationProgressSuite {
 
         let p100 = OperationProgress(current: 100, total: 100)
         #expect(p100.percentage == 100)
+    }
+
+    @Test
+    func testOperationProgress_PercentageRange() {
+        let cases: [(current: Int, total: Int, expected: Int)] = [
+            (0, 0, 0), (1, 0, 0), (Int.max, 0, 0),
+            (0, 1, 0), (1, 1, 100), (Int.max, 1, Int.max),
+            (0, Int.max, 0), (1, Int.max, 0), (Int.max, Int.max, 100),
+            (Int.min, 1, 0), (1, Int.min, 0), (Int.max, Int.min, 0),
+            (Int.min, Int.min, 0)
+        ]
+        for (current, total, expected) in cases {
+            let progress = OperationProgress(current: current, total: total)
+            #expect(progress.percentage == expected, "current=\(current), total=\(total)")
+        }
+    }
+
+    @Test
+    func testOperationProgress_PercentageConversionBoundary() {
+        let boundaryCurrent: Int = Int.max / 100
+        // On 64-bit, these products round to 2^63 - 1024 and 2^63.
+        // On 32-bit, the integer products below are exactly representable in Double.
+        let belowExpected: Int = Int.bitWidth == 64 ? Int.max - 1023 : (boundaryCurrent - 16) * 100
+        let boundaryExpected: Int = Int.bitWidth == 64 ? Int.max : boundaryCurrent * 100
+        let cases: [(current: Int, total: Int, expected: Int)] = [
+            (boundaryCurrent - 16, 1, belowExpected),
+            (boundaryCurrent, 1, boundaryExpected),
+            (boundaryCurrent + 1, 1, Int.max),
+            (Int.max, 100, Int.max)
+        ]
+        for (current, total, expected) in cases {
+            #expect(OperationProgress(current: current, total: total).percentage == expected,
+                    "current=\(current), total=\(total)")
+        }
+    }
+
+    @Test
+    func testOperationProgress_PercentagePreservesOvershootAndTruncation() {
+        let progress = OperationProgress(current: 15, total: 10)
+        #expect(progress.percentage == 150)
+        #expect(progress.current == 15 && progress.total == 10)
+        #expect(abs(progress.fraction - 1.5) <= Double.ulpOfOne)
+        #expect(progress.isComplete)
+        #expect(OperationProgress(current: 1, total: 3).percentage == 33)
+        #expect(OperationProgress(current: 2, total: 3).percentage == 66)
     }
 
     @Test

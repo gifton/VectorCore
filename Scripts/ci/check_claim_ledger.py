@@ -948,6 +948,15 @@ def check(repo, ledger_path=LEDGER):
             continue
         label, path, evidence = entry['id'], entry['path'], entry['evidence']
         parsed = files[path]
+        # Historical text stays forbidden after a corrected entry is retired.
+        original = (entry['history'] or {}).get('originalFingerprint')
+        if original:
+            if original != entry['fingerprint'] and original in by_fp[path]:
+                problems.append(f'R2 {label}: tombstone violation: the corrected statement\'s original text is present again in {path}')
+        for superseded in (entry['history'] or {}).get('superseded', []):
+            if superseded.get('fingerprint') in by_fp[path]:
+                problems.append(f'R2 {label}: tombstone violation: superseded text {superseded["fingerprint"]} '
+                                f'({superseded.get("revision", "?")}) is present again in {path}')
         if entry['disposition'] == 'removed':
             # R2
             if entry['fingerprint'] in by_fp[path]:
@@ -967,14 +976,6 @@ def check(repo, ledger_path=LEDGER):
         if statements.get(key) and found != occurrences:
             problems.append(f'R1 {label}: {found} occurrences at the anchor, ledger says {occurrences}')
         covered[path][(entry['symbol'], entry['fingerprint'])] += occurrences
-        original = (entry['history'] or {}).get('originalFingerprint')
-        if original:
-            if original != entry['fingerprint'] and original in by_fp[path]:
-                problems.append(f'R2 {label}: tombstone violation: the corrected statement\'s original text is present again in {path}')
-        for superseded in (entry['history'] or {}).get('superseded', []):
-            if superseded.get('fingerprint') in by_fp[path]:
-                problems.append(f'R2 {label}: tombstone violation: superseded text {superseded["fingerprint"]} '
-                                f'({superseded.get("revision", "?")}) is present again in {path}')
         # R3
         if evidence['kind'] == 'named-test':
             references = evidence['reference'] if isinstance(evidence['reference'], list) else [evidence['reference']]

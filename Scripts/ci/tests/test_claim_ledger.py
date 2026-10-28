@@ -283,6 +283,18 @@ class Mutations(TemporaryRepository):
         problems = self.run_with(COW, lambda t: t.replace(anchor, anchor + '/// - No overhead for unique instances\n'))
         self.assertIn('R2', rules(problems), problems)
 
+    def test_removed_entries_preserve_every_superseded_tombstone(self):
+        ledger = json.loads((ROOT / LEDGER).read_text(encoding='utf-8'))
+        histories = [(entry, old) for entry in ledger['entries'] if entry['disposition'] == 'removed'
+                     for old in (entry['history'] or {}).get('superseded', [])]
+        self.assertTrue(histories, 'the historical-claim negative control must not be vacuous')
+        for entry, old in histories:
+            with self.subTest(entry=entry['id'], fingerprint=old['fingerprint']):
+                prefix = '// ' if entry['path'].endswith('.swift') else ''
+                problems = self.run_with(entry['path'], lambda text: text + '\n' + prefix + old['statement'] + '\n')
+                self.assertTrue(any(p.startswith('R2 ' + entry['id'] + ':') and 'superseded' in p
+                                    for p in problems), problems)
+
     def test_m5_forbidden_variant_fails_r7(self):
         anchor = '    public func acquire() -> MixedPrecisionKernels.Vector512FP16? {\n'
         problems = self.run_with(MPK, lambda t: t.replace(anchor, anchor + '        // lock-free fast path\n'))

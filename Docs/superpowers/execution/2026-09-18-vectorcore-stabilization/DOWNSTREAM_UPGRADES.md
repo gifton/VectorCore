@@ -184,7 +184,7 @@ VectorCore is not built with library evolution (CL-11), so any binary compiled a
 | AB-03 | The 30 removed concrete metric overloads (CB-06) remove their mangled symbols; calls now bind the protocol witnesses. | Rebuild (binaries built against the removed symbols fail to load or link). | (keys listed in CB-06) | T14 (819d3fe, 2cccd8c); CL-36; CL-37 | stated; observed |
 | AB-04 | The public `storage` of the optimized FP32 types and of the INT8 types is now a computed property with a guarded setter and `_modify` over private backing storage (`var storage` became `var storage { get set }`): "computed public storage changes backing ABI layout; valid source usage preserved". INT8 types gain explicit `Codable` (`init(from:)`, `encode(to:)`) that check shape. | Rebuild. Wrong-count assignments now trap (BH-21). | `Vector384Optimized.storage`, `Vector512Optimized.storage`, `Vector768Optimized.storage`, `Vector1536Optimized.storage`, `Vector512INT8.storage`, `Vector768INT8.storage`, `Vector1536INT8.storage` | S01 (7c211d9); closure S01 migration[3]; report S01.md | stated; observed |
 | AB-05 | `NormalizationHint.vector` is now a computed property (`get`/`set`/`_modify` over stored backing) that invalidates hints before mutation. | Rebuild. Semantics: BH-34. | `NormalizationHint.vector` | I01 (99a2ac4); report I01.md | stated; observed |
-| AB-06 | The four `AlignedDynamicArrayStorage` initializers (a `final class`) are now `convenience` initializers converging on a validated internal designated initializer; constructor signatures remain available. | Rebuild ("rebuild clients using serialized inlinable bodies"). Semantics: BH-47. | `AlignedDynamicArrayStorage.init(dimension:alignment:)`, `AlignedDynamicArrayStorage.init(dimension:repeating:alignment:)`, `AlignedDynamicArrayStorage.init(from:)`, `AlignedDynamicArrayStorage.init(from:alignment:)` | O04 (98388fc); report O04-implementation.md | stated; observed |
+| AB-06 | **Historical stage, superseded by AB-09:** The four `AlignedDynamicArrayStorage` initializers (a `final class`) are now `convenience` initializers converging on a validated internal designated initializer; constructor signatures remain available. | Rebuild ("rebuild clients using serialized inlinable bodies"). Semantics: BH-47. | `AlignedDynamicArrayStorage.init(dimension:alignment:)`, `AlignedDynamicArrayStorage.init(dimension:repeating:alignment:)`, `AlignedDynamicArrayStorage.init(from:)`, `AlignedDynamicArrayStorage.init(from:alignment:)` | O04 (98388fc); report O04-implementation.md | stated; observed |
 | AB-07 | `MemoryPool.BufferHandle.count` changed from a computed `var count: Int { get }` to a stored `let count: Int`; handles now retain an allocation owner and a weak pool. | Rebuild. Semantics: BH-44. | `MemoryPool.BufferHandle.count` | E04 (076f60b); closure E04 migrations[2]; symbol diff | stated; observed |
 | AB-08 | Three existing internal `Interop` declarations gain ABI visibility (`@usableFromInline`) for existing inlinable INT8 callers; bodies, gates and public source access are unchanged. Not in the public symbol graph. | Rebuild (inlinable bodies changed). | (internal; not in the public graph) | V02 (53976c1); closure V02 migrations[2] | stated |
 | AB-09 | Two public storage types changed from classes to structs. | Rebuild downstream binaries; source migration is CB-43. | `AlignedDynamicArrayStorage`, `DynamicArrayStorage` | VC-F001 (1ad233b) | stated; observed |
@@ -263,13 +263,13 @@ CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the cur
 
 | Key | Section | Entry (title as written) | Task (commit) | Rows |
 |---|---|---|---|---|
-| CL-01 | Added | Public initializers for `Tuning` and `CalibrationProbes` (VC-F008). | none | none |
+| CL-01 | Added | Public initializers for `Tuning` and `CalibrationProbes` (VC-F008). | VC-F008 (a8f1fd5) | NA-14 |
 | CL-02 | Added | `VectorCoreCompiledFeatures` (V02). | V02 | BC-03, NA-10, NA-13 |
 | CL-03 | Added | `ComputeDevice.isSupportedByCore` and `ComputeDevice.coreSupportedDevices`. | D02 (93e08c4) | NA-02 |
 | CL-04 | Added | `BatchSearchCPUStrategy` and the `cpuStrategy:` parameter of `Operations.findNearestBatch`. | P02 (1544ab4) | NA-01, SG-01, PF-10 |
 | CL-05 | Added | Opt-in `boundary` benchmark suite. | V04 (2179a19; entry fcb6c34) | BC-08 |
-| CL-06 | Changed | Breaking: dynamic storage uses value semantics (VC-F001). | none | none |
-| CL-07 | Changed | watchOS support retired. | none | none |
+| CL-06 | Changed | Breaking: dynamic storage uses value semantics (VC-F001). | VC-F001 (1ad233b) | CB-43, BH-62, AB-09 |
+| CL-07 | Changed | watchOS support retired. | Platform retirement (f88d797) | CB-44 |
 | CL-08 | Changed | Breaking: fixed-size vector storage must have the type's lane count (S01). | S01 | BH-21, NA-12 |
 | CL-09 | Changed | Breaking: `Operations.centroid(of:)` and `Operations.statistics(for:)` now throw, and dimensions are checked before mutation and aggregation (S02). | S02 | BH-22 |
 | CL-10 | Changed | Decoding a `TopKResult` with mismatched counts throws (S03). | S03 | BH-07 |
@@ -339,10 +339,10 @@ CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the cur
 | CL-74 | Removed | Breaking (source-compatible): the 6 concrete `CosineDistance` overloads. | T14 phase 3 (2cccd8c) | CB-06, AB-03, BH-13 |
 | CL-75 | Removed | The native `Float16` branch of the FP16 scalar converters, never enabled by default. | T12 (d7f4f3d) | BH-18 |
 | CL-76 | Removed | Two unused internal quantization analyzers. | none | none |
-| CL-77 | Fixed | Collection replacement and clearing release displaced values after unlocking | none | none |
-| CL-78 | Fixed | Finite-endpoint interpolation widens before subtraction (VC-F004), preserving | none | none |
-| CL-79 | Fixed | Batch squared-distance shortcuts require coordinate zero (VC-F005); tiny | none | none |
-| CL-80 | Fixed | Precision diagnostics retain a Double mean, residuals and outlier threshold | none | none |
+| CL-77 | Fixed | Collection replacement and clearing release displaced values after unlocking | VC-F002 (0e7e377) | BH-63 |
+| CL-78 | Fixed | Finite-endpoint interpolation widens before subtraction (VC-F004), preserving | VC-F004 (043c4e7) | BH-64 |
+| CL-79 | Fixed | Batch squared-distance shortcuts require coordinate zero (VC-F005); tiny | VC-F005 (433ffa0) | BH-65 |
+| CL-80 | Fixed | Precision diagnostics retain a Double mean, residuals and outlier threshold | VC-F006 (d643292) | BH-66 |
 | CL-81 | Fixed | `vectorcore-bench --ab-only` with an explicit suite list. | none | none |
 | CL-82 | Fixed | `vectorcore-bench` output names the build configuration. | none | none |
 | CL-83 | Fixed | Release builds check the output capacity of the FP16 SoA batch kernels and the row shapes of `MatrixDistance`. | PR #56 review AP2, CV1 | BH-54 |
@@ -375,11 +375,11 @@ CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the cur
 
 ## Appendix B. CHANGELOG Breaking lines mapped to rows
 
-Every top-level `[Unreleased]` bullet whose title starts with "Breaking" (40 entries); 1 entry has no row and is listed as `none`.
+Every top-level `[Unreleased]` bullet whose title starts with "Breaking" (40 entries); every one has at least one row.
 
 | CHANGELOG entry | Title | Rows |
 |---|---|---|
-| CL-06 | Breaking: dynamic storage uses value semantics (VC-F001). | none |
+| CL-06 | Breaking: dynamic storage uses value semantics (VC-F001). | CB-43, BH-62, AB-09 |
 | CL-08 | Breaking: fixed-size vector storage must have the type's lane count (S01). | BH-21, NA-12 |
 | CL-09 | Breaking: `Operations.centroid(of:)` and `Operations.statistics(for:)` now throw, and dimensions are checked before mutation and aggregation (S02). | BH-22 |
 | CL-11 | Breaking: the Float search facades take `any DistanceMetric<Float>` and use the supplied metric (R01). | BH-04, NA-11 |

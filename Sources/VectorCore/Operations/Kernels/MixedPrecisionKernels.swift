@@ -3453,7 +3453,8 @@ public enum MixedPrecisionKernels {
             }
         }
 
-        let meanValue = Float(sum / Double(valueCount))
+        let mean = sum / Double(valueCount)
+        let meanValue = Float(mean)
 
         // Second pass: compute variance for standard deviation
         var sumSquaredDiff: Double = 0
@@ -3462,7 +3463,7 @@ public enum MixedPrecisionKernels {
                 for i in 0..<4 {
                     let v = simd4[i]
                     if v.isFinite {
-                        let diff = Double(v - meanValue)
+                        let diff = Double(v) - mean
                         sumSquaredDiff += diff * diff
                     }
                 }
@@ -3470,16 +3471,17 @@ public enum MixedPrecisionKernels {
         }
 
         let variance = sumSquaredDiff / Double(valueCount)
-        let stdDev = Float(sqrt(variance))
+        let standardDeviation = sqrt(variance)
+        let stdDev = Float(standardDeviation)
 
         // Third pass: count outliers (values beyond 3 standard deviations)
         var outlierCount = 0
-        let outlierThreshold = 3.0 * stdDev
+        let outlierThreshold = 3.0 * standardDeviation
         for vector in vectors {
             for simd4 in vector.storage {
                 for i in 0..<4 {
                     let v = simd4[i]
-                    if v.isFinite && abs(v - meanValue) > outlierThreshold {
+                    if v.isFinite && abs(Double(v) - mean) > outlierThreshold {
                         outlierCount += 1
                     }
                 }

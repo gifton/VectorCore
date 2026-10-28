@@ -32599,12 +32599,12 @@
    "id": "R56-C-0003",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Fixed",
-   "fingerprint": "34464e38b7c8a06a",
-   "statement": "- **pool teardown leaks active leases instead of freeing them, and the `memorypool` cleanup timer no longer depends on the width of `int`.** destroying a `typedbufferpool`, a `swiftbufferpool` or the internal `bufferpool` while a lease was still checked out freed that lease, so a `handle` or `bufferhandle` that outlived its pool pointed at freed memory and the first write through it was a silent use-after-free. the three pools now leak active leases on teardown and still free their cached allocations, as 0.3.3 did, so an escaped handle stays valid (`bufferpoolownershiptests.internalandtypeddestructionowncachedandleakactive`, `swiftpooldestructionleaksactivelease`); the lease contract is unchanged: release every handle before dropping the pool. `memorypool` compared the cleanup interval against `double(int.max) / 1e9`, which is 2.147 s on a 32-bit `int` (arm64_32 watchos devices, inside the declared floor), so the default 30 s interval silently disabled automatic cleanup there; the bound is now the 64-bit nanosecond horizon on every platform (`memorypoolboundarytests.timerhorizonisindependentofintwidth`).",
+   "fingerprint": "fe4f202e46e98583",
+   "statement": "- **pool teardown leaks active leases instead of freeing them, and the `memorypool` cleanup timer no longer depends on the width of `int`.** destroying a `typedbufferpool`, a `swiftbufferpool` or the internal `bufferpool` while a lease was still checked out freed that lease, so a `handle` or `bufferhandle` that outlived its pool pointed at freed memory and the first write through it was a silent use-after-free. the three pools now leak active leases on teardown and still free their cached allocations, as 0.3.3 did, so an escaped handle stays valid (`bufferpoolownershiptests.internalandtypeddestructionowncachedandleakactive`, `swiftpooldestructionleaksactivelease`); the lease contract is unchanged: release every handle before dropping the pool. `memorypool` compared the cleanup interval against `double(int.max) / 1e9`, which is 2.147 s on a 32-bit `int` (arm64_32 watchos devices, supported before the 0.4.0 scope change), so the default 30 s interval silently disabled automatic cleanup there; the bound is now the 64-bit nanosecond horizon on every platform (`memorypoolboundarytests.timerhorizonisindependentofintwidth`).",
    "kind": "markdown",
-   "lineHint": 1103,
+   "lineHint": 1180,
    "category": "memory-model",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "named-test",
     "reference": [
@@ -32617,9 +32617,16 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "PR #56 review remediation (2026-10-23)"
+    "originalStatement": "- **pool teardown leaks active leases instead of freeing them, and the `memorypool` cleanup timer no longer depends on the width of `int`.** destroying a `typedbufferpool`, a `swiftbufferpool` or the internal `bufferpool` while a lease was still checked out freed that lease, so a `handle` or `bufferhandle` that outlived its pool pointed at freed memory and the first write through it was a silent use-after-free. the three pools now leak active leases on teardown and still free their cached allocations, as 0.3.3 did, so an escaped handle stays valid (`bufferpoolownershiptests.internalandtypeddestructionowncachedandleakactive`, `swiftpooldestructionleaksactivelease`); the lease contract is unchanged: release every handle before dropping the pool. `memorypool` compared the cleanup interval against `double(int.max) / 1e9`, which is 2.147 s on a 32-bit `int` (arm64_32 watchos devices, inside the declared floor), so the default 30 s interval silently disabled automatic cleanup there; the bound is now the 64-bit nanosecond horizon on every platform (`memorypoolboundarytests.timerhorizonisindependentofintwidth`).",
+    "originalFingerprint": "34464e38b7c8a06a",
+    "origin": "PR #56 review remediation (2026-10-23)",
+    "superseded": [
+     {
+      "statement": "- **pool teardown leaks active leases instead of freeing them, and the `memorypool` cleanup timer no longer depends on the width of `int`.** destroying a `typedbufferpool`, a `swiftbufferpool` or the internal `bufferpool` while a lease was still checked out freed that lease, so a `handle` or `bufferhandle` that outlived its pool pointed at freed memory and the first write through it was a silent use-after-free. the three pools now leak active leases on teardown and still free their cached allocations, as 0.3.3 did, so an escaped handle stays valid (`bufferpoolownershiptests.internalandtypeddestructionowncachedandleakactive`, `swiftpooldestructionleaksactivelease`); the lease contract is unchanged: release every handle before dropping the pool. `memorypool` compared the cleanup interval against `double(int.max) / 1e9`, which is 2.147 s on a 32-bit `int` (arm64_32 watchos devices, inside the declared floor), so the default 30 s interval silently disabled automatic cleanup there; the bound is now the 64-bit nanosecond horizon on every platform (`memorypoolboundarytests.timerhorizonisindependentofintwidth`).",
+      "fingerprint": "34464e38b7c8a06a",
+      "revision": "84798d3"
+     }
+    ]
    }
   },
   {
@@ -32651,16 +32658,16 @@
    "id": "R56-C-0005",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Fixed",
-   "fingerprint": "46429a5718856c1c",
-   "statement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the nine must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative`) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_nine_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
+   "fingerprint": "2198a4777e7d78a4",
+   "statement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the ten must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative` and `f001storageletnegative`) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_ten_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
    "kind": "markdown",
-   "lineHint": 1136,
+   "lineHint": 1208,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "named-test",
     "reference": [
-     "Scripts/ci/tests/test_consumer_smoke.py::CompileContractTests.test_table_names_the_nine_negatives_and_their_controls",
+     "Scripts/ci/tests/test_consumer_smoke.py::CompileContractTests.test_table_names_the_ten_negatives_and_their_controls",
      "Scripts/ci/tests/test_consumer_smoke.py::ContractJudgementTests.test_negative_with_every_code_line_erroring"
     ],
     "domain": "compile-contract table and judgement; removal of never-run fixtures",
@@ -32668,9 +32675,184 @@
    },
    "acceptedContract": null,
    "history": {
+    "originalStatement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the nine must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative`) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_nine_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
+    "originalFingerprint": "46429a5718856c1c",
+    "origin": "PR #56 review remediation (2026-10-23)",
+    "superseded": [
+     {
+      "statement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the nine must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative`) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_nine_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
+      "fingerprint": "46429a5718856c1c",
+      "revision": "84798d3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "VC-AUDIT-F008",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Added",
+   "fingerprint": "bbe8aeb91c8cd6a3",
+   "statement": "- public initializers for `tuning` and `calibrationprobes` (vc-f008). `tuning` requires `breakevenn >= 0` and `minchunk > 0`; raw calibration observations retain the existing fallback policy. the ordinary-import `f008tuningconsumer.swift` exercises overrides, calibration and scheduling boundaries.",
+   "kind": "markdown",
+   "lineHint": 15,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "adjacent-invariant",
+    "reference": "Sources/VectorCore/Providers/AutoTuning.swift public initializers and their preconditions; Scripts/ci/fixtures/compile-contracts/F008TuningConsumer.swift calls the public API.",
+    "domain": "Public construction and scheduling boundary controls",
+    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
     "originalStatement": null,
     "originalFingerprint": null,
-    "origin": "PR #56 review remediation (2026-10-23)"
+    "origin": "2026-10-27 audit repairs"
+   }
+  },
+  {
+   "id": "VC-AUDIT-F001",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Changed",
+   "fingerprint": "d050922dd4a92e9e",
+   "statement": "- **breaking: dynamic storage uses value semantics (vc-f001).** `aligneddynamicarraystorage` and `dynamicarraystorage` are now structs. mutations require `var`; copying a value isolates subsequent writes, including mutable buffer borrows (`referencestoragevaluetests.dynamiccopies`, `alignedcopies`, `concurrentindependentcopies`). clients needing shared mutations must provide synchronized ownership. `cowdynamicstorage` delegates to the aligned value. see [migration details](docs/memory_alignment.md#pools-copying-and-concurrency).",
+   "kind": "markdown",
+   "lineHint": 64,
+   "category": "memory-model",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/ReferenceStorageValueTests.swift::ReferenceStorageValueTests.dynamicCopies",
+     "Tests/ComprehensiveTests/ReferenceStorageValueTests.swift::ReferenceStorageValueTests.alignedCopies",
+     "Tests/ComprehensiveTests/ReferenceStorageValueTests.swift::ReferenceStorageValueTests.concurrentIndependentCopies"
+    ],
+    "domain": "Independent copies, scalar and mutable-borrow writes; separate variables in concurrent tasks",
+    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-10-27 audit repairs"
+   }
+  },
+  {
+   "id": "VC-AUDIT-PLATFORM",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Changed",
+   "fingerprint": "7c6d93e2582406d8",
+   "statement": "- **watchos support retired.** the supported deployment floors are macos 14, ios 17, tvos 17 and visionos 1, with mac catalyst retained. historical watchos findings describe the earlier baseline and are not marked repaired by this scope change.",
+   "kind": "markdown",
+   "lineHint": 71,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "adjacent-invariant",
+    "reference": "Package.swift platform declaration; .github/workflows/ci.yml destinations",
+    "domain": "Supported-platform policy; no watchOS runtime claim",
+    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-10-27 audit repairs"
+   }
+  },
+  {
+   "id": "VC-AUDIT-F002",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "3142c4e30a7dc9ae",
+   "statement": "- collection replacement and clearing release displaced values after unlocking (vc-f002); destructor callbacks can re-enter the completed collection state (`collectiondestructioncontracttests.destructioncanreenter`).",
+   "kind": "markdown",
+   "lineHint": 1126,
+   "category": "concurrency",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift::CollectionDestructionContractTests.destructionCanReenter",
+    "domain": "Replacement, clearing and removal destructor re-entry",
+    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-10-27 audit repairs"
+   }
+  },
+  {
+   "id": "VC-AUDIT-F004",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "cb8436c0252d1941",
+   "statement": "- finite-endpoint interpolation widens before subtraction (vc-f004), preserving endpoint bits and degenerate widths (`interpolationrangecontracttests.oppositefiniteextrema`, `endpointbitsanddegeneratewidths`).",
+   "kind": "markdown",
+   "lineHint": 1129,
+   "category": "numerical-accuracy",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/InterpolationRangeContractTests.swift::InterpolationRangeContractTests.oppositeFiniteExtrema",
+     "Tests/ComprehensiveTests/InterpolationRangeContractTests.swift::InterpolationRangeContractTests.endpointBitsAndDegenerateWidths"
+    ],
+    "domain": "Finite extrema, endpoint bit patterns and widths zero/one",
+    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-10-27 audit repairs"
+   }
+  },
+  {
+   "id": "VC-AUDIT-F005",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "696bb6fcbd24467a",
+   "statement": "- batch squared-distance shortcuts require coordinate zero (vc-f005); tiny nonzero queries retain their identity (`batchzeroquerycontracttests.tinyselfdistancedoesnotdependonbatchsize`).",
+   "kind": "markdown",
+   "lineHint": 1132,
+   "category": "numerical-accuracy",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": "Tests/ComprehensiveTests/BatchZeroQueryContractTests.swift::BatchZeroQueryContractTests.tinySelfDistanceDoesNotDependOnBatchSize",
+    "domain": "Tiny signed and zero query identities for batch sizes zero through three",
+    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-10-27 audit repairs"
+   }
+  },
+  {
+   "id": "VC-AUDIT-F006",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "d91b18da4f11c52c",
+   "statement": "- precision diagnostics retain a double mean, residuals and outlier threshold (vc-f006), correcting variance and outlier counts for the large finite inputs in `precisionstatisticsrangetests.statisticsacrosssupportedwidths`.",
+   "kind": "markdown",
+   "lineHint": 1134,
+   "category": "numerical-accuracy",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": "Tests/ComprehensiveTests/PrecisionStatisticsRangeTests.swift::PrecisionStatisticsRangeTests.statisticsAcrossSupportedWidths",
+    "domain": "Finite near-equal large values, asymmetric extrema and filtering at widths 512/768/1536",
+    "limitations": "Coverage is limited to the named fixtures and source contract, not a universal numerical or scheduling guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-10-27 audit repairs"
    }
   }
  ],

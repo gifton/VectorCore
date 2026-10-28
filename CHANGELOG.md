@@ -12,6 +12,11 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Added
 
+- Public initializers for `Tuning` and `CalibrationProbes` (VC-F008).
+  `Tuning` requires `breakEvenN >= 0` and `minChunk > 0`; raw calibration
+  observations retain the existing fallback policy. The ordinary-import
+  `F008TuningConsumer.swift` exercises overrides, calibration and scheduling boundaries.
+
 - **`VectorCoreCompiledFeatures` (V02).** `VectorCoreCompiledFeatures.useCKernels` reports whether the
   linked VectorCore was compiled with `VC_USE_C_KERNELS`, and `VectorCoreCompiledFeatures.configuration`
   reports `"debug"`, `"release"` or `"unknown"` from the `VC_SWIFTPM_DEBUG` and `VC_SWIFTPM_RELEASE`
@@ -55,6 +60,17 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   See [Benchmark measurement boundaries](Docs/Benchmark_Measurement_Boundaries.md#the-opt-in-boundary-suite).
 
 ### Changed
+
+- **Breaking: dynamic storage uses value semantics (VC-F001).**
+  `AlignedDynamicArrayStorage` and `DynamicArrayStorage` are now structs.
+  Mutations require `var`; copying a value isolates subsequent writes, including
+  mutable buffer borrows (`ReferenceStorageValueTests.dynamicCopies`, `alignedCopies`, `concurrentIndependentCopies`). Clients needing shared
+  mutations must provide synchronized ownership. `COWDynamicStorage` delegates
+  to the aligned value. See [migration details](Docs/Memory_Alignment.md#pools-copying-and-concurrency).
+
+- **watchOS support retired.** The supported deployment floors are macOS 14,
+  iOS 17, tvOS 17 and visionOS 1, with Mac Catalyst retained. Historical watchOS
+  findings describe the earlier baseline and are not marked repaired by this scope change.
 
 - **Breaking: fixed-size vector storage must have the type's lane count (S01).** On the optimized FP32
   types and the INT8 types, a raw, replacement, nested or `inout` storage write with the wrong lane count
@@ -1107,6 +1123,18 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Fixed
 
+- Collection replacement and clearing release displaced values after unlocking
+  (VC-F002); destructor callbacks can re-enter the completed collection state
+  (`CollectionDestructionContractTests.destructionCanReenter`).
+- Finite-endpoint interpolation widens before subtraction (VC-F004), preserving
+  endpoint bits and degenerate widths (`InterpolationRangeContractTests.oppositeFiniteExtrema`,
+  `endpointBitsAndDegenerateWidths`).
+- Batch squared-distance shortcuts require coordinate zero (VC-F005); tiny
+  nonzero queries retain their identity (`BatchZeroQueryContractTests.tinySelfDistanceDoesNotDependOnBatchSize`).
+- Precision diagnostics retain a Double mean, residuals and outlier threshold
+  (VC-F006), correcting variance and outlier counts for the large finite inputs
+  in `PrecisionStatisticsRangeTests.statisticsAcrossSupportedWidths`.
+
 - **`vectorcore-bench --ab-only` with an explicit suite list.** `--ab-only` runs only the
   `batch` suite. Before, an explicit `--suites` naming any other suite was replaced by
   `batch` with no message, and `--dims` was then checked against the batch suite, so
@@ -1161,7 +1189,7 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   `swiftPoolDestructionLeaksActiveLease`); the lease contract is unchanged:
   release every handle before dropping the pool. `MemoryPool` compared the
   cleanup interval against `Double(Int.max) / 1e9`, which is 2.147 s on a 32-bit
-  `Int` (arm64_32 watchOS devices, inside the declared floor), so the default
+  `Int` (arm64_32 watchOS devices, supported before the 0.4.0 scope change), so the default
   30 s interval silently disabled automatic cleanup there; the bound is now the
   64-bit nanosecond horizon on every platform
   (`MemoryPoolBoundaryTests.timerHorizonIsIndependentOfIntWidth`).
@@ -1182,14 +1210,15 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   `Scripts/ci/tests` and `Scripts/ci/fixtures` were executed by nothing: not a
   SwiftPM test target, not collected by unittest, not called by any workflow.
   They are removed; what remains in those directories is read or executed by a
-  live test or regenerates a committed table. The nine must-not-compile fixtures
+  live test or regenerates a committed table. The ten must-not-compile fixtures
   (`R01MetricScalarContract`, `R02CollectionUpdateConsumer`, the five D02
-  negatives, `B01BareConformanceNegative`, `R05OldPropertyNegative`) and their
+  negatives, `B01BareConformanceNegative`, `R05OldPropertyNegative` and
+  `F001StorageLetNegative`) and their
   positive controls are compiled by `consumer_smoke.py` in the consumer job, from
   the documentation examples' scratch package: a negative must fail with one
   error on each expected line and the named diagnostic, a control must build or
   run and print its marker. The table is checked without a compiler by
-  `test_consumer_smoke.CompileContractTests.test_table_names_the_nine_negatives_and_their_controls`
+  `test_consumer_smoke.CompileContractTests.test_table_names_the_ten_negatives_and_their_controls`
   and the judgement by `ContractJudgementTests.test_negative_with_every_code_line_erroring`.
   The stale paragraph in
   `Docs/README.md` that called the Performance Guide and the how-to "retained

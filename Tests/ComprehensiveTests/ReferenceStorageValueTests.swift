@@ -32,6 +32,8 @@ private enum StorageBorrowFailure: Error { case expected }
         throwingCopy[0] = 10
         #expect(throwingCopy[0] == 10)
         #expect(original.dotProduct(original) == 30)
+        #expect(original.dotProduct(scalarCopy) == 66)
+        #expect(scalarCopy.dotProduct(original) == 66)
 
         let empty = S(from: [])
         var emptyCopy = empty

@@ -159,6 +159,26 @@ extension UnsafeMemoryContractTests {
 }
 
 extension UnsafeMemoryContractTests {
+    @Test func alignedCopiesReleaseBothAllocations() {
+        weak var originalAllocation: AlignedDynamicAllocation?
+        weak var copiedAllocation: AlignedDynamicAllocation?
+        do {
+            let original = AlignedDynamicArrayStorage(from: [1, 2, 3])
+            originalAllocation = original.allocation
+            do {
+                var copy = original
+                copy[0] = 9
+                copiedAllocation = copy.allocation
+                #expect(originalAllocation !== copiedAllocation)
+                #expect(original[0] == 1 && copy[0] == 9)
+            }
+            #expect(copiedAllocation == nil)
+            #expect(originalAllocation != nil)
+            withExtendedLifetime(original) {}
+        }
+        #expect(originalAllocation == nil)
+    }
+
     @Test func forcedPrimaryFailurePreservesAlignment() {
         for count in [0, 1, 3, 17, 257] {
             for alignment in [16, 32, 64, 256, 4096] {

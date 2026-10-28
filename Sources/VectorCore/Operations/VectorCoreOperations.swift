@@ -99,10 +99,11 @@ public extension Vector {
         if clampedT == 0 { return self }
         if clampedT == 1 { return other }
 
-        // Compute: result = self * (1 - t) + other * t
-        // Which is equivalent to: result = self + (other - self) * t
-        let diff = other - self
-        return self + diff * clampedT
+        var result = self
+        for i in 0..<D.value {
+            result[i] = VectorInterpolation.scalar(from: self[i], to: other[i], t: Double(clampedT))
+        }
+        return result
     }
 
     /// Linearly interpolate between two vectors (unclamped)
@@ -118,9 +119,11 @@ public extension Vector {
         if t == 0 { return self }
         if t == 1 { return other }
 
-        // Compute: result = self + (other - self) * t
-        let diff = other - self
-        return self + diff * t
+        var result = self
+        for i in 0..<D.value {
+            result[i] = VectorInterpolation.scalar(from: self[i], to: other[i], t: Double(t))
+        }
+        return result
     }
 
     /// Smoothly interpolate between two vectors using smoothstep
@@ -254,8 +257,10 @@ public extension DynamicVector {
         if clampedT == 0 { return self }
         if clampedT == 1 { return other }
 
-        // Compute: result = self + (other - self) * t
-        let diff = other - self
-        return self + diff * clampedT
+        var result = self
+        for i in 0..<dimension {
+            result[i] = VectorInterpolation.scalar(from: self[i], to: other[i], t: Double(clampedT))
+        }
+        return result
     }
 }

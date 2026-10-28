@@ -13020,12 +13020,12 @@
    "kind": "comment",
    "lineHint": 3,
    "category": "memory-model",
-   "disposition": "corrected",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "stored property type AlignedDynamicArrayStorage",
-    "domain": "type",
-    "limitations": "Type name corrected."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13034,8 +13034,11 @@
     "originalSymbol": "<file>",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "value-semantics wrapper around the reference-type aligneddynamicarraystorage."
   },
   {
    "id": "V04-C-0454",
@@ -13046,12 +13049,12 @@
    "kind": "comment",
    "lineHint": 5,
    "category": "memory-model",
-   "disposition": "corrected",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "`internal var storage: AlignedDynamicArrayStorage`; makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "COWDynamicStorage",
-    "limitations": "The false DynamicVector attribution and \"efficient memory usage\" were removed; the type has no package callers (grep, phase F)."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13060,24 +13063,27 @@
     "originalSymbol": "<file>",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "this type stores an aligneddynamicarraystorage (`storage`) and copies it on the first mutation through the wrapper while it is shared (copy-on-write)."
   },
   {
    "id": "V04-C-0455",
    "path": "Sources/VectorCore/Storage/COWDynamicStorage.swift",
    "symbol": "struct COWDynamicStorage",
-   "fingerprint": "9fb955538e4bd0ce",
-   "statement": "copy-on-write wrapper for aligneddynamicarraystorage providing value semantics.",
+   "fingerprint": "a6b13be61add8ecc",
+   "statement": "compatibility wrapper delegating value semantics to aligneddynamicarraystorage. copies isolate mutations; see referencestoragevaluetests.wrappercopies. copying is o(1); the first mutation of shared backing storage copies o(n) elements.",
    "kind": "comment",
-   "lineHint": 11,
+   "lineHint": 5,
    "category": "memory-model",
    "disposition": "corrected",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "stored property type AlignedDynamicArrayStorage",
-    "domain": "type",
-    "limitations": "Type name corrected."
+    "kind": "named-test",
+    "reference": "Tests/ComprehensiveTests/ReferenceStorageValueTests.swift::ReferenceStorageValueTests.wrapperCopies",
+    "domain": "scalar, mutable borrow and throwing borrow copy isolation",
+    "limitations": "Asymptotic costs follow the single allocation reference and uniqueness/copy branch, not a latency guarantee."
    },
    "acceptedContract": null,
    "history": {
@@ -13086,7 +13092,14 @@
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
+    "correctedIn": "V04 phase F",
+    "superseded": [
+     {
+      "statement": "copy-on-write wrapper for aligneddynamicarraystorage providing value semantics.",
+      "fingerprint": "9fb955538e4bd0ce",
+      "revision": "84798d3"
+     }
+    ]
    }
   },
   {
@@ -13098,12 +13111,12 @@
    "kind": "comment",
    "lineHint": 13,
    "category": "memory-model",
-   "disposition": "corrected",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "mutations through subscript set and withUnsafeMutableBufferPointer",
-    "limitations": "\"avoiding unnecessary copies\" removed."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13112,8 +13125,11 @@
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "`cowdynamicstorage` wraps the reference-type `aligneddynamicarraystorage` in a value type with copy-on-write: copies share one storage object until a mutation through the wrapper finds it shared."
   },
   {
    "id": "V04-C-0457",
@@ -13124,12 +13140,12 @@
    "kind": "comment",
    "lineHint": 18,
    "category": "performance-qualitative",
-   "disposition": "corrected",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "mutating paths",
-    "limitations": "no cost claim"
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13138,8 +13154,11 @@
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "- defers the element copy until the first mutation while shared"
   },
   {
    "id": "V04-C-0458",
@@ -13150,19 +13169,22 @@
    "kind": "comment",
    "lineHint": 21,
    "category": "performance-qualitative",
-   "disposition": "retained",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "the struct holds one class reference; copying it copies the reference",
-    "domain": "value copies",
-    "limitations": "Asymptotic only."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
     "originalStatement": null,
     "originalFingerprint": null,
-    "origin": "V04 phase F review"
-   }
+    "origin": "V04 phase F review",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "- o(1) copy operations (until mutation)"
   },
   {
    "id": "V04-C-0459",
@@ -13173,19 +13195,22 @@
    "kind": "comment",
    "lineHint": 22,
    "category": "performance-qualitative",
-   "disposition": "retained",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "first mutation while shared",
-    "limitations": "Asymptotic only."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
     "originalStatement": null,
     "originalFingerprint": null,
-    "origin": "V04 phase F review"
-   }
+    "origin": "V04 phase F review",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "- o(n) copy on first mutation after sharing"
   },
   {
    "id": "V04-C-0460",
@@ -13196,12 +13221,12 @@
    "kind": "comment",
    "lineHint": 25,
    "category": "performance-qualitative",
-   "disposition": "corrected",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "type",
-    "limitations": "\"efficiently\" removed; type name corrected."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13210,8 +13235,11 @@
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "## implementation details the type wraps aligneddynamicarraystorage and uses `isknownuniquelyreferenced` to detect when a copy is needed (`makeunique`)."
   },
   {
    "id": "V04-C-0461",
@@ -13222,12 +13250,12 @@
    "kind": "comment",
    "lineHint": 32,
    "category": "memory-model",
-   "disposition": "unverified-contract",
+   "disposition": "removed",
    "evidence": {
-    "kind": "unverified-contract",
-    "reference": "none (no test exercises COWDynamicStorage)",
-    "domain": "example",
-    "limitations": "Allocation behaviour not verified."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13236,8 +13264,11 @@
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "let storage2 = storage1 // shares the storage object; no element copy (allocation behaviour not verified)"
   },
   {
    "id": "V04-C-0462",
@@ -13248,12 +13279,12 @@
    "kind": "comment",
    "lineHint": 33,
    "category": "memory-model",
-   "disposition": "unverified-contract",
+   "disposition": "removed",
    "evidence": {
-    "kind": "unverified-contract",
-    "reference": "none (no test exercises COWDynamicStorage)",
-    "domain": "example",
-    "limitations": "Allocation not verified."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13262,30 +13293,40 @@
     "originalSymbol": "struct COWDynamicStorage",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "storage1[0] = 42.0 // shared, so makeunique copies the elements first (allocation not verified by a test)"
   },
   {
    "id": "V04-C-0463",
    "path": "Sources/VectorCore/Storage/COWDynamicStorage.swift",
    "symbol": "struct COWDynamicStorage::var storage",
-   "fingerprint": "8c66d35434db054f",
-   "statement": "the underlying reference-type storage. marked as var to allow cow reassignment when copying is needed.",
+   "fingerprint": "04daa21ab339a229",
+   "statement": "the underlying copy-on-write value.",
    "kind": "comment",
-   "lineHint": 36,
+   "lineHint": 9,
    "category": "memory-model",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "`internal var storage` reassigned in makeUnique",
-    "domain": "type",
-    "limitations": "none"
+    "reference": "stored property has the struct type AlignedDynamicArrayStorage",
+    "domain": "stored value",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "V04 phase F review"
+    "originalStatement": "the underlying reference-type storage. marked as var to allow cow reassignment when copying is needed.",
+    "originalFingerprint": "8c66d35434db054f",
+    "origin": "V04 phase F review",
+    "superseded": [
+     {
+      "statement": "the underlying reference-type storage. marked as var to allow cow reassignment when copying is needed.",
+      "fingerprint": "8c66d35434db054f",
+      "revision": "84798d3"
+     }
+    ]
    }
   },
   {
@@ -13344,19 +13385,22 @@
    "kind": "comment",
    "lineHint": 82,
    "category": "memory-model",
-   "disposition": "retained",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "makeUnique",
-    "limitations": "none"
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
     "originalStatement": null,
     "originalFingerprint": null,
-    "origin": "V04 phase F review"
-   }
+    "origin": "V04 phase F review",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "ensure storage is uniquely referenced for cow."
   },
   {
    "id": "V04-C-0467",
@@ -13367,12 +13411,12 @@
    "kind": "comment",
    "lineHint": 84,
    "category": "memory-model",
-   "disposition": "corrected",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "makeUnique",
-    "limitations": "\"private\" was wrong (internal @inlinable)."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
@@ -13381,8 +13425,11 @@
     "originalSymbol": "struct COWDynamicStorage::func makeUnique",
     "originalRevision": "631ed4b",
     "origin": "V04-design-inventory",
-    "correctedIn": "V04 phase F"
-   }
+    "correctedIn": "V04 phase F",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "this method implements the copy-on-write mechanism. it checks if the underlying storage is shared and creates a copy if needed."
   },
   {
    "id": "V04-C-0468",
@@ -13393,19 +13440,22 @@
    "kind": "comment",
    "lineHint": 87,
    "category": "performance-qualitative",
-   "disposition": "retained",
+   "disposition": "removed",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
-    "domain": "makeUnique",
-    "limitations": "Asymptotic only."
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
    },
    "acceptedContract": null,
    "history": {
     "originalStatement": null,
     "originalFingerprint": null,
-    "origin": "V04 phase F review"
-   }
+    "origin": "V04 phase F review",
+    "removedIn": "2026-10-27 VC-F001"
+   },
+   "reason": "VC-F001: redundant wrapper ownership comments removed when COW moved into AlignedDynamicArrayStorage.",
+   "absentPhrase": "- complexity: o(1) if unique, o(n) if copy needed"
   },
   {
    "id": "V04-C-0469",
@@ -13419,7 +13469,7 @@
    "disposition": "retained",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "setter calls makeUnique() before storing",
+    "reference": "Delegates to AlignedDynamicArrayStorage; its scalar setter and mutable borrow call makeUnique before accessing mutable allocation memory.",
     "domain": "subscript",
     "limitations": "none"
    },
@@ -13442,7 +13492,7 @@
    "disposition": "retained",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "getter indexes; setter may run makeUnique",
+    "reference": "Delegates to AlignedDynamicArrayStorage; its scalar setter and mutable borrow call makeUnique before accessing mutable allocation memory.",
     "domain": "subscript",
     "limitations": "Asymptotic only."
    },
@@ -13488,7 +13538,7 @@
    "disposition": "retained",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "makeUnique() precedes storage.withUnsafeMutableBufferPointer",
+    "reference": "Delegates to AlignedDynamicArrayStorage; its scalar setter and mutable borrow call makeUnique before accessing mutable allocation memory.",
     "domain": "withUnsafeMutableBufferPointer",
     "limitations": "none"
    },
@@ -13511,7 +13561,7 @@
    "disposition": "retained",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "makeUnique: `if !isKnownUniquelyReferenced(&storage) { storage = AlignedDynamicArrayStorage(from: storage.toArray()) }`",
+    "reference": "Delegates to AlignedDynamicArrayStorage; its scalar setter and mutable borrow call makeUnique before accessing mutable allocation memory.",
     "domain": "withUnsafeMutableBufferPointer",
     "limitations": "Asymptotic only."
    },
@@ -25077,8 +25127,8 @@
    "id": "V04-C-0902",
    "path": "README.md",
    "symbol": "section VectorCore",
-   "fingerprint": "2fd5ac849e50ec04",
-   "statement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2017%2b%20|%20tvos%2017%2b%20|%20watchos%2010%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
+   "fingerprint": "7b25ff41a4caa0c2",
+   "statement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2017%2b%20|%20tvos%2017%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
    "kind": "markdown",
    "lineHint": 3,
    "category": "non-claim",
@@ -25092,9 +25142,16 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "T13 phase 2B"
+    "originalStatement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2017%2b%20|%20tvos%2017%2b%20|%20watchos%2010%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
+    "originalFingerprint": "2fd5ac849e50ec04",
+    "origin": "T13 phase 2B",
+    "superseded": [
+     {
+      "statement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2017%2b%20|%20tvos%2017%2b%20|%20watchos%2010%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
+      "fingerprint": "2fd5ac849e50ec04",
+      "revision": "84798d3"
+     }
+    ]
    }
   },
   {

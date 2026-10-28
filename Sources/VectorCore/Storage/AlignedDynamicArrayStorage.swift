@@ -1,58 +1,21 @@
 // VectorCore: Aligned Dynamic Array Storage
-//
-// Replacement for DynamicArrayStorage with guaranteed memory alignment
-//
 
 import Foundation
 
-/// Dynamic array storage with guaranteed memory alignment for SIMD operations
-public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorage, VectorStorageOperations {
-    /// Aligned pointer to the data
-    @usableFromInline
-    internal let ptr: UnsafeMutablePointer<Float>
-
-    /// Number of elements
-    @usableFromInline
-    internal let _count: Int
-
-    /// Alignment used for this storage
-    @usableFromInline
-    internal let alignment: Int
-
-    public var count: Int { _count }
-
-    /// Tracks whether allocation used posix_memalign (via AlignedMemory)
-    @usableFromInline
+// Allocation ownership is private to the value wrapper. Shared allocations are read-only;
+// both public write paths call makeUnique first. ReferenceStorageValueTests covers copy
+// isolation, including throwing borrows and concurrentIndependentCopies.
+@usableFromInline
+internal final class AlignedDynamicAllocation: @unchecked Sendable {
+    @usableFromInline internal let ptr: UnsafeMutablePointer<Float>
+    @usableFromInline internal let _count: Int
+    @usableFromInline internal let alignment: Int
     internal let usedPosixAlignedAlloc: Bool
-
-    /// Initialize zeroed storage at the requested alignment.
-    public convenience init(dimension: Int, alignment: Int = AlignedMemory.optimalAlignment) {
-        self.init(dimension: dimension, repeating: 0, alignment: alignment)
-    }
-
-    /// Initialize with a repeating value.
-    public convenience init(dimension: Int, repeating value: Float, alignment: Int = AlignedMemory.optimalAlignment) {
-        self.init(dimension: dimension, repeating: value, alignment: alignment,
-                  primaryAllocator: { try AlignedMemory.allocateAligned(count: $0, alignment: $1) })
-    }
-
-    /// Initialize from an array using the default alignment.
-    public convenience init(from values: [Float]) {
-        self.init(from: values, alignment: AlignedMemory.optimalAlignment)
-    }
-
-    /// Initialize from an array at the requested alignment.
-    public convenience init(from values: [Float], alignment: Int) {
-        self.init(dimension: values.count, alignment: alignment)
-        values.withUnsafeBufferPointer { buffer in
-            if let source = buffer.baseAddress { ptr.update(from: source, count: buffer.count) }
-        }
-    }
 
     /// Per-call primary allocator seam. The allocator must return Float-bound,
     /// uninitialized storage suitable for `free`, or throw without transferring storage.
     /// The fallback requests the same alignment; actual exhaustion can still terminate.
-    internal init(dimension: Int, repeating value: Float, alignment: Int,
+    init(dimension: Int, repeating value: Float, alignment: Int,
                   primaryAllocator: (Int, Int) throws -> UnsafeMutablePointer<Float>) {
         guard dimension >= 0 else { fatalError("Dimension must be nonnegative") }
         let (byteCount, overflow) = max(dimension, 1).multipliedReportingOverflow(by: MemoryLayout<Float>.stride)
@@ -73,12 +36,13 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
         ptr.initialize(repeating: value, count: dimension)
     }
 
-    public required init() {
-        fatalError("Dynamic storage requires explicit dimension")
-    }
-
-    public init(repeating value: Float) {
-        fatalError("Dynamic storage requires explicit dimension")
+    @usableFromInline
+    convenience init(copying original: AlignedDynamicAllocation) {
+        self.init(dimension: original._count, repeating: 0, alignment: original.alignment,
+                  primaryAllocator: { try AlignedMemory.allocateAligned(count: $0, alignment: $1) })
+        withExtendedLifetime(original) {
+            ptr.update(from: original.ptr, count: original._count)
+        }
     }
 
     deinit {
@@ -90,24 +54,81 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
         }
     }
 
+}
+
+/// Copy-on-write value storage with the requested SIMD alignment.
+/// Copies isolate scalar and mutable-buffer writes (ReferenceStorageValueTests).
+/// Unsafe buffer pointers are valid only during their closure and must not escape.
+public struct AlignedDynamicArrayStorage: VectorStorage, VectorStorageOperations {
+    @usableFromInline internal var allocation: AlignedDynamicAllocation
+    @usableFromInline internal var _count: Int { allocation._count }
+    @usableFromInline internal var alignment: Int { allocation.alignment }
+    internal var usedPosixAlignedAlloc: Bool { allocation.usedPosixAlignedAlloc }
+
+    public var count: Int { _count }
+
+    public init(dimension: Int, alignment: Int = AlignedMemory.optimalAlignment) {
+        self.init(dimension: dimension, repeating: 0, alignment: alignment)
+    }
+
+    public init(dimension: Int, repeating value: Float, alignment: Int = AlignedMemory.optimalAlignment) {
+        self.init(dimension: dimension, repeating: value, alignment: alignment,
+                  primaryAllocator: { try AlignedMemory.allocateAligned(count: $0, alignment: $1) })
+    }
+
+    public init(from values: [Float]) {
+        self.init(from: values, alignment: AlignedMemory.optimalAlignment)
+    }
+
+    public init(from values: [Float], alignment: Int) {
+        self.init(dimension: values.count, alignment: alignment)
+        withUnsafeMutableBufferPointer { destination in
+            values.withUnsafeBufferPointer { source in
+                if let base = source.baseAddress { destination.baseAddress!.update(from: base, count: source.count) }
+            }
+        }
+    }
+
+    internal init(dimension: Int, repeating value: Float, alignment: Int,
+                  primaryAllocator: (Int, Int) throws -> UnsafeMutablePointer<Float>) {
+        allocation = AlignedDynamicAllocation(dimension: dimension, repeating: value,
+                                             alignment: alignment, primaryAllocator: primaryAllocator)
+    }
+
+    public init() { fatalError("Dynamic storage requires explicit dimension") }
+    public init(repeating value: Float) { fatalError("Dynamic storage requires explicit dimension") }
+
+    @inlinable
+    internal mutating func makeUnique() {
+        if !isKnownUniquelyReferenced(&allocation) {
+            allocation = AlignedDynamicAllocation(copying: allocation)
+        }
+    }
+
     @inlinable
     public subscript(index: Int) -> Float {
         get {
             precondition(index >= 0 && index < _count, "Index out of bounds")
-            return ptr[index]
+            return withExtendedLifetime(allocation) { allocation.ptr[index] }
         }
         set {
             precondition(index >= 0 && index < _count, "Index out of bounds")
-            ptr[index] = newValue
+            makeUnique()
+            allocation.ptr[index] = newValue
         }
     }
 
     public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) throws -> R) rethrows -> R {
-        try body(UnsafeBufferPointer(start: ptr, count: _count))
+        try withExtendedLifetime(allocation) {
+            try body(UnsafeBufferPointer(start: allocation.ptr, count: _count))
+        }
     }
 
-    public func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
-        try body(UnsafeMutableBufferPointer(start: ptr, count: _count))
+    public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+        makeUnique()
+        return try withExtendedLifetime(allocation) {
+            try body(UnsafeMutableBufferPointer(start: allocation.ptr, count: _count))
+        }
     }
 
     @inlinable
@@ -130,7 +151,7 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     /// Convert to array for COW operations
     @usableFromInline
     func toArray() -> [Float] {
-        Array(UnsafeBufferPointer(start: ptr, count: _count))
+        withUnsafeBufferPointer { Array($0) }
     }
 }
 
@@ -160,6 +181,6 @@ extension AlignedDynamicArrayStorage: AlignedStorage {
 
     @inlinable
     public func verifyAlignment() -> Bool {
-        AlignedMemory.isAligned(ptr, to: alignment)
+        withUnsafeBufferPointer { AlignedMemory.isAligned($0.baseAddress!, to: alignment) }
     }
 }

@@ -34,6 +34,10 @@ _R01 = "Scripts/ci/fixtures/compile-contracts/R01MetricScalarContract.swift"
 _R02 = "Scripts/ci/fixtures/compile-contracts/R02CollectionUpdateConsumer.swift"
 _B01 = "Scripts/ci/fixtures/B01BareConformanceNegative.swift"
 CONTRACTS = (
+    {"id": "F001-storage-let-negative", "path": "Scripts/ci/fixtures/compile-contracts/F001StorageLetNegative.swift",
+     "expect": "fail", "errorLines": [7, 8, 9, 10], "diagnostics": ["is a 'let' constant"]},
+    {"id": "F001-storage-value-consumer", "path": "Scripts/ci/fixtures/compile-contracts/F001StorageValueConsumer.swift",
+     "expect": "run", "marker": "F001_VALUE_STORAGE_OK"},
     # R01: a DistanceMetric whose Scalar is Double is rejected by every public search entry; Float compiles.
     {"id": "R01-reject-double", "path": _R01, "define": "REJECT_DOUBLE", "expect": "fail", "errorLines": [5, 8, 11]},
     {"id": "R01-float-control", "path": _R01, "expect": "compile"},

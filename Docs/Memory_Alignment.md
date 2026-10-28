@@ -155,6 +155,18 @@ preconditions can trap before allocation.
 
 ## Pools, copying, and concurrency
 
+As of 0.4.0, `AlignedDynamicArrayStorage` and `DynamicArrayStorage` are
+copy-on-write value types. Assigning a copy and mutating it leaves the original
+unchanged, including mutations through a scoped mutable buffer borrow; see
+[ReferenceStorageValueTests](../Tests/ComprehensiveTests/ReferenceStorageValueTests.swift).
+`COWDynamicStorage` delegates to the aligned value storage.
+
+This changes the former public classes' shared-mutation behavior. Use `var`
+for a value you intend to mutate. Clients needing shared mutable state must
+own it behind an actor or another synchronization boundary. Independent
+values can be passed between tasks; a single mutable variable still requires
+exclusive access, and unsafe pointers must stay within their borrow closure.
+
 **Version scope:** The explicit-lock implementation and pool lifetime/byte-accounting
 fixes described here are post-`v0.3.3` changes. That tag uses the earlier
 dispatch-queue bookkeeping and does not contain these fixes. See

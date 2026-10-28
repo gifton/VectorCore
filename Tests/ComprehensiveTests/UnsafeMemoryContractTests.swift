@@ -163,14 +163,14 @@ extension UnsafeMemoryContractTests {
         for count in [0, 1, 3, 17, 257] {
             for alignment in [16, 32, 64, 256, 4096] {
                 var calls = 0
-                weak var released: AlignedDynamicArrayStorage?
+                weak var released: AlignedDynamicAllocation?
                 do {
-                    let storage = AlignedDynamicArrayStorage(dimension: count, repeating: 9, alignment: alignment, primaryAllocator: { n, a in
+                    var storage = AlignedDynamicArrayStorage(dimension: count, repeating: 9, alignment: alignment, primaryAllocator: { n, a in
                         calls += 1
                         #expect(n == count && a == alignment)
                         throw VectorError.allocationFailed(size: 0, reason: "O04 injected primary failure")
                     })
-                    released = storage
+                    released = storage.allocation
                     #expect(calls == 1)
                     #expect(!storage.usedPosixAlignedAlloc)
                     #expect(storage.guaranteedAlignment == alignment && storage.verifyAlignment())

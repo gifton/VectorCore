@@ -32887,6 +32887,33 @@
     "originalFingerprint": null,
     "origin": "2026-10-27 audit repairs"
    }
+  },
+  {
+   "id": "VC-AUDIT-F007",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "aceef61981f80021",
+   "statement": "- **`operationprogress.percentage` saturates at `int.max` (vc-f007).** extreme overcomplete progress no longer traps during integer conversion. percentages above 100 and ordinary fractional truncation are preserved (`operationprogresssuite.testoperationprogress_percentagerange`, `testoperationprogress_percentageconversionboundary`, `testoperationprogress_percentagepreservesovershootandtruncation`).",
+   "kind": "markdown",
+   "lineHint": 1126,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/OperationProgressTests.swift::OperationProgressSuite.testOperationProgress_PercentageRange",
+     "Tests/ComprehensiveTests/OperationProgressTests.swift::OperationProgressSuite.testOperationProgress_PercentageConversionBoundary",
+     "Tests/ComprehensiveTests/OperationProgressTests.swift::OperationProgressSuite.testOperationProgress_PercentagePreservesOvershootAndTruncation"
+    ],
+    "domain": "Clamped negative and zero inputs, full native-Int range endpoints, adjacent floating conversion boundary, ordinary overshoot and fractional truncation.",
+    "limitations": "Runtime checks are recorded on macOS arm64; the alternate 32-bit expected-value branch is not runtime validation of a 32-bit platform. The property retains Double rounding rather than promising exact integer-rational percentages."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-10-28 F007 repair"
+   }
   }
  ],
  "bodyPinDescribers": [

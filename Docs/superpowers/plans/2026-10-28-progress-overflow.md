@@ -35,6 +35,6 @@
 - [x] Add regression tables over current/total 0, 1 and Int.max, negative initialization, 150% overshoot and fractional truncation; include the floating conversion boundary. Use the public import.
 - [x] Run focused progress tests before the fix. Expected: termination at the actual out-of-range percentage conversion; retain the log and tested patch.
 - [x] Saturate when the scaled percentage is at least `Double(Int.max)`, otherwise keep the original integer conversion. Document the behavior and named regressions.
-- [ ] Run progress/stream tests in Debug and Release. Expected: all pass, including adjacent boundary values.
-- [ ] Independently challenge the final diff with Astra; run full Debug/Release and applicable CI checks. Expected: no new failures; retain existing skips/known compiler canary explicitly.
-- [ ] Record disposition, exact source/commands/results and evidence hashes; commit and preserve the worktree. Resume the FP16 consumer discussion.
+- [x] Run progress/stream tests in Debug and Release. Expected: all pass, including adjacent boundary values.
+- [x] Independently challenge the final diff with Astra; run full Debug/Release and applicable CI checks. Expected: no new failures; retain existing skips/known compiler canary explicitly.
+- [x] Record disposition, exact source/commands/results and evidence hashes; commit and preserve the worktree. Resume the FP16 consumer discussion.

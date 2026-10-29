@@ -1,0 +1,218 @@
+{
+  "generated_at_utc": "2026-10-29T00:01:57.138095+00:00",
+  "root": "/Users/goftin/dev/projects/VectorCore-progress-fix-2026-10-28-evidence",
+  "algorithm": "sha256",
+  "scope": "F007 raw logs, exact command records and tracked patches, source hashes, preserved review/workflow records and evidence integrity checks. Excludes build products/caches and this manifest.",
+  "files": [
+    {
+      "path": "baseline.json",
+      "bytes": 313,
+      "sha256": "792424bea5c306f0a4872ae39789aedd5860f8bcb6914fde06c901db8dd3d942"
+    },
+    {
+      "path": "checkout-preservation.json",
+      "bytes": 698,
+      "sha256": "ed9a88088b0acbc2f9446ac2171f352a091ab1229c371b5c6903a0e3dbb1e36a"
+    },
+    {
+      "path": "design-review.json",
+      "bytes": 1125,
+      "sha256": "153b49b2557788f6267d26d701c39e4f8f410f881d89dea6b31495b35c00e40e"
+    },
+    {
+      "path": "environment.json",
+      "bytes": 1501,
+      "sha256": "04edbad8dd3b979ab400db6eed36ed599f97dc31ae4422b878d9a58f1d4b692a"
+    },
+    {
+      "path": "final-review.json",
+      "bytes": 1350,
+      "sha256": "212612c210a6d71c4a16bad38e015ae395c4b0647c6c7bc6a6835943266a596e"
+    },
+    {
+      "path": "logs/claim-ledger-green.json",
+      "bytes": 507,
+      "sha256": "82406b14ec763d81fcf9aa77442695a0cfb9699acf1776454347daea59e481c1"
+    },
+    {
+      "path": "logs/claim-ledger-green.log",
+      "bytes": 27,
+      "sha256": "c0d7af37d61b7d6aab16bb5662ade28dc3ad570aec1ed0e64c43c52727d5047c"
+    },
+    {
+      "path": "logs/claim-ledger-green.patch",
+      "bytes": 2095,
+      "sha256": "2df29a9d980ea971a23a6cdabb700c06311c33fd411ab213ea22c8a972aa1830"
+    },
+    {
+      "path": "logs/claim-ledger-red.json",
+      "bytes": 446,
+      "sha256": "6217d9e5ad25afe0cdbcf23c6fdc9fde66486028ed40caf5917055ad327ea1c3"
+    },
+    {
+      "path": "logs/claim-ledger-red.log",
+      "bytes": 268,
+      "sha256": "0124b24f787dc68d26c34dc4533853d6b0b1b4c36bd94004ab9600e8f8eb3b10"
+    },
+    {
+      "path": "logs/focused-debug.json",
+      "bytes": 1092,
+      "sha256": "13b16816ff0822fe59c33c6c5fe2ca7a96caf5fda6804514b3081a635e125d12"
+    },
+    {
+      "path": "logs/focused-debug.log",
+      "bytes": 4661,
+      "sha256": "5530016705ea1053d10be120fb4fc67f968a2fc0918ebe6b42e3cff352328e55"
+    },
+    {
+      "path": "logs/focused-debug.patch",
+      "bytes": 15255,
+      "sha256": "e546c3ea1316e7f247b519d0d92c2c5810990c52cadb64772fe087ce7291fd86"
+    },
+    {
+      "path": "logs/focused-release.json",
+      "bytes": 1053,
+      "sha256": "886abf3e88cff895e80c74ea69de7f588a66c017847214255ea47e769df2a676"
+    },
+    {
+      "path": "logs/focused-release.log",
+      "bytes": 22588,
+      "sha256": "a7bb6d7afcae1ee356efe4b3af290fe9849af30d8378decf45e5f624aee9389c"
+    },
+    {
+      "path": "logs/full-debug.json",
+      "bytes": 963,
+      "sha256": "ff29315e1a9f811e8ecfc96efec3fc76f55df731b1c7261d8fe1c7f96689a38e"
+    },
+    {
+      "path": "logs/full-debug.log",
+      "bytes": 728207,
+      "sha256": "ee874d4dee44c3014881d301b27b2d24a491483b85d79d94a525870ee5538bee"
+    },
+    {
+      "path": "logs/full-release.json",
+      "bytes": 988,
+      "sha256": "ece5aa016edc04ab85e1c19d232e827cbe4ec806b41131c5f981973468ae826f"
+    },
+    {
+      "path": "logs/full-release.log",
+      "bytes": 691347,
+      "sha256": "86108f4eef0694920c76ce7a204bbfad9d36b8725333f955910903feb5395735"
+    },
+    {
+      "path": "logs/python-policies-final.json",
+      "bytes": 492,
+      "sha256": "fd98ad6085e56ef98200b77fdb6af61f9fdbd267b73ec8548d0a46230ffc5518"
+    },
+    {
+      "path": "logs/python-policies-final.log",
+      "bytes": 652,
+      "sha256": "7ed516f01d7d7f2af9f51bb15d4738eb2ed76399374e65179081ad1a82b9434e"
+    },
+    {
+      "path": "logs/python-policies.json",
+      "bytes": 493,
+      "sha256": "219b39ca838bb2efa90ca4de421441d96bae56927b29713a0d8949f401b40607"
+    },
+    {
+      "path": "logs/python-policies.log",
+      "bytes": 3564,
+      "sha256": "987a5b4d28d1bfbd804eb8633153576b3889f05645210e526ae274ddff25588f"
+    },
+    {
+      "path": "logs/red-boundary-debug.json",
+      "bytes": 1143,
+      "sha256": "3f815ed091b7dd3355aebbdb28f4a74829225ab89d37cb923c7c334ff9f50228"
+    },
+    {
+      "path": "logs/red-boundary-debug.log",
+      "bytes": 1578,
+      "sha256": "bdfa503889e9748e8c05b524ba7f9d6e20c2d8a9b9841577f78499a8f182e489"
+    },
+    {
+      "path": "logs/red-boundary-debug.patch",
+      "bytes": 2832,
+      "sha256": "055f9c493ba89ca45e503a39a043132aa189fd68d65d620b64e2664d90e7246a"
+    },
+    {
+      "path": "logs/red-range-debug.json",
+      "bytes": 1110,
+      "sha256": "8c0d1ba44095121f6e07f108132d5cb8bbbb853d4317cd11452e086f9eb4da11"
+    },
+    {
+      "path": "logs/red-range-debug.log",
+      "bytes": 1833,
+      "sha256": "31a933c8c14539b4658479859807bc1f43d6c9d419c681e56ceba0bdc5d714e1"
+    },
+    {
+      "path": "logs/red-range-debug.patch",
+      "bytes": 2832,
+      "sha256": "055f9c493ba89ca45e503a39a043132aa189fd68d65d620b64e2664d90e7246a"
+    },
+    {
+      "path": "policy-interruption.json",
+      "bytes": 312,
+      "sha256": "f6cafdde28628732fd368ea7808fa40685b5b10d0e950017a191fee854b62fe2"
+    },
+    {
+      "path": "prior-evidence-integrity.json",
+      "bytes": 276,
+      "sha256": "0062f3cf26b319eb9fe6cec367e4793ab0d92dd36a6bb09edbc2fb6657ff037a"
+    },
+    {
+      "path": "repair-source-hashes.json",
+      "bytes": 519,
+      "sha256": "d744ea4dae4c0f03ecb24c081d4b7ff5716dd702d1ce7816b5ddddfc2fc1d096"
+    },
+    {
+      "path": "review-summary.json",
+      "bytes": 2985,
+      "sha256": "e73fed6c36f3e42b3c4a2514ed64698e8437eb16be1c5d44e078bf7904d7f757"
+    },
+    {
+      "path": "run-check.py",
+      "bytes": 1923,
+      "sha256": "de9c2ffde25813f5d53162df55a39477a421ffe58b27505bbca1ae5f3cc3e332"
+    },
+    {
+      "path": "validation-registry.json",
+      "bytes": 13509,
+      "sha256": "861403463c3b9eb9fdf51c8e8059e0375c4254659544502f26dd17cef9764529"
+    },
+    {
+      "path": "workflow/implementation-plan.md",
+      "bytes": 3074,
+      "sha256": "0d594d9663d858ccf74abace01c99fbac2d8aeeb101ac8e74f5ea8a0407f7679"
+    },
+    {
+      "path": "workflow/plan-path",
+      "bytes": 55,
+      "sha256": "f48cc4a56626343f58981e943e1725df4871e174c13b7f62f8ee71fc06c63819"
+    },
+    {
+      "path": "workflow/progress.md",
+      "bytes": 3242,
+      "sha256": "365333a518dc6a8a96ad63aa510ee5001db8222feb8f0102765fc6bc037b1277"
+    },
+    {
+      "path": "workflow/review-6e7a136..4fbfaa0.diff",
+      "bytes": 31696,
+      "sha256": "5f838d3698632a842091c8bb056034ebb4807fc7c0ccffe0d6b987475d7a878d"
+    },
+    {
+      "path": "workflow/review-6e7a136..ac1897e.diff",
+      "bytes": 28975,
+      "sha256": "bb53eebad221883e0dea251c5d3f3d8085bbbab76bc62fdc06d8ce168c6f916b"
+    },
+    {
+      "path": "workflow/task-1-brief.md",
+      "bytes": 1328,
+      "sha256": "603e4e241755918e7cb00046b62ca1a4defead3f71bb198670aa9b5d44208137"
+    },
+    {
+      "path": "workflow/task-1-tests.log",
+      "bytes": 2379,
+      "sha256": "c46340ead2eb464bb737802522d786c5c0ef94f5b984e9f32f7a0215746dd03b"
+    }
+  ]
+}

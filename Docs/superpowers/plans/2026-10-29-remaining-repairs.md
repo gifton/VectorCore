@@ -69,7 +69,7 @@
 
 **Interfaces:** Consume the three repaired areas and preserved raw logs; no new production interface.
 
-- [ ] Obtain a fresh Astra review of the complete diff from `db93295`, including gate reachability and regression validity; resolve consequential findings with failing-then-passing evidence.
-- [ ] Run complete Debug and Release suites and Python policy checks; retain pre-existing skips/known issues and identify new failures accurately. Run claim/documentation checks applicable to changed claims.
-- [ ] Reconcile source coverage and identities, hash all new evidence, verify prior evidence and original/audit checkout preservation, and write the final disposition. Archive this plan's workflow ledger and remove only its temporary workspace.
-- [ ] Commit the report and leave the clean repair worktree available for integration.
+- [x] Obtain a fresh Astra review of the complete diff from `db93295`, including gate reachability and regression validity; resolve consequential findings with failing-then-passing evidence.
+- [x] Run complete Debug and Release suites and Python policy checks; retain pre-existing skips/known issues and identify new failures accurately. Run claim/documentation checks applicable to changed claims.
+- [x] Reconcile source coverage and identities, hash all new evidence, verify prior evidence and original/audit checkout preservation, and write the final disposition. Archive this plan's workflow ledger and remove only its temporary workspace.
+- [x] Commit the report and leave the clean repair worktree available for integration.

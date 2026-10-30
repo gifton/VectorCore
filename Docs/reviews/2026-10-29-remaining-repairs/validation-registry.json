@@ -1,0 +1,957 @@
+{
+  "baseline": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+  "implementation_revision": "73d6a5bcd4fa1063e39d467284638b2812a84e7d",
+  "repair_root": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+  "external_evidence_root": "/Users/goftin/dev/projects/VectorCore-remaining-repairs-2026-10-29-evidence",
+  "scope": [
+    "VC-F012",
+    "VC-F011",
+    "two F009-deferred FP16 helpers"
+  ],
+  "environment_record": "environment.json",
+  "summary": {
+    "final-claim-ledger": {},
+    "final-debug": {
+      "xctest_reported_cases": 196,
+      "xctest_skipped": 28,
+      "xctest_failures": 0,
+      "swift_testing_reported_tests": 1742,
+      "swift_testing_suites": 262,
+      "swift_testing_skip_events": 18,
+      "known_issues": 0
+    },
+    "final-python-policy": {
+      "python_tests": 558
+    },
+    "final-release": {
+      "xctest_reported_cases": 196,
+      "xctest_skipped": 28,
+      "xctest_failures": 0,
+      "swift_testing_reported_tests": 1742,
+      "swift_testing_suites": 262,
+      "swift_testing_skip_events": 18,
+      "known_issues": 1
+    }
+  },
+  "provenance": [
+    "Each command captures start HEAD and the full tracked dirty patch where present; new test files were intent-added before regression runs.",
+    "All final suites ran at clean implementation commit 73d6a5b. Later report/plan changes do not change tested code.",
+    "Initial full-debug passed before the shared-launcher integration; final-debug supersedes it for the final source.",
+    "The F012 initial focused suites had 47 XCTest entries; consolidating the child fixture leaves 46, without removing a behavioral test.",
+    "No huge F012 fixture was allocated; production admission tests use a pre-setup child exit sentinel.",
+    "Only macOS arm64 native-build runtime validation is claimed. Timing printed by ordinary tests is not a performance study."
+  ],
+  "runs": [
+    {
+      "id": "f011-consumer-smoke",
+      "outcome": "pass",
+      "command_record": "logs/f011-consumer-smoke.json",
+      "log": "logs/f011-consumer-smoke.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_consumer_smoke.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:40:45.201619+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "47f6dcf168b25c2b9c3ee8a975b4055e29bad17ceeed26d61aef9ea71d207d6d",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 0.38850020797690377
+      },
+      "reported_counts": {
+        "python_tests": 12
+      }
+    },
+    {
+      "id": "f011-d02-surface-guards",
+      "outcome": "pass",
+      "command_record": "logs/f011-d02-surface-guards.json",
+      "log": "logs/f011-d02-surface-guards.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_d02_surface_guards.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:40:45.201595+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "47f6dcf168b25c2b9c3ee8a975b4055e29bad17ceeed26d61aef9ea71d207d6d",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 3.7577419160516
+      },
+      "reported_counts": {
+        "python_tests": 25
+      }
+    },
+    {
+      "id": "f011-driver-debug",
+      "outcome": "pass",
+      "command_record": "logs/f011-driver-debug.json",
+      "log": "logs/f011-driver-debug.log",
+      "record": {
+        "command": [
+          "python3",
+          "Scripts/ci/tests/D02RunConsumers.py",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build/arm64-apple-macosx/debug",
+          "/Users/goftin/dev/projects/VectorCore-remaining-repairs-2026-10-29-evidence/f011-debug",
+          "final"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:41:03.416373+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "47f6dcf168b25c2b9c3ee8a975b4055e29bad17ceeed26d61aef9ea71d207d6d",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 6.287985500006471
+      },
+      "reported_counts": {}
+    },
+    {
+      "id": "f011-driver-release",
+      "outcome": "pass",
+      "command_record": "logs/f011-driver-release.json",
+      "log": "logs/f011-driver-release.log",
+      "record": {
+        "command": [
+          "python3",
+          "Scripts/ci/tests/D02RunConsumers.py",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build/arm64-apple-macosx/release",
+          "/Users/goftin/dev/projects/VectorCore-remaining-repairs-2026-10-29-evidence/f011-release",
+          "final"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:41:03.416377+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "47f6dcf168b25c2b9c3ee8a975b4055e29bad17ceeed26d61aef9ea71d207d6d",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 6.287979541986715
+      },
+      "reported_counts": {}
+    },
+    {
+      "id": "f011-policy-green",
+      "outcome": "pass",
+      "command_record": "logs/f011-policy-green.json",
+      "log": "logs/f011-policy-green.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_consumer_fixture_manifests.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:40:44.071801+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "47f6dcf168b25c2b9c3ee8a975b4055e29bad17ceeed26d61aef9ea71d207d6d",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 4.280238165985793
+      },
+      "reported_counts": {
+        "python_tests": 7
+      }
+    },
+    {
+      "id": "f011-preflight-red",
+      "outcome": "preflight regression development: 7 assertion failures plus 2 propagated errors, including a MagicMock serialization error; not a clean behavioral-red claim",
+      "command_record": "logs/f011-preflight-red.json",
+      "log": "logs/f011-preflight-red.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_consumer_fixture_manifests.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:39:53.373765+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "8134af3b88321e43e113212530eac97cd20c64b825b3d7640603c1490c361720",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 1,
+        "elapsed_seconds": 4.175945749972016
+      },
+      "reported_counts": {
+        "python_tests": 7
+      }
+    },
+    {
+      "id": "f011-red",
+      "outcome": "expected regression: 5 failures (three missing fixtures in one assertion, two binding reports, two Logger cases)",
+      "command_record": "logs/f011-red.json",
+      "log": "logs/f011-red.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_consumer_fixture_manifests.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:28:21.978218+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "b16321dc4b2befcceca0cb579792063c609f07d912458e09abc98ff02453dbd5",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 1,
+        "elapsed_seconds": 4.253011249995325
+      },
+      "reported_counts": {
+        "python_tests": 5
+      }
+    },
+    {
+      "id": "f011-swiftpm-products",
+      "outcome": "pass",
+      "command_record": "logs/f011-swiftpm-products.json",
+      "log": "logs/f011-swiftpm-products.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_swiftpm_products.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:40:45.201597+00:00",
+        "source_head_at_start": "c69ce8f4299ceb3cc7026f7f55195d03fd7f852d",
+        "tracked_patch_sha256": "47f6dcf168b25c2b9c3ee8a975b4055e29bad17ceeed26d61aef9ea71d207d6d",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 0.12141354201594368
+      },
+      "reported_counts": {
+        "python_tests": 21
+      }
+    },
+    {
+      "id": "f012-cli-build",
+      "outcome": "pass",
+      "command_record": "logs/f012-cli-build.json",
+      "log": "logs/f012-cli-build.log",
+      "record": {
+        "command": [
+          "swift",
+          "build",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--product",
+          "vectorcore-bench"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:22:14.189214+00:00",
+        "source_head_at_start": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+        "tracked_patch_sha256": "763ccc1bdcadfa08eb8f63539086eacde52d64028761e02ca3ad0c49bbeafee0",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 51.84670120902592
+      },
+      "reported_counts": {}
+    },
+    {
+      "id": "f012-cli-contracts",
+      "outcome": "pass",
+      "command_record": "logs/f012-cli-contracts.json",
+      "log": "logs/f012-cli-contracts.log",
+      "record": {
+        "command": [
+          "python3",
+          "Scripts/ci/tests/test_benchmark_contracts.py",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build/arm64-apple-macosx/release/vectorcore-bench",
+          "--output",
+          "/Users/goftin/dev/projects/VectorCore-remaining-repairs-2026-10-29-evidence/f012-cli"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:24:59.274978+00:00",
+        "source_head_at_start": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+        "tracked_patch_sha256": "763ccc1bdcadfa08eb8f63539086eacde52d64028761e02ca3ad0c49bbeafee0",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 3.7675609579891898
+      },
+      "reported_counts": {}
+    },
+    {
+      "id": "f012-expanded-debug",
+      "outcome": "pass",
+      "command_record": "logs/f012-expanded-debug.json",
+      "log": "logs/f012-expanded-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "BenchmarkModelDomainTests|BenchmarkCorrectnessPolicyTests|BenchmarkSelectionContractTests|BenchmarkRunnerContractTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:17:19.107718+00:00",
+        "source_head_at_start": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+        "tracked_patch_sha256": "887061412532dda65978af57a44628bfc789d7bbd7fb6440242cff340d1799cb",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 48.1041870409972
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 47,
+        "xctest_skipped": 0,
+        "xctest_failures": 0
+      }
+    },
+    {
+      "id": "f012-focused-release",
+      "outcome": "pass",
+      "command_record": "logs/f012-focused-release.json",
+      "log": "logs/f012-focused-release.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "BenchmarkModelDomainTests|BenchmarkCorrectnessPolicyTests|BenchmarkSelectionContractTests|BenchmarkRunnerContractTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:19:07.772088+00:00",
+        "source_head_at_start": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+        "tracked_patch_sha256": "763ccc1bdcadfa08eb8f63539086eacde52d64028761e02ca3ad0c49bbeafee0",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 75.85765033302596
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 47,
+        "xctest_skipped": 0,
+        "xctest_failures": 0
+      }
+    },
+    {
+      "id": "f012-initial-green",
+      "outcome": "pass",
+      "command_record": "logs/f012-initial-green.json",
+      "log": "logs/f012-initial-green.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "BenchmarkModelDomainTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:13:56.538247+00:00",
+        "source_head_at_start": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+        "tracked_patch_sha256": "04da6b560bd4d95cbe744059499ac02094b1c792e9d04ae3f8b02f9f7dad5373",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 6.165178291965276
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 3,
+        "xctest_skipped": 0,
+        "xctest_failures": 0
+      }
+    },
+    {
+      "id": "f012-red",
+      "outcome": "expected regression: 96 XCTest assertion failures before model-domain admission",
+      "command_record": "logs/f012-red.json",
+      "log": "logs/f012-red.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "BenchmarkModelDomainTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:12:05.263468+00:00",
+        "source_head_at_start": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+        "tracked_patch_sha256": "c934033e1e98f1c16e953316e59c67e1b0b95bfdd4e6ff484da0b675db8b314b",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 1,
+        "elapsed_seconds": 6.8108327919617295
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 3,
+        "xctest_skipped": 0,
+        "xctest_failures": 96
+      }
+    },
+    {
+      "id": "final-claim-ledger",
+      "outcome": "pass",
+      "command_record": "logs/final-claim-ledger.json",
+      "log": "logs/final-claim-ledger.log",
+      "record": {
+        "command": [
+          "python3",
+          "Scripts/ci/check_claim_ledger.py"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T07:02:09.134492+00:00",
+        "source_head_at_start": "73d6a5bcd4fa1063e39d467284638b2812a84e7d",
+        "tracked_patch_sha256": null,
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 2.8059677919954993
+      },
+      "reported_counts": {}
+    },
+    {
+      "id": "final-debug",
+      "outcome": "pass",
+      "command_record": "logs/final-debug.json",
+      "log": "logs/final-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T07:02:09.134549+00:00",
+        "source_head_at_start": "73d6a5bcd4fa1063e39d467284638b2812a84e7d",
+        "tracked_patch_sha256": null,
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 327.5016676670057
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 196,
+        "xctest_skipped": 28,
+        "xctest_failures": 0,
+        "swift_testing_reported_tests": 1742,
+        "swift_testing_suites": 262,
+        "swift_testing_skip_events": 18,
+        "known_issues": 0
+      }
+    },
+    {
+      "id": "final-python-policy",
+      "outcome": "pass",
+      "command_record": "logs/final-python-policy.json",
+      "log": "logs/final-python-policy.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_*.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T07:02:09.134558+00:00",
+        "source_head_at_start": "73d6a5bcd4fa1063e39d467284638b2812a84e7d",
+        "tracked_patch_sha256": null,
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 263.6343871249701
+      },
+      "reported_counts": {
+        "python_tests": 558
+      }
+    },
+    {
+      "id": "final-release",
+      "outcome": "pass",
+      "command_record": "logs/final-release.json",
+      "log": "logs/final-release.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T07:08:24.083588+00:00",
+        "source_head_at_start": "73d6a5bcd4fa1063e39d467284638b2812a84e7d",
+        "tracked_patch_sha256": null,
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 84.80762745800894
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 196,
+        "xctest_skipped": 28,
+        "xctest_failures": 0,
+        "swift_testing_reported_tests": 1742,
+        "swift_testing_suites": 262,
+        "swift_testing_skip_events": 18,
+        "known_issues": 1
+      }
+    },
+    {
+      "id": "fp16-classification-red",
+      "outcome": "expected regression: 2 actual helper tests / 44 issues; recorder tail-display Unicode error occurred after raw log and exit record were saved",
+      "command_record": "logs/fp16-classification-red.json",
+      "log": "logs/fp16-classification-red.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "FP16ComparisonHelperTests/(testNativeClassification|testMixedClassification)"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:43:33.022451+00:00",
+        "source_head_at_start": "0110a53b7b5f70367ee40210a29e2c5fcdcf9c6d",
+        "tracked_patch_sha256": "69023651acfa39483608deb0065e8ea365565ce2d5dbfa83e15dcb2143b2a279",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 1,
+        "elapsed_seconds": 12.335910915979184
+      },
+      "reported_counts": {}
+    },
+    {
+      "id": "fp16-focused-debug",
+      "outcome": "pass",
+      "command_record": "logs/fp16-focused-debug.json",
+      "log": "logs/fp16-focused-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "FP16ComparisonHelperTests|MixedPrecisionKernelTests|MixedPrecisionKernelsTests|MixedPrecisionRangeWorkTests|MixedPrecisionFuzzingTests|FP16DiagnosticsBoundaryTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:45:36.985715+00:00",
+        "source_head_at_start": "0110a53b7b5f70367ee40210a29e2c5fcdcf9c6d",
+        "tracked_patch_sha256": "d0bd7d84d52dda8ab06186f651295bd22d248223095c8b0f8ce8ac4b9cb77edd",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 22.11902804102283
+      },
+      "reported_counts": {
+        "swift_testing_reported_tests": 138,
+        "swift_testing_suites": 32,
+        "swift_testing_skip_events": 4,
+        "known_issues": 0
+      }
+    },
+    {
+      "id": "fp16-focused-release",
+      "outcome": "pass",
+      "command_record": "logs/fp16-focused-release.json",
+      "log": "logs/fp16-focused-release.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "FP16ComparisonHelperTests|MixedPrecisionKernelTests|MixedPrecisionKernelsTests|MixedPrecisionRangeWorkTests|MixedPrecisionFuzzingTests|FP16DiagnosticsBoundaryTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:46:23.561133+00:00",
+        "source_head_at_start": "0110a53b7b5f70367ee40210a29e2c5fcdcf9c6d",
+        "tracked_patch_sha256": "d0bd7d84d52dda8ab06186f651295bd22d248223095c8b0f8ce8ac4b9cb77edd",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 271.91554995800834
+      },
+      "reported_counts": {
+        "swift_testing_reported_tests": 138,
+        "swift_testing_suites": 32,
+        "swift_testing_skip_events": 4,
+        "known_issues": 0
+      }
+    },
+    {
+      "id": "fp16-oracle-policy",
+      "outcome": "pass",
+      "command_record": "logs/fp16-oracle-policy.json",
+      "log": "logs/fp16-oracle-policy.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_relative_oracle_guards.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:45:37.018753+00:00",
+        "source_head_at_start": "0110a53b7b5f70367ee40210a29e2c5fcdcf9c6d",
+        "tracked_patch_sha256": "d0bd7d84d52dda8ab06186f651295bd22d248223095c8b0f8ce8ac4b9cb77edd",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 3.724228790961206
+      },
+      "reported_counts": {
+        "python_tests": 8
+      }
+    },
+    {
+      "id": "full-debug",
+      "outcome": "pass",
+      "command_record": "logs/full-debug.json",
+      "log": "logs/full-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:53:32.061938+00:00",
+        "source_head_at_start": "0110a53b7b5f70367ee40210a29e2c5fcdcf9c6d",
+        "tracked_patch_sha256": "d0bd7d84d52dda8ab06186f651295bd22d248223095c8b0f8ce8ac4b9cb77edd",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 317.69872691703495
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 197,
+        "xctest_skipped": 28,
+        "xctest_failures": 0,
+        "swift_testing_reported_tests": 1742,
+        "swift_testing_suites": 262,
+        "swift_testing_skip_events": 18,
+        "known_issues": 0
+      }
+    },
+    {
+      "id": "full-python-policy",
+      "outcome": "integration failure: 558 tests / 1 failure / 1 error; new benchmark source membership and duplicate launcher policy subsequently repaired",
+      "command_record": "logs/full-python-policy.json",
+      "log": "logs/full-python-policy.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_*.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T06:50:19.392986+00:00",
+        "source_head_at_start": "0110a53b7b5f70367ee40210a29e2c5fcdcf9c6d",
+        "tracked_patch_sha256": "d0bd7d84d52dda8ab06186f651295bd22d248223095c8b0f8ce8ac4b9cb77edd",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 1,
+        "elapsed_seconds": 239.1529359999695
+      },
+      "reported_counts": {
+        "python_tests": 558
+      }
+    },
+    {
+      "id": "integration-benchmark-debug",
+      "outcome": "pass",
+      "command_record": "logs/integration-benchmark-debug.json",
+      "log": "logs/integration-benchmark-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "BenchmarkModelDomainTests|BenchmarkCorrectnessPolicyTests|BenchmarkSelectionContractTests|BenchmarkRunnerContractTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T07:00:31.054040+00:00",
+        "source_head_at_start": "b2968f4b20588a1016623d369a25fbd8d6413f05",
+        "tracked_patch_sha256": "1a4faa4f263a13a174493576f2664f993ff13a50f728bd1a495381920fd08943",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 47.47869520902168
+      },
+      "reported_counts": {
+        "xctest_reported_cases": 46,
+        "xctest_skipped": 0,
+        "xctest_failures": 0
+      }
+    },
+    {
+      "id": "integration-ci-contracts",
+      "outcome": "pass",
+      "command_record": "logs/integration-ci-contracts.json",
+      "log": "logs/integration-ci-contracts.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_ci_contracts.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T07:00:31.054040+00:00",
+        "source_head_at_start": "b2968f4b20588a1016623d369a25fbd8d6413f05",
+        "tracked_patch_sha256": "1a4faa4f263a13a174493576f2664f993ff13a50f728bd1a495381920fd08943",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 0.3378436249913648
+      },
+      "reported_counts": {
+        "python_tests": 5
+      }
+    },
+    {
+      "id": "integration-launch-policy",
+      "outcome": "pass",
+      "command_record": "logs/integration-launch-policy.json",
+      "log": "logs/integration-launch-policy.log",
+      "record": {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_child_probe_launch_policy.py",
+          "-v"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "started_at_utc": "2026-10-30T07:00:31.054039+00:00",
+        "source_head_at_start": "b2968f4b20588a1016623d369a25fbd8d6413f05",
+        "tracked_patch_sha256": "1a4faa4f263a13a174493576f2664f993ff13a50f728bd1a495381920fd08943",
+        "tracked_patch_unchanged_during_run": true,
+        "environment_overrides": {},
+        "exit_code": 0,
+        "elapsed_seconds": 1.7090376249980181
+      },
+      "reported_counts": {
+        "python_tests": 6
+      }
+    }
+  ]
+}

@@ -30,7 +30,9 @@ class CIContractTests(unittest.TestCase):
     def test_actual_target_membership_and_selected_bodies(self):
         result = POLICY.validate(ROOT)
         self.assertEqual(result['sanitizerBodies'], {'address': 77, 'thread': 39})
-        self.assertEqual(len(result['benchmarkTestSources']), 4)
+        self.assertEqual(result['benchmarkTestSources'], ['BenchmarkContractTests.swift', 'BenchmarkModelDomainTests.swift',
+                                                        'BenchmarkSelectionContractTests.swift', 'RunnerContractTests.swift',
+                                                        'SwiftTestingEntryTests.swift'])
 
     def test_deleting_each_required_body_cannot_shrink_expectation(self):
         path = self.root / 'Scripts/ci/sanitizer_bodies.json'
@@ -70,9 +72,13 @@ class CIContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 POLICY.validate(self.root)
         package.write_text(original)
-        (self.root / 'Tests/BenchmarkContractTests/RunnerContractTests.swift').unlink()
-        with self.assertRaises(ValueError):
-            POLICY.validate(self.root)
+        for name in POLICY.BENCHMARK_TEST_SOURCES:
+            path = self.root / 'Tests/BenchmarkContractTests' / name
+            original_source = path.read_bytes()
+            path.unlink()
+            with self.subTest(missing=name), self.assertRaises(ValueError):
+                POLICY.validate(self.root)
+            path.write_bytes(original_source)
 
     def test_lint_roots_and_unexecuted_analysis_mutations(self):
         for relative in ['.swiftlint.yml', 'Sources/.swiftlint.yml']:

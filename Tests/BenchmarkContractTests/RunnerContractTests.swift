@@ -77,6 +77,9 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     // This subprocess entry exists only in the test bundle. It invokes the production runner.
     @MainActor func testProcessFixture() async throws {
         let env = ProcessInfo.processInfo.environment
+        if let encoded = env["F012_TEST_ARGUMENTS"] {
+            try await BenchmarkModelDomainTests.runProcessFixture(encoded: encoded)
+        }
         guard env["BENCHMARK_TEST_SCENARIO"] != nil else { return }
         var options = CLIOptions()
         options.suites = ["fixture"]
@@ -121,16 +124,21 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     private func launch(scenario: String, artifact: URL, strict: Bool, format: String = "json") throws -> Int32 {
+        let environment = ["BENCHMARK_TEST_SCENARIO": scenario, "BENCHMARK_TEST_OUTPUT": artifact.path,
+                           "BENCHMARK_TEST_STRICT": strict ? "1" : "0", "BENCHMARK_TEST_FORMAT": format]
+        let output = artifact.deletingLastPathComponent().appendingPathComponent("\(scenario)-\(format).log")
+        return try Self.launchFixture(environment: environment, output: output)
+    }
+
+    // One pinned leaf entry for both runner and model-domain tests; no parent selector is inherited.
+    // test_child_probe_launch_policy.py pins the single Process and literal argv shape.
+    static func launchFixture(environment: [String: String], output: URL) throws -> Int32 {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
         process.arguments = ["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", Bundle(for: Self.self).bundlePath]
         var env = ProcessInfo.processInfo.environment.filter { ["PATH", "HOME", "TMPDIR", "DYLD_FRAMEWORK_PATH", "DYLD_LIBRARY_PATH", "SDKROOT"].contains($0.key) }
-        env["BENCHMARK_TEST_SCENARIO"] = scenario
-        env["BENCHMARK_TEST_OUTPUT"] = artifact.path
-        env["BENCHMARK_TEST_STRICT"] = strict ? "1" : "0"
-        env["BENCHMARK_TEST_FORMAT"] = format
+        env.merge(environment) { _, supplied in supplied }
         process.environment = env
-        let output = artifact.deletingLastPathComponent().appendingPathComponent("\(scenario)-\(format).log")
         _ = FileManager.default.createFile(atPath: output.path, contents: nil)
         let handle = try FileHandle(forWritingTo: output)
         defer { try? handle.close() }
@@ -143,7 +151,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
             if process.isRunning { kill(process.processIdentifier, SIGKILL) }
             let cleanup = exited.wait(timeout: .now() + 2)
             throw NSError(domain: "BenchmarkRunnerContractTests.childTimeout", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "\(scenario): child deadline; cleanup=\(cleanup); log=\(output.path)"])
+                          userInfo: [NSLocalizedDescriptionKey: "child deadline; cleanup=\(cleanup); log=\(output.path)"])
         }
         return process.terminationStatus
     }

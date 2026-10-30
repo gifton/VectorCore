@@ -24,7 +24,7 @@ except where a rule reads string literals on purpose):
                    once: the file may not read the parent argv beyond `CommandLine.arguments[0]` (no copy,
                    append or reassignment; no `ProcessInfo.processInfo.arguments`, no `unsafeArgv`), so
                    nothing of the parent's argv is inherited and no selector survives. Its child, testProcessFixture,
-                   runs the benchmark runner in-process and launches no probe (the runner's production
+                   dispatches runner-contract or model-domain scenarios in-process and launches no probe (the runner's production
                    EnvCapture may run `git rev-parse` / `swiftc -version`, each under its own 2 s deadline).
                    It predates T10 and lives in another test target, which cannot use the launcher without
                    changing the reviewed BenchmarkContractTests source membership
@@ -95,6 +95,8 @@ SPAWN_ALLOWANCES = {
 SELECTOR_ALLOWANCES = {
     'Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift': (
         9, 'the vectorcore-bench CLI\'s own --filter option, parsed in-process by CLIOptions; no process launch'),
+    'Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift': (
+        8, 'the vectorcore-bench CLI\'s own --filter option; child scenarios use RunnerContractTests\' single pinned leaf launcher'),
     'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
         36, 'argument-filter fixtures passed to childProbeArguments; its only launches go through launchChildProbe'),
     'Tests/BenchmarkContractTests/RunnerContractTests.swift': (
@@ -401,9 +403,10 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
         # argv[0] (the runner executable) stays allowed.
         self.assertEqual(spawn_findings('process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])\n' + pinned,
                                         runner), [])
-        bench = 'Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift'
-        self.assertEqual(selector_findings('options(["--filter", "a"])\n' * 9, bench), [])
-        self.assertNotEqual(selector_findings('options(["--filter", "a"])\n' * 10, bench), [])
+        for name, count in [('BenchmarkSelectionContractTests.swift', 9), ('BenchmarkModelDomainTests.swift', 8)]:
+            bench = 'Tests/BenchmarkContractTests/' + name
+            self.assertEqual(selector_findings('options(["--filter", "a"])\n' * count, bench), [])
+            self.assertNotEqual(selector_findings('options(["--filter", "a"])\n' * (count + 1), bench), [])
 
     def test_launcher_invariants_and_mutations(self):
         text = self._launcher_text()

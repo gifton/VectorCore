@@ -55,9 +55,8 @@ final class BenchmarkModelDomainTests: XCTestCase {
 
     // The callback terminates before any case setup. The process tests therefore exercise
     // the production registry and runner without allocating the enormous batch fixture.
-    @MainActor func testProcessFixture() async throws {
+    @MainActor static func runProcessFixture(encoded: String) async throws -> Never {
         let environment = ProcessInfo.processInfo.environment
-        guard let encoded = environment["F012_TEST_ARGUMENTS"] else { return }
         let arguments = try JSONDecoder().decode([String].self, from: Data(encoded.utf8))
         let options = parseCLI(arguments: arguments, environment: [:])
         if environment["F012_TEST_RESULT_NAME"] != nil {
@@ -239,32 +238,12 @@ final class BenchmarkModelDomainTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let report = directory.appendingPathComponent("report.\(format)")
         let log = directory.appendingPathComponent("process.log")
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
-        process.arguments = ["-XCTest", "BenchmarkContractTests.BenchmarkModelDomainTests/testProcessFixture",
-                             Bundle(for: Self.self).bundlePath]
-        var environment = ProcessInfo.processInfo.environment.filter {
-            ["PATH", "HOME", "TMPDIR", "DYLD_FRAMEWORK_PATH", "DYLD_LIBRARY_PATH", "SDKROOT"].contains($0.key)
-        }
+        var environment: [String: String] = [:]
         environment["F012_TEST_ARGUMENTS"] = String(decoding: try JSONEncoder().encode(
             arguments + ["--format", format, "--out", report.path]), as: UTF8.self)
         environment["F012_TEST_RESULT_NAME"] = resultName
-        process.environment = environment
-        _ = FileManager.default.createFile(atPath: log.path, contents: nil)
-        let handle = try FileHandle(forWritingTo: log)
-        defer { try? handle.close() }
-        process.standardOutput = handle
-        process.standardError = handle
-        let exited = DispatchSemaphore(value: 0)
-        process.terminationHandler = { _ in exited.signal() }
-        try process.run()
-        if exited.wait(timeout: .now() + 15) == .timedOut {
-            if process.isRunning { kill(process.processIdentifier, SIGKILL) }
-            let cleanup = exited.wait(timeout: .now() + 2)
-            throw NSError(domain: "BenchmarkModelDomainTests.childTimeout", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "cleanup=\(cleanup); log=\(log.path)"])
-        }
-        return (process.terminationStatus, try String(contentsOf: log, encoding: .utf8),
+        let status = try BenchmarkRunnerContractTests.launchFixture(environment: environment, output: log)
+        return (status, try String(contentsOf: log, encoding: .utf8),
                 FileManager.default.fileExists(atPath: report.path), (try? String(contentsOf: report, encoding: .utf8)) ?? "")
     }
 }

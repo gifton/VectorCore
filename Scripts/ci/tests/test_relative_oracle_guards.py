@@ -100,6 +100,20 @@ def problems(sources, reviewed):
     return findings
 
 
+def dormant_control():
+    """A scanner fixture keeps dormant enforcement exercised even with no live dormant sites."""
+    path = 'Tests/DormantControl.swift'
+    source = '''func dormantOracle(absError: Float, relError: Float) -> Bool {
+        if absError > 1 && relError > 1 { return false }
+        return true
+    }'''
+    site, = sites(source)
+    entry = {key: site[key] for key in ('function', 'expression')}
+    entry.update({'path': path, 'category': 'dormant', 'body_sha256': digest(site['body']),
+                  'reason': 'Synthetic dormant-body and activation controls.'})
+    return {path: source}, [entry]
+
+
 class RelativeOracleGuards(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -150,30 +164,40 @@ class RelativeOracleGuards(unittest.TestCase):
                     controls += 1
         self.assertGreater(controls, 0)
 
-    def test_bounded_bodies_and_dormant_activation_require_review(self):
+    def test_bounded_bodies_require_review(self):
+        controls = 0
         for entry in self.reviewed:
-            if entry['category'] not in ['bounded-reference', 'dormant']:
+            if entry['category'] != 'bounded-reference':
                 continue
             with self.subTest(path=entry['path'], function=entry['function']):
                 source = self.sources[entry['path']]
                 start = next(start for name, start, _ in lexing._Scopes(source).bodies() if name == entry['function'])
                 mutated = source[:start] + '\nlet changedReference = Float.infinity\n' + source[start:]
                 self.assertTrue(any('body changed' in item for item in problems({entry['path']: mutated}, [entry])))
-                if entry['category'] == 'dormant':
-                    activated = dict(self.sources, **{'Tests/New.swift': 'func activate() { _ = ' + entry['function'] + ' }'})
-                    self.assertTrue(any('dormant oracle activated' in item for item in problems(activated, self.reviewed)))
+                controls += 1
+        self.assertGreater(controls, 0)
+
+    def test_dormant_body_and_direct_activation_require_review(self):
+        sources, reviewed = dormant_control()
+        self.assertEqual(problems(sources, reviewed), [])
+        path, source = next(iter(sources.items()))
+        mutated = source.replace('return true', 'return false')
+        self.assertTrue(any('dormant body changed' in item for item in problems({path: mutated}, reviewed)))
+        for path in ['Tests/New.swift', 'Sources/New.swift']:
+            with self.subTest(path=path):
+                activated = dict(sources, **{path: 'func activate() { _ = dormantOracle }'})
+                self.assertTrue(any('dormant oracle activated' in item for item in problems(activated, reviewed)))
 
     def test_dormant_references_in_interpolations_require_review(self):
-        for entry in self.reviewed:
-            if entry['category'] != 'dormant':
-                continue
+        sources, reviewed = dormant_control()
+        for path in ['Tests/New.swift', 'Sources/New.swift']:
             for expression in [r'"\(HELPER)"', r'#"\#(HELPER)"#']:
-                with self.subTest(function=entry['function'], expression=expression):
-                    source = 'func activate() { _ = ' + expression.replace('HELPER', entry['function']) + ' }'
-                    activated = dict(self.sources, **{'Tests/New.swift': source})
-                    self.assertTrue(any('dormant oracle activated' in item for item in problems(activated, self.reviewed)))
-            literal = 'func inactive() { _ = "' + entry['function'] + '" } // ' + entry['function']
-            self.assertEqual(problems(dict(self.sources, **{'Tests/New.swift': literal}), self.reviewed), [])
+                with self.subTest(path=path, expression=expression):
+                    source = 'func activate() { _ = ' + expression.replace('HELPER', 'dormantOracle') + ' }'
+                    activated = dict(sources, **{path: source})
+                    self.assertTrue(any('dormant oracle activated' in item for item in problems(activated, reviewed)))
+            literal = 'func inactive() { _ = "dormantOracle"; _ = #"dormantOracle"# } // dormantOracle'
+            self.assertEqual(problems(dict(sources, **{path: literal}), reviewed), [])
 
     def test_missing_and_duplicate_sites_require_review(self):
         entry = self.reviewed[0]

@@ -57,11 +57,11 @@
 
 **Interfaces:** Existing Bool-returning `verifyFP16Accuracy(original:converted:tolerance:)` and `compareMixedVsFullPrecision(mixed:full:relativeTolerance:absoluteTolerance:)`; preserve their platform gates and finite tolerance policy.
 
-- [ ] Add direct tests of both actual helpers with literal special-value classifications, finite tolerance boundaries, shapes, signed zeros, flush behavior and all-lane corrupted conversion/kernel output. Run the nonfinite regressions before repair and record their failures.
-- [ ] Insert both-operands-finite guards after allowed paired specials and before flush/arithmetic. Keep error arithmetic and inclusive absolute-or-relative acceptance unchanged.
-- [ ] Exercise both helpers from existing real converter/kernel tests while retaining their stronger existing assertions.
-- [ ] Migrate both inventory entries from dormant to finite-gated; retain dormant enforcement with synthetic direct and interpolated activation controls. Run the helper tests, existing mixed-precision suites in Debug/Release, and Python oracle policies. Expected: matching specials remain accepted; mismatches fail; no weakening of the inventory guard.
-- [ ] Commit the helper repair and coverage.
+- [x] Add direct tests of both actual helpers with literal special-value classifications, finite tolerance boundaries, shapes, signed zeros, flush behavior and all-lane corrupted conversion/kernel output. Run the nonfinite regressions before repair and record their failures.
+- [x] Insert both-operands-finite guards after allowed paired specials and before flush/arithmetic. Keep error arithmetic and inclusive absolute-or-relative acceptance unchanged.
+- [x] Exercise both helpers from existing real converter/kernel tests while retaining their stronger existing assertions.
+- [x] Migrate both inventory entries from dormant to finite-gated; retain dormant enforcement with synthetic direct and interpolated activation controls. Run the helper tests, existing mixed-precision suites in Debug/Release, and Python oracle policies. Expected: matching specials remain accepted; mismatches fail; no weakening of the inventory guard.
+- [x] Commit the helper repair and coverage.
 
 ## Task 4: Integrated review and evidence
 

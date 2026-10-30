@@ -158,17 +158,21 @@
       "function": "verifyFP16Accuracy",
       "expression": "ifabsError>tolerance&&relError>tolerance{",
       "path": "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift",
-      "category": "dormant",
-      "body_sha256": "c9352a9acd1eeeabcb4493560404b2bb6a2cd5819797decb696724da3eca5536",
-      "reason": "Unused helper has nonfinite fall-through. Source inventory found only its declaration; this guard blocks activation until its NaN/infinity policy is repaired and tested."
+      "category": "finite-gated",
+      "reason": "FP16ComparisonHelperTests tests the actual helper against a literal classification matrix, finite boundaries, strict flush behavior, and all-lane corrupted production conversion output. Paired NaNs and same-sign infinities are explicitly accepted before the finite gate.",
+      "required": [
+        "guardorig.isFinite,conv.isFiniteelse{returnfalse}"
+      ]
     },
     {
       "function": "compareMixedVsFullPrecision",
       "expression": "ifabsError>absoluteTolerance&&relError>relativeTolerance{",
       "path": "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift",
-      "category": "dormant",
-      "body_sha256": "33b8309f2d9907aa4f7874eb62e3b92ffdca15cc970dc686354369d04e0a5149",
-      "reason": "Unused helper has nonfinite fall-through. Source inventory found only its declaration; this guard blocks activation until its NaN/infinity policy is repaired and tested."
+      "category": "finite-gated",
+      "reason": "FP16ComparisonHelperTests tests the actual helper against a literal classification matrix, finite tolerance/overflow boundaries, and corrupted production kernel output in both orders and every lane. Paired NaNs and same-sign infinities are explicitly accepted before the finite gate.",
+      "required": [
+        "guardm.isFinite,f.isFiniteelse{returnfalse}"
+      ]
     },
     {
       "function": "testFP16OverflowUnderflow",

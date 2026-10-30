@@ -173,6 +173,11 @@ struct MixedPrecisionKernelTests {
                 let fp16Vector = Vector512FP16(from: fp32Vector)
                 let backVector = fp16Vector.toFP32()
 
+                #if !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
+                #expect(MixedPrecisionKernelTests().verifyFP16Accuracy(
+                    original: values, converted: fp16Vector.storage.map { Float16(bitPattern: $0) }, tolerance: 0.001))
+                #endif
+
                 for i in 0..<512 {
                     let original = values[i]
                     let converted = backVector[i]
@@ -204,6 +209,11 @@ struct MixedPrecisionKernelTests {
                 let fp32Vector = try Vector512Optimized(values)
                 let fp16Vector = Vector512FP16(from: fp32Vector)
                 let backVector = fp16Vector.toFP32()
+
+                #if !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
+                #expect(MixedPrecisionKernelTests().verifyFP16Accuracy(
+                    original: values, converted: fp16Vector.storage.map { Float16(bitPattern: $0) }, tolerance: 0.001))
+                #endif
 
                 if value.isNaN {
                     #expect(backVector[0].isNaN)
@@ -440,6 +450,8 @@ struct MixedPrecisionKernelTests {
             }
 
             // Compare results
+            #expect(MixedPrecisionKernelTests().compareMixedVsFullPrecision(
+                mixed: Array(outputBuffer), full: referenceDist, relativeTolerance: 0.005, absoluteTolerance: 0))
             for i in 0..<candidateCount {
                 let mixed = outputBuffer[i]
                 let reference = referenceDist[i]
@@ -4060,6 +4072,8 @@ extension MixedPrecisionKernelTests {
 
     #if !(arch(x86_64) && (os(macOS) || targetEnvironment(macCatalyst)))
     /// Verify native FP16 conversion accuracy.
+    /// FP16ComparisonHelperTests covers paired specials, rejected nonfinite mismatches,
+    /// strict subnormal flushing, and inclusive finite absolute-or-relative tolerances.
     func verifyFP16Accuracy(original: [Float], converted: [Float16], tolerance: Float) -> Bool {
         guard original.count == converted.count else { return false }
 
@@ -4071,7 +4085,9 @@ extension MixedPrecisionKernelTests {
                 continue  // Both NaN is OK
             } else if orig.isInfinite && conv.isInfinite && orig.sign == conv.sign {
                 continue  // Same infinity is OK
-            } else if abs(orig) < Float(0x1p-14) {
+            }
+            guard orig.isFinite, conv.isFinite else { return false }
+            if abs(orig) < Float(0x1p-14) {
                 // May flush to zero
                 if conv == 0 { continue }
             }
@@ -4105,6 +4121,8 @@ extension MixedPrecisionKernelTests {
     }
 
     /// Compare mixed precision vs full precision results
+    /// FP16ComparisonHelperTests covers paired specials, rejected nonfinite mismatches,
+    /// and inclusive finite absolute-or-relative tolerances using `full` as the reference.
     func compareMixedVsFullPrecision(
         mixed: [Float],
         full: [Float],
@@ -4122,6 +4140,7 @@ extension MixedPrecisionKernelTests {
             } else if m.isInfinite && f.isInfinite && m.sign == f.sign {
                 continue
             }
+            guard m.isFinite, f.isFinite else { return false }
 
             let absError = abs(m - f)
             let relError = f != 0 ? abs((m - f) / f) : absError

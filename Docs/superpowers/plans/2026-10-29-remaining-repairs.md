@@ -46,10 +46,10 @@
 
 **Interfaces:** Preserve `BIN_PATH OUTPUT baseline|final`, marker names, and retained SILGen/member backstops. Restore the original positive fixture contracts with current value semantics where applicable.
 
-- [ ] Add a retained-driver manifest membership test; run it against the missing fixtures and record the failure. Include missing/extra controls for the mechanical check.
-- [ ] Restore the three positive fixtures. Reconcile the documented compiler-dependent LoggerNegative diagnostics and fix binding-status output to use the SILGen result, with behavioral regressions before each change.
-- [ ] Run Python driver guards and the actual final-mode driver against current Debug and Release module snapshots. Expected: all ten fixtures, 61-symbol binding check and 77-member backstop pass; preserve exact evidence. Historical baseline execution is only claimed if actually performed against that baseline.
-- [ ] Commit the driver repair and regression coverage.
+- [x] Add a retained-driver manifest membership test; run it against the missing fixtures and record the failure. Include missing/extra controls for the mechanical check.
+- [x] Restore the three positive fixtures. Reconcile the documented compiler-dependent LoggerNegative diagnostics and fix binding-status output to use the SILGen result, with behavioral regressions before each change.
+- [x] Run Python driver guards and the actual final-mode driver against current Debug and Release module snapshots. Expected: all ten fixtures, 61-symbol binding check and 77-member backstop pass; preserve exact evidence. Historical baseline execution is only claimed if actually performed against that baseline.
+- [x] Commit the driver repair and regression coverage.
 
 ## Task 3: FP16 comparison helper activation
 

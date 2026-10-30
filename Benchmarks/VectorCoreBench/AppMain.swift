@@ -89,6 +89,8 @@ func printUsage() {
       --strict-correctness  Exit non-zero when any case exceeds thresholds
       Defaults: derived per-route bounds for the modeled Euclidean and matrix routes (see CorrectnessPolicy);
                 FP32 rel<=1e-6, FP16 rel<=2e-3, cosine(FP16) rel<=3e-3 for every other validated route
+                Selected executable cases must have a supported model domain, including with threshold overrides.
+                Unsupported derived counts are rejected before case setup.
       --progress-format  Progress output format: none|text|json (default: none)
                          Emits structured progress events to stderr for UI tools
       -h, --help    Show this help message
@@ -221,12 +223,15 @@ private func printCorrectnessSummary(results: [BenchResult], options: ValidatedO
         var passCount = 0
         var derived = 0
         var empirical = 0
+        var unsupported = 0
 
         for (r, c) in corrCases {
             // The same decision the gate records (evaluateCorrectnessWithPolicy), so the summary cannot disagree with it.
             let failed = CorrectnessPolicy.failure(for: r, overrideRel: options.maxRelError, overrideAbs: options.maxAbsError) != nil
             if failed { failCount += 1 } else { passCount += 1 }
-            if case .derived = CorrectnessPolicy.rule(forCaseName: r.name).basis { derived += 1 } else { empirical += 1 }
+            if CorrectnessPolicy.domainProblem(forCaseName: r.name) != nil { unsupported += 1 }
+            else if CorrectnessPolicy.hasDerivedModel(forCaseName: r.name) { derived += 1 }
+            else { empirical += 1 }
             if c.status == .valid {
                 if worstRel == nil || c.maxRelError > worstRel!.val { worstRel = (r.name, c.maxRelError) }
                 if worstAbs == nil || c.maxAbsError > worstAbs!.val { worstAbs = (r.name, c.maxAbsError) }
@@ -235,6 +240,7 @@ private func printCorrectnessSummary(results: [BenchResult], options: ValidatedO
 
         print("\n--- Correctness Summary ---")
         print("cases=\(corrCases.count)  pass=\(passCount)  fail=\(failCount)")
+        if unsupported > 0 { print("unsupported correctness model: \(unsupported) case(s)") }
         if let w = worstRel { print(String(format: "worst maxRel=%.3e  (%@)", w.val, w.name)) }
         if let w = worstAbs { print(String(format: "worst maxAbs=%.3e  (%@)", w.val, w.name)) }
         if options.maxRelError == nil && options.maxAbsError == nil {
@@ -321,6 +327,11 @@ public struct BenchmarkRunner {
             let missing = try ABComparisons.missingSides(boundaries: selectedCases.map { ($0.name, $0.boundary) })
             if options.abOnly == true && !missing.isEmpty { throw BenchmarkReportError(missing.joined(separator: "; ")) }
         } catch { fputs("Invalid configuration: \(error)\n", stderr); return 1 }
+        for item in executableCases {
+            if let problem = CorrectnessPolicy.domainProblem(forCaseName: item.name) {
+                fputs("Invalid configuration: \(problem)\n", stderr); return 1
+            }
+        }
         for (suite, cases) in plans where !cases.isEmpty {
             progress.suiteStarted(suite)
             let start = Date()

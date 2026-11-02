@@ -9,17 +9,20 @@
 //
 //  ## Why randomized rather than full SVD
 //
-//  Cost is a few GEMM passes over the data — O(n·d·ℓ) with ℓ = k + p — plus
-//  factorizations of small panels only (n×ℓ QR, ℓ×d SVD). No n×n or full
-//  n×d factorization is ever formed, so fitting on a 100–500k sample is
-//  GEMM-bound and fast. When ℓ ≥ min(n, d) the sketch cannot help; the
-//  implementation falls back to one exact thin SVD of the centered sample.
+//  The randomized path uses GEMM passes O(n·d·ℓ), n×ℓ QR, and ℓ×d SVD.
+//  The sketch width is clamped to min(n,d) before addition. At that limit,
+//  fitting uses an exact thin SVD of the full centered n×d sample (PCATests.exactPathMatchesEigen;
+//  near-square samples on both sides of LAPACK sgesdd's path-5 boundary, tall and wide:
+//  T19LAPACKWorkspaceQueryTests.exactPCASweepCrossesPathFive).
+//  No corpus-size memory or throughput envelope is implied.
 //
 //  ## Usage at corpus scale
 //
 //  `PCAModel.fit` on a representative sample, then `transform` the full
 //  corpus in caller-sized batches (one GEMM per batch) — the model is an
-//  immutable value and `transform` is pure, so batches parallelize freely.
+//  immutable value and `transform` is pure, so batches can run in parallel as far
+//  as the active `Operations.linearAlgebraProvider` and GEMM are safe to call
+//  concurrently; that is the provider's contract and is not verified here.
 //
 //  ## Layout
 //
@@ -33,15 +36,20 @@ import Foundation
 
 // MARK: - Configuration
 
-/// Tuning knobs for randomized-SVD PCA. The defaults follow Halko et al.'s
-/// recommendations and are appropriate for embedding workloads.
+/// Configuration for randomized-SVD PCA; workload suitability is caller-selected.
 public struct PCAConfig: Sendable {
-    /// Sketch oversampling `p`: the sketch width is `k + p` columns.
-    /// 5–10 suffices when singular values decay; raise for flat spectra.
+    /// Nonnegative sketch oversampling p, clamped to min(n,d)-k before
+    /// addition. Int.max is accepted and selects the exact fallback
+    /// (T19LAPACKWorkspaceQueryTests.exactPCASweepCrossesPathFive and
+    /// reportedCellsSucceed, default LAPACK provider).
+    /// See PCACenteringContractTests.sketchBoundariesAndProviderIdentity for
+    /// sketch-boundary controls.
     public var oversampling: Int
 
-    /// Power (subspace) iterations `q`. Each costs two extra GEMM passes and
-    /// sharpens accuracy on slowly decaying spectra; 1–2 is standard.
+    /// Power (subspace) iterations `q`. Each adds two GEMM passes (`AᵀQ` and
+    /// `A·Q'`) and two QR factorizations. Per Halko–Martinsson–Tropp (2011) they
+    /// improve accuracy on slowly decaying spectra and q = 1–2 is a common
+    /// choice (not verified for this implementation by a test here).
     public var powerIterations: Int
 
     /// Subtract the per-dimension mean before factorization (classical PCA).
@@ -49,9 +57,9 @@ public struct PCAConfig: Sendable {
     /// `explainedVariance` reads as raw second moments, not variances.
     public var center: Bool
 
-    /// Seed for the Gaussian sketch. Fits are fully deterministic for a
-    /// given (data, config) pair — including across the LAPACK and Swift
-    /// providers up to floating-point noise.
+    /// Seed for the Gaussian sketch. PCATests.determinismAndProviderParity checks
+    /// repeatability for its fixtures; bitwise parity across providers or
+    /// hardware is not promised.
     public var seed: UInt64
 
     public init(
@@ -76,11 +84,14 @@ public struct PCAConfig: Sendable {
 /// Fit on a sample with `fit`, then apply with `transform` — see the header
 /// note on corpus-scale batching.
 public struct PCAModel: Sendable {
-    /// Per-dimension mean μ of the fit data (zeros when fit uncentered).
-    public let mean: [Float]
+    /// Widened per-dimension center μ used during fit and both transforms;
+    /// exact Double zeros when uncentered (PCATests.uncenteredFit). Reconstruct in Double or explicitly
+    /// round when migrating a caller that previously expected [Float].
+    public let mean: [Double]
 
     /// Principal axes `W`, k×d ROW-MAJOR: `components[r*d + j]` is
-    /// coordinate j of axis r. Rows are ordered by decreasing explained variance.
+    /// coordinate j of axis r. Rows are ordered by decreasing explained variance
+    /// (ordering and sign convention: PCATests.modelInvariants).
     /// The PCA contract calls for orthonormal rows, but this buffer copies the
     /// SVD's Vᵀ rows: with the Swift provider, wide rank-deficient panels can
     /// yield zero rows for zero singular values. See `SingularValueDecomposition.vt`.
@@ -104,12 +115,26 @@ public struct PCAModel: Sendable {
 
     /// Fits a k-component PCA on `vectors` (the sample) via randomized SVD.
     ///
+    /// Work and storage (from the internal fit body): the sample is flattened
+    /// into an n×d column-major Float buffer and a second n×d copy is centered.
+    /// When the sketch width reaches min(n, d), that full centered panel goes to
+    /// the provider's thin SVD; otherwise the sketch adds n×L and d×L Float
+    /// buffers, L being the sketch width.
+    ///
+    /// One-host time and peak memory for n up to 100,000 and d of 384, 768 and
+    /// 1536 are recorded in Docs/Performance_Guide.md ("Measured Workload
+    /// Envelope (One Host)"). Larger inputs are not measured.
+    ///
     /// - Throws: `VectorError.invalidDimension` for k outside
     ///   `1...min(n − 1, d)` when centered, or `1...min(n, d)` when
     ///   `config.center == false`; also for invalid config.
-    ///   These are structural bounds, not a measurement of the data's rank.
+    ///   These are structural bounds, not a measurement of the data's rank
+    ///   (PCATests.errorContracts).
     ///   `.dimensionMismatch` for ragged input;
-    ///   `.invalidOperation` for n < 2; plus anything the active
+    ///   `.invalidOperation` for n < 2;
+    ///   `.operationFailed` when a centering, variance or factorization result
+    ///   is nonfinite or not representable as `Float` for finite input (0.3.3
+    ///   returned infinity in the variance case); plus anything the active
     ///   `Operations.linearAlgebraProvider` throws.
     public static func fit<V: VectorProtocol>(
         _ vectors: [V],
@@ -122,11 +147,14 @@ public struct PCAModel: Sendable {
                 "PCAModel.fit", reason: "PCA requires at least 2 vectors, got \(n)")
         }
         let d = vectors[0].scalarCount
+        let count = try validateVectorShapes(vectors, count: n, dimension: d)
+        _ = try PCAShape.fit(rows: n, dimension: d, components: k, config: config, flatCount: count)
         let flat = try flattenColumnMajor(vectors, count: n, dimension: d)
         return try fit(columnMajor: flat, rows: n, dimension: d, components: k, config: config)
     }
 
-    /// Core fit on an n×d column-major buffer (consumed and mutated).
+    /// Core fit on an n×d column-major buffer. It centers a local copy
+    /// (`var a = a`), so the caller's array is not modified.
     internal static func fit(
         columnMajor a: [Float],
         rows n: Int,
@@ -134,43 +162,41 @@ public struct PCAModel: Sendable {
         components k: Int,
         config: PCAConfig
     ) throws -> PCAModel {
-        guard config.oversampling >= 0, config.powerIterations >= 0 else {
-            throw VectorError.invalidDimension(
-                min(config.oversampling, config.powerIterations),
-                reason: "oversampling and powerIterations must be non-negative")
-        }
-        let maxRank = min(config.center ? n - 1 : n, d)
-        guard k >= 1, k <= maxRank else {
-            throw VectorError.invalidDimension(
-                k, reason: "components must be in 1...\(maxRank) (n=\(n), d=\(d), centered=\(config.center))")
-        }
-
+        let sketchWidth = try PCAShape.fit(rows: n, dimension: d, components: k,
+                                            config: config, flatCount: a.count)
+        try Self.requireFiniteInput(a)
         var a = a
 
-        // Center and measure total variance in one pass. Column j is
-        // contiguous (length n); Double accumulation keeps the mean and the
-        // variance stable at sample sizes in the 10⁵–10⁶ range.
-        var mean = [Float](repeating: 0, count: d)
+        // PCACenteringContractTests exercises representable translations
+        // (translatedPair, multicolumnAndRandomizedTranslations).
+        // Compensated Double centers do not remove Float panel/GEMM rounding.
+        var mean = [Double](repeating: 0, count: d)
         var totalVariance: Double = 0
-        let varianceDenominator = Double(max(n - 1, 1))
-        a.withUnsafeMutableBufferPointer { ab in
-            for j in 0..<d {
-                let base = j * n
-                if config.center {
-                    var sum: Double = 0
-                    for i in 0..<n { sum += Double(ab[base + i]) }
-                    let mu = Float(sum / Double(n))
-                    mean[j] = mu
-                    for i in 0..<n { ab[base + i] -= mu }
+        let varianceDenominator = Double(n - 1)
+        for j in 0..<d {
+            let base = j * n
+            if config.center {
+                var sum = 0.0, correction = 0.0
+                for i in 0..<n {
+                    let value = Double(a[base + i])
+                    let next = sum + value
+                    correction += abs(sum) >= abs(value) ? (sum - next) + value : (value - next) + sum
+                    sum = next
                 }
-                var sumSq: Double = 0
-                for i in 0..<n { sumSq += Double(ab[base + i]) * Double(ab[base + i]) }
-                totalVariance += sumSq / varianceDenominator
+                mean[j] = (sum + correction) / Double(n)
             }
+            var sumSq = 0.0
+            for i in 0..<n {
+                a[base + i] = try Self.centered(a[base + i], mean: mean[j])
+                let residual = Double(a[base + i])
+                sumSq += residual * residual
+            }
+            totalVariance += sumSq / varianceDenominator
         }
-
+        guard mean.allSatisfy(\.isFinite), totalVariance.isFinite else {
+            throw Self.resultFailure("centering statistics")
+        }
         let provider = Operations.linearAlgebraProvider
-        let sketchWidth = min(k + config.oversampling, min(n, d))
 
         // The ℓ×d panel whose SVD yields the principal axes: either the
         // projected sketch B = QᵀA (randomized path) or A itself (exact
@@ -187,7 +213,8 @@ public struct PCAModel: Sendable {
             // Y = A·Ω, then q rounds of QR-stabilized subspace iteration:
             // Q = qr(Y).q;  Y ← A·qr(AᵀQ).q — re-orthonormalizing between
             // multiplications prevents the sketch from collapsing onto the
-            // dominant axis (the classic power-iteration failure mode).
+            // dominant axis (the classic power-iteration failure mode; Halko et
+            // al. 2011, Alg. 4.4; not verified by a test here).
             var y = LAMatMul.multiply(a, omega, m: n, n: sketchWidth, k: d)
             for _ in 0..<config.powerIterations {
                 let q = try provider.qrThin(y, rows: n, columns: sketchWidth).q
@@ -227,10 +254,12 @@ public struct PCAModel: Sendable {
         for r in 0..<k {
             let sigma = Double(svd.singularValues[r])
             let variance = sigma * sigma / varianceDenominator
-            explained[r] = Float(variance)
-            ratios[r] = totalVariance > 0 ? Float(variance / totalVariance) : 0
+            explained[r] = try Self.publish(variance, stage: "explained variance")
+            ratios[r] = try Self.publish(totalVariance > 0 ? variance / totalVariance : 0,
+                                         stage: "explained variance ratio")
         }
 
+        try Self.requireFiniteResult(componentsRowMajor, stage: "components")
         return PCAModel(
             mean: mean,
             components: componentsRowMajor,
@@ -250,16 +279,13 @@ public struct PCAModel: Sendable {
         guard !vectors.isEmpty else { return [] }
         let n = vectors.count
         let d = inputDimension
+        _ = try Self.validateVectorShapes(vectors, count: n, dimension: d)
+        try PCAShape.transform(rows: n, dimension: d, components: componentCount)
         var centered = try Self.flattenColumnMajor(vectors, count: n, dimension: d)
-        if mean.contains(where: { $0 != 0 }) {
-            centered.withUnsafeMutableBufferPointer { cb in
-                for j in 0..<d {
-                    let mu = mean[j]
-                    if mu == 0 { continue }
-                    let base = j * n
-                    for i in 0..<n { cb[base + i] -= mu }
-                }
-            }
+        try Self.requireFiniteInput(centered)
+        for j in 0..<d {
+            let base = j * n
+            for i in 0..<n { centered[base + i] = try Self.centered(centered[base + i], mean: mean[j]) }
         }
 
         // components is k×d row-major, which IS d×k column-major Wᵀ —
@@ -267,6 +293,7 @@ public struct PCAModel: Sendable {
         let projected = LAMatMul.multiply(
             centered, components, m: n, n: componentCount, k: d)
 
+        try Self.requireFiniteResult(projected, stage: "batch projection")
         var out = [[Float]](repeating: [], count: n)
         for i in 0..<n {
             var row = [Float](repeating: 0, count: componentCount)
@@ -276,52 +303,143 @@ public struct PCAModel: Sendable {
         return out
     }
 
-    /// Projects a single raw vector — the streaming-friendly form.
+    /// Projects a single raw vector.
     public func transform(_ vector: [Float]) throws -> [Float] {
         guard vector.count == inputDimension else {
             throw VectorError.dimensionMismatch(expected: inputDimension, actual: vector.count)
         }
         let d = inputDimension
+        try PCAShape.transform(rows: 1, dimension: d, components: componentCount)
+        try Self.requireFiniteInput(vector)
         var out = [Float](repeating: 0, count: componentCount)
-        vector.withUnsafeBufferPointer { xb in
-            components.withUnsafeBufferPointer { wb in
-                for r in 0..<componentCount {
-                    var acc: Float = 0
-                    let base = r * d
-                    for j in 0..<d { acc += wb[base + j] * (xb[j] - mean[j]) }
-                    out[r] = acc
-                }
-            }
+        for r in 0..<componentCount {
+            var acc: Float = 0
+            let base = r * d
+            for j in 0..<d { acc += components[base + j] * (try Self.centered(vector[j], mean: mean[j])) }
+            out[r] = acc
         }
+        try Self.requireFiniteResult(out, stage: "single projection")
         return out
     }
 
     // MARK: Flattening
 
     /// Flattens vectors into an n×d COLUMN-MAJOR buffer, validating that
-    /// every vector has dimension d. Writes for consecutive vectors land on
-    /// adjacent addresses within each of the d column panels, so the pass
-    /// stays cache-resident for embedding-sized d.
-    /// Internal: also the flatten used by `KNNGraph.bruteForce`.
+    /// every vector has dimension d. Shared with KNNGraph.bruteForce: only
+    /// general row/count/byte shape checks apply here. PCA finite-input and
+    /// LP64 policy is enforced by PCA callers, not by this shared helper.
     internal static func flattenColumnMajor<V: VectorProtocol>(
         _ vectors: [V], count n: Int, dimension d: Int
     ) throws -> [Float] where V.Scalar == Float {
-        guard d >= 1 else {
-            throw VectorError.invalidDimension(d, reason: "vectors must be non-empty")
-        }
-        var flat = [Float](repeating: 0, count: n * d)
-        try flat.withUnsafeMutableBufferPointer { fb in
+        let count = try validateVectorShapes(vectors, count: n, dimension: d)
+        var flat = [Float](repeating: 0, count: count)
+        flat.withUnsafeMutableBufferPointer { fb in
             for i in 0..<n {
-                let v = vectors[i]
-                guard v.scalarCount == d else {
-                    throw VectorError.dimensionMismatch(expected: d, actual: v.scalarCount)
-                }
-                v.withUnsafeBufferPointer { vb in
+                vectors[i].withUnsafeBufferPointer { vb in
                     for j in 0..<d { fb[j * n + i] = vb[j] }
                 }
             }
         }
         return flat
+    }
+
+    private static func validateVectorShapes<V: VectorProtocol>(
+        _ vectors: [V], count n: Int, dimension d: Int
+    ) throws -> Int where V.Scalar == Float {
+        let count = try PCAShape.flatten(rows: n, dimension: d, vectorCount: vectors.count)
+        // Complete structural validation precedes any PCA finite scan.
+        for vector in vectors where vector.scalarCount != d {
+            throw VectorError.dimensionMismatch(expected: d, actual: vector.scalarCount)
+        }
+        return count
+    }
+
+    private static func requireFiniteInput(_ values: [Float]) throws {
+        guard values.allSatisfy(\.isFinite) else { throw VectorError.invalidData("PCA requires finite input coordinates") }
+    }
+
+    private static func centered(_ value: Float, mean: Double) throws -> Float {
+        try publish(Double(value) - mean, stage: "centering")
+    }
+
+    private static func publish(_ value: Double, stage: String) throws -> Float {
+        let result = Float(value)
+        guard value.isFinite, result.isFinite else { throw resultFailure(stage) }
+        return result
+    }
+
+    private static func requireFiniteResult(_ values: [Float], stage: String) throws {
+        guard values.allSatisfy(\.isFinite) else { throw resultFailure(stage) }
+    }
+
+    private static func resultFailure(_ stage: String) -> VectorError {
+        ErrorBuilder(.operationFailed).message("PCA \(stage) produced a nonfinite or unrepresentable Float result").build()
+    }
+
+}
+
+// Pure representability checks; PCACenteringContractTests.shapeAndSharedFlattenBoundaries exercises boundaries
+// without allocating extreme shapes. These do not guarantee allocation success.
+internal enum PCAShape {
+    static func count(rows: Int, columns: Int, width: Int = MemoryLayout<Float>.stride) throws -> Int {
+        guard rows >= 0, columns >= 0, width > 0 else {
+            throw VectorError.invalidDimension(min(rows, columns), reason: "invalid PCA count domain")
+        }
+        let product = rows.multipliedReportingOverflow(by: columns)
+        guard !product.overflow, !product.partialValue.multipliedReportingOverflow(by: width).overflow else {
+            throw VectorError.invalidDimension(max(rows, columns), reason: "PCA element or byte count is not representable in Int")
+        }
+        return product.partialValue
+    }
+
+    static func flatten(rows n: Int, dimension d: Int, vectorCount: Int) throws -> Int {
+        guard n >= 0, n == vectorCount else {
+            throw VectorError.invalidDimension(n, reason: "flatten row count must equal vector count")
+        }
+        guard d >= 1 else { throw VectorError.invalidDimension(d, reason: "vectors must be non-empty") }
+        return try count(rows: n, columns: d)
+    }
+
+    private static func blas(_ dimensions: Int...) throws {
+        for dimension in dimensions where dimension < 1 || dimension > Int(Int32.max) {
+            throw VectorError.invalidDimension(dimension, reason: "PCA dimension must fit positive LP64 BLAS indices")
+        }
+    }
+
+    static func fit(rows n: Int, dimension d: Int, components k: Int,
+                    config: PCAConfig, flatCount: Int) throws -> Int {
+        guard n >= 2 else { throw VectorError.invalidDimension(n, reason: "internal PCA fit requires at least two rows") }
+        try blas(n, d)
+        guard config.oversampling >= 0, config.powerIterations >= 0 else {
+            throw VectorError.invalidDimension(min(config.oversampling, config.powerIterations),
+                                               reason: "oversampling and powerIterations must be non-negative")
+        }
+        let maxRank = min(config.center ? n - 1 : n, d)
+        guard k >= 1, k <= maxRank else {
+            throw VectorError.invalidDimension(k, reason: "components must be in 1...\(maxRank) (n=\(n), d=\(d), centered=\(config.center))")
+        }
+        let inputCount = try count(rows: n, columns: d)
+        guard flatCount == inputCount else {
+            throw VectorError.dimensionMismatch(expected: inputCount, actual: flatCount)
+        }
+        let limit = min(n, d)
+        let sketchWidth = k + min(config.oversampling, limit - k)
+        try blas(k, sketchWidth)
+        _ = try count(rows: d, columns: 1, width: MemoryLayout<Double>.stride)
+        _ = try count(rows: n, columns: sketchWidth)
+        _ = try count(rows: d, columns: sketchWidth)
+        _ = try count(rows: k, columns: d)
+        _ = try count(rows: n, columns: k)
+        return sketchWidth
+    }
+
+    static func transform(rows n: Int, dimension d: Int, components k: Int) throws {
+        try blas(n, d, k)
+        _ = try count(rows: n, columns: d)
+        _ = try count(rows: k, columns: d)
+        _ = try count(rows: n, columns: k)
+        _ = try count(rows: d, columns: 1, width: MemoryLayout<Double>.stride)
+        _ = try count(rows: n, columns: 1, width: MemoryLayout<[Float]>.stride)
     }
 }
 
@@ -331,6 +449,11 @@ extension Operations {
     /// One-shot PCA: fit on `vectors` and project them, per the gap-report
     /// API sketch. For fit-on-sample / transform-the-corpus workflows use
     /// `PCAModel.fit` + `PCAModel.transform` directly.
+    ///
+    /// The body is `PCAModel.fit` followed by one batch `transform` of the same
+    /// vectors, so it pays for both. One-host measurements of that pair of calls
+    /// for n up to 100,000 and d up to 1536 are in Docs/Performance_Guide.md
+    /// ("Measured Workload Envelope (One Host)"). Larger inputs are not measured.
     public static func pca<V: VectorProtocol>(
         _ vectors: [V],
         components: Int,
@@ -345,8 +468,9 @@ extension Operations {
 // MARK: - Seeded Gaussian source
 
 /// Deterministic standard-normal stream: SplitMix64 → Box–Muller.
-/// Cross-platform reproducible for a given seed (pure integer state plus
-/// libm; no rejection sampling, so the stream position is data-independent).
+/// Integer state is deterministic for a given seed. No rejection sampling
+/// makes stream position data-independent; libm bits are not guaranteed
+/// identical across platforms.
 internal struct GaussianSource {
     private var state: UInt64
     private var spare: Float?

@@ -1,0 +1,32 @@
+{
+  "task": "T16",
+  "status": "accepted",
+  "task_base": "553d7f1",
+  "integration_revision": "614c670",
+  "closed_records": [
+    "T16-REDUCTION-NAN-CONTRACT",
+    "T16-PROVIDER-DISAGREEMENT",
+    "T16-REDUCTION-CLASS-CLOSURE"
+  ],
+  "disposition_records": {
+    "T16-REDUCTION-NAN-CONTRACT": "47 NaN-dropping sites across 23 functions (19 public) plus element-wise min/max and clip/clamped now propagate NaN (S1 zero sign unspecified; Z1 maximumMagnitude +0; E1 empty → −∞/+∞/0, now library-defined via explicit count guards; I1 SIMDStorage.minMax starts from ±∞; index APIs give the first NaN). RED (independent pre-fix probe: 73/107 rows, 36,575 cells) → GREEN 0 in Debug and Release. NaN-free outputs: 259,408/259,786 bit-identical; the other 378 are exactly E1/I1/Z1.",
+    "T16-PROVIDER-DISAGREEMENT": "The Swift providers kept NaN only at element 0, while vDSP kept it except in the scalar tail and n≤3 (all-NaN gave ∓∞); they disagreed on 207-251 of 411 fixtures. Explicit in-source NaN scans now define the contract on both; Accelerate clip relies on the DOCUMENTED vDSP_vclip formula (one host; Intel unverified).",
+    "T16-REDUCTION-CLASS-CLOSURE": "T16ReductionRegistry plus T16ReductionExceptionalTableTests (every reduction × provider, NaN at every index, 18 sizes, Swift/Accelerate agreement); test_reduction_nan_guard.py (F1-F7 including accumulator-either-side, argmin with assignment anywhere, max(by:) trailing closure, fmax/fmin, pointwiseMax/Min, leading-dot chains, parenthesised and negated conditions; the Int filter (RD14); tabled/external/exempt registry with reasons; LIMITS)."
+  },
+  "validation": {
+    "suite": "Phase 2: full Debug 1,591 plus 75 XCTest; Release 301/48; Intel compile; 9/9 mutations. Fix: Debug 357/63; Release T16Reduction; 107 cells 0.",
+    "policy": "Merged tree: ledger 0 problems; unittest 438 OK in-repo and git-less.",
+    "reviews": "Phase 1 rulings → phase 2 → Opus review (Spec 9/9; I-1 guard gaps) → fix round 1 → scoped re-review (a guard regression found) → narrow residual fix verified by ROOT directly (all 5 reviewer shapes flag; control does not; 19/19)."
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T16",
+  "reviewed_tree": "15ce794a80b0b6c6abb369d2208efcb3e698cb85",
+  "limitations": [
+    "Performance (one loaded host, disclosed): the Swift reductions +6-10%, Accelerate 2.1-2.7× for n≥1536, element-wise min 1.4×.",
+    "The Accelerate clip NaN behaviour rests on the documented vDSP_vclip formula, verified on one host only.",
+    "The guard is lexical (LIMITS: += and ternary updates, helper or inout folds, guard-style folds, let/case pattern conditions).",
+    "Profiler rows run only in ChildProbeLauncher children (not under ASan)."
+  ],
+  "routed": [
+    "Follow-up: verify vDSP clip and reductions on Intel and macOS 15 when hardware is available."
+  ]
+}

@@ -170,7 +170,8 @@ struct QuantizedKernelsComprehensiveTests {
                     symmetric: false
                 )
 
-                let expectedScale = (range.max - range.min) / 255.0
+                // Q01 includes zero: negative-only [-100,-10] calibrates [-100,0].
+                let expectedScale = Float((Double(max(range.max, 0)) - Double(min(range.min, 0))) / 255.0)
                 #expect(abs(params.scale - expectedScale) < 1e-5)
 
                 let quantizedMin = params.quantize(range.min)
@@ -198,10 +199,9 @@ struct QuantizedKernelsComprehensiveTests {
             let quantized = Vector512INT8(from: vector)
             let params = quantized.quantizationParams
 
-            let valueRange = values.max()! - values.min()!
-            let expectedScale = params.isSymmetric
-                ? max(abs(values.min()!), abs(values.max()!)) / 127.0
-                : valueRange / 255.0
+            // Vector512INT8(from:) without params always auto-calibrates symmetric (QuantizedKernels.swift init, symmetric: true).
+            #expect(params.isSymmetric)
+            let expectedScale = max(abs(values.min()!), abs(values.max()!)) / 127.0
 
             #expect(abs(params.scale - expectedScale) / expectedScale < 0.01)
         }
@@ -907,13 +907,13 @@ struct QuantizedKernelsComprehensiveTests {
             #expect(quantized.storage.count == 128)  // Exactly 512/4 SIMD4 vectors
         }
 
-        @Test("Memory bandwidth utilization")
+        @Test("Stored payload ratio, FP32 vs INT8")
         func testMemoryBandwidth() async throws {
             let fp32Size = 512 * MemoryLayout<Float>.size
             let int8Size = 512 * MemoryLayout<Int8>.size + MemoryLayout<LinearQuantizationParams>.size
 
             let bandwidthReduction = Float(fp32Size) / Float(int8Size)
-            #expect(bandwidthReduction > 3.5, "Should reduce memory bandwidth by ~4x")
+            #expect(bandwidthReduction > 3.5, "Stored payload ratio FP32/INT8 should exceed 3.5 (payload model, not measured bandwidth)")
         }
 
         @Test("Cache efficiency with INT8")
@@ -940,7 +940,7 @@ struct QuantizedKernelsComprehensiveTests {
             #expect(quantized.count == batchSize)
             print("  [perf] batch quantization (\(batchSize)): \(quantizationTime)s (gate < 1.0)")
             if strictPerfGatesEnabled {
-                #expect(quantizationTime < 1.0, "Batch quantization should be fast")
+                expectPerformance("QuantizedKernelsComprehensiveTests.testBatchThroughput.1", quantizationTime < 1.0, "Batch quantization should be fast")
             }
         }
 
@@ -961,7 +961,7 @@ struct QuantizedKernelsComprehensiveTests {
 
             print("  [perf] INT8 round-trip conversion: \(timePerConversion)s/op (gate < 0.001)")
             if strictPerfGatesEnabled {
-                #expect(timePerConversion < 0.001, "Conversion should be fast")
+                expectPerformance("QuantizedKernelsComprehensiveTests.testConversionOverhead.2", timePerConversion < 0.001, "Conversion should be fast")
             }
         }
 
@@ -981,7 +981,7 @@ struct QuantizedKernelsComprehensiveTests {
             let elapsed = CFAbsoluteTimeGetCurrent() - start
             print("  [perf] mixed-precision euclidean ×\(iterations): \(elapsed)s (gate < 1.0)")
             if strictPerfGatesEnabled {
-                #expect(elapsed < 1.0, "Mixed precision should be performant")
+                expectPerformance("QuantizedKernelsComprehensiveTests.testMixedPrecisionPerformance.3", elapsed < 1.0, "Mixed precision should be performant")
             }
         }
     }
@@ -989,18 +989,18 @@ struct QuantizedKernelsComprehensiveTests {
     // Edge cases and remaining test stubs
     @Suite("Edge Cases")
     struct EdgeCaseTests {
-        @Test("Quantization of NaN and Inf values")
+        @Test("Throwing INT8 construction rejects NaN and Inf with indices")
         func testNaNInfQuantization() async throws {
             let specialValues: [Float] = [.nan, .infinity, -.infinity, 0, -0]
-            let normalValues = Array(repeating: Float(1.0), count: 507)
-            let allValues = specialValues + normalValues
-
-            let vector = try Vector512Optimized(allValues)
-            let quantized = Vector512INT8(from: vector)
-            let dequantized = quantized.toFP32()
-
-            // Should handle special values gracefully
-            #expect(dequantized.toArray().count == 512)
+            let allValues = specialValues + Array(repeating: Float(1), count: 507)
+            do {
+                _ = try Vector512INT8(allValues)
+                Issue.record("Expected invalid quantization input")
+            } catch let error as VectorError {
+                #expect(error.kind == .invalidData)
+                #expect(error.context.additionalInfo["indices"] == "0,1,2")
+            }
+            // Nonthrowing conversion rejection is covered by Q01ChildContracts.namedRejectionMatrix.
         }
 
         @Test("Zero vector quantization")

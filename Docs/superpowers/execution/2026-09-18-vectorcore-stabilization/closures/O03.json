@@ -1,0 +1,44 @@
+{
+  "task": "O03",
+  "status": "accepted",
+  "task_base": "6d47ec508d55ef7e863ca3b9d51ac0d2f5cca10b",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "OWN-12",
+    "OWN-22"
+  ],
+  "context_disposition": {
+    "OWN-26": "Historical optimized source-fixture zero-allocation result preserved. New separately linked actual-client default-managed copying is reproduced and repaired in this build; no blanket compiler-independent quadratic claim."
+  },
+  "validation": {
+    "red": "Four actual unchanged-production ownership matrix tests fail with 105 issues; linked Release allocation growth retained. Setup failures distinguished.",
+    "debug": "53 tests in nine suites, exit 0.",
+    "release": "53 tests in nine suites, exit 0.",
+    "asan": "Eight valid matrix tests, exit 0, no reported sanitizer findings.",
+    "allocation": "627 aligned rows with identical source fixtures/normalized compile-link-run commands. 268 unique mutation/diagnostic rows zero events; 47 shared-detach rows inline zero or exactly one owner and payload. Float512 Hybrid repeating 2052 -> 2 allocations; default-managed ten writes 20 -> 0; Dynamic min/max/clamp each save one Array allocation.",
+    "provenance": "Root reconstructed 270/274 code inventory, verified all 34 worker evidence files/canonical copies, ten command logs, final helper/bundle hashes and baseline binary/source backup, 268 linked artifacts and complete raw allocation comparison."
+  },
+  "review": "reports/O03-implementation-review.md",
+  "evidence": "reports/O03-implementation.md",
+  "commands": "reports/O03-test-command-status.json",
+  "root_verification": "reports/O03-root-verification-v1.json",
+  "diff_sha256": "9c0fb3a99702f051cb5ba766f1c4c52815e3a57b56687a39f66b8647a0e4a4cc",
+  "frozen_sha256": {
+    "Scripts/ci/tests/O03Allocation.c": "4f21209620aa0e15e0a449634e4e9ccf2ad8ea5db34dffbeaf4469ec17a11e63",
+    "Scripts/ci/tests/O03AllocationProbe.swift": "66d03e753938d687a8994fe088eefac1f4893432e2c766f550bb5ed561006530",
+    "Scripts/ci/tests/O03RunAllocationProbe.py": "4c04c7c18f1dec23791ef0e3a96d2448dab622be68972c38fd3c71c2a9be1fe4",
+    "Sources/VectorCore/Operations/VectorCoreOperations.swift": "9f2a694647b8dc37d88b3b868617aa755fabd53f62968ea968cef4b8452a7b3c",
+    "Sources/VectorCore/Storage/DimensionStorage.swift": "3d92d41ca458ac8ea6c88b9a1f41bb902d359656bc3e2a4c5b759525b49bdeb9",
+    "Sources/VectorCore/Storage/HybridStorage.swift": "8e21d756a67e4ea47cbbd008e5de3c88f4c208d989a37ca5ec09151b86734282",
+    "Sources/VectorCore/Vectors/DynamicVector.swift": "6eceda295bd18ae5e53607ace44cdb58817005dffae89d02c813c2092c6c1cee",
+    "Tests/ComprehensiveTests/StorageAllocationContractTests.swift": "6ec51cd062cbe8370065ea8f786ad6e6d8673573ebeea5e0f5cfc48d36a6546f"
+  },
+  "migrations": [
+    "No public API removal; value semantics, mode selection, throwing partial writes and provider witness dispatch preserved."
+  ],
+  "limitations": [
+    "Requested allocation events/bytes are measured for this linked Release build, not latency, live memory, RSS, throughput or production scale.",
+    "OWN-22 closes the unused initial-result opportunity with measured reduction; array-based provider interface remains a potential future design opportunity.",
+    "No sibling, GPU or arbitrary compiler behavior claim."
+  ]
+}

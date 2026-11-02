@@ -1,0 +1,40 @@
+{
+ "task": "P02",
+ "status": "accepted",
+ "task_base": "29b5bba",
+ "integration_revision": "1544ab4",
+ "closed_records": [
+  "P02-BATCH-DEFAULT-ACCURACY",
+  "P02-GRAM-EXPLICIT-BOUNDED",
+  "P02-PAIRWISE-PER-ROW",
+  "P02-ARRAY-CAST-CLASS",
+  "P02-SCALARCOUNT-LAYOUT",
+  "P02-LEXER-GUARD-CLASS"
+ ],
+ "disposition_records": {
+  "P02-BATCH-DEFAULT-ACCURACY": "findNearestBatch gains a final cpuStrategy parameter, defaulting to .perQuery. The implicit Q>=8/N>=256 GEMM gate is deleted (duplicates scored 0.0146; near-duplicate top-10 collapsed). D1-D4 and API-41 go RED to GREEN. The provider gets the original batch before any CPU validation. RD3: enableMatrixRouting does not affect batch search (child-isolated test). The slowdown is disclosed in the CHANGELOG (one host: up to 22.6x at Q64/N4096 Euclidean; cosine at Q8 and all Q7 shapes faster).",
+  "P02-GRAM-EXPLICIT-BOUNDED": ".gram is serial and tiled, for Euclidean and cosine on 512/768/1536 only; anything else throws before allocation. GramPlan applies RD15 precedence, Int32/overflow checks and the payload formula (planner = formula = observed in 76/76). It has cancellation checkpoints, drainWorstFirst, RD16 ties, and the RD1 bound with its domain hypothesis plus an overflow NaN test. The BLAS integers come from the plan's checked fields (C-M3). RD9 MatrixDistance refactor: bit-identical (sha 73ecf59b).",
+  "P02-PAIRWISE-PER-ROW": "gemmPairwiseTyped prepares once and runs per row into the final row, with no N x N temporary (requested bytes fell in 18/18 cases). It is slower on one host (1.6-8.7x), which is disclosed. R03 is migrated. Euclidean GEMM pairwise is NOT bitwise symmetric (the doc was corrected, O-1).",
+  "P02-ARRAY-CAST-CLASS": "39 conditional array casts became exactArray, with a token-diff proof that only the expressions changed; all 39 guards are ahead. test_no_array_conditional_casts has an EMPTY allowlist and covers pattern, parenthesized, interpolated and backtick forms; typealias targets are a fixture-pinned limit. One fewer 16N+32 request per call in 54/54 cases.",
+  "P02-SCALARCOUNT-LAYOUT": "scalarCount is computed on the four Vector*Optimized types: the handle stride goes 16 to 8, Mirror changes, and the JSON and B01 golden bytes are unchanged (encodeBinary reads scalarCount, whose computed value equals the old stored one).",
+  "P02-LEXER-GUARD-CLASS": "Shared swift_lexing: opt-in interpolation keeping, _unbacktick, a raw-string quote fix, and test_swift_lexing. C2 counts every gramBatch token; C7 pins the pairwise shape; C8 pins the GemmArguments order and the single blas binding. The blast radius on both trees showed 0 new hits with the shipped lexer; the keep-by-default exploration routed to T17."
+ },
+ "validation": {
+  "suite": "Final fix: full Debug 1658/239, 0 failures; focused Debug/Release; ASan 77/15 (phase G); Intel --build-tests; RD9 probe re-run by the reviewer.",
+  "policy": "Merged tree: claim ledger 0 problems; unittest 493 OK in-repo and git-less (P02/merge/gitless-gate.log); SwiftLint 0 new; H2 symbol diff: only BatchSearchCPUStrategy plus cpuStrategy.",
+  "reviews": "Phase 1 rulings (RD1-RD16) -> A+B review -> C reviews A/B -> D-F (+step 0) reviews A/B -> phase G (+step 0) -> final reviews A (step 0), B (evidence), C (holistic) -> ONE final fix -> scoped re-review APPROVED -> root residuals F1/F2/N1-N4 applied and verified by ROOT directly."
+ },
+ "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/P02",
+ "reviewed_tree": "manifest P02/root-residuals/freeze-sha256.txt (6297 files; worktree frozen by sha256, not staged: the staging permission was denied 2026-10-06)",
+ "limitations": [
+  "Performance: one quiet host. .perQuery is up to 22.6x slower than the deleted gate at Q64/N4096; pairwise per-row is 1.6-8.7x slower. Accepted under POLICY (performance targets deferred) and added to the D01/L04 user packet.",
+  "Accelerate allocates per call at some .gram tile shapes; this is excluded from the payload by design and disclosed.",
+  "The lexical guards (C2/C7/C8, the cast guard) keep documented, fixture-pinned limits: macro-generated code, typealias targets, aliases inside gemmCrossTerm.",
+  "x86_64 runtime is not executed (Rosetta set aside by the user); Intel is compile-only."
+ ],
+ "routed": [
+  "T17: interpolation-aware lint adoption (the lost-store true positive in NumericalStabilityTests; Float16 and inert-provider guard opt-in; clock-policy LIMITS)",
+  "T14 owner: witness casts +43 ns per unspecialized call (RD8, measure-only)",
+  "D01/L04 user packet: the .perQuery and pairwise slowdowns as a downstream workload item"
+ ]
+}

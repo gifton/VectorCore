@@ -1,5 +1,8 @@
-// CKernels.swift — Swift wrappers around C kernels (usage gated)
-// This file provides thin Swift helpers to call into VectorCoreC.
+// CKernels.swift — Swift wrappers around the VectorCoreC FP32 and INT8 kernels.
+// The wrappers call VectorCoreC only when the VC_USE_C_KERNELS compilation condition is defined.
+// Package.swift defines no such condition, so every package build runs the Swift loops below
+// (VectorCoreCompiledFeatures.useCKernels reports which). The C contracts (compact range output,
+// the INT8 modulo law, feature-query semantics) are documented in VectorCoreC.h.
 
 import Foundation
 #if canImport(VectorCoreC)
@@ -30,7 +33,11 @@ func vc_hasNEON() -> Bool {
     #endif
 }
 
-// Example wrappers for 512-d FP32 primitives
+// Wrappers for the 512-d FP32 primitives and the INT8 dot product.
+// The 16-byte alignment assertions below are wrapper-level Debug checks. Unverified contract: the C
+// implementations are not expected to need more than the element type's natural alignment (arm64 FP32 uses
+// vld1q_f32, x86_64 FP32 is scalar, INT8 uses vld1q_s8 / _mm_loadu_si128), but no test passes a misaligned pointer.
+@usableFromInline
 enum CKernels {
     // Dot product 512 (returns scalar)
     static func dot512(_ a: UnsafePointer<Float>, _ b: UnsafePointer<Float>) -> Float {
@@ -39,7 +46,7 @@ enum CKernels {
         assertAligned(UnsafeRawPointer(b), to: 16)
         return vc_dot_fp32_512(a, b)
         #else
-        // Fallback should never be called when gated; keep a tiny scalar path for debug.
+        // Without VC_USE_C_KERNELS (every package build) this Swift loop runs instead of the C kernel.
         var acc: Float = 0
         for i in 0..<512 { acc += a[i] * b[i] }
         return acc
@@ -59,8 +66,15 @@ enum CKernels {
         #endif
     }
 
-    /// INT8 dot product over `lanes` elements; returns Int32 accumulator.
-    /// Routes to SDOT (ARM) or AVX2 (x86) when C kernels are enabled.
+    /// INT8 dot product over `lanes` elements: the exact integer dot product reduced modulo 2^32 and
+    /// read in the Int32 range (the `vc_dot_int8` law in VectorCoreC.h). The Swift loop below follows
+    /// the same law with wrapping `&+=` / `&*`.
+    /// With VC_USE_C_KERNELS it calls `vc_dot_int8`: on arm64, SDOT when the compile target defines
+    /// `__ARM_FEATURE_DOTPROD`, otherwise the NEON fallback; on x86_64, AVX2 when `vc_has_avx2()`
+    /// reports it at run time, otherwise the scalar implementation. Without it (every package build)
+    /// the Swift loop runs. `a` and `b` must each point to `lanes` readable values; `lanes == 0`
+    /// reads nothing.
+    @usableFromInline
     static func dotInt8(_ a: UnsafePointer<Int8>, _ b: UnsafePointer<Int8>, lanes: Int) -> Int32 {
         #if VC_USE_C_KERNELS
         return vc_dot_int8(a, b, lanes)
@@ -74,7 +88,9 @@ enum CKernels {
         #endif
     }
 
-    // Range L2^2 512: writes into out[0..(end-start))
+    // Range L2^2 512: compact output, written to out[0 ..< end - start] independently of start
+    // (VectorCoreC.h states the full caller obligations: start <= end, stride >= 512, live,
+    // non-overlapping buffers).
     static func rangeL2sq512(q: UnsafePointer<Float>, base: UnsafePointer<Float>, strideFloats: Int, start: Int, end: Int, out: UnsafeMutablePointer<Float>) {
         #if VC_USE_C_KERNELS
         assertAligned(UnsafeRawPointer(q), to: 16)

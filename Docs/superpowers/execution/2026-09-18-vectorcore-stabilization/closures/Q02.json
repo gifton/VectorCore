@@ -1,0 +1,61 @@
+{
+  "task": "Q02",
+  "status": "accepted with staged peak-live characterization",
+  "task_base": "101b3749bf531cfdbc42d61198b503e94af4aa5b",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "NUM-16",
+    "NUM-17",
+    "NUM-19",
+    "NUM-20",
+    "NUM-24"
+  ],
+  "staged_records": {
+    "NUM-21": "Functional implicit-calibration work amplification repaired and independent work/allocation counts verified. Peak-live allocation characterization remains staged after authorized Instruments attach failure; cumulative requested bytes and RSS do not substitute."
+  },
+  "validation": {
+    "red": "Seven ordinary unchanged-base semantic failures; separate private-initializer admission failure. Historical profile-first persistence defect remains source-established.",
+    "debug_release": "Each24XCTest+36SwiftTesting/5suites on frozen v3; separate bounded helper-host executions each17contract tests.",
+    "public": "Ordinary Swift6 Debug/Release consumers each58checks including15independent decoded-record mutations; actual disk roundtrip, publication/save/delete failures and mixed/full bridge controls.",
+    "measurement": "Six matched Release width/count workloads; identical Swift/C/Python fixtures, baseline API define recorded. Cold events5554 or51254 to2/64bytes, warm0/0; explicit calibration separately retains all5strategies. Single elapsed observations, no speed claim.",
+    "work": "Source-unchanged coverage125strategy executions,5benchmark entries,1reference,1generator and N+1vectors per workload; five kernel closures25entries each; standalone3call control. Q03convertedElements25*(4N+2)*D before and0after. Constructor multiplicities remain source-callsite deductions, not machine-entry counts.",
+    "provenance": "Root full328base/338final reconstruction, exact17files,1519canonical artifacts and raw six-row measurement/source/link association verification; independent final source/runtime review."
+  },
+  "review": "reports/Q02-implementation-review-v3.md",
+  "evidence": "reports/Q02-implementation.md",
+  "commands": "reports/Q02-command-runtime-index.json",
+  "root_verification": [
+    "reports/Q02-root-v3-source-verification.json",
+    "reports/Q02-root-final-evidence-verification.json"
+  ],
+  "diff_sha256": "eabcfe85abf022ff546198a56c7b920944cf66598b078e044b9310776ab68b24",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/Kernels/KernelAutoTuner.swift": "23297936f53dd878e2273ab2ba75fdb8e6358edefd3a892522ecd25df75da23d",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionAutoTuner.swift": "1e5886e5ae18b26af3a091d3f7f7567fae89c7b28340701b152253ab6dfaaf06",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift": "8a6f3a0a5bcd6937706c1a8796e73dad82f6fc4fbbfb4655a55ae2467cc64af4",
+    "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift": "cdaa21d3b3d81aef2c8c5c13d0b87db3d0bd40f6e88f4d1da53c01188c999fc8",
+    "Tests/ComprehensiveTests/KernelAutoTunerTests.swift": "15ba68c8583c470b38420d8416a54749606c75a34993563cac4763ad41dedec1",
+    "Tests/ComprehensiveTests/MixedPrecisionAutoTunerTests.swift": "ea9d04357aa4c86e2fd75968bd64b6943881cf0b9be75b351bb1e5da140fc433",
+    "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift": "1bb3d2acbfed293c100e4a387a42cbd839b5a900104b70acd65c39af590ed18d",
+    "Scripts/ci/tests/Q02Allocation.c": "4659356667fee3e95028ae5df0936bd6ed423e6cc8404f26695ad21edb3a14bc",
+    "Scripts/ci/tests/Q02CalibrationProbe.swift": "bf7199e05f4956c0ad692c6cf857957d39cd211a6fd863160549a8fd53db60f4",
+    "Scripts/ci/tests/Q02InitializerAdmission.swift": "302bb6dfbfbf36abf1e0a371b0f3b7f9182579b59683e48002e5071eb82508b0",
+    "Scripts/ci/tests/Q02PublicConsumer.swift": "2b495903b6077b3c087fad63f500db9b9a10ba588397aedf0a2a0361e87a01b1",
+    "Scripts/ci/tests/Q02RunCalibrationProbe.py": "0a0b22975c8d3ab140ca4f99b3c61944b01777373e477f83dac61f29306b1832",
+    "Scripts/ci/tests/Q02RunPublicConsumer.py": "72a3baae76d507fd8f323c6cf93f5a6614e744c9dac7b75243b2a0880d38ecd8",
+    "Scripts/ci/tests/Q02RunSelectionProbe.py": "627ddb3587fec3393414fccc7f73da9e85ae9d0973f90b3959c501776f685a81",
+    "Scripts/ci/tests/Q02SelectionProbe.swift": "5b5263f735567d4e9f0b77a879d7326150e8997f6c43f389108662abba513613",
+    "Sources/VectorCore/Operations/Kernels/PrecisionTuningSupport.swift": "6de57588daf9c92c3ec25ae404ab6f32364322c56eebbb085cd48f5436326823",
+    "Tests/ComprehensiveTests/PrecisionSelectionContractTests.swift": "204a5396e913f70e678987196b44417b331dfb94b2d2a4c1c2b7d753467bce1c"
+  },
+  "migrations": [
+    "Mixed selection is lookup-only; explicit calibration owns requested work and staged publication.",
+    "Kernel persistence is opt-in with typed workload/provenance records; unsupported or infeasible selections report errors.",
+    "Adaptive FP16 acceptance checks both operands and actual widened error against one defined FP32 result; full-mode bridge preserves fullFP32 policy."
+  ],
+  "limitations": [
+    "Synthetic profiles are fixture measurements, not data-dependent accuracy or production performance guarantees.",
+    "No automatic Operations precision activation, arithmetic-core/SoA ownership change, GPU or downstream claim.",
+    "Historical lost temporary build/development evidence is excluded; final successful v3 bundles and consumer binaries are retained."
+  ]
+}

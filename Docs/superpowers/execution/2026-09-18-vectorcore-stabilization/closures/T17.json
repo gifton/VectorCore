@@ -1,0 +1,26 @@
+{
+ "task": "T17",
+ "status": "accepted",
+ "task_base": "5b7df5e",
+ "integration_revision": "2da89d3",
+ "closed_records": [
+  "T17-LOST-STORE-INTERPOLATION",
+  "T17-GUARD-OPT-IN-DECISIONS"
+ ],
+ "disposition_records": {
+  "T17-LOST-STORE-INTERPOLATION": "test_lost_store_reads opts into keep_interpolations (4 must-fail, 2 must-pass fixtures). It found NumericalStabilityTests.magnitudeDiagnostic::maxComponent read inside a diagnostic interpolation after a closure mutation. maxComponent and components are now returned from their closures (W2). The lint goes from 1 hit to 0, and the diagnostic text is unchanged.",
+  "T17-GUARD-OPT-IN-DECISIONS": "The inert-provider guard opts in, closing L5; its full outputs are identical on the real tree. The Float16 availability guard does NOT opt in: its own code_view already sees interpolation, and opting in would make its mutation control vacuous (pinned). The clock-assertion policy does NOT opt in: message strings never count; LIMITS gives the example, and the pin covers the direct Date() form."
+ },
+ "validation": {
+  "suite": "NumericalStability Debug and Release, 43 tests in 10 suites each (root runs on R/T17/swift-tree, a copy verified against the freeze).",
+  "policy": "Merged tree: claim ledger 0 problems; unittest 497 OK git-less (T17/merge/gitless-gate.log).",
+  "reviews": "Implementer (PARTIAL: the capture driver refused the /private/tmp workdir, so root ran the Swift tests) -> Sonnet review APPROVED 7/7 -> root residuals M1-M3 applied and verified by ROOT directly (each new check bites under mutation)."
+ },
+ "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T17",
+ "reviewed_tree": "manifest T17/freeze-final-sha256.txt (6298 files; plain copy /private/tmp/vectorcore-ws-T17)",
+ "limitations": [
+  "magnitudeDiagnostic runs only on a failure path, so the evidence for the fix is compiling in both configurations plus the passing suites.",
+  "The mutating-member capture form (`x.append` inside a closure) stays outside the lost-store lint, a documented LIMIT. The upstream miscompile is the mutable-pointer form."
+ ],
+ "routed": []
+}

@@ -122,7 +122,7 @@ final class Vector512Tests: XCTestCase {
         let a = Vector512Optimized(repeating: 1.0)
         let b = Vector512Optimized(repeating: 2.0)
 
-        measure {
+        observePerformance("Vector512Tests.testDotProductPerformance") {
             for _ in 0..<10000 {
                 _ = a.dotProduct(b)
             }
@@ -133,7 +133,7 @@ final class Vector512Tests: XCTestCase {
         let a = Vector512Optimized(repeating: 1.0)
         let b = Vector512Optimized(repeating: 2.0)
 
-        measure {
+        observePerformance("Vector512Tests.testDistancePerformance") {
             for _ in 0..<10000 {
                 _ = a.euclideanDistanceSquared(to: b)
             }
@@ -143,7 +143,7 @@ final class Vector512Tests: XCTestCase {
     func testNormalizationPerformance() throws {
         let vector = Vector512Optimized(repeating: 2.0)
 
-        measure {
+        observePerformance("Vector512Tests.testNormalizationPerformance") {
             for _ in 0..<10000 {
                 _ = try? vector.normalized().get()
             }

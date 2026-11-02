@@ -4,17 +4,10 @@ import Testing
 
 @Suite("Vector Entropy")
 struct VectorEntropySuite {
-    // Helper to compute manual entropy for small vectors
+    // Independent Double max-scaled reference (see EntropyRangeContractTests.swift).
+    // Retains the normalized-probability cutoff p > Float.ulpOfOne; no absolute-input cutoff.
     private func manualEntropy(_ values: [Float]) -> Float {
-        let absVals = values.map { Swift.abs($0) }
-        let sum = absVals.reduce(0, +)
-        guard sum > Float.ulpOfOne else { return 0 }
-        var h: Float = 0
-        for a in absVals {
-            let p = a / sum
-            if p > Float.ulpOfOne { h -= p * Foundation.log(p) }
-        }
-        return h
+        entropyContractReference(values)
     }
 
     // Baseline correctness
@@ -67,6 +60,8 @@ struct VectorEntropySuite {
     }
 
     // Invariance properties
+    // Legacy approximate characterization; exact invariance is asserted with power-of-two
+    // scalings in EntropyRangeContractTests.
     @Test
     func testEntropy_ScaleInvariance_Positive() {
         let vals: [Float] = [0.1, 0.3, 0.6, 0]
@@ -143,12 +138,20 @@ struct VectorEntropySuite {
     // Near-zero and numerical handling
     @Test
     func testEntropy_UlpThreshold_IgnoresNearZero() {
+        // Retained policy: the tiny coordinate's own term is omitted (p < 2^-23) but it stays
+        // in the denominator, so the dominant term -q ln q with q = 1/(1+2^-25) remains
+        // small, positive and NOT exactly zero.
         let tiny = Float.ulpOfOne / 4
         var vals = Array(repeating: Float(0), count: 8)
         vals[0] = 1
         vals[1] = tiny
         let v = try! Vector<Dim8>(vals)
-        #expect(approxEqual(v.entropy, 0, tol: 1e-6))
+        let q = 1.0 / (1.0 + Double(tiny))
+        let expected = Float(-q * Foundation.log(q))
+        #expect(expected > 0)
+        #expect(v.entropy.isFinite)
+        #expect(v.entropy > 0)
+        #expect(Swift.abs(v.entropy - expected) <= 8 * Float.ulpOfOne)
     }
 
     @Test
@@ -199,6 +202,8 @@ struct VectorEntropySuite {
     }
 
     // Stability across scales
+    // Legacy approximate characterization; exact invariance is asserted with power-of-two
+    // scalings in EntropyRangeContractTests.
     @Test
     func testEntropy_ScaleStability_LargeMagnitudesVsSmall_Large() {
         // Same distribution different scales

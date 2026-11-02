@@ -1,0 +1,36 @@
+{
+  "task": "E05",
+  "status": "accepted",
+  "task_base": "a558253329933b186ba450b07a67a8a56cb4ca54",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-29"
+  ],
+  "validation": {
+    "red": "Two actual unchanged-library children enter direct/Operations calibration callbacks and deadlock at reentrant get; 15-second execution deadlines and successful bounded cleanup. Original compiled baseline bundle hash unavailable after relink, explicitly not reconstructed.",
+    "debug": "Eight reported functions in two suites, including one no-op child entry; 21 actual isolated scenarios pass; seven narrow existing Operations controls separately pass.",
+    "release": "Same frozen source and matched focused/control counts, exits 0; 21 actual isolated scenarios pass.",
+    "consumers": "Supplied-public-value Swift 6 strict concurrency nonthrowing/rethrows/MainActor/actor fixture typechecks in Debug and Release, exit 0; no public constructor additions.",
+    "provenance": "Full three-file patch reconstructed; 261/263 code-path inventory and canonical source backup; 151 worker artifacts/canonical copies, 11 command-log hashes, 63 parent-associated child captures and final distinct host/bundle original+backup hashes verified."
+  },
+  "review": "reports/E05-implementation-review.md",
+  "evidence": "reports/E05-implementation-report.md",
+  "commands": "reports/E05-command-evidence-final.json",
+  "root_verification": "reports/E05-root-verification.json",
+  "diff_sha256": "b10dda5a783949f5283b6a0d46580a76e3f33b4fcfddace46e3cbc417774a855",
+  "frozen_sha256": {
+    "Sources/VectorCore/Providers/AutoTuning.swift": "7f35e7ea035b19faf1883c84c664a3d8df7ff71867151688c4215cb7d2ff14f4",
+    "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift": "5832cc2fd24d0725bc66ec762bd18ec394953e5b7eb85f19931cbae0dfeec19f",
+    "Scripts/ci/tests/E05CalibrationConsumer.swift": "8f241ff8855107dd374e492239684896b838b85f9259527198de72462ce09136"
+  },
+  "migrations": [
+    "Concurrent or recursive same-key calibration returns an unpublished provisional default while the active callback runs; simultaneous return values may differ.",
+    "Calibration accepts throwing callbacks and rethrows identical errors; successful manual publication wins and active reservation cleanup remains callback-owned.",
+    "Invalid dimensions/cores bypass callback/cache lookup; invalid probes or unsafe intermediates publish the default unless a manual value wins. Existing nonthrowing Operations caller requires no source migration."
+  ],
+  "limitations": [
+    "The 20ms completed-callback admission cap is soft; overlapping/nested callbacks count individually and already admitted or nonreturning callbacks have no deadline guarantee.",
+    "No tuning-quality/key-provenance/precision strategy closure (Q02), downstream execution, throughput or production-scale claim.",
+    "Historical baseline test-bundle binary was overwritten before hashing; source/build/entry/timeout/cleanup provenance remains limited as disclosed."
+  ]
+}

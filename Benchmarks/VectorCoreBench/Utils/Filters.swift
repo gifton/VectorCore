@@ -1,33 +1,18 @@
 import Foundation
 
 enum Filters {
-    nonisolated(unsafe) private static var cacheKey: String = ""
-    nonisolated(unsafe) private static var cached: CaseFilter? = nil
-
-    static func shouldRun(name: String, options: CLIOptions) -> Bool {
-        let key = cacheKeyFor(options: options)
-        if key != cacheKey {
-            cacheKey = key
-            cached = CaseFilter(include: options.filters, exclude: options.excludes, mode: options.filterMode)
-        }
-        guard let cf = cached else { return true }
-        return cf.matches(name)
-    }
-
-    private static func cacheKeyFor(options: CLIOptions) -> String {
-        ([options.filterMode] + options.filters + ["--"] + options.excludes).joined(separator: "\u{1f}")
-    }
+    static func shouldRun(name: String, options: ValidatedOptions) -> Bool { options.caseFilter.matches(name) }
 }
 
-struct CaseFilter {
+struct CaseFilter: Sendable {
     enum Mode { case glob, regex }
     let include: [NSRegularExpression]
     let exclude: [NSRegularExpression]
 
-    init(include: [String], exclude: [String], mode: String) {
+    init(include: [String], exclude: [String], mode: String) throws {
         let m: Mode = mode.lowercased() == "regex" ? .regex : .glob
-        self.include = include.compactMap { CaseFilter.compile(pattern: $0, mode: m) }
-        self.exclude = exclude.compactMap { CaseFilter.compile(pattern: $0, mode: m) }
+        self.include = try include.map { try CaseFilter.compile(pattern: $0, mode: m) }
+        self.exclude = try exclude.map { try CaseFilter.compile(pattern: $0, mode: m) }
     }
 
     func matches(_ name: String) -> Bool {
@@ -42,9 +27,9 @@ struct CaseFilter {
         return ok
     }
 
-    private static func compile(pattern: String, mode: Mode) -> NSRegularExpression? {
+    private static func compile(pattern: String, mode: Mode) throws -> NSRegularExpression {
         let pat = pattern.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !pat.isEmpty else { return nil }
+        guard !pat.isEmpty else { throw BenchmarkConfigurationError("Empty filter") }
         let regex: String
         switch mode {
         case .regex:
@@ -52,7 +37,7 @@ struct CaseFilter {
         case .glob:
             regex = globToRegex(pat)
         }
-        return try? NSRegularExpression(pattern: regex)
+        return try NSRegularExpression(pattern: regex)
     }
 
     private static func globToRegex(_ glob: String) -> String {

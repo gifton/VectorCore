@@ -89,7 +89,7 @@ public struct ErrorContext: Sendable {
 /// do {
 ///     try riskyOperation()
 /// } catch let error as VectorError {
-///     logger.log(error, severity: error.kind.severity)
+///     error.log(to: coreLogger)
 ///     if error.kind == .dimensionMismatch {
 ///         // Handle specific error type
 ///     }
@@ -338,7 +338,7 @@ public extension VectorError {
     ) -> VectorError {
         ErrorBuilder(.indexOutOfBounds, file: file, line: line, function: function)
             .message("Index \(index) is out of bounds for dimension \(dimension)")
-            .index(index, max: dimension - 1)
+            .index(index, max: dimension > 0 ? dimension - 1 : -1)
             .build()
     }
 

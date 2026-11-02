@@ -1,0 +1,26 @@
+{
+ "task": "T19",
+ "status": "accepted",
+ "task_base": "9e70a23",
+ "integration_revision": "4c552d9",
+ "closed_records": [
+  "T19-LAPACK-WORKSPACE-FLOOR"
+ ],
+ "disposition_records": {
+  "T19-LAPACK-WORKSPACE-FLOOR": "vc_la_query/vc_la_integer_query no longer reject a positive finite vendor answer below the reference minimum; all four callers allocate max(answer+headroom, minimum) and pass allocated counts (ssyevd LIWORK fixed). Exact PCA/svdThin on near-square inputs (sgesdd path 5) no longer throw. Introduced after v0.3.3 by ed95f95; v0.3.3 unaffected. Class closed by T19LAPACKWorkspaceQueryTests (179-cell sweeps RED 108 -> 0, reported cells, sketch, eigen, QR; analytic Double spectra; tolerance min(2e-3, gap/4), worst margin 0.0233) and corrected L01 C fixtures (RED base, GREEN fixed)."
+ },
+ "validation": {
+  "suite": "Full Debug 1701/252, 0 failures; focused Debug/Release; Intel build; SwiftLint 0 new.",
+  "policy": "Merged tree: ledger 0 problems; unittest 523 git-less (T19/merge/gitless-gate.log).",
+  "reviews": "L04 STOP S1 -> T19 implementer -> Opus review (Quality APPROVED; I1 + m1-m3) -> fix round -> Sonnet scoped re-review APPROVED (one-index-shift mutant fails)."
+ },
+ "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T19",
+ "reviewed_tree": "manifest T19/freeze-sha256.txt (6329 files)",
+ "limitations": [
+  "Eigen/QR never went RED through Swift (Accelerate's answers were not below floors); the C fixtures supply that RED.",
+  "Path-5 shapes now allocate the reference minimum 4k^2+7k floats (more than Accelerate asks; ~16 MB at k=1000)."
+ ],
+ "routed": [
+  "Pre-0.4.0 follow-up: PCACenteringContractTests.sketchBoundariesAndProviderIdentity hangs (Int.max power iterations) instead of failing when the exact branch is removed."
+ ]
+}

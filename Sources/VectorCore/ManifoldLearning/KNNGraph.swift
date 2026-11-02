@@ -7,7 +7,7 @@
 //  dependency arrow points VectorIndex → VectorCore only, so graph-consuming
 //  math (UMAP, §3.3) takes this struct as INPUT: VectorIndex (or any ANN
 //  backend) populates it at corpus scale, and data flows Index → Core while
-//  code never does. `bruteForce` below is the exact in-Core builder, so the
+//  code never does. `bruteForce` exhaustively enumerates Float Gram scores, so the
 //  full UMAP pipeline also runs with no external producer at sample scale.
 //
 
@@ -52,9 +52,10 @@ public struct KNNGraph: Sendable {
             throw VectorError.invalidDimension(
                 pointCount, reason: "pointCount must be in 1...Int32.max")
         }
-        guard rowOffsets.count == pointCount + 1 else {
+        let expectedOffsets = try UMAPChecked.increment(pointCount, label: "CSR offsets")
+        guard rowOffsets.count == expectedOffsets else {
             throw VectorError.invalidData(
-                "rowOffsets has \(rowOffsets.count) entries, expected pointCount + 1 = \(pointCount + 1)")
+                "rowOffsets has \(rowOffsets.count) entries, expected pointCount + 1 = \(expectedOffsets)")
         }
         guard rowOffsets[0] == 0, rowOffsets[pointCount] == neighborIndices.count else {
             throw VectorError.invalidData(
@@ -64,12 +65,18 @@ public struct KNNGraph: Sendable {
             throw VectorError.invalidData(
                 "neighborIndices (\(neighborIndices.count)) and distances (\(distances.count)) differ in length")
         }
+        // Complete preflight before any row indexes either entry array.
+        // UMAPRangeContractTests exercises malformed interior offsets with valid endpoints.
+        var previous = 0
+        for offset in rowOffsets {
+            guard offset >= previous, offset >= 0, offset <= neighborIndices.count else {
+                throw VectorError.invalidData("rowOffsets must be bounded by edge count and non-decreasing")
+            }
+            previous = offset
+        }
         for i in 0..<pointCount {
             let low = rowOffsets[i]
             let high = rowOffsets[i + 1]
-            guard low <= high else {
-                throw VectorError.invalidData("rowOffsets must be non-decreasing (row \(i))")
-            }
             for idx in low..<high {
                 let j = Int(neighborIndices[idx])
                 guard j >= 0, j < pointCount else {
@@ -98,37 +105,46 @@ public struct KNNGraph: Sendable {
     }
 }
 
-// MARK: - Exact construction
+// MARK: - Exhaustive construction
 
 extension KNNGraph {
-    /// Exact kNN by blocked all-pairs Euclidean distance — O(n²·d) GEMM
-    /// passes plus O(n²) selection. This is the reference builder for
-    /// samples and tests; at corpus scale build the graph with an ANN index
-    /// (VectorIndex, §3.2) and pass it in.
+    /// Exhaustive candidate enumeration using blocked Float Gram distances.
+    /// Work is O(n²·d) GEMM plus O(n²·k) insertion selection; checked sizes are representation
+    /// limits, not an allocation budget or corpus-scale readiness guarantee.
     ///
-    /// Distances are Euclidean via the Gram identity
-    /// ‖x−y‖² = ‖x‖² + ‖y‖² − 2⟨x,y⟩. For unit-normalized embeddings this
-    /// is monotone in cosine distance (‖x−y‖² = 2 − 2cosθ), so the neighbor
-    /// sets match cosine kNN. Each row comes back distance-sorted ascending
-    /// with index-order tie-breaking — fully deterministic.
+    /// Gram subtraction can cancel nearby distances under large common offsets,
+    /// and extreme finite input can overflow Float intermediates. This builder is
+    /// not a stable direct-distance oracle. UMAPRangeContractTests characterizes
+    /// the offset fixture against independent Double differences; no reranking or
+    /// routing repair is performed here. Ordinary controls remain in KNNGraphSuite.
+    /// Rows sort by computed distance with index-order ties on the current route.
     ///
-    /// - Throws: `VectorError.invalidOperation` for n < 2,
-    ///   `.invalidDimension` for k outside `1...n−1`,
-    ///   `.dimensionMismatch` for ragged input.
+    /// Every query row scans all n − 1 candidates, so candidate work is
+    /// quadratic in n for any k; each block's Gram panel holds min(n, 256)·n
+    /// Floats next to the n×d packed copy (see the body). One-host times, taken
+    /// in High Power Mode on synthetic data (conditions in the dated record cited
+    /// by Docs/Performance_Guide.md, "Measured Workload Envelope (One Host)"),
+    /// include 44.4 s at n = 100,000, d = 768, k = 15. There, time grew more than
+    /// quadratically from n = 5,000 to 25,000 and from 25,000 to 100,000, but
+    /// less than quadratically from 500 to 5,000; do not extrapolate. Larger n
+    /// is not measured.
+    ///
+    /// - Throws: invalidDimension for n/d, k, LP64 or count/byte rejection (fewer than two points included; 0.3.3
+    ///   threw invalidOperation for that case);
+    ///   dimensionMismatch for ragged input; invalidData if computed entries do
+    ///   not satisfy the checked CSR contract.
     public static func bruteForce<V: VectorProtocol>(
         _ vectors: [V],
         neighbors k: Int
     ) throws -> KNNGraph where V.Scalar == Float {
         let n = vectors.count
-        guard n >= 2 else {
-            throw VectorError.invalidOperation(
-                "KNNGraph.bruteForce", reason: "need at least 2 points, got \(n)")
-        }
+        guard n >= 2 else { throw VectorError.invalidDimension(n, reason: "KNNGraph.bruteForce needs at least 2 points") }
         guard k >= 1, k <= n - 1 else {
             throw VectorError.invalidDimension(
                 k, reason: "neighbors must be in 1...\(n - 1) (n = \(n))")
         }
         let d = vectors[0].scalarCount
+        let sizes = try checkedSizes(points: n, dimensions: d, neighbors: k)
         let flat = try PCAModel.flattenColumnMajor(vectors, count: n, dimension: d)
 
         var norms = [Float](repeating: 0, count: n)
@@ -139,8 +155,8 @@ extension KNNGraph {
             }
         }
 
-        var neighborIndices = [Int32](repeating: 0, count: n * k)
-        var distances = [Float](repeating: 0, count: n * k)
+        var neighborIndices = [Int32](repeating: 0, count: sizes.edges)
+        var distances = [Float](repeating: 0, count: sizes.edges)
         var bestDistance = [Float](repeating: .infinity, count: k)
         var bestIndex = [Int32](repeating: -1, count: k)
 
@@ -149,7 +165,9 @@ extension KNNGraph {
         var start = 0
         while start < n {
             let blockRows = min(blockSize, n - start)
-            var block = [Float](repeating: 0, count: blockRows * d)
+            let panelCount = try UMAPChecked.count([blockRows, d], stride: MemoryLayout<Float>.stride, label: "KNN block")
+            _ = try UMAPChecked.count([blockRows, n], stride: MemoryLayout<Float>.stride, label: "KNN Gram panel")
+            var block = [Float](repeating: 0, count: panelCount)
             for c in 0..<d {
                 let source = c * n + start
                 let target = c * blockRows
@@ -186,10 +204,33 @@ extension KNNGraph {
             start += blockRows
         }
 
+        var offsets = [Int](repeating: 0, count: sizes.offsets)
+        for i in 0...n { offsets[i] = i * k } // i*k <= the checked n*k bound.
         return try KNNGraph(
             pointCount: n,
-            rowOffsets: (0...n).map { $0 * k },
+            rowOffsets: offsets,
             neighborIndices: neighborIndices,
             distances: distances)
     }
+
+    /// Pure preflight used before allocation/BLAS and exercised at representability
+    /// limits by UMAPRangeContractTests, without giant arrays or vendor calls.
+    internal static func checkedSizes(points n: Int, dimensions d: Int, neighbors k: Int) throws -> (edges: Int, offsets: Int) {
+        guard n >= 2 else { throw VectorError.invalidDimension(n, reason: "KNN needs at least 2 points") }
+        try UMAPChecked.lp64(n, label: "KNN points")
+        try UMAPChecked.lp64(d, label: "KNN dimensions")
+        guard k >= 1, k < n else { throw VectorError.invalidDimension(k, reason: "KNN neighbors must be in 1..<points") }
+        let edges = try UMAPChecked.count([n, k], stride: MemoryLayout<Int32>.stride, label: "KNN edges")
+        _ = try UMAPChecked.count([n, k], stride: MemoryLayout<Float>.stride, label: "KNN distances")
+        _ = try UMAPChecked.count([n, d], stride: MemoryLayout<Float>.stride, label: "KNN data")
+        _ = try UMAPChecked.count([n], stride: MemoryLayout<Float>.stride, label: "KNN norms")
+        _ = try UMAPChecked.count([k], stride: MemoryLayout<Float>.stride, label: "KNN selection")
+        let block = min(n, 256)
+        _ = try UMAPChecked.count([block, d], stride: MemoryLayout<Float>.stride, label: "KNN block")
+        _ = try UMAPChecked.count([block, n], stride: MemoryLayout<Float>.stride, label: "KNN Gram panel")
+        let offsets = try UMAPChecked.increment(n, label: "KNN offsets")
+        _ = try UMAPChecked.count([offsets], stride: MemoryLayout<Int>.stride, label: "KNN offsets")
+        return (edges, offsets)
+    }
+
 }

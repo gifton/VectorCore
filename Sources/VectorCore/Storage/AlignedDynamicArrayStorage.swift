@@ -25,74 +25,52 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
     @usableFromInline
     internal let usedPosixAlignedAlloc: Bool
 
-    /// Initialize with specified dimension and alignment
-    public init(dimension: Int, alignment: Int = AlignedMemory.optimalAlignment) {
-        self._count = dimension
-        self.alignment = alignment
-        if let p = try? AlignedMemory.allocateAligned(count: dimension, alignment: alignment) {
-            self.ptr = p
-            self.usedPosixAlignedAlloc = true
-        } else {
-            // Fallback: allocate with natural alignment to avoid hard crash
-            let raw = UnsafeMutableRawPointer.allocate(byteCount: dimension * MemoryLayout<Float>.stride,
-                                                       alignment: MemoryLayout<Float>.alignment)
-            self.ptr = raw.assumingMemoryBound(to: Float.self)
-            self.usedPosixAlignedAlloc = false
-        }
-
-        // Zero-initialize for safety
-        ptr.initialize(repeating: 0, count: dimension)
+    /// Initialize zeroed storage at the requested alignment.
+    public convenience init(dimension: Int, alignment: Int = AlignedMemory.optimalAlignment) {
+        self.init(dimension: dimension, repeating: 0, alignment: alignment)
     }
 
-    /// Initialize with repeating value
-    public init(dimension: Int, repeating value: Float, alignment: Int = AlignedMemory.optimalAlignment) {
+    /// Initialize with a repeating value.
+    public convenience init(dimension: Int, repeating value: Float, alignment: Int = AlignedMemory.optimalAlignment) {
+        self.init(dimension: dimension, repeating: value, alignment: alignment,
+                  primaryAllocator: { try AlignedMemory.allocateAligned(count: $0, alignment: $1) })
+    }
+
+    /// Initialize from an array using the default alignment.
+    public convenience init(from values: [Float]) {
+        self.init(from: values, alignment: AlignedMemory.optimalAlignment)
+    }
+
+    /// Initialize from an array at the requested alignment.
+    public convenience init(from values: [Float], alignment: Int) {
+        self.init(dimension: values.count, alignment: alignment)
+        values.withUnsafeBufferPointer { buffer in
+            if let source = buffer.baseAddress { ptr.update(from: source, count: buffer.count) }
+        }
+    }
+
+    /// Per-call primary allocator seam. The allocator must return Float-bound,
+    /// uninitialized storage suitable for `free`, or throw without transferring storage.
+    /// The fallback requests the same alignment; actual exhaustion can still terminate.
+    internal init(dimension: Int, repeating value: Float, alignment: Int,
+                  primaryAllocator: (Int, Int) throws -> UnsafeMutablePointer<Float>) {
+        guard dimension >= 0 else { fatalError("Dimension must be nonnegative") }
+        let (byteCount, overflow) = max(dimension, 1).multipliedReportingOverflow(by: MemoryLayout<Float>.stride)
+        guard !overflow else { fatalError("Dimension byte count must be representable") }
+        guard alignment >= AlignedMemory.minimumAlignment && (alignment & (alignment - 1)) == 0 else {
+            fatalError("Alignment must be a power of two and at least 16 bytes")
+        }
         self._count = dimension
         self.alignment = alignment
-        if let p = try? AlignedMemory.allocateAligned(count: dimension, alignment: alignment) {
-            self.ptr = p
+        do {
+            self.ptr = try primaryAllocator(dimension, alignment)
             self.usedPosixAlignedAlloc = true
-        } else {
-            let raw = UnsafeMutableRawPointer.allocate(byteCount: dimension * MemoryLayout<Float>.stride,
-                                                       alignment: MemoryLayout<Float>.alignment)
-            self.ptr = raw.assumingMemoryBound(to: Float.self)
+        } catch {
+            let raw = UnsafeMutableRawPointer.allocate(byteCount: byteCount, alignment: alignment)
+            self.ptr = raw.bindMemory(to: Float.self, capacity: max(dimension, 1))
             self.usedPosixAlignedAlloc = false
         }
-
         ptr.initialize(repeating: value, count: dimension)
-    }
-
-    /// Initialize from array
-    public init(from values: [Float]) {
-        self._count = values.count
-        self.alignment = AlignedMemory.optimalAlignment
-        if let p = try? AlignedMemory.allocateAligned(count: values.count, alignment: alignment) {
-            self.ptr = p
-            self.usedPosixAlignedAlloc = true
-        } else {
-            let raw = UnsafeMutableRawPointer.allocate(byteCount: values.count * MemoryLayout<Float>.stride,
-                                                       alignment: MemoryLayout<Float>.alignment)
-            self.ptr = raw.assumingMemoryBound(to: Float.self)
-            self.usedPosixAlignedAlloc = false
-        }
-
-        ptr.initialize(from: values, count: values.count)
-    }
-
-    /// Initialize from array with custom alignment
-    public init(from values: [Float], alignment: Int) {
-        self._count = values.count
-        self.alignment = alignment
-        if let p = try? AlignedMemory.allocateAligned(count: values.count, alignment: alignment) {
-            self.ptr = p
-            self.usedPosixAlignedAlloc = true
-        } else {
-            let raw = UnsafeMutableRawPointer.allocate(byteCount: values.count * MemoryLayout<Float>.stride,
-                                                       alignment: MemoryLayout<Float>.alignment)
-            self.ptr = raw.assumingMemoryBound(to: Float.self)
-            self.usedPosixAlignedAlloc = false
-        }
-
-        ptr.initialize(from: values, count: values.count)
     }
 
     public required init() {
@@ -108,7 +86,7 @@ public final class AlignedDynamicArrayStorage: @unchecked Sendable, VectorStorag
         if usedPosixAlignedAlloc {
             AlignedMemory.deallocate(ptr)
         } else {
-            ptr.deallocate()
+            UnsafeMutableRawPointer(ptr).deallocate()
         }
     }
 

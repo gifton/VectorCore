@@ -1,0 +1,40 @@
+{
+  "task": "R04",
+  "status": "accepted",
+  "task_base": "e0e0e74b5128419482d1e1993d58c2184adc01ba",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-17",
+    "API-26"
+  ],
+  "validation": {
+    "red": "Unchanged-production red3 exits1 with4reportedfunctions/13issues: bulk orientation mismatches, NaN replacement failure, two incorrectly accepted negative constructors and one bounded negative bulk hang. Compile/approval setup failures are separate.",
+    "debug_release": "Each72reportedSwiftTesting functions/4suites, including1parent childProbe no-op, plus3actual negative-domain children. All final children signal5/reason2; Debug diagnostic asserted, Release signal/entry plus frozen guard verification.",
+    "scanner": "Seven existing child-process scanner checks pass.",
+    "provenance": "Root verifies320base/321final code hashes,5891base/5892final archive files, exact2path patch,26workerrecords/canonical copies,4259failed-compile+4351RED+4351Debug+2885Release build entries,355source/runtime paths and9actual child associations."
+  },
+  "review": "reports/R04-final-review.md",
+  "source_review": "reports/R04-v1-source-review.md",
+  "evidence": "reports/R04-implementation.md",
+  "commands": "reports/R04-command-results.json",
+  "root_verification": [
+    "reports/R04-root-v1-source-verification.json",
+    "reports/R04-root-evidence-verification.json"
+  ],
+  "diff_sha256": "a5dffcd7c82cad065528e1f32e66196cd8cf518cc2336a36fa5f5fa3f15e0049",
+  "worker_index_sha256": "b276f1cd648ae85ba0b1fa14cb9d941a3963fcd87fc94ca6f9b4b3a4c66fc21c",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/MinHeap.swift": "4075d681d4a9f616f3a3757acca99f7481f4908b2b42c89cf2a389aea000ed2f",
+    "Tests/ComprehensiveTests/HeapMembershipContractTests.swift": "725012b33741593bfb0b31ea5754c6c5ab4ccf5704ae572ec1c6ce4ee1960607"
+  },
+  "migrations": [
+    "Negative capacity/k now rejects before work; capacity is a retention cap with no eager reservation.",
+    "Bounded bulk membership now matches streaming under a strict weak ordering; numeric < keeps largest, > keeps smallest.",
+    "Legacy KNearestHeap now follows numeric-before-NaN, lower distance, smaller-index ties; duplicate identical entries remain allowed. Public signatures unchanged."
+  ],
+  "limitations": [
+    "No stable identity/drain order among comparator-equivalent generic records or policy for invalid non-strict-weak comparators.",
+    "Baseline timeout bounds parent waiting/cleanup but does not supply a terminal-status or universal child-reaping guarantee.",
+    "No pointer change; ASan not required. No benchmark speedup, measured allocation saving, downstream execution or production-scale claim."
+  ]
+}

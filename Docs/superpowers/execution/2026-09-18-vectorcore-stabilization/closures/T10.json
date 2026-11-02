@@ -1,0 +1,63 @@
+{
+  "task": "T10",
+  "status": "accepted",
+  "task_base": "4464e4a",
+  "integration_revision": "b0a0f97",
+  "closed_records": [
+    "T10-CHILD-PROBE-UNBOUNDED-RESPAWN",
+    "T10-CHILD-PROBE-ORPHANS",
+    "T10-CHILD-PROBE-CLASS"
+  ],
+  "disposition_records": {
+    "T10-CHILD-PROBE-UNBOUNDED-RESPAWN": "Rewriting only the first --filter let leftover selectors re-select probe-spawning tests (BEFORE: 1→13 runners in 0.53 s, generation 6; an earlier attempt reached about 1,450 processes). The launcher strips all selection args and sinks, adds one selector, and refuses nested launches. AFTER: multi-filter and whole-suite runs stay at generation ≤1, with each child running exactly one test.",
+    "T10-CHILD-PROBE-ORPHANS": "Foundation Process puts each child in its own pgid, so kill(pid) left grandchildren orphaned. The launcher spawns its own process group and sweeps it on exit and on deadline (waitid WNOWAIT, sweep, reap): 0 orphans in every run.",
+    "T10-CHILD-PROBE-CLASS": "Closed mechanically by test_child_probe_launch_policy.py (no process creation or selector literals outside the launcher; pinned exceptions; invariants, call order, single spawn caller) and test_child_process_bounds.py (timeout-check visibility floor)."
+  },
+  "validation": {
+    "suite": "whole Debug suite EXTENDED=0 exit 0 (Swift Testing 1466/200; XCTest 0 failures), gen ≤1, 0 orphans; merged integration: ExecutionBoundaryTests 8/0, ChildProbeLauncherTests 13/13, 0 orphans",
+    "policy": "unittest OK in-repo and out-of-repo on the merged tree; claim ledger 0 problems",
+    "reviews": "independent Opus (Spec PASS / CHANGES REQUESTED) → fix 1 → scoped Opus re-review (all ADDRESSED) → fix 2 (comment-claim and argv minors), root-verified"
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T10",
+  "patch_sha256": "c0d6996b2c80ccfcaabd79fb9d7f014dca420f6e7f2265c0b2c0035f78dcebd4",
+  "frozen_sha256": {
+    "Scripts/ci/tests/test_child_probe_launch_policy.py": "8cd481c199fce3177905ab1be8b91245d7b17adb17bdc06553b498c5e899ea84",
+    "Scripts/ci/tests/test_child_process_bounds.py": "2272b7661dfbc6bb5595586ec60d7fca0e92c8e2a81c606dd69757e85bc80bcf",
+    "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift": "18b12588feaaf39d4e354514724c7d186e94bba72074b0722eb2973f98c6580a",
+    "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift": "d8922f08fcd9eea91dc4c1b6cbfa6f1eeeaac58f9aed837c20155571ef3e5561",
+    "Tests/ComprehensiveTests/ChildProbeLauncher.swift": "44caad596f0b3d463f766c941a54f4612e19bd28cd1b6a0790155b712718eff3",
+    "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift": "613a7d41f504501d9e9b9069d23818a12b2dc5d993d37fccc548c17692e46193",
+    "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift": "7a0664d3fb0c9d4c07acfe020a5d3ca8e650c015bee73d5b412c191d01cefa25",
+    "Tests/ComprehensiveTests/E06ConfigurationTestHelpers.swift": "bac86fca15d6a5fb643195590310e78f31f57406e547965aa4a5656ef2852617",
+    "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift": "5d32b20ddab7d14704e1a49851dee3eb2c06769abdbb289cba13622c0c163704",
+    "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift": "423f7d13e850d8323efc2bfb9cde3b4509bf7dab954e4a030d2fcd859d4ceebb",
+    "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift": "a486bf52bab8a697023b91102238a16346afcfcf3753e02c0880efe54a630938",
+    "Tests/ComprehensiveTests/HeapMembershipContractTests.swift": "90e57fa63a51525c4c8819f92e3217b60c6e6c4bb5ca22140cec18186b17c76f",
+    "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift": "96a3f1da71b9e9bba44fdb289cab194c12c05514a660887dd70228a14f7dfc5f",
+    "Tests/ComprehensiveTests/LoggingPublicConsumerTests.swift": "90b6c7bd5625e251d3e78ebb6c31253672851d5355f2d1c3fa13c16c9232131d",
+    "Tests/ComprehensiveTests/MatrixMetricContractTests.swift": "4ff180063c76de17ee76b6d9ef8f1721cf4f7dcf1afbf7960b952d3a0898e042",
+    "Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift": "dae32db290cd38f097433f3ee4425b8911b951772e297596a8d0aa819c8da955",
+    "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift": "f1d6011bea40bb14bcaf24608c27a27a22b434f37b783cad1c5d9ee2ca32682a",
+    "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift": "af20043fa14fe15c814c7c4490df5fb22ef1399be2fc1500fe7c8f199dd83cb6",
+    "Tests/ComprehensiveTests/PCACenteringContractTests.swift": "090cea451dea3a367840b165b003e3d76dc8ad77f5c912da57e1191d49b40798",
+    "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift": "ed6def6aae54085581acbeee1c1ece3dbf53c1f012731f8f543d85e95beee012",
+    "Tests/ComprehensiveTests/SearchResultScoreContractTests.swift": "b35aff50f2a7cf7495e1993845c5d94ca22b8585e9fcab1240efce8acad40f6a",
+    "Tests/ComprehensiveTests/SoAFP16CacheIdentityTests.swift": "7969cccb0d419d2eacdde94afb835a5c35232e04613872d2b4127227ed2c782e",
+    "Tests/ComprehensiveTests/UMAPRangeContractTests.swift": "309d919598bb04aab8d9ca721e5cacec03edbc9beb04c7d3ea6b6c402a06b4a1",
+    "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift": "2ba9b353fcd62a3fe3c1430becaaac67011d574ef2e8fb7adb874351e592c6d4",
+    "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift": "7273cbd92ae3ac3b11ca4244b87bcde648854c8c184420be2d23bf466c5c8a77",
+    "Tests/ComprehensiveTests/VectorDispatchContractTests.swift": "c9485e65b2ef3470a617e6ceab35b252b87a667800240fab4ea82adb996660d3",
+    "Tests/ComprehensiveTests/VectorShapeContractTests.swift": "84835f0b36785ff4edac21ab5e7c2526ee54e79347cefb0c9944b5a90ddb7e28"
+  },
+  "limitations": [
+    "Swift 6.0 (CI Xcode 16.2) argv shape unverified locally; Swift 6.2 verified only via the CLT 6.2.0 proxy. Unknown shapes fail loudly with the argv printed.",
+    "The selector check is a SHAPE check (unanchored --filter); over-match is bounded to depth 1 by the marker.",
+    "UNVERIFIED CONTRACT: no foreign reaper (waitpid(-1)/ignored SIGCHLD) in test processes.",
+    "RunnerContractTests remains a pinned Process exception; EnvCapture's git/swiftc leaves can orphan briefly if their parent is killed."
+  ],
+  "routed": [
+    "Follow-up: move the launcher to a shared test-support target, migrate RunnerContractTests (changes the pinned BENCHMARK_TEST_SOURCES), and optionally spawn EnvCapture leaves in the caller's group.",
+    "Follow-up: anchor the probe selector regex (feasible on 6.2/6.4) with a zero-match failure, once Swift 6.0's test-ID format is verified."
+  ],
+  "incident": "The implementer's BEFORE-run watchdog v1 was too slow against the doubling tree; it was recovered by verified-PID kills (scratch-path-verified), with no name-based kills. The harness blocked subagent report files; root transcribed the reports."
+}

@@ -1,6 +1,6 @@
 // VectorCore: Vector Factory
 //
-// Factory for creating vectors with optimal type selection
+// Factory that picks a vector type from the dimension
 //
 
 import Foundation
@@ -25,13 +25,14 @@ public protocol VectorType: VectorProtocol where Scalar == Float {
     init(repeating value: Float)
 }
 
-/// Factory for creating vectors with optimal type selection
+/// Factory that picks a vector type from the dimension: `Vector<DimN>` for 128, 256, 384, 512,
+/// 768, 1536 and 3072, `DynamicVector` otherwise (see `vector(of:from:)`).
 public enum VectorTypeFactory {
 
     /// Creates a strongly-typed vector with compile-time dimension checking.
     ///
     /// This method provides type-safe vector creation when the dimension is known
-    /// at compile time, enabling optimal performance and compile-time validation.
+    /// at compile time, with compile-time dimension validation.
     ///
     /// ## Example Usage
     /// ```swift
@@ -57,9 +58,13 @@ public enum VectorTypeFactory {
     /// - Parameters:
     ///   - dimension: The desired vector dimension
     ///   - values: Array of values (must match dimension)
-    /// - Returns: Optimal vector type for the dimension
-    /// - Throws: VectorError if dimension doesn't match value count
+    /// - Returns: `Vector<DimN>` for 128, 256, 384, 512, 768, 1536 and 3072; otherwise a `DynamicVector`
+    /// - Throws: `.invalidDimension` for a negative dimension; `.dimensionMismatch` for a count mismatch.
+    ///   Zero dimension with empty values is valid.
     public static func vector(of dimension: Int, from values: [Float]) throws -> any VectorType {
+        guard dimension >= 0 else {
+            throw VectorError.invalidDimension(dimension, reason: "Dimension must be nonnegative")
+        }
         guard values.count == dimension else {
             throw VectorError.dimensionMismatch(expected: dimension, actual: values.count)
         }
@@ -90,11 +95,15 @@ public enum VectorTypeFactory {
     /// - Parameters:
     ///   - dimension: The desired vector dimension
     ///   - range: Range for random values (default: -1...1)
+    /// - Precondition: Dimension is nonnegative; zero produces an empty vector.
     /// - Returns: Vector with random values
     public static func random(
         dimension: Int,
         range: ClosedRange<Float> = -1...1
     ) -> any VectorType {
+        guard dimension >= 0 else {
+            fatalError("Dimension must be nonnegative")
+        }
         let values = (0..<dimension).map { _ in Float.random(in: range) }
         return try! vector(of: dimension, from: values)
     }
@@ -102,8 +111,12 @@ public enum VectorTypeFactory {
     /// Create a zero vector of the specified dimension
     ///
     /// - Parameter dimension: The desired vector dimension
+    /// - Precondition: Dimension is nonnegative; zero produces an empty vector.
     /// - Returns: Vector with all zeros
     public static func zeros(dimension: Int) -> any VectorType {
+        guard dimension >= 0 else {
+            fatalError("Dimension must be nonnegative")
+        }
         switch dimension {
         case 128:
             return Vector<Dim128>()
@@ -127,8 +140,12 @@ public enum VectorTypeFactory {
     /// Create a vector of ones of the specified dimension
     ///
     /// - Parameter dimension: The desired vector dimension
+    /// - Precondition: Dimension is nonnegative; zero produces an empty vector.
     /// - Returns: Vector with all ones
     public static func ones(dimension: Int) -> any VectorType {
+        guard dimension >= 0 else {
+            fatalError("Dimension must be nonnegative")
+        }
         switch dimension {
         case 128:
             return Vector<Dim128>(repeating: 1)
@@ -154,11 +171,15 @@ public enum VectorTypeFactory {
     /// - Parameters:
     ///   - dimension: The desired vector dimension
     ///   - pattern: Function that generates value for each index
+    /// - Precondition: Dimension is nonnegative; zero produces an empty vector.
     /// - Returns: Vector with pattern-generated values
     public static func withPattern(
         dimension: Int,
         pattern: (Int) -> Float
     ) -> any VectorType {
+        guard dimension >= 0 else {
+            fatalError("Dimension must be nonnegative")
+        }
         let values = (0..<dimension).map(pattern)
         return try! vector(of: dimension, from: values)
     }
@@ -177,21 +198,33 @@ public enum VectorTypeFactory {
     //     return random
     // }
 
-    /// Get the optimal dimension for a given approximate size
+    /// The supported dimension nearest to a given approximate size
     ///
     /// - Parameter approximateSize: Desired approximate dimension
-    /// - Returns: Nearest supported dimension
+    /// - Returns: Nearest supported dimension, clamped at the endpoints; smaller width on ties.
     public static func optimalDimension(for approximateSize: Int) -> Int {
         let supportedDimensions = [128, 256, 384, 512, 768, 1536, 3072]
 
+        // Clamp before subtraction so every Int input has bounded differences.
+        if approximateSize <= 128 { return 128 }
+        if approximateSize >= 3072 { return 3072 }
+
+        // Ascending order and strict comparison preserve the smaller width on ties.
         // Find the closest supported dimension
         return supportedDimensions.min { abs($0 - approximateSize) < abs($1 - approximateSize) } ?? 384
     }
 
-    /// Check if a dimension is natively supported with optimized storage
+    /// Whether the factory maps `dimension` to a fixed-width `Vector<DimN>`
+    ///
+    /// `vector(of:from:)`, `zeros(dimension:)` and `ones(dimension:)` return `Vector<Dim128>`, `Vector<Dim256>`,
+    /// `Vector<Dim384>`, `Vector<Dim512>`, `Vector<Dim768>`, `Vector<Dim1536>` or `Vector<Dim3072>` for exactly
+    /// these seven dimensions and `DynamicVector` for every other nonnegative dimension. The factory never returns
+    /// the separate `Vector384Optimized`, `Vector512Optimized`, `Vector768Optimized` or `Vector1536Optimized`
+    /// types. No speed or storage comparison between `Vector<DimN>` and `DynamicVector` is measured in this
+    /// repository (not verified); D02FactoryContractTests pins the concrete result types.
     ///
     /// - Parameter dimension: Dimension to check
-    /// - Returns: true if dimension has an optimized implementation
+    /// - Returns: true for 128, 256, 384, 512, 768, 1536 and 3072; false otherwise
     public static func isSupported(dimension: Int) -> Bool {
         switch dimension {
         case 128, 256, 384, 512, 768, 1536, 3072:
@@ -207,8 +240,11 @@ public enum VectorTypeFactory {
     ///   - dimension: The desired vector dimension
     ///   - index: Index of the non-zero element
     /// - Returns: Basis vector with 1.0 at the specified index
-    /// - Throws: VectorError if index is out of bounds
+    /// - Throws: `.invalidDimension` unless dimension is positive, then `.indexOutOfBounds` for an invalid index.
     public static func basis(dimension: Int, index: Int) throws -> any VectorType {
+        guard dimension > 0 else {
+            throw VectorError.invalidDimension(dimension, reason: "Basis dimension must be positive")
+        }
         guard index >= 0 && index < dimension else {
             throw VectorError.indexOutOfBounds(index: index, dimension: dimension)
         }
@@ -245,8 +281,12 @@ public enum VectorTypeFactory {
     ///   - dimension: Dimension of each vector
     ///   - values: Flat array of values (count must be multiple of dimension)
     /// - Returns: Array of vectors
-    /// - Throws: VectorError if values count is not a multiple of dimension
+    /// - Throws: `.invalidDimension` unless dimension is positive, then `.invalidData` for a nonmultiple count.
+    ///   Empty values with a positive dimension produce an empty batch.
     public static func batch(dimension: Int, from values: [Float]) throws -> [any VectorType] {
+        guard dimension > 0 else {
+            throw VectorError.invalidDimension(dimension, reason: "Batch dimension must be positive")
+        }
         guard values.count % dimension == 0 else {
             throw VectorError.invalidValues(
                 indices: [],

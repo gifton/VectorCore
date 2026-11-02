@@ -1,0 +1,39 @@
+{
+  "task": "T04",
+  "status": "accepted",
+  "task_base": "2f526e6",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "T04-INTERMITTENT-SIGTRAP",
+    "T04-CLASS-UNSIGNED-RSS-DELTA",
+    "T04-E02-ORPHAN"
+  ],
+  "disposition_records": {
+    "T04-INTERMITTENT-SIGTRAP": "Root cause: QuantizedKernelsTests.swift:1217 computed `info.resident_size - baselineMemory` as UInt64 on whole-process RSS while Swift Testing ran tests in parallel; when concurrent tests freed more memory than this test allocated, RSS fell, the subtraction underflowed, and the overflow check executed brk #1 (message-less SIGTRAP killing the ComprehensiveTests Swift Testing process). Reproduced twice with backtraces (frame 0 at :1217:49), plus a deterministic standalone reproduction. Classification (b), test defect; no production code on the faulting frame. Fixed by deleting the non-asserting RSS block.",
+    "T04-CLASS-UNSIGNED-RSS-DELTA": "Second instance (dead MixedPrecisionKernelsTests.measureMemoryUsage, UInt64 at :2398) deleted; the whole-process RSS-growth assertion in BatchKernels_SoATests.testLargeBatchSize (false-failure risk under parallel load) removed with a signed informational print. Guard: Scripts/ci/tests/test_process_memory_deltas.py (line-local heuristic with documented scope; negative controls incl. the :1217, :2398 and -= shapes; positive Int64(clamping:); non-vacuous scan of Tests/Sources/Benchmarks; RED on the originals).",
+    "T04-E02-ORPHAN": "The E02 watchdog child (ignores SIGTERM by design) now exits when re-parented (getppid()==1) or after a 120 s ceiling; parent-observed semantics unchanged (E02_CHILD_TIMEOUT watchdog cleanupReaped=true, 16.02 s). Manual orphan check: PPID 1 observed, child gone 0.17 s after creation (fix/orphan2.out). Two pre-existing orphans from crashed milestone-11 runs were killed by root."
+  },
+  "validation": {
+    "toolchain": "Swift 6.4/Xcode 27 swiftbuild",
+    "trap_loop": "0 traps in 6 full Debug Swift Testing runs (baseline 3 in 12; ~18% chance alone at the baseline rate, so supporting evidence only; the primary justification is deletion of the backtrace-proven faulting line plus the class guard)",
+    "whole_suite": "EXTENDED=0 Debug and Release: 1449 tests/199 suites pass",
+    "policy": "91 OK (1 skip)",
+    "independent_review": "Spec PASS, Quality APPROVED; fix round 1 root-verified (comment-only Swift, 10/10 policy tests)"
+  },
+  "review": "T04/fix-review (root-recorded in the ledger)",
+  "evidence": "T04 investigation report (returned text, summarized in progress.md) and T04/fix-report.md",
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T04",
+  "patch_sha256": "8e09191bef18b1129db62a49e4de94520ea088af3397c549545f511a76ffc26b",
+  "frozen_sha256": {
+    "Scripts/ci/tests/test_process_memory_deltas.py": "5a4074782b4925e7523eebc35d029acfa1ab4461d9a72bcf9da41e63c55c7388",
+    "Tests/ComprehensiveTests/BatchKernels_SoATests.swift": "f1ad5335646ad3324947405b2653d2414748b16533aea005dbf4dabf78f6faf6",
+    "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift": "73498999e081949da6f53bda860a17dc76800f04e36ee32cff397b15f75c19b6",
+    "Tests/ComprehensiveTests/MixedPrecisionKernelsTests.swift": "bb791632acb1d5fea0d246073d90a3e1dd05f21a1479a93de13d1f35ce9e0ce9",
+    "Tests/ComprehensiveTests/QuantizedKernelsTests.swift": "3c8af571310fbe6bbbb757362908d9cf79077a4703d3f9fabc751b57d90e8be1"
+  },
+  "limitations": [
+    "The policy heuristic misses multi-line and parenthesised subtractions, &-, and comparisons (documented).",
+    "Orphan exit-on-reparent is verified manually, not by an automated test.",
+    "Other whole-process RSS reads remain informational only."
+  ]
+}

@@ -1,5 +1,6 @@
-// arm64 implementations — NEON/SDOT intrinsics for Apple Silicon and ARM64
+// arm64 implementations — NEON intrinsics (FP32) and SDOT or NEON (INT8), selected at compile time.
 #include "VectorCoreC.h"
+#include "../common/vc_int8_accum.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -13,8 +14,9 @@ extern void  vc_scalar_range_l2sq_fp32_512(const float* q, const float* base, si
 #include <arm_neon.h>
 
 // --- FP32 Dot Product: 4-accumulator NEON FMA, stride-16 ---
-// Processes 16 floats per iteration (4 NEON registers x 4 floats).
-// 4 independent accumulator chains hide FMA latency (~4 cycles on M-series).
+// Processes 16 floats per iteration (4 NEON registers x 4 floats) into 4 independent accumulator chains, which
+// are added pairwise at the end. The summation order differs from the scalar loop, so results can differ from it
+// in the last bits.
 float vc_arm64_dot_fp32_512(const float* VC_RESTRICT a, const float* VC_RESTRICT b) {
     float32x4_t acc0 = vdupq_n_f32(0.0f);
     float32x4_t acc1 = vdupq_n_f32(0.0f);
@@ -107,12 +109,16 @@ void vc_arm64_range_l2sq_fp32_512(
 }
 
 // --- INT8 Dot Product ---
-// Two paths: SDOT (A12+ / all Apple Silicon) and vmull/vpadal fallback.
+// Two compile-time paths: SDOT when the compile target defines __ARM_FEATURE_DOTPROD (clang defines it for the
+// arm64 macOS 14 target this package builds; vc_has_dotprod() reports the same macro, not a runtime probe), and a
+// vmull/vpadal NEON fallback otherwise. Both follow the vc_dot_int8 law (VectorCoreC.h): SIMD integer lane
+// additions wrap modulo 2^32, the horizontal combination and the scalar tail are unsigned, and the final pattern
+// is mapped by vc_int8_accum_to_int32. Block loops test the remaining count (vc_int8_block_fits), so i <= lanes
+// holds throughout.
 
 #if defined(__ARM_FEATURE_DOTPROD)
 
-// SDOT path: vdotq_s32 processes 16 signed int8 pairs per instruction,
-// accumulating into 4 int32 lanes. 4 accumulators for ILP.
+// SDOT path: each vdotq_s32 adds 16 signed int8 products into 4 int32 lanes; 4 independent accumulators.
 static int32_t vc_arm64_dot_int8_sdot(const int8_t* VC_RESTRICT a, const int8_t* VC_RESTRICT b, size_t lanes) {
     int32x4_t acc0 = vdupq_n_s32(0);
     int32x4_t acc1 = vdupq_n_s32(0);
@@ -121,7 +127,7 @@ static int32_t vc_arm64_dot_int8_sdot(const int8_t* VC_RESTRICT a, const int8_t*
 
     size_t i = 0;
     // Main loop: 64 int8 elements per iteration (4 x 16-element SDOT)
-    for (; i + 64 <= lanes; i += 64) {
+    for (; vc_int8_block_fits(lanes, i, 64); i += 64) {
         int8x16_t va0 = vld1q_s8(a + i);
         int8x16_t va1 = vld1q_s8(a + i + 16);
         int8x16_t va2 = vld1q_s8(a + i + 32);
@@ -139,37 +145,38 @@ static int32_t vc_arm64_dot_int8_sdot(const int8_t* VC_RESTRICT a, const int8_t*
     }
 
     // Handle 16-byte remainder chunks
-    for (; i + 16 <= lanes; i += 16) {
+    for (; vc_int8_block_fits(lanes, i, 16); i += 16) {
         int8x16_t va = vld1q_s8(a + i);
         int8x16_t vb = vld1q_s8(b + i);
         acc0 = vdotq_s32(acc0, va, vb);
     }
 
-    // Scalar tail for remaining elements (< 16)
-    int32_t tail = 0;
+    // Scalar tail for remaining elements (< 16), unsigned
+    uint32_t tail = 0;
     for (; i < lanes; i++) {
-        tail += (int32_t)a[i] * (int32_t)b[i];
+        tail += vc_int8_product_bits(a[i], b[i]);
     }
 
-    // Tree reduction
-    int32x4_t sum01 = vaddq_s32(acc0, acc1);
-    int32x4_t sum23 = vaddq_s32(acc2, acc3);
-    int32x4_t sum   = vaddq_s32(sum01, sum23);
-    return vaddvq_s32(sum) + tail;
+    // Tree reduction in unsigned lanes (modulo 2^32), then the unsigned final addition and the checked mapping
+    uint32x4_t sum01 = vaddq_u32(vreinterpretq_u32_s32(acc0), vreinterpretq_u32_s32(acc1));
+    uint32x4_t sum23 = vaddq_u32(vreinterpretq_u32_s32(acc2), vreinterpretq_u32_s32(acc3));
+    uint32x4_t sum   = vaddq_u32(sum01, sum23);
+    return vc_int8_accum_to_int32(vaddvq_u32(sum) + tail);
 }
 
 #else
 
-// Non-SDOT NEON fallback for older ARM64 (A11 and earlier, ARM64 Linux without dotprod).
-// Uses vmull_s8 (8 int8 pairs -> 8 int16 products) + vpadalq_s16 (pairwise add int16 into int32).
-// vpadalq_s16 widens and accumulates simultaneously, preventing int16 overflow.
+// NEON fallback, compiled when the target does not define __ARM_FEATURE_DOTPROD (for example `-march=armv8-a`, and
+// per `clang -dM` the default arm64 iOS 17, tvOS 17 and visionOS 1 targets).
+// Uses vmull_s8 (8 int8 pairs -> 8 int16 products; |product| <= 16384 fits int16) + vpadalq_s16, which widens
+// each pair of int16 products to int32 before adding it to the int32 lanes.
 static int32_t vc_arm64_dot_int8_neon(const int8_t* VC_RESTRICT a, const int8_t* VC_RESTRICT b, size_t lanes) {
     int32x4_t acc0 = vdupq_n_s32(0);
     int32x4_t acc1 = vdupq_n_s32(0);
 
     size_t i = 0;
     // Process 16 bytes per iteration
-    for (; i + 16 <= lanes; i += 16) {
+    for (; vc_int8_block_fits(lanes, i, 16); i += 16) {
         int8x16_t va = vld1q_s8(a + i);
         int8x16_t vb = vld1q_s8(b + i);
 
@@ -182,19 +189,21 @@ static int32_t vc_arm64_dot_int8_neon(const int8_t* VC_RESTRICT a, const int8_t*
         acc1 = vpadalq_s16(acc1, prod_hi);
     }
 
-    // Scalar tail
-    int32_t tail = 0;
+    // Scalar tail, unsigned
+    uint32_t tail = 0;
     for (; i < lanes; i++) {
-        tail += (int32_t)a[i] * (int32_t)b[i];
+        tail += vc_int8_product_bits(a[i], b[i]);
     }
 
-    int32x4_t sum = vaddq_s32(acc0, acc1);
-    return vaddvq_s32(sum) + tail;
+    // Unsigned lane combination (modulo 2^32), unsigned final addition, checked mapping
+    uint32x4_t sum = vaddq_u32(vreinterpretq_u32_s32(acc0), vreinterpretq_u32_s32(acc1));
+    return vc_int8_accum_to_int32(vaddvq_u32(sum) + tail);
 }
 
 #endif // __ARM_FEATURE_DOTPROD
 
-// Public ARM64 dispatcher — compile-time selection between SDOT and vmull fallback
+// Internal arm64 INT8 entry (linker-visible, not declared in a public header; D02 RD-C5) — compile-time
+// selection between SDOT and the vmull fallback. The public dispatcher vc_dot_int8 calls it on arm64.
 int32_t vc_arm64_dot_int8(const int8_t* VC_RESTRICT a, const int8_t* VC_RESTRICT b, size_t lanes) {
 #if defined(__ARM_FEATURE_DOTPROD)
     return vc_arm64_dot_int8_sdot(a, b, lanes);

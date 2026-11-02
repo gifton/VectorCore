@@ -17,8 +17,8 @@ import simd
 /// `SoA` stores candidate vectors **lane-major, then candidate index**: the element for
 /// (lane `ℓ`, candidate `j`) lives at `buffer[ℓ * count + j]`, where each element is a
 /// `SIMD4<Float>` packing four contiguous dimensions. This descriptor exposes that layout
-/// as data so a consumer — most importantly a VectorAccelerate Metal shader indexing a
-/// zero-copy `MTLBuffer` built from ``SoA/pageAlignedBytes`` — derives its constants from
+/// as data so a consumer — most importantly a VectorAccelerate Metal shader indexing an
+/// `MTLBuffer` created with `makeBuffer(bytesNoCopy:)` over ``SoA/pageAlignedBytes`` — derives its constants from
 /// one authoritative place rather than re-deriving (and risking drift from) the formula.
 ///
 /// The layout is **stable as of VectorCore 0.3.0**. Any change to the formula, the element
@@ -108,7 +108,7 @@ public struct SoALayout: Sendable, Equatable {
     ///     ``allocatedByteCount`` is then page-rounded to the `makeBuffer(bytesNoCopy:)`
     ///     length. Defaults to `false` (the exact logical size), matching the `pageAligned`
     ///     default on `SoA.build`/`init` so page-alignment is **opt-in everywhere**. A GPU
-    ///     consumer sizing a zero-copy buffer must pass `true` (just as it calls
+    ///     consumer sizing a `makeBuffer(bytesNoCopy:)` buffer must pass `true` (just as it calls
     ///     `build(from:pageAligned: true)`).
     /// - Returns: A descriptor whose ``allocatedByteCount`` matches what the corresponding
     ///   `SoA` reports for the same `pageAligned` value.

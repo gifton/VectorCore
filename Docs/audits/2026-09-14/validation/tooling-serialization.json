@@ -1,0 +1,638 @@
+[
+  {
+    "id": "TOOL-01",
+    "original_refs": [
+      "B1",
+      "PERF9"
+    ],
+    "claim": "Strict benchmark correctness accepts nonfinite errors, mismatched output lengths and missing validation.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P1",
+    "category": "code quality",
+    "exposure": "Benchmark CLI; undermines validation of later optimizations.",
+    "sources": [
+      "Benchmarks/VectorCoreBench/Utils/Correctness.swift:15",
+      "Benchmarks/VectorCoreBench/Utils/Correctness.swift:21",
+      "Benchmarks/VectorCoreBench/AppMain.swift:577",
+      "Benchmarks/VectorCoreBench/Suites/BatchBench.swift:541"
+    ],
+    "evidence": "Fresh exact-source tooling-probe.log: scalar NaN yields NaN maximum error and violates=false; vector NaN yields zero maxima; empty output and extra output pass. Source: CLI skips nil correctness; dot/normalization and several optimized batch results omit it. Timed try? provider failures can become zero while reference validation reruns a different kernel.",
+    "correction": "NaN JSON failure is separate from threshold acceptance. There was no injected faulty production kernel. This is a validation blocker, not a claim every benchmark value is wrong.",
+    "improvement": "Use explicit validation status, exact expected shape, documented nonfinite policy and case-level validation requirements. Validate the execution path actually timed; surface provider errors.",
+    "acceptance": "CLI-level table tests: finite matches/mismatches, NaN, infinities, both length mismatch directions, missing validation and provider failure. Each invalid case must fail strict mode and emit a parseable failure artifact.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P1",
+    "canonical_ids": [
+      "B1",
+      "PERF9"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-02",
+    "original_refs": [
+      "B1:artifact-write",
+      "PERF9"
+    ],
+    "claim": "Requested benchmark output can fail to write while the CLI exits successfully.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Benchmark automation.",
+    "sources": [
+      "Benchmarks/VectorCoreBench/AppMain.swift:485"
+    ],
+    "evidence": "Fresh CLI failed-write.log: output destination is an existing directory, error printed, exit 0. Fresh helper confirms NaN-containing correctness output is rejected by default JSONEncoder.",
+    "correction": "The CLI experiment used a filesystem error; NaN-to-CLI exit behavior follows the same catch/control flow.",
+    "improvement": "Treat requested artifact write failure as a failed run; serialize validation failure without nonfinite JSON numbers.",
+    "acceptance": "Unwritable/invalid destination and invalid numeric statistics must produce nonzero exit and explicit error; successful runs must leave decodable artifacts.",
+    "dependencies": [
+      "TOOL-01"
+    ],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "B1",
+      "PERF9"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-03",
+    "original_refs": [
+      "B2",
+      "PERF9"
+    ],
+    "claim": "Benchmark metadata claims Release/C/size settings that do not establish the binary executed.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Debug and Release CLI metadata; provenance.",
+    "sources": [
+      "Benchmarks/VectorCoreBench/AppMain.swift:94",
+      "Benchmarks/VectorCoreBench/AppMain.swift:474",
+      "Sources/VectorCore/Interop/CKernels.swift:17",
+      "Sources/VectorCoreBenchmarking/EnvCapture.swift:164"
+    ],
+    "evidence": "Fresh debug-meta.json records buildConfiguration=release and useCKernels/releaseSize=true. Source references show these CLI options set metadata only; C routing is compile-time. EnvCapture runs git in the working directory and swiftc from PATH.",
+    "correction": "Requested flags are not proof a C kernel actually ran. No separately compiled C-on/C-off A/B performance measurement was made.",
+    "improvement": "Record effective compile configuration and executable/source identity separately from requests; use a build driver for build variants.",
+    "acceptance": "Build Debug/Release and C-on/C-off fixtures; metadata must identify actual settings, and observable route tests must verify enabled C dispatch. Reject incompatible runtime requests.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "B2",
+      "PERF9"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-04",
+    "original_refs": [
+      "B3",
+      "PERF9"
+    ],
+    "claim": "Extended mixed-precision tests bypass the strict-performance opt-out.",
+    "verdict": "confirmed-source",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Manual benchmarks workflow with EXTENDED=1, STRICT_PERF=0.",
+    "sources": [
+      "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift:100",
+      "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift:134",
+      "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift:227",
+      "Tests/ComprehensiveTests/PerfGate.swift:9",
+      ".github/workflows/benchmarks.yml:33"
+    ],
+    "evidence": "Four speedup assertions are reachable under EXTENDED=1 and never consult strictPerfGatesEnabled. Ordinary baseline did not enable these tests.",
+    "correction": "No current hosted failure or compiler elimination was observed; universal speedup/dimension-order expectations are unsupported by numerical correctness.",
+    "improvement": "Move timing assertions into controlled benchmark comparisons or consistently gate them. Consume measured outputs.",
+    "acceptance": "Mechanically enumerate performance assertions; EXTENDED=1/STRICT_PERF=0 must disable every wall-clock pass/fail gate while retaining numerical checks.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "B3",
+      "PERF9"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-05",
+    "original_refs": [
+      "B4",
+      "PERF9"
+    ],
+    "claim": "Selecting optimized-only dot cases runs zero cases and succeeds.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Targeted benchmark selection.",
+    "sources": [
+      "Benchmarks/VectorCoreBench/Suites/DotProductBench.swift:57",
+      "Benchmarks/VectorCoreBench/Suites/DotProductBench.swift:116",
+      "Benchmarks/VectorCoreBench/Suites/DotProductBench.swift:160",
+      "Scripts/compare_benchmarks.swift:23"
+    ],
+    "evidence": "Fresh filter.json: --suites dot --dims 512,768,1536 --filter *.optimized yields results=[] and exit 0. Each dimension returns before optimized registration when generic is excluded. Comparator defaults to allowing missing cases; baseline README omits --strict.",
+    "correction": "This is case selection/coverage loss, not a zero-duration optimized speedup.",
+    "improvement": "Register/filter sibling cases independently, reject unintended empty runs and require matching case sets for regression comparisons.",
+    "acceptance": "Table-driven selection test for every registered case, exact names, excludes and variant filters; expected counts and missing-baseline policy must be asserted.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "B4",
+      "PERF9"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-06",
+    "original_refs": [
+      "B5",
+      "PERF9"
+    ],
+    "claim": "Fused/pre-normalized cosine A/B pairs cannot join under their current grouping keys.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "JSON and console A/B reporting.",
+    "sources": [
+      "Sources/VectorCoreBenchmarking/ABComparisons.swift:62",
+      "Benchmarks/VectorCoreBench/AppMain.swift:341",
+      "Sources/VectorCoreBenchmarking/Models.swift:308"
+    ],
+    "evidence": "Fresh two-case helper reports cosineABPairCount=0. Variant is part of key yet differs for fused and preNorm; console duplicates this disjoint-key requirement. deltaPercent comment gives a different denominator/sign formula from implementation.",
+    "correction": "Euclidean pairing is a separate path and is not invalidated by this proof.",
+    "improvement": "Use a common comparison family key and one model for both output formats; document the chosen percentage convention.",
+    "acceptance": "Every supported A/B family must yield exactly one valid pair; mismatched dimensions/N/provider must not pair; check numeric delta against hand-calculated examples.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "B5",
+      "PERF9"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-07",
+    "original_refs": [
+      "B6",
+      "PERF9"
+    ],
+    "claim": "Several timings lack consistent result consumption and compare different setup/allocation boundaries.",
+    "verdict": "qualified",
+    "priority": "P2",
+    "category": "performance",
+    "exposure": "Benchmark/test timing paths.",
+    "sources": [
+      "Benchmarks/VectorCoreBench/Suites/BatchBench.swift:449",
+      "Benchmarks/VectorCoreBench/Suites/BatchBench.swift:610",
+      "Benchmarks/VectorCoreBench/Suites/BatchBench.swift:864",
+      "Benchmarks/VectorCoreBench/Suites/BatchBench.swift:1016",
+      "Benchmarks/VectorCoreBench/Suites/MatrixDistanceBench.swift:67"
+    ],
+    "evidence": "Source rechecked: some 1536D reductions discarded; neighboring widths use blackHole. SoA packing/FP16 conversion occurs before timing despite comments saying included. AoS may allocate chunk outputs during timing while SoA reuses output.",
+    "correction": "Missing consumption is proved; dead-code elimination and its timing magnitude are unverified. Different timing scopes can be intentional but must be identified before attributing speedups.",
+    "improvement": "Define setup scope and work units; maintain separate prepacked-kernel and end-to-end cases; consume/check all output consistently.",
+    "acceptance": "Inspect optimized code and allocation traces for representative cases; record consumer overhead, warmups, raw samples, machine/toolchain and scope. Compare only equivalent workloads.",
+    "dependencies": [
+      "TOOL-01",
+      "TOOL-03"
+    ],
+    "review_group": "tooling-serialization",
+    "category_detail": "performance",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "B6",
+      "PERF9"
+    ],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-08",
+    "original_refs": [
+      "B7",
+      "PERF9"
+    ],
+    "claim": "Memory-footprint output counts owning struct handles rather than heap payload.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "Mixed-precision footprint report and misleading timing-test names.",
+    "sources": [
+      "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift:302",
+      "Tests/MinimalTests/ComprehensiveBenchmarks.swift:24",
+      "Sources/VectorCore/Vectors/Vector512Optimized.swift:29",
+      "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift:302"
+    ],
+    "evidence": "Fresh linked Release probe reports FP32 handle=16, FP16 handle=8. The corresponding 512D scalar payloads alone are 2048 and 1024 bytes. Source uses handle stride for a 100000-vector footprint extrapolation; MinimalTests footprint names time magnitudes.",
+    "correction": "No allocated-byte or RSS measurement was made; payload arithmetic excludes headers, allocator overhead and COW sharing.",
+    "improvement": "Separate handle bytes, logical payload and measured retained memory; rename timing-only tests.",
+    "acceptance": "Check representation payload size; profile realistic independent/shared datasets and report method, peak/retained bytes and workload.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P3",
+    "canonical_ids": [
+      "B7",
+      "PERF9"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-09",
+    "original_refs": [
+      "validation_benchmarks:Matrix suite ignores common harness controls"
+    ],
+    "claim": "Matrix benchmark ignores shared selection/timing controls and has only 17 distinct generated vectors.",
+    "verdict": "confirmed-source",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Opt-in matrix benchmark.",
+    "sources": [
+      "Benchmarks/VectorCoreBench/Suites/MatrixDistanceBench.swift:18",
+      "Benchmarks/VectorCoreBench/Suites/MatrixDistanceBench.swift:45",
+      "Sources/VectorCoreBenchmarking/CaseParsing.swift:17"
+    ],
+    "evidence": "Hardcoded N=64/256/1024, custom timer, no seed/repeats/samples/batchNs consumption; filtering occurs after suite execution. Values depend on (coordinate+row)%17; slash-form names do not parse dim/N.",
+    "correction": "No claim that 17 distinct vectors makes numerical computation incorrect; it limits representativeness and provenance.",
+    "improvement": "Adopt shared descriptors/harness and explicit packed versus one-shot cases.",
+    "acceptance": "Changing controls must change scheduled cases/samples; filters must prevent execution; names or structured fields must preserve dim/N; seeded fixtures must have documented diversity.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-10",
+    "original_refs": [
+      "validation_benchmarks:Trustworthy coverage for downstream scale"
+    ],
+    "claim": "Current benchmark coverage does not establish downstream large-scale behavior.",
+    "verdict": "qualified",
+    "priority": "P2",
+    "category": "architecture",
+    "exposure": "Scale-readiness validation gap; no universal throughput claim supported.",
+    "sources": [
+      "Benchmarks/VectorCoreBench/AppMain.swift:11",
+      ".github/workflows/ci.yml:145",
+      ".github/workflows/benchmarks.yml:31",
+      "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift:1"
+    ],
+    "evidence": "Default/full suites omit matrix/memory; PR smoke uses three suites at 512D; SoA/FP16 opt-ins absent in workflows. Source registry lacks dedicated PCA/UMAP/quantization/streaming-search scale cases. Numerical parity tests alone do not prove a route executed.",
+    "correction": "These are coverage opportunities, not proof of a current production outage or a demand to put all workloads into every PR job.",
+    "improvement": "Add representative downstream workload tiers with route sentinels, allocation/peak-memory measurements and bounded concurrency checks.",
+    "acceptance": "Publish exact hardware, inputs, routing, raw sample distribution and memory budget for chosen target scale; validate custom-provider precedence at every newly reachable boundary.",
+    "dependencies": [
+      "TOOL-01",
+      "TOOL-03",
+      "TOOL-07"
+    ],
+    "review_group": "tooling-serialization",
+    "category_detail": "architecture",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-11",
+    "original_refs": [
+      "validation_benchmarks:CI and style enforcement"
+    ],
+    "claim": "CI coverage excludes important tooling and selected safety surfaces.",
+    "verdict": "confirmed-source",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Test/lint/CI configuration.",
+    "sources": [
+      "Package.swift:82",
+      ".swiftlint.yml:39",
+      ".github/workflows/ci.yml:90",
+      ".github/workflows/ci.yml:157",
+      ".github/workflows/sanitizers.yml:30",
+      "Tests/PerformanceTests/NSWOptimizationBenchmark.swift:11"
+    ],
+    "evidence": "No test target depends on VectorCoreBenchmarking. Root lint includes Sources/Tests; workflow invokes lint, not analyze. Required aggregate lists test/lint/repository-checks/consumer/platforms, not sanitizer/CodeQL/perf-smoke. NSW file outside registered targets references former graph APIs. New Python 25-test run and Ruby 9-file policy validation pass.",
+    "correction": "No remote branch-protection settings inspected; independent checks may be required externally. Declared analyzer rules alone do not execute analysis. Do not count unregistered tests as coverage.",
+    "improvement": "Add focused tooling tests, audited sanitizer/filter coverage and benchmark lint scope. Archive/move obsolete NSW benchmark. Enforce claim-to-evidence discipline in review; avoid cosmetic blanket inlining/weak-self rules.",
+    "acceptance": "CI inventory must map each promised test/analysis to an executed target/command; mechanical policy tests must reject missing required jobs and test/route coverage gaps.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-12",
+    "original_refs": [
+      "validation_benchmarks:Metadata and baseline handling"
+    ],
+    "claim": "Baseline comparison ignores provenance and CSV metadata does not escape multiline/arbitrary values.",
+    "verdict": "confirmed-source",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Benchmark artifact comparison/export.",
+    "sources": [
+      "Scripts/compare_benchmarks.swift:46",
+      "Benchmarks/VectorCoreBench/Formatters/CSVWriter.swift:11",
+      "Benchmarks/baselines/arm64-os15.4.1-canonical.json:7",
+      "Benchmarks/baselines/arm64-os15.4.1-local.json:7",
+      "Sources/VectorCoreBenchmarking/ABComparisons.swift:21"
+    ],
+    "evidence": "Comparator decodes results only. Both checked-in baselines record 2025/0.1.0-alpha. CSV header fields interpolate labels/newlines unquoted, while data rows use quoting. A/B uses aggregate ns/unit; shared p90 is a percentile of per-sample averages.",
+    "correction": "Historical baselines are useful records, not current guarantees. Aggregate means versus medians are choices needing explicit labeling, not inherently arithmetic errors.",
+    "improvement": "Validate hardware/build/workload compatibility before comparisons; quote all CSV fields; retain raw samples and label statistics precisely.",
+    "acceptance": "Incompatible metadata must be rejected or explicitly overridden; round-trip labels containing commas/quotes/newlines; independently verify chosen statistic and comparison formula.",
+    "dependencies": [
+      "TOOL-03",
+      "TOOL-06"
+    ],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "TOOL-13",
+    "original_refs": [
+      "validation_benchmarks:Metadata and baseline handling:mobile"
+    ],
+    "claim": "Mobile availability of the separate benchmarking product remains unverified.",
+    "verdict": "unverified",
+    "priority": "P3",
+    "category": "architecture",
+    "exposure": "VectorCoreBenchmarking product only.",
+    "sources": [
+      "Sources/VectorCoreBenchmarking/EnvCapture.swift:120",
+      "Sources/VectorCoreBenchmarking/EnvCapture.swift:164",
+      "Package.swift:20",
+      ".github/workflows/ci.yml:107"
+    ],
+    "evidence": "EnvCapture references Process/Host and sysctl; the Apple platform loop targets VectorCore. No mobile benchmarking-product build was performed.",
+    "correction": "Do not report a confirmed mobile compile failure or extend this suspicion to the Core product.",
+    "improvement": "Explicitly scope tooling to supported hosts or separately compile advertised product/platform combinations.",
+    "acceptance": "Product support matrix backed by actual target builds, or clear host-only documentation.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "architecture",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "investigation",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-01",
+    "original_refs": [
+      "C20",
+      "serialization:P2 empty DynamicVector"
+    ],
+    "claim": "A valid empty DynamicVector binary encoding cannot be decoded by its own type.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Public binary round trip of default/empty dynamic values.",
+    "sources": [
+      "Sources/VectorCore/Vectors/DynamicVector.swift:49",
+      "Sources/VectorCore/Vectors/VectorSerialization.swift:61",
+      "Sources/VectorCore/Utilities/BinaryFormat.swift:164",
+      "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift:22"
+    ],
+    "evidence": "Fresh Release SerializationProbe: dimension0 emits16 bytes, binary decode throws invalidDimension, JSON roundtrip restores0. Named empty test substitutes a one-element value.",
+    "correction": "The 10001 cap is a distinct intentionally tested limitation. Do not remove decoder limits as an incidental repair.",
+    "improvement": "Choose and document empty binary semantics; accept a valid empty frame for DynamicVector or expose checked encoding rejection.",
+    "acceptance": "Real default/last-element-removal empty roundtrips or explicit checked rejection; fixed-size decoders must retain dimension checks; CRC/size failures remain rejected.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [
+      "C20"
+    ],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-02",
+    "original_refs": [
+      "serialization:P3 coverage",
+      "serialization:golden fixtures"
+    ],
+    "claim": "Serialization tests include 15 comment-only bodies and mislabeled optimized-type coverage.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Confidence in passing tests.",
+    "sources": [
+      "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift:611",
+      "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift:641",
+      "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift:707"
+    ],
+    "evidence": "Fresh mechanical count saved in placeholder-tests.json:15 empty bodies after comments removed. Three optimized-named cases instantiate generic Vector and encode extracted arrays. Fixture placeholders contain no independent bytes.",
+    "correction": "This does not mean all optimized Codable code is untested elsewhere, or that Core should implement every feature mentioned by a placeholder.",
+    "improvement": "Replace misleading active placeholders with real tests or future-work notes; exercise actual concrete Codable and add independent golden byte fixtures.",
+    "acceptance": "Every active test named for a behavior must execute/assert that behavior. Include signed-zero/NaN payload binary bits, direct sliced Data, valid/invalid CRC and exact frame lengths.",
+    "dependencies": [
+      "SER-01"
+    ],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-03",
+    "original_refs": [
+      "serialization:scalar-at-a-time binary conversion"
+    ],
+    "claim": "Binary conversion has scalar loops and temporary representations; a Release allocation speedup is not yet established.",
+    "verdict": "qualified",
+    "priority": "P3",
+    "category": "performance",
+    "exposure": "Binary encode/decode.",
+    "sources": [
+      "Sources/VectorCore/Utilities/BinaryFormat.swift:109",
+      "Sources/VectorCore/Utilities/BinaryFormat.swift:204",
+      "Sources/VectorCore/Vectors/VectorSerialization.swift:71"
+    ],
+    "evidence": "Source defines scratch-allocating generic unaligned-load extensions and per-scalar decode; encoding materializes toArray then appends scalars. Overload selection/optimization may eliminate the apparent scratch allocation for concrete UInt32.",
+    "correction": "Retain only a profiling candidate. Neither one heap allocation per scalar in Release nor a throughput regression was demonstrated; do not blindly replace the implementation.",
+    "improvement": "Inspect concrete generated code and allocation traces; assess scoped/bulk paths preserving unaligned input, endian conversion and exact bit patterns.",
+    "acceptance": "Before/after Release measurements with allocation counts, CRC included, representative dimensions and unaligned slices; byte-for-byte equality against independent fixtures.",
+    "dependencies": [
+      "SER-02",
+      "TOOL-07"
+    ],
+    "review_group": "tooling-serialization",
+    "category_detail": "performance",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-04",
+    "original_refs": [
+      "serialization:Representation and API clarity:INT8",
+      "serialization:JSON schemas"
+    ],
+    "claim": "Binary and JSON representations have different type/precision contracts.",
+    "verdict": "qualified",
+    "priority": "P3",
+    "category": "architecture",
+    "exposure": "Serialization of optimized FP32 and quantized vectors.",
+    "sources": [
+      "Sources/VectorCore/Vectors/VectorSerialization.swift:61",
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:148",
+      "Sources/VectorCore/Vectors/VectorSerialization.swift:12"
+    ],
+    "evidence": "Generic binary encoder writes dequantized FP32 for INT8 (16+4N bytes); same-concrete binary decoders exist for generic/dynamic only. JSON uses distinct schemas: generic object, dynamic dimension+elements, optimized array, synthesized INT8 storage+parameters.",
+    "correction": "No compressed-INT8 binary or universal JSON schema promise found. These are documentation/interoperability decisions, not demonstrated corrupt roundtrips.",
+    "improvement": "Document value interchange versus storage-preserving encoding, concrete decoder availability and schemas. Add compressed storage framing only if required by consumers.",
+    "acceptance": "Examples and tests must name concrete source/destination types and expected byte sizes/precision; existing wire format compatibility preserved unless explicitly versioned.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "architecture",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-05",
+    "original_refs": [
+      "serialization:Representation and API clarity:protocols"
+    ],
+    "claim": "Vectors expose binary methods without adopting the public binary protocols.",
+    "verdict": "confirmed-source",
+    "priority": "P3",
+    "category": "architecture",
+    "exposure": "Generic BinaryCodable integrations; no internal dependent caller found.",
+    "sources": [
+      "Sources/VectorCore/Serialization/BinaryProtocols.swift:9",
+      "Sources/VectorCore/Vectors/VectorSerialization.swift:61"
+    ],
+    "evidence": "Repository declaration/reference inventory finds only the documentation example of vector conformance. Method-name coincidence does not declare Swift protocol conformance.",
+    "correction": "An integration opportunity; no existing downstream generic BinaryCodable compilation failure was claimed.",
+    "improvement": "Add appropriate conformances or document the protocols as consumer extension points.",
+    "acceptance": "External generic helper compile test for supported conformances; clearly define types that encode only versus fully roundtrip.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "architecture",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "opportunity",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-06",
+    "original_refs": [
+      "serialization:Representation and API clarity:magic"
+    ],
+    "claim": "Header documentation describes VECT while the actual little-endian wire bytes spell TCEV.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "External binary readers/documentation.",
+    "sources": [
+      "Sources/VectorCore/Serialization/BinaryProtocols.swift:46",
+      "Sources/VectorCore/Utilities/BinaryFormat.swift:23"
+    ],
+    "evidence": "Fresh binary hex starts54434556. Independent Python struct+zlib generation matches complete encoded header/payload/CRC for six bit-pattern fixtures.",
+    "correction": "Existing encoder and decoder agree and tests expect actual bytes. This is a documentation defect; changing wire bytes would be a compatibility change.",
+    "improvement": "Document numeric magic separately from actual bytes and every field endian order.",
+    "acceptance": "Publish independently specified full golden frame; old frames remain decodable.",
+    "dependencies": [
+      "SER-02"
+    ],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "finding",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-07",
+    "original_refs": [
+      "serialization:Documented limitations",
+      "serialization:Strengths"
+    ],
+    "claim": "Decoder framing/CRC bounds and Data-slice behavior support the original limited positive assessment.",
+    "verdict": "confirmed-reproduced",
+    "priority": "P3",
+    "category": "code quality",
+    "exposure": "Public binary decoder; context/guardrails, not an additional defect.",
+    "sources": [
+      "Sources/VectorCore/Utilities/BinaryFormat.swift:135",
+      "Sources/VectorCore/Utilities/BinaryFormat.swift:186",
+      "Sources/VectorCore/Vectors/VectorSerialization.swift:82"
+    ],
+    "evidence": "Source validates16-byte minimum, magic/version,1...10000 dimension and exact total length before payload allocation, then CRC. Fresh probe independently matches CRC/bit patterns and successfully decodes nonzero-startIndex3 Data slice. Dimension10001 encode/decode asymmetry reproduced and is explicitly expected by existing test.",
+    "correction": "No public overflow exploit, compression implementation defect or direct-slice bug found. CRC is integrity checking, not authentication. Reserved flags are read but unused; one uncompressed frame is the current contract.",
+    "improvement": "Preserve checks while fixing empty values; document cap/flags/version/whole-record behavior. Define rejection/version policy before assigning flag semantics.",
+    "acceptance": "Class-wide malformed framing/CRC and cap boundary tests, plus independent bits/slice regression; do not count absent streaming/compression/migration features as implemented.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P3",
+    "canonical_ids": [],
+    "kind": "context",
+    "evidence_directory": "evidence/root/"
+  },
+  {
+    "id": "SER-08",
+    "original_refs": [
+      "serialization:Boundary observations"
+    ],
+    "claim": "Decoded INT8 storage, quantization parameters and TopK result arrays require invariant validation.",
+    "verdict": "confirmed-source",
+    "priority": "P2",
+    "category": "code quality",
+    "exposure": "Synthesized/custom Codable construction boundaries.",
+    "sources": [
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:175",
+      "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift:17",
+      "Sources/VectorCore/Operations/TopKSelection.swift:651"
+    ],
+    "evidence": "Source constructors/Codable can bypass length/derived-field relationships. Ownership and API validators reproduce empty INT8 decoded storage and mismatched TopK lengths; quantization numeric validator owns scale/zero-point semantics.",
+    "correction": "Cross-reference OWN/NUM/API rows for severity and actual effects; this row is boundary coverage, not a separate issue count.",
+    "improvement": "Include decoded construction in the same invariant repair as public constructors/mutation.",
+    "acceptance": "Table-driven invalid shape/derived-parameter/result-pair decoding tests across every representation; valid existing data remains compatible.",
+    "dependencies": [],
+    "review_group": "tooling-serialization",
+    "category_detail": "code quality",
+    "priority_detail": "P2",
+    "canonical_ids": [],
+    "kind": "context",
+    "evidence_directory": "evidence/root/"
+  }
+]

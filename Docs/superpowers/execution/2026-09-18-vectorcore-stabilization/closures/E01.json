@@ -1,0 +1,36 @@
+{
+  "task": "E01",
+  "status": "accepted",
+  "task_base": "6f364bac978e099feeb2e02693235bbbcdcc88b3",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-07",
+    "API-08",
+    "API-44"
+  ],
+  "partial_records": {},
+  "validation": {
+    "red": "Corrected baseline6tests/490failures, explicit-domain28failures, and separate bounded giant-reduction SIGTRAP",
+    "debug": "7XCTest entries/0failures +16SwiftTesting controls passed",
+    "release": "7XCTest entries/0failures +16SwiftTesting controls passed",
+    "matrix": "All5CPU+5default helpers; explicit minChunk; tiny extreme-endpoint ranges; nonrepresentable and giant representable ranges; batch N0/1/999/1000; loops widths1...17/counts0...40, errors and bounded extreme arithmetic",
+    "provenance": "5frozen hashes verified; full Sources/Tests/Scripts inventory changes only4assigned sources+1newtest; final review and evidence hashes verified"
+  },
+  "review": "reports/E01-review.md",
+  "evidence": "reports/E01.md",
+  "root_verification": "reports/E01-root-verification.json",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/BatchOperations.swift": "5dc2eb9c395d263b2fc57d545d864f3d6b80d5b6dbb4df487af1a494892378e5",
+    "Sources/VectorCore/Providers/CPUComputeProvider.swift": "b6bfd82863ed4ace74bdecf4b4f648df34484e02cced2a7b374221232a1f52ca",
+    "Sources/VectorCore/Protocols/ComputeProvider.swift": "0b8770c050ada3c42015f0ad13b6ee5a96517d309188bb58cb10d72f6c15ced5",
+    "Sources/VectorCore/Optimization/OptimizationAttributes.swift": "311a7151aeabdcfa976edc0d3624a53212087868f78c1460b922904eea31ba95",
+    "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift": "3ad771dcf36b9581075b5853d473fc0550c549004ebe12c75314fd98612fe108"
+  },
+  "limitations": [
+    "One XCTest entry is a child probe idle in parent; substantive assertions run through the other cases",
+    "Release deliberate traps supplemented by Debug guard diagnostics and source review",
+    "E02 scheduling/initial/reduction-order laws unchanged",
+    "E03 transactions and E06 live/initializer settings remain separate",
+    "No performance/scale-readiness/downstream or triangular-size-overflow claim"
+  ]
+}

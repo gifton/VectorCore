@@ -2,18 +2,18 @@
 //  TieredStorage.swift
 //  VectorCore
 //
-//  Adaptive storage that automatically selects optimal backing store based on size and access patterns
+//  Storage that selects its backing store by element count (and by a `.simd` hint)
 //
 
 import Foundation
 
-/// Adaptive storage container that automatically selects the optimal backing store
-/// based on element count and access patterns, enabling efficient memory usage for different vector sizes.
+/// Storage container that selects its backing store by element count (see `Tier`) and moves to
+/// the aligned tier on `optimizeFor(.simd)` only when `count > inlineThreshold`.
 @usableFromInline
 internal struct TieredStorage<Element> {
     // MARK: - Storage Tiers
 
-    /// Storage tier variants optimized for different size ranges
+    /// Storage tier variants, one per size range
     @usableFromInline
     internal enum Tier {
         /// Stack-allocated storage for tiny vectors (≤ 4 elements)
@@ -160,6 +160,8 @@ internal struct TieredStorage<Element> {
             case .compact(let buffer):
                 buffer[index] = newValue
             case .standard(var array):
+                // Remove the enum's retain before Array checks uniqueness.
+                tier = .inline(InlineBuffer())
                 array[index] = newValue
                 tier = .standard(array)
             case .aligned(let buffer):
@@ -174,16 +176,21 @@ internal struct TieredStorage<Element> {
     @usableFromInline
     internal mutating func ensureUniqueTier() {
         switch tier {
-        case .compact(let buffer):
-            if !buffer.isUniquelyReferenced() {
-                tier = .compact(buffer.copy())
+        case .compact(var buffer):
+            // Remove the enum's retain before checking the actual shared owner.
+            tier = .inline(InlineBuffer())
+            if !isKnownUniquelyReferenced(&buffer) {
+                buffer = buffer.copy()
             }
-        case .aligned(let buffer):
-            if !buffer.isUniquelyReferenced() {
-                tier = .aligned(buffer.copy())
+            tier = .compact(buffer)
+        case .aligned(var buffer):
+            tier = .inline(InlineBuffer())
+            if !isKnownUniquelyReferenced(&buffer) {
+                buffer = buffer.copy()
             }
+            tier = .aligned(buffer)
         default:
-            // Inline and standard tiers are value types, no COW needed
+            // Inline has value semantics; standard Array handles its own COW.
             break
         }
     }
@@ -207,7 +214,9 @@ internal struct TieredStorage<Element> {
         }
     }
 
-    /// Mutate storage through unsafe buffer pointer
+    /// Mutate storage through an unsafe buffer pointer.
+    /// Writes before a thrown error persist; copies and iterators retain snapshots.
+    /// Exercised by TieredStorageMutationTests normal/throwingBulkWriteback.
     @usableFromInline
     internal mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
@@ -216,12 +225,13 @@ internal struct TieredStorage<Element> {
 
         switch tier {
         case .inline(var buffer):
-            let result = try buffer.withUnsafeMutableBufferPointer(body)
-            tier = .inline(buffer)
-            return result
+            defer { tier = .inline(buffer) }
+            return try buffer.withUnsafeMutableBufferPointer(body)
         case .compact(let buffer):
             return try buffer.withUnsafeMutableBufferPointer(body)
         case .standard(var array):
+            tier = .inline(InlineBuffer())
+            defer { tier = .standard(array) }
             return try array.withUnsafeMutableBufferPointer { ptr in
                 try body(ptr)
             }
@@ -240,7 +250,7 @@ internal struct TieredStorage<Element> {
         if hint == .simd && count > Self.inlineThreshold {
             switch tier {
             case .aligned:
-                return // Already optimal
+                return // Already in the aligned tier
             default:
                 let elements = Array(self)
                 tier = .aligned(AlignedBuffer(elements))
@@ -362,16 +372,24 @@ internal struct InlineBuffer<Element> {
             array.append(self[i])
         }
 
-        let result = try array.withUnsafeMutableBufferPointer { ptr in
+        defer {
+            for i in 0..<count {
+                self[i] = array[i]
+            }
+        }
+        return try array.withUnsafeMutableBufferPointer { ptr in
             try body(ptr)
         }
+    }
+}
 
-        // Copy back
-        for i in 0..<count {
-            self[i] = array[i]
+/// Allocation owner for the initialized compact tail.
+@usableFromInline
+internal final class CompactAllocation<Element>: ManagedBuffer<CompactBufferHeader, Element> {
+    deinit {
+        withUnsafeMutablePointerToElements { pointer in
+            _ = pointer.deinitialize(count: header.count)
         }
-
-        return result
     }
 }
 
@@ -394,7 +412,7 @@ internal final class CompactBuffer<Element> {
     @usableFromInline
     internal init(capacity: Int) {
         let actualCapacity = CompactBuffer.alignedCapacity(for: capacity)
-        self.buffer = ManagedBuffer<CompactBufferHeader, Element>.create(
+        self.buffer = CompactAllocation<Element>.create(
             minimumCapacity: actualCapacity
         ) { _ in
             CompactBufferHeader(count: 0, capacity: actualCapacity)
@@ -405,16 +423,17 @@ internal final class CompactBuffer<Element> {
     @usableFromInline
     internal init(_ elements: [Element]) {
         let actualCapacity = CompactBuffer.alignedCapacity(for: elements.count)
-        self.buffer = ManagedBuffer<CompactBufferHeader, Element>.create(
+        self.buffer = CompactAllocation<Element>.create(
             minimumCapacity: actualCapacity
         ) { _ in
-            CompactBufferHeader(count: elements.count, capacity: actualCapacity)
+            CompactBufferHeader(count: 0, capacity: actualCapacity)
         }
 
         // Copy elements
         buffer.withUnsafeMutablePointerToElements { ptr in
             ptr.initialize(from: elements, count: elements.count)
         }
+        buffer.header.count = elements.count
     }
 
     /// Calculate cache-line aligned capacity
@@ -445,24 +464,17 @@ internal final class CompactBuffer<Element> {
         }
     }
 
-    /// Check if uniquely referenced (for COW)
-    @usableFromInline
-    internal func isUniquelyReferenced() -> Bool {
-        isKnownUniquelyReferenced(&buffer)
-    }
-
     /// Create a copy
     @usableFromInline
     internal func copy() -> CompactBuffer {
         let newBuffer = CompactBuffer(capacity: capacity)
-        newBuffer.buffer.header.count = count
-
         buffer.withUnsafeMutablePointerToElements { src in
             newBuffer.buffer.withUnsafeMutablePointerToElements { dst in
                 dst.initialize(from: src, count: count)
             }
         }
 
+        newBuffer.buffer.header.count = count
         return newBuffer
     }
 
@@ -577,14 +589,6 @@ internal final class AlignedBuffer<Element> {
     @usableFromInline
     internal var isAligned: Bool {
         Int(bitPattern: ptr) % alignment == 0
-    }
-
-    /// Check if uniquely referenced (for COW)
-    @usableFromInline
-    internal func isUniquelyReferenced() -> Bool {
-        // AlignedBuffer is a class, so we can use isKnownUniquelyReferenced
-        var mutableSelf = self
-        return isKnownUniquelyReferenced(&mutableSelf)
     }
 
     /// Create a copy

@@ -1,0 +1,21 @@
+{
+ "task": "T18",
+ "status": "accepted",
+ "task_base": "08a3be7",
+ "integration_revision": "3f59a28",
+ "closed_records": [
+  "T18-CHANGELOG-SINCE-0.3.3"
+ ],
+ "disposition_records": {
+  "T18-CHANGELOG-SINCE-0.3.3": "CHANGELOG [Unreleased] gains 34 entries (Added 1, Changed 32 incl. Breaking labels per root convention: silent result change 'Breaking:', rebuild-only 'Breaking (source-compatible):', layout 'Breaking (binary layout):'; Fixed 1) for the ~30 earlier tasks it omitted, plus the ruled P02 figure revision (rounded values with ranges across the 2026-10-07 and 2026-10-16 high-power records). check_changelog_coverage: 91/91 DOWNSTREAM_UPGRADES rows in sections 1-4 mapped. Ledger: 29 entries added, V04-C-1032/1034 revised."
+ },
+ "validation": {
+  "policy": "Ledger 0; coverage 91/91; CHANGELOG diff = pure insertion plus the two ruled replacements (root-verified on the real tree)."
+ },
+ "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T18",
+ "reviewed_tree": "staged scripts R/T18/deliverables.sha256",
+ "limitations": [
+  "Contradiction check vs existing entries was targeted, not exhaustive."
+ ],
+ "routed": []
+}

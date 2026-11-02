@@ -6,12 +6,19 @@ public enum JSONWriter {
     ///
     /// - Parameter results: Array of raw BenchResult from harness
     /// - Returns: Array of BenchCase with computed metrics and parsed parameters
-    public static func toCases(_ results: [BenchResult]) -> [BenchCase] {
-        results.map { r in
+    /// - Throws: `BenchmarkReportError` when a result has no boundary or an invalid one. A report entry without
+    ///   measurement identity is an integrity error, never an accidentally compatible default.
+    public static func toCases(_ results: [BenchResult]) throws -> [BenchCase] {
+        var seen = Set<String>()
+        for r in results where !seen.insert(r.name).inserted { throw BenchmarkReportError("Duplicate case ID: \(r.name)") }
+        return try results.map { r in
+            guard let boundary = r.boundary else { throw BenchmarkReportError("Missing measurement boundary: \(r.name)") }
+            if let problem = boundary.validationError() { throw BenchmarkReportError("Invalid measurement boundary (\(problem)): "
+                + "\(r.name)") }
             let nsPerOp = Double(r.totalNanoseconds) / Double(max(r.iterations, 1))
             let unitCount = max(r.unitCount, 1)
             let nsPerUnit = nsPerOp / Double(unitCount)
-            let throughput = (Double(r.iterations * unitCount) / (Double(r.totalNanoseconds) / 1_000_000_000.0))
+            let throughput = ((Double(r.iterations) * Double(unitCount)) / (Double(r.totalNanoseconds) / 1_000_000_000.0))
             let params = CaseParsing.parse(name: r.name)
             let exec = deriveExecution(from: params)
             // Derive GFLOP/s for dot and dist.dot
@@ -41,12 +48,19 @@ public enum JSONWriter {
                 p90NsPerOp: r.p90NsPerOp,
                 stddevNsPerOp: r.stddevNsPerOp,
                 rsdPercent: r.rsdPercent,
-                correctness: r.correctness.map { CorrectnessOut(from: $0) }
+                correctness: r.correctness.map { CorrectnessOut(from: $0) },
+                boundary: boundary,
+                sampleNsPerInvocation: r.sampleNsPerInvocation.isEmpty ? nil : r.sampleNsPerInvocation,
+                sampleIterations: r.sampleIterations.isEmpty ? nil : r.sampleIterations,
+                warmupIterations: r.warmupIterations,
+                perOperation: PerOperationStatistics(sampleNsPerInvocation: r.sampleNsPerInvocation,
+                    unitsPerInvocation: boundary.unitsPerInvocation)
             )
         }
     }
 
-    /// Derive execution information from parsed case parameters
+    /// Derive execution information from parsed case parameters. Name-derived display hints only;
+    /// the authoritative identity is `BenchCase.boundary`.
     ///
     /// Extracts feature flags like isOptimized, isFused, usesSoA from variant strings
     private static func deriveExecution(from p: CaseParams) -> ExecutionInfo {

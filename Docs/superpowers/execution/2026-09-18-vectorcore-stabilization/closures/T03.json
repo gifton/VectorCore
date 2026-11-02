@@ -1,0 +1,72 @@
+{
+  "task": "T03",
+  "status": "accepted",
+  "task_base": "b92e76e (3-way merged with T04 on QuantizedKernelsTests.swift; both composition proofs pass incl. blank lines)",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "T03-BUILD-MODES-LAYOUT",
+    "T03-FIXTURE-DRIVERS",
+    "T03-SDK-CHECKER-CI",
+    "T03-CAPTURE-PATH-CLASS",
+    "T03-NATIVE-LAYOUT-CLASS",
+    "T03-DEAD-PRE-Q01-BRANCHES",
+    "T03-SDK-GRAPH-OMISSION-CLASS"
+  ],
+  "disposition_records": {
+    "T03-BUILD-MODES-LAYOUT": "check_benchmark_build_modes.py discovers objects/modules/module maps through swiftpm_products (exactly native or swiftbuild layout); under swiftbuild it links per-source intermediates and swaps vc_dispatch.o, redirects diagnostics/index side files, snapshots the real build's object directories before and after (688 swiftbuild / 523 native files unchanged), and asserts no rewritten argument points into them. Gate 5: 4/4 cells under Swift 6.4 swiftbuild and CLT 6.2 native. New sha f300477f… (validate_github.rb re-pin is a separate user-approved root commit).",
+    "T03-FIXTURE-DRIVERS": "L03/R05/B01 public drivers take --bin-path via the helper (old flags kept as tested aliases); pass under both layouts.",
+    "T03-SDK-CHECKER-CI": "check_sdk_name_collisions.py: portable SDK sentinels (ProgressReporter removed; it is absent from SDK 26.0, which root confirmed), package sentinels, error-path tests, non-required `sdk-names` CI job (Xcode 26.3; required aggregate unchanged; validator rules with mutations). Real runs: CLT/SDK 26.0 exit 0, Xcode 27 exit 0. Guards the CI SDK only; Xcode-27 collisions need an Xcode-27 leg.",
+    "T03-SDK-GRAPH-OMISSION-CLASS": "The symbol-graph extractor silently drops top-level types named <Module>Version… (VectorCoreVersion). A source cross-check (lexical public top-level scan vs extracted graph) exits 2 on an unreviewed omission; one allowlisted entry with an evidenced reason (real-tree omission on both toolchains; isolated reproduction on Xcode 27 only).",
+    "T03-CAPTURE-PATH-CLASS": "Third instance (R04 HeapMembershipContractTests) moved to temporaryDirectory; test_swift_test_output_paths.py generalized (.build literals, #filePath/#file/#fileID-derived write paths through let/var/functions/computed properties, multi-line statements, more write APIs, relative-path writes, currentDirectoryPath) with per-pattern negative controls; documented as a heuristic.",
+    "T03-NATIVE-LAYOUT-CLASS": "Eight more helpers (O03, Q04, Q02 calibration/public/selection, O05, B01, E03 via E03RunTypecheck.py) migrated to swiftpm_products; test_no_native_layout_literals.py guards Scripts/ and .github/ with a justified allowlist.",
+    "T03-DEAD-PRE-Q01-BRANCHES": "Two unreachable (max-min)/255 branches removed with source-proven unreachability; replaced by #expect(isSymmetric) plus the symmetric formula."
+  },
+  "disposition_notes": {
+    "xunit": "Not a current defect: children inherit --xunit-output but are awaited inside a parent test, so the parent writes last (17/17 and 200/200 testcases intact on Swift 6.4). Documented as a convention for most helpers; native-CI behavior unverified; a class fix (shared argument filter) is deferred.",
+    "approxEqual": "Doc comment states the absolute 1e-5 default suits |x| ≲ 100 or exact results; 15 sites above that pass only because their results are exact integers (inventory in the T03 report); no call-site change."
+  },
+  "validation": {
+    "toolchains": "Swift 6.4/Xcode 27 swiftbuild and CLT Swift 6.2/SDK 26.0 native",
+    "policy": "149 tests; only the 2 expected pin failures until the re-pin commit",
+    "reviews": "independent review (C1 critical caught); scoped re-reviews of rounds 1+2, 3 and the round-4 wording (root-verified)"
+  },
+  "review": "reports/T03-review.md; scoped re-reviews summarized in progress.md",
+  "evidence": "reports/T03-implementation.md",
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T03",
+  "patch_sha256": "cc958e9d774b747228322b5dfa99ef94df228ce59b38f317a7cf1ba11ae9da36",
+  "frozen_sha256": {
+    ".github/workflows/ci.yml": "7161637fbbc73c9bca081b41d7bb4df2573c54c751e1a8e6a42d0d82666e4c2b",
+    "Scripts/ci/check_benchmark_build_modes.py": "f300477f37f05cd9dedce983231a4debfede5311fb8ba0fea2b4e1f7c4963752",
+    "Scripts/ci/check_sdk_name_collisions.py": "7184b94b6caf76ae301e847bee91c570793c620070a30f8338ce5f61ceefb991",
+    "Scripts/ci/fixtures/B01_public_driver.py": "4f6050b706bf70aa1bb5c7e2d3d50ffd7d957d3ae136b2fbeb763edab43a8473",
+    "Scripts/ci/fixtures/L03_public_driver.py": "a7cdf1f2176c18109ccb732f617adc14367ebb7a658d3145869d4fa451ac2b24",
+    "Scripts/ci/fixtures/R05_public_driver.py": "803a6a5d7b087287e7910dbe55e566978554afa2e19b0ac5c631597eb3ec1228",
+    "Scripts/ci/swiftpm_products.py": "c66f52c62836b1d80c5884d87b9cc785286bdd83fd9cac5f81e4349a42bb74fc",
+    "Scripts/ci/tests/E03RunTypecheck.py": "f0a7958650a4b761b4bb2d64aad7e912084334db6c3a95ca610875feae9b13ff",
+    "Scripts/ci/tests/E03TypecheckDriver.swift": "25329fdad515092640c2f8abe1319fb2c3f3799c2cc9a3702fd94f92a0129004",
+    "Scripts/ci/tests/O03AllocationProbe.swift": "5b8b49deab86c1dcc1f3a752a26f41e1244e9b05d66da8b89730c51eea44a947",
+    "Scripts/ci/tests/O03RunAllocationProbe.py": "39c75a830b03cf283964f02419866bfbb681fdc2e1992cd8f434b819eeec90a2",
+    "Scripts/ci/tests/O05RunConsumers.py": "410dd9dd051db8216c330f343ae747b837526dd7fd2a365bf01052fcbe47fcc5",
+    "Scripts/ci/tests/Q02RunCalibrationProbe.py": "63be377cda6e8638c0ccbd2491401a231cf67dfebfa3c1f4b0c5d60109ed4f3c",
+    "Scripts/ci/tests/Q02RunPublicConsumer.py": "365476d60162295e344bb83ada5fa83c3321ec831464fb87dcf04f2a4feda1dd",
+    "Scripts/ci/tests/Q02RunSelectionProbe.py": "ceb250e40dc743c25374c1db02c67a59ea827b8e7f00857216bf04f750bd0937",
+    "Scripts/ci/tests/Q04RunAllocationProbe.py": "99bbc9de54caff4605c613ab4886abba19ab2eacb4149c4ad3ba170999a6d703",
+    "Scripts/ci/tests/test_build_modes_layout.py": "215550eb99641f536ba6b4f9ac9de2aa1ae542fbe6d7427ff6694767682a35e3",
+    "Scripts/ci/tests/test_no_native_layout_literals.py": "3f00d16268d71792f290e4a99ecb2dc40a4a5d2c328ed1f2da3b1ac1876338de",
+    "Scripts/ci/tests/test_sdk_name_collisions.py": "5d3bf7469a043480f6a57d66723c78ea98f199235a3609946169c7ac313bc65f",
+    "Scripts/ci/tests/test_swift_test_output_paths.py": "c65bcf28fdeff861ec2671364f446d70ab3f73136e140c34af248f1cba4079d9",
+    "Scripts/ci/tests/test_swiftpm_products.py": "0ab46a8edd3d55f23ec777586236a5cb9a603dc7e06b77cc6803f1a83eac465c",
+    "Scripts/ci/tests/test_validate_github.py": "9a88cabe34c10082935ea30ca4c4958ae64dbadfd30d807907ca5f6b95678703",
+    "Scripts/ci/validate_github.rb": "57831cc37e1f61ec777c3592cb23c34a290d97686afeff3d22ce4a75014fb1a8",
+    "Tests/ComprehensiveTests/HeapMembershipContractTests.swift": "2f4ea6a626104996746bed1212f1094521e3593f791378b101bad2f79ebac90e",
+    "Tests/ComprehensiveTests/LoggingPublicConsumerTests.swift": "085b3a1aa5e6679bf90a428b9b374b454243d5dd462311b086afb05702fe0ba4",
+    "Tests/ComprehensiveTests/QuantizedKernelsComprehensiveTests.swift": "bb9dcfeb04b866b28e4241cbda7383948402536ea209a08b6dd3eabe5d42aa3b",
+    "Tests/ComprehensiveTests/QuantizedKernelsTests.swift": "47b847b1ed89517b29e5ba4c18a7f4e9311ed39454e3f10274089058c7970674",
+    "Tests/ComprehensiveTests/TestSupport.swift": "6bd00482aefad5bea7410721fc8c85f03b22548db04aeb730f783cdc0e575664"
+  },
+  "limitations": [
+    "Xcode 26.3 (CI) not executed locally; SDK 26.0 via CLT is the proxy.",
+    "E03 positive typecheck on CLT exceeds the 15 s deadline (toolchain slowness; layout proven by the negative case).",
+    "Lexical guards (path policy, layout literals, source scan) are heuristics with documented scope."
+  ]
+}

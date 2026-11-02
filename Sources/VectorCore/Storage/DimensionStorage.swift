@@ -122,9 +122,11 @@ extension DimensionStorage: VectorStorage {
         set {
             switch storage {
             case .hybrid(var hybrid):
+                storage = .hybrid(HybridStorage(capacity: 0))
                 hybrid[index] = newValue
                 storage = .hybrid(hybrid)
             case .managed(var managed):
+                storage = .hybrid(HybridStorage(capacity: 0))
                 managed[index] = newValue
                 storage = .managed(managed)
             }
@@ -147,16 +149,18 @@ extension DimensionStorage: VectorStorage {
     ) rethrows -> R {
         switch storage {
         case .hybrid(var hybrid):
+            storage = .hybrid(HybridStorage(capacity: 0))
             defer { storage = .hybrid(hybrid) }
             return try hybrid.withUnsafeMutableBufferPointer(body)
         case .managed(var managed):
+            storage = .hybrid(HybridStorage(capacity: 0))
             defer { storage = .managed(managed) }
             return try managed.withUnsafeMutableBufferPointer(body)
         }
     }
 }
 
-// MARK: - SIMD-Optimized Operations
+// MARK: - SIMD Operations
 
 extension DimensionStorage where Element == Float {
     /// Fill storage with a value using SIMD
@@ -266,50 +270,20 @@ extension DimensionStorage {
         mutating get {
             switch storage {
             case .hybrid(var hybrid):
+                storage = .hybrid(HybridStorage(capacity: 0))
+                defer { storage = .hybrid(hybrid) }
                 return hybrid.isUniquelyReferenced
             case .managed(var managed):
+                storage = .hybrid(HybridStorage(capacity: 0))
+                defer { storage = .managed(managed) }
                 return managed.isUniquelyReferenced
             }
         }
     }
 
-    /// Force a copy of the storage
+    /// Detach a shared heap owner, leaving an already unique or inline value alone.
     public mutating func makeUnique() {
-        if !isUniquelyReferenced {
-            switch storage {
-            case .hybrid(let hybrid):
-                var newHybrid = HybridStorage<Element>(capacity: D.value)
-                newHybrid.copyFrom(hybrid)
-                storage = .hybrid(newHybrid)
-            case .managed(let managed):
-                var newManaged = ManagedStorage<Element>(capacity: D.value)
-                newManaged.copyFrom(managed)
-                storage = .managed(newManaged)
-            }
-        }
-    }
-}
-
-// MARK: - Slice Operations
-
-extension DimensionStorage {
-    /// Create a slice view of the storage
-    @usableFromInline
-    internal func slice(from start: Int, to end: Int) -> StorageSlice<Element> {
-        switch storage {
-        case .hybrid, .managed:
-            // Both storage types can provide slices through buffer pointers
-            precondition(start >= 0 && end <= D.value && start < end, "Invalid slice bounds")
-            return withUnsafeBufferPointer { buffer in
-                StorageSlice(base: buffer.baseAddress! + start, count: end - start)
-            }
-        }
-    }
-
-    /// Create a slice with a range
-    @usableFromInline
-    internal func slice(_ range: Range<Int>) -> StorageSlice<Element> {
-        slice(from: range.lowerBound, to: range.upperBound)
+        withUnsafeMutableBufferPointer { _ in }
     }
 }
 

@@ -17,9 +17,15 @@ def bounded_run(command, *, timeout, env=None):
     process = subprocess.Popen(command, env=env, start_new_session=True)
     try:
         returncode = process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        os.killpg(process.pid, signal.SIGKILL)
-        process.wait()
+    except subprocess.TimeoutExpired as execution_timeout:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # The private process group may have exited at the deadline.
+        try:
+            process.wait(timeout=2)
+        except subprocess.TimeoutExpired as cleanup_timeout:
+            raise execution_timeout from cleanup_timeout
         raise
     if returncode:
         raise subprocess.CalledProcessError(returncode, command)
@@ -42,6 +48,7 @@ def main():
         command = ["xcrun", "swiftc", "-swift-version", "6", "-parse-as-library",
                    "-O" if args.configuration == "release" else "-Onone",
                    "-module-cache-path", str(Path(directory) / "cache"),
+                   str(root / "Sources/VectorCore/Utilities/PoolAllocation.swift"),
                    str(root / "Sources/VectorCore/Utilities/MemoryPool.swift"),
                    str(fixtures / "AllocationSupport.swift"), str(fixtures / "Probe.swift"),
                    "-o", str(executable)]

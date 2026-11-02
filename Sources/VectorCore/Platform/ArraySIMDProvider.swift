@@ -40,10 +40,12 @@ public protocol ArraySIMDProvider: Sendable {
     /// Sum all elements
     func sum(_ a: [Float]) -> Float
 
-    /// Find maximum value
+    /// Find maximum value. The built-in providers return NaN when any element is NaN and -infinity for an empty
+    /// array (T16 reduction NaN contract; T16ReductionExceptionalTableTests).
     func max(_ a: [Float]) -> Float
 
-    /// Find minimum value
+    /// Find minimum value. The built-in providers return NaN when any element is NaN and +infinity for an empty
+    /// array (T16 reduction NaN contract; T16ReductionExceptionalTableTests).
     func min(_ a: [Float]) -> Float
 
     /// Compute mean (average) of all elements
@@ -54,7 +56,7 @@ public protocol ArraySIMDProvider: Sendable {
     /// Compute magnitude (L2 norm) of vector
     func magnitude(_ a: [Float]) -> Float
 
-    /// Normalize vector to unit length
+    /// Normalize finite nonzero input; empty/zero/nonfinite input is returned unchanged
     func normalize(_ a: [Float]) -> [Float]
 
     /// Compute squared magnitude
@@ -70,10 +72,12 @@ public protocol ArraySIMDProvider: Sendable {
 
     // MARK: - Element-wise Operations
 
-    /// Element-wise minimum
+    /// Element-wise minimum. In the built-in providers a lane is NaN when either operand's lane is NaN
+    /// (T16; T16ReductionExceptionalTableTests).
     func elementWiseMin(_ a: [Float], _ b: [Float]) -> [Float]
 
-    /// Element-wise maximum
+    /// Element-wise maximum. In the built-in providers a lane is NaN when either operand's lane is NaN
+    /// (T16; T16ReductionExceptionalTableTests).
     func elementWiseMax(_ a: [Float], _ b: [Float]) -> [Float]
 
     /// Element-wise multiplication
@@ -91,15 +95,18 @@ public protocol ArraySIMDProvider: Sendable {
     /// Natural logarithm
     func log(_ a: [Float]) -> [Float]
 
-    /// Clip values to range
+    /// Clip values to range. In the built-in providers a NaN element stays NaN
+    /// (T16; T16ReductionExceptionalTableTests).
     func clip(_ a: [Float], min: Float, max: Float) -> [Float]
 
     // MARK: - Index Operations
 
-    /// Find index of minimum value
+    /// Find index of minimum value. The built-in providers return the index of the first NaN when any element is
+    /// NaN, and 0 for an empty array (T16; T16ReductionExceptionalTableTests).
     func minIndex(_ a: [Float]) -> Int
 
-    /// Find index of maximum value
+    /// Find index of maximum value. The built-in providers return the index of the first NaN when any element is
+    /// NaN, and 0 for an empty array (T16; T16ReductionExceptionalTableTests).
     func maxIndex(_ a: [Float]) -> Int
 }
 
@@ -179,7 +186,7 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
     }
 
     public func divide(_ a: [Float], by scalar: Float) -> [Float] {
-        multiply(a, by: 1.0 / scalar)
+        a.map { $0 / scalar }
     }
 
     public func dot(_ a: [Float], _ b: [Float]) -> Float {
@@ -246,9 +253,7 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
     }
 
     public func normalize(_ a: [Float]) -> [Float] {
-        let mag = magnitude(a)
-        guard mag > 0 else { return a }
-        return multiply(a, by: 1.0 / mag)
+        return NormalizationCore.permissive(a)
     }
 
     public func euclideanDistanceSquared(_ a: [Float], _ b: [Float]) -> Float {
@@ -270,10 +275,17 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
         let magA = magnitude(a)
         let magB = magnitude(b)
 
+        // NaN for a NaN or infinite magnitude; 0 for a zero magnitude or a product that underflows to zero
+        // (T15CosineExceptionalTableTests, sim.array rows)
+        guard magA.isFinite && magB.isFinite else { return .nan }
         guard magA > 0 && magB > 0 else { return 0 }
-        return dotProduct / (magA * magB)
+        let denominator = magA * magB
+        guard denominator > 0 else { return 0 }
+        return dotProduct / denominator
     }
 
+    /// Element-wise minimum: a lane is NaN when either operand's lane is NaN (T16; `Swift.min` alone keeps a NaN only
+    /// in its first argument); other lanes are `Swift.min(a[i], b[i])`. Pinned by T16ReductionExceptionalTableTests.
     public func elementWiseMin(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
         let count = a.count
@@ -281,13 +293,15 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
             a.withUnsafeBufferPointer { aBuffer in
                 b.withUnsafeBufferPointer { bBuffer in
                     for i in 0..<count {
-                        resultBuffer[i] = Swift.min(aBuffer[i], bBuffer[i])
+                        resultBuffer[i] = ReductionNaN.propagatingMin(aBuffer[i], bBuffer[i])
                     }
                 }
             }
         }
     }
 
+    /// Element-wise maximum: a lane is NaN when either operand's lane is NaN (T16; `Swift.max` alone keeps a NaN only
+    /// in its first argument); other lanes are `Swift.max(a[i], b[i])`. Pinned by T16ReductionExceptionalTableTests.
     public func elementWiseMax(_ a: [Float], _ b: [Float]) -> [Float] {
         precondition(a.count == b.count, "Arrays must have same length")
         let count = a.count
@@ -295,7 +309,7 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
             a.withUnsafeBufferPointer { aBuffer in
                 b.withUnsafeBufferPointer { bBuffer in
                     for i in 0..<count {
-                        resultBuffer[i] = Swift.max(aBuffer[i], bBuffer[i])
+                        resultBuffer[i] = ReductionNaN.propagatingMax(aBuffer[i], bBuffer[i])
                     }
                 }
             }
@@ -396,13 +410,17 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
         }
     }
 
+    /// Index of the first minimum, or of the FIRST NaN when any element is NaN (T16; the comparison scan alone skips
+    /// a NaN after element 0); 0 for an empty array. Pinned by T16ReductionExceptionalTableTests.
     public func minIndex(_ a: [Float]) -> Int {
         guard !a.isEmpty else { return 0 }
+        if a[0].isNaN { return 0 }
 
         var minIdx = 0
         var minVal = a[0]
 
         for i in 1..<a.count {
+            if a[i].isNaN { return i }
             if a[i] < minVal {
                 minVal = a[i]
                 minIdx = i
@@ -412,13 +430,17 @@ public struct DefaultArraySIMDProvider: ArraySIMDProvider, Sendable {
         return minIdx
     }
 
+    /// Index of the first maximum, or of the FIRST NaN when any element is NaN (T16; the comparison scan alone skips
+    /// a NaN after element 0); 0 for an empty array. Pinned by T16ReductionExceptionalTableTests.
     public func maxIndex(_ a: [Float]) -> Int {
         guard !a.isEmpty else { return 0 }
+        if a[0].isNaN { return 0 }
 
         var maxIdx = 0
         var maxVal = a[0]
 
         for i in 1..<a.count {
+            if a[i].isNaN { return i }
             if a[i] > maxVal {
                 maxVal = a[i]
                 maxIdx = i
@@ -637,7 +659,7 @@ public struct AccelerateArraySIMDProvider: ArraySIMDProvider, Sendable {
     }
 
     public func divide(_ a: [Float], by scalar: Float) -> [Float] {
-        multiply(a, by: 1.0 / scalar)
+        a.map { $0 / scalar }
     }
 
     public func dot(_ a: [Float], _ b: [Float]) -> Float {
@@ -704,9 +726,7 @@ public struct AccelerateArraySIMDProvider: ArraySIMDProvider, Sendable {
     }
 
     public func normalize(_ a: [Float]) -> [Float] {
-        let mag = magnitude(a)
-        guard mag > 0 else { return a }
-        return multiply(a, by: 1.0 / mag)
+        return NormalizationCore.permissive(a)
     }
 
     public func euclideanDistanceSquared(_ a: [Float], _ b: [Float]) -> Float {
@@ -728,8 +748,13 @@ public struct AccelerateArraySIMDProvider: ArraySIMDProvider, Sendable {
         let magA = magnitude(a)
         let magB = magnitude(b)
 
+        // NaN for a NaN or infinite magnitude; 0 for a zero magnitude or a product that underflows to zero
+        // (T15CosineExceptionalTableTests, sim.array rows)
+        guard magA.isFinite && magB.isFinite else { return .nan }
         guard magA > 0 && magB > 0 else { return 0 }
-        return dotProduct / (magA * magB)
+        let denominator = magA * magB
+        guard denominator > 0 else { return 0 }
+        return dotProduct / denominator
     }
 
     public func elementWiseMin(_ a: [Float], _ b: [Float]) -> [Float] {

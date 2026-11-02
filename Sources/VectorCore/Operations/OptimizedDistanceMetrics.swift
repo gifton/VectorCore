@@ -2,362 +2,20 @@
 //  OptimizedDistanceMetrics.swift
 //  VectorCore
 //
-//  Specialized distance metric implementations for optimized vector types
-//  Provides significant performance improvements by avoiding array conversions
+//  The metric factory
 //
 
 import Foundation
-import simd
 
-// MARK: - Optimized Euclidean Distance
-
-extension EuclideanDistance {
-
-    /// Specialized implementation for Vector512Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
-        a.euclideanDistance(to: b)
-    }
-
-    /// Specialized implementation for Vector768Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
-        a.euclideanDistance(to: b)
-    }
-
-    /// Specialized implementation for Vector1536Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
-        a.euclideanDistance(to: b)
-    }
-
-    /// Optimized batch distance for Vector512Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector512Optimized,
-        candidates: [Vector512Optimized]
-    ) -> [DistanceScore] {
-        // For small batches, use direct computation
-        guard candidates.count > 100 else {
-            return candidates.map { query.euclideanDistance(to: $0) }
-        }
-
-        // For large batches, use chunked processing for better cache locality
-        var results = [DistanceScore](repeating: 0, count: candidates.count)
-        let chunkSize = 64 // Optimize for cache line
-
-        for chunkStart in stride(from: 0, to: candidates.count, by: chunkSize) {
-            let chunkEnd = min(chunkStart + chunkSize, candidates.count)
-            for i in chunkStart..<chunkEnd {
-                results[i] = query.euclideanDistance(to: candidates[i])
-            }
-        }
-
-        return results
-    }
-
-    /// Optimized batch distance for Vector768Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector768Optimized,
-        candidates: [Vector768Optimized]
-    ) -> [DistanceScore] {
-        // For small batches, use direct computation
-        guard candidates.count > 100 else {
-            return candidates.map { query.euclideanDistance(to: $0) }
-        }
-
-        // For large batches, use chunked processing for better cache locality
-        var results = [DistanceScore](repeating: 0, count: candidates.count)
-        let chunkSize = 64 // Optimize for cache line
-
-        for chunkStart in stride(from: 0, to: candidates.count, by: chunkSize) {
-            let chunkEnd = min(chunkStart + chunkSize, candidates.count)
-            for i in chunkStart..<chunkEnd {
-                results[i] = query.euclideanDistance(to: candidates[i])
-            }
-        }
-
-        return results
-    }
-
-    /// Optimized batch distance for Vector1536Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector1536Optimized,
-        candidates: [Vector1536Optimized]
-    ) -> [DistanceScore] {
-        // For small batches, use direct computation
-        guard candidates.count > 100 else {
-            return candidates.map { query.euclideanDistance(to: $0) }
-        }
-
-        // For large batches, use chunked processing for better cache locality
-        var results = [DistanceScore](repeating: 0, count: candidates.count)
-        let chunkSize = 32 // Smaller chunk for larger vectors
-
-        for chunkStart in stride(from: 0, to: candidates.count, by: chunkSize) {
-            let chunkEnd = min(chunkStart + chunkSize, candidates.count)
-            for i in chunkStart..<chunkEnd {
-                results[i] = query.euclideanDistance(to: candidates[i])
-            }
-        }
-
-        return results
-    }
-}
-
-// MARK: - Optimized Cosine Distance
-
-extension CosineDistance {
-
-    /// Specialized implementation for Vector512Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
-        CosineKernels.distance512_fused(a, b)
-    }
-
-    /// Specialized implementation for Vector768Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
-        CosineKernels.distance768_fused(a, b)
-    }
-
-    /// Specialized implementation for Vector1536Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
-        CosineKernels.distance1536_fused(a, b)
-    }
-
-    /// Optimized batch distance for Vector512Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector512Optimized,
-        candidates: [Vector512Optimized]
-    ) -> [DistanceScore] {
-        // Fused path for higher throughput and fewer passes
-        return candidates.map { CosineKernels.distance512_fused(query, $0) }
-    }
-
-    /// Optimized batch distance for Vector768Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector768Optimized,
-        candidates: [Vector768Optimized]
-    ) -> [DistanceScore] {
-        return candidates.map { CosineKernels.distance768_fused(query, $0) }
-    }
-
-    /// Optimized batch distance for Vector1536Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector1536Optimized,
-        candidates: [Vector1536Optimized]
-    ) -> [DistanceScore] {
-        return candidates.map { CosineKernels.distance1536_fused(query, $0) }
-    }
-}
-
-// MARK: - Optimized Dot Product Distance
-
-extension DotProductDistance {
-
-    /// Specialized implementation for Vector512Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
-        -a.dotProduct(b)
-    }
-
-    /// Specialized implementation for Vector768Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
-        -a.dotProduct(b)
-    }
-
-    /// Specialized implementation for Vector1536Optimized
-    @inlinable
-    @inline(__always)
-    public func distance(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
-        -a.dotProduct(b)
-    }
-
-    /// Optimized batch distance for Vector512Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector512Optimized,
-        candidates: [Vector512Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { -query.dotProduct($0) }
-    }
-
-    /// Optimized batch distance for Vector768Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector768Optimized,
-        candidates: [Vector768Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { -query.dotProduct($0) }
-    }
-
-    /// Optimized batch distance for Vector1536Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector1536Optimized,
-        candidates: [Vector1536Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { -query.dotProduct($0) }
-    }
-}
-
-// MARK: - Optimized Manhattan Distance
-
-extension ManhattanDistance {
-
-    /// Specialized implementation for Vector512Optimized
-    @inlinable
-    public func distance(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
-        var sum = SIMD4<Float>()
-
-        for i in 0..<128 {
-            let diff = a.storage[i] - b.storage[i]
-            sum += abs(diff)
-        }
-
-        return sum.x + sum.y + sum.z + sum.w
-    }
-
-    /// Specialized implementation for Vector768Optimized
-    @inlinable
-    public func distance(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
-        var sum = SIMD4<Float>()
-
-        for i in 0..<192 {
-            let diff = a.storage[i] - b.storage[i]
-            sum += abs(diff)
-        }
-
-        return sum.x + sum.y + sum.z + sum.w
-    }
-
-    /// Specialized implementation for Vector1536Optimized
-    @inlinable
-    public func distance(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
-        var sum = SIMD4<Float>()
-
-        for i in 0..<384 {
-            let diff = a.storage[i] - b.storage[i]
-            sum += abs(diff)
-        }
-
-        return sum.x + sum.y + sum.z + sum.w
-    }
-
-    /// Optimized batch distance for Vector512Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector512Optimized,
-        candidates: [Vector512Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { distance(query, $0) }
-    }
-
-    /// Optimized batch distance for Vector768Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector768Optimized,
-        candidates: [Vector768Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { distance(query, $0) }
-    }
-
-    /// Optimized batch distance for Vector1536Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector1536Optimized,
-        candidates: [Vector1536Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { distance(query, $0) }
-    }
-}
-
-// MARK: - Optimized Chebyshev Distance
-
-extension ChebyshevDistance {
-
-    /// Specialized implementation for Vector512Optimized
-    @inlinable
-    public func distance(_ a: Vector512Optimized, _ b: Vector512Optimized) -> Float {
-        var maxDiff = SIMD4<Float>()
-
-        for i in 0..<128 {
-            let diff = abs(a.storage[i] - b.storage[i])
-            maxDiff = max(maxDiff, diff)
-        }
-
-        return max(max(maxDiff.x, maxDiff.y), max(maxDiff.z, maxDiff.w))
-    }
-
-    /// Specialized implementation for Vector768Optimized
-    @inlinable
-    public func distance(_ a: Vector768Optimized, _ b: Vector768Optimized) -> Float {
-        var maxDiff = SIMD4<Float>()
-
-        for i in 0..<192 {
-            let diff = abs(a.storage[i] - b.storage[i])
-            maxDiff = max(maxDiff, diff)
-        }
-
-        return max(max(maxDiff.x, maxDiff.y), max(maxDiff.z, maxDiff.w))
-    }
-
-    /// Specialized implementation for Vector1536Optimized
-    @inlinable
-    public func distance(_ a: Vector1536Optimized, _ b: Vector1536Optimized) -> Float {
-        var maxDiff = SIMD4<Float>()
-
-        for i in 0..<384 {
-            let diff = abs(a.storage[i] - b.storage[i])
-            maxDiff = max(maxDiff, diff)
-        }
-
-        return max(max(maxDiff.x, maxDiff.y), max(maxDiff.z, maxDiff.w))
-    }
-
-    /// Optimized batch distance for Vector512Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector512Optimized,
-        candidates: [Vector512Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { distance(query, $0) }
-    }
-
-    /// Optimized batch distance for Vector768Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector768Optimized,
-        candidates: [Vector768Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { distance(query, $0) }
-    }
-
-    /// Optimized batch distance for Vector1536Optimized
-    @inlinable
-    public func batchDistance(
-        query: Vector1536Optimized,
-        candidates: [Vector1536Optimized]
-    ) -> [DistanceScore] {
-        candidates.map { distance(query, $0) }
-    }
-}
+// T14 removed every concrete `distance`/`batchDistance` overload for Vector512Optimized, Vector768Optimized and
+// Vector1536Optimized: the Euclidean, dot-product, Manhattan and Chebyshev ones in phase 2 and the cosine ones in
+// phase 3. A call with those concrete types binds the DistanceMetric witness: MetricWitnessEquivalenceTests checks
+// that concrete, generic and existential calls agree, and MetricSearchWitnessConsistencyTests that the search APIs
+// return the witness's result outside the GEMM routes. The Euclidean and cosine GEMM routes are a different arithmetic
+// and are not covered: Operations.findNearestBatch with the explicit BatchSearchCPUStrategy.gram (the default,
+// .perQuery, runs the per-candidate routes), and the off-diagonal entries of BatchOperations.pairwiseDistances when
+// enableMatrixRouting is set and the count reaches matrixRoutingMinN. A new concrete overload needs a key in MetricWitnessEquivalenceTests.concreteOverloadRegistry
+// (Scripts/ci/tests/test_metric_overload_registry.py).
 
 // MARK: - Distance Metric Factory
 
@@ -374,7 +32,7 @@ public struct OptimizedDistanceMetrics {
         case hamming
 
         /// Create the corresponding distance metric
-        public func createMetric() -> any DistanceMetric {
+        public func createMetric() -> any DistanceMetric<Float> {
             switch self {
             case .euclidean:
                 return EuclideanDistance()
@@ -393,12 +51,12 @@ public struct OptimizedDistanceMetrics {
     }
 
     /// Create a distance metric by type
-    public static func create(_ type: MetricType) -> any DistanceMetric {
+    public static func create(_ type: MetricType) -> any DistanceMetric<Float> {
         type.createMetric()
     }
 
     /// Create a distance metric by name
-    public static func create(named name: String) -> (any DistanceMetric)? {
-        MetricType(rawValue: name.lowercased())?.createMetric()
+    public static func create(named name: String) -> (any DistanceMetric<Float>)? {
+        MetricType.allCases.first { $0.rawValue.lowercased() == name.lowercased() }?.createMetric()
     }
 }

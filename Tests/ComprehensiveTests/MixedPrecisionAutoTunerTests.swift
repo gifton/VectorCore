@@ -1,9 +1,3 @@
-//
-//  MixedPrecisionAutoTunerTests.swift
-//  VectorCore
-//
-//  Tests for MixedPrecisionAutoTuner Phase 2 implementation
-//
 
 import Testing
 import Foundation
@@ -13,136 +7,106 @@ import Foundation
 struct MixedPrecisionAutoTunerTests {
 
     @Test("Strategy selection - Small batch (N=50)")
-    func testSmallBatchStrategySelection() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    func testSmallBatchStrategySelection() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
 
-        let strategy = await tuner.selectOptimalStrategy(
+        let strategy = try await tuner.selectStrategy(
             candidateCount: 50,
-            accuracyRequirement: 0.001  // 0.1% max error
+            maximumSyntheticRelativeError: 0.001  // Synthetic relative-error filter
         )
-
-        // A small batch legitimately prefers .fullFP32: with a strict 0.1% accuracy
-        // requirement, FP16's worst-case error exceeds the bound (so FP16 strategies are
-        // filtered out), and in a DEBUG build FP16/SoA conversion overhead makes fullFP32
-        // fastest anyway. So we only assert that a *valid* strategy is returned here.
-        // Specific non-fullFP32 selection is throughput/accuracy-dependent and is only
-        // meaningfully asserted in optimized (release) builds.
-        #expect(MixedPrecisionStrategy.allCases.contains(strategy), "Should return a valid strategy for small batch")
+        #expect(strategy == .fullFP32, "Should return a valid strategy for small batch")
         print("✓ Small batch (N=50) selected: \(strategy.description)")
     }
 
     @Test("Strategy selection - Medium batch (N=500)")
-    func testMediumBatchStrategySelection() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    func testMediumBatchStrategySelection() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
 
-        let strategy = await tuner.selectOptimalStrategy(
+        let strategy = try await tuner.selectStrategy(
             candidateCount: 500,
-            accuracyRequirement: 0.001
+            maximumSyntheticRelativeError: 0.001
         )
-
-        // Medium batches should benefit from blocked kernels
+        #expect(strategy == .fullFP32)
         print("✓ Medium batch (N=500) selected: \(strategy.description)")
     }
 
     @Test("Strategy selection - Large batch (N=2000)")
-    func testLargeBatchStrategySelection() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    func testLargeBatchStrategySelection() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
 
-        let strategy = await tuner.selectOptimalStrategy(
+        let strategy = try await tuner.selectStrategy(
             candidateCount: 2000,
-            accuracyRequirement: 0.001
+            maximumSyntheticRelativeError: 0.001
         )
-
-        // Even for a large batch, returning .fullFP32 can be correct: with a strict 0.1%
-        // accuracy requirement FP16's worst-case error exceeds the bound (FP16 strategies
-        // get filtered out), and in a DEBUG build FP16/SoA conversion overhead can make
-        // fullFP32 fastest. We therefore assert only that a *valid* strategy is returned.
-        // Specific non-fullFP32 selection is throughput/accuracy-dependent and is only
-        // meaningfully asserted in optimized (release) builds.
-        #expect(MixedPrecisionStrategy.allCases.contains(strategy), "Large batch should return a valid strategy")
+        #expect(strategy == .fullFP32, "Large batch should return a valid strategy")
         print("✓ Large batch (N=2000) selected: \(strategy.description)")
     }
 
-    @Test("Strategy caching")
-    func testStrategyCaching() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    @Test("Repeated unprofiled lookup")
+    func testRepeatedUnprofiledLookup() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
-
-        // First call - should calibrate
-        let strategy1 = await tuner.selectOptimalStrategy(
+        let strategy1 = try await tuner.selectStrategy(
             candidateCount: 100,
-            accuracyRequirement: 0.001
+            maximumSyntheticRelativeError: 0.001
+        )
+        let strategy2 = try await tuner.selectStrategy(
+            candidateCount: 100,
+            maximumSyntheticRelativeError: 0.001
         )
 
-        // Second call with same params - should use cache
-        let strategy2 = await tuner.selectOptimalStrategy(
-            candidateCount: 100,
-            accuracyRequirement: 0.001
-        )
-
-        #expect(strategy1 == strategy2, "Cached strategy should match")
-        print("✓ Strategy caching verified: \(strategy1.description)")
+        #expect(strategy1 == strategy2, "Repeated unprofiled lookup should match")
+        print("✓ Repeated unprofiled lookup verified: \(strategy1.description)")
     }
 
     @Test("Manual override")
-    func testManualOverride() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    func testManualOverride() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
-
-        // Set manual override to fullFP32
-        await tuner.setOverride(
+        try await tuner.setOverride(
             .fullFP32,
             candidateCount: 100,
-            accuracyRequirement: 0.001
+            maximumSyntheticRelativeError: 0.001
         )
 
-        let strategy = await tuner.selectOptimalStrategy(
+        let strategy = try await tuner.selectStrategy(
             candidateCount: 100,
-            accuracyRequirement: 0.001
+            maximumSyntheticRelativeError: 0.001
         )
 
         #expect(strategy == .fullFP32, "Should use manual override")
         print("✓ Manual override verified: \(strategy.description)")
-
-        // Clear for other tests
         await tuner.clearCache()
     }
 
-    @Test("Strict accuracy requirement")
-    func testStrictAccuracyRequirement() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    @Test("Strict synthetic-limit cache miss")
+    func testStrictSyntheticLimitMiss() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
-
-        // Very strict accuracy (0.01% = 0.0001)
-        let strategy = await tuner.selectOptimalStrategy(
+        let strategy = try await tuner.selectStrategy(
             candidateCount: 100,
-            accuracyRequirement: 0.0001
+            maximumSyntheticRelativeError: 0.0001
         )
-
-        // With very strict requirements, may need FP32 query or fallback to fullFP32
         #expect(
-            strategy == .fullFP32 || strategy == .queryFP32Standard || strategy == .queryFP32Blocked,
-            "Strict accuracy should prefer FP32 query or full FP32, got \(strategy.description)"
+            strategy == .fullFP32,
+            "An unprofiled strict-limit lookup returns full FP32, got \(strategy.description)"
         )
-        print("✓ Strict accuracy requirement handled: \(strategy.description)")
+        print("✓ Strict synthetic-limit cache miss handled: \(strategy.description)")
     }
 
-    @Test("Relaxed accuracy requirement")
-    func testRelaxedAccuracyRequirement() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    @Test("Relaxed synthetic-limit cache miss")
+    func testRelaxedSyntheticLimitMiss() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
-
-        // Relaxed accuracy (1% = 0.01)
-        let strategy = await tuner.selectOptimalStrategy(
+        let strategy = try await tuner.selectStrategy(
             candidateCount: 100,
-            accuracyRequirement: 0.01
+            maximumSyntheticRelativeError: 0.01
         )
-
-        // With relaxed requirements, can use full FP16 strategies
-        print("✓ Relaxed accuracy requirement handled: \(strategy.description)")
+        #expect(strategy == .fullFP32)
+        print("✓ Relaxed synthetic-limit miss handled: \(strategy.description)")
     }
 
     @Test("All strategies enumeration")
@@ -162,31 +126,20 @@ struct MixedPrecisionAutoTunerTests {
         }
     }
 
-    @Test("Performance comparison - Blocked vs Standard")
-    func testBlockedVsStandard() async {
-        let tuner = MixedPrecisionAutoTuner.shared
-
-        // For large batches, blocked should be selected over standard
+    @Test("Unprofiled large count returns full FP32")
+    func testUnprofiledLargeCount() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
-        let largeBatchStrategy = await tuner.selectOptimalStrategy(
+        let largeBatchStrategy = try await tuner.selectStrategy(
             candidateCount: 1000,
-            accuracyRequirement: 0.001
+            maximumSyntheticRelativeError: 0.001
         )
+        #expect(largeBatchStrategy == .fullFP32)
 
-        // Verify it's a blocked variant for large batches
-        let isBlocked = (largeBatchStrategy == .queryFP16Blocked ||
-                        largeBatchStrategy == .queryFP32Blocked)
-
-        if isBlocked {
-            print("✓ Large batch correctly selected blocked kernel: \(largeBatchStrategy.description)")
-        } else {
-            print("ℹ️ Large batch selected: \(largeBatchStrategy.description)")
-        }
     }
 
     @Test("Strategy metrics quality score")
     func testMetricsQualityScore() {
-        // Test quality score calculation
         let goodMetrics = StrategyMetrics(
             strategy: .queryFP32Blocked,
             meanLatency: 0.001,  // 1ms
@@ -194,7 +147,9 @@ struct MixedPrecisionAutoTunerTests {
             throughput: 1000,    // 1K ops/sec
             maxRelativeError: 0.0001,  // 0.01% error
             meanRelativeError: 0.00005,
-            candidateCount: 100,
+            candidateCount: 100, dimension: 512, measuredSamples: 1, warmupIterations: 0,
+            algorithmVersion: 1, datasetVersion: "gaussian-lcg-boxmuller-v1", seed: 42,
+            conversionBoundary: "fp32-input-conversion-per-reduced-euclidean-invocation-v1",
             timestamp: Date()
         )
 
@@ -205,7 +160,9 @@ struct MixedPrecisionAutoTunerTests {
             throughput: 100,     // 100 ops/sec
             maxRelativeError: 0,  // Perfect accuracy but slow
             meanRelativeError: 0,
-            candidateCount: 100,
+            candidateCount: 100, dimension: 512, measuredSamples: 1, warmupIterations: 0,
+            algorithmVersion: 1, datasetVersion: "gaussian-lcg-boxmuller-v1", seed: 42,
+            conversionBoundary: "fp32-input-conversion-per-reduced-euclidean-invocation-v1",
             timestamp: Date()
         )
 
@@ -217,36 +174,29 @@ struct MixedPrecisionAutoTunerTests {
         print("  Poor metrics: \(String(format: "%.2f", poorMetrics.qualityScore))")
     }
 
-    @Test("Cache key uniqueness")
-    func testCacheKeyUniqueness() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    @Test("Independent unprofiled counts")
+    func testIndependentUnprofiledCounts() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
-
-        // Different candidate counts should use different cache entries
-        let strategy1 = await tuner.selectOptimalStrategy(candidateCount: 100)
-        let strategy2 = await tuner.selectOptimalStrategy(candidateCount: 200)
-
-        // Strategies might differ based on workload
-        print("✓ Cache keys differentiate workloads:")
+        let strategy1 = try await tuner.selectStrategy(candidateCount: 100)
+        let strategy2 = try await tuner.selectStrategy(candidateCount: 200)
+        #expect(strategy1 == .fullFP32 && strategy2 == .fullFP32)
+        print("✓ Both unprofiled counts return full FP32:")
         print("  N=100: \(strategy1.description)")
         print("  N=200: \(strategy2.description)")
     }
 
-    @Test("Accuracy validation against FP32 baseline")
-    func testAccuracyValidation() async {
-        let tuner = MixedPrecisionAutoTuner.shared
+    @Test("Unprofiled lookup preserves full FP32")
+    func testUnprofiledLookupPreservesFullFP32() async throws {
+        let tuner = MixedPrecisionAutoTuner()
         await tuner.clearCache()
-
-        // Select strategy with 0.1% accuracy requirement
-        let strategy = await tuner.selectOptimalStrategy(
+        let strategy = try await tuner.selectStrategy(
             candidateCount: 100,
-            accuracyRequirement: 0.001
+            maximumSyntheticRelativeError: 0.001
         )
+        #expect(strategy == .fullFP32,
+               "An unprofiled lookup returns full FP32")
 
-        // The AutoTuner should only select strategies that meet the requirement
-        #expect(strategy != .fullFP32 || strategy == .fullFP32,
-               "Selected strategy should meet accuracy requirement")
-
-        print("✓ Accuracy validation passed for: \(strategy.description)")
+        print("✓ Unprofiled result verified: \(strategy.description)")
     }
 }

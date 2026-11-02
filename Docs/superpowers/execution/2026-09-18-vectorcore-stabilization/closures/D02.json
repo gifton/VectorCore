@@ -1,0 +1,37 @@
+{
+ "task": "D02",
+ "status": "accepted",
+ "task_base": "74ceae1 (phases 2-4); cf47327 (phase 5, after P02 and T17)",
+ "integration_revision": "93e08c4",
+ "closed_records": [
+  "D02-STORAGE-GATE",
+  "D02-C-CONTRACT",
+  "D02-DEVICE-FACTORY-WITNESS",
+  "D02-ROUTED-CLEANUP",
+  "D02-HOOK-TABLE"
+ ],
+ "disposition_records": {
+  "D02-STORAGE-GATE": "The StaticDimension.Storage requirement and its 18 gates are removed; value-only dimensions reach all 61 formerly gated members. Behaviour is SILGen-binding checked (61/61); a degenerate-width table covers every symbol at V0/V1; zero-width minElement/maxElement have an explicit precondition. IndexableVector.isNormalized now witnesses the real check for every Vector<D>, including dimension-generic code; this is disclosed and routed to the D01/L04 user packet. 59 mangled names change (source-compatible).",
+  "D02-C-CONTRACT": "INT8 accumulation is modulo 2^32 through uint32_t: UBSan RED at 3 sites goes to 0; IR signed-overflow adds 7 -> 0; bit-identical where there was no overflow (20,000 cases x 3 entries x 4 builds). The 18 declared-but-undefined functions are removed; exports unchanged (21). The x86 AVX2 path is compile/IR/disassembly verified only (Rosetta set aside by the user).",
+  "D02-DEVICE-FACTORY-WITNESS": "The ComputeDevice discovery members and DeviceCapabilities are removed; isSupportedByCore and coreSupportedDevices = [.cpu] are added. Factory docs are corrected. A witness/static matrix covers all 77 protocol members, backed by a live lexical scan plus a symbol-graph backstop (77/77/77/77).",
+  "D02-ROUTED-CLEANUP": "RD-R0 routed fixes: the Q14 flag helpers, the PERFORMANCE_METRICS counters, SoA.memoryEfficiency, estimatePerformanceGain and SIMDMemoryUtilities are removed; the PrecisionProfile strings are reworded; the VectorData doc is fixed; V04-C-0607 is rebound to unverified-contract with its wording in the adjacent comment (claim-ledger R5); Logger qualification is documented as `import struct VectorCore.Logger`; the unused hooks and Configuration are removed. All 13 phase 5 public removals have negative consumers and CHANGELOG lines.",
+  "D02-HOOK-TABLE": "The Operations provider-hook table has 37 rows, each pinned to an exact spy-recorded ordered call list, plus a git-less table-vs-test cross-check. This class closure found 3 table errors (softmax, the PCA sketch qrThin x5, and missing indirect rows)."
+ },
+ "validation": {
+  "suite": "Final tree: full Debug 1694+2 Swift Testing plus 185 XCTest, 0 failures; focused Debug/Release; Intel --build-tests; D02 consumers 10/10; build modes complete; C contract RED/GREEN.",
+  "policy": "Merged tree: claim ledger 0 problems; unittest 523 OK git-less (D02/merge/gitless-gate.log).",
+  "reviews": "Phase 1 rulings -> phases 2-4 reviews A1/A2/B -> fix 1 -> re-review -> fix 2 -> re-review APPROVED -> phase 5 (two watchdog stalls, then a continuation agent) -> reviews A/B -> fix 1 -> scoped re-review APPROVED (no findings)."
+ },
+ "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/D02",
+ "reviewed_tree": "manifest D02/phase5/fix1/freeze-sha256.txt (6326 files; plain-copy workspace, not staged)",
+ "limitations": [
+  "The x86_64 AVX2 INT8 path and the FP16 runtime are not executed (Rosetta set aside).",
+  "The SILGen binding check and the symbol-graph backstop need a built module, so they run in the evidence runner/merge gate, not CI; CI keeps the lexical guards.",
+  "The hook-table route tests pin exact call lists for their specific inputs; multiplicities for other inputs are row notes from the code."
+ ],
+ "routed": [
+  "D01/L04 user packet: IndexableVector.isNormalized witness change (including dimension-generic code)",
+  "C claim-rule follow-up: stale 'scaffold'/'stub' comments in vc_features.c and vc_dispatch.c (A1-M6)",
+  "T13 follow-up vocabulary: V04-R-0011/0012 noun forms (unchanged owner)"
+ ]
+}

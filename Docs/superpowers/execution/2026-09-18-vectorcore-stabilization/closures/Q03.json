@@ -1,0 +1,37 @@
+{
+  "task": "Q03",
+  "status": "accepted",
+  "task_base": "a97b886861c62c74a188309502da7b56e623c754",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-21",
+    "NUM-18"
+  ],
+  "validation": {
+    "red": "146 actual classification/range assertion issues; original unsafe singleton TSan child reported enabled-flag race. Initial sanitizer startup failure retained separately.",
+    "debug": "35 reported functions/7 suites; one no-op child entry excluded: 34 nonempty parent bodies and 3 actual children.",
+    "release": "Same focused 35/7 and 3 actual children, exit0.",
+    "tsan": "Final v2 concurrent parent and actual child exit0, no race report; six workers each completed2000 loops, stable-total and atomic-batch phases completed.",
+    "oracle": "Independent42-row integer RNE generator reproduced exact frozen table; all three constructors and stored output bits tested.",
+    "provenance": "284base/287final complete reconstruction;71 worker artifacts/canonical copies;387 final build entries;157 baseline artifacts;20 versioned child associations verified. Final v2 differs only in test helper from v1."
+  },
+  "review": "reports/Q03-implementation-review.md",
+  "evidence": "reports/Q03-implementation.md",
+  "commands": "reports/Q03-command-inventory.json",
+  "root_verification": "reports/Q03-root-verification.json",
+  "diff_sha256": "21c3cfc0ad089cf0f249f83a41b56d63f7464455d20675814d63f5406ace65fb",
+  "frozen_sha256": {
+    "Scripts/ci/tests/Q03GenerateOracle.py": "15b1db9ac0bebe76d8a5a7753e1c87cb1063d37257735d53ca7ed6b96a4b9fe1",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionDiagnostics.swift": "d43bcbde7e873056a9f7a8777df7b1b9eb0f8b9d51c0d1f7e54732e27f1b7b2c",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift": "cf4830c7151efe3634568a7d94b1d8b54f2e5d60788bc85dd24e67ff7d2848bb",
+    "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift": "13d5393f3216aa68445dd05201ef05e36158c382f852e42ed1f45f2b72852d87",
+    "Tests/ComprehensiveTests/Q03FP16Oracle.swift": "a8c22683af45a0b44507e5eb8a247ccfffcabbb3e321a89a6ce254b87ffb5f1b"
+  },
+  "limitations": [
+    "Synchronized preflight is a hint; a prepared batch may join a new reset generation; every physical conversion during toggling is not promised counted.",
+    "Independent counter saturation and finite-original-input signed-zero bounds follow the documented policy.",
+    "Conversion arithmetic and O05 borrow APIs remain unchanged; no performance, arbitrary raw-memory, downstream or profiler claim.",
+    "Task archive predates E02; byte-identical imported production then passed focused combined Debug/Release milestone07 with accepted scheduling and scoped-borrow contracts."
+  ],
+  "combined_verification": "reports/milestone-07-verification.json"
+}

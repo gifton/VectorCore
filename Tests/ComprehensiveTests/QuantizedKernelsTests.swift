@@ -300,16 +300,12 @@ struct QuantizedKernelsTests {
                 print("    Asymmetric - Scale: \(asymmetricParams.scale), ZP: \(asymmetricParams.zeroPoint), Error: \(errorAsym)")
 
                 // Verify scale calculation
-                if symmetricParams.isSymmetric {
-                    let expectedScale = max(abs(minVal), abs(maxVal)) / 127.0
-                    #expect(abs(symmetricParams.scale - expectedScale) < 0.001 || symmetricParams.scale == 1.0,
-                           "Symmetric scale calculation incorrect")
-                    #expect(symmetricParams.zeroPoint == 0, "Symmetric should have zero-point = 0")
-                } else {
-                    let expectedScale = (maxVal - minVal) / 255.0
-                    #expect(abs(asymmetricParams.scale - expectedScale) < 0.001 || asymmetricParams.scale == 1.0,
-                           "Asymmetric scale calculation incorrect")
-                }
+                // symmetricParams is built with symmetric: true and isSymmetric stores that argument verbatim.
+                #expect(symmetricParams.isSymmetric, "Symmetric parameters must report isSymmetric")
+                let expectedScale = max(abs(minVal), abs(maxVal)) / 127.0
+                #expect(abs(symmetricParams.scale - expectedScale) < 0.001 || symmetricParams.scale == 1.0,
+                       "Symmetric scale calculation incorrect")
+                #expect(symmetricParams.zeroPoint == 0, "Symmetric should have zero-point = 0")
 
                 // For skewed ranges, asymmetric should generally be more accurate
                 if abs(minVal) != abs(maxVal) && minVal != 0 && maxVal != 0 {
@@ -627,7 +623,7 @@ struct QuantizedKernelsTests {
             // INT8-vs-FP32 ratio is hardware-dependent (0.91x on M3 Max after the
             // 0.3.0 FP32 GEMM/SoA gains) — gate only in strict-perf runs
             if strictPerfGatesEnabled {
-                #expect(speedup > 1.0, "INT8 should be faster than FP32")
+                expectPerformance("QuantizedKernelsTests.testQuantizedEuclideanDistance.1", speedup > 1.0, "INT8 should be faster than FP32")
             }
 
             // Test edge case: identical vectors
@@ -728,7 +724,7 @@ struct QuantizedKernelsTests {
             // actually calls euclidean512 — which sqrts — then squares, so it does MORE work).
             // Only assert in strict-perf runs.
             if strictPerfGatesEnabled {
-                #expect(withoutSqrtTime < withSqrtTime, "Squared distance should be faster")
+                expectPerformance("QuantizedKernelsTests.testQuantizedEuclideanSquaredDistance.2", withoutSqrtTime < withSqrtTime, "Squared distance should be faster")
             }
 
             // Test accumulator overflow protection
@@ -1157,10 +1153,10 @@ struct QuantizedKernelsTests {
         @Test
         func testMemoryFootprintReduction() throws {
             var rng = SeededGenerator(seed: 0xA0010006)
-            // Test 4x memory footprint reduction with INT8
-            // - Actual memory usage measurement
+            // Test the 4x stored scalar payload ratio of INT8 vs FP32 vectors
+            // - Stored scalar payload of real vector storage (not a measured memory footprint)
             // - Compression ratio analysis
-            // - Memory layout optimization
+            // - Storage layout display (lane count, lane size and alignment; nothing is optimized or measured)
 
             let vectorCount = 1000
             let dimension = 512
@@ -1174,55 +1170,35 @@ struct QuantizedKernelsTests {
             let params = LinearQuantizationParams(minValue: -1, maxValue: 1, symmetric: true)
             let int8Vectors = fp32Vectors.map { Vector512INT8(from: $0, params: params) }
 
-            // Calculate memory footprints
-            let fp32MemoryPerVector = dimension * MemoryLayout<Float>.size  // 512 * 4 = 2048 bytes
-            let int8MemoryPerVector = dimension * MemoryLayout<Int8>.size + MemoryLayout<LinearQuantizationParams>.size  // 512 * 1 + params
+            // Calculate stored scalar payloads
+            // Stored scalar payload of the real vectors, plus the per-vector quantization parameters
+            let fp32ScalarBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(fp32Vectors[0].storage)
+            let int8ScalarBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(int8Vectors[0].storage)
+            #expect(fp32ScalarBytes == dimension * 4, "FP32 stored scalar payload per vector")
+            #expect(int8ScalarBytes == dimension, "INT8 stored scalar payload per vector")
+            let fp32PayloadBytesPerVector = fp32ScalarBytes
+            let int8PayloadBytesPerVector = int8ScalarBytes + MemoryLayout<LinearQuantizationParams>.size
 
-            let fp32TotalMemory = fp32MemoryPerVector * vectorCount
-            let int8TotalMemory = int8MemoryPerVector * vectorCount
+            let fp32PayloadBytesTotal = fp32PayloadBytesPerVector * vectorCount
+            let int8PayloadBytesTotal = int8PayloadBytesPerVector * vectorCount
 
-            let compressionRatio = Float(fp32TotalMemory) / Float(int8TotalMemory)
+            let compressionRatio = Float(fp32PayloadBytesTotal) / Float(int8PayloadBytesTotal)
 
-            print("Memory Footprint Reduction:")
-            print("  FP32 per vector: \(fp32MemoryPerVector) bytes")
-            print("  INT8 per vector: \(int8MemoryPerVector) bytes")
-            print("  Total FP32: \(fp32TotalMemory / 1024) KB")
-            print("  Total INT8: \(int8TotalMemory / 1024) KB")
+            print("Stored scalar payload (INT8 includes the per-vector params struct; not process memory):")
+            print("  FP32 per vector: \(fp32PayloadBytesPerVector) bytes")
+            print("  INT8 per vector: \(int8PayloadBytesPerVector) bytes")
+            print("  Total FP32: \(fp32PayloadBytesTotal / 1024) KB")
+            print("  Total INT8: \(int8PayloadBytesTotal / 1024) KB")
             print("  Compression ratio: \(compressionRatio)x")
-            print("  Memory saved: \((1.0 - 1.0/compressionRatio) * 100)%")
+            print("  Stored scalar payload difference: \((1.0 - 1.0/compressionRatio) * 100)% (not process memory)")
 
             // Verify expected compression ratio (should be close to 4x)
             #expect(compressionRatio > 3.5, "Should achieve at least 3.5x compression")
 
-            // Test actual memory allocation
-            var info = mach_task_basic_info()
-            var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+            // Whole-process RSS deltas were removed here: under parallel Swift Testing the
+            // unsigned resident_size subtraction trapped (T04). This test measures no process memory.
 
-            // Measure baseline
-            _ = withUnsafeMutablePointer(to: &info) { ptr in
-                ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { int_ptr in
-                    task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
-                }
-            }
-            let baselineMemory = info.resident_size
-
-            // Allocate large FP32 array
-            let largeFP32 = (0..<10000).map { _ in Vector512Optimized { _ in Float.random(in: -1...1, using: &rng) } }
-
-            _ = withUnsafeMutablePointer(to: &info) { ptr in
-                ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { int_ptr in
-                    task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), int_ptr, &count)
-                }
-            }
-            let fp32Memory = info.resident_size - baselineMemory
-
-            // Force deallocation
-            _ = largeFP32.count  // Keep reference
-
-            print("\n  Actual memory allocation test:")
-            print("    FP32 allocation: \(fp32Memory / 1024 / 1024) MB")
-
-            // Memory layout optimization check
+            // Storage layout display (reports MemoryLayout facts; no optimization is checked)
             let int8Vector = int8Vectors[0]
             print("\n  Memory layout:")
             print("    Storage type: ContiguousArray<SIMD4<Int8>>")
@@ -1262,7 +1238,9 @@ struct QuantizedKernelsTests {
             print("  Alignment: \(alignmentStr)")
             print("  Total lanes: \(bufferCount)")
             print("  Bytes per SIMD4: \(MemoryLayout<SIMD4<Int8>>.size)")
-            print("  Total bytes: \(bufferCount * MemoryLayout<SIMD4<Int8>>.size)")
+            // Stored scalar payload from the real storage (element stride comes from its element type)
+            let actualBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(quantized.storage)
+            print("  Total bytes (stored scalar payload): \(actualBytes)")
 
             // Verify SIMD-friendly alignment
             let isAligned4 = baseAddress % 4 == 0
@@ -1270,7 +1248,7 @@ struct QuantizedKernelsTests {
 
             // Check packing efficiency
             let expectedBytes = 512  // 512 INT8 values
-            let actualBytes = bufferCount * MemoryLayout<SIMD4<Int8>>.size
+            #expect(bufferCount == 128, "Should pack 512 INT8 values as 128 SIMD4 lanes")
             #expect(actualBytes == expectedBytes, "Should pack exactly 512 bytes")
 
             // Test sequential access pattern in a separate closure
@@ -1457,7 +1435,7 @@ struct QuantizedKernelsTests {
             print("    Cache efficiency improvement: \(int8VectorsPerCacheLine * 4 / (fp32VectorsPerCacheLine * 4))x")
 
             if strictPerfGatesEnabled {
-                #expect(int8Time < fp32Time, "INT8 should have better memory bandwidth")
+                expectPerformance("QuantizedKernelsTests.testMemoryBandwidthImprovement.3", int8Time < fp32Time, "INT8 should have better memory bandwidth")
             }
         }
 
@@ -1620,7 +1598,7 @@ struct QuantizedKernelsTests {
             print("\n  Packed dot product result: \(dotProductResult)")
 
             if strictPerfGatesEnabled {
-                #expect(simdTime < scalarTime, "SIMD should be faster than scalar")
+                expectPerformance("QuantizedKernelsTests.simdAdd.4", simdTime < scalarTime, "SIMD should be faster than scalar")
             }
         }
 
@@ -2130,7 +2108,7 @@ struct QuantizedKernelsTests {
             print("  INT8 latency: \(int8MinLatency * 1_000_000) μs")
             print("  Improvement: \(String(format: "%.1fx", latencyImprovement))")
 
-            #expect(latencyImprovement > 1.5, "INT8 should have lower latency")
+            expectPerformance("QuantizedKernelsTests.testQuantizedComputationPerformance.5", latencyImprovement > 1.5, "INT8 should have lower latency")
 
             // Test 2: Throughput (batch operations)
             print("\n2. Throughput Test (batch operations):")
@@ -2164,26 +2142,25 @@ struct QuantizedKernelsTests {
             print("  Improvement: \(String(format: "%.1fx", throughputImprovement))")
 
             if strictPerfGatesEnabled {
-                #expect(throughputImprovement > 2.0, "INT8 should have higher throughput")
+                expectPerformance("QuantizedKernelsTests.testQuantizedComputationPerformance.6", throughputImprovement > 2.0, "INT8 should have higher throughput")
             }
 
-            // Test 3: Energy efficiency (estimated by ops count)
-            print("\n3. Energy Efficiency (estimated):")
+            // Test 3: op-count model. It assumes 4x INT8 op efficiency, so it is not a measurement
+            // and nothing is asserted on it.
+            print("\n3. Op-count model (assumes 4x INT8 op efficiency; not measured):")
 
             // FP32: 512 multiplies + 512 adds + 1 sqrt
             let fp32OpsPerDistance = 512 * 2 + 1
             // INT8: 512 INT8 multiplies + 512 INT8 adds + scale ops
             let int8OpsPerDistance = 512 * 2 / 4  // Assuming 4x efficiency for INT8 ops
 
-            let energyEfficiencyRatio = Float(fp32OpsPerDistance) / Float(int8OpsPerDistance)
+            let opCountModelRatio = Float(fp32OpsPerDistance) / Float(int8OpsPerDistance)
             print("  FP32 ops: \(fp32OpsPerDistance)")
             print("  INT8 ops (weighted): \(int8OpsPerDistance)")
-            print("  Energy efficiency gain: \(String(format: "%.1fx", energyEfficiencyRatio))")
+            print("  Modelled op-count ratio (assumed, not measured): \(String(format: "%.1fx", opCountModelRatio))")
 
-            #expect(energyEfficiencyRatio > 2.0, "INT8 should be more energy efficient")
-
-            // Test 4: Memory bandwidth utilization
-            print("\n4. Memory Bandwidth Utilization:")
+            // Test 4: modelled payload rate (stored payload bytes / measured time; not a measured bandwidth)
+            print("\n4. Modelled payload rate (not measured bandwidth):")
 
             let fp32BytesPerVector = 512 * 4  // 4 bytes per float
             let int8BytesPerVector = 512 * 1  // 1 byte per int8
@@ -2191,9 +2168,9 @@ struct QuantizedKernelsTests {
             let fp32BandwidthUsed = Float(fp32BytesPerVector * batchSize * iterations) / Float(fp32Time)
             let int8BandwidthUsed = Float(int8BytesPerVector * batchSize * iterations) / Float(int8Time)
 
-            print("  FP32 bandwidth: \(String(format: "%.1f MB/s", fp32BandwidthUsed / 1_000_000))")
-            print("  INT8 bandwidth: \(String(format: "%.1f MB/s", int8BandwidthUsed / 1_000_000))")
-            print("  Bandwidth reduction: \(String(format: "%.1fx", fp32BandwidthUsed / int8BandwidthUsed))")
+            print("  FP32 payload rate: \(String(format: "%.1f MB/s", fp32BandwidthUsed / 1_000_000))")
+            print("  INT8 payload rate: \(String(format: "%.1f MB/s", int8BandwidthUsed / 1_000_000))")
+            print("  Payload rate ratio FP32/INT8: \(String(format: "%.1fx", fp32BandwidthUsed / int8BandwidthUsed))")
         }
 
         // PERF-GATE: asserts wall-clock cache-efficiency speedups that only hold
@@ -2203,7 +2180,7 @@ struct QuantizedKernelsTests {
             var rng = SeededGenerator(seed: 0xA001000E)
             // Test cache efficiency with quantized data
             // - Cache hit rate improvements
-            // - Reduced memory pressure
+            // - Memory pressure is not measured
             // - Cache-friendly access patterns
 
             print("Cache Efficiency with Quantized Data:")
@@ -2265,7 +2242,7 @@ struct QuantizedKernelsTests {
             print("    Cache efficiency gain: \(String(format: "%.1fx", cacheSpeedup))")
 
             if strictPerfGatesEnabled {
-                #expect(cacheSpeedup > 2.5, "INT8 should benefit from better cache utilization")
+                expectPerformance("QuantizedKernelsTests.testCacheEfficiencyQuantized.7", cacheSpeedup > 2.5, "INT8 should benefit from better cache utilization")
             }
 
             // Test 2: Sequential vs random access patterns
@@ -2300,18 +2277,24 @@ struct QuantizedKernelsTests {
             print("    Random access: \(String(format: "%.2f ms", randTime * 1000))")
             print("    Sequential advantage: \(String(format: "%.1fx", sequentialAdvantage))")
 
-            // Test 3: Memory pressure reduction
-            print("\n  Memory pressure test:")
+            // Test 3: stored scalar payload at a larger dataset size (no memory pressure is measured)
+            print("\n  Stored payload at a larger dataset size:")
 
-            let pressureTestSize = 2000  // Large enough to cause pressure
+            let pressureTestSize = 2000  // Dataset size for the payload arithmetic below
             // Note: Could iterate for stress testing (currently single-pass validation)
 
             print("    Dataset size: \(pressureTestSize) vectors")
-            print("    FP32 memory: \(pressureTestSize * fp32VectorSize / 1_000_000) MB")
-            print("    INT8 memory: \(pressureTestSize * int8VectorSize / 1_000_000) MB")
-            print("    Reduction: 4x")
+            // The model constants above must equal the stored scalar payload of real vectors.
+            let fp32StoredBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(fp32Vectors[0].storage)
+            let int8StoredBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(int8Vectors[0].storage)
+            #expect(fp32StoredBytes == fp32VectorSize, "FP32 stored scalar payload per vector")
+            #expect(int8StoredBytes == int8VectorSize, "INT8 stored scalar payload per vector")
+            #expect(int8StoredBytes * 4 == fp32StoredBytes, "INT8 should store 4x fewer scalar bytes")
 
-            #expect(int8VectorSize * 4 == fp32VectorSize, "INT8 should use 4x less memory")
+            // Printed after the checks, from the real storage values (not process memory)
+            print("    FP32 stored scalar payload: \(pressureTestSize * fp32StoredBytes / 1_000_000) MB")
+            print("    INT8 stored scalar payload: \(pressureTestSize * int8StoredBytes / 1_000_000) MB")
+            print("    Stored scalar payload ratio: \(Float(fp32StoredBytes) / Float(int8StoredBytes))x")
         }
 
         // PERF-GATE: asserts wall-clock break-even speed ratios that only hold
@@ -2429,7 +2412,8 @@ struct QuantizedKernelsTests {
                 print("  Batch size \(batchSize): \(String(format: "%.2fx", ratio)) \(ratio > 1 ? "✓" : "✗")")
 
                 if batchSize >= 10 {
-                    #expect(ratio > 1.0, "Should be beneficial for batch size >= 10")
+                    expectPerformance("QuantizedKernelsTests.testQuantizationOverhead.11", ratio > 1.0,
+                                      "Should be beneficial for batch size >= 10")
                 }
             }
         }
@@ -2487,7 +2471,7 @@ struct QuantizedKernelsTests {
             print("  Speedup: \(String(format: "%.1fx", quantSpeedup))")
 
             if strictPerfGatesEnabled {
-                #expect(quantSpeedup > 2.0, "Parallel quantization should provide speedup")
+                expectPerformance("QuantizedKernelsTests.testParallelQuantizedOperations.8", quantSpeedup > 2.0, "Parallel quantization should provide speedup")
             }
             #expect(serialQuantized.count == parallelQuantized.count, "Should produce same number of vectors")
 
@@ -2532,7 +2516,7 @@ struct QuantizedKernelsTests {
             print("  Speedup: \(String(format: "%.1fx", distSpeedup))")
 
             if strictPerfGatesEnabled {
-                #expect(distSpeedup > 2.0, "Parallel distance computation should provide speedup")
+                expectPerformance("QuantizedKernelsTests.testParallelQuantizedOperations.9", distSpeedup > 2.0, "Parallel distance computation should provide speedup")
             }
             #expect(serialDistances.count == parallelDistances.count, "Should compute same number of distances")
 
@@ -2640,7 +2624,7 @@ struct QuantizedKernelsTests {
             print("  Speedup: \(String(format: "%.1fx", fp32Time / int8Time))")
 
             if strictPerfGatesEnabled {
-                #expect(int8Time < fp32Time, "INT8 should be faster for batch operations")
+                expectPerformance("QuantizedKernelsTests.testQuantizedBatchPerformance.10", int8Time < fp32Time, "INT8 should be faster for batch operations")
             }
 
             // Test 3: Memory-bound vs compute-bound analysis
@@ -2693,7 +2677,7 @@ struct QuantizedKernelsTests {
         func testINT4Quantization() throws {
             var rng = SeededGenerator(seed: 0xA0010010)
             // Test INT4 quantization for maximum compression
-            // - 8x memory reduction
+            // - 8x stored scalar payload ratio versus FP32 (not process memory)
             // - Accuracy vs compression tradeoffs
             // - Specialized INT4 arithmetic
 
@@ -2776,7 +2760,7 @@ struct QuantizedKernelsTests {
         func testINT8Quantization() throws {
             var rng = SeededGenerator(seed: 0xA0010011)
             // Test standard INT8 quantization
-            // - 4x memory reduction
+            // - 4x stored scalar payload ratio versus FP32 (not process memory)
             // - Good accuracy/performance balance
             // - Wide hardware support
 
@@ -2792,9 +2776,13 @@ struct QuantizedKernelsTests {
             ]
 
             print("  Memory and accuracy characteristics:")
+            var fp32StoredBytes = 0
+            var int8StoredBytes = 0
             for (idx, vector) in vectors.enumerated() {
                 let int8 = Vector512INT8(from: vector)
                 let restored = int8.toFP32()
+                fp32StoredBytes += MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(vector.storage)
+                int8StoredBytes += MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(int8.storage)
 
                 var maxError: Float = 0
                 var avgError: Float = 0
@@ -2811,25 +2799,26 @@ struct QuantizedKernelsTests {
                 print("      Scale: \(int8.quantizationParams.scale)")
             }
 
-            // Verify 4x compression
-            let originalBytes = 512 * 4  // FP32
-            let quantizedBytes = 512 * 1  // INT8
-            let ratio = Float(originalBytes) / Float(quantizedBytes)
-            print("  Compression ratio: \(ratio)x")
-            #expect(ratio == 4.0, "INT8 should provide exactly 4x compression")
+            // Verify 4x stored scalar payload ratio, from the real storage of the vectors above
+            // (independent literals: 3 vectors x 2048 and x 512 bytes)
+            let ratio = Float(fp32StoredBytes) / Float(int8StoredBytes)
+            print("  Stored scalar payload ratio: \(ratio)x")
+            #expect(fp32StoredBytes == 3 * 2048, "FP32 stored scalar payload")
+            #expect(int8StoredBytes == 3 * 512, "INT8 stored scalar payload")
+            #expect(ratio == 4.0, "INT8 should store exactly 4x fewer scalar bytes")
 
             // Test hardware optimization benefits
             print("\n  Hardware optimization benefits:")
             print("    - SIMD4<Int8> operations supported natively")
             print("    - Efficient cache utilization")
-            print("    - Reduced memory bandwidth requirements")
+            print("    - A quarter of the FP32 scalar payload (bandwidth not measured)")
             print("    - Wide hardware support across platforms")
         }
 
         @Test
         func testINT16Quantization() throws {
             // Test INT16 quantization for high accuracy
-            // - 2x memory reduction
+            // - 2x stored scalar payload ratio versus FP32 (not process memory)
             // - Minimal accuracy loss
             // - Compatibility with existing systems
 
@@ -3045,9 +3034,9 @@ struct QuantizedKernelsTests {
                 print("  \(name): Sparsity=\(sparsity), Range=\(dynamicRange) → \(selectedBitWidth)")
             }
 
-            print("\n4. Memory savings with mixed precision:")
+            print("\n4. Stored scalar payload with mixed precision (payload model):")
 
-            // Calculate memory usage for different strategies
+            // Stored scalar payload for different strategies (not process memory)
             let layerCount = 4
             let vectorsPerLayer = 100
 
@@ -3063,7 +3052,7 @@ struct QuantizedKernelsTests {
             print("  Full precision (FP32): \(fullPrecisionBytes / 1024) KB")
             print("  Uniform INT8: \(uniformInt8Bytes / 1024) KB")
             print("  Mixed precision: \(mixedPrecisionBytes / 1024) KB")
-            print("  Savings vs FP32: \(Float(fullPrecisionBytes) / Float(mixedPrecisionBytes))x")
+            print("  Payload ratio FP32 / mixed: \(Float(fullPrecisionBytes) / Float(mixedPrecisionBytes))x")
         }
 
         @Test
@@ -3693,10 +3682,10 @@ struct QuantizedKernelsTests {
             print("\n  Type system integration:")
 
             // Verify storage efficiency
-            let storageSize = quantized.storage.count * MemoryLayout<SIMD4<Int8>>.size
-            print("    Storage size: \(storageSize) bytes")
-            print("    Expected: 512 bytes")
+            let storageSize = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(quantized.storage)
             #expect(storageSize == 512, "Storage should be exactly 512 bytes")
+            print("    Stored scalar payload: \(storageSize) bytes")
+            print("    Expected: 512 bytes")
 
             // Test SIMD operations
             print("\n  SIMD operation compatibility:")
@@ -3854,8 +3843,8 @@ struct QuantizedKernelsTests {
                 }
 
                 var memorySaved: Int {
-                    // Each INT8 vector saves 3x memory vs FP32
-                    return cache.count * (512 * 3) // 3 bytes saved per element
+                    // Model: 3 bytes per element (4-byte Float minus 1-byte Int8); not measured
+                    return cache.count * (512 * 3)
                 }
             }
 
@@ -3897,7 +3886,7 @@ struct QuantizedKernelsTests {
             print("  Cache hits: \(cacheHits)")
             print("  Cache misses: \(cacheMisses)")
             print("  Hit rate: \(cache.hitRate)")
-            print("  Memory saved: \(cache.memorySaved) bytes")
+            print("  Payload difference (model: 3 bytes per element, not measured): \(cache.memorySaved) bytes")
 
             #expect(cacheHits == 30, "All 30 vectors should be cache hits")
 
@@ -3926,16 +3915,23 @@ struct QuantizedKernelsTests {
             print("  Sequential access time: \(sequentialAccessTime * 1000) ms")
             print("  Random access time: \(randomAccessTime * 1000) ms")
 
-            // Test memory efficiency
-            let fp32MemoryUsage = 50 * 512 * 4  // 50 vectors * 512 dims * 4 bytes
-            let int8MemoryUsage = 50 * 512 * 1  // 50 vectors * 512 dims * 1 byte
-            let compressionRatio = Float(fp32MemoryUsage) / Float(int8MemoryUsage)
+            // Stored scalar payload of the 50 vectors cached in the first pass, from real storage
+            // (not process memory). Independent literals: 50 x 2048 and 50 x 512 bytes.
+            var fp32PayloadBytes = 0
+            var int8PayloadBytes = 0
+            for (_, vector) in testVectors.prefix(50) {
+                fp32PayloadBytes += MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(vector.storage)
+                int8PayloadBytes += MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(Vector512INT8(from: vector).storage)
+            }
+            let compressionRatio = Float(fp32PayloadBytes) / Float(int8PayloadBytes)
 
-            print("  FP32 memory: \(fp32MemoryUsage) bytes")
-            print("  INT8 memory: \(int8MemoryUsage) bytes")
-            print("  Compression ratio: \(compressionRatio)x")
+            print("  FP32 stored scalar payload: \(fp32PayloadBytes) bytes")
+            print("  INT8 stored scalar payload: \(int8PayloadBytes) bytes")
+            print("  Scalar payload ratio: \(compressionRatio)x")
 
-            #expect(compressionRatio >= 3.5, "Should achieve at least 3.5x compression")
+            #expect(fp32PayloadBytes == 50 * 2048, "FP32 stored scalar payload")
+            #expect(int8PayloadBytes == 50 * 512, "INT8 stored scalar payload")
+            #expect(compressionRatio >= 3.5, "Should store at least 3.5x fewer scalar bytes")
         }
 
         @Test
@@ -4388,15 +4384,22 @@ struct QuantizedKernelsTests {
 
         @Test
         func testNaNInfinityHandling() throws {
-            // Test handling of NaN and infinity values
-            // - NaN propagation in quantization
-            // - Infinity handling strategies
-            // - Error recovery mechanisms
-
+            // Migrated for Q01 (closures/Q01.json migrations[1]; briefs/Q01.md "Conversion, decoding and
+            // nonfinite policy"). Observed at pre-program revision 8b02e75 during the T02 investigation (not
+            // re-verified by a live test): the nonthrowing `Vector512INT8(from:params:)` then silently encoded
+            // NaN and +Inf as code 127 and -Inf as -128 (it printed "NaN -> 10.0"), and this test only
+            // checked that later distances were finite. That initializer now calls
+            // AffineQuantizationCore.requireFinite before reading params and stops with the named guard
+            // "Quantization requires finite input coordinates", so the former in-process NaN/Inf probes
+            // trapped the whole Swift Testing process. That trap is asserted in bounded child processes by
+            // Q01ChildContracts.namedRejectionMatrix (routes `from` and `supplied`, widths 512/768/1536,
+            // NaN/+Inf/-Inf). Here the same legacy fixtures exercise the recoverable route instead: the
+            // throwing array initializer must reject each with `.invalidData` and exactly the nonfinite
+            // indices, which are derived from each fixture's construction rule rather than from `isFinite`.
             print("NaN and Infinity Handling:")
 
-            // Test 1: NaN handling
-            let nanVector = try Vector512Optimized((0..<512).map { i in
+            // Test 1: mixed payload; NaN at i % 10 == 0, +Inf at 1, -Inf at 2.
+            let mixedValues: [Float] = (0..<512).map { i in
                 if i % 10 == 0 {
                     return Float.nan
                 } else if i % 10 == 1 {
@@ -4406,121 +4409,75 @@ struct QuantizedKernelsTests {
                 } else {
                     return Float(i) / 100.0
                 }
-            })
-
-            print("  Input vector stats:")
-            let nanCount = nanVector.toArray().filter { $0.isNaN }.count
-            let infCount = nanVector.toArray().filter { $0.isInfinite }.count
-            print("    NaN values: \(nanCount)")
-            print("    Infinite values: \(infCount)")
-
-            // Quantize with normal parameters
-            let params = LinearQuantizationParams(minValue: -10.0, maxValue: 10.0, symmetric: true)
-            let quantized = Vector512INT8(from: nanVector, params: params)
-            let dequantized = quantized.toFP32()
-
-            // Analyze how special values were handled
-            var nanHandling: [Float] = []
-            var infHandling: [Float] = []
-            var negInfHandling: [Float] = []
-
-            for i in 0..<512 {
-                let original = nanVector[i]
-                let recovered = dequantized[i]
-
-                if original.isNaN {
-                    nanHandling.append(recovered)
-                } else if original == Float.infinity {
-                    infHandling.append(recovered)
-                } else if original == -Float.infinity {
-                    negInfHandling.append(recovered)
-                }
             }
+            Self.expectNonfiniteRejection(
+                mixedValues,
+                expectedIndices: (0..<512).filter { $0 % 10 < 3 },
+                label: "Mixed NaN/+Inf/-Inf"
+            )
 
-            print("\n  Quantization results:")
-            if !nanHandling.isEmpty {
-                print("    NaN -> \(nanHandling[0]) (consistent: \(nanHandling.allSatisfy { $0 == nanHandling[0] }))")
-            }
-            if !infHandling.isEmpty {
-                print("    +Inf -> \(infHandling[0]) (consistent: \(infHandling.allSatisfy { $0 == infHandling[0] }))")
-            }
-            if !negInfHandling.isEmpty {
-                print("    -Inf -> \(negInfHandling[0]) (consistent: \(negInfHandling.allSatisfy { $0 == negInfHandling[0] }))")
-            }
+            // Test 2 (distances against the quantized Test 1 payload) has no successor: Q01 rejects
+            // quantizing NaN/Inf coordinates on each conversion route that namedRejectionMatrix
+            // enumerates, so that operand cannot be built.
 
-            // Test 2: Distance computation with special values
-            print("\n  Distance computation with special values:")
-
-            let normalVector = try Vector512Optimized((0..<512).map { sin(Float($0) * 0.01) })
-            let qNormal = Vector512INT8(from: normalVector, params: params)
-            let qSpecial = Vector512INT8(from: nanVector, params: params)
-
-            let distance = QuantizedKernels.euclidean512(query: qNormal, candidate: qSpecial)
-            let dotProduct = QuantizedKernels.dotProduct512(query: qNormal, candidate: qSpecial)
-
-            print("    Distance: \(distance) (finite: \(distance.isFinite))")
-            print("    Dot product: \(dotProduct) (finite: \(dotProduct.isFinite))")
-
-            #expect(distance.isFinite, "Distance should be finite even with special values")
-            #expect(dotProduct.isFinite, "Dot product should be finite even with special values")
-
-            // Test 3: Graceful degradation
+            // Test 3: graceful degradation. Only the finite 0% fixture can still be quantized; every
+            // other ratio puts NaN/+Inf at indices 0..<specialCount.
             print("\n  Graceful degradation test:")
-
-            // Create vector with increasing number of special values
+            let params = LinearQuantizationParams(minValue: -10.0, maxValue: 10.0, symmetric: true)
             for specialRatio in [0.0, 0.1, 0.25, 0.5] {
                 let specialCount = Int(512.0 * specialRatio)
-                let testVector = try Vector512Optimized((0..<512).map { i in
+                let values: [Float] = (0..<512).map { i in
                     if i < specialCount {
                         return i % 2 == 0 ? Float.nan : Float.infinity
                     } else {
                         return Float(i - specialCount) / Float(512 - specialCount)
                     }
-                })
-
-                let qTest = Vector512INT8(from: testVector, params: params)
-                let dqTest = qTest.toFP32()
-
-                // Measure reconstruction quality for normal values
+                }
+                guard specialCount == 0 else {
+                    Self.expectNonfiniteRejection(
+                        values,
+                        expectedIndices: Array(0..<specialCount),
+                        label: "\(Int(specialRatio * 100))% special values"
+                    )
+                    continue
+                }
+                let testVector = try Vector512Optimized(values)
+                let dqTest = Vector512INT8(from: testVector, params: params).toFP32()
                 var normalError: Float = 0
-                var normalCount = 0
-
-                for i in specialCount..<512 {
+                for i in 0..<512 {
                     normalError += abs(testVector[i] - dqTest[i])
-                    normalCount += 1
                 }
-
-                if normalCount > 0 {
-                    normalError /= Float(normalCount)
-                    print("    \(Int(specialRatio * 100))% special values: avg error for normal values = \(normalError)")
-                }
+                print("    0% special values: avg error for normal values = \(normalError / 512)")
             }
 
-            // Test 4: Robustness of operations
-            print("\n  Operation robustness:")
+            // Test 4: operation-robustness fixtures; NaN at i % 3 == 0 and +Inf at i % 5 == 0.
+            Self.expectNonfiniteRejection(
+                (0..<512).map { i in i % 3 == 0 ? Float.nan : Float(i) / 256.0 },
+                expectedIndices: (0..<512).filter { $0 % 3 == 0 },
+                label: "Operation fixture v1 (NaN)"
+            )
+            Self.expectNonfiniteRejection(
+                (0..<512).map { i in i % 5 == 0 ? Float.infinity : Float(i) / 256.0 },
+                expectedIndices: (0..<512).filter { $0 % 5 == 0 },
+                label: "Operation fixture v2 (+Inf)"
+            )
+        }
 
-            // Create pairs of vectors with special values
-            let v1 = Vector512Optimized { i in i % 3 == 0 ? Float.nan : Float(i) / 256.0 }
-            let v2 = Vector512Optimized { i in i % 5 == 0 ? Float.infinity : Float(i) / 256.0 }
-
-            let q1 = Vector512INT8(from: v1, params: params)
-            let q2 = Vector512INT8(from: v2, params: params)
-
-            // Test various operations
-            let dot = QuantizedKernels.dotProduct512(query: q1, candidate: q2)
-            let mag1 = sqrt(QuantizedKernels.dotProduct512(query: q1, candidate: q1))
-            let mag2 = sqrt(QuantizedKernels.dotProduct512(query: q2, candidate: q2))
-            let cosineSim = mag1 > 0 && mag2 > 0 ? dot / (mag1 * mag2) : 0
-
-            let operations: [(String, Float)] = [
-                ("Euclidean", QuantizedKernels.euclidean512(query: q1, candidate: q2)),
-                ("Dot product", dot),
-                ("Cosine similarity", cosineSim)
-            ]
-
-            for (name, result) in operations {
-                print("    \(name): \(result) (finite: \(result.isFinite))")
-                #expect(result.isFinite || result.isNaN, "Operations should handle special values gracefully")
+        /// Q01 recoverable nonfinite contract for the throwing INT8 array initializer: rejection with
+        /// `.invalidData` listing every nonfinite index (same assertion form as
+        /// QuantizedKernelsComprehensiveTests.EdgeCaseTests.testNaNInfQuantization).
+        private static func expectNonfiniteRejection(_ values: [Float], expectedIndices: [Int], label: String) {
+            do {
+                _ = try Vector512INT8(values)
+                Issue.record("\(label): expected nonfinite quantization input to be rejected")
+            } catch let error as VectorError {
+                let observedIndices = error.context.additionalInfo["indices"]
+                #expect(error.kind == .invalidData, "\(label)")
+                #expect(observedIndices == expectedIndices.map(String.init).joined(separator: ","), "\(label)")
+                let observedCount = observedIndices.map { $0.split(separator: ",").count } ?? 0
+                print("    \(label): rejected, \(observedCount) reported nonfinite indices")
+            } catch {
+                Issue.record("\(label): unexpected error \(error)")
             }
         }
 
@@ -4549,6 +4506,9 @@ struct QuantizedKernelsTests {
                     i == 256 ? 10.0 : 0.0
                 })
             ]
+            // Two-valued fixtures, classified by the Q01 resolution argument in the loop below.
+            var resolvablePairFixtures: [String] = []
+            var subResolutionPairFixtures: [String] = []
 
             for (name, vector) in testCases {
                 print("\n  \(name) distribution:")
@@ -4565,6 +4525,7 @@ struct QuantizedKernelsTests {
 
                 // Handle degenerate case
                 let params: LinearQuantizationParams
+                var paramsUseDataEndpoints = false
                 if range == 0 {
                     // Constant vector - special handling
                     print("    Special handling: Constant vector")
@@ -4590,6 +4551,7 @@ struct QuantizedKernelsTests {
                         maxValue: maxVal,
                         symmetric: false
                     )
+                    paramsUseDataEndpoints = true
                 }
 
                 let quantized = Vector512INT8(from: vector, params: params)
@@ -4628,7 +4590,34 @@ struct QuantizedKernelsTests {
                     if uniqueValues.count == 1 {
                         #expect(uniqueQuantized.count <= 2, "Constant should map to at most 2 quantized values")
                     } else if uniqueValues.count == 2 {
-                        #expect(uniqueQuantized.count >= 2, "Binary should preserve at least 2 values")
+                        // Migrated for Q01 (closures/Q01.json migrations[0]; briefs/Q01.md "Parameters and
+                        // calibration"): asymmetric calibration includes zero, so Q01's ideal scale is
+                        // (max(maxValue, 0) - min(minValue, 0)) / 255 (the stored scale is that value rounded to
+                        // Float, clamped up to leastNonzeroMagnitude and capped so every code decodes finitely),
+                        // and a narrow interval far from zero trades resolution for a representable zero point.
+                        // Both coordinates are the requested endpoints (normal branch above), so each obeys Q01's
+                        // endpoint criterion
+                        // |x̂ - x| <= E(x) = max(leastNonzero, scale + 2 ulp(x) + 2 ulp(x̂)), the bound used by
+                        // QuantizationRangeContractTests.testCalibrationEndpoints; it is asserted per coordinate
+                        // here. If both coordinates decoded to one value d, the triangle inequality would give
+                        // |x₂ - x₁| <= E(x₁) + E(x₂). So a pair separated by more than that must keep two decoded
+                        // values, and only a narrower pair may legitimately merge.
+                        #expect(paramsUseDataEndpoints, "Two-valued fixtures calibrate on their own endpoints")
+                        var endpointBound: [Float: Double] = [:]
+                        for i in 0..<512 {
+                            let bound = Self.q01EndpointBound(input: vector[i], decoded: dequantized[i], scale: params.scale)
+                            #expect(dequantized[i].isFinite && abs(Double(vector[i]) - Double(dequantized[i])) <= bound,
+                                    "Q01 endpoint bound at index \(i)")
+                            endpointBound[vector[i]] = max(endpointBound[vector[i], default: 0], bound)
+                        }
+                        let separation = Double(maxVal) - Double(minVal)
+                        if separation > endpointBound[minVal, default: 0] + endpointBound[maxVal, default: 0] {
+                            resolvablePairFixtures.append(name)
+                            #expect(uniqueQuantized.count == 2, "Binary should preserve both resolvable values")
+                        } else {
+                            subResolutionPairFixtures.append(name)
+                            #expect((1...2).contains(uniqueQuantized.count), "Sub-resolution pair maps to 1 or 2 values")
+                        }
                     }
                 }
 
@@ -4647,12 +4636,30 @@ struct QuantizedKernelsTests {
                 #expect(params.scale > 0, "Scale should be positive")
             }
 
+            // Pins that the structure assertion above still runs and that the one merge comes from Q01's
+            // zero inclusion. Separation vs E(x₁) + E(x₂): Binary 1.0 vs ≈ 7.8e-3 and Single spike 10 vs
+            // ≈ 7.8e-2 (both resolvable); Nearly constant 1.0e-4 vs ≈ 3.9e-3, because its Q01 scale is
+            // Float(0.5001 / 255) ≈ 1.96e-3. Observed at pre-program revision 8b02e75 during the T02
+            // investigation (not re-verified by a live test): that revision calibrated on [0.5, 0.5001] with
+            // scale (0.5001 - 0.5) / 255 ≈ 3.9e-7, so this pair stayed two values there. Every fixture sits at
+            // least 30x from the threshold, so evaluation rounding cannot flip a classification.
+            #expect(resolvablePairFixtures.sorted() == ["Binary", "Single spike"])
+            #expect(subResolutionPairFixtures == ["Nearly constant"])
+
             print("\n  Handling strategies for degenerate distributions:")
             print("    - Detect constant vectors and use minimal quantization")
             print("    - Expand range for near-constant distributions")
             print("    - Use higher precision for small dynamic range")
             print("    - Implement special encodings for sparse/binary data")
             print("    - Add numerical stability checks")
+        }
+
+        /// Q01's bounded endpoint regression criterion (briefs/Q01.md, "Parameters and calibration"), in the
+        /// same form as QuantizationRangeContractTests.testCalibrationEndpoints:
+        /// E(x) = max(leastNonzero, scale + 2 ulp(|x|) + 2 ulp(|x̂|)), evaluated in Double.
+        private static func q01EndpointBound(input: Float, decoded: Float, scale: Float) -> Double {
+            max(Double(Float.leastNonzeroMagnitude),
+                Double(scale) + 2 * Double(abs(input).ulp) + 2 * Double(abs(decoded).ulp))
         }
     }
 
@@ -4678,14 +4685,14 @@ struct QuantizedKernelsTests {
             print("    Queries: \(scenario.queries.count)")
             print("    Embedding dimension: 512")
 
-            // Memory footprint comparison
+            // Stored scalar payload comparison (not a memory footprint)
             let fp32Size = scenario.documents.count * 512 * 4
             let int8Size = scenario.documents.count * 512 * 1
 
-            print("\n  Memory footprint:")
+            print("\n  Stored scalar payload:")
             print("    FP32: \(fp32Size / 1_000_000) MB")
             print("    INT8: \(int8Size / 1_000_000) MB")
-            print("    Reduction: \(Float(fp32Size) / Float(int8Size))x")
+            print("    Payload ratio FP32 / INT8: \(Float(fp32Size) / Float(int8Size))x")
 
             // Evaluate search quality
             print("\n  Search quality (Recall@K):")
@@ -4732,8 +4739,8 @@ struct QuantizedKernelsTests {
             print("    Speedup: \(String(format: "%.1fx", fp32Time / int8Time))")
 
             print("\n  Scalability improvements:")
-            print("    - 4x more documents fit in memory")
-            print("    - 4x reduction in network transfer")
+            print("    - A quarter of the FP32 scalar payload per document (payload model)")
+            print("    - Memory and network transfer are not measured here")
             print("    - Better cache utilization")
             print("    - Faster similarity computation")
         }
@@ -4755,15 +4762,15 @@ struct QuantizedKernelsTests {
             print("    Items: \(scenario.itemEmbeddings.count)")
             print("    Embedding dimension: 512")
 
-            // Calculate memory savings
+            // Stored scalar payload (payload model, not process memory)
             let totalEmbeddings = scenario.userEmbeddings.count + scenario.itemEmbeddings.count
             let fp32Memory = totalEmbeddings * 512 * 4
             let int8Memory = totalEmbeddings * 512 * 1
 
-            print("\n  Memory usage:")
+            print("\n  Stored scalar payload:")
             print("    FP32: \(fp32Memory / 1_000_000) MB")
             print("    INT8: \(int8Memory / 1_000_000) MB")
-            print("    Savings: \(fp32Memory - int8Memory) bytes")
+            print("    Payload difference: \(fp32Memory - int8Memory) bytes")
 
             // Evaluate recommendation quality
             let precision = scenario.evaluatePrecision(topK: 10)
@@ -4826,7 +4833,7 @@ struct QuantizedKernelsTests {
             print("    Throughput: \(String(format: "%.0f", throughput)) scores/sec")
 
             print("\n  System improvements:")
-            print("    - Reduced memory footprint enables larger catalogs")
+            print("    - A quarter of the FP32 scalar payload (footprint not measured)")
             print("    - Lower latency for real-time recommendations")
             print("    - Higher throughput for batch processing")
             print("    - Cost reduction in cloud deployments")
@@ -4837,7 +4844,7 @@ struct QuantizedKernelsTests {
             // TODO: Test image retrieval with quantized features
             // - Visual feature quantization
             // - Retrieval accuracy analysis
-            // - Storage and bandwidth savings
+            // - Stored scalar payload ratios (payload model; bandwidth not measured)
         }
 
         @Test

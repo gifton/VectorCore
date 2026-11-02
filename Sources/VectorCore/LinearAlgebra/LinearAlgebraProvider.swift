@@ -23,14 +23,16 @@
 //  These are SMALL-PANEL routines: covariance/Gram matrices (d ≤ a few
 //  thousand) and randomized-SVD sketch panels (n × (k+p), k+p ≤ ~100).
 //  They are deliberately not streamed or tiled — the streaming happens a
-//  level above, in the GEMM passes that build the panels.
+//  level above, in the GEMM passes that build the panels. Int32 dimensions and
+//  local workspace representability do not prove vendor-internal arithmetic
+//  safety for arbitrary extreme shapes, or guarantee allocation success.
 //
 
 // MARK: - Result types
 
 /// Thin QR factorization: `A (m×n, m ≥ n) = Q (m×n) · R (n×n)`.
 public struct QRFactorization: Sendable {
-    /// Orthonormal factor, m×n, column-major. Columns satisfy QᵀQ = I.
+    /// Contract: orthonormal factor, m×n, column-major (QᵀQ ≈ I).
     public let q: [Float]
     /// Upper-triangular factor, n×n, column-major.
     public let r: [Float]
@@ -66,6 +68,8 @@ public struct SingularValueDecomposition: Sendable {
     /// `SwiftLinearAlgebraProvider.svdThin` decomposes the transpose and uses
     /// its U columns here. Rows paired with zero singular values can therefore
     /// remain zero rather than complete an orthonormal basis (LAPACK does).
+    /// This exception concerns exact zero working columns, not a nonzero
+    /// singular value that rounds to zero at the final Float boundary.
     public let vt: [Float]
     /// Row count of A.
     public let rows: Int
@@ -109,6 +113,16 @@ public struct SymmetricEigenDecomposition: Sendable {
 ///
 /// All inputs/outputs are column-major flat buffers — see the layout contract
 /// in this file's header.
+///
+/// Contract: shape errors precede value validation and backend availability.
+/// QR/SVD require finite input; eigen requires only a finite lower triangle.
+/// Successful factors and spectra are finite Float. Nonfinite working/output
+/// values or output overflow throw `.operationFailed`; nonfinite input throws
+/// `.invalidData`. Final Float rounding (including subnormal rounding to zero)
+/// is allowed: relative accuracy below Float spacing is not promised.
+/// Swift uses Double Householder/Jacobi workspaces with a 60-sweep cap; neither
+/// convergence for arbitrary conditioning nor backend accuracy equivalence is
+/// promised. See LinearAlgebraRangeTests for finite range and residual controls.
 public protocol LinearAlgebraProvider: Sendable {
 
     /// Thin QR of an m×n matrix with m ≥ n.
@@ -183,6 +197,7 @@ internal enum LinearAlgebraValidation {
         guard count == rows * columns else {
             throw VectorError.dimensionMismatch(expected: rows * columns, actual: count)
         }
+        try validateWorkingCount(count)
     }
 
     static func validateRect(count: Int, rows: Int, columns: Int) throws {
@@ -190,6 +205,7 @@ internal enum LinearAlgebraValidation {
         guard count == rows * columns else {
             throw VectorError.dimensionMismatch(expected: rows * columns, actual: count)
         }
+        try validateWorkingCount(count)
     }
 
     static func validateSquare(count: Int, dimension: Int) throws {
@@ -197,5 +213,36 @@ internal enum LinearAlgebraValidation {
         guard count == dimension * dimension else {
             throw VectorError.dimensionMismatch(expected: dimension * dimension, actual: count)
         }
+        try validateWorkingCount(count)
     }
+
+    // Every thin result and individual working array has at most input-count
+    // elements. Double is the largest element type used by these providers.
+    static func validateWorkingCount(_ count: Int) throws {
+        guard count >= 0, !count.multipliedReportingOverflow(by: MemoryLayout<Double>.stride).overflow else {
+            throw VectorError.invalidDimension(count, reason: "linear algebra working byte count is not representable in Int")
+        }
+    }
+
+    static func validateFinite(_ a: [Float], operation: String) throws {
+        guard a.allSatisfy(\.isFinite) else {
+            throw VectorError.invalidData("\(operation) requires finite input")
+        }
+    }
+
+    static func validateLowerFinite(_ a: [Float], dimension n: Int) throws {
+        for j in 0..<n {
+            for i in j..<n where !a[j * n + i].isFinite {
+                throw VectorError.invalidData("symmetricEigen requires a finite lower triangle")
+            }
+        }
+    }
+
+    static func validateOutput(_ a: [Float], operation: String) throws {
+        guard a.allSatisfy(\.isFinite) else {
+            throw ErrorBuilder(.operationFailed)
+                .message("\(operation) produced a nonfinite or unrepresentable Float result").build()
+        }
+    }
+
 }

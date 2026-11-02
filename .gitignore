@@ -64,3 +64,7 @@ fastlane/test_output
 *-swift-testing.xml
 test-results*.xml
 test-results*.txt
+
+# Python bytecode
+__pycache__/
+*.py[cod]

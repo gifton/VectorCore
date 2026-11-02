@@ -2,7 +2,7 @@
 //  ManhattanKernels.swift
 //  VectorCore
 //
-//  CPU-only, SIMD-optimized L1 (Manhattan) distance kernels for optimized vectors.
+//  CPU-only L1 (Manhattan) distance kernels over `SIMD4<Float>` lanes for the optimized vector types.
 //
 
 import Foundation

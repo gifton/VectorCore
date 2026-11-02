@@ -1,5 +1,18 @@
 # Top-K NaN contract verification — 2026-09-05
 
+> **Superseded in part — 2026-10-06 (stabilization task P01, merged at `a5b2189`; note added by T13).**
+> This dated record is kept as written below. Since P01, `VectorMath.nearestNeighbors` selects
+> through the shared `TopKSelection.selectByScore` (ascending, NaN after numeric, smaller original
+> index on exact ties), so it is no longer one of the separate selectors listed under "Scope and
+> release handoff". For small k (`min(k, n) < n / 10`), the array and generic
+> `TopKSelection.select` paths, `nearest`/`batchNearest` and `VectorMath.nearestNeighbors` keep
+> O(k') working storage instead of materializing `n` pairs, and small-k
+> `BatchOperations.findNearest` keeps one heap per worker partition (its six optimized routes
+> score with the `BatchKernels` range helpers on tiles of at most 256 candidates) instead of the
+> shared heap/sort helper path described under "Changed paths". Current behavior is documented in
+> `TopKSelection.swift`, `VectorMath.swift`, `BatchOperations.swift` and the CHANGELOG
+> `[Unreleased]` section.
+
 Implementation and measurements: September 5. Full verification: September 6.
 
 Baseline: `ad39ab6` (`main`, VectorCore 0.3.2). The owner subsequently requested

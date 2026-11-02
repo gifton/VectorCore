@@ -9,8 +9,8 @@ import VectorCore
 ///
 /// Collects system information including:
 /// - OS version, architecture, CPU core count
-/// - Device model, Swift version
-/// - Git SHA, binary sizes
+/// - Device model, and `swiftc -version` resolved through PATH at run time (not the compiler that built the binary)
+/// - git HEAD of the working directory (not the build's source), and binary file sizes
 /// - Runtime configuration flags
 public enum EnvCapture {
     /// Collect complete metadata for a benchmark run
@@ -28,22 +28,27 @@ public enum EnvCapture {
     public static func collectMetadata(
         suites: [String],
         dims: [Int],
-        buildConfig: String = "release",
+        buildConfig: String,
         runSeed: UInt64,
         runLabel: String?,
         flags: RunFlags,
         thresholds: RunThresholds? = nil,
-        filters: RunFilters? = nil
+        filters: RunFilters? = nil,
+        selectedCaseIDs: [String] = [], samples: Int = 1, repeats: Int? = nil, minTimeSeconds: Double = 0,
+        batchNs: [Int] = [], profile: String = "custom", mode: String? = nil,
+        unavailableCaseIDs: [String] = [], thermalStateStart: RuntimeObservation? = nil, harnessCalibration: String = "unknown"
     ) -> BenchMetadata {
         let package = "VectorCore"
         let packageVersion = VectorCoreVersion.versionString
-        let gitSHA = safeGitSHA()
+        let checkout = observe(command: ["/usr/bin/env", "git", "rev-parse", "HEAD"])
+        let gitSHA = checkout.value
         let date = ISO8601DateFormatter().string(from: Date())
         let os = osVersionString()
         let arch = currentArch()
         let cpuCores = ProcessInfo.processInfo.activeProcessorCount
         let deviceModel = sysctlString(["machdep.cpu.brand_string", "hw.model", "hw.machine"]) // first non-nil
-        let swiftVersion = swiftcVersion()
+        let toolchain = observe(command: ["/usr/bin/env", "swiftc", "-version"])
+        let swiftVersion = toolchain.value
         let deviceTag = computeDeviceTag(arch: arch)
         let sizes = binarySizes()
         return BenchMetadata(
@@ -65,8 +70,30 @@ public enum EnvCapture {
             runLabel: runLabel,
             flags: flags,
             thresholds: thresholds,
-            filters: filters
+            filters: filters, coreConfiguration: VectorCoreCompiledFeatures.configuration, benchmarkConfiguration: buildConfig,
+            selectedCaseIDs: selectedCaseIDs, samples: samples, repeats: repeats, minTimeSeconds: minTimeSeconds,
+            batchNs: batchNs, profile: profile, mode: mode,
+            runtimeCheckout: checkout, runtimeToolchain: toolchain,
+            unavailableCaseIDs: unavailableCaseIDs,
+            thermalStateStart: thermalStateStart ?? .unavailable("Start-of-run thermal state was not captured"),
+            thermalStateEnd: thermalState(), lowPowerMode: lowPowerMode(),
+            harnessCalibration: harnessCalibration
         )
+    }
+
+    /// Current `ProcessInfo.thermalState` as an explicit observation. This is a coarse OS state, not a temperature.
+    public static func thermalState() -> RuntimeObservation {
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: return RuntimeObservation(value: "nominal")
+        case .fair: return RuntimeObservation(value: "fair")
+        case .serious: return RuntimeObservation(value: "serious")
+        case .critical: return RuntimeObservation(value: "critical")
+        @unknown default: return .unavailable("Unrecognized ProcessInfo.thermalState value")
+        }
+    }
+
+    public static func lowPowerMode() -> RuntimeObservation {
+        RuntimeObservation(value: ProcessInfo.processInfo.isLowPowerModeEnabled ? "enabled" : "disabled")
     }
 
     private static func currentArch() -> String {
@@ -100,7 +127,24 @@ public enum EnvCapture {
 
     private static func osVersionString() -> String {
         let v = ProcessInfo.processInfo.operatingSystemVersion
-        return "os\(v.majorVersion).\(v.minorVersion).\(v.patchVersion)"
+        let version = "os\(v.majorVersion).\(v.minorVersion).\(v.patchVersion)"
+        // macOS keeps the historical bare form; other families are named so a simulator or
+        // Catalyst run is not mistaken for a macOS run (the host CPU model is still recorded).
+        #if os(macOS)
+        return version
+        #elseif targetEnvironment(macCatalyst)
+        return "maccatalyst-" + version
+        #elseif os(iOS)
+        return "ios-" + version
+        #elseif os(tvOS)
+        return "tvos-" + version
+        #elseif os(watchOS)
+        return "watchos-" + version
+        #elseif os(visionOS)
+        return "visionos-" + version
+        #else
+        return "unknown-" + version
+        #endif
     }
 
     private static func computeDeviceTag(arch: String) -> String {
@@ -110,7 +154,12 @@ public enum EnvCapture {
         }
         let os = osVersionString()
         // Try hostname for local disambiguation
+        #if os(macOS)
         let host = (Host.current().localizedName ?? "local").replacingOccurrences(of: " ", with: "-")
+        #else
+        // Foundation's `Host` exists only on macOS; record that instead of inventing a name.
+        let host = "host-unavailable"
+        #endif
         return "\(arch)-\(os)-\(host)"
     }
 
@@ -124,60 +173,77 @@ public enum EnvCapture {
             }
         }
 
-        // Attempt to discover a VectorCore dynamic library in loaded images (may be nil if statically linked)
+        // A loaded VectorCore dynamic library or framework binary; nil when VectorCore is linked statically.
         var vcBytes: UInt64? = nil
-        #if canImport(Darwin)
-        let count = _dyld_image_count()
-        for i in 0..<count {
-            if let cstr = _dyld_get_image_name(i), let path = String(validatingCString: cstr) {
-                if path.contains("VectorCore") {
-                    if let attrs = try? FileManager.default.attributesOfItem(atPath: path),
-                       let size = attrs[.size] as? NSNumber {
-                        vcBytes = size.uint64Value
-                        break
-                    }
-                }
+        for path in loadedImagePaths() where isVectorCoreLibraryImage(path) {
+            if let attrs = try? FileManager.default.attributesOfItem(atPath: path),
+               let size = attrs[.size] as? NSNumber {
+                vcBytes = size.uint64Value
+                break
             }
         }
-        #endif
 
         return BinarySizes(benchExecutableBytes: exeBytes, vectorCoreLibraryBytes: vcBytes)
     }
 
-    private static func safeGitSHA() -> String? {
-        let task = Process()
-        task.launchPath = "/usr/bin/env"
-        task.arguments = ["git", "rev-parse", "HEAD"]
-
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = Pipe()
-        do {
-            try task.run()
-        } catch {
-            return nil
+    /// Paths of the images loaded in this process, in dyld order (empty off Darwin).
+    static func loadedImagePaths() -> [String] {
+        #if canImport(Darwin)
+        return (0..<_dyld_image_count()).compactMap { index in
+            _dyld_get_image_name(index).flatMap { String(validatingCString: $0) }
         }
-        task.waitUntilExit()
-        guard task.terminationStatus == 0 else { return nil }
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let sha = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        return sha?.isEmpty == false ? sha : nil
+        #else
+        return []
+        #endif
     }
 
-    private static func swiftcVersion() -> String? {
-        let task = Process()
-        task.launchPath = "/usr/bin/env"
-        task.arguments = ["swiftc", "-version"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = pipe
+    /// Whether `path` names a VectorCore library binary by its file name: `libVectorCore.dylib`, or a file named
+    /// `VectorCore` inside a `VectorCore.framework` directory. A path that only contains "VectorCore" in a directory or in
+    /// another file name (an executable built inside a VectorCore checkout, `libVectorCoreBenchmarking.dylib`) does not
+    /// match (`testVectorCoreLibraryImageMatchesFileNameOnly`).
+    static func isVectorCoreLibraryImage(_ path: String) -> Bool {
+        let components = path.split(separator: "/")
+        guard let name = components.last else { return false }
+        return name == "libVectorCore.dylib" || (name == "VectorCore" && components.dropLast().contains("VectorCore.framework"))
+    }
+
+    /// Internal command seam for deterministic timeout/error fixtures; never a CLI setting.
+    static func observe(command: [String], timeout: TimeInterval = 2) -> RuntimeObservation {
+        guard let executable = command.first, timeout > 0, timeout <= 15 else { return .unavailable("Invalid observation command/deadline") }
+        #if os(macOS)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("V02-metadata-" + UUID().uuidString)
         do {
-            try task.run()
-        } catch {
-            return nil
-        }
-        task.waitUntilExit()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let output = directory.appendingPathComponent("stdout")
+            let errors = directory.appendingPathComponent("stderr")
+            FileManager.default.createFile(atPath: output.path, contents: nil)
+            FileManager.default.createFile(atPath: errors.path, contents: nil)
+            let stdout = try FileHandle(forWritingTo: output), stderr = try FileHandle(forWritingTo: errors)
+            defer { try? stdout.close(); try? stderr.close() }
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: executable)
+            process.arguments = Array(command.dropFirst())
+            process.standardOutput = stdout; process.standardError = stderr
+            let finished = DispatchSemaphore(value: 0)
+            process.terminationHandler = { _ in finished.signal() }
+            try process.run()
+            if finished.wait(timeout: .now() + timeout) == .timedOut {
+                kill(process.processIdentifier, SIGKILL)
+                let cleaned = finished.wait(timeout: .now() + 2) == .success
+                // Never inspect termination properties after an execution timeout.
+                return .unavailable("Observation timeout; cleanup completed: \(cleaned)")
+            }
+            guard process.terminationReason == .exit, process.terminationStatus == 0 else {
+                return .unavailable("Observation command failed: \(process.terminationStatus)")
+            }
+            let text = try String(contentsOf: output, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
+            return text.isEmpty ? .unavailable("Observation returned empty output") : RuntimeObservation(value: text)
+        } catch { return .unavailable("Observation setup/read failed: \(error)") }
+        #else
+        // Foundation's `Process` is unavailable on this platform, so the observation is recorded as unavailable.
+        _ = executable
+        return .unavailable("Subprocess observation is unavailable on this platform (Foundation Process is macOS-only)")
+        #endif
     }
 }

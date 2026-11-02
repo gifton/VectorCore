@@ -1,0 +1,48 @@
+{
+  "task": "S02",
+  "status": "accepted",
+  "task_base": "7c211d9d230bbd7534099b28a4be3daee732d637",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "OWN-06",
+    "API-13",
+    "API-19"
+  ],
+  "closed_execution_findings": [
+    "EX-02",
+    "EX-03"
+  ],
+  "partial_records": {},
+  "validation": {
+    "red": "bounded child-only7tests/372issues; separateEX03helper1test/1issue; setup failures retained separately",
+    "debug": "finalcleanup64tests/9suites,exit0",
+    "release": "finalcleanup64tests/9suites,exit0",
+    "asan": "finalcleanup5valid/recoverabletests/1suite,exit0,no diagnostics",
+    "matrix": "242children incl204binarymismatch; direct/generic/default/factorydispatch, metadata-beforepayload, materializedcountchecks, empty/zero-dimensional, sentinelerrors, integerfactorydomains/ties,20error-metadataedges",
+    "provenance": "6frozenhashes;completepatch;236base/237archivecodefiles withonly6assignedchanges;61evidencehashes inclfinalreview"
+  },
+  "review": "reports/S02-review.md",
+  "evidence": "reports/S02.md",
+  "root_verification": "reports/S02-root-verification.json",
+  "frozen_sha256": {
+    "Sources/VectorCore/Protocols/VectorProtocol.swift": "16f9591e31e086bf40c97e88afab6ae31476c178e1a7e3cce09e921fe8115acf",
+    "Sources/VectorCore/Operations/Operations.swift": "b87f7cec39b3a7fac67cd9cb67eeafa241543d9f4ee12582f9da7d204f5994c4",
+    "Sources/VectorCore/Factory/VectorTypeFactory.swift": "cddb3f0443ff75799bdaa1adef3fec8cf73f8250c3e6a9a335eea92f74e8ef8a",
+    "Sources/VectorCore/Errors/VectorError.swift": "afc31638a3e2d4be2a9ef52bc9ece82976e9235ca6a22d4dc29b788d4ac53bf1",
+    "Tests/ComprehensiveTests/ExecutionOperationsTests.swift": "ccd2b7864164723aa56ce5e82d30f4c3c248a298248dcac13d94da122df73161",
+    "Tests/ComprehensiveTests/VectorDispatchContractTests.swift": "d685f7f16601b19cc2b8e3aa8c0e7c566337166e56ce6c7cf35e61afcce2403a"
+  },
+  "migrations": [
+    "Operations.centroid/statistics nowthrow;emptycentroidinsufficientData;callersuse try",
+    "Factorybatch/basis requirepositive dimensions;single/random/zeros/ones/patternallowzero rejectnegative",
+    "indexOutOfBounds max_index=-1 fornonpositive dimensions,originalmessage/code/indexretained"
+  ],
+  "limitations": [
+    "Customconformersstillowe truthfulscalarCount/borrowshape;existingtoArrayboundarieschecked",
+    "N01normalization/N03populationstatistics and generalaggregate numericalrange notclosed",
+    "No baseline Release short-bufferoverread intentionallyexecuted;access-stopping spies established rejectionorder",
+    "Release compiler assertion reproduced againstpre-S02module;explicitread-onlysubscriptintestconformersonly;optimizationunchanged",
+    "Timeoutcleanup source-reviewed,normaltrapcompletionexecuted",
+    "No downstream migration/build,GPU,optionalC,allocationbudget orperformanceclaim"
+  ]
+}

@@ -49,19 +49,43 @@ for reconstruction, shape, ordering, and provider comparisons.
 `y = W * (x - mean)`. The public `components` buffer is k-by-d
 **row-major**, unlike the factorization interface. The model exposes the mean,
 component count, input dimension, explained variance, and explained-variance
-ratios.
+ratios. The public `mean` is `[Double]`: it stores the widened center actually
+used during fit and both transforms. Components, statistics, and projections
+remain Float. Callers migrating from `[Float]` mean should reconstruct in Double
+or explicitly choose where to round the center.
 
 `PCAConfig` defaults to centering, oversampling 8, and two power iterations.
 Fitting uses randomized SVD with QR-stabilized subspace iteration. If the
 sketch width reaches `min(sampleCount, inputDimension)`, it uses an exact
-thin SVD instead. Setting `center: false` computes an uncentered truncated
+thin SVD instead (the route:
+`PCACenteringContractTests.sketchBoundariesAndProviderIdentity`; with the
+default LAPACK provider the fit succeeds across `sgesdd`'s path-5 boundary:
+`T19LAPACKWorkspaceQueryTests.exactPCASweepCrossesPathFive` and
+`reportedCellsSucceed`). Setting `center: false` computes an uncentered truncated
 SVD; its reported second-moment quantities should not be interpreted as
 centered variances.
 
 Fitting requires at least two equal-dimension, nonempty vectors. The component
 count must be in `1...min(n - 1, d)` when centered, or
-`1...min(n, d)` when uncentered. Configuration and shape checks are not a
-comprehensive finite-input or allocation-safety validator.
+`1...min(n, d)` when uncentered. Nonnegative oversampling, including `Int.max`,
+is clamped before addition; reaching the shape limit selects exact fallback
+(the route: `PCACenteringContractTests.sketchBoundariesAndProviderIdentity`;
+with the default LAPACK provider the fit succeeds on near-square samples on
+both sides of `sgesdd`'s path-5 boundary, tall and wide:
+`T19LAPACKWorkspaceQueryTests.exactPCASweepCrossesPathFive` and
+`reportedCellsSucceed`).
+PCA checks its LP64 dimensions and element/byte representability before its
+allocations and GEMM calls. Representability does not guarantee allocation
+success or practical memory use.
+
+Fit and both transforms reject nonfinite input after structural checks. Means
+use deterministic compensated Double accumulation; every centering path uses
+`Float(Double(x) - mean[j])`. Nonfinite centered residuals, model statistics,
+components, or projections throw a stage-specific error. Provider errors retain
+their identity. Float panels and GEMM still round and can overflow; this is not
+an arbitrary translation-invariance or conditioning guarantee. See
+[PCACenteringContractTests](../Tests/ComprehensiveTests/PCACenteringContractTests.swift)
+for representable translation, finite-boundary, and sketch-shape controls.
 
 These component-count limits are structural, not a measurement of the data's
 rank. PCA copies rows of the SVD's Vᵀ into `components`. With the Swift
@@ -110,8 +134,11 @@ directed compressed-sparse-row graph. Row i occupies
 from zero to edge count, valid Int32 neighbor indices, no self-loops, and
 finite nonnegative distances. Rows can have different degrees and need not
 be distance-sorted. A zero distance is allowed for duplicate points.
-Callers must supply structurally valid buffers; do not treat construction as
-a general-purpose parser for arbitrary untrusted data.
+Construction checks every offset is bounded and nondecreasing before any row
+indexes the entry arrays. Malformed CSR throws invalidData; this checked contract
+is exercised by UMAPRangeContractTests' bounded malformed-offset matrix. Duplicate
+neighbor IDs, unsorted rows and isolated rows remain allowed. Count/byte guards do
+not promise successful allocation or a corpus memory budget.
 
 There are two UMAP entry points:
 
@@ -147,7 +174,7 @@ print("Layout coordinates: \(layout.coordinates.count)")
 ```
 
 This small example checks API usage and output shape, not layout quality.
-The reference graph builder considers all pairs: distance work is O(n²·d),
+The exhaustive Float Gram builder considers all pairs: distance work is O(n²·d),
 and insertion-based neighbor selection can add O(n²·k) work. Its Gram scratch
 panel is bounded to at most `min(n, 256) * n` Floats, but it also holds the
 packed data and O(n·k) graph. It is not a corpus-scale ANN substitute.
@@ -159,6 +186,81 @@ initialization. The API returns coordinates, not a fitted transform for new
 points. A low-dimensional visual separation is not proof of semantic clusters.
 See [UMAP implementation](../Sources/VectorCore/ManifoldLearning/UMAP.swift)
 and [UMAPTests](../Tests/ComprehensiveTests/UMAPTests.swift).
+
+## UMAP calibration and checked numerical domain
+
+`UMAPRangeContractTests` exercises these explicit contracts; they are not a claim
+of bitwise equivalence to another UMAP implementation or whole-layout convergence.
+
+The output curve keeps the 300-point target on t in [0,3], with
+r = Double(minDist)/Double(spread), and fits `1/(1+alpha*t^(2*beta))` in log-positive
+parameters. Damped Double normal equations run for at most 200 iterations and
+must meet finite SSE-gradient infinity norm <= 1e-8. Failure to reach stationarity
+throws operationFailed. This is an engineering convergence test, not a global
+optimum proof. The retained independent derivative-free multi-start fixture
+solver compares curve values and SSE at pinned Binary32 inputs.
+
+The returned Float exponent b is rounded before mapping
+`log(a)=log(alpha)-2*Double(b)*log(Double(spread))`. Both coefficients must remain
+positive and finite, and their dimensionless curve must differ from the converged
+Double curve by at most `64*Float.ulpOfOne` on the same grid. Sufficiently accurate
+subnormal a is supported; overflow, underflow to zero and coarse quantization
+throw operationFailed with a range diagnostic. Positive finite spread alone is
+not a guarantee that its physical Float coefficient representation is supported.
+
+Smooth-kNN keeps rho as the smallest positive stored row distance. For k stored
+entries the target is log2(Double(k)+1). Duplicate IDs count separately here,
+then merge by maximum directed membership during fusion. Isolated rows retain
+rho=sigma=0. If zero shifted distances already meet/exceed the target, the explicit
+pre-floor bandwidth is zero. Otherwise a checked logarithmic bracket and at most
+64 bisections must meet residual `1e-5*max(1,target)` in Double. Nearly flat equations
+need not identify sigma accurately; memberships and residual are the controls.
+The existing `1e-3` local/global mean floor follows calibration and may intentionally
+change the target residual. Zero bandwidth gives weight 1 only for zero shifted
+distance, otherwise 0. Fused weights retain canonical ordering and duplicate-max
+probabilistic union; Float underflow-to-zero edges are dropped.
+
+Both public entry points validate finite spread/minDist/learningRate, existing
+option signs, and an exact-integer Double schedule domain. Effective epochs and
+negativeSampleRate are at most 2^53-1 (or native Int.max if smaller), and
+`epochs*max(1,negativeSampleRate)` must fit that bound. This is not a work budget:
+large accepted counts can still be impractical. Tests use pure boundary helpers,
+not enormous accepted loops. Runtime cadence/count arithmetic is checked before
+floating-to-Int conversion and throws operationFailed if it leaves the domain.
+
+Point/dimension/count/byte representation failures use invalidDimension;
+configuration/schedule-domain failures use invalidOperation. CSR and nonfinite
+supplied coordinates use invalidData; mismatching coordinate shapes retain
+dimensionMismatch. Every supplied row width is validated before values are copied.
+Both APIs reject impossible point counts before initialization allocation. The
+KNN builder separately checks LP64 dimensions, data/edge/block products, offsets
+and element bytes before allocation or BLAS conversion. These checks do not
+establish extreme vendor-internal workspace safety or successful allocation.
+
+PCA initialization uses `10*(Double(value)/Double(maxAbs))` before Float projection,
+then the existing jitter; zero projection keeps zero plus jitter. PCA/provider
+failures retain their identities. Initial and returned coordinates must be finite.
+SGD retains Float coordinates, equations and clipping, but checks differences,
+squares, powers, coefficients, unclipped gradients, steps and updates before a
+nonfinite value can be hidden by clipping. Thus finite extreme input or learning
+rate can throw operationFailed instead of producing a layout. Public input arrays
+remain unmodified; internal inout optimizer mutation on failure is not transactional.
+
+The KNN scoring route is unchanged: Float norms and GEMM dots feed Gram subtraction.
+It exhaustively enumerates computed scores, not stable direct Euclidean distances.
+The pinned `[10000,10002,10001]` characterization compares against independent
+Double differences and records the cancellation divergence. There is no reranking
+of a truncated candidate set, new distance route or numerical-oracle promise.
+A direct Euclidean distance route remains separate P02-dependent work.
+
+The LM acceptance check uses the algebraic objective change
+`Σ (newF - oldF) * ((newF - target) + (oldF - target))`, with separately
+formed residuals and Neumaier compensation. Every term and the result must be
+finite, and the change must be strictly negative. This avoids comparing two
+separately rounded total SSEs near stationarity; equality or worsening is still
+rejected. The `1e-8` gradient criterion and 200-iteration limit are unchanged.
+`UMAPRangeContractTests.curveOrdinaryNonDyadicScales` covers the retained
+`.25 / Float(.7)` stall and `.5 / 1.5` control using independent minima.
 
 ## Reproducibility and interpretation
 

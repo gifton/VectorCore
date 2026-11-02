@@ -14,12 +14,11 @@
 //      implementations; availability is a runtime probe, mirroring the
 //      vc_has_* CPU-feature pattern in VectorCoreC.h.
 //
-// Integer model: 32-bit LAPACK indices (ACCELERATE_LAPACK_ILP64 deliberately
-// NOT defined). Every factorization VectorCore performs is on small panels —
-// covariance/Gram matrices (d ≤ ~2k) and randomized-SVD sketches
-// (n × (k+p), k+p ≤ ~100). Element counts never approach 2^31; ILP64 would
-// only complicate the Swift boundary. Revisit if a consumer ever factors a
-// matrix with >2^31 elements (they should not — that is GEMM territory).
+// Integer model: signed32 modern LP64; ILP64 is not selected. Intended for
+// small covariance/sketch panels. Checked local counts and workspace lengths
+// do not prove vendor-internal arithmetic safe for arbitrary extreme shapes.
+// Sufficient preflight bounds can reject a shape whose vendor-specific tighter
+// workspace path might fit. Representability does not promise allocation success.
 //
 // Matrix layout: ALL matrices are COLUMN-MAJOR (LAPACK native). Callers are
 // responsible for layout; the Swift providers document this contract.
@@ -40,11 +39,23 @@
 extern "C" {
 #endif
 
-// Returned when no LAPACK backend exists on this platform (non-Apple build).
+// Returned for an unavailable backend OR local workspace allocation failure.
 // Positive/negative values in the small range are LAPACK `info` codes:
 //   0 = success; <0 = illegal argument at position -info; >0 = algorithm
 //   failure (did not converge / not positive definite, routine-specific).
 #define VC_LAPACK_UNAVAILABLE (-1000)
+#define VC_LAPACK_INVALID_QUERY (-1001)
+#define VC_LAPACK_WORKSPACE_OVERFLOW (-1002)
+
+// Apple scalar validation returns Fortran argument positions (including hidden
+// fixed JOBZ for SGESDD): GEQRF m:-1,n:-2,lda:-4; ORGQR m:-1,n:-2,k:-3,lda:-5;
+// GESDD m:-2,n:-3,lda:-5,ldu:-8,ldvt:-10; SYEVD jobz:-1,uplo:-2,n:-3,lda:-5.
+// Leading dimensions must be >=max(1, corresponding row count). ORGQR requires
+// 0<=k<=n<=m. Scalar checks precede valid zero-size returns, which access no
+// pointers and allocate nothing. Positive-size buffer capacities, initialization,
+// and column-major layout remain the caller's unsafe preconditions. Non-Apple
+// stubs always return UNAVAILABLE without touching buffers. Invalid query values
+// return INVALID_QUERY; unrepresentable local counts return WORKSPACE_OVERFLOW.
 
 /// 1 if a LAPACK backend is compiled in and callable, 0 otherwise.
 VC_EXPORT int32_t vc_lapack_available(void);
@@ -57,8 +68,8 @@ VC_EXPORT int32_t vc_lapack_sgeqrf(int32_t m, int32_t n,
                                    float *tau);
 
 /// Generate explicit Q (SORGQR) from SGEQRF output. On entry `a` holds the
-/// reflectors (m×n as left by sgeqrf); on exit the first k columns of `a`
-/// are the orthonormal Q (m×k). k = number of reflectors (= tau length used).
+/// reflectors (m×n as left by sgeqrf); on exit `a` is the orthonormal Q (m×n).
+/// k is the number of reflectors (= tau length used), with 0<=k<=n<=m.
 /// Returns LAPACK info.
 VC_EXPORT int32_t vc_lapack_sorgqr(int32_t m, int32_t n, int32_t k,
                                    float *a, int32_t lda,

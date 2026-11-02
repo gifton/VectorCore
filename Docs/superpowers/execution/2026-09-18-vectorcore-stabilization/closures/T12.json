@@ -1,0 +1,49 @@
+{
+  "task": "T12",
+  "status": "accepted",
+  "task_base": "6e69662",
+  "integration_revision": "d7f4f3d",
+  "closed_records": [
+    "T12-FP16-PER-LOAD-ALLOCATION",
+    "T12-STDLIB-SHADOW-CLASS",
+    "T12-FP16-CONVERTER-COVERAGE",
+    "T12-NAN-ENCODING-POLICY",
+    "T12-NATIVE-FLOAT16-DEAD-BRANCH",
+    "T12-BOUNDARY-NOTES-REPROBE"
+  ],
+  "disposition_records": {
+    "T12-FP16-PER-LOAD-ALLOCATION": "Root cause: the module-internal UnsafeRawPointer.loadUnaligned(as:) in BinaryFormat.swift shadowed the stdlib and allocated, copied and freed 16 B per call (168 sites in 54 functions). Both shadows were deleted. Release D4 per invocation: aos-fp16-reused 262,145/393,217/786,433 → 1; setup → 4,099; optimized-fp16 524,289/786,433 → 1. 16-B slowAlloc sites 168 → 0. 450 fixture sections are byte-identical. Serialization reads were never affected (they bind to the stdlib BitwiseCopyable overload; root premise corrected in phase 2).",
+    "T12-STDLIB-SHADOW-CLASS": "Closed mechanically by Scripts/ci/tests/test_no_stdlib_member_shadows.py: a curated stdlib member list per extended type (raw pointers, SIMD) with must-fail and must-pass fixtures. Pinned allowlist: the two SIMDExtensions sum() declarations (semantic review routed to T14).",
+    "T12-FP16-CONVERTER-COVERAGE": "FP16ConverterExhaustiveTests: sync, Float16-free, unguarded. 65,536 decodes, 63,490 round trips and 190,464 RNE inputs against independent integer references; NaN pins on every encode and decode path including the MixedPrecisionFactory entry points.",
+    "T12-NAN-ENCODING-POLICY": "One policy: encode any NaN to sign|0x7E00, decode any NaN to 0x7FC00000. Only the arm64 NEON chunk path changed (0x7fc12345: 0x7e09 → 0x7e00); RED-first. Across all 2^32 FP32 inputs the non-NaN digest is unchanged, and non-canonical NaN outputs fell 16,744,448 → 0 (one-host probe records outside the repo). CHANGELOG Changed.",
+    "T12-NATIVE-FLOAT16-DEAD-BRANCH": "Deleted: the branch and the private nativeFloat16Supported, plus the dead private fp16ToFp32_bulk. CHANGELOG Removed ('never enabled by default'). V04 routing to D02 was amended (84a0662); V04-R-0008 resolved.",
+    "T12-BOUNDARY-NOTES-REPROBE": "Boundaries.swift fp16Reused/fp16Setup/fp16DefaultRow ('probed') rewritten from the phase 2 re-probe; fp16Code deleted; flags stay included. BCT hand literals use an anchored containsCountLiteral at every count-literal site with leading- and trailing-digit controls (class fix). Ledger rebinds and tombstones are generated; 0 problems."
+  },
+  "frozen_supersession": {
+    "Sources/VectorCore/Utilities/BinaryFormat.swift": {
+      "b01_frozen_sha256": "579a5835608ff359604e38271977fda00a5188f58a5941f4ca6e490f00373c83",
+      "t12_sha256": "d6e5edd242ab29e8835896395b10719b76b393c1c2c5b56e660e4cbebfbd5c11",
+      "authority": "Root ruling T12 phase1 (a): B01 brief clause 'unless actual independent regression evidence establishes a new defect and root approves it'; scoped to deleting the two shadow extensions; B01 suites green unchanged."
+    }
+  },
+  "validation": {
+    "suite": "Phase 3 final fix: Debug and Release 251/53 suites. Phase 3: 304/57. Phase 2: 289 plus 17+75 XCTest including the B01 suites. Intel --build-tests compiles. Reviewer exports re-ran Debug at each stage.",
+    "policy": "Merged tree: claim ledger 0 problems; unittest 351 OK in-repo and git-less.",
+    "reviews": "Phase 1 rulings → phase 2 (Opus review: PASS/APPROVED, 4 minors folded into phase 3) → phase 3 plus FINAL whole-task review (Opus: PASS/APPROVED, 5 minors) → ONE final fix → scoped Sonnet re-review APPROVED (all 8 ADDRESSED, no new issues).",
+    "merge": "Byte-identical import of 9 files; all preimages equal 6e69662; merged tree = reviewed 816a71b apart from the ledger docs."
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T12",
+  "patch_sha256": "0cdb385520807a1bb3e567853554ec534e65362e414a70242ca5cb445ab8d8b1",
+  "reviewed_tree": "816a71b6d8ef97a3ded8fcb4fc0ce42b35f837fa",
+  "limitations": [
+    "The x86_64 batch path (convertBatchAVX2) is compiled but never executed here or in CI. Rosetta is not installed (installing it would be a host change). The verbatim loop body ran natively over all 2^32 inputs: 0 mismatches. The residual risk is x86 code generation only.",
+    "NEON/software non-NaN agreement is shown in the default FP environment only.",
+    "The Swift 6.0 (CI Xcode 16.2) binding of the remaining loadUnaligned sites is inferred from the 6.0.3 stdlib interface and SILGen with 6.2 against it; no 6.0 compiler is installed.",
+    "No Mac Catalyst test build is exercised; no performance claim is made about the per-lane NaN check.",
+    "The note record paths are outside the repo; the ledger carries their sha256."
+  ],
+  "routed": [
+    "T14: SIMDExtensions sum() semantic review (allowlisted in the shadow lint).",
+    "Follow-up: if Rosetta is installed by the user, run the FP16 suites under x86_64."
+  ]
+}

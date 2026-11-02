@@ -65,6 +65,7 @@ struct MemoryPoolTests {
                 #expect(AlignedMemory.isAligned(handle.pointer, to: 64))
                 // Touch memory to ensure the buffer is writable
                 handle.pointer.initialize(to: 0)
+                handle.pointer.deinitialize(count: 1)
                 _ = handle // returned on scope exit
             }
             // Returned buffers are available before the handle release completes.
@@ -225,6 +226,8 @@ struct MemoryPoolTests {
             let pool = MemoryPool(configuration: testConfig())
             let sum = pool.withBuffer(type: Float.self, count: 64, alignment: 32) { buf in
                 #expect(AlignedMemory.isAligned(buf.baseAddress!, to: 32))
+                buf.baseAddress!.initialize(repeating: 0, count: buf.count)
+                defer { buf.baseAddress!.deinitialize(count: buf.count) }
                 for i in 0..<buf.count { buf[i] = Float(i) }
                 return buf.reduce(0, +)
             }
@@ -233,12 +236,14 @@ struct MemoryPoolTests {
     }
 
     @Test
-    func testWithBuffer_FallbackPathWorksWhenAcquireNil() async {
+    func testWithBuffer_OrdinaryZeroAndSmallAcquisitions() async {
         await recordTestErrors {
             let pool = MemoryPool(configuration: testConfig())
             let first = pool.withBuffer(type: UInt8.self, count: 0, alignment: 16) { buf in buf.count }
             #expect(first == 0)
             let second = pool.withBuffer(type: UInt8.self, count: 5, alignment: 16) { buf in
+                buf.baseAddress!.initialize(repeating: 0, count: buf.count)
+                defer { buf.baseAddress!.deinitialize(count: buf.count) }
                 for i in 0..<buf.count { buf[i] = UInt8(i) }
                 return Int(buf[4])
             }
@@ -372,6 +377,7 @@ struct MemoryPoolTests {
             for handle in handles {
                 handle.pointer[0] = 42
                 #expect(approxEqual(handle.pointer[0], 42))
+                handle.pointer.deinitialize(count: handle.count)
             }
             handles.removeAll()
         }

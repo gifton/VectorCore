@@ -7,7 +7,8 @@ import Foundation
 
 /// Common alignment utilities for VectorCore storage types
 public enum AlignedMemory {
-    /// Platform-specific optimal alignment for SIMD operations
+    /// Alignment in bytes used by VectorCore storage, fixed at compile time: 64 on arm64 and
+    /// x86_64, 16 otherwise
     public static var optimalAlignment: Int {
         #if arch(arm64)
         // Apple Silicon prefers 64-byte alignment (cache line size)
@@ -28,13 +29,13 @@ public enum AlignedMemory {
     /// Check if a pointer is properly aligned
     @inlinable
     public static func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
-        Int(bitPattern: pointer) % alignment == 0
+        alignment > 0 && Int(bitPattern: pointer) % alignment == 0
     }
 
     /// Check if a mutable pointer is properly aligned
     @inlinable
     public static func isAligned<T>(_ pointer: UnsafeMutablePointer<T>, to alignment: Int) -> Bool {
-        Int(bitPattern: pointer) % alignment == 0
+        alignment > 0 && Int(bitPattern: pointer) % alignment == 0
     }
 
     /// Allocate aligned memory for Float arrays
@@ -47,6 +48,10 @@ public enum AlignedMemory {
         try allocateAligned(type: Float.self, count: count, alignment: alignment)
     }
 
+    /// Allocate storage bound to T with no initialized elements.
+    /// Initialize/deinitialize the logical count before releasing with `deallocate`.
+    /// Count zero allocates one element of storage but initializes none.
+    /// Negative or overflowing counts throw `VectorError.invalidDimension`.
     /// Allocate aligned memory for any type
     /// - Throws: VectorError.allocationFailed if allocation fails
     @inlinable
@@ -60,15 +65,20 @@ public enum AlignedMemory {
         precondition(alignment >= minimumAlignment,
                      "Alignment must be at least \(minimumAlignment) bytes")
 
+        precondition(alignment >= MemoryLayout<T>.alignment,
+                     "Alignment must satisfy the element type")
+        let (byteCount, overflow) = max(count, 1).multipliedReportingOverflow(by: MemoryLayout<T>.stride)
+        guard count >= 0 && !overflow else {
+            throw VectorError.invalidDimension(count, reason: "Count must be nonnegative and byte count representable")
+        }
         var rawPtr: UnsafeMutableRawPointer?
-        let byteCount = count * MemoryLayout<T>.stride
         let result = posix_memalign(&rawPtr, alignment, byteCount)
 
         guard result == 0, let ptr = rawPtr else {
             throw VectorError.allocationFailed(size: byteCount, reason: "posix_memalign error \(result)")
         }
 
-        return ptr.assumingMemoryBound(to: T.self)
+        return ptr.bindMemory(to: T.self, capacity: max(count, 1))
     }
 
     /// Deallocate memory previously allocated via posix_memalign or aligned_alloc.

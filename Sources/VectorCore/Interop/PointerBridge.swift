@@ -29,6 +29,7 @@ func withSIMD4FloatPointer<R>(_ array: ContiguousArray<SIMD4<Float>>, _ body: (U
 
 // Bridge ContiguousArray<SIMD4<Int8>> to UnsafePointer<Int8> for C kernel interop.
 // SIMD4<Int8> is 4 bytes with stride 4, so contiguous storage is a flat int8 array.
+@usableFromInline
 @inline(__always)
 func withSIMD4Int8Pointer<R>(_ array: ContiguousArray<SIMD4<Int8>>, _ body: (UnsafePointer<Int8>, Int) -> R) -> R {
     assert(MemoryLayout<SIMD4<Int8>>.stride == 4, "SIMD4<Int8> stride must be 4 for safe rebinding")

@@ -2,9 +2,9 @@
 //
 // beta-evolution-4, DOCUMENT-2. CPU batch-distance via the identity
 //   ‖x − y‖² = ‖x‖² + ‖y‖² − 2⟨x, y⟩
-// computed with Accelerate's cblas_sgemm, which dispatches to the AMX coprocessor
-// on Apple Silicon. This is the high-throughput path for large query × candidate
-// matrices; the per-pair SIMD kernels (BatchKernels) remain the small-batch path.
+// computed with Accelerate's cblas_sgemm. Which hardware unit Accelerate uses is
+// not specified by this repository, and whether this path is faster than the
+// per-pair SIMD kernels (BatchKernels) at a given size is not verified here.
 //
 // CPU-only. The GPU GEMM lives in VectorAccelerate.
 
@@ -56,7 +56,10 @@ public enum MatrixDistance {
 
     /// Pack candidates once for reuse. `normalized: false` prepares for Euclidean
     /// (raw rows + squared norms); `normalized: true` prepares for Cosine
-    /// (L2-normalized rows).
+    /// (L2-normalized rows). Every row must have the first row's `elementCount`; a
+    /// shorter or longer row stops with a named `fatalError` in every build, before
+    /// any row is read past its end (`ReleaseSizeGuardTests.matrixRowsOfUnequalLengthTrap`).
+    /// The same check covers the query rows of every matrix entry.
     public static func prepare<V: UnifiedVectorBuffer>(
         _ candidates: [V], normalized: Bool = false
     ) -> PreparedCandidates {
@@ -67,6 +70,7 @@ public enum MatrixDistance {
             normalizeRows(&packed, rows: n, d: d)
             return PreparedCandidates(packed: packed, norms: [], n: n, d: d, normalized: true)
         } else {
+            // swiftlang/swift#92562 (P02 R-LS4): a non-literal initializer.
             var norms = [Float](repeating: 0, count: n)
             rowSumOfSquares(packed, rows: n, d: d, into: &norms)
             return PreparedCandidates(packed: packed, norms: norms, n: n, d: d, normalized: false)
@@ -104,6 +108,7 @@ public enum MatrixDistance {
         precondition(out.count == q * n, "out must have q*n elements (got \(out.count), expected \(q * n))")
 
         let X = packRows(queries, d: d)
+        // swiftlang/swift#92562 (P02 R-LS4): a non-literal initializer.
         var xNorm = [Float](repeating: 0, count: q)
         rowSumOfSquares(X, rows: q, d: d, into: &xNorm)
 
@@ -111,13 +116,10 @@ public enum MatrixDistance {
 
         let yNorm = prepared.norms
         out.withUnsafeMutableBufferPointer { ob in
-            let o = ob.baseAddress!
-            for i in 0..<q {
-                let xi = xNorm[i]
-                let base = i * n
-                for j in 0..<n {
-                    let v = o[base + j] + xi + yNorm[j]
-                    o[base + j] = v < 0 ? 0 : v
+            xNorm.withUnsafeBufferPointer { xb in
+                yNorm.withUnsafeBufferPointer { yb in
+                    euclideanPostprocess(ob.baseAddress!, rows: q, columns: n, ldc: n,
+                                         xNorm: xb.baseAddress!, yNorm: yb.baseAddress!)
                 }
             }
         }
@@ -165,11 +167,7 @@ public enum MatrixDistance {
         gemmCrossTerm(X: X, Y: prepared.packed, n: n, d: d, alpha: 1, into: &out)
 
         out.withUnsafeMutableBufferPointer { ob in
-            let o = ob.baseAddress!
-            for k in 0..<(q * n) {
-                let dist = 1 - o[k]
-                o[k] = dist < 0 ? 0 : (dist > 2 ? 2 : dist)
-            }
+            cosinePostprocess(ob.baseAddress!, rows: q, columns: n, ldc: n)
         }
     }
 
@@ -182,19 +180,14 @@ public enum MatrixDistance {
         return out
     }
 
-    // MARK: - Private helpers
+    // MARK: - Private helpers (the array forms used by the public entries above)
 
     /// Pack vectors into a contiguous row-major `[rows × d]` Float buffer.
     private static func packRows<V: UnifiedVectorBuffer>(_ vs: [V], d: Int) -> [Float] {
-        let stride = MemoryLayout<Float>.stride
+        // swiftlang/swift#92562 (P02 R-LS4): a non-literal initializer.
         var buf = [Float](repeating: 0, count: vs.count * d)
-        buf.withUnsafeMutableBytes { dst in
-            let dstBase = dst.baseAddress!
-            for (i, v) in vs.enumerated() {
-                v.withUnsafeContiguousBytes { src in
-                    memcpy(dstBase.advanced(by: i * d * stride), src.baseAddress!, d * stride)
-                }
-            }
+        buf.withUnsafeMutableBufferPointer { dst in
+            packRows(vs, rows: 0..<vs.count, d: d, into: dst.baseAddress!)
         }
         return buf
     }
@@ -202,11 +195,8 @@ public enum MatrixDistance {
     /// Per-row sum of squares (‖row‖²) via vDSP.
     private static func rowSumOfSquares(_ buf: [Float], rows: Int, d: Int, into norms: inout [Float]) {
         buf.withUnsafeBufferPointer { bp in
-            let base = bp.baseAddress!
-            for i in 0..<rows {
-                var ss: Float = 0
-                vDSP_svesq(base + i * d, 1, &ss, vDSP_Length(d))
-                norms[i] = ss
+            norms.withUnsafeMutableBufferPointer { nb in
+                rowSumOfSquares(bp.baseAddress!, rows: rows, d: d, into: nb.baseAddress!)
             }
         }
     }
@@ -214,19 +204,11 @@ public enum MatrixDistance {
     /// L2-normalize each row in place (no-op for zero rows).
     private static func normalizeRows(_ buf: inout [Float], rows: Int, d: Int) {
         buf.withUnsafeMutableBufferPointer { bp in
-            let base = bp.baseAddress!
-            for i in 0..<rows {
-                var ss: Float = 0
-                vDSP_svesq(base + i * d, 1, &ss, vDSP_Length(d))
-                if ss > 0 {
-                    var inv = 1 / sqrtf(ss)
-                    vDSP_vsmul(base + i * d, 1, &inv, base + i * d, 1, vDSP_Length(d))
-                }
-            }
+            normalizeRows(bp.baseAddress!, rows: rows, d: d)
         }
     }
 
-    /// `out (q × n) = alpha · X (q × d) · Y (n × d)ᵀ` via cblas_sgemm (AMX on Apple Silicon).
+    /// `out (q × n) = alpha · X (q × d) · Y (n × d)ᵀ` via cblas_sgemm.
     /// The row count `q` is derived from `X.count / d` (X is row-major `q × d`).
     private static func gemmCrossTerm(
         X: [Float], Y: [Float], n: Int, d: Int, alpha: Float, into out: inout [Float]
@@ -235,14 +217,143 @@ public enum MatrixDistance {
         X.withUnsafeBufferPointer { xb in
             Y.withUnsafeBufferPointer { yb in
                 out.withUnsafeMutableBufferPointer { ob in
-                    cblas_sgemm(
-                        CblasRowMajor, CblasNoTrans, CblasTrans,
-                        Int32(q), Int32(n), Int32(d),
-                        alpha, xb.baseAddress, Int32(d),
-                        yb.baseAddress, Int32(d),
-                        0, ob.baseAddress, Int32(n)
-                    )
+                    gemmCrossTerm(x: xb.baseAddress!, y: yb.baseAddress!,
+                                  arguments: GemmArguments(rows: q, columns: n, d: d, ldc: n), alpha: alpha,
+                                  into: ob.baseAddress!)
                 }
+            }
+        }
+    }
+
+    // MARK: - Active-row helpers (internal; also the arithmetic of the explicit Gram route)
+    //
+    // P02 (RD9): the public entries above and `Operations.findNearestBatch` with `BatchSearchCPUStrategy.gram` share
+    // these helpers, so a Gram tile computes the same arithmetic as the public prepared/into entries on the same rows
+    // (`P02GramRouteTests.tileScoresMatchPublicPreparedEntries`). Every row count is an ACTIVE count, never a scratch
+    // capacity. Pointers are passed by value, never `inout` (P02 R-LS2, swiftlang/swift#92562), and every caller keeps
+    // the borrow that produced them synchronous. Unchecked caller preconditions, as before this refactor: every
+    // vector has at least `d` Floats, every pointer covers the rows and columns it is given, and `rows`, `columns`,
+    // `d` and `ldc` fit `Int32` (`Int32(_:)` traps otherwise); the Gram route checks the last with `GramPlan`.
+
+    /// Copies rows `rows` of `vs`, `d` Floats each, to consecutive rows of `dst`: row `rows.lowerBound + i` goes to
+    /// `dst + i * d`.
+    internal static func packRows<V: UnifiedVectorBuffer>(
+        _ vs: [V], rows: Range<Int>, d: Int, into dst: UnsafeMutablePointer<Float>
+    ) {
+        let bytes = d * MemoryLayout<Float>.stride
+        for (offset, i) in rows.enumerated() {
+            // A named guard: a `precondition` message is dropped at -O, and the Release row asserts this diagnostic.
+            guard vs[i].elementCount == d else {
+                fatalError("MatrixDistance rows must share a dimension: row \(i) has \(vs[i].elementCount) elements, expected \(d)")
+            }
+            let target = dst + offset * d
+            vs[i].withUnsafeContiguousBytes { src in
+                _ = memcpy(target, src.baseAddress!, bytes)
+            }
+        }
+    }
+
+    /// `norms[i] = ‖row i‖²` (`vDSP_svesq`) for `rows` rows of `d` Floats at `src`.
+    internal static func rowSumOfSquares(
+        _ src: UnsafePointer<Float>, rows: Int, d: Int, into norms: UnsafeMutablePointer<Float>
+    ) {
+        for i in 0..<rows {
+            var ss: Float = 0
+            vDSP_svesq(src + i * d, 1, &ss, vDSP_Length(d))
+            norms[i] = ss
+        }
+    }
+
+    /// L2-normalizes `rows` rows of `d` Floats at `base` in place with `NormalizationCore` (N01): a zero row stays
+    /// unchanged and a row with a nonfinite coordinate becomes all NaN.
+    internal static func normalizeRows(_ base: UnsafeMutablePointer<Float>, rows: Int, d: Int) {
+        for i in 0..<rows {
+            let row = base + i * d
+            switch NormalizationCore.plan(count: d, get: { row[$0] }) {
+            case .success(let plan):
+                for j in 0..<d { row[j] = plan.coordinate(row[j]) }
+            case .failure:
+                if (0..<d).contains(where: { !row[$0].isFinite }) {
+                    for j in 0..<d { row[j] = .nan }
+                }
+            }
+        }
+    }
+
+    /// The integer arguments of one `gemmCrossTerm` call. `gemmCrossTerm` passes exactly these fields to `cblas_sgemm`
+    /// (lexical pin C8 in `Scripts/ci/tests/test_gram_route_lexical.py`), so a caller that keeps this value (the Gram
+    /// route's trace seam, P02 phase C review RA-1) holds the arguments BLAS received rather than a recomputation of them.
+    internal struct GemmArguments: Sendable, Equatable {
+        /// Active rows of `x` (M), active rows of `y` (N), the dimension (K), and the leading dimensions of `x`, `y`
+        /// and `out`.
+        let m: Int32, n: Int32, k: Int32, lda: Int32, ldb: Int32, ldc: Int32
+
+        /// A `rows × columns` output block of `d`-long rows with row stride `ldc`; `lda = ldb = d`. `Int32(_:)` traps
+        /// when a value does not fit. Its one caller is the public entries' array wrapper, which checks nothing first;
+        /// the Gram route does not use it (it takes `GramPlan.gemmArguments`, built from the plan's checked fields).
+        init(rows: Int, columns: Int, d: Int, ldc: Int) {
+            m = Int32(rows)
+            n = Int32(columns)
+            k = Int32(d)
+            lda = Int32(d)
+            ldb = Int32(d)
+            self.ldc = Int32(ldc)
+        }
+
+        /// The six fields as given, already `Int32`: nothing is converted here. The Gram route builds its value with
+        /// `GramPlan.gemmArguments(activeQueryRows:activeCandidateRows:)` from the plan's checked fields (P02 final
+        /// review C-M3).
+        init(m: Int32, n: Int32, k: Int32, lda: Int32, ldb: Int32, ldc: Int32) {
+            self.m = m
+            self.n = n
+            self.k = k
+            self.lda = lda
+            self.ldb = ldb
+            self.ldc = ldc
+        }
+    }
+
+    /// `out[i * ldc + j] = alpha · Σ_k x[i * d + k] · y[j * d + k]` for `i < m`, `j < n` (the fields of `arguments`):
+    /// one `cblas_sgemm` (row-major, `x` not transposed, `y` transposed, `beta = 0`) that receives the six integer
+    /// fields of `arguments` unchanged. Only the active `m × n` block of `out` is passed to BLAS; with `beta = 0`,
+    /// BLAS does not read `out`.
+    internal static func gemmCrossTerm(
+        x: UnsafePointer<Float>, y: UnsafePointer<Float>, arguments: GemmArguments, alpha: Float,
+        into out: UnsafeMutablePointer<Float>
+    ) {
+        cblas_sgemm(
+            CblasRowMajor, CblasNoTrans, CblasTrans,
+            arguments.m, arguments.n, arguments.k,
+            alpha, x, arguments.lda,
+            y, arguments.ldb,
+            0, out, arguments.ldc
+        )
+    }
+
+    /// Squared-Euclidean postprocess of the active `rows × columns` block of `out` (row stride `ldc`), which holds
+    /// `−2·x·y`: `v = (out + xNorm[i]) + yNorm[j]`, stored as `v < 0 ? 0 : v` (a NaN stays NaN).
+    internal static func euclideanPostprocess( // swiftlint:disable:this function_parameter_count
+        _ out: UnsafeMutablePointer<Float>, rows: Int, columns: Int, ldc: Int,
+        xNorm: UnsafePointer<Float>, yNorm: UnsafePointer<Float>
+    ) {
+        for i in 0..<rows {
+            let xi = xNorm[i]
+            let base = i * ldc
+            for j in 0..<columns {
+                let v = out[base + j] + xi + yNorm[j]
+                out[base + j] = v < 0 ? 0 : v
+            }
+        }
+    }
+
+    /// Cosine-distance postprocess of the active `rows × columns` block of `out` (row stride `ldc`), which holds the
+    /// dot products of normalized rows: `1 − dot`, clamped to `[0, 2]` by comparisons (a NaN stays NaN).
+    internal static func cosinePostprocess(_ out: UnsafeMutablePointer<Float>, rows: Int, columns: Int, ldc: Int) {
+        for i in 0..<rows {
+            let base = i * ldc
+            for j in 0..<columns {
+                let dist = 1 - out[base + j]
+                out[base + j] = dist < 0 ? 0 : (dist > 2 ? 2 : dist)
             }
         }
     }

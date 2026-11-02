@@ -1,0 +1,7 @@
+[
+  {
+    "name": "Logger",
+    "module": "os",
+    "reason": "VectorCore.Logger versus os.Logger, which has existed since macOS 11, so this is pre-existing and not a toolchain regression. VectorCore itself compiles because module-local declarations shadow imports; only downstream files importing both modules must disambiguate the name. Allowlisted per root ruling 2026-10-03 (T01 brief-addendum item 2) and retained by D02 (RD-R5): a rename would be a downstream source migration (D01, user-deferred). Logger.swift documents the working spelling, `import struct VectorCore.Logger` (a client cannot write `VectorCore.Logger`, which resolves to the VectorCore enum), checked by the D02 consumers Scripts/ci/tests/D02/LoggerQualification.swift and LoggerNegative.swift. Matching is keyed on (name, SDK module), so this one entry also covers the re-export VectorCoreBenchmarking.Logger."
+  }
+]

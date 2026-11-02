@@ -1,0 +1,21 @@
+{
+  "task": "R01",
+  "status": "accepted",
+  "task_base": "312bec8",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-01",
+    "API-46"
+  ],
+  "validation": {
+    "debug": "74 tests /5 suites passed",
+    "release": "74 tests /5 suites passed",
+    "scalar_contract": "Float typecheck exit0; Double rejected at nearest, batch and collection"
+  },
+  "review": "reports/R01-review.md",
+  "evidence": "reports/R01.md",
+  "limitations": [
+    "Breaking Float-associated existential signature and collection override migration",
+    "No metric-aware relevance or downstream runtime closure"
+  ]
+}

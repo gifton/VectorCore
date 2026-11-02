@@ -1,0 +1,62 @@
+[
+  {
+    "name": "testJSONToBinaryConversion",
+    "line": 611
+  },
+  {
+    "name": "testFormatDetectionAndAutoSelection",
+    "line": 619
+  },
+  {
+    "name": "testMixedFormatBatchProcessing",
+    "line": 627
+  },
+  {
+    "name": "testDynamicVectorSerialization",
+    "line": 707
+  },
+  {
+    "name": "testQuantizedVectorSerialization",
+    "line": 715
+  },
+  {
+    "name": "testMixedPrecisionVectorSerialization",
+    "line": 723
+  },
+  {
+    "name": "testVersionMigrationHandling",
+    "line": 763
+  },
+  {
+    "name": "testResourceExhaustionHandling",
+    "line": 771
+  },
+  {
+    "name": "testStreamingSerializationPerformance",
+    "line": 823
+  },
+  {
+    "name": "testCompressionEffectiveness",
+    "line": 831
+  },
+  {
+    "name": "testCacheFriendlySerialization",
+    "line": 839
+  },
+  {
+    "name": "testBatchSerializationOptimization",
+    "line": 847
+  },
+  {
+    "name": "testIOSMacOSCompatibility",
+    "line": 861
+  },
+  {
+    "name": "testLinuxCompatibility",
+    "line": 869
+  },
+  {
+    "name": "test32BitVs64BitCompatibility",
+    "line": 877
+  }
+]

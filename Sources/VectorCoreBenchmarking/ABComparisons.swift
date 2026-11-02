@@ -1,98 +1,101 @@
 import Foundation
 
-/// Utilities for building A/B performance comparisons between benchmark variants
+public struct BenchmarkReportError: Error, CustomStringConvertible {
+    public let description: String
+    public init(_ description: String) { self.description = description }
+}
+
+public struct ABReport: Sendable {
+    public let comparisons: [ABComparison]
+    public let missingSides: [String]
+}
+
+/// One pairing policy serves planning, JSON and pretty output.
 ///
-/// Generates structured comparisons for:
-/// - Euclidean distance: euclidean2 (squared) vs euclidean (sqrt)
-/// - Cosine similarity: preNorm vs fused variants
+/// Pairing comes only from catalog-declared `boundary.comparison` membership. Case-name patterns never
+/// form pairs. A declared pair must agree on every boundary field except the family's allowed differences
+/// (`ComparisonFamilies`), and members with different timing scopes are an integrity error.
 public enum ABComparisons {
-    /// Build all A/B comparisons from benchmark cases
-    ///
-    /// Groups cases by dimension, N, variant, and provider, then compares:
-    /// 1. batch euclidean2 vs euclidean (squared distance optimization)
-    /// 2. batch cosine preNorm vs fused (normalization strategy)
-    ///
-    /// - Parameter cases: Array of benchmark cases to analyze
-    /// - Returns: Sorted array of A/B comparisons
-    public static func buildComparisons(cases: [BenchCase]) -> [ABComparison] {
-        var out: [ABComparison] = []
-
-        // Helper to compute ns/unit from case
-        func nsPerUnit(_ c: BenchCase) -> Double { c.nsPerUnit }
-
-        // batch euclidean2 vs euclidean
-        struct Key: Hashable { let dim: Int; let n: Int; let variant: String?; let provider: String? }
-        var byKey: [Key: [String: BenchCase]] = [:]
-        for c in cases {
-            let p = c.params
-            guard p.kind == "batch", let dim = p.dim, let n = p.n else { continue }
-            let key = Key(dim: dim, n: n, variant: p.variant, provider: p.provider)
-            if let m = p.metric { byKey[key, default: [:]][m] = c }
-        }
-        for (key, dict) in byKey {
-            if let rEuclid2 = dict["euclidean2"], let rEuclid = dict["euclidean"] {
-                // Match console summary semantics: label "euclidean2 vs euclidean",
-                // value order = euclid2 (left) vs euclid (right),
-                // delta = (euclid - euclid2)/euclid * 100
-                let left = nsPerUnit(rEuclid2)
-                let right = nsPerUnit(rEuclid)
-                let delta = (right - left) / right * 100.0
-                out.append(ABComparison(
-                    kind: "batch",
-                    comparison: "euclidean2_vs_euclidean",
-                    dim: key.dim,
-                    n: key.n,
-                    variant: key.variant,
-                    provider: key.provider,
-                    leftName: rEuclid2.name,
-                    rightName: rEuclid.name,
-                    leftNsPerUnit: left,
-                    rightNsPerUnit: right,
-                    deltaPercent: delta
-                ))
-            }
-        }
-
-        // batch cosine preNorm vs fused (optimized)
-        var cosByKey: [Key: [String: BenchCase]] = [:]
-        for c in cases {
-            let p = c.params
-            guard p.kind == "batch", p.metric == "cosine", let dim = p.dim, let n = p.n else { continue }
-            let v = (p.variant ?? "").lowercased()
-            let key = Key(dim: dim, n: n, variant: p.variant, provider: p.provider)
-            if v.contains("fused") { cosByKey[key, default: [:]]["fused"] = c }
-            else if v.contains("prenorm") { cosByKey[key, default: [:]]["prenorm"] = c }
-        }
-        for (key, dict) in cosByKey {
-            if let fused = dict["fused"], let prenorm = dict["prenorm"] {
-                // Match console: label "preNorm vs fused" but we encode
-                // comparison key as "cosine_prenorm_vs_fused".
-                // value order = preNorm (left) vs fused (right),
-                // delta = (fused - preNorm)/fused * 100
-                let left = nsPerUnit(prenorm)
-                let right = nsPerUnit(fused)
-                let delta = (right - left) / right * 100.0
-                out.append(ABComparison(
-                    kind: "batch",
-                    comparison: "cosine_prenorm_vs_fused",
-                    dim: key.dim,
-                    n: key.n,
-                    variant: key.variant,
-                    provider: key.provider,
-                    leftName: prenorm.name,
-                    rightName: fused.name,
-                    leftNsPerUnit: left,
-                    rightNsPerUnit: right,
-                    deltaPercent: delta
-                ))
-            }
-        }
-
-        return out.sorted(by: { a, b in
-            if a.comparison != b.comparison { return a.comparison < b.comparison }
-            if a.dim != b.dim { return a.dim < b.dim }
-            if a.n != b.n { return a.n < b.n }
-            return (a.variant ?? "").lexicographicallyPrecedes(b.variant ?? "")
-        })
+    private struct Key: Hashable {
+        let family: String
+        let group: String
     }
+    private struct Member { let name: String; let boundary: MeasurementBoundary; let side: String }
+    private struct Pair { let key: Key; let left: Member?; let right: Member? }
+
+    private static func pairs(_ entries: [(name: String, boundary: MeasurementBoundary?)]) throws -> [Pair] {
+        var seen = Set<String>()
+        var groups: [Key: [String: Member]] = [:]
+        for (name, boundary) in entries {
+            guard seen.insert(name).inserted else { throw BenchmarkReportError("Duplicate case ID: \(name)") }
+            guard let boundary, let membership = boundary.comparison else { continue }
+            guard ComparisonFamilies.allowedDifferences(family: membership.family) != nil else {
+                throw BenchmarkReportError("Undeclared comparison family \(membership.family): \(name)")
+            }
+            guard membership.side == "left" || membership.side == "right" else {
+                throw BenchmarkReportError("Invalid comparison side \(membership.side): \(name)")
+            }
+            let key = Key(family: membership.family, group: membership.group)
+            guard groups[key,
+                default: [:]][membership.side] == nil else { throw BenchmarkReportError("Duplicate comparison side: \(name)") }
+            groups[key, default: [:]][membership.side] = Member(name: name, boundary: boundary, side: membership.side)
+        }
+        return groups.map { Pair(key: $0.key, left: $0.value["left"], right: $0.value["right"]) }.sorted {
+            if $0.key.family != $1.key.family { return $0.key.family < $1.key.family }
+            let a = $0.left?.boundary ?? $0.right!.boundary, b = $1.left?.boundary ?? $1.right!.boundary
+            if a.fixture.dimension != b.fixture.dimension { return a.fixture.dimension < b.fixture.dimension }
+            if a.fixture.count != b.fixture.count { return a.fixture.count < b.fixture.count }
+            return $0.key.group < $1.key.group
+        }
+    }
+
+    /// Pre-execution planning (`--ab-only`): which declared sides lack a counterpart in the selection.
+    public static func missingSides(boundaries: [(name: String, boundary: MeasurementBoundary)]) throws -> [String] {
+        try missing(pairs(boundaries.map { ($0.name, Optional($0.boundary)) }))
+    }
+
+    private static func missing(_ pairs: [Pair]) -> [String] {
+        pairs.compactMap { pair in
+            guard pair.left == nil || pair.right == nil else { return nil }
+            return "Missing \(pair.left == nil ? "left" : "right") comparison side for \(pair.left?.name ?? pair.right!.name)"
+        }
+    }
+
+    public static func report(cases: [BenchCase]) throws -> ABReport {
+        let pairs = try pairs(cases.map { ($0.name, $0.boundary) })
+        let byName = Dictionary(uniqueKeysWithValues: cases.map { ($0.name, $0) })
+        var comparisons: [ABComparison] = []
+        for pair in pairs {
+            guard let leftMember = pair.left, let rightMember = pair.right else { continue }
+            let leftName = leftMember.name, rightName = rightMember.name
+            let leftBoundary = leftMember.boundary, rightBoundary = rightMember.boundary
+            guard leftBoundary.timingScope == rightBoundary.timingScope else {
+                throw BenchmarkReportError("Cross-scope comparison rejected (\(leftBoundary.timingScope.rawValue) vs "
+                    + "\(rightBoundary.timingScope.rawValue)): \(leftName), \(rightName)")
+            }
+            let allowed = ComparisonFamilies.allowedDifferences(family: pair.key.family)!.union(["comparison.side"])
+            let disallowed = leftBoundary.differences(from: rightBoundary).filter { !allowed.contains($0) }
+            guard disallowed.isEmpty else {
+                throw BenchmarkReportError("Boundary mismatch in \(pair.key.family): \(leftName), \(rightName): "
+                    + "\(disallowed.joined(separator: ","))")
+            }
+            let left = byName[leftName]!, right = byName[rightName]!
+            guard left.unitCount > 0, left.unitCount == right.unitCount,
+                  left.nsPerUnit.isFinite, left.nsPerUnit > 0,
+                  right.nsPerUnit.isFinite, right.nsPerUnit > 0 else {
+                throw BenchmarkReportError("Invalid comparison units/timing: \(leftName), \(rightName)")
+            }
+            let delta = (right.nsPerUnit - left.nsPerUnit) / right.nsPerUnit * 100
+            guard delta.isFinite else { throw BenchmarkReportError("Nonfinite comparison delta: \(leftName)") }
+            // Group format is "D|N|variantFamily|provider"; the variant is its third component.
+            let components = pair.key.group.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+            let variant = components.count == 4 ? components[2] : nil
+            comparisons.append(ABComparison(kind: "batch", comparison: pair.key.family,
+                dim: leftBoundary.fixture.dimension, n: leftBoundary.fixture.count, variant: variant, provider: leftBoundary.provider,
+                leftName: leftName, rightName: rightName, leftNsPerUnit: left.nsPerUnit, rightNsPerUnit: right.nsPerUnit,
+                deltaPercent: delta, leftBoundary: leftBoundary, rightBoundary: rightBoundary))
+        }
+        return ABReport(comparisons: comparisons, missingSides: missing(pairs))
+    }
+    public static func buildComparisons(cases: [BenchCase]) throws -> [ABComparison] { try report(cases: cases).comparisons }
 }

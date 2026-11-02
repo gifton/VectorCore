@@ -1,0 +1,42 @@
+{
+  "task": "P01",
+  "status": "accepted",
+  "task_base": "2240d2e",
+  "integration_revision": "a5b2189",
+  "closed_records": [
+    "OWN-07",
+    "API-23",
+    "API-45"
+  ],
+  "staged_records": {
+    "API-24": "PARTIAL: validation once per batch and partial heaps of min(k, range.count) repaired in P01 (verified); the flat GEMM matrix-to-row reshape and the retained Q×N score matrix are staged to P02."
+  },
+  "disposition_records": {
+    "OWN-07": "Vector384/512/768/1536Optimized hash(into:) feeds every SIMD4 storage block in order, then the fixed dimension (Q13 form). Float/SIMD Hashable semantics, so ±0 hash equally; no raw bits, no caching; equality, storage and I02 cache identity unchanged. Verified by OptimizedHashContractTests (interior-only sparse and dense corpora, late lanes, ±0 every block, real Set/Dictionary) and the structural check test_optimized_hash_coverage.py with mutation and shadow fixtures. One-host Release: distinct hashValues over the interior-only corpora 1 → 64/512/1024. Tradeoff, not a speed claim: O(D) uncached hashing, per-hash ≈16.6× (384) to ≈63.7× (1536) slower (BASE G → FINAL G medians); dictionary insert+lookup slower at corpus 64, faster at 512/1024. Process-seeded, collisions legal; ledger V04-C-0500 corrected.",
+    "API-23": "For small k (min(k,n) < n/10), selection no longer materializes n distances or pairs on: TopKSelection.select (array), select<T>, nearest/batchNearest and VectorMath.nearestNeighbors (shared internal selectByScore, Int-indexed TopKBuffer, sort of retained entries only, no Int32 route or ceiling); generic small-k Operations.findNearest (one no-hint parallelReduce, per-range heaps of min(k′,|range|)); small-k BatchOperations.findNearest (generic feeds the heap directly; the six optimized routes use the unchanged BatchKernels range helpers on ≤256-candidate tiles, one heap per worker partition, ≤min(C,L) partitions). Verified by TopKSelectorOracleTests, the phase D differential (5,652 cases, 0 mismatches), the P01 Operations and Batch route suites, B10 parity (396,180 comparisons, 0 mismatches, Debug/Release/ASan/TSan) and P01DirectEuclideanAdmissionTests (squared admission on all 7 direct Euclidean routes; root-admission mutant: 192 issues). Release D4, one host: e.g. select.array N=262,144 k=8 24 events/12,566,576 B → 5/480; select.generic N=16,384 k=1 32,789/1,490,852 → 6/212; ops.generic.dyn64.sequential N=16,384 k=1 29/901,440 → 12/612. Retained and not credited: large-k O(n) paths by design; Operations cosine 768/1536 fused n-score route; the pre-existing 16·n+32 B handle-array conversion on optimized routes (routed to P02). No speedup or RSS claim.",
+    "API-45": "VectorMath.nearestNeighbors uses the shared selector: ascending, numeric before NaN, smaller original index on exact ties (±0 and NaN pairs included), original bits; k ≤ 0 (negative included) and empty input return [] with no metric call; positive k makes exactly n calls in index order and returns min(k,n). Docs state small-k and large-k complexity separately; false heap/O(n log k)/Accelerate claims removed or qualified; CHANGELOG Breaking entry with migration. Verified by VectorMathNearestContractTests (k=0 zero calls; the negative-k child exits 0; [NaN,1,0] k=3 → [2,1,0]) and the VectorMath route of TopKSelectorOracleTests, Debug and Release. One-host Release vectormath.dim64 N=16,384 k=8: 32,791 events/3,129,920 B → 3/320 per call."
+  },
+  "resource_model_B17": "The temporary model for built-in small-k BatchOperations is O(C·k′ + C·256 + k′), excluding inputs and results. Measured on one host in Release (C = 16): per-call requested bytes on the optimized routes are a pre-existing 16·N+32 B handle-array conversion (outside the model; routed to P02) plus an N-independent remainder (serial exactly 1,220 B including one 1,056 B tile; parallel ≈50,964 B at N=4,096 and ≈51,732 B at N=16,384). Generic parallel totals 33,908 B (N=4,096) and 34,164 B (N=16,384). Against base: 332,900 → 116,532 B (optimized, N=4,096); 270,732 → 33,908 B (generic). Events rose at N ≤ 4,096 with default partitions and fell at N=16,384 and in min1 mode. C-dependence not measured. No allocation-free or constant-memory claim.",
+  "validation": {
+    "suite": "Phase G frozen tree 307441c: focused Debug and Release 390/39 plus XCTest 8/0; in-process ASan clean (396,180 parity, 0 mismatches). Final fix (comment-only production): Debug and Release 71/10 incl. the admission suite; TSan CI-row replay clean. Final reviewer Debug 390/39 from the export.",
+    "policy": "Merged tree: claim ledger 0 problems; unittest 377 OK in-repo and git-less.",
+    "reviews": "Phases A–F each independently reviewed with fix rounds (D, E, F); phase G measurement plus root comparison; FINAL whole-task Opus review (Spec FAIL on T8 sub-item; I1/I2) → ONE final fix → scoped re-review APPROVED (seed change judged fixture-only).",
+    "merge": "26 files imported byte-identically (preimages = 2240d2e); CHANGELOG.md and claim_ledger.json 3-way merged with identical results in both merge directions; merged tree differs from integration exactly in P01's 28 files and from P01's tree only in T11/T12 files."
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/P01",
+  "patch_sha256": "4ee702695cb1273fe03d5b25328fb4d4468d17fb960d8274516523255ac2366d",
+  "reviewed_tree": "2d4f1cf3a9a520583e4b5f2e68010472f63de686",
+  "limitations": [
+    "Timing records were taken under disclosed shared-host load; thermal state not recorded in the measurement window. A quiet-host re-run is the user's option.",
+    "Allocation figures are one host (Mac15,9, Swift 6.4, C=16), Release; C-dependence not measured.",
+    "ASan cannot start ChildProbeLauncher children; fresh-process isolation under ASan is not exercised (bodies ran in-process).",
+    "Euclidean tiled-vs-untiled parity is blind to tile placement (pair and tail kernels are bit-equal); the tile log and scratch-capacity checks carry that coverage.",
+    "The inert-wrapper guard is lexical (helper-function or closure-variable wrappers are a documented limit)."
+  ],
+  "routed": [
+    "P02: the 16·N+32 B handle-array conversion as a CLASS of 36 conditional array-cast sites (BatchOperations 21, Operations 14, MixedPrecisionKernels 1); the stored `public let scalarCount` doubles handle stride (check Codable/Equatable first); the flat GEMM reshape and Q×N matrix (API-24).",
+    "T13: Operations.swift/CHANGELOG ledger regions; HowTo_NearestNeighbor.md and API_Overview_Map.md; the stale selector list in the 2026-09-05 verification doc (superseded-by-P01 note).",
+    "T14: overload/witness bit consistency (seen in phase E). T15: cosine NaN → distance 0 clamp (seen in phase E).",
+    "T10 follow-up: propagate the sanitizer runtime environment to ChildProbeLauncher children."
+  ]
+}

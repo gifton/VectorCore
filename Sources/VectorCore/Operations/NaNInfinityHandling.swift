@@ -1,11 +1,11 @@
 // VectorCore: NaN and Infinity Handling
 //
-// Comprehensive utilities for handling non-finite values in vectors
+// Utilities that detect, replace or reject non-finite (NaN and infinite) values in vectors
 //
 
 import Foundation
 
-/// Options for handling NaN and Infinity values
+/// Options for `handleNonFinite(options:)`: what to do with NaN and infinite components
 public struct NonFiniteHandling: OptionSet, Sendable {
     public let rawValue: Int
 
@@ -75,7 +75,7 @@ public struct NonFiniteCheckResult {
 
 // MARK: - Vector Extensions for NaN/Infinity Handling
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
     /// Check for non-finite values in the vector
     ///
@@ -107,19 +107,7 @@ public extension Vector where D.Storage: VectorStorageOperations {
         )
     }
 
-    /// Check if all values are finite
-    ///
-    /// - Returns: true if all values are finite
-    /// - Complexity: O(n) where n is the dimension
-    @inlinable
-    var isFinite: Bool {
-        for i in 0..<D.value {
-            if !self[i].isFinite {
-                return false
-            }
-        }
-        return true
-    }
+    // `isFinite` is declared once, for every Vector<D>, in Vector.swift.
 
     /// Check if vector contains any NaN values
     ///
@@ -150,9 +138,9 @@ public extension Vector where D.Storage: VectorStorageOperations {
         return false
     }
 
-    /// Handle non-finite values according to specified options
+    /// Applies `options` to the non-finite components (see `NonFiniteHandling`)
     ///
-    /// - Parameter options: How to handle non-finite values
+    /// - Parameter options: What to do with each non-finite component
     /// - Returns: New vector with non-finite values handled
     /// - Throws: NonFiniteError if throwOnNonFinite option is set
     func handleNonFinite(options: NonFiniteHandling) throws -> Vector<D> {
@@ -280,7 +268,7 @@ public extension DynamicVector {
         return true
     }
 
-    /// Handle non-finite values
+    /// Applies `options` to the non-finite components (see `NonFiniteHandling`)
     func handleNonFinite(options: NonFiniteHandling) throws -> DynamicVector {
         if isFinite {
             return self
@@ -322,7 +310,7 @@ public extension DynamicVector {
 
 // MARK: - Safe Mathematical Operations
 
-public extension Vector where D.Storage: VectorStorageOperations {
+public extension Vector {
 
     /// Safe division that handles division by zero
     ///
@@ -348,38 +336,40 @@ public extension Vector where D.Storage: VectorStorageOperations {
         return try result.handleNonFinite(options: options)
     }
 
-    /// Safe normalization that handles zero vectors
-    ///
-    /// - Parameter options: How to handle zero magnitude
-    /// - Returns: Normalized vector or handled according to options
+    /// Handle original nonfinite coordinates first, then normalize finite nonzero output.
+    /// Strict handling takes precedence over propagation and replacement. Remaining
+    /// nonfinite coordinates return unchanged after handling, so output may be unnormalized.
+    /// Zero handled input throws in strict mode, becomes NaN under propagation, or is unchanged.
     func safeNormalized(options: NonFiniteHandling = .replaceAll) throws -> Vector<D> {
-        let mag = magnitude
-
-        if mag == 0 {
+        let handled = try handleNonFinite(options: options)
+        guard handled.isFinite else { return handled }
+        if handled.isZero {
             if options.contains(.throwOnNonFinite) {
                 throw VectorError.zeroVectorError(operation: "normalization")
             }
-
-            if options.contains(.propagateNaN) {
-                return Vector<D>(repeating: .nan)
-            }
-
-            // Return zero vector by default
-            return self
+            if options.contains(.propagateNaN) { return Vector<D>(repeating: .nan) }
+            return handled
         }
-
-        return try safeDivide(by: mag, options: options)
+        let normalized: Result<Vector<D>, VectorError> = handled.normalized()
+        return try normalized.get()
     }
 
-    /// Safe logarithm that handles non-positive values
-    ///
-    /// - Parameter options: How to handle non-positive values
-    /// - Returns: Vector with log of each element
+    /// Apply input nonfinite handling, then logarithms with a nonpositive-domain policy.
+    /// Input handling preserves strict-before-propagation-before-replacement precedence.
+    /// Strict input errors are classified before domain errors, regardless of index.
+    /// For handled values <= 0, strict throws at the first index, propagation returns
+    /// all NaNs, NaN replacement yields zero, and otherwise the fallback is -Float.max.
+    /// Unresolved NaN and positive infinity pass through the logarithm.
+    /// - Parameter options: Input nonfinite and nonpositive-domain handling options.
+    /// - Returns: Logarithms of handled coordinates, subject to the domain policy.
+    /// - Throws: NonFiniteError for strict nonfinite input, or VectorError.invalidValues
+    ///   for the first strict nonpositive coordinate. Complexity: O(n).
     func safeLog(options: NonFiniteHandling = .replaceNaNWithZero) throws -> Vector<D> {
+        let handled = try handleNonFinite(options: options)
         var result = Vector<D>()
 
         for i in 0..<D.value {
-            let value = self[i]
+            let value = handled[i]
             if value <= 0 {
                 if options.contains(.throwOnNonFinite) {
                     throw VectorError.invalidValues(indices: [i], reason: "Logarithm of non-positive value")

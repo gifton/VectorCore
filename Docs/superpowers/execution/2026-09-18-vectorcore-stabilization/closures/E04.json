@@ -1,0 +1,58 @@
+{
+  "task": "E04",
+  "status": "accepted",
+  "task_base": "ae0fd908d99b5ccacdb22749e5203f6e70cbc381",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-05",
+    "API-06",
+    "API-32",
+    "API-37"
+  ],
+  "execution_findings_closed": [
+    "EX-05"
+  ],
+  "validation": {
+    "red": "Actual unchanged baseline: three actor pools leaked returned payload after weak-confirmed destruction; SwiftBufferPool retained 512 bytes under a 64-byte cap. Positive raw/free and explicit-clear controls passed.",
+    "debug": "48 reported functions in four suites, exit 0; 20 actual bounded named guard children; parent child entry is a no-op.",
+    "release": "Same final v2 source/filter/counts, exit 0.",
+    "asan": "46 exercised valid functions / 63 parameterized invocations, exit 0. Parent child entry and 20 early-return guard cases excluded; detect_leaks=0, no LeakSanitizer claim.",
+    "standalone": "Unchanged v1 inputs: five modes each in Debug/Release; three watchdog regressions pass.",
+    "consumers": "Swift 6 strict concurrency positive compile/link/run pass; three negative fixtures reject intended Sendable and typed-handle/budget migrations.",
+    "provenance": "Full 16-file patch reconstructed; 255/262 code-file inventory, 264 worker files and canonical copies, 18 command logs, 80 parent capture associations, 40 direct bounded guard replays, 132 public linked artifacts, source archives and retained artifacts verified.",
+    "allocation": "Three identical Release repetitions: return at cached counts 0/1/8/32/128 records 3/2/2/2/2 allocation events and 256/184/184/184/184 requested bytes. Baseline cached-size byte growth removed; bookkeeping allocations remain."
+  },
+  "review": "reports/E04-implementation-review.md",
+  "evidence": "reports/E04-implementation-report.md",
+  "commands": "reports/E04-v2-final-commands.json",
+  "root_verification": "reports/E04-root-acceptance.json",
+  "diff_sha256": "91b53d9683ac7f202c862088526a6cf1379bc29cacdb37a05f0ad081ab908816",
+  "frozen_sha256": {
+    "Scripts/ci/check_memory_pool.py": "76a232f15b09eb9d833bf26c0c8a56848fa791fc262aad97deea1ce27f5b9b5e",
+    "Sources/VectorCore/Operations/BufferPool.swift": "cad46300bb614af46022a42c39150f6925d5b6339a16350c795b9781b19866bf",
+    "Sources/VectorCore/Operations/ExecutionOperations.swift": "d77968fc4852b5fbccdb7c64f3f68246382fc788b5b9cee0aafd32308e5833d6",
+    "Sources/VectorCore/Protocols/BufferProvider.swift": "f993f9048a7db727e5557b1d5b064f8ad73a8d1b960f13af4a70ce4385a7f067",
+    "Sources/VectorCore/Providers/SwiftBufferPool.swift": "b92563951cbea258f2877643fbffcf0286c5825cf222310d686a87df086ba357",
+    "Sources/VectorCore/Utilities/MemoryPool.swift": "efdc5ca8db008354d7ab75ff6a77eb49e67b0a42efbc975c36ef3f6e04868448",
+    "Sources/VectorCore/Utilities/PoolAllocation.swift": "cb83ce112e7207c482acea3f188697a12dc9185037a3ed4e81ca548d55e8bcd2",
+    "Tests/ComprehensiveTests/BufferPoolOwnershipTests.swift": "02e860d44afc7438c6e0859ae0c3fad34346530673b8c5377a74520e28d01136",
+    "Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift": "e014dc009aea72acfb66a31e71c495a0b22a2356ecac44f79133ceb173163bf5",
+    "Tests/ComprehensiveTests/MemoryPoolTests.swift": "def116dcfa3c991a49260c496de884c1365576c664ec20ff0e564064ddb5c04f",
+    "Tests/E04Consumers/NegativeCapture.swift": "1afc79f1477b1925a61c1ff6597ad310de35aabf427ac0057ee5e37e87a0488e",
+    "Tests/E04Consumers/NegativeLegacy.swift": "48686c846f2307b8966e6909eca5593b0d5357d626ecdec977fb13cb679939a5",
+    "Tests/E04Consumers/NegativeResult.swift": "26f684246e09b26c00be05eddbfb4575edc701d006c7bb45832dae6120eb6e91",
+    "Tests/E04Consumers/Positive.swift": "b986c4ad7ee58a3e1358f4da27560dd92c04be51d6bf532ee0df622892890f8b",
+    "Tests/MemoryPoolRegression/AllocationSupport.swift": "62745a97bbf9210591c03f6855798dbaff5fff81824796ee02e6f28fa93fa73c",
+    "Tests/MemoryPoolRegression/Probe.swift": "0dcee60cbb61aebfbea2dd092b712aa2e1381dfa8af01c546fa5e9a5d046a4a1"
+  },
+  "migrations": [
+    "TypedBufferPool requires an explicit maxCachedBytes and returns immutable lease Handle; release takes that handle.",
+    "BufferProvider.withBuffer is async throws with Sendable body/result; release is awaited on both exits.",
+    "Actor handles are borrowed metadata: retain provider through release, initialize/deinitialize used generic elements, and synchronize pointer access independently. MemoryPool handles retain allocation owners and may outlive their pool."
+  ],
+  "limitations": [
+    "No real OOM recovery claim; per-instance deterministic allocation failures exercise fallback routes.",
+    "Cancellation retains the lease until the scoped body completes, including a body that ignores cancellation.",
+    "No universal zero-allocation, latency, contention, RSS, Linux, downstream or GPU claim."
+  ]
+}

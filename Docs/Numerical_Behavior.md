@@ -49,9 +49,34 @@ Wrapper coverage is in
 Do not infer a package-wide “NaNs propagate” policy from Top-K's ordering
 rule. Metrics, normalization, fused kernels, and matrix wrappers have their
 own checks and clamps. For example, the scalar `CosineDistance` returns 1
-when its magnitude-product guard fails, while other paths compute normalized
-rows. Zero norm is not a meaningful direction, and a returned number is not
-evidence that the input represented a valid cosine comparison.
+when its magnitude-product guard fails and both squared norms are finite,
+while other paths compute normalized rows. Zero norm is not a meaningful
+direction, and a returned number is not evidence that the input represented
+a valid cosine comparison.
+
+Cosine distance does have one exceptional-value policy across its paths
+(`CosineDistance` and its optimized overloads, the fused, pre-normalized,
+SoA, FP16 and mixed-precision kernels, `cosineDistance(to:)`,
+`MatrixDistance.cosineDistanceMatrix`, and the searches built on them):
+a NaN or infinite coordinate in either vector gives a NaN distance, also
+against a zero vector, so Top-K ranks such rows after every numeric
+distance; the `[-1, 1]` similarity clamp applies only to a finite
+similarity; one or two zero vectors give 1. What counts as a zero vector
+(the tiny-magnitude threshold) still differs between paths and is
+unchanged: the value 1 applies to whatever a path already treats as zero,
+so on the fused kernels two vectors whose squared norms are at or below
+`Float.leastNormalMagnitude` also give 1. Vectors whose
+squared norm overflows Float (`‖v‖² ≥ Float.greatestFiniteMagnitude`) are
+outside the supported domain: the per-pair paths can return NaN or 1
+where the GEMM path returns the true distance. The mixed-precision kernels
+that pair an FP32 vector with an FP16 vector need the product of the two
+squared norms to stay below `Float.greatestFiniteMagnitude`; past it they
+return 1 for finite inputs in any direction (this follows from
+`MixedPrecisionKernels.cosineMixedCore`; it is not a table row). Tests:
+[T15CosineExceptionalTableTests](../Tests/ComprehensiveTests/T15CosineExceptionalTableTests.swift)
+(every registered implementation) and
+[T15CosineSelectionTests](../Tests/ComprehensiveTests/T15CosineSelectionTests.swift)
+(every public cosine search route).
 
 There is also a current wrapper limitation:
 `BatchOperations.pairwiseDistances` converts GEMM Euclidean scores with
@@ -65,6 +90,47 @@ Do not use the pairwise wrapper as a non-finite-input validation mechanism.
 If an application requires finite, nonzero embeddings, validate those
 requirements before selecting an optimized route. An external
 `BatchKernelProvider` needs its own numerical conformance tests.
+
+## Min/max reductions, statistics and clamps
+
+The min/max family has one NaN rule: if any input element is NaN, the result
+is NaN. This covers `maximum`, `minimum` and `maximumMagnitude` of the Swift and
+Accelerate SIMD providers (and `SIMDOperations`), the array providers' `max` and
+`min`, `VectorProtocol.min` and `max`, `SIMDStorage.minMax()`, the column
+`min`/`max` and magnitude extremes of `Operations.statistics(for:)`, the
+`maxAbsoluteError` of `QuantizationSchemes.analyzeQuantizationError`, and the
+`PerformanceProfiler` maxima. Index reductions (`minIndex`/`maxIndex`,
+`Vector.minElement()`/`maxElement()`) return the index of the first NaN.
+Element-wise `elementWiseMin`/`elementWiseMax` (`Vector.min(_:)`/`max(_:)`) give
+NaN in a lane where either operand is NaN, and `clip`/`clamped(to:)` keep a NaN
+lane NaN. The NaN's sign and payload are unspecified; test with `isNaN`.
+
+The other edge cases: the sign of a zero maximum or minimum is unspecified
+(the Swift and vDSP paths may differ); a zero `maximumMagnitude` is `+0`; an
+empty pointer-level reduction returns -infinity (`maximum`), +infinity
+(`minimum`) or 0 (`maximumMagnitude`) on both providers (library-defined: the
+Accelerate paths guard `count > 0` themselves and do not depend on vDSP's
+undocumented `N == 0` output); `SIMDStorage.minMax()`
+of empty storage is (+infinity, -infinity); `VectorProtocol.min`/`max` of an
+empty vector is nil.
+
+Swift's `max(a, b)`/`min(a, b)` keep a NaN only in their first argument,
+`Array.max()` only at index 0, and `SIMD.max()` and `Float.maximum` ignore it;
+the vDSP header does not specify NaN handling for `maxv`/`minv`/`maxmgv`. The
+library therefore checks for NaN explicitly rather than relying on any of them.
+The one exception is the Accelerate `clip`: it relies on the documented
+`vDSP_vclip` header formula (`D[n] = A[n]; if (D[n] < B[0]) D[n] = B[0];
+if (C[0] < D[n]) D[n] = C[0]`, both comparisons false for NaN), verified on one
+host only (Apple silicon); Intel and older OS versions are unverified.
+For NaN-ignoring extrema, filter NaNs before reducing. The `lerp`/`smoothstep`
+parameter clamp is not covered: `t = NaN` returns the other endpoint.
+
+Tests:
+[T16ReductionExceptionalTableTests](../Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift)
+evaluates every implementation and provider with a NaN at every index of 18
+lengths and checks that the Swift and Accelerate providers agree;
+`Scripts/ci/tests/test_reduction_nan_guard.py` requires every `Float`/`Double`
+min/max fold in `Sources` to be registered with a reviewed NaN decision.
 
 ## Matrix distances: shape, memory, and precision
 
@@ -108,10 +174,41 @@ Mixed-precision configuration or validation results are not blanket numerical
 guarantees for arbitrary data; see the actual path and
 [MixedPrecisionRangeValidationTests](../Tests/ComprehensiveTests/MixedPrecisionRangeValidationTests.swift).
 
+PCA retains its compensated Double center in the public `[Double]` mean and
+uses `Float(Double(x) - mean)` consistently in fit and single/batch transforms.
+The exactly representable translation fixtures in PCACenteringContractTests
+exercise the avoided early center rounding. Input quantization, Float residual
+rounding and Float matrix products remain; arbitrary translation invariance is
+not promised. Nonfinite original inputs are rejected, and successful model
+statistics/projections must be finite. Provider failures propagate unchanged.
+
 PCA and UMAP introduce additional approximation and conditioning concerns.
 A fixed random seed does not promise bitwise equality across factorization
 providers, hardware, or toolchains. Degenerate eigenspaces can have different
 valid bases. See [Linear Algebra and Projection](Linear_Algebra_and_Projection.md).
+
+## UMAP calibration and Float Gram context
+
+UMAPRangeContractTests covers dimensionless output-curve fitting against a retained
+derivative-free reference and Double smooth-kNN membership/residual controls against
+110/160-digit Decimal references. Float coefficient publication has an explicit curve
+fidelity bound; smooth bandwidth uses a limiting tie policy followed by a mean floor.
+A floor-dominated row is not required to satisfy the unfloored target equation, and
+an ill-conditioned equation does not promise accurate sigma identification.
+
+Both UMAP overloads reject nonfinite floating options and supplied coordinates,
+preflight schedule/count representation, and throw on nonfinite Float SGD arithmetic
+before clipping. This supports finite successful output on the checked routes, not
+meaningful/converged layouts for every finite input or stochastic layout-scale
+equivariance. The public array inputs are not mutated. Internal optimizer failure
+may leave its inout buffer partially updated.
+
+KNNGraph.bruteForce still uses exhaustive Float Gram scoring. Common offsets can
+cancel nearby distances; large finite values can overflow norms/dots. The
+`[10000,10002,10001]` fixture records actual scores/neighbors against independent
+Double differences as a characterization, not a repaired direct-distance guarantee.
+No truncated-candidate rerank or hidden routing change is included. See
+[the explicit calibration and boundary contracts](Linear_Algebra_and_Projection.md#umap-calibration-and-checked-numerical-domain).
 
 ## Choosing checks and tolerances
 
@@ -125,3 +222,10 @@ Throwing construction does not make every later operation checked. Unsafe
 storage, integer sizing, lifetime, and concurrency obligations are described
 in [Memory Alignment](Memory_Alignment.md). Tests establish the cases they
 exercise, not correctness for every dimension, value, or execution route.
+
+L03 curve-step acceptance compares a Neumaier-compensated per-sample SSE
+change, with separately formed new/old residuals, rather than subtracting
+separately rounded objective totals. Only finite strictly negative changes are
+accepted; stationarity remains the true SSE-gradient infinity norm `<= 1e-8`.
+The non-dyadic regression controls are named
+`UMAPRangeContractTests.curveOrdinaryNonDyadicScales`.

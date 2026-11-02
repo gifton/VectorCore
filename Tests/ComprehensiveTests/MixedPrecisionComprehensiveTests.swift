@@ -733,7 +733,7 @@ struct MixedPrecisionComprehensiveTests {
             print("  Mixed top result: index \(mixedTopK[0])")
         }
 
-        @Test("Memory footprint reduction verification")
+        @Test("Logical scalar payload ratio (model, not process memory)")
         func testMemoryFootprintReduction() throws {
             var rng = SeededGenerator(seed: 0xC003000D)
             let vectorCount = 1000
@@ -745,22 +745,22 @@ struct MixedPrecisionComprehensiveTests {
                 fp32Vectors.append(try Vector512Optimized(values))
             }
 
-            // Convert to FP16 (verifies conversion works; memory estimate uses known sizes)
+            // Convert to FP16 (verifies conversion works; the payload model uses known scalar widths)
             _ = fp32Vectors.map { MixedPrecisionKernels.Vector512FP16(from: $0) }
 
-            // Estimate memory usage
+            // Logical scalar payload model from the known scalar widths (4 and 2 bytes); not process memory
             let fp32MemoryBytes = vectorCount * 512 * MemoryLayout<Float>.size
-            let fp16MemoryBytes = vectorCount * 512 * 2  // 2 bytes per FP16
+            let fp16MemoryBytes = vectorCount * 512 * 2  // 2 bytes per FP16 scalar
 
             let savings = Float(fp32MemoryBytes - fp16MemoryBytes) / Float(fp32MemoryBytes) * 100
 
-            print("Memory footprint test:")
-            print("  FP32 memory: \(fp32MemoryBytes) bytes")
-            print("  FP16 memory: \(fp16MemoryBytes) bytes")
-            print("  Savings: \(String(format: "%.1f%%", savings))")
+            print("Logical scalar payload model (not process memory):")
+            print("  FP32 scalar payload: \(fp32MemoryBytes) bytes")
+            print("  FP16 scalar payload: \(fp16MemoryBytes) bytes")
+            print("  Payload difference: \(String(format: "%.1f%%", savings)) of the FP32 scalar payload (not process memory)")
 
-            // Verify 50% savings
-            #expect(abs(savings - 50.0) < 1.0, "Memory savings not ~50%: \(savings)%")
+            // The 2:1 scalar-width ratio of the payload model; no memory saving is measured
+            #expect(abs(savings - 50.0) < 1.0, "Logical scalar payload difference not ~50%: \(savings)%")
         }
     }
 
@@ -781,11 +781,11 @@ struct MixedPrecisionComprehensiveTests {
             print("\nSpeedup: \(String(format: "%.2f×", result.speedup))")
 
             // Speedup should be > 1.0 (FP16 faster than FP32)
-            #expect(result.speedup > 1.0, "FP16 should be faster than FP32")
+            expectPerformance("MixedPrecisionComprehensiveTests.testBenchmarkDotProduct.1", result.speedup > 1.0, "FP16 should be faster than FP32")
 
             // FP16 should meet performance target (< 120ns on M1)
             // Note: This is hardware-dependent, so we use a relaxed threshold
-            #expect(result.fp16.meanTimeNs < 300, "FP16 performance target not met: \(result.fp16.meanTimeNs)ns")
+            expectPerformance("MixedPrecisionComprehensiveTests.testBenchmarkDotProduct.2", result.fp16.meanTimeNs < 300, "FP16 performance target not met: \(result.fp16.meanTimeNs)ns")
         }
 
         @Test("Measure accuracy with benchmark utility")
@@ -821,8 +821,8 @@ struct MixedPrecisionComprehensiveTests {
             print("\nMixed vs FP16 speedup: \(String(format: "%.2f×", speedupVsFP16))")
 
             // Both should complete in reasonable time
-            #expect(result.mixed.meanTimeNs < 50_000, "Batch mixed too slow: \(result.mixed.meanTimeNs)ns")
-            #expect(result.fp16.meanTimeNs < 50_000, "Batch FP16 too slow: \(result.fp16.meanTimeNs)ns")
+            expectPerformance("MixedPrecisionComprehensiveTests.testBenchmarkBatchOperations.3", result.mixed.meanTimeNs < 50_000, "Batch mixed too slow: \(result.mixed.meanTimeNs)ns")
+            expectPerformance("MixedPrecisionComprehensiveTests.testBenchmarkBatchOperations.4", result.fp16.meanTimeNs < 50_000, "Batch FP16 too slow: \(result.fp16.meanTimeNs)ns")
         }
     }
 }

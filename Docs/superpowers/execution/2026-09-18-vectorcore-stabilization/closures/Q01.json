@@ -1,0 +1,56 @@
+{
+  "task": "Q01",
+  "status": "accepted",
+  "task_base": "0dbb18c818f26edd8e28bb303a6fccedbd063a6f",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "NUM-03",
+    "NUM-04",
+    "NUM-05"
+  ],
+  "closed_execution_findings": [
+    "EX-01",
+    "EX-04"
+  ],
+  "partial_records": {
+    "SER-08": "INT8 parameter decoding validated here; S01 shape repair accepted; combined result-pair/decoded invariant closure remains with S03"
+  },
+  "validation": {
+    "red": "33 metric assertions across all widths plus separate calibration/finite-outlier trap, symmetric final-rounding failure and Release diagnostic-stripping failure; all retained",
+    "debug": "frozenv4 exit0,17XCTest methods and50SwiftTesting functions/12suites",
+    "release": "frozenv4 exit0,17XCTest methods and50SwiftTesting functions/12suites",
+    "asan": "frozenv4 valid controls exit0,10XCTest methods and7SwiftTesting functions/2suites,no sanitizer finding",
+    "children": "99 intended rejections plus1 finite-outlier success; 15s execution deadline and at most2s owned-PID cleanup; parent childProbe function is a no-op",
+    "matrix": "Both calibration APIs/extreme exponent families/all256codes; every INT8width; decoded legacy tuples; conversion/borrow/SoAcounts0...5;21EX04witnesses; exactwidecancellation;96independentFractiondifferencefixtures",
+    "allocation": "Root linked Release v2 regression and v4 correction; all22 measured v4 rows0allocationevents/0requestedbytes and samev2resultbits; no latency/throughput claim",
+    "provenance": "7 matching frozen hashes, exact completepatch,270base/274archive codefiles only7assignedchanges,845 matching worker evidence artifacts, independent final review"
+  },
+  "review": "reports/Q01-implementation-review.md",
+  "evidence": "reports/Q01-implementation-final.md",
+  "commands": "reports/Q01-validation-commands.json",
+  "root_verification": "reports/Q01-root-verification.json",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/Kernels/QuantizedKernels.swift": "edd36b6c5712d37436053c4f229c294646d44813b575e8c0026cf66a28e6d913",
+    "Sources/VectorCore/Quantization/QuantizationSchemes.swift": "355cb03d6f986952b90137c0d7b3cad41bab144ee20938b0eccfe4f6e1d5ae06",
+    "Sources/VectorCore/Quantization/AffineQuantizationCore.swift": "63763233e91e29cf8bb127b746d4a1015cfcf9174169eb2508edaf7140b808fc",
+    "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift": "7db78f5043882b80387d639873d4700b812762549e67593c8f936806b7ce9dbc",
+    "Tests/ComprehensiveTests/QuantizedMetricRangeTests.swift": "0bb7c3ed665d77a25a99b484b1d4185633ef8528513c54a30847eec995e2bd0d",
+    "Tests/ComprehensiveTests/Q01ExactOracleFixtures.swift": "4687c0f6f9dacfae5ed82256fd0f35f1d8b16cfccd68b14a6459c6ddbb07da41",
+    "Tests/ComprehensiveTests/QuantizedKernelsComprehensiveTests.swift": "c0cd49213f7cc284c29fdc01038191a9586c58a3c52c1a60dea1ee1053b9078c"
+  },
+  "migrations": [
+    "Asymmetric calibration includes zero; narrow one-sided intervals trade resolution for representable zeroPoint; newly calibrated tuples decode all256codes finitely",
+    "Nonfinite throwing array inputs reject with exact invalid indices; nonthrowing conversion/calibration/mutation returns reject with named guards",
+    "Invalid decoded parameter tuples reject while valid five-key legacy tuples retain fullInt32zeroPoints; legacy Float projections may overflow",
+    "Quantized mutable borrows preserve rawbytes/params onthrow; normalreturn validates thenrecalibrates, includingno-op; legacyoverflow no-op rejects",
+    "INT8 metrics evaluate affine coordinates beforeFloat projection; scale equality is exact forinteger Euclidean routing; emptycalibrationcanonicalzero"
+  ],
+  "limitations": [
+    "SER-08 complete decoded/result-pair coverage remainsS03",
+    "Ordinary generic VectorProtocol/FP32 range, tuner/precision policy and downstream/GPU runtime notclosed",
+    "Optional C alternatives remainuncompiled; no universal floatingpoint rounding/error theorem",
+    "Allocation evidence measures requested events/bytes only forretainedfixtures, notRSS/latency/productionreadiness",
+    "Required raw-zero INT8 affine SoAfixture is notconstructible via supportedFloatconversion; scalar exactfixture and independentlycomputed actualSoAcode2 plusreachablemixedfixture retained",
+    "Timeoutcleanup source-reviewed, normalchildcompletion exercised; no -Ounchecked guarantee"
+  ]
+}

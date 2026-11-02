@@ -2,7 +2,7 @@
 //  TopKSelection.swift
 //  VectorCore
 //
-//  Public API for efficient Top-K selection in k-nearest neighbor search.
+//  Public API for Top-K selection in k-nearest neighbor search.
 //  Provides both distance-based and pre-computed selection algorithms.
 //
 
@@ -79,7 +79,7 @@ public enum TieBreaker: Sendable {
 
 /// Top-K selection algorithms for k-nearest neighbor search.
 ///
-/// Provides efficient selection of the k smallest distances from a set of candidates.
+/// Selects the k smallest distances from a set of candidates.
 /// Uses heap-based algorithms for O(n log k) complexity when k << n.
 ///
 /// Selection contract: numeric scores (including infinities) precede NaNs in
@@ -133,44 +133,34 @@ public enum TopKSelection {
     ///   - k: Number of nearest neighbors to select
     ///   - distances: Array of pre-computed distances
     /// - Returns: TopKResult with indices and distances of k smallest
-    /// - Complexity: O(n log k) for small k, O(n log n) for large k
+    /// - Complexity: With n = `distances.count` and k' = min(k, n): O(n log k')
+    ///   time and O(k') working arrays when k' < n / 10; otherwise O(n log n)
+    ///   time and O(n) working arrays.
     ///
     /// ## Algorithm Selection
-    /// - For k < n/10: Uses max-heap to maintain k smallest (O(n log k))
-    /// - For k >= n/10: Uses partial sort (O(n log n) but better constants)
+    /// - k' < n / 10 (integer division): streams each value into a bounded
+    ///   max-heap of k' entries, then sorts only those entries.
+    /// - Otherwise: sorts all n (index, value) pairs and keeps the first k'.
     public static func select(
         k: Int,
         from distances: [Float],
         tieBreaker: TieBreaker = .smallerIndex
     ) -> TopKResult {
-        guard k > 0 else { return TopKResult() }
-        guard !distances.isEmpty else { return TopKResult() }
-
-        let actualK = min(k, distances.count)
-
-        // Create index-distance pairs
-        let pairs = distances.enumerated().map { (index: $0.offset, distance: $0.element) }
-
-        // Use adaptive algorithm based on k/n ratio
-        let selected: [(index: Int, distance: Float)]
-        if actualK < distances.count / 10 {
-            selected = heapSelectSmallK(pairs, k: actualK, tieBreaker: tieBreaker)
-        } else {
-            selected = sortSelectLargeK(pairs, k: actualK, tieBreaker: tieBreaker)
-        }
-
+        let selected = selectByScore(count: distances.count, k: k, tieBreaker: tieBreaker) { distances[$0] }
         return TopKResult(
             indices: selected.map { $0.index },
             distances: selected.map { $0.distance }
         )
     }
 
-    // MARK: - Zero-Copy Pointer API
+    // MARK: - Pointer API
 
     /// Select the k smallest values from a raw distance buffer.
     ///
-    /// Zero-copy API for GPU/IOSurface interop. Accepts raw pointers and returns
-    /// Int32 indices suitable for direct upload to GPU buffers.
+    /// For distances held in raw memory (for example a buffer shared with the GPU). Reads
+    /// `distances` (and `ids`) through the pointers without first copying them into an array;
+    /// the small-k path keeps a heap of k entries, the large-k path allocates a `count`-element
+    /// index array, and the results are new `[Int32]` and `[Float]` arrays.
     ///
     /// NaNs rank last; positive k returns min(k, count) entries. Ties use exact
     /// equality (+0 and -0 tie), with original buffer positions as the default
@@ -268,31 +258,30 @@ public enum TopKSelection {
 
     // MARK: - Generic Selection
 
-    /// Select the k smallest values with custom comparison.
+    /// Select the k elements with the smallest `distance` values.
+    ///
+    /// Same order, NaN, count and strategy rules as `select(k:from:tieBreaker:)`.
+    /// An element's position is its index, so `.smallerIndex` and `.insertionOrder`
+    /// break exact ties by position; `.smallerValue` leaves tie identity and order
+    /// unspecified (see `TieBreaker`). For positive k and nonempty `elements`,
+    /// `distance` runs exactly once per element in increasing position order (NaN
+    /// and losing values included) and never during the final extraction or sort;
+    /// on the small-k path each value is offered to the bounded heap as it is
+    /// computed. Nonpositive k or empty input returns `[]` without calling it
+    /// (`TopKSelectorOracleTests`).
     ///
     /// - Parameters:
     ///   - k: Number of elements to select
     ///   - elements: Array of elements to select from
     ///   - distance: Closure to extract distance value from element
-    /// - Returns: Array of k elements with smallest distances
+    /// - Returns: Array of min(k, elements.count) elements, best first
     public static func select<T>(
         k: Int,
         from elements: [T],
         distance: (T) -> Float,
         tieBreaker: TieBreaker = .smallerIndex
     ) -> [T] {
-        guard k > 0 && !elements.isEmpty else { return [] }
-
-        let actualK = min(k, elements.count)
-        let indexed = elements.enumerated().map { (index: $0.offset, distance: distance($0.element)) }
-
-        let selected: [(index: Int, distance: Float)]
-        if actualK < elements.count / 10 {
-            selected = heapSelectSmallK(indexed, k: actualK, tieBreaker: tieBreaker)
-        } else {
-            selected = sortSelectLargeK(indexed, k: actualK, tieBreaker: tieBreaker)
-        }
-
+        let selected = selectByScore(count: elements.count, k: k, tieBreaker: tieBreaker) { distance(elements[$0]) }
         return selected.map { elements[$0.index] }
     }
 
@@ -300,32 +289,30 @@ public enum TopKSelection {
 
     /// Find k nearest neighbors using any distance metric.
     ///
+    /// The metric's own `distance` witness scores every candidate (no built-in
+    /// metric is substituted). For positive k and nonempty `candidates` it runs
+    /// exactly once per candidate in increasing index order and never during the
+    /// final extraction or sort; on the small-k path each distance is offered to
+    /// the bounded heap as it is computed. Nonpositive k or empty input returns an
+    /// empty result without calling it.
+    /// Order, ties (smaller index), NaN and count rules are those of
+    /// `select(k:from:tieBreaker:)` (`TopKSelectorOracleTests`).
+    ///
     /// - Parameters:
     ///   - k: Number of nearest neighbors to find
     ///   - query: The query vector
     ///   - candidates: Array of candidate vectors to search
     ///   - metric: Distance metric to use (default: Euclidean)
     /// - Returns: TopKResult with indices and distances of k nearest
-    /// - Complexity: O(n * d + n log k) where d is vector dimension
+    /// - Complexity: n metric evaluations, plus (k' = min(k, n)) O(n log k') heap
+    ///   work when k' < n / 10, otherwise an O(n log n) sort of n pairs.
     public static func nearest<V: VectorProtocol>(
         k: Int,
         query: V,
         candidates: [V],
-        metric: any DistanceMetric = EuclideanDistance()
+        metric: any DistanceMetric<Float> = EuclideanDistance()
     ) -> TopKResult where V.Scalar == Float {
-        // Use specific metric implementations to avoid existential limitations
-        if metric is EuclideanDistance {
-            return nearestWithMetric(k: k, query: query, candidates: candidates, metric: EuclideanDistance())
-        } else if metric is CosineDistance {
-            return nearestWithMetric(k: k, query: query, candidates: candidates, metric: CosineDistance())
-        } else if metric is ManhattanDistance {
-            return nearestWithMetric(k: k, query: query, candidates: candidates, metric: ManhattanDistance())
-        } else if metric is DotProductDistance {
-            return nearestWithMetric(k: k, query: query, candidates: candidates, metric: DotProductDistance())
-        } else {
-            // Fallback to Euclidean
-            return nearestWithMetric(k: k, query: query, candidates: candidates, metric: EuclideanDistance())
-        }
+        nearestWithMetric(k: k, query: query, candidates: candidates, metric: metric)
     }
 
     /// Internal generic implementation with concrete metric type
@@ -335,21 +322,21 @@ public enum TopKSelection {
         candidates: [V],
         metric: M
     ) -> TopKResult where V.Scalar == Float, M.Scalar == Float {
-        guard k > 0 && !candidates.isEmpty else { return TopKResult() }
-
-        let actualK = min(k, candidates.count)
-
-        // Compute all distances
-        let distances = candidates.map { metric.distance(query, $0) }
-
-        return select(k: actualK, from: distances)
+        let selected = selectByScore(count: candidates.count, k: k, tieBreaker: .smallerIndex) {
+            metric.distance(query, candidates[$0])
+        }
+        return TopKResult(
+            indices: selected.map { $0.index },
+            distances: selected.map { $0.distance }
+        )
     }
 
     // MARK: - Optimized Paths for Specific Vector Types
 
     /// Optimized k-nearest for Vector384Optimized with Euclidean distance.
     ///
-    /// Uses SIMD-accelerated distance computation and efficient heap selection.
+    /// Scores each candidate with `EuclideanKernels.squared384` and keeps the best `min(k, n)` in a
+    /// bounded heap (`TopKBuffer`).
     /// - Complexity: O(n * 384/4 + n log k) ≈ O(96n + n log k)
     @inlinable
     public static func nearestEuclidean384(
@@ -514,7 +501,7 @@ public enum TopKSelection {
         k: Int,
         queries: [V],
         candidates: [V],
-        metric: any DistanceMetric = EuclideanDistance()
+        metric: any DistanceMetric<Float> = EuclideanDistance()
     ) -> [TopKResult] where V.Scalar == Float {
         queries.map { query in
             nearest(k: k, query: query, candidates: candidates, metric: metric)
@@ -551,28 +538,73 @@ public enum TopKSelection {
         orderedBefore(a, b, descending: false, tieBreaker: tieBreaker)
     }
 
-    /// Heap-based selection for small k (O(n log k)), using `tieBreaker`.
+    /// Small-k strategy predicate for the Int-indexed selector: stream into a bounded heap when
+    /// `actualK < count / 10` (integer division), otherwise sort all pairs. It keeps the pre-P01 array and
+    /// generic predicate as a compatibility choice, not a measured crossover. Boundary values are pinned by
+    /// `TopKSelectorOracleTests.strategyPredicateBoundaries`.
+    @inline(__always)
+    internal static func usesSmallKStrategy(actualK: Int, count: Int) -> Bool {
+        actualK < count / 10
+    }
+
+    /// Common Int-indexed selection of the `k` best candidates `0..<count` by ascending score.
     ///
-    /// Routes through `TopKBuffer` (the same primitive the pointer/optimized paths
-    /// use) so that boundary membership and result order honor the tie policy — the
-    /// historical `KNearestHeap` broke ties only by value, leaving order undefined.
-    @usableFromInline
-    internal static func heapSelectSmallK(
-        _ elements: [(index: Int, distance: Float)],
+    /// Callers: `select(k:from:tieBreaker:)`, `select(k:from:distance:tieBreaker:)`,
+    /// `nearest(k:query:candidates:metric:)` (so `batchNearest`) and `VectorMath.nearestNeighbors`.
+    ///
+    /// Callback law: when `k > 0` and `count > 0`, `score(i)` is called exactly once for each `i` in
+    /// `0..<count`, in increasing `i`, NaN and losing scores included; no call happens during extraction or
+    /// sorting. Otherwise it returns `[]` without calling `score`.
+    ///
+    /// Result law: `min(k, count)` entries, best first: numeric scores ascending, then NaNs; exact ties
+    /// (including +0/-0 and two NaNs) by `tieBreaker` through `orderedAscending`. Each entry carries the
+    /// original index and the value `score` returned for it, unmodified (zero sign and NaN payload included).
+    ///
+    /// Strategy (`usesSmallKStrategy`), with positive `k` clamped to `count` before any allocation:
+    /// - small k: each score is pushed once into a `TopKBuffer` of capacity `actualK`; only the retained
+    ///   entries are extracted and sorted. No `count`-sized score or pair array is built.
+    /// - otherwise: `count` (index, score) pairs are built in index order and sorted by `sortSelectLargeK`.
+    ///
+    /// Indices stay `Int`: there is no `Int32` conversion and no count ceiling.
+    ///
+    /// Tests: `TopKSelectorOracleTests` observes the callback law (number and order of calls, none for
+    /// `k <= 0` or empty input), the result law (order, ties per policy, NaN placement, every k class,
+    /// original indices and score bits) and the strategy predicate's boundaries; `VectorMathNearestContractTests`
+    /// observes the callback and result laws through `VectorMath`. Two properties follow from this body
+    /// alone and are not observed by any test: no `count`-sized array is built on the small-k branch, and
+    /// there is no Int32 count ceiling.
+    ///
+    /// - Complexity: `count` score calls; small k: O(count log actualK) heap work and O(actualK) working
+    ///   arrays; otherwise O(count log count) and O(count) working arrays.
+    internal static func selectByScore(
+        count: Int,
         k: Int,
-        tieBreaker: TieBreaker = .smallerIndex
+        tieBreaker: TieBreaker,
+        score: (Int) -> Float
     ) -> [(index: Int, distance: Float)] {
-        var buffer = TopKBuffer(k: k, isMinHeap: false, tieBreaker: tieBreaker)
-        for element in elements {
-            buffer.pushIfBetter(val: element.distance, idx: element.index)
+        guard k > 0, count > 0 else { return [] }
+        let actualK = min(k, count)
+
+        guard usesSmallKStrategy(actualK: actualK, count: count) else {
+            var pairs: [(index: Int, distance: Float)] = []
+            pairs.reserveCapacity(count)
+            for index in 0..<count {
+                pairs.append((index: index, distance: score(index)))
+            }
+            return sortSelectLargeK(pairs, k: actualK, tieBreaker: tieBreaker)
         }
-        var pairs: [(index: Int, distance: Float)] = []
-        pairs.reserveCapacity(buffer.size)
-        for i in 0..<buffer.size {
-            pairs.append((index: buffer.idxs[i], distance: buffer.vals[i]))
+
+        var buffer = TopKBuffer(k: actualK, isMinHeap: false, tieBreaker: tieBreaker)
+        for index in 0..<count {
+            buffer.pushIfBetter(val: score(index), idx: index)
         }
-        pairs.sort { orderedAscending(($0.index, $0.distance), ($1.index, $1.distance), tieBreaker) }
-        return pairs
+        var retained: [(index: Int, distance: Float)] = []
+        retained.reserveCapacity(buffer.size)
+        for slot in 0..<buffer.size {
+            retained.append((index: buffer.idxs[slot], distance: buffer.vals[slot]))
+        }
+        retained.sort { orderedAscending(($0.index, $0.distance), ($1.index, $1.distance), tieBreaker) }
+        return retained
     }
 
     /// Sort-based selection for large k (better constants), using `tieBreaker`.
@@ -650,8 +682,16 @@ extension TopKResult: Codable {
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        indices = try container.decode([Int].self, forKey: .indices)
-        distances = try container.decode([Float].self, forKey: .distances)
+        let indices = try container.decode([Int].self, forKey: .indices)
+        let distances = try container.decode([Float].self, forKey: .distances)
+        guard indices.count == distances.count else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .distances, in: container,
+                debugDescription: "Indices count \(indices.count) does not match distances count \(distances.count)"
+            )
+        }
+        self.indices = indices
+        self.distances = distances
     }
 
     public func encode(to encoder: any Encoder) throws {

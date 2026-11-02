@@ -1,9 +1,33 @@
 import Foundation
+import Testing
+import XCTest
 
-/// Wall-clock performance gates are opt-in: they assert only when the
-/// environment sets `VECTORCORE_STRICT_PERF=1` (e.g. a dedicated benchmark
-/// CI job on quiet hardware). In normal runs — and especially under
-/// ASan/TSan, whose 2–15× slowdowns make wall-clock thresholds meaningless —
-/// the measurements are still printed but never fail the suite.
-/// Inventory of gated sites: Docs/verification-baseline-0.3.1.md.
+/// Clock-derived assertions are opt-in. All values other than exactly "1" disable
+/// predicate evaluation. Numerical checks and liveness deadlines remain independent.
+/// The explicit site inventory is Scripts/ci/performance_sites.json.
 let strictPerfGatesEnabled: Bool = ProcessInfo.processInfo.environment["VECTORCORE_STRICT_PERF"] == "1"
+
+func expectPerformance(
+    _ site: String,
+    _ condition: @autoclosure () -> Bool,
+    _ message: @autoclosure () -> String = "Performance predicate failed",
+    sourceLocation: SourceLocation = #_sourceLocation
+) {
+    guard strictPerfGatesEnabled else { return }
+    if !condition() {
+        Issue.record("\(site): \(message())", sourceLocation: sourceLocation)
+    }
+}
+
+func expectXCTestPerformance(
+    _ site: String,
+    _ condition: @autoclosure () -> Bool,
+    _ message: @autoclosure () -> String = "Performance predicate failed",
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    guard strictPerfGatesEnabled else { return }
+    if !condition() {
+        XCTFail("\(site): \(message())", file: file, line: line)
+    }
+}

@@ -1,0 +1,42 @@
+{
+  "task": "L02",
+  "status": "accepted",
+  "task_base": "ed95f95133abcb5245e7dd1fc04e11ea3ceb96fd",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-20"
+  ],
+  "qualified_records": {
+    "NUM-10": "Demonstrated early Float mean rounding repaired with compensated Double centering; arbitrary translation invariance and Float-panel/GEMM/result precision remain qualified."
+  },
+  "migration": "PCAModel.mean is now [Double]; components, centered panels, projections and public variance statistics remain Float. Consumers reconstruct in Double or explicitly round.",
+  "validation": {
+    "red": "Unchanged production: 22 issues across three reported functions; one actual oversampling child SIGTRAP without completion. Separate public typecheck failed Float-to-Double mean migration.",
+    "debug_release": "37 reported functions/10 suites each including child parent and no-op; two actual bounded children each.",
+    "asan": "13 selected valid functions/3 suites plus separate 9 existing PCA functions/3 suites; two actual direct children with explicit ASan preload. Leak checking disabled.",
+    "public": "Swift 6 strict compile/link/run; 130 linked Release objects,133 retained artifacts.",
+    "scanner": "Seven actual Python checks.",
+    "provenance": "Root full 305 base/307 final code+docs reconstruction, exact six changed/new files;40 sealed worker records, all versioned build manifests and child host/bundle/runtime associations rehashed."
+  },
+  "review": "reports/L02-implementation-review-v2.md",
+  "evidence": "reports/L02-implementation-report.md",
+  "commands": "reports/L02-command-results.json",
+  "root_verification": [
+    "reports/L02-root-v2-source-verification.json",
+    "reports/L02-root-final-evidence-verification.json"
+  ],
+  "diff_sha256": "0f8a26ef7798fdf1e5ffcdc7bea0979359ae95bea7b1a33536c73052f1c08602",
+  "frozen_sha256": {
+    "Docs/Linear_Algebra_and_Projection.md": "4a4d1d616e22b125e95483661c0ce7b1ec7d6aaa3c149e470ce441091f62d9b3",
+    "Docs/Numerical_Behavior.md": "93c7e9b95701ffc5b22c13b35f0df2e5dd8e89bbcc74d2becb40cf4c3a1e5112",
+    "Scripts/ci/fixtures/L02PublicConsumer.swift": "a219ba6b19833e85ad220cbc70a01cdda3d34d4c90a8c6e2165efc60031c277f",
+    "Sources/VectorCore/LinearAlgebra/PCA.swift": "dc7dffa7ce827ac902244ae38e409f5731342ce28888d40d4712a5719e13364f",
+    "Tests/ComprehensiveTests/PCACenteringContractTests.swift": "1c464bf64e8dc88bdfb2cb3f6008ad6150b43410f4ff3d04cad2633082f89d06",
+    "Tests/ComprehensiveTests/PCATests.swift": "d3526c7f703e63b2f6c0c808c2873010af2ad0221e8c545f7ee6b0b615eee003"
+  },
+  "limitations": [
+    "Finite input can still overflow intermediate Float panels/provider operations, and provider errors propagate unchanged.",
+    "No arbitrary conditioning, exact summation, allocation-success, whole-corpus, downstream, GPU or performance claim.",
+    "V1 failed test compilation is retained; successful final runtime is v2. Lost pre-RED inventory is explicitly reconstructed from base.tar, not recovered original evidence."
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "task": "O05",
+  "status": "accepted",
+  "task_base": "94b73440eae64e2d97726138f2ee9752708e5736",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "OWN-15",
+    "OWN-16",
+    "OWN-17"
+  ],
+  "context_disposition": {
+    "OWN-24": "Preserved owned SoA/page layout, transfer and synchronization obligations; conforming dimension8/lanes2 consumer tested. No new arbitrary-conformer/GPU safety claim."
+  },
+  "validation": {
+    "red": "All three old pointer getters compile at unchanged base, while each new scoped API independently fails typecheck. API migration RED, not UAF reproduction.",
+    "debug": "63 tests in nine suites, exit0.",
+    "release": "63 tests in nine suites, exit0.",
+    "asan": "23 valid tests in three suites, exit0; no reported findings.",
+    "public": "Six baseline and twelve final-v2 phases verified across all three widths; eight scanner policy cases; obsolete source matches empty.",
+    "provenance": "Complete278base/286final inventory (includes two docs),59 worker artifacts/canonical copies, host/three loaded test bundles,369 library objects,134 objects/modules per consumer snapshot and six public executables verified. Only Python driver changes v1 to v2; exact Swift evidence mapping retained."
+  },
+  "review": "reports/O05-implementation-review.md",
+  "evidence": "reports/O05-implementation.md",
+  "commands": "reports/O05-test-command-status.json",
+  "root_verification": "reports/O05-root-verification.json",
+  "diff_sha256": "7696d82de3c9a40259b316d203c29e1f396634d1ec2d10b54210fcc8d46c27c9",
+  "frozen_sha256": {
+    "Docs/Memory_Alignment.md": "f168fd3223d8d38e227e4de19fc195b609fd07505de680e75565b8ed3d41be50",
+    "Docs/SoA_Layout_Contract.md": "a62225596e0fd20ae1d7d0ca5fc7d667ba16630edf912c202c89fcbb33caef6d",
+    "Scripts/ci/tests/O05/Legacy1536.swift": "fabf57b922b765df78e1273508de7a36efec502ff1998eb20dfa850415f66104",
+    "Scripts/ci/tests/O05/Legacy512.swift": "f8d11c20c8dae51b3559fd697289c26783444985ab3476f43103e08da3ac0ac5",
+    "Scripts/ci/tests/O05/Legacy768.swift": "c806c4ad7cfd0815f625f1fb1228c66bfadddf845936103dfa9729f0241e0ce0",
+    "Scripts/ci/tests/O05/Scoped1536.swift": "ba85ccd820d24d2eb198c8c5077f0127a7e2547a16221971bcb286cb6c44e422",
+    "Scripts/ci/tests/O05/Scoped512.swift": "1649f280a21f063856db34de47e27c2cc4c6b888c0b47d2fa559558ddb0ed730",
+    "Scripts/ci/tests/O05/Scoped768.swift": "4dc8af0e475edb36fa0b13fe0781e4b52c1ef51c7d0d8482e1af49c5402c6620",
+    "Scripts/ci/tests/O05RunConsumers.py": "62df6c1f5d673fcceb6b0d8525a9116f96ae6517af648b5e24cbd7fa559c7855",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift": "c6e7a823d50e921f4c7dfecf3dc84c0ecfa175c81f3b93328b8dc8be2799a21b",
+    "Sources/VectorCore/Storage/DimensionStorage.swift": "8eac41c9c1f7ce5e86ed2d7fd372769269c02e31f3730a08247db179f95f756f",
+    "Sources/VectorCore/Storage/UnifiedStorage.swift": "0036bad6f5c3145ccfb6754b9cf00369d5457472246ee0d498ebffce3aa25478",
+    "Tests/ComprehensiveTests/StorageBorrowContractTests.swift": "50072fa8504913d63677f89d1304ffdd60c5d0ee1df96e29d7f44470ae7c9cd0"
+  },
+  "migrations": [
+    "Remove fp16Storage from Vector512FP16/Vector768FP16/Vector1536FP16; use synchronous withUnsafeFP16BufferPointer and copy inside callback for retained/async values.",
+    "Delete unused internal StorageSlice and disabled MoveOnlyStorage instead of introducing replacement lifetime/transfer features."
+  ],
+  "limitations": [
+    "Unsafe buffer and base pointer must not escape the callback; generic return type does not enforce this duty.",
+    "No supported-use UAF reproduced and no expired pointer dereferenced.",
+    "Direct scoped FP16 kernels, owned DynamicVector.slice and SoAFP16.storage remain covered controls; no GPU, concurrent transfer or performance claim."
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "task": "R05",
+  "status": "accepted",
+  "task_base": "e6e1bae (pause draft base 0fe4953, rebased with zero preimage conflicts)",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "API-11"
+  ],
+  "disposition_records": {
+    "API-11": "Metric-free SearchResult.computedScore removed. DistanceMetric gains a defaulted relevanceScore(for:) requirement (default nil; witness dispatch through concrete, generic and existential calls). Six inverse-distance builtins return Float(1/(1+Double(d))) only for finite d>=0; DotProduct uses an overflow-free piecewise logistic 1/(1+e^d) with no pole at d=-1 and range [0,1]. The producer scores selected results only, once each, with the same metric instance, outside the collection lock. Explicit scores are preserved bit-exactly. RED (Swift 6.3.3): dot-product scores [-1, Inf, 2]. GREEN (Swift 6.4): [0.8807971, 0.7310586, 0.62245935] with unchanged IDs [2,1,0] and distances [-2,-1,-0.5].",
+    "R05-I1-CLASS": "Test child-capture routing by parent-directory name (second occurrence: L03 UMAPRangeContractTests and R05) replaced with unique temporary-directory captures; Scripts/ci/tests/test_swift_test_output_paths.py rejects `lastPathComponent ==`/`!=` and the literal \"workspaces\" in Tests/**/*.swift (RED on both original files)."
+  },
+  "validation": {
+    "toolchain": "macOS 27 / Xcode 27.0 / Swift 6.4, swiftbuild",
+    "focused": "SearchResultScoreContractTests|IntegrationProtocolsSuite|MetricDispatchContractTests|VectorCollectionTransactionTests: 71 tests/4 suites, Debug and Release, all pass (initial and fix round 1)",
+    "l03_regression": "L03 focused filter after the capture-path change: 39 tests/9 suites + 9 children, Debug and Release",
+    "public": "R05 public Swift 6 consumer (defaulted conformance, computedScore(using:), search, custom override) plus a negative control rejecting any computedScore property shape; Debug and Release",
+    "independent_numerics": "The reviewer's 80-digit Decimal reference shows 0 ULP at every inverse and logistic test point; offline maxFinite literal 0x00200000",
+    "mutation": "The reviewer's lock-placement mutation is caught by the reentrancy test",
+    "lint": "0 errors; no new warnings in R05 files"
+  },
+  "review": "reports/R05-review-2026-10-03.md",
+  "rereview": "reports/R05-rereview-1-2026-10-03.md",
+  "evidence": "reports/R05-implementation-2026-10-03.md",
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/R05",
+  "patch_sha256": "2fac71da5caaea570dfa9080d3c7a8ac19f8f3d8d1ba82dac4503bab94ac4de8",
+  "frozen_sha256": {
+    "CHANGELOG.md": "e5d26b7530bc5396333f8f4948de59aae56c3b687c532ae69a9b58a23e3f3a8f",
+    "Scripts/ci/fixtures/R05OldPropertyNegative.swift": "c40a305712277da48df10180748ca53071bd254c2e7456e6121c26f46bce92f4",
+    "Scripts/ci/fixtures/R05PublicConsumer.swift": "ebd7d894c25b551714759d223db9b151fac695d36aa60f0d59c46885dcccf4b9",
+    "Scripts/ci/fixtures/R05_public_driver.py": "95cc6ce2864cad4b4b33eb405e1f03c5dcf3131d7cbc757d55e72ba646e3660d",
+    "Scripts/ci/tests/test_swift_test_output_paths.py": "fad3cfbffa299a081e69783b3f340de171895f394020a6a9f299cfb506a1c888",
+    "Sources/VectorCore/Integration/SearchResult.swift": "83bb6fd8d9743966c96b779160dd8c2d5a9663e30667787afc5cc9df7552d0c2",
+    "Sources/VectorCore/Integration/VectorCollection.swift": "a3ba0319003648843af2f03ff05cd4b0255538dfff1e9bff22780fd039175803",
+    "Sources/VectorCore/Operations/DistanceMetrics.swift": "750f1eafcf10461f4fb9305b8bd4a5853cbfd8ee62560a0f8e4b0fc13c8bf239",
+    "Sources/VectorCore/Protocols/DistanceMetric.swift": "777d96b2564f2f0408e2c27949163cafc6a073c2486841e63e37f7bcd5d2f83a",
+    "Tests/ComprehensiveTests/IntegrationProtocolsTests.swift": "880b63a1705d24bab3df0cc9bf5839079dd3e14fbd1c71997002651e1aca9554",
+    "Tests/ComprehensiveTests/SearchResultScoreContractTests.swift": "a74cc10551de9de6b4f4d6dd0516a2e40a40628c611e7a02c62fff7e0031e809",
+    "Tests/ComprehensiveTests/UMAPRangeContractTests.swift": "a841eb33b98bf464022514a232adc3bc7a7f8b22c51960e40e8e7a8594f5ba2a"
+  },
+  "migrations": [
+    "SearchResult.computedScore (property) removed: use .score for producer-populated scores or .computedScore(using: metric) when the metric is known.",
+    "DistanceMetric adds relevanceScore(for:) with a default nil implementation; custom metrics may override.",
+    "Producer results now carry score for builtin metrics, so synthesized Equatable makes producerResult == SearchResult(id:distance:) false; Hashable still uses id and distance only. CHANGELOG Unreleased."
+  ],
+  "limitations": [
+    "No calibrated probability, downstream relevance use, distance numerical accuracy, ANN/GPU or production score calibration claim.",
+    "R05 fixture driver depends on the swiftbuild product layout (L03 driver: native); migration to the shared discovery helper is deferred to after V03 v5.",
+    "Temporary capture directories are not removed after runs (the OS reaps them)."
+  ]
+}

@@ -28,12 +28,13 @@ public struct MixedPrecisionMetrics: Sendable {
     /// Cache hit rate for SoA conversions (0.0 to 1.0)
     public var cacheHitRate: Double = 0
 
-    /// Estimated speedup compared to FP32 baseline
+    /// Estimated speedup compared to an FP32 baseline that is assumed, not measured, to take
+    /// twice `computationTime`
     public var totalSpeedup: Double {
         let totalTime = fp16ConversionTime + computationTime
         guard totalTime > 0 else { return 0.0 }
 
-        // Heuristic: FP16 typically provides ~2× improvement
+        // Assumption (not measured): the FP32 baseline takes 2× `computationTime`
         let baselineTime = computationTime * 2.0
         return baselineTime / totalTime
     }
@@ -53,7 +54,8 @@ public struct MixedPrecisionMetrics: Sendable {
 
 // MARK: - Performance Profiler
 
-/// Thread-safe performance profiler for mixed precision operations
+/// Performance profiler for mixed precision operations. It is an `actor`, so its metrics are
+/// actor-isolated state.
 ///
 /// Tracks runtime metrics including conversion overhead, computation time,
 /// and accuracy degradation.
@@ -106,17 +108,24 @@ public actor PerformanceProfiler {
 
     /// Record accuracy loss
     ///
+    /// Tracks the maximum observed loss. A NaN loss makes the tracked maximum NaN until `reset()` (T16 reduction NaN
+    /// contract; `max` alone ignored a NaN). Pinned by T16ReductionProfilerTests.
+    ///
     /// - Parameter loss: Relative error vs FP32 baseline
     public func recordAccuracyLoss(_ loss: Float) {
         // Track maximum observed loss
-        metrics.accuracyLoss = max(metrics.accuracyLoss, loss)
+        metrics.accuracyLoss = ReductionNaN.propagatingMax(metrics.accuracyLoss, loss)
     }
 
     /// Record memory bandwidth utilization
     ///
+    /// Tracks the maximum observed utilization. A NaN utilization makes the tracked maximum NaN until `reset()`
+    /// (T16 reduction NaN contract). Pinned by T16ReductionProfilerTests.
+    ///
     /// - Parameter utilization: Bandwidth utilization (0.0 to 1.0)
     public func recordMemoryBandwidthUtilization(_ utilization: Double) {
-        metrics.memoryBandwidthUtilization = max(metrics.memoryBandwidthUtilization, utilization)
+        metrics.memoryBandwidthUtilization = ReductionNaN.propagatingMax(metrics.memoryBandwidthUtilization,
+                                                                         utilization)
     }
 
     /// Record cache hit rate
@@ -157,30 +166,36 @@ internal enum PrecisionValidator {
     ///   - original: Original FP32 vector
     ///   - converted: FP16 representation
     ///   - tolerance: Maximum acceptable absolute difference per element
-    /// - Returns: true if conversion is within tolerance
+    /// Nonfinite coordinates or an invalid tolerance return false.
+    /// - Returns: true if every absolute scalar conversion error is within tolerance
     public static func validateConversion512(
         original: Vector512Optimized,
         converted: MixedPrecisionKernels.Vector512FP16,
-        tolerance: Float = 0.001  // 0.1% default
+        tolerance: Float = 0.001  // Absolute scalar error, not a percentage
     ) -> Bool {
+        guard tolerance.isFinite, tolerance >= 0 else { return false }
         let restored = converted.toFP32()
         return validateVectorEquality512(original, restored, tolerance: tolerance)
     }
 
+    /// Finite conversion validation with absolute scalar tolerance (default 0.001).
     public static func validateConversion768(
         original: Vector768Optimized,
         converted: MixedPrecisionKernels.Vector768FP16,
         tolerance: Float = 0.001
     ) -> Bool {
+        guard tolerance.isFinite, tolerance >= 0 else { return false }
         let restored = converted.toFP32()
         return validateVectorEquality768(original, restored, tolerance: tolerance)
     }
 
+    /// Finite conversion validation with absolute scalar tolerance (default 0.001).
     public static func validateConversion1536(
         original: Vector1536Optimized,
         converted: MixedPrecisionKernels.Vector1536FP16,
         tolerance: Float = 0.001
     ) -> Bool {
+        guard tolerance.isFinite, tolerance >= 0 else { return false }
         let restored = converted.toFP32()
         return validateVectorEquality1536(original, restored, tolerance: tolerance)
     }
@@ -190,7 +205,10 @@ internal enum PrecisionValidator {
     /// Validate distance computation accuracy
     ///
     /// Compares a mixed precision distance result against FP32 reference
-    /// using relative error metric.
+    /// using abs(Double(reference) - Double(computed)) divided by the larger of
+    /// abs(Double(reference)) and Double(Float(1e-8)). Inputs and tolerance must
+    /// be finite, and tolerance must be nonnegative. Widening avoids Float
+    /// subtraction overflow for opposite finite extrema.
     ///
     /// - Parameters:
     ///   - referenceFP32: Reference FP32 distance
@@ -202,12 +220,12 @@ internal enum PrecisionValidator {
         computedFP16: Float,
         tolerance: Float = 0.01  // 1% default
     ) -> Bool {
-        guard referenceFP32.isFinite && computedFP16.isFinite else {
+        guard tolerance.isFinite, tolerance >= 0, referenceFP32.isFinite, computedFP16.isFinite else {
             return false
         }
 
-        let relativeError = abs(referenceFP32 - computedFP16) / max(abs(referenceFP32), 1e-8)
-        return relativeError <= tolerance
+        let relativeError = distanceError(referenceFP32, computedFP16)
+        return relativeError <= Double(tolerance)
     }
 
     /// Validate batch distance accuracy
@@ -216,43 +234,45 @@ internal enum PrecisionValidator {
     ///   - referenceFP32: Reference FP32 distances
     ///   - computedFP16: Mixed precision distances
     ///   - tolerance: Maximum acceptable relative error
-    /// - Returns: (allValid, maxError, meanError)
+    /// Uses the scalar distance formula and Double summary accumulation.
+    /// Invalid tolerance, mismatched lengths or any nonfinite pair returns
+    /// `(false, infinity, infinity)`. Valid empty batches return `(true, 0, 0)`.
+    /// - Returns: (allValid, maxError, meanError), with summaries converted to Float once.
     public static func validateBatchDistanceAccuracy(
         referenceFP32: [Float],
         computedFP16: [Float],
         tolerance: Float = 0.01
     ) -> (allValid: Bool, maxError: Float, meanError: Float) {
-        guard referenceFP32.count == computedFP16.count else {
-            return (false, Float.infinity, Float.infinity)
+        guard tolerance.isFinite, tolerance >= 0,
+              referenceFP32.count == computedFP16.count else {
+            return (false, .infinity, .infinity)
         }
 
-        var maxError: Float = 0
-        var sumError: Float = 0
+        var maxError: Double = 0
+        var sumError: Double = 0
         var allValid = true
-
-        for (ref, computed) in zip(referenceFP32, computedFP16) {
-            guard ref.isFinite && computed.isFinite else {
-                allValid = false
-                maxError = Float.infinity
-                continue
+        for (reference, computed) in zip(referenceFP32, computedFP16) {
+            guard reference.isFinite, computed.isFinite else {
+                return (false, .infinity, .infinity)
             }
-
-            let relativeError = abs(ref - computed) / max(abs(ref), 1e-8)
-            maxError = max(maxError, relativeError)
-            sumError += relativeError
-
-            if relativeError > tolerance {
-                allValid = false
-            }
+            let error = distanceError(reference, computed)
+            maxError = max(maxError, error)
+            sumError += error
+            allValid = allValid && error <= Double(tolerance)
         }
+        let meanError = referenceFP32.isEmpty ? 0 : sumError / Double(referenceFP32.count)
+        return (allValid, Float(maxError), Float(meanError))
+    }
 
-        let meanError = referenceFP32.isEmpty ? 0 : sumError / Float(referenceFP32.count)
-        return (allValid, maxError, meanError)
+    private static func distanceError(_ reference: Float, _ computed: Float) -> Double {
+        abs(Double(reference) - Double(computed)) / max(abs(Double(reference)), Double(Float(1e-8)))
     }
 
     // MARK: - Vector Equality Validation
 
-    /// Validate two 512D vectors are equal within tolerance
+    /// Validate finite coordinates with finite, nonnegative absolute tolerance.
+    /// All three width-specific equality validators use this policy; nonfinite
+    /// coordinates are unequal even when both operands have identical bits.
     ///
     /// - Parameters:
     ///   - v1: First vector
@@ -264,12 +284,11 @@ internal enum PrecisionValidator {
         _ v2: Vector512Optimized,
         tolerance: Float
     ) -> Bool {
-        for i in 0..<128 {  // 512 / 4 = 128 SIMD4 lanes
-            let diff = abs(v1.storage[i] - v2.storage[i])
-
-            // Check if any element exceeds tolerance
-            if any(diff .> tolerance) {
-                return false
+        guard tolerance.isFinite, tolerance >= 0 else { return false }
+        for i in 0..<128 {
+            for lane in 0..<4 {
+                let lhs = v1.storage[i][lane], rhs = v2.storage[i][lane]
+                guard lhs.isFinite, rhs.isFinite, abs(lhs - rhs) <= tolerance else { return false }
             }
         }
         return true
@@ -280,10 +299,11 @@ internal enum PrecisionValidator {
         _ v2: Vector768Optimized,
         tolerance: Float
     ) -> Bool {
-        for i in 0..<192 {  // 768 / 4 = 192 SIMD4 lanes
-            let diff = abs(v1.storage[i] - v2.storage[i])
-            if any(diff .> tolerance) {
-                return false
+        guard tolerance.isFinite, tolerance >= 0 else { return false }
+        for i in 0..<192 {
+            for lane in 0..<4 {
+                let lhs = v1.storage[i][lane], rhs = v2.storage[i][lane]
+                guard lhs.isFinite, rhs.isFinite, abs(lhs - rhs) <= tolerance else { return false }
             }
         }
         return true
@@ -294,10 +314,11 @@ internal enum PrecisionValidator {
         _ v2: Vector1536Optimized,
         tolerance: Float
     ) -> Bool {
-        for i in 0..<384 {  // 1536 / 4 = 384 SIMD4 lanes
-            let diff = abs(v1.storage[i] - v2.storage[i])
-            if any(diff .> tolerance) {
-                return false
+        guard tolerance.isFinite, tolerance >= 0 else { return false }
+        for i in 0..<384 {
+            for lane in 0..<4 {
+                let lhs = v1.storage[i][lane], rhs = v2.storage[i][lane]
+                guard lhs.isFinite, rhs.isFinite, abs(lhs - rhs) <= tolerance else { return false }
             }
         }
         return true
@@ -345,8 +366,10 @@ internal enum PrecisionValidator {
         public let absoluteErrors: [Float]
         public let relativeErrors: [Float]
 
+        /// NaN when any error is NaN (T16; `Array.max()` keeps a NaN only at index 0); 0 when empty.
+        /// Pinned by T16ReductionExceptionalTableTests.
         public var maxAbsoluteError: Float {
-            absoluteErrors.max() ?? 0
+            absoluteErrors.contains { $0.isNaN } ? .nan : (absoluteErrors.max() ?? 0)
         }
 
         public var meanAbsoluteError: Float {
@@ -354,8 +377,10 @@ internal enum PrecisionValidator {
             return absoluteErrors.reduce(0, +) / Float(absoluteErrors.count)
         }
 
+        /// NaN when any error is NaN (T16; `Array.max()` keeps a NaN only at index 0); 0 when empty.
+        /// Pinned by T16ReductionExceptionalTableTests.
         public var maxRelativeError: Float {
-            relativeErrors.max() ?? 0
+            relativeErrors.contains { $0.isNaN } ? .nan : (relativeErrors.max() ?? 0)
         }
 
         public var meanRelativeError: Float {

@@ -1,45 +1,19 @@
 """Policy regressions use repository fixtures, never source-text assertions."""
 from pathlib import Path
-import subprocess
+import shutil
+import json
+import sys
+from types import SimpleNamespace
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from v03_process import run
 import tempfile
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / "validate_github.rb"
-PIN = "a" * 40
-WORKFLOW = """name: CI
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-permissions:
-  contents: read
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@PIN
-        with:
-          persist-credentials: false
-  lint:
-    runs-on: ubuntu-latest
-    steps: [{run: 'true'}]
-  repository-checks:
-    runs-on: ubuntu-latest
-    steps: [{run: 'true'}]
-  consumer:
-    runs-on: ubuntu-latest
-    steps: [{run: 'true'}]
-  platforms:
-    runs-on: ubuntu-latest
-    steps: [{run: 'true'}]
-  required:
-    name: CI Required
-    if: ${{ always() }}
-    needs: [test, lint, repository-checks, consumer, platforms]
-    runs-on: ubuntu-latest
-    steps: [{run: 'python3 Scripts/ci/check_required.py test lint repository-checks consumer platforms'}]
-""".replace("PIN", PIN)
+ROOT = SCRIPT.parents[2]
+PIN = "d23441a48e516b6c34aea4fa41551a30e30af803"
+WORKFLOW = (ROOT / ".github/workflows/ci.yml").read_text()
+
 
 
 class GithubPolicyTests(unittest.TestCase):
@@ -47,6 +21,16 @@ class GithubPolicyTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="github policy ")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        shutil.copytree(ROOT / ".github", self.root / ".github")
+        inputs = ["Scripts/ci/sanitizer_bodies.json", "Scripts/ci/sanitizer_expected_bodies.txt",
+                  "Scripts/ci/check_benchmark_build_modes.py"]
+        manifest = json.loads((ROOT / inputs[0]).read_text())
+        inputs += list({row['source'] for rows in manifest['sanitizers'].values() for row in rows})
+        for relative in inputs:
+            target = self.root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, target)
+        self.command_number = 0
         self.write("workflows/ci.yml", WORKFLOW)
         self.write("CODEOWNERS", "* @gifton\n")
         self.write("dependabot.yml", "version: 2\nupdates: []\n")
@@ -58,8 +42,12 @@ class GithubPolicyTests(unittest.TestCase):
         path.write_text(text)
 
     def validate(self):
-        return subprocess.run(["ruby", str(SCRIPT), str(self.root)],
-                              capture_output=True, text=True)
+        self.command_number += 1
+        record, _ = run(["ruby", str(SCRIPT), str(self.root)], self.root / "captures",
+                        str(self.command_number), cwd=ROOT, expected=None)
+        return SimpleNamespace(returncode=record['exit'],
+                               stdout=Path(record['stdout']['path']).read_text(),
+                               stderr=Path(record['stderr']['path']).read_text())
 
     def test_valid_repository_passes(self):
         result = self.validate()
@@ -94,9 +82,9 @@ class GithubPolicyTests(unittest.TestCase):
             ("          persist-credentials: false\n", ""),
             ("persist-credentials: false", "persist-credentials: true"),
             ("branches: [main]", "branches: [main]\n    paths: ['Sources/**']"),
-            ("${{ always() }}", "${{ success() }}"),
-            ("${{ always() }}", "${{ always() && false }}"),
-            ("needs: [test, lint, repository-checks, consumer, platforms]", "needs: [test, lint]"),
+            ("if: always()", "if: success()"),
+            ("if: always()", "if: always() && false"),
+            ("needs: [test, lint, repository-checks, consumer, platforms, benchmark-contracts, sanitizers]", "needs: [test, lint]"),
             ("    name: CI Required\n", ""),
         ]
         for before, after in changes:
@@ -127,3 +115,73 @@ jobs:
     def test_rejects_unrelated_job_write_permissions(self):
         self.write("workflows/ci.yml", WORKFLOW.replace("  test:\n", "  test:\n    permissions:\n      contents: read\n      security-events: write\n"))
         self.assertNotEqual(self.validate().returncode, 0)
+
+    def test_rejects_missing_or_disabled_semantic_commands(self):
+        mutations = [
+            ('swift test -c "$CONFIGURATION"', 'echo skipped-test -c "$CONFIGURATION"'),
+            ('python3 Scripts/ci/check_memory_pool.py', 'echo memory-pool-not-run'),
+            ('ruby Scripts/ci/validate_github.rb', 'echo policy-not-run'),
+            ('python3 Scripts/ci/consumer_smoke.py', 'echo consumers-not-run'),
+            ('lint --config .swiftlint.yml', 'version --config .swiftlint.yml'),
+            ('xcodebuild -scheme VectorCore', 'echo xcodebuild-not-run -scheme VectorCore'),
+            ('swift build --build-tests --triple', 'echo intel-not-built --triple'),
+            ('swift build -c release --product vectorcore-bench', 'echo product-not-built'),
+            ('python3 Scripts/ci/tests/test_benchmark_contracts.py "$BENCH_BIN"',
+             'python3 -B -m unittest discover -s Scripts/ci/tests -v'),
+            ('python3 Scripts/ci/check_benchmark_build_modes.py', 'echo build-modes-not-run'),
+            ('python3 Scripts/ci/check_sdk_name_collisions.py', 'echo sdk-names-not-checked'),
+            ('  sdk-names:\n', '  sdk-names:\n    if: false\n'),
+            ('  sdk-names:\n', '  sdk-names:\n    continue-on-error: true\n'),
+            ('python3 Scripts/ci/check_sanitizers.py', 'echo sanitizers-not-run'),
+            ('check_required.py test lint repository-checks consumer platforms benchmark-contracts sanitizers',
+             'check_required.py test lint repository-checks consumer platforms'),
+            ('  benchmark-contracts:\n', '  benchmark-contracts:\n    if: false\n'),
+            ('  sanitizers:\n', '  sanitizers:\n    continue-on-error: true\n'),
+            ('configuration: [debug, release]', 'configuration: [debug]'),
+            ('sanitizer: [address, thread]', 'sanitizer: [address]'),
+        ]
+        for before, after in mutations:
+            with self.subTest(before=before):
+                self.assertIn(before, WORKFLOW)
+                self.write('workflows/ci.yml', WORKFLOW.replace(before, after))
+                self.assertNotEqual(self.validate().returncode, 0)
+
+    def test_artifact_only_job_and_standalone_drift_are_rejected(self):
+        # Keep job name, matrix and artifact step while removing actual execution.
+        self.write('workflows/ci.yml', WORKFLOW.replace(
+            'run: python3 Scripts/ci/check_sanitizers.py', 'run: echo artifact-only'))
+        self.assertNotEqual(self.validate().returncode, 0)
+        self.write('workflows/ci.yml', WORKFLOW)
+        path = self.root / '.github/workflows/sanitizers.yml'
+        path.write_text(path.read_text().replace('check_sanitizers.py', 'not_executed.py'))
+        self.assertNotEqual(self.validate().returncode, 0)
+
+    def test_required_instrumented_body_and_filter_mutations(self):
+        path = self.root / 'Scripts/ci/sanitizer_bodies.json'
+        original = path.read_text()
+        for mutation in ['delete', 'empty-filter', 'wide-filter']:
+            data = json.loads(original)
+            if mutation == 'delete':
+                data['sanitizers']['address'].pop()
+            else:
+                data['sanitizers']['address'][0]['filter'] = '' if mutation == 'empty-filter' else '.*'
+            path.write_text(json.dumps(data))
+            with self.subTest(mutation=mutation):
+                self.assertNotEqual(self.validate().returncode, 0)
+        path.write_text(original)
+
+    def test_aggregate_and_required_job_step_bypasses_are_rejected(self):
+        for job in ['required', 'test', 'lint', 'repository-checks', 'consumer', 'platforms', 'benchmark-contracts', 'sanitizers']:
+            for level in ['job', 'step']:
+                marker = '  ' + job + ':\n'
+                self.assertIn(marker, WORKFLOW)
+                if level == 'job':
+                    changed = WORKFLOW.replace(marker, marker + '    continue-on-error: true\n', 1)
+                else:
+                    start = WORKFLOW.index(marker)
+                    position = WORKFLOW.index('      - uses:', start)
+                    changed = WORKFLOW[:position] + WORKFLOW[position:].replace(
+                        '      - uses:', '      - continue-on-error: true\n        uses:', 1)
+                self.write('workflows/ci.yml', changed)
+                with self.subTest(job=job, level=level):
+                    self.assertNotEqual(self.validate().returncode, 0)

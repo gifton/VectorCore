@@ -1,0 +1,40 @@
+{
+  "task": "I02",
+  "status": "accepted",
+  "task_base": "98388fc96fb62b013eea84dcf97ed092fdb76f8d",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "OWN-04",
+    "OWN-18",
+    "OWN-19"
+  ],
+  "partial_records": {},
+  "validation": {
+    "red": "512coordinate behavioral matrix:496falsehits,17missesinstead513,498issues; compiler-cache denial retained separately",
+    "debug": "revision2:22tests/2suites,exit0",
+    "release": "revision2:22tests/2suites,exit0; named negative-limit diagnostics",
+    "matrix": "all512coordinates/count/order/mutation/padding/freshidentity; forcedcollisions/signedzero/NaNbits; zero/one/negativecounts; exactbytefit/oneshort/oversizebypass/multipleevictions/recency/clear; retainedresults; checked artificial capacity overflows",
+    "provenance": "3frozenhashes,completepatch,238base/239archivecodefiles,only3assignedchanges;18evidencehashes"
+  },
+  "review": "reports/I02-review.md",
+  "evidence": "reports/I02-revision2.md",
+  "root_verification": "reports/I02-root-verification.json",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/Kernels/SoAFP16Cache.swift": "dc180ca867f05d4d4d4c7dc16f3634f569db46f853b70fa9c99b5b7247e53307",
+    "Tests/ComprehensiveTests/MixedPrecisionPhase3Tests.swift": "a3f6e5cb96c464217a927c4033856e3c68938939b044e2b948c3b0c25dfc4b2d",
+    "Tests/ComprehensiveTests/SoAFP16CacheIdentityTests.swift": "a823477099b8739d07808426f1d2e72c4f0f5448e63458bdd85705473c804969"
+  },
+  "migrations": [
+    "Initializer requires caller-selected maxBytes; maxSize remains independent default100",
+    "Removed shared; consumers own a budgeted actor",
+    "Removed public store; migrate to getOrCreate"
+  ],
+  "limitations": [
+    "Counts allocated snapshot and padded SoA payload capacities; excludes metadata/transients/caller-onlyretainedallocations; not RSS",
+    "Only512 cache; no new otherwidthcache",
+    "Conversion-equivalence oracle does not independently establish FP16numericalaccuracy",
+    "Canonical key allocation sharing source-reviewed; no allocationprofile or latency/throughput claim",
+    "Child timeout path source-reviewed; normal diagnostic completions tested",
+    "No production operating envelope or downstream build"
+  ]
+}

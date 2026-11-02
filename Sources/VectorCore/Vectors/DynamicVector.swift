@@ -17,7 +17,7 @@ public struct DynamicVector: Sendable {
     public var storage: Storage
 
     @usableFromInline
-    internal let dimension: Int
+    internal var dimension: Int { storage.count }
 
     /// The number of elements in the vector
     @inlinable
@@ -29,28 +29,24 @@ public struct DynamicVector: Sendable {
         guard storage.count == dimension else {
             throw VectorError.dimensionMismatch(expected: dimension, actual: storage.count)
         }
-        self.dimension = dimension
         self.storage = storage
     }
 
     /// Initialize with dimension and default value
     @inlinable
     public init(dimension: Int, repeating value: Scalar = 0) {
-        self.dimension = dimension
         self.storage = Storage(capacity: dimension, repeating: value)
     }
 
     /// Initialize from array
     @inlinable
     public init(_ elements: [Scalar]) {
-        self.dimension = elements.count
         self.storage = Storage(from: elements)
     }
 
     /// Initialize empty (zero-dimensional) vector
     @inlinable
     public init() {
-        self.dimension = 0
         self.storage = Storage(capacity: 0, repeating: 0)
     }
 
@@ -58,7 +54,6 @@ public struct DynamicVector: Sendable {
     @inlinable
     public init(repeating value: Float) {
         // Default to zero dimensions for dynamic vector
-        self.dimension = 0
         self.storage = Storage(capacity: 0, repeating: value)
     }
 
@@ -72,7 +67,6 @@ public struct DynamicVector: Sendable {
     /// Initialize with generator function
     @inlinable
     public init(dimension: Int, generator: (Int) throws -> Scalar) rethrows {
-        self.dimension = dimension
         var elements = [Scalar]()
         elements.reserveCapacity(dimension)
         for i in 0..<dimension {
@@ -92,7 +86,6 @@ extension DynamicVector: VectorProtocol {
     /// Initialize from storage (protocol requirement)
     @inlinable
     public init(storage: Storage) throws {
-        self.dimension = storage.count
         self.storage = storage
     }
 
@@ -114,7 +107,7 @@ extension DynamicVector: VectorProtocol {
 // MARK: - Storage Access
 
 extension DynamicVector {
-    /// Access storage for reading (borrowing for efficiency)
+    /// Access storage for reading; forwards to `storage.withUnsafeBufferPointer`.
     @inlinable
     public func withUnsafeBufferPointer<R>(
         _ body: (UnsafeBufferPointer<Scalar>) throws -> R
@@ -122,7 +115,7 @@ extension DynamicVector {
         try storage.withUnsafeBufferPointer(body)
     }
 
-    /// Access storage for writing (COW semantics)
+    /// Access storage for writing (COW semantics: a shared heap buffer is not modified, `hybridFloatMatrix`).
     @inlinable
     public mutating func withUnsafeMutableBufferPointer<R>(
         _ body: (UnsafeMutableBufferPointer<Scalar>) throws -> R
@@ -143,7 +136,7 @@ extension DynamicVector {
         if copyCount > 0 {
             withUnsafeBufferPointer { source in
                 newStorage.withUnsafeMutableBufferPointer { dest in
-                    dest.baseAddress!.initialize(from: source.baseAddress!, count: copyCount)
+                    dest.baseAddress!.update(from: source.baseAddress!, count: copyCount)
                 }
             }
         }

@@ -55,7 +55,8 @@ public struct AccelerateFloatProvider: SIMDProvider {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        vDSP_vdiv(b, 1, a, 1, result, 1, vDSP_Length(count))
+        guard count >= 0 else { fatalError("divide: count must be nonnegative") }
+        for i in 0..<count { result[i] = a[i] / b[i] }
     }
 
     @inlinable
@@ -91,6 +92,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_vsmul(a, 1, &s, result, 1, vDSP_Length(count))
     }
 
+    /// Native scalar division; count >= 0, count 0 accesses nothing. Exact aliasing is allowed.
     @inlinable
     public static func divideByScalar(
         _ a: UnsafePointer<Float>,
@@ -98,8 +100,8 @@ public struct AccelerateFloatProvider: SIMDProvider {
         result: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        var s = scalar
-        vDSP_vsdiv(a, 1, &s, result, 1, vDSP_Length(count))
+        guard count >= 0 else { fatalError("divideByScalar: count must be nonnegative") }
+        for i in 0..<count { result[i] = a[i] / scalar }
     }
 
     // MARK: - Reduction Operations
@@ -147,34 +149,52 @@ public struct AccelerateFloatProvider: SIMDProvider {
 
     // MARK: - Statistical Operations
 
+    /// Largest element: NaN when any element is NaN; -infinity for `count == 0` (library-defined by an explicit `count > 0` guard).
+    /// T16 reduction NaN contract: the vDSP header does not specify NaN handling (on the T16 phase 1 host
+    /// `vDSP_maxv`/`vDSP_minv` dropped a NaN in their scalar tail), so an explicit scan selects NaN over the unchanged
+    /// `vDSP_maxv` result (ruling C1).
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
+        guard count > 0 else { return -.infinity }  // E1 is library-defined, not vDSP's N == 0 output
         var result: Float = 0
         vDSP_maxv(a, 1, &result, vDSP_Length(count))
-        return result
+        return ReductionNaN.containsNaN(a, count: count) ? .nan : result
     }
 
+    /// Smallest element: NaN when any element is NaN; +infinity for `count == 0` (library-defined by an explicit `count > 0` guard).
+    /// T16 reduction NaN contract: the vDSP header does not specify NaN handling (on the T16 phase 1 host
+    /// `vDSP_maxv`/`vDSP_minv` dropped a NaN in their scalar tail), so an explicit scan selects NaN over the unchanged
+    /// `vDSP_minv` result (ruling C1).
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
+        guard count > 0 else { return .infinity }  // E1 is library-defined, not vDSP's N == 0 output
         var result: Float = 0
         vDSP_minv(a, 1, &result, vDSP_Length(count))
-        return result
+        return ReductionNaN.containsNaN(a, count: count) ? .nan : result
     }
 
+    /// Largest absolute value: NaN when any element is NaN; +0 for `count == 0` (library-defined by an explicit `count > 0` guard).
+    /// T16 reduction NaN contract: the vDSP header does not specify NaN handling (on the T16 phase 1 host
+    /// `vDSP_maxv`/`vDSP_minv` dropped a NaN in their scalar tail), so an explicit scan selects NaN over the unchanged
+    /// `vDSP_maxmgv` result (ruling C1).
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Float>,
         count: Int
     ) -> Float {
+        guard count > 0 else { return 0 }  // E1 is library-defined, not vDSP's N == 0 output
         var result: Float = 0
         vDSP_maxmgv(a, 1, &result, vDSP_Length(count))
-        return result
+        return ReductionNaN.containsNaN(a, count: count) ? .nan : result
     }
 
     // MARK: - Distance Operations
@@ -198,7 +218,7 @@ public struct AccelerateFloatProvider: SIMDProvider {
         destination: UnsafeMutablePointer<Float>,
         count: Int
     ) {
-        // Use memcpy for efficient copying
+        // Element-wise initialization (`initialize(from:count:)`), not a memcpy call
         destination.initialize(from: source, count: count)
     }
 
@@ -212,6 +232,10 @@ public struct AccelerateFloatProvider: SIMDProvider {
         vDSP_vfill(&v, destination, 1, vDSP_Length(count))
     }
 
+    /// Clamps each element to `[low, high]`. A NaN element stays NaN: this relies on the DOCUMENTED `vDSP_vclip` header
+    /// formula (`D[n] = A[n]; if (D[n] < B[0]) D[n] = B[0]; if (C[0] < D[n]) D[n] = C[0]`, both comparisons false for
+    /// NaN), observed on one host (Apple silicon) and pinned there by T16ReductionExceptionalTableTests; Intel and older
+    /// OS versions are unverified.
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Float>,
@@ -269,7 +293,8 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        vDSP_vdivD(b, 1, a, 1, result, 1, vDSP_Length(count))
+        guard count >= 0 else { fatalError("divide: count must be nonnegative") }
+        for i in 0..<count { result[i] = a[i] / b[i] }
     }
 
     @inlinable
@@ -305,6 +330,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_vsmulD(a, 1, &s, result, 1, vDSP_Length(count))
     }
 
+    /// Native scalar division; count >= 0, count 0 accesses nothing. Exact aliasing is allowed.
     @inlinable
     public static func divideByScalar(
         _ a: UnsafePointer<Double>,
@@ -312,8 +338,8 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         result: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        var s = scalar
-        vDSP_vsdivD(a, 1, &s, result, 1, vDSP_Length(count))
+        guard count >= 0 else { fatalError("divideByScalar: count must be nonnegative") }
+        for i in 0..<count { result[i] = a[i] / scalar }
     }
 
     // MARK: - Reduction Operations
@@ -361,34 +387,52 @@ public struct AccelerateDoubleProvider: SIMDProvider {
 
     // MARK: - Statistical Operations
 
+    /// Largest element: NaN when any element is NaN; -infinity for `count == 0` (library-defined by an explicit `count > 0` guard).
+    /// T16 reduction NaN contract: the vDSP header does not specify NaN handling (on the T16 phase 1 host
+    /// `vDSP_maxv`/`vDSP_minv` dropped a NaN in their scalar tail), so an explicit scan selects NaN over the unchanged
+    /// `vDSP_maxvD` result (ruling C1).
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func maximum(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
+        guard count > 0 else { return -.infinity }  // E1 is library-defined, not vDSP's N == 0 output
         var result: Double = 0
         vDSP_maxvD(a, 1, &result, vDSP_Length(count))
-        return result
+        return ReductionNaN.containsNaN(a, count: count) ? .nan : result
     }
 
+    /// Smallest element: NaN when any element is NaN; +infinity for `count == 0` (library-defined by an explicit `count > 0` guard).
+    /// T16 reduction NaN contract: the vDSP header does not specify NaN handling (on the T16 phase 1 host
+    /// `vDSP_maxv`/`vDSP_minv` dropped a NaN in their scalar tail), so an explicit scan selects NaN over the unchanged
+    /// `vDSP_minvD` result (ruling C1).
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func minimum(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
+        guard count > 0 else { return .infinity }  // E1 is library-defined, not vDSP's N == 0 output
         var result: Double = 0
         vDSP_minvD(a, 1, &result, vDSP_Length(count))
-        return result
+        return ReductionNaN.containsNaN(a, count: count) ? .nan : result
     }
 
+    /// Largest absolute value: NaN when any element is NaN; +0 for `count == 0` (library-defined by an explicit `count > 0` guard).
+    /// T16 reduction NaN contract: the vDSP header does not specify NaN handling (on the T16 phase 1 host
+    /// `vDSP_maxv`/`vDSP_minv` dropped a NaN in their scalar tail), so an explicit scan selects NaN over the unchanged
+    /// `vDSP_maxmgvD` result (ruling C1).
+    /// Pinned by T16ReductionExceptionalTableTests.
     @inlinable
     public static func maximumMagnitude(
         _ a: UnsafePointer<Double>,
         count: Int
     ) -> Double {
+        guard count > 0 else { return 0 }  // E1 is library-defined, not vDSP's N == 0 output
         var result: Double = 0
         vDSP_maxmgvD(a, 1, &result, vDSP_Length(count))
-        return result
+        return ReductionNaN.containsNaN(a, count: count) ? .nan : result
     }
 
     // MARK: - Distance Operations
@@ -412,7 +456,7 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         destination: UnsafeMutablePointer<Double>,
         count: Int
     ) {
-        // Use memcpy for efficient copying
+        // Element-wise initialization (`initialize(from:count:)`), not a memcpy call
         destination.initialize(from: source, count: count)
     }
 
@@ -426,6 +470,10 @@ public struct AccelerateDoubleProvider: SIMDProvider {
         vDSP_vfillD(&v, destination, 1, vDSP_Length(count))
     }
 
+    /// Clamps each element to `[low, high]`. A NaN element stays NaN: this relies on the DOCUMENTED `vDSP_vclip` header
+    /// formula (`D[n] = A[n]; if (D[n] < B[0]) D[n] = B[0]; if (C[0] < D[n]) D[n] = C[0]`, both comparisons false for
+    /// NaN), observed on one host (Apple silicon) and pinned there by T16ReductionExceptionalTableTests; Intel and older
+    /// OS versions are unverified.
     @inlinable
     public static func clip(
         _ a: UnsafePointer<Double>,

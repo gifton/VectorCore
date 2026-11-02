@@ -1,0 +1,44 @@
+{
+  "task": "O04",
+  "status": "accepted",
+  "task_base": "cd9bbe392901d1467318c00cba7e96dd973ea1a9",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "OWN-08",
+    "OWN-09",
+    "OWN-11",
+    "OWN-25"
+  ],
+  "partial_records": {},
+  "validation": {
+    "red": "initialized destination reference leak1test/1issue; separate Debug naturally aligned Float pointer misaligned SIMD load trap",
+    "debug": "55tests/8suites passed, final revision2",
+    "release": "55tests/8suites passed including named new boundary diagnostics",
+    "asan": "8valid-path tests/1suite passed; no diagnostics/suppression",
+    "matrix": "48pointer offset/count combinations; all4optimizedwidths conversion/scoped throwing borrows/COW; initialized nontrivial/reference copy lifetime independent offsets;100publicstorage controls;25injectedprimaryfailures;generic typed allocation;11bounded invalid children",
+    "provenance": "9frozen hashes, exact full diff,237base codefiles/238archive codefiles inventory only assigned8sources+1newtest;18evidence hashes incl final review"
+  },
+  "review": "reports/O04-review.md",
+  "evidence": "reports/O04-implementation.md",
+  "root_verification": "reports/O04-root-verification.json",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/Kernels/NormalizeKernels.swift": "1f05962053a3e8553b34e59a857cf6541b8563ae56281a3fc008464be0c09966",
+    "Sources/VectorCore/Vectors/Vector384Optimized.swift": "a17329832d222784a665358d8f724c02a1a080bf55fc8439865dae2fde8b1ade",
+    "Sources/VectorCore/Vectors/Vector512Optimized.swift": "0294506696487b7357fba3847180c4fa1af5d773d9e62466dbb962db2fbc8467",
+    "Sources/VectorCore/Vectors/Vector768Optimized.swift": "c55bf88e745278de8da76f80e285c6b38a5b06a2debb152630e547cd691d7e9c",
+    "Sources/VectorCore/Vectors/Vector1536Optimized.swift": "34d5a9466fedd52540a4d79dc28d7bb60e46fb012a1acee0599a6bcf69c1e282",
+    "Sources/VectorCore/Storage/AlignedMemory.swift": "d92969378bce18f8bcaf83e1629b2f6388b06774aed1599e09bd509789493d5a",
+    "Sources/VectorCore/Storage/AlignedDynamicArrayStorage.swift": "f2f4923d81bdaa50f1ae7ef733d1fddede2b503e690987d9d9a92e448d6b91ed",
+    "Sources/VectorCore/Utilities/MemoryUtilities.swift": "805edd86f8454f4a241e443c31bf748a60d66729be86fe741126f8dcd6a467da",
+    "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift": "dc02aef15d6c042bfc76946b191b61a403e3bb06b79ea1d18e01f92c55b0e022"
+  },
+  "limitations": [
+    "OWN-09 source-established binding repair; no reproduced optimizer miscompile",
+    "OWN-25 closed to injected-failure acceptance; no realOOM reproduction or old misalignment/corruption claim",
+    "Pointer ordinary-value numerical coverage; N01 extreme normalization remains pending",
+    "alignedCopy destination initialized/nonoverlapping; uninitialized callers migrate to initialize(from:count:)",
+    "Common allocator returns bound/uninitialized logical storage; caller initializes/deinitializes",
+    "MemoryPool fallback/ownership remains E04/EX-05",
+    "No performance, concurrency, production envelope, downstream or optional C/GPU claim"
+  ]
+}

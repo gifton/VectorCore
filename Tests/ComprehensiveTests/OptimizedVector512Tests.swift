@@ -356,4 +356,41 @@ struct OptimizedVector512Suite {
         }
         for i in 0..<512 { #expect(approxEqual(v[i], source[i] * 2, tol: 1e-6)) }
     }
+
+    // Pins the `magnitudeSquared` doc claim in Vector512Optimized.swift (claim ledger, V04 phase F): a finite input whose
+    // squared norm exceeds Float range returns +infinity, and one whose squared norm is in range stays finite.
+    // 512 * (1e20)^2 = 5.12e42 > Float.greatestFiniteMagnitude (about 3.4e38); 512 * (1e17)^2 = 5.12e36 < 3.4e38.
+    @Test
+    func testMagnitudeSquaredOverflowsToInfinityBeyondFloatRange() {
+        let beyond = Vector512Optimized(repeating: 1e20).magnitudeSquared
+        #expect(beyond.isInfinite && beyond > 0)
+        let within = Vector512Optimized(repeating: 1e17).magnitudeSquared
+        #expect(within.isFinite)
+        #expect(within > Float(5e36) && within < Float(5.2e36))
+    }
+
+    // Pins the single-rounding claims of the `magnitudeSquared` and `magnitude` docs in Vector512Optimized.swift (claim
+    // ledger, V04 phase F fix 1). Fixture: x[0] = 1 and x[1...511] = b = 5 * 2^-14, so b^2 = 25 * 2^-28 and the sum of
+    // squares S = 1 + 511 * 25 * 2^-28 = 1 + 12775 * 2^-28 is exact in Double, as is every partial sum.
+    // One rounding of S to Float gives 0x3F80018F; one rounding of the Double sqrt(S) to Float gives 0x3F8000C8.
+    // Rounding more than once gives other bits on this fixture (the controls at the end): sequential Float accumulation
+    // gives 0x3F8001FF (each b^2 is 25/32 of one Float ulp of the running sum, so every addition rounds to a whole ulp),
+    // and rounding S to Float before a Float square root gives 0x3F8000C7.
+    @Test
+    func testMagnitudeRoundsOnceFromTheWidenedSum() throws {
+        let b: Float = 5 * 0x1p-14
+        var values = [Float](repeating: b, count: 512)
+        values[0] = 1
+        let vector = try Vector512Optimized(values)
+        let exactSum: Double = 1 + 12775 * 0x1p-28
+        #expect(Float(exactSum).bitPattern == 0x3F80_018F)
+        #expect(Float(exactSum.squareRoot()).bitPattern == 0x3F80_00C8)
+        #expect(vector.magnitudeSquared.bitPattern == 0x3F80_018F)
+        #expect(vector.magnitude.bitPattern == 0x3F80_00C8)
+        // Fixture controls: the double-rounding alternatives give different bits on this fixture.
+        var floatSum: Float = 0
+        for value in values { floatSum += value * value }
+        #expect(floatSum.bitPattern == 0x3F80_01FF)
+        #expect(Float(exactSum).squareRoot().bitPattern == 0x3F80_00C7)
+    }
 }

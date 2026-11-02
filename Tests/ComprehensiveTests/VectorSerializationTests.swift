@@ -11,7 +11,7 @@ struct SerializationSuite {
         let v = try! Vector<Dim16>(vals)
         let data = v.encodeBinary()
         let decoded = try! Vector<Dim16>.decodeBinary(from: data)
-        for i in 0..<16 { #expect(approxEqual(decoded[i], vals[i])) }
+        for i in 0..<16 { #expect(decoded[i].bitPattern == vals[i].bitPattern) }
     }
 
     @Test
@@ -21,7 +21,7 @@ struct SerializationSuite {
         let data = v.encodeBinary()
         let decoded = try! DynamicVector.decodeBinary(from: data)
         #expect(decoded.scalarCount == v.scalarCount)
-        for i in 0..<v.scalarCount { #expect(approxEqual(decoded[i], vals[i])) }
+        for i in 0..<v.scalarCount { #expect(decoded[i].bitPattern == vals[i].bitPattern) }
     }
 
     @Test
@@ -128,11 +128,11 @@ struct SerializationSuite {
 
     @Test
     func testBase64RoundTrip_VectorFixedDim() {
-        let vals = Array(0..<8).map { _ in Float.random(in: -1...1) }
+        let vals = Array(0..<8).map { Float($0 - 4) / 4 }
         let v = try! Vector<Dim8>(vals)
         let b64 = v.base64Encoded
         let decoded = try! Vector<Dim8>.base64Decoded(from: b64)
-        for i in 0..<8 { #expect(approxEqual(decoded[i], v[i])) }
+        for i in 0..<8 { #expect(decoded[i].bitPattern == v[i].bitPattern) }
     }
 
     @Test
@@ -154,7 +154,7 @@ struct SerializationSuite {
         let v = try! Vector<Dim8>(vals)
         let data = try! v.encodeJSON()
         let decoded = try! Vector<Dim8>.decodeJSON(from: data)
-        for i in 0..<8 { #expect(approxEqual(decoded[i], vals[i])) }
+        for i in 0..<8 { #expect(decoded[i].bitPattern == vals[i].bitPattern) }
     }
 
     @Test
@@ -164,20 +164,19 @@ struct SerializationSuite {
         let data = try! JSONEncoder().encode(v)
         let decoded = try! DynamicVector.decodeJSON(from: data)
         #expect(decoded.scalarCount == 5)
-        for i in 0..<5 { #expect(approxEqual(decoded[i], vals[i])) }
+        for i in 0..<5 { #expect(decoded[i].bitPattern == vals[i].bitPattern) }
     }
 
     @Test
-    func testJSONDecode_InvalidUTF8StringThrows() {
+    func testJSONDecode_NonJSONTextThrows() {
         // Swift strings are always valid UTF-8 when encoded.
         // Instead, verify that non-JSON content throws a decoding error.
         let notJSON = "this is not json"
         do {
             _ = try Vector<Dim8>.decodeJSON(from: notJSON)
             Issue.record("Expected decoding error not thrown")
-        } catch {
-            // Any error here is acceptable (DecodingError or VectorError)
-        }
+        } catch DecodingError.dataCorrupted {
+        } catch { Issue.record("Unexpected error type: \(error)") }
     }
 
     @Test
@@ -190,9 +189,8 @@ struct SerializationSuite {
         do {
             _ = try DynamicVector.decodeJSON(from: badJSON)
             Issue.record("Expected dataCorrupted decoding error not thrown")
-        } catch {
-            // Expected to throw
-        }
+        } catch DecodingError.dataCorrupted {
+        } catch { Issue.record("Unexpected error type: \(error)") }
     }
 
     @Test
@@ -209,13 +207,13 @@ struct SerializationSuite {
     }
 
     @Test
-    func testBinaryRoundTrip_RandomizedFuzzSmall() {
-        for _ in 0..<10 {
-            let vals = Array(0..<8).map { _ in Float.random(in: -10...10) }
+    func testBinaryRoundTrip_DeterministicWordsSmall() {
+        for shift in 0..<10 {
+            let vals = Array(0..<8).map { Float(bitPattern: B01Golden.specialWords[($0 + shift) % B01Golden.specialWords.count]) }
             let v = try! Vector<Dim8>(vals)
             let data = v.encodeBinary()
             let decoded = try! Vector<Dim8>.decodeBinary(from: data)
-            for i in 0..<8 { #expect(approxEqual(decoded[i], vals[i])) }
+            for i in 0..<8 { #expect(decoded[i].bitPattern == vals[i].bitPattern) }
         }
     }
 

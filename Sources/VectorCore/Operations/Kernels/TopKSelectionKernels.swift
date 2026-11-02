@@ -6,6 +6,15 @@ import simd
 /// Fixed-capacity Top‑K heap buffer.
 /// Distances (minimize) → use Max-Heap (isMinHeap = false).
 /// Similarities (maximize) → use Min-Heap (isMinHeap = true).
+///
+/// Capacity contract:
+/// - `k > 0`: retains the best `k` pushed entries under the direction and tie policy.
+/// - `k == 0`: a valid empty buffer. `pushIfBetter` ignores every push (it neither traps nor grows the arrays)
+///   and `size` stays 0. Callers may therefore pass `min(k, rangeCount)` for an empty range, or skip the push
+///   loop; either is safe. Verified by `TopKBufferContractTests` (zero-capacity tests) and
+///   `P01TopKBufferRedTests`.
+/// - `k < 0`: traps in `Array(repeating:count:)` before a buffer exists (negative-capacity control in
+///   `P01TopKBufferRedTests`). Callers validate `k >= 0` first.
 @usableFromInline
 internal struct TopKBuffer: Sendable {
     public let k: Int
@@ -34,6 +43,9 @@ internal struct TopKBuffer: Sendable {
 
     @inlinable
     public mutating func pushIfBetter(val: Float, idx: Int) {
+        // Zero capacity retains nothing: without this guard the full-buffer branch below reads vals[0] of an
+        // empty array and traps.
+        guard k > 0 else { return }
         if size < k {
             vals[size] = val
             idxs[size] = idx
@@ -46,6 +58,34 @@ internal struct TopKBuffer: Sendable {
             idxs[0] = idx
             heapifyDown(from: 0)
         }
+    }
+
+    /// Feeds the live entries of `src` into this buffer with `pushIfBetter`, so this buffer ends up holding the
+    /// best `k` of its own entries and `src`'s under its direction and tie policy. Unlike
+    /// `TopKSelectionKernels.mergeTopK` it keeps this buffer's existing entries and builds no third buffer.
+    ///
+    /// Preconditions (traps otherwise; each pinned by a child test in `TopKBufferMergeInTrapTests`:
+    /// `directionMismatchTraps`, `tiePolicyMismatchTraps` and `smallerDestinationCapacityTraps`):
+    /// - `isMinHeap == src.isMinHeap`
+    /// - `tieBreaker == src.tieBreaker`
+    /// - `k >= src.k`
+    ///
+    /// Contract (not checked): the two buffers carry disjoint global indices, as for `mergeTopK`. For an exact
+    /// union of two exact partial top-lists the caller sizes the destination at `min(K, a.k + b.k)`, where `K` is
+    /// the global k and `a`, `b` are the partials' capacities; a smaller destination keeps only its best `k`.
+    ///
+    /// Allocation: `src` is a by-value parameter and is never mutated. Mutating `self` copies its arrays first
+    /// if they are shared with another value (copy-on-write), so no zero-allocation claim is made here. `src`
+    /// stays unchanged and independent of `self` (`TopKBufferContractTests` alias tests). Merging a buffer with a
+    /// copy of itself violates the disjointness contract and duplicates indices.
+    ///
+    /// - Complexity: O(src.size * log k).
+    @inlinable
+    public mutating func mergeIn(from src: TopKBuffer) {
+        precondition(isMinHeap == src.isMinHeap, "Heap types must match")
+        precondition(tieBreaker == src.tieBreaker, "Tie policies must match")
+        precondition(k >= src.k, "Destination capacity too small")
+        for i in 0..<src.size { pushIfBetter(val: src.vals[i], idx: src.idxs[i]) }
     }
 
     @inlinable
@@ -158,21 +198,20 @@ internal enum TopKSelectionKernels {
         precondition(!localTopK.isMinHeap, "Cosine distance uses Max-Heap")
         range_topk_template(query: query, candidates: candidates, range: range, k: k, localTopK: &localTopK) {
             let sim = DotKernels.dot512($0, $1)
-            return 1.0 - max(-1.0, min(1.0, sim))
+            return sim.isFinite ? 1.0 - max(-1.0, min(1.0, sim)) : .nan
         }
     }
 
-    // Cosine fused (one-pass via existing helpers) — distances → Max-Heap
+    // Cosine fused — distances → Max-Heap. `CosineKernels.fused`'s arithmetic with the query's squared norm computed once
+    // (`CosineKernels.fusedCandidate`), the arithmetic of the `CosineDistance` witness and of the other cosine search
+    // routes on this type, so a candidate's score does not depend on k (T14 phase 3; MetricSearchWitnessConsistencyTests).
     @inlinable
     public static func range_topk_cosine_fused_512(query: Vector512Optimized, candidates: [Vector512Optimized], range: Range<Int>, k: Int, localTopK: inout TopKBuffer) {
         precondition(!localTopK.isMinHeap, "Cosine distance uses Max-Heap")
-        // Precompute sumAA once
-        let sumAA = DotKernels.dot512(query, query)
+        let q = query.storage
+        let sumAA = CosineKernels.fusedSquaredNorm(q, laneCount: 128)
         for i in range {
-            let c = candidates[i]
-            let dot = DotKernels.dot512(query, c)
-            let sumBB = DotKernels.dot512(c, c)
-            let d = CosineKernels.calculateCosineDistance(dot: dot, sumAA: sumAA, sumBB: sumBB)
+            let d = CosineKernels.fusedCandidate(query: q, queryNorm: sumAA, candidates[i].storage, laneCount: 128)
             localTopK.pushIfBetter(val: d, idx: i)
         }
     }

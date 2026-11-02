@@ -33,25 +33,25 @@ private enum PCAFixtures {
 
     /// Sample covariance C = XcᵀXc/(n−1), d×d column-major, built directly
     /// from definition (independent of LAMatMul and the PCA code paths).
-    static func covariance(_ vectors: [DynamicVector]) -> (matrix: [Float], mean: [Float]) {
+    static func covariance(_ vectors: [DynamicVector]) -> (matrix: [Float], mean: [Double]) {
         let n = vectors.count
         let d = vectors[0].scalarCount
-        var mean = [Float](repeating: 0, count: d)
+        var mean = [Double](repeating: 0, count: d)
         for v in vectors {
-            for j in 0..<d { mean[j] += v[j] }
+            for j in 0..<d { mean[j] += Double(v[j]) }
         }
-        for j in 0..<d { mean[j] /= Float(n) }
-        var cov = [Float](repeating: 0, count: d * d)
+        for j in 0..<d { mean[j] /= Double(n) }
+        var cov = [Double](repeating: 0, count: d * d)
         for v in vectors {
             for j in 0..<d {
-                let dj = v[j] - mean[j]
+                let dj = Double(v[j]) - mean[j]
                 for i in 0..<d {
-                    cov[j * d + i] += (v[i] - mean[i]) * dj
+                    cov[j * d + i] += (Double(v[i]) - mean[i]) * dj
                 }
             }
         }
-        for idx in 0..<(d * d) { cov[idx] /= Float(n - 1) }
-        return (cov, mean)
+        for idx in 0..<(d * d) { cov[idx] /= Double(n - 1) }
+        return (cov.map(Float.init), mean)
     }
 
     /// Top-k eigenpairs of the sample covariance (exact, via the seam),
@@ -173,9 +173,9 @@ struct PCASpectralSuite {
                 // x̂ = μ + Wᵀy
                 var reconstructed = model.mean[j]
                 for r in 0..<model.componentCount {
-                    reconstructed += model.components[r * d + j] * y[r]
+                    reconstructed += Double(model.components[r * d + j]) * Double(y[r])
                 }
-                #expect(abs(reconstructed - vector[j]) < 1e-3)
+                #expect(abs(reconstructed - Double(vector[j])) < 1e-3)
             }
         }
     }

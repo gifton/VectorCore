@@ -2,7 +2,7 @@
 //  QuantizationSchemes.swift
 //  VectorCore
 //
-//  Structure-aware quantization for high-performance vector compression
+//  Structure-aware quantization for vector compression
 //  Implements asymmetric INT8 quantization with error analysis
 //
 
@@ -56,12 +56,14 @@ public enum QuantizationSchemes {
     private static let Q_MAX: Float = 127.0
     private static let Q_RANGE: Float = 255.0 // Q_MAX - Q_MIN
 
-    /// Computes optimal scale and offset for asymmetric INT8 quantization for a single vector.
+    /// Computes the scale and offset for asymmetric INT8 quantization of a single vector under `strategy`.
     public static func computeQuantizationParams(
         values: [Float],
         strategy: QuantizationParams.Strategy
     ) -> QuantizationParams {
 
+        guard strategy == .perVector else { fatalError("Quantization perDimension calibration requires a dataset-level API") }
+        AffineQuantizationCore.requireFinite(values)
         guard !values.isEmpty else {
             // Handle empty vector case
             return QuantizationParams(strategy: strategy, scales: [1.0], offsets: [0.0])
@@ -77,31 +79,10 @@ public enum QuantizationSchemes {
     }
 
     /// Calculates parameters for the .perVector strategy.
-    /// Scale = (max_val - min_val) / 255
-    /// Offset = -128 - min_val / scale
+    /// Includes zero in the calibrated interval and shares the affine parameter contract.
     private static func computePerVectorParams(values: [Float]) -> QuantizationParams {
-        // 1. Find Min/Max.
-        var minVal = values[0]
-        var maxVal = values[0]
-
-        for value in values {
-            minVal = min(minVal, value)
-            maxVal = max(maxVal, value)
-        }
-
-        // 2. Calculate Scale
-        let scale = (maxVal - minVal) / Q_RANGE
-
-        // Handle the edge case where all values are the same (scale would be near 0).
-        let effectiveScale = max(scale, Float.leastNonzeroMagnitude)
-
-        // 3. Calculate Offset (Zero Point)
-        let offset = Q_MIN - minVal / effectiveScale
-
-        // Nudging: Round the offset and ensure it is within the representable range.
-        let nudgedOffset = max(Q_MIN, min(Q_MAX, round(offset)))
-
-        return QuantizationParams(strategy: .perVector, scales: [effectiveScale], offsets: [nudgedOffset])
+        let params = LinearQuantizationParams(minValue: values.min()!, maxValue: values.max()!, symmetric: false)
+        return QuantizationParams(strategy: .perVector, scales: [params.scale], offsets: [Float(params.zeroPoint)])
     }
 
     // MARK: - Accuracy Analysis
@@ -138,7 +119,8 @@ public enum QuantizationSchemes {
             // Calculate error
             let error = x - x_prime
 
-            maxAbsErr = max(maxAbsErr, abs(error))
+            // A NaN error makes maxAbsoluteError NaN, as it makes MSE and SNR NaN (T16; `max` alone drops it).
+            maxAbsErr = ReductionNaN.propagatingMax(maxAbsErr, abs(error))
             sumSqErr += error * error
             sumSqSignal += x * x
         }

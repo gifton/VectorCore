@@ -106,8 +106,8 @@ struct CosineKernelsTests {
         let u512 = try! Vector512Optimized(Array(repeating: 1, count: 512))
         // One zero, one non-zero -> distance = 1
         #expect(approxEqual(CosineKernels.distance512_fused(z512, u512), 1, tol: 1e-6))
-        // Both zero -> distance = 0 (CosineKernels behavior)
-        #expect(approxEqual(CosineKernels.distance512_fused(z512, z512), 0, tol: 1e-6))
+        // Both zero -> distance = 1 (T15 ruling P3a: every cosine path)
+        #expect(approxEqual(CosineKernels.distance512_fused(z512, z512), 1, tol: 1e-6))
     }
 
     @Test
@@ -122,18 +122,18 @@ struct CosineKernelsTests {
     // MARK: - Regression: +Inf overflow in cosine denominator (Fix 4.2)
 
     /// For large unnormalized vectors, forming the product `sumAA * sumBB`
-    /// overflows Float to +Inf (e.g. 9e38 * 9e38). The old code then computed
+    /// overflows Float to +Inf (e.g. 3e38 * 3e38). The old code then computed
     /// `dot / sqrt(+Inf) = dot / +Inf = 0`, clamped to 0, and returned a spurious
     /// distance of 1.0 for vectors that are in fact identical in direction.
     /// The fix computes `sqrt(sumAA) * sqrt(sumBB)` so the denominator stays finite.
     @Test
     func testCosineDistanceNoOverflowForHugeIdenticalDirection() {
         // Two vectors of identical direction with huge magnitude.
-        // ||v||² ≈ 9e38 for each; dot(a,b) ≈ 9e38 as well (parallel).
-        // sumAA * sumBB ≈ 8.1e77 → +Inf in Float. sqrt path keeps it finite.
-        let sumAA: Float = 9.0e38
-        let sumBB: Float = 9.0e38
-        let dot: Float = 9.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
+        // ||v||² = 3e38 for each (finite, inside the documented domain ||v||² < Float.greatestFiniteMagnitude);
+        // dot(a,b) = 3e38 as well (parallel). sumAA * sumBB ≈ 9e76 → +Inf in Float. sqrt path keeps it finite.
+        let sumAA: Float = 3.0e38
+        let sumBB: Float = 3.0e38
+        let dot: Float = 3.0e38  // perfectly parallel: dot == sqrt(sumAA)*sqrt(sumBB)
 
         // Confirm the product genuinely overflows (the bug's precondition).
         #expect((sumAA * sumBB).isInfinite, "Precondition: product must overflow to +Inf")
@@ -149,8 +149,8 @@ struct CosineKernelsTests {
     /// distance ≈ 1 (cosine similarity 0), and must remain finite.
     @Test
     func testCosineDistanceHugeMagnitudeOrthogonal() {
-        let sumAA: Float = 9.0e38
-        let sumBB: Float = 9.0e38
+        let sumAA: Float = 3.0e38  // finite, inside the documented domain; the product overflows
+        let sumBB: Float = 3.0e38
         let dot: Float = 0.0
 
         let d = CosineKernels.calculateCosineDistance(dot: dot, sumAA: sumAA, sumBB: sumBB)
@@ -164,8 +164,8 @@ struct CosineKernelsTests {
     @Test
     func testCosineDistanceZeroVectorSemanticsPreserved() {
         let z: Float = 0
-        // Both zero → 0.
-        #expect(approxEqual(CosineKernels.calculateCosineDistance(dot: 0, sumAA: z, sumBB: z), 0, tol: 1e-6))
+        // Both zero → 1 (T15 ruling P3a).
+        #expect(approxEqual(CosineKernels.calculateCosineDistance(dot: 0, sumAA: z, sumBB: z), 1, tol: 1e-6))
         // One zero, one non-zero → 1.
         #expect(approxEqual(CosineKernels.calculateCosineDistance(dot: 0, sumAA: z, sumBB: 1.0), 1, tol: 1e-6))
         #expect(approxEqual(CosineKernels.calculateCosineDistance(dot: 0, sumAA: 1.0, sumBB: z), 1, tol: 1e-6))

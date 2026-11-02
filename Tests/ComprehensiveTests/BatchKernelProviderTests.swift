@@ -104,7 +104,7 @@ struct BatchKernelProviderTests {
 
     @Test("findNearestBatch delegates per query (GPU precedence over CPU GEMM)")
     func findNearestBatchDelegates() async throws {
-        // n = 300 ≥ 256 would normally hit the CPU GEMM path; the GPU provider must win.
+        // The provider must win over every CPU route.
         let qs = (0..<5).map { _ in try! Vector512Optimized(Array(repeating: 1, count: 512)) }
         let cs = (0..<300).map { _ in try! Vector512Optimized(Array(repeating: 0, count: 512)) }
         let result = try await Operations.$computeProvider.withValue(MockGPUProvider()) {

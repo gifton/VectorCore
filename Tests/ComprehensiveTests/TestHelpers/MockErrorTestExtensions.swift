@@ -53,6 +53,7 @@ extension XCTestCase {
     }
 
     /// Assert that code throws a specific mock error type (async version)
+    @MainActor
     public func assertThrowsMockError<T: MockError>(
         _ expectedType: T.Type,
         _ message: String = "",

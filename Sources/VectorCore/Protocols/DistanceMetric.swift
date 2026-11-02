@@ -21,6 +21,13 @@ public protocol DistanceMetric<Scalar>: Sendable {
     func distance<V: VectorProtocol>(_ a: V, _ b: V) -> Scalar
     where V.Scalar == Scalar
 
+    /// Optional relevance interpretation of a distance produced by this metric.
+    /// The default is nil. Custom witnesses define their own domain and range;
+    /// scores do not affect distance ranking and are not calibrated probabilities.
+    /// A requirement ensures generic/existential witness dispatch, exercised by
+    /// SearchResultScoreContractTests.customWitnessDispatchAndUnknownContext.
+    func relevanceScore(for distance: Scalar) -> Scalar?
+
     /// Metric name for identification
     var name: String { get }
 
@@ -40,6 +47,8 @@ public protocol DistanceMetric<Scalar>: Sendable {
 
 public extension DistanceMetric {
     var identifier: String { name }
+
+    func relevanceScore(for distance: Scalar) -> Scalar? { nil }
 
     /// Batch distance computation with default implementation
     func batchDistance<V: VectorProtocol>(

@@ -1,0 +1,123 @@
+{
+  "task": "V04",
+  "status": "accepted",
+  "task_base": "dbd0833",
+  "integration_revisions": {
+    "A+B": "d2d579a",
+    "C": "2179a19",
+    "E": "ffc15ee",
+    "F": "3f9bf63",
+    "D-resolve": "e022cf9",
+    "final-fix+polish": "fcb6c34"
+  },
+  "closed_records": [
+    "TOOL-07",
+    "TOOL-08",
+    "API-43",
+    "NUM-23",
+    "OWN-23"
+  ],
+  "disposition_records": {
+    "TOOL-07": "CLOSED WITH LIMITATIONS. Per-case MeasurementBoundary schema 3 (timing scope, inclusion flags, notes) across all suites. Within-run A/B pairing (36/18) requires equal boundaries except operation/route. Comparator refuses mismatched boundaries (exit 2). Honest output consumption (OutputFold, closed consumer vocabulary, body-fingerprint drift guard). Calibration V04-calibration-2 (geometric growth to >=10 ticks, extension floor). Boundary suite with setup-inclusive companions. 28 allocation inclusion flags resolved by the D4 probe; resolved notes pinned by a hand-written table.",
+    "TOOL-08": "CLOSED WITH LIMITATIONS. Owning-handle MemoryLayout strides are no longer presented as payload or memory. Stored scalar payload is measured from real storage (storedScalarPayloadBytes<E>). Sink-agnostic handle-layout guard (types derived from Sources, aliases expanded). Positive memory-saving claims are rejected by a ledger rule over Sources/Tests/Benchmarks. D5 public-API process-memory probe records (38 bounded children, controls exact).",
+    "API-43": "CLOSED WITH LIMITATIONS. Prefetch/speed claims in SoA and kernel docs corrected or marked unverified. D2 emitted-code inspection (0 prfm; 4-way kernel with 4 fmla chains; no j+4 load) recorded out of repo; in-repo text says 'not verified in this repository'. CHANGELOG carries dated corrections of retracted historical claims.",
+    "NUM-23": "CLOSED WITH LIMITATIONS. A checked claim ledger (879 entries, 21 regions, 7 rules, R1-R8 plus Q14/Q17): every tier-A statement in the regions has a reviewed disposition; forbidden phrases are matched on escape-neutralized text; mutation-tested. Provenance fields are documented as run-time observations; reproducible identity requires the external build manifest. Q14 flag helpers are pinned undefined.",
+    "OWN-23": "CLOSED WITH LIMITATIONS. Performance_Guide.md is rewritten with the real CLI and comparator; fixed ns figures and multipliers are removed (24 tombstones); it is a ledger region plus Rule 6; a known-issue note documents why the CI recipe exits 2 today."
+  },
+  "limitations": {
+    "common": "No throughput claim, no universal error bound, no target-scale claim and no downstream claim follows from V04.",
+    "TOOL-07": [
+      "D3 timing records are records only, taken under disclosed contention (mediaanalysisd ~250-330% CPU, load averages up to 44); no ratio or baseline use follows. A quiet-machine re-run was offered to the user.",
+      "Evidence covers D=512 only (vector N 257/4096; matrix N 17/65) on one host and toolchain.",
+      "D2 inspected the 04660cc binary; tied to HEAD by function-level identity across the resolve rebuild, identical __text in the part-2 build, and per-file source identity.",
+      "Only 28 case IDs are resolved, on one Release arm64 build; all others (including the generic euclidean2/euclidean pair, kept unverified by the pair constraint) stay unverified; values can go stale after library changes.",
+      "First-interval calibration ticks are unavailable (the harness does not expose them; fixed repeats skip calibration), so the 'under ~420 ns' affected-case figure remains a steady-state proxy.",
+      "39 discarded-result timed test statements are recorded only (Q17); memory micro-cases rest on escaped-pointer retention.",
+      "Evidence records live outside the repository (sha256-cited in ledger entries V04-C-0692..0713 and below); the D3 JSON gitSHA names the main checkout, not the measured (uncommitted) tree.",
+      "The documented CI comparison recipe exits 2 on this tree because of the routed FP32 tolerance failures (P02) and noop 'Missing validation'; workaround documented. No automated test runs the comparator.",
+      "Ledger entry V04-C-0607 keeps 'retained' for the fixture-injected runtime note 'never paired or compared', but the comparator accepts that scope; the corrective rebind is routed to D02 (runtime-text owner, Q11)."
+    ],
+    "TOOL-08": [
+      "Memory snapshots are process-wide, with noise, and no object-level attribution.",
+      "No simultaneous peak heap: sumOfZoneHighWaterMarksBytes returned 0 in all 114 snapshots; only the process-lifetime resident maximum exists.",
+      "Fixtures are bounded (N<=4096, D<=1536) on one host; no RSS budget or saving claim.",
+      "The payload model excludes array header, spare capacity and allocation rounding (stride includes per-element padding).",
+      "Runtime strings PrecisionProfile '50%/75%' and SoA.memoryEfficiency, plus two exempted Sources runtime memory-saving strings (V04-R-0007), are owned by D02.",
+      "Evidence is outside the repository."
+    ],
+    "API-43": [
+      "Emitted-code facts come from one build and are out of repo.",
+      "estimatePerformanceGain still returns '10-20%' as unverified runtime text owned by D02."
+    ],
+    "NUM-23": [
+      "The ledger is a lexical guard with documented limits (Rule 6 misses spelled-out multipliers such as 'twice as fast' in README; routed to P01). 'zero-copy' remains excludable (routed to P01).",
+      "No universal error bound; NaN payload encodings are not pinned (V04-R-0008, routed to P02 with an exhaustive FP16 converter test).",
+      "The NATIVE_FLOAT16_SUPPORTED native scalar branch is dead and untested; do not enable it before the P02 converter test lands (D02). [Amended 2026-10-04: the converter test and the branch disposition moved to T12 (root ruling T12 phase1 (c)); the original text is kept above.]",
+      "Q11 runtime strings and Q14 dead or always-on flags (releaseOnly, isReleaseMode, isSIMDEnabled, performancePrecondition) and the dead PERFORMANCE_METRICS counters are routed to D02.",
+      "GPU claims remain unverified.",
+      "Provenance lives in out-of-repo manifests."
+    ],
+    "OWN-23": [
+      "Storage layers were not consolidated (not authorized); backend docs are corrected.",
+      "magnitudeSquared overflow is documented and tested, not repaired.",
+      "README relies on the lexical Rule 6 only (F-2, routed to P01)."
+    ]
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/V04",
+  "evidence_sha256": {
+    "phase1-inventory.md": "357769dbe5e999babb13aa63c4ae73cfc6af76f4c59bf169782c18a6887f6b02",
+    "rulings.md": "82d9d2a372a318d812057b9721c6ae890239152574d1de75a8ccd56942908965",
+    "phaseAB-report.md": "bf9024b25d9f2e9d8b0a9f2e428b4864a775dae48887d6fcad554282da14c384",
+    "phaseF-report.md": "e4548dcd8d9fa9e3bba79cf5b9d25ed9a7dedff5c51741318af961e48524aba4",
+    "phaseD-report.md": "22fb1b6380ab2cf1e1a17c97985aeb9b8dd7423b2dc25537094906e0a4e0bab2",
+    "final-review.md": "d92a2f79ee108b45ea3ca7e717ad89f536ac4442065826776985d347c6685734",
+    "final-fix-rereview.md": "f0ee1e5f276287b4ce6fdcfa24bb53bd1366d7004d7a21eb13609e453cf82ad8",
+    "phaseD/part1-manifest.json": "d5b0d0106057f0de862537d8a4f708484447289c0959d8fa760ff3b3b3671c7e",
+    "phaseD/part2-manifest.json": "1284900876b79821a02a5b202b4d9ce6283988fb076cfbb05cc633e67182a1e5",
+    "phaseD/resolve/MANIFEST.json": "8c538a89cb894cf2abab7c196b77327f91584ffd37a77a15545f5b6ca369a363",
+    "final-fix/MANIFEST.json": "b41a9cba636840471311aeacafbf7d5ddfc681c9155f1623cf378e3120b55916",
+    "final-polish/MANIFEST.json": "fd6fdaf60fd6b3877023e357a26bce2db28618de3a40f9cbc45bd18bf24e93d7"
+  },
+  "evidence_notes": [
+    "M-5: phase reports and reviews are cited here by sha256 instead of being copied in-repo.",
+    "N-2 correction: the phase D part 2 timing driver's repeat rule is R = max(3, smallest power of two giving >= 1 ms per sample from cited estimates); its 'smallest power of two >= 3' description was wrong."
+  ],
+  "routed": {
+    "P02": [
+      "matrix 4N+5 allocations per invocation (Gram-route temporaries; P02's bounded Gram workspace)"
+    ],
+    "T11": [
+      "FP32 tolerance class: generic euclidean2 1.04e-6..2.3e-6 vs 1e-6 (the CI recipe exits 2)",
+      "matrix diagonal zero-reference relative-error class",
+      "'Missing validation' policy"
+    ],
+    "T12": [
+      "FP16 range_euclid2_mixed_core per-conversion heap allocation (262,145/invocation)",
+      "exhaustive FP16 software-converter test",
+      "NaN-encoding pins and convertBatchNEON payload consistency (V04-R-0008)",
+      "NATIVE_FLOAT16_SUPPORTED dead branch disposition (T12 owns it; root ruling 2026-10-04, T12 phase1 (c))",
+      "re-probe FP16 allocation flags after the fix"
+    ],
+    "T13": [
+      "qualitative 'efficient' labels outside regions",
+      "Rule 6 spelled-out multipliers (README)",
+      "'zero-copy' excludability"
+    ],
+    "D02": [
+      "OptimizationAttributes flags; PERFORMANCE_METRICS dead paths (NATIVE_FLOAT16_SUPPORTED re-routed to T12 on 2026-10-04: root ruling T12 phase1 (c), T12 owns the flag)",
+      "runtime memory-saving strings (V04-R-0007), PrecisionProfile, SoA.memoryEfficiency, estimatePerformanceGain",
+      "V04-C-0607 fixture-injected note rebind",
+      "entropyFast naming; batchEuclideanSquaredSoA returns sqrt"
+    ],
+    "follow-up (unassigned)": [
+      "provider closure context (40 B/call), generic provider 3 allocations/candidate, normalize allocations: candidates for a later allocation task; not defects by themselves",
+      "probe the non-squared generic rows to resolve the generic pair together",
+      "comparator unit test; executableSHA256 field"
+    ]
+  },
+  "process_notes": [
+    "Q13 (Performance_Guide) was ruled in scope but root never assigned it to a §10.1 phase row; caught by the final review and closed in the final fix round.",
+    "Final-review residuals were closed in a root-verified closure-polish round (a deviation from the skill's single final fix dispatch; reason: inaccurate doc/comment claims must be fixed, not filed).",
+    "Routing CORRECTED 2026-10-04 after milestone 13: P01 (hashing and streaming selection) and P02 (CPU batch search and Gram workspace) are narrow; the misrouted items now go to new root tasks T11/T12/T13, with only the matrix allocations kept on P02."
+  ]
+}

@@ -1,0 +1,1562 @@
+{
+  "program": "2026-09-18-vectorcore-stabilization",
+  "base_revision": "8b02e75bca7055ae11170873d15c06f1538709b7",
+  "execution_authorized": true,
+  "breaking_changes_authorized": true,
+  "performance_targets": "deferred by user",
+  "tasks": [
+    {
+      "id": "V01",
+      "title": "Strict correctness and observable benchmark failure",
+      "status": "accepted",
+      "depends_on": [],
+      "base": "04f27df",
+      "agent": "<agents>/v01_implementation",
+      "review_agent": "<agents>/v01_review",
+      "review": "Round2 approved",
+      "closure": "closures/V01.json",
+      "integration_revision": "297ad4e"
+    },
+    {
+      "id": "V02",
+      "title": "Benchmark selection, provenance and comparison",
+      "status": "accepted",
+      "depends_on": [
+        "V01"
+      ],
+      "brief": "briefs/V02.md",
+      "design_review": "reports/V02-design-review.md",
+      "design_status": "approved; independent driver and allocator/metadata scope refinements incorporated",
+      "brief_sha256": "072a9a5ffa221302610e54431fcd71ab1d07ad744ffd05539e6b44f4ab070631",
+      "base": "813255cb389891590db172480667bb47d83fbdd1",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-29/workspaces/V02",
+      "dispatched_brief_sha256": "8a9b0ba02f81240c0198f188b43861f205ae200c094259104742d0b793c14cdf",
+      "matrix_disposition_review": "reports/V02-matrix-disposition-review.md",
+      "scope_addendum": "October2: preserve dense matrix inputs and V01 thresholds; replace unsupported guaranteed-pass test with observed-output independent statistics/strict classification. Internal post-timing observer on MatrixDistanceBench.measure only. No numerical ownership expansion. October2 comparator clarification: reject present malformed correctness and nonintegral observation/iteration counts; absent/null observations remain supported and metadata override does not waive validation. October2 C-on compile: exactly3 @usableFromInline annotations across PointerBridge.withSIMD4Int8Pointer, CKernels enum/dotInt8; bodies/gates/sourceAPIinternal unchanged; focusedC-on quantization DebugRelease required.",
+      "source_review": "reports/V02-source-review-v7.md",
+      "source_status": "v7 accepted and imported byte-identically",
+      "source_verification": "reports/V02-root-v7-source-verification.json",
+      "schema_review": "reports/V02-comparator-source-supplement-v1.md",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final sourcev7/seal2 accepted; source/runtime/arithmetic provenance verified",
+      "closure": "closures/V02.json",
+      "integration_revision": "53976c1f1d21f3005473d209106e0ef3df995438"
+    },
+    {
+      "id": "V03",
+      "title": "Executed CI coverage and performance opt-outs",
+      "status": "accepted",
+      "depends_on": [
+        "V01",
+        "E02",
+        "O05",
+        "Q03",
+        "V02"
+      ],
+      "brief": "briefs/V03.md",
+      "design_review": "reports/V03-design-review.md",
+      "design_status": "approved; actual V02 driver and post-Q02 XCTest timing adapter pinned; dispatch after V02 acceptance/import",
+      "brief_sha256": "dcb0ab4b2a4acfaee9f4dff36f9676c136a304f49b108f095e6246140d5785f2",
+      "post_prerequisite_review": "reports/V03-post-V02-readiness-review.md",
+      "base": "53976c1f1d21f3005473d209106e0ef3df995438",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-03/workspaces/V03-v4",
+      "dispatched_brief_sha256": "95413b3aca2fc87c39d1341a21ed7cec5d9e3808f9467ab8f14446f88be55ccd",
+      "scope_addendum": "October2 complete measurement class:3Vector512Tests methods join26ComprehensiveBenchmarks;29unchanged bodies migrate to shared observationwrapper.",
+      "sanitizer_deadline_addendum": "Only Q03 isolatedConcurrency outer parent49s; child45s and cleanup<=2s unchanged. Other bodies15s.",
+      "lint_scope_addendum": "50 existing errors/19 exact source paths:49 line wraps, one childProbe mutation helper extraction; B01 generator emitted-format-only migration. No lint weakening.",
+      "formatting_generators": [
+        "Scripts/ci/fixtures/B01_generate_goldens.py",
+        "Scripts/N01-reference-generator.py",
+        "Scripts/fixtures/N03-generate-references.py"
+      ],
+      "policy_aggregate_deadline_seconds": 120,
+      "resume_status": "implementing",
+      "pause_handoff": "reports/V03-pause-handoff.md",
+      "source_review": "reports/V03-source-review-v3.md",
+      "source_stage": "Frozen v3 source accepted; final runtime pending; no v4 edits.",
+      "remaining_scope_decision": "Migrate legacy test_check_required.py five-job table to all seven required IDs with bounded file-backed execution; duplicate-key fixture must include both new jobs so it fails for the intended reason. Preserve existing negative cases; explicit brief addendum and new freeze/review required before final commands.",
+      "closure": "closures/V03.json"
+    },
+    {
+      "id": "V04",
+      "title": "Honest timing, memory and optimization claims",
+      "status": "accepted",
+      "depends_on": [
+        "V01",
+        "V02",
+        "V03"
+      ],
+      "brief": "briefs/V04.md",
+      "design_review": "reports/V04-design-review.md",
+      "design_status": "approved; V02 prerequisite, final claim reconciliation after L01/L02/Q02/Q04/O02/O03/O05 and V03 test coordination",
+      "brief_sha256": "972771285dcdf2840fe665f013fbd87a7c45faa98c6e27515a2d7f8d0c6b0ba9",
+      "phase_checkpoint": {
+        "A+B": "accepted after 3 fix rounds; integrated as a phase checkpoint; records TOOL-07/08, API-43, NUM-23, OWN-23 close only after the final V04 review"
+      },
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-03/workspaces/V04-c",
+      "closure": "closures/V04.json"
+    },
+    {
+      "id": "S01",
+      "title": "Public vector shape invariants",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/S01.md",
+      "base": "99a2ac4",
+      "agent": "<agents>/s01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-S01-implementation",
+      "review_agent": "<agents>/s01_review",
+      "review": "Approved including supplemental mixed/SoA/calibrator evidence",
+      "closure": "closures/S01.json",
+      "integration_revision": "7c211d9"
+    },
+    {
+      "id": "S02",
+      "title": "Dimension guards, aggregation and factory validation",
+      "status": "accepted",
+      "depends_on": [
+        "S01"
+      ],
+      "brief": "briefs/S02.md",
+      "base": "7c211d9",
+      "agent": "<agents>/s02_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-S02-implementation",
+      "review_agent": "<agents>/s02_review",
+      "review": "Approved finalcleanup; root fullpatch/source/evidence/inventory verification complete",
+      "closure": "closures/S02.json",
+      "integration_revision": "028b4aacc80249b745a89454008c7d2b9e5da154"
+    },
+    {
+      "id": "S03",
+      "title": "Decoded result and parameter invariants",
+      "status": "accepted",
+      "depends_on": [
+        "S01",
+        "Q01"
+      ],
+      "brief": "briefs/S03.md",
+      "design_review": "reports/S03-design-review.md",
+      "base": "813255cb389891590db172480667bb47d83fbdd1",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-29/workspaces/S03",
+      "dispatched_brief_sha256": "5ec57e87db1b00f85fe82167c214411b4f3e0627514d9c199c83bc1eb2273c1c",
+      "brief_sha256": "16d7357efd1a35b5d9c53350ca1dffcdb660eb9ce6abeae187e74f71fc6e4dac",
+      "design_refinement": "September29: direct built-in INT8 NormalizationHint is unavailable; inventory marks non-applicable without new conformance.",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v1 accepted with three historical stub tests excluded from exercised-contract credit",
+      "closure": "closures/S03.json",
+      "integration_revision": "e0e0e74b5128419482d1e1993d58c2184adc01ba"
+    },
+    {
+      "id": "O01",
+      "title": "Compact copy isolation and element lifetime",
+      "status": "accepted",
+      "depends_on": [],
+      "base": "ed1fd0b",
+      "agent": "<agents>/o01_implementation",
+      "review": "Approved, including scoped warning cleanup",
+      "closure": "closures/O01.json",
+      "integration_revision": "312bec8"
+    },
+    {
+      "id": "O02",
+      "title": "Tiered bulk writeback and mutation cost",
+      "status": "accepted",
+      "depends_on": [
+        "O01"
+      ],
+      "brief": "briefs/O02.md",
+      "base": "297ad4e",
+      "agent": "<agents>/o02_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-O02-implementation",
+      "review_agent": "<agents>/o02_review",
+      "review": "Approved; root verified source/build/probe association",
+      "closure": "closures/O02.json",
+      "integration_revision": "6f364ba"
+    },
+    {
+      "id": "O03",
+      "title": "Hybrid ownership traffic and operation temporaries",
+      "status": "accepted",
+      "depends_on": [
+        "S01"
+      ],
+      "brief": "briefs/O03.md",
+      "design_review": "reports/O03-design-review.md",
+      "base": "6d47ec508d55ef7e863ca3b9d51ac0d2f5cca10b",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-O03-implementation",
+      "brief_sha256": "528e656c9c1e5f1f6b06d5b7dc9d94dbdd7e71eccb7ba73d57ebfe860c7d945b",
+      "scope_addendum": "Root approved same-class move-out repair for managed DimensionStorage mutation too after actual separately linked Release direct concrete baseline: ten default Dim512 Float writes allocate ten owners and ten payloads (20 events/20,880 requested bytes). Historical OWN-26 zero-allocation source fixture remains preserved; no blanket build-independent extrapolation.",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v1 accepted; full source reconstruction, canonical backups and all actual runtime/allocation evidence verified",
+      "closure": "closures/O03.json",
+      "integration_revision": "94b73440eae64e2d97726138f2ee9752708e5736"
+    },
+    {
+      "id": "O04",
+      "title": "Alignment, binding and copy destination contracts",
+      "status": "accepted",
+      "depends_on": [
+        "S01"
+      ],
+      "brief": "briefs/O04.md",
+      "base": "cd9bbe3",
+      "agent": "<agents>/o04_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-O04-implementation",
+      "review": "Approved revision2; root source/evidence/inventory verification complete",
+      "review_agent": "<agents>/o04_review",
+      "closure": "closures/O04.json",
+      "integration_revision": "98388fc96fb62b013eea84dcf97ed092fdb76f8d"
+    },
+    {
+      "id": "O05",
+      "title": "Scoped borrow and dormant transfer lifetimes",
+      "status": "accepted",
+      "depends_on": [
+        "O03"
+      ],
+      "brief": "briefs/O05.md",
+      "design_review": "reports/O05-design-review.md",
+      "design_status": "approved; dispatch requires accepted O03 and exclusive MixedPrecisionKernels ownership",
+      "base": "94b73440eae64e2d97726138f2ee9752708e5736",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-24/workspaces/O05",
+      "brief_sha256": "eb33368266452c548c04b9a94525969892faf406cf814d0c4a6d37402084768a",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v2 accepted; full source/evidence reconstruction and canonical runtime associations verified",
+      "closure": "closures/O05.json",
+      "integration_revision": "a97b886861c62c74a188309502da7b56e623c754"
+    },
+    {
+      "id": "I01",
+      "title": "Normalization hint invalidation",
+      "status": "accepted",
+      "depends_on": [
+        "S01"
+      ],
+      "brief": "briefs/I01.md",
+      "base": "297ad4e",
+      "agent": "<agents>/i01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-I01-implementation",
+      "review_agent": "<agents>/i01_review",
+      "review": "Approved",
+      "closure": "closures/I01.json",
+      "integration_revision": "99a2ac4",
+      "downstream_validation": "handed off to the consuming-products agent (user, 2026-10-16)"
+    },
+    {
+      "id": "I02",
+      "title": "Exact cache identity and bounded retention",
+      "status": "accepted",
+      "depends_on": [
+        "S01"
+      ],
+      "brief": "briefs/I02.md",
+      "base": "98388fc96fb62b013eea84dcf97ed092fdb76f8d",
+      "agent": "<agents>/i02_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-I02-implementation",
+      "review_agent": "<agents>/i02_review",
+      "review": "Approved revision2; root verified full patch, inventory, file/evidence hashes",
+      "closure": "closures/I02.json",
+      "integration_revision": "0dbb18c818f26edd8e28bb303a6fccedbd063a6f"
+    },
+    {
+      "id": "R01",
+      "title": "Requested metric witness preservation",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/R01.md",
+      "base": "312bec8",
+      "agent": "<agents>/r01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-R01-implementation",
+      "review": "Approved",
+      "closure": "closures/R01.json",
+      "integration_revision": "61a9bbd"
+    },
+    {
+      "id": "R02",
+      "title": "Transactional collection replacement and identifiers",
+      "status": "accepted",
+      "depends_on": [
+        "R01"
+      ],
+      "brief": "briefs/R02.md",
+      "base": "84f42d01489a526b8ae40bd77fe7618c0de33f34",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-R02-implementation",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Accepted; complete patch, 248/250 code-file inventory, backups and final runtime/consumer/child evidence verified by root",
+      "closure": "closures/R02.json",
+      "integration_revision": "ae0fd908d99b5ccacdb22749e5203f6e70cbc381"
+    },
+    {
+      "id": "R03",
+      "title": "Matrix metric semantics and logical output bounds",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/R03.md",
+      "base": "076f60b8da6b4cad80a36be73b9506d06eb90bf9",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-R03-implementation",
+      "brief_sha256": "b0a7130d5df896dcf41dc1faaf0b55d02fa304801bfd6ca448a57b47aab1077c",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v2 accepted; complete source reconstruction, runtime v1/doc-only v2 association, canonical backups and all evidence verified",
+      "closure": "closures/R03.json",
+      "integration_revision": "433efec697853f1a680317eaf9706dc56675267b"
+    },
+    {
+      "id": "R04",
+      "title": "Bounded heap membership and legacy ordering policy",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/R04.md",
+      "brief_sha256": "e44c01117ccff56a465cc35b02c54bc3e804d6eac813f2d36a01b4d216d52bfb",
+      "route_inventory_update": "Accepted E02 removed dormant ExecutionOperations nearest; direct public KNearestHeap controls replace obsolete caller obligation.",
+      "design_review": "reports/R04-design-review.md",
+      "design_status": "approved; required accepted prerequisites satisfied; exclusive file ownership required at dispatch",
+      "base": "e0e0e74b5128419482d1e1993d58c2184adc01ba",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-29/workspaces/R04",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v1 accepted; complete source/runtime reconstruction and actual child associations verified",
+      "closure": "closures/R04.json",
+      "integration_revision": "1d6b3b3ee3ae5e3fa24c90768ef805125969c41f"
+    },
+    {
+      "id": "R05",
+      "title": "Metric-aware relevance scores",
+      "status": "accepted",
+      "depends_on": [
+        "R01",
+        "R02"
+      ],
+      "brief": "briefs/R05.md",
+      "design_review": "reports/R05-design-review.md",
+      "design_status": "approved; required accepted prerequisites satisfied; exclusive file ownership required at dispatch",
+      "brief_sha256": "da4ea6c37730403e5178177cac5f6620cde30eee34101b63673f7c869ab45994",
+      "base": "0fe49538ab60b2d9922a6cd47782d3fc7df7035c",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-02/workspaces/R05",
+      "dispatched_brief_sha256": "da4ea6c37730403e5178177cac5f6620cde30eee34101b63673f7c869ab45994",
+      "resume_status": "implementing",
+      "pause_handoff": "reports/R05-pause-handoff.md",
+      "source_stage": "Actual behavioral RED reproduced (one function, seven issues); six-path implementation/test draft preserved but uncompiled, unverified and unreviewed.",
+      "closure": "closures/R05.json",
+      "resumed_workspace": "<repo>/.stabilization-recovery/2026-10-03/workspaces/R05",
+      "review": "reports/R05-review-2026-10-03.md; reports/R05-rereview-1-2026-10-03.md (all addressed)"
+    },
+    {
+      "id": "E01",
+      "title": "Chunk and loop arithmetic boundaries",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/E01.md",
+      "base": "6f364ba",
+      "agent": "<agents>/e01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-E01-implementation",
+      "review_agent": "<agents>/e01_review",
+      "review": "Approved with final Debug/Release evidence",
+      "closure": "closures/E01.json",
+      "integration_revision": "cd9bbe3"
+    },
+    {
+      "id": "E02",
+      "title": "Bounded scheduling and execution laws",
+      "status": "accepted",
+      "depends_on": [
+        "E01",
+        "O01",
+        "R03",
+        "N03",
+        "E04"
+      ],
+      "brief": "briefs/E02.md",
+      "design_review": "reports/E02-design-review.md",
+      "design_status": "approved; dispatch after accepted E01/O01/R03/N03/E04",
+      "base": "433efec697853f1a680317eaf9706dc56675267b",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-E02-implementation",
+      "brief_sha256": "d93005c7988312fb8208c707c2ecaa2327d7caef8cd3a78fb64502361ab975b3",
+      "scope_addendum": "Root authorized narrow ExecutionBoundaryTests migration: invalid maxConcurrency 0/-1 now rejects before callbacks even for empty/huge representable ranges; preserve positive-provider range coverage and invalidRange precedence for unrepresentable lengths. Root additionally authorized private-to-internal visibility for exactly six optimized nearest parallel helpers for direct testing; public gate stays unchanged and dormancy is explicitly reported. Root additionally authorized a narrow test_child_process_bounds.py forbidden-pattern scan for timeout assertions followed by termination-status access, with real frozen-v1 RED, to close the repeated EX06 class. The conservative scanner also requires helper-only throw-before-status policy migrations in MemoryPoolBoundaryTests, NormalizationRangeContractTests, VectorCollectionTransactionTests and MatrixMetricContractTests; these already guarded helpers are not relabeled as new unbounded waits. Final generic nearest observer coverage is authorized at the unchanged heuristic boundary, with production byte identity preserved. Root v5 clarification: synchronous parent combine is a user callback; both provider loops require shared region and cancellation checks before/after each combine, with actual frozen-v4 RED and class-covering tests.",
+      "clarified_brief_sha256": "4c6f5f0f8042ae9c3f4ec6f2f0c3cab0578ed375095f68c4ed75215c685b199d",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Frozen v5 final accepted; EOF-only integration reviewed; combined Debug/Release milestone independently verified",
+      "frozen_diff_sha256": "07bc72e83a1013f3dceb4d50d7a6af2ae8f8a54bad7ef96a1a02d0d925dcb533",
+      "closure": "closures/E02.json",
+      "integration_revision": "8698845414c145f1d982e35a3cc53e582d010407"
+    },
+    {
+      "id": "E03",
+      "title": "Atomic configuration transactions",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/E03.md",
+      "base": "8f7b8283df10ee16f43ebd86ec5d039e801821ba",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-E03-implementation",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Revision 2 accepted; complete patch, source inventory, backup and all 35 evidence artifacts verified by root",
+      "closure": "closures/E03.json",
+      "integration_revision": "9038f2e44b38fe980b04f12a2a01995d98eadcaf"
+    },
+    {
+      "id": "E04",
+      "title": "Pool teardown, budgets and handle ownership",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/E04.md",
+      "design_review": "reports/E04-design-review.md",
+      "profile": "reports/E04-root-memorypool-profile.md",
+      "base": "ae0fd908d99b5ccacdb22749e5203f6e70cbc381",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-E04-implementation",
+      "brief_sha256": "d8809fd4fe7b386bc4649220c2fa9dfaaaddcb3687043b5831ccbef782c3fc6a",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v2 accepted; complete patch, full code inventory, runtime/consumer/child evidence, allocation profile and canonical backups verified",
+      "closure": "closures/E04.json",
+      "integration_revision": "076f60b8da6b4cad80a36be73b9506d06eb90bf9"
+    },
+    {
+      "id": "E05",
+      "title": "Reentrant and concurrent calibration",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/E05.md",
+      "design_review": "reports/E05-design-review.md",
+      "base": "a558253329933b186ba450b07a67a8a56cb4ca54",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-E05-implementation",
+      "brief_sha256": "6c4b4f3a744aa2fc7c3bd230bdc5b1dd1ed64f9b42382e78204df9666ff19666",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v1 accepted; full patch/source inventory, all runtime/consumer/child associations and canonical backups verified",
+      "closure": "closures/E05.json",
+      "integration_revision": "6d47ec508d55ef7e863ca3b9d51ac0d2f5cca10b"
+    },
+    {
+      "id": "E06",
+      "title": "Validated live operation settings",
+      "status": "accepted",
+      "depends_on": [
+        "E01",
+        "E02",
+        "E03",
+        "N03"
+      ],
+      "brief": "briefs/E06.md",
+      "design_review": "reports/E06-design-review.md",
+      "design_status": "approved; dispatch requires accepted E02",
+      "brief_sha256": "2b01d14e7f80e013cff8eaac2d791a696fafac14001221f21a6d5c14fac0ea86",
+      "base": "545d819f1ec57f9b504757ab6ae2fa42488cbd29",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-24/workspaces/E06",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v2 accepted; root source/evidence reconstruction and current canonical artifacts verified, historical v1 bundle-retention limitation explicit",
+      "closure": "closures/E06.json",
+      "integration_revision": "394ee070791eff097bff708b4c736d77f85056db"
+    },
+    {
+      "id": "N01",
+      "title": "Range-safe division and normalization",
+      "status": "accepted",
+      "depends_on": [
+        "S01",
+        "S02",
+        "O04",
+        "I01"
+      ],
+      "brief": "briefs/N01.md",
+      "base": "028b4aacc80249b745a89454008c7d2b9e5da154",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-N01-implementation",
+      "design_review": "reports/N01-design-review.md",
+      "scope_addendum": "Root-approved same-class Accelerate Float/Double binary division repair after isolated least-subnormal behavioral RED; direct native coordinate division preserves provider IEEE policy",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "ACCEPT boundedCore; rootfullpatch/source/evidence verificationcomplete; API39downstreamstaged",
+      "closure": "closures/N01.json",
+      "integration_revision": "84f42d01489a526b8ae40bd77fe7618c0de33f34",
+      "downstream_validation": "handed off to the consuming-products agent (user, 2026-10-16)"
+    },
+    {
+      "id": "N02",
+      "title": "Finite-aware equality and logarithm policy",
+      "status": "accepted",
+      "depends_on": [
+        "S02",
+        "N01"
+      ],
+      "brief": "briefs/N02.md",
+      "base": "84f42d01489a526b8ae40bd77fe7618c0de33f34",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-N02-implementation",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v2 accepted; complete patch, 248/249 code-file inventory, canonical backups and all 27 evidence artifacts verified by root",
+      "closure": "closures/N02.json",
+      "integration_revision": "1c55a85b46f026fbcad8d27face1159000be4501"
+    },
+    {
+      "id": "N03",
+      "title": "Stable batch population statistics",
+      "status": "accepted",
+      "depends_on": [
+        "E03"
+      ],
+      "brief": "briefs/N03.md",
+      "design_review": "reports/N03-design-review.md",
+      "design_status": "approved; dispatch requires accepted E03",
+      "base": "1c55a85b46f026fbcad8d27face1159000be4501",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-N03-implementation",
+      "brief_sha256": "976f77a65c56db104c7187b98cb4d6404ef8d1cf0cf7834d3543acd8870637a5",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v1 accepted; full patch/inventory, byte-identical independent fixture regeneration, Debug/Release and all 16 evidence artifacts verified",
+      "closure": "closures/N03.json",
+      "integration_revision": "a558253329933b186ba450b07a67a8a56cb4ca54"
+    },
+    {
+      "id": "N04",
+      "title": "Scale-invariant entropy",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/N04.md",
+      "design_review": "reports/N04-design-review.md",
+      "design_status": "approved; required accepted prerequisites satisfied; exclusive file ownership required at dispatch",
+      "brief_sha256": "11a683afeaa82cb7071f93f24bafe4d176f67675cdda572fcae2b6b649c304fc",
+      "closure": "closures/N04.json",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-03/workspaces/N04",
+      "review": "reports/N04-review.md; reports/N04-rereview-1.md"
+    },
+    {
+      "id": "Q01",
+      "title": "Quantization ranges, conversion and decoded metrics",
+      "status": "accepted",
+      "depends_on": [
+        "S01"
+      ],
+      "brief": "briefs/Q01.md",
+      "design_review": "reports/Q01-design-review.md",
+      "design_status": "approved with root incorporation of final nonblocking precision/nonfinite refinements",
+      "base": "0dbb18c818f26edd8e28bb303a6fccedbd063a6f",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<tmp>/vectorcore-stabilization-Q01-implementation",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "ACCEPT frozenv4; root fullpatch/hash/inventory/evidence and allocation verification complete",
+      "root_allocation_probe": "reports/Q01-root-allocation-adjudication.md",
+      "closure": "closures/Q01.json",
+      "integration_revision": "8f7b8283df10ee16f43ebd86ec5d039e801821ba"
+    },
+    {
+      "id": "Q02",
+      "title": "Precision selection, accuracy and tuner provenance",
+      "status": "accepted",
+      "depends_on": [
+        "Q01",
+        "N01",
+        "E05"
+      ],
+      "brief": "briefs/Q02.md",
+      "design_review": "reports/Q02-design-review.md",
+      "design_status": "independently approved; dispatch must avoid active MixedPrecisionKernels writer",
+      "brief_sha256": "36805606eebf1126344c0f015524141d990b72ff9eef1dbb6bcb436464ae9cae",
+      "base": "101b3749bf531cfdbc42d61198b503e94af4aa5b",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-24/workspaces/Q02",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v3 source and runtime accepted; complete1519artifact evidence verified; NUM21 peak-live characterization staged",
+      "early_review": "reports/Q02-implementation-review-v3.md",
+      "root_source_verification": "reports/Q02-root-v3-source-verification.json",
+      "closure": "closures/Q02.json",
+      "integration_revision": "813255cb389891590db172480667bb47d83fbdd1"
+    },
+    {
+      "id": "Q03",
+      "title": "Race-free rounding-aware FP16 diagnostics",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/Q03.md",
+      "design_review": "reports/Q03-design-review.md",
+      "base": "a97b886861c62c74a188309502da7b56e623c754",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-24/workspaces/Q03",
+      "brief_sha256": "10664735c8557ac9dbb84219f5a63aa54264e453046d37d6f0ef7956aef17526",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v2 accepted after independent source/runtime review and root full reconstruction; broader combined milestone separate",
+      "closure": "closures/Q03.json",
+      "integration_revision": "9c035ef7b927346de4744289b7de13892c89e7cb"
+    },
+    {
+      "id": "Q04",
+      "title": "FP16 range work proportional to requested range",
+      "status": "accepted",
+      "depends_on": [
+        "Q01",
+        "Q03"
+      ],
+      "brief": "briefs/Q04.md",
+      "design_review": "reports/Q04-design-review.md",
+      "design_status": "approved; requires accepted Q03 and serialized MixedPrecisionKernels ownership",
+      "brief_sha256": "28dfd5e2b708bac3179ee9eed4b79e35678de99eb3b97d96f7b1d929c025d5b8",
+      "base": "9c035ef7b927346de4744289b7de13892c89e7cb",
+      "agent": "<agents>/q01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-24/workspaces/Q04",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v1 accepted; complete source/runtime/canonical evidence and independent identical-build allocation comparison verified",
+      "closure": "closures/Q04.json",
+      "integration_revision": "101b3749bf531cfdbc42d61198b503e94af4aa5b"
+    },
+    {
+      "id": "L01",
+      "title": "Swift factorization range and boundary contracts",
+      "status": "accepted",
+      "depends_on": [
+        "N01"
+      ],
+      "brief": "briefs/L01.md",
+      "design_review": "reports/L01-design-review.md",
+      "design_status": "approved; all four reviewer clarifications incorporated; NUM-35 upstream extreme-shape concern remains qualified",
+      "brief_sha256": "e00094441fe2793fd51e9c406776aa7983a20efeae244877a1c1a69797b422ad",
+      "base": "101b3749bf531cfdbc42d61198b503e94af4aa5b",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-24/workspaces/L01",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v4 accepted; complete source/evidence/canonical reconstruction and versioned runtime associations verified",
+      "closure": "closures/L01.json",
+      "integration_revision": "ed95f95133abcb5245e7dd1fc04e11ea3ceb96fd"
+    },
+    {
+      "id": "L02",
+      "title": "PCA centering and checked sketch dimensions",
+      "status": "accepted",
+      "depends_on": [
+        "L01"
+      ],
+      "brief": "briefs/L02.md",
+      "design_review": "reports/L02-design-review.md",
+      "design_status": "approved with reviewer clarifications incorporated; requires accepted L01",
+      "brief_sha256": "82316d5bf788951f491d0857fd6a231d0590cdc1e4a87b8d9860cf0a104db284",
+      "base": "ed95f95133abcb5245e7dd1fc04e11ea3ceb96fd",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-09-24/workspaces/L02",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v2 accepted by root and independent reviewer; complete source and sealed evidence verified",
+      "early_review": "reports/L02-implementation-review-v2.md",
+      "root_source_verification": "reports/L02-root-v2-source-verification.json",
+      "closure": "closures/L02.json",
+      "integration_revision": "6ac9c8ae5215cbb3f5f97d0d3761cd66965d4050"
+    },
+    {
+      "id": "L03",
+      "title": "UMAP calibration equations and input boundaries",
+      "status": "accepted",
+      "depends_on": [
+        "L02"
+      ],
+      "brief": "briefs/L03.md",
+      "design_review": "reports/L03-design-review.md",
+      "design_status": "approved with typed-count clarification incorporated; requires accepted L02; NUM-27 remains qualified Gram context",
+      "brief_sha256": "a57c9beaf4b6a3e0d7edf9d664bb32162f893834d87a25a4387da2d0df202e07",
+      "base": "17c1af927b6d6b9f343583e34b330ac3c351dac8",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-02/workspaces/L03",
+      "dispatched_brief_sha256": "c489828874bce8ca6beea5056dde8a50b844e4b683a430a94c5f0111a17d4100",
+      "numerical_addendum": "Compensated strict per-sample objective change after actual v2 SSE-rounding stall; unchanged gradient 1e-8/iteration/damping/Jacobian/fidelity. Final v3 independently accepted; Debug/Release each 39 reported functions (one parent no-op) plus nine children, ASan 12 distinct valid functions, public Swift 6 consumer passed. Root source/evidence verification complete. Exact 11-path import, closure and integration commit pending.",
+      "review": "reports/L03-review.md",
+      "review_sha256": "e50af7b074ab8b147beb467d218454aa8f80553b17cad623efd3945c95c9bed1",
+      "root_verification": [
+        "reports/L03-root-v3-source-verification.json",
+        "reports/L03-root-v3-reference-verification.json",
+        "reports/L03-root-v3-lint.json",
+        "reports/L03-root-evidence-verification.json"
+      ],
+      "closure": "closures/L03.json",
+      "source_status": "v3 accepted and imported byte-identically (11 paths) on 2026-10-03"
+    },
+    {
+      "id": "L04",
+      "title": "Manifold and PCA memory/work envelope",
+      "status": "accepted",
+      "depends_on": [
+        "L03",
+        "V04"
+      ],
+      "design_inventory": "reports/L04-design-inventory.md",
+      "integration_revision": "08a3be7",
+      "closure": "closures/L04.json"
+    },
+    {
+      "id": "P01",
+      "title": "Hash quality and streaming selection work",
+      "status": "accepted",
+      "depends_on": [
+        "R01",
+        "R03",
+        "R04",
+        "O03",
+        "V04",
+        "E06",
+        "S03"
+      ],
+      "brief": "briefs/P01.md",
+      "design_inventory": "reports/P01-design-inventory.md",
+      "design_status": "approved; explicit retained cosine768/1536 full-score route, deliberate generic small-k calibration bypass, exact original-range tile parity and dependency gates",
+      "design_review": "reports/P01-design-review.md",
+      "brief_sha256": "53c18c8ffe9fcd66f9350c149c5b4b9875fbd00ce62e9d515daf5671884c5eeb",
+      "closure": "closures/P01.json"
+    },
+    {
+      "id": "P02",
+      "title": "Explicit batch accuracy, memory and reusable packing",
+      "status": "accepted",
+      "depends_on": [
+        "R01",
+        "R03",
+        "N01",
+        "E06",
+        "V02",
+        "V04",
+        "P01"
+      ],
+      "design_inventory": "reports/P02-design-inventory.md",
+      "design_status": "approved after cancellation/validation-order clarification; requires accepted P01/V02/V04; API-25 and TOOL-10 remain staged",
+      "brief": "briefs/P02.md",
+      "brief_sha256": "82629d23630328e7f56615d0fa0ac95d43e1c23bb35541f23cdd7e79783736a5",
+      "policy_review": "reports/P02-policy-review.md",
+      "design_review": "reports/P02-design-review.md",
+      "integration_revision": "1544ab4",
+      "closure": "closures/P02.json"
+    },
+    {
+      "id": "B01",
+      "title": "Binary round trips, real tests and wire contracts",
+      "status": "accepted",
+      "depends_on": [
+        "S01",
+        "S03"
+      ],
+      "design_inventory": "reports/B01-design-inventory.md",
+      "brief": "briefs/B01.md",
+      "design_review": "reports/B01-design-review.md",
+      "brief_sha256": "bf6d4f1bfc605d19d0b90d6b4ee24929c1fee66d10bdabd75b08e343a7635a44",
+      "design_status": "approved; explicit consumer protocol extension points, empty DynamicVector wire repair, concrete format matrix and executable coverage; SER-03 remains unmeasured profiling opportunity",
+      "post_prerequisite_review": "reports/B01-post-S03-readiness-review.md",
+      "base": "1d6b3b3ee3ae5e3fa24c90768ef805125969c41f",
+      "agent": "<agents>/n01_implementation",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-02/workspaces/B01",
+      "scope_addendum": "October2: comment-only correction of stale zero-dimension binary claim in VectorShapeContractTests.swift; keep its count>0 guard and test behavior unchanged.",
+      "source_review": "reports/B01-source-review-v1.md",
+      "source_status": "v1 accepted and imported byte-identically",
+      "source_verification": "reports/B01-root-v1-source-verification.json",
+      "review_agent": "<agents>/n03_design_review",
+      "review": "Final v1 accepted; complete source/golden/runtime reconstruction and sealed evidence verified",
+      "closure": "closures/B01.json",
+      "integration_revision": "17c1af927b6d6b9f343583e34b330ac3c351dac8"
+    },
+    {
+      "id": "D01",
+      "title": "Pinned downstream contract validation",
+      "status": "handed-off",
+      "depends_on": [
+        "I01",
+        "N01",
+        "R01",
+        "R05"
+      ],
+      "handoff": "Consuming products (VectorIndex, VectorAccelerate) are ported by a separate agent (user, 2026-10-16). Root maintains the downstream-upgrade list (baseline: everything after 0.3.3)."
+    },
+    {
+      "id": "D02",
+      "title": "Public API, device and C contract disposition",
+      "status": "accepted",
+      "depends_on": [
+        "B01",
+        "E06",
+        "L01",
+        "Q02",
+        "V02",
+        "V04",
+        "P01",
+        "N04",
+        "N02",
+        "R05"
+      ],
+      "design_inventory": "reports/D02-design-inventory.md",
+      "design_status": "approved; explicit Core surface disposition, gate reachability and C modulo policy; dispatch awaits accepted overlapping prerequisites",
+      "inventory_review": "reports/D02-inventory-review.md",
+      "brief": "briefs/D02.md",
+      "brief_sha256": "719d6f811414d30bca1fac59f908e9b699708fa012194779502c84075182aa56",
+      "design_review": "reports/D02-design-review.md",
+      "staged_dependencies": [
+        "D01"
+      ],
+      "dependency_disposition": "Root separates local Core surface decision from deferred pinned sibling compatibility; D01 acceptance remains necessary for downstream/API-38 closure, not local implementation.",
+      "integration_revision": "93e08c4",
+      "closure": "closures/D02.json"
+    },
+    {
+      "id": "D03",
+      "title": "Lazy logging and elapsed-time contract",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/D03.md",
+      "design_review": "reports/D03-design-review.md",
+      "design_status": "approved; public signatures and configuration remain preserved",
+      "brief_sha256": "1a81e912a6b671dcfc10bfc8a4898937680fd0ce0556591256fe586ab6a71b14",
+      "closure": "closures/D03.json",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-03/workspaces/D03",
+      "review": "reports/D03-review.md; reports/D03-rereview-1.md"
+    },
+    {
+      "id": "T01",
+      "title": "Xcode 27 / Swift 6.4 toolchain compatibility (root-created, outside the 43-task catalog)",
+      "status": "accepted",
+      "depends_on": [],
+      "brief": "briefs/T01.md",
+      "base": "9f5fda2",
+      "implementation_snapshot": "<repo>/.stabilization-recovery/2026-10-03/workspaces/T01",
+      "review": "reports/T01-review.md; reports/T01-rereview-1.md (all 7 addressed)",
+      "closure": "closures/T01.json"
+    },
+    {
+      "id": "T02",
+      "title": "Milestone-11 whole-suite legacy test failures (root-created)",
+      "status": "accepted",
+      "depends_on": [
+        "Q01",
+        "N01"
+      ],
+      "brief": "briefs/T02.md",
+      "base": "3639cc4",
+      "closure": "closures/T02.json"
+    },
+    {
+      "id": "T04",
+      "title": "Intermittent message-less SIGTRAP in ComprehensiveTests Swift Testing process (root-created)",
+      "status": "accepted",
+      "depends_on": [
+        "T02"
+      ],
+      "brief": "briefs/T04.md",
+      "closure": "closures/T04.json"
+    },
+    {
+      "id": "T03",
+      "title": "CI tooling and test-hygiene follow-ups (root-created)",
+      "status": "accepted",
+      "depends_on": [
+        "V03",
+        "T01",
+        "R05"
+      ],
+      "closure": "closures/T03.json",
+      "brief": "briefs/T03.md"
+    },
+    {
+      "id": "T05",
+      "title": "Label- and scope-aware test output-path policy (root-created)",
+      "status": "accepted",
+      "depends_on": [
+        "T03"
+      ],
+      "brief": "briefs/T05.md",
+      "closure": "closures/T05.json"
+    },
+    {
+      "id": "T06",
+      "title": "Ungated clock-derived assertions outside the V03 inventory (root-created; milestone 12)",
+      "status": "accepted",
+      "depends_on": [
+        "V03",
+        "T05"
+      ],
+      "closure": "closures/T06.json",
+      "brief": "briefs/T06.md"
+    },
+    {
+      "id": "T07",
+      "title": "Public VectorCoreBenchmarking product does not build on declared non-macOS platforms (unguarded Host/Process in EnvCapture); CI builds only the VectorCore scheme cross-platform (root-created; found by the V04 phase C fix-3 re-review)",
+      "status": "accepted",
+      "depends_on": [
+        "V04"
+      ],
+      "brief": "briefs/T07.md",
+      "closure": "closures/T07.json"
+    },
+    {
+      "id": "T08",
+      "title": "XCTest silently drops assertion failures in nonisolated async test methods: convert the remaining methods to main-actor isolation, add a mechanical policy guard, re-run to surface previously hidden failures (root-created; V04 phase C fix-4 root investigation)",
+      "status": "accepted",
+      "depends_on": [
+        "V04 phase C (integrated 2179a19)"
+      ],
+      "brief": "briefs/T08.md",
+      "closure": "closures/T08.json"
+    },
+    {
+      "id": "T09",
+      "title": "Integration branch fails CI's Intel x86_64 build-tests (and Catalyst) steps: Float16 used unguarded in program-added tests/sources; local gates never replayed CI's platforms job (root-created)",
+      "status": "accepted",
+      "depends_on": [
+        "T07 (candidate tree 6f856b6)"
+      ],
+      "brief": "briefs/T09.md",
+      "closure": "closures/T09.json"
+    },
+    {
+      "id": "T10",
+      "title": "Test child-process harnesses rewrite only the first --filter (unbounded recursive respawn) and kill only the direct child on timeout (orphaned grandchildren); 18 files; shared helper plus lexical guard (root-created; V04 phase F review I-5)",
+      "status": "accepted",
+      "depends_on": [
+        "T09"
+      ],
+      "brief": "briefs/T10.md",
+      "closure": "closures/T10.json"
+    },
+    {
+      "id": "T11",
+      "title": "Benchmark correctness-gate policy: principled FP32 tolerance for generic euclidean2, zero-reference relative-error class, missing-validation policy (makes the CI recipe exit 0) (root-created; V04)",
+      "status": "accepted",
+      "depends_on": [
+        "V04"
+      ],
+      "brief": "briefs/T11.md",
+      "closure": "closures/T11.json"
+    },
+    {
+      "id": "T12",
+      "title": "FP16 range-kernel per-conversion heap allocation; exhaustive FP16 converter test; unified NaN encoding policy; dead native branch disposition (root-created; V04/T09/phase F)",
+      "status": "accepted",
+      "depends_on": [
+        "V04",
+        "T09"
+      ],
+      "brief": "briefs/T12.md",
+      "closure": "closures/T12.json"
+    },
+    {
+      "id": "T13",
+      "title": "Claim-ledger coverage extension: qualitative performance labels outside regions, spelled-out multipliers, zero-copy (root-created; V04)",
+      "status": "accepted",
+      "depends_on": [
+        "V04",
+        "P01"
+      ],
+      "brief": "briefs/T13.md",
+      "closure": "closures/T13.json"
+    },
+    {
+      "id": "T14",
+      "title": "Metric overload/witness numerics consistency (public concrete overloads in OptimizedDistanceMetrics differ in bits from the protocol witnesses; dot1536 2 ulps) plus the stdlib-shadowing SIMD sum() semantic review (root-created; P01 phase E, T12 phase 1)",
+      "status": "accepted",
+      "depends_on": [
+        "P01",
+        "T12"
+      ],
+      "brief": "briefs/T14.md",
+      "closure": "closures/T14.json"
+    },
+    {
+      "id": "T15",
+      "title": "Cosine distance clamps a NaN similarity to distance 0 (NaN and ±inf rows rank nearest on fused routes); one exceptional-value policy across every cosine implementation (root-created; P01 phase E)",
+      "status": "accepted",
+      "depends_on": [
+        "P01",
+        "T12"
+      ],
+      "brief": "briefs/T15.md",
+      "closure": "closures/T15.json"
+    },
+    {
+      "id": "T16",
+      "title": "NaN contract for reductions (max/min/maximumMagnitude, Swift vs vDSP providers) and element statistics; lexical guard for NaN-dropping min/max (root-created; T15 phase 2 review)",
+      "status": "accepted",
+      "depends_on": [
+        "T15",
+        "T14"
+      ],
+      "brief": "briefs/T16.md",
+      "closure": "closures/T16.json"
+    },
+    {
+      "id": "T17",
+      "title": "Interpolation-aware lint adoption (root-created after P02)",
+      "status": "accepted",
+      "integration_revision": "2da89d3",
+      "closure": "closures/T17.json",
+      "depends_on": [
+        "P02",
+        "T15"
+      ]
+    },
+    {
+      "id": "T19",
+      "title": "LAPACK workspace-query floor (root-created from L04 S1)",
+      "status": "accepted",
+      "integration_revision": "4c552d9",
+      "closure": "closures/T19.json",
+      "depends_on": [
+        "L04"
+      ]
+    },
+    {
+      "id": "T18",
+      "title": "CHANGELOG reconciliation since v0.3.3 (root-created)",
+      "status": "accepted",
+      "integration_revision": "3f59a28",
+      "closure": "closures/T18.json",
+      "depends_on": [
+        "L04",
+        "T19"
+      ]
+    },
+    {
+      "id": "T20",
+      "title": "CI toolchain compatibility after PR #56 CI run 1 (root-created)",
+      "status": "accepted",
+      "integration_revision": "80bfba2, e0cc335, 6749bb4",
+      "closure": "closures/T20.json",
+      "depends_on": [
+        "T18"
+      ]
+    }
+  ],
+  "integration_milestones": [
+    {
+      "id": "01",
+      "source_revision": "297ad4e",
+      "tasks": [
+        "O01",
+        "R01",
+        "V01"
+      ],
+      "checks": [
+        {
+          "configuration": "debug",
+          "command": "swift test --scratch-path <tmp>/vectorcore-stabilization-V01-build --jobs 4 --filter 'TieredStorageOwnership|MetricDispatchContractTests|TopKNaN|BatchKernelProviderTests|IntegrationProtocolsSuite|BenchmarkContract'",
+          "exit_code": 0,
+          "xctest_tests": 8,
+          "swift_testing_tests": 86,
+          "swift_testing_suites": 7,
+          "log": "reports/milestone-01-debug.log",
+          "sha256": "4eaf4b0f9714e70033140d971fb952c37c4a89d09e1274635707cff8d76ca206"
+        },
+        {
+          "configuration": "release",
+          "command": "swift test -c release --scratch-path <tmp>/vectorcore-stabilization-V01-build --jobs 4 --filter 'TieredStorageOwnership|MetricDispatchContractTests|TopKNaN|BatchKernelProviderTests|IntegrationProtocolsSuite|BenchmarkContract'",
+          "exit_code": 0,
+          "xctest_tests": 8,
+          "swift_testing_tests": 86,
+          "swift_testing_suites": 7,
+          "log": "reports/milestone-01-release.log",
+          "sha256": "0322c80e9aee95ad7f58aef2f52ff9e696b5cb39c81949afb72e20b1468cbf4f"
+        }
+      ],
+      "scope": "Combined focused checks; no additional audit closure."
+    },
+    {
+      "id": "02",
+      "source_revision": "cd9bbe392901d1467318c00cba7e96dd973ea1a9",
+      "head_at_start": "26df9f1",
+      "tasks": [
+        "O01",
+        "O02",
+        "R01",
+        "V01",
+        "I01",
+        "S01",
+        "E01"
+      ],
+      "checks": [
+        {
+          "configuration": "debug",
+          "command": "swift test --jobs 4 --scratch-path <tmp>/vectorcore-stabilization-V01-build --filter 'TieredStorageOwnership|TieredStorageMutationTests|VectorShapeContractTests|NormalizationHintMutationTests|MetricDispatchContractTests|TopKNaN|ProviderConformance|IntegrationProtocolsSuite|BenchmarkContract|ExecutionBoundaryTests'",
+          "exit_code": 0,
+          "xctest_entries": 15,
+          "swift_testing_tests": 109,
+          "swift_testing_suites": 10,
+          "log": "reports/milestone-02-debug.log",
+          "sha256": "992cf9b5d43fe9d77055bbb24d5fe8f20327726e5ec791fcbb1c0554fd68eed4"
+        },
+        {
+          "configuration": "release",
+          "command": "swift test -c release --jobs 4 --scratch-path <tmp>/vectorcore-stabilization-V01-build --filter 'TieredStorageOwnership|TieredStorageMutationTests|VectorShapeContractTests|NormalizationHintMutationTests|MetricDispatchContractTests|TopKNaN|ProviderConformance|IntegrationProtocolsSuite|BenchmarkContract|ExecutionBoundaryTests'",
+          "exit_code": 0,
+          "xctest_entries": 15,
+          "swift_testing_tests": 109,
+          "swift_testing_suites": 10,
+          "log": "reports/milestone-02-release.log",
+          "sha256": "8b4a4299979e01c6960ccc41277b0c92294864efc4fbf1f06039a4cfc165522c"
+        }
+      ],
+      "scope": "Combined accepted storage/shape/metric/hint/benchmark/execution contracts; S02/O04 not yet imported; no broader closure."
+    },
+    {
+      "id": "03",
+      "status": "passed",
+      "source_revision": "028b4aacc80249b745a89454008c7d2b9e5da154",
+      "tasks": [
+        "O01",
+        "O02",
+        "O04",
+        "R01",
+        "V01",
+        "I01",
+        "I02",
+        "S01",
+        "S02",
+        "E01"
+      ],
+      "checks": [
+        {
+          "configuration": "debug",
+          "status": "passed",
+          "command": "swift test --jobs 4 --scratch-path <tmp>/vectorcore-stabilization-V01-build --filter 'TieredStorageOwnership|TieredStorageMutationTests|VectorShapeContractTests|NormalizationHintMutationTests|MetricDispatchContractTests|TopKNaN|ProviderConformance|IntegrationProtocolsSuite|BenchmarkContract|ExecutionBoundaryTests|VectorDispatchContractTests|OperationsValidationTests|OperationsTests|VectorTypeFactorySuite|UnsafeMemoryContractTests|SoAFP16CacheIdentityTests|MixedPrecisionPhase3'",
+          "log": "reports/milestone-03-debug.log",
+          "exit_code": 0,
+          "xctest_entries": 15,
+          "swift_testing_tests": 197,
+          "swift_testing_suites": 21,
+          "sha256": "26b42004211b15389a93e99fa56f53726b8ae52168100eff30e1274915ca4ccc"
+        },
+        {
+          "configuration": "release",
+          "status": "passed",
+          "command": "swift test -c release --jobs 4 --scratch-path <tmp>/vectorcore-stabilization-V01-build --filter 'TieredStorageOwnership|TieredStorageMutationTests|VectorShapeContractTests|NormalizationHintMutationTests|MetricDispatchContractTests|TopKNaN|ProviderConformance|IntegrationProtocolsSuite|BenchmarkContract|ExecutionBoundaryTests|VectorDispatchContractTests|OperationsValidationTests|OperationsTests|VectorTypeFactorySuite|UnsafeMemoryContractTests|SoAFP16CacheIdentityTests|MixedPrecisionPhase3'",
+          "log": "reports/milestone-03-release.log",
+          "exit_code": 0,
+          "xctest_entries": 15,
+          "swift_testing_tests": 197,
+          "swift_testing_suites": 21,
+          "sha256": "4c4d3abf52844383240fe8f9e330257ca000c399ae1a281c2a6c48b06f11c218"
+        }
+      ],
+      "setup_failure": {
+        "log": "reports/milestone-03-debug-setup.log",
+        "exit_code": 1,
+        "reason": "sandbox compiler-cache permission denial, rerun with approved escalation",
+        "sha256": "90272280eb9a47c873177203677de2f66ca49e81505021b7c57d184180c749ad"
+      },
+      "scope": "Combined accepted contracts only; N01/Q01 isolated work excluded; no new audit closure"
+    },
+    {
+      "id": "04",
+      "status": "passed",
+      "source_revision": "84f42d01489a526b8ae40bd77fe7618c0de33f34 plus EX06 test/CI patch",
+      "integration_revision": "ce6b0d396ddf8716b50eae01643b24a503aa194c",
+      "report": "reports/milestone-04-verification.json",
+      "scope": "Accepted Core contracts through N01/Q01; E03/R02 excluded",
+      "checks": [
+        {
+          "configuration": "debug",
+          "exit_code": 0,
+          "xctest_entries": 25,
+          "swift_testing_tests": 260,
+          "swift_testing_suites": 28,
+          "log": "reports/milestone-04-debug-final.log"
+        },
+        {
+          "configuration": "release",
+          "exit_code": 0,
+          "xctest_entries": 25,
+          "swift_testing_tests": 260,
+          "swift_testing_suites": 28,
+          "log": "reports/milestone-04-release-final.log"
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "source_revision": "076f60b8da6b4cad80a36be73b9506d06eb90bf9",
+      "tasks": [
+        "E03",
+        "R02",
+        "N02",
+        "N03",
+        "E04"
+      ],
+      "checks": [
+        {
+          "configuration": "debug",
+          "argv": [
+            "swift",
+            "test",
+            "--jobs",
+            "4",
+            "--scratch-path",
+            "<tmp>/vectorcore-stabilization-milestone05",
+            "--filter",
+            "TieredStorageOwnership|TieredStorageMutationTests|VectorShapeContractTests|NormalizationHintMutationTests|MetricDispatchContractTests|TopKNaN|ProviderConformance|IntegrationProtocolsSuite|BenchmarkContract|ExecutionBoundaryTests|VectorDispatchContractTests|OperationsValidationTests|OperationsTests|VectorTypeFactorySuite|UnsafeMemoryContractTests|SoAFP16CacheIdentityTests|MixedPrecisionPhase3|DivisionRangeContractTests|NormalizationRangeContractTests|VectorNormalizationSuite|NormalizeUncheckedRegressionTests|PointerTopKRegressionTests|QuantizationRangeContractTests|QuantizedMetricRangeTests|Q01ChildContracts|QuantizedEuclideanOverflowRegressionTests|ConfigurationTransactionTests|VectorCollectionTransactionTests|NumericalPolicyContractTests|BatchStatisticsRangeTests|BufferPoolOwnershipTests|MemoryPoolBoundaryTests|MemoryPoolTests"
+          ],
+          "cwd": "<tmp>/vectorcore-stabilization-2026-09-18",
+          "log": "milestone-05-debug.log",
+          "status": "passed",
+          "exit": 0,
+          "sha256": "3acf20b6e204f47640715b8a766b9924eccff137cbb6dcc014080e0549c89a4a",
+          "XCTest": 25,
+          "SwiftTestingFunctions": 331,
+          "SwiftTestingSuites": 35,
+          "retainedChildFamilies": {
+            "S01": 126,
+            "O04": 11,
+            "E03": 4,
+            "E04": 20
+          },
+          "testExecutable": {
+            "path": "<tmp>/vectorcore-stabilization-milestone05/arm64-apple-macosx/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
+            "sha256": "90e368cc2ce543fd679e945154c7d59e721f921f959e1ca2da545ce0a50fb932"
+          }
+        },
+        {
+          "configuration": "release",
+          "argv": [
+            "swift",
+            "test",
+            "-c",
+            "release",
+            "--jobs",
+            "4",
+            "--scratch-path",
+            "<tmp>/vectorcore-stabilization-milestone05",
+            "--filter",
+            "TieredStorageOwnership|TieredStorageMutationTests|VectorShapeContractTests|NormalizationHintMutationTests|MetricDispatchContractTests|TopKNaN|ProviderConformance|IntegrationProtocolsSuite|BenchmarkContract|ExecutionBoundaryTests|VectorDispatchContractTests|OperationsValidationTests|OperationsTests|VectorTypeFactorySuite|UnsafeMemoryContractTests|SoAFP16CacheIdentityTests|MixedPrecisionPhase3|DivisionRangeContractTests|NormalizationRangeContractTests|VectorNormalizationSuite|NormalizeUncheckedRegressionTests|PointerTopKRegressionTests|QuantizationRangeContractTests|QuantizedMetricRangeTests|Q01ChildContracts|QuantizedEuclideanOverflowRegressionTests|ConfigurationTransactionTests|VectorCollectionTransactionTests|NumericalPolicyContractTests|BatchStatisticsRangeTests|BufferPoolOwnershipTests|MemoryPoolBoundaryTests|MemoryPoolTests"
+          ],
+          "cwd": "<tmp>/vectorcore-stabilization-2026-09-18",
+          "log": "milestone-05-release.log",
+          "status": "passed",
+          "exit": 0,
+          "sha256": "ff726db392b555feca57707b1eb2909cff9a209b661b65f8d0f76f0b96ea1eb6",
+          "XCTest": 25,
+          "SwiftTestingFunctions": 331,
+          "SwiftTestingSuites": 35,
+          "retainedChildFamilies": {
+            "S01": 126,
+            "O04": 11,
+            "E03": 4,
+            "E04": 20
+          },
+          "testExecutable": {
+            "path": "<tmp>/vectorcore-stabilization-milestone05/arm64-apple-macosx/release/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
+            "sha256": "b10e0adc0460cc61817a2742f49c7816b6d1d76674262adddf959aef91e8b4d4"
+          }
+        }
+      ],
+      "verification": "reports/milestone-05-verification.json",
+      "scope": "Combined focused acceptance checks for O01/R01/V01/I01/O02/S01/E01/O04/I02/S02/Q01/N01/E03/R02/N02/N03/E04. Excludes unimported E05/R03."
+    },
+    {
+      "id": "06",
+      "status": "passed",
+      "source_revision": "8698845414c145f1d982e35a3cc53e582d010407",
+      "tasks": [
+        "E05",
+        "R03",
+        "O03",
+        "O05",
+        "E02"
+      ],
+      "verification": "reports/milestone-06-verification.json",
+      "checks": [
+        {
+          "configuration": "debug",
+          "exit_code": 0,
+          "SwiftTestingReportedFunctions": 446,
+          "SwiftTestingSuites": 50,
+          "XCTestReportedCases": 25,
+          "retainedChildCaptures": 75,
+          "log": "reports/milestone-06-debug.log"
+        },
+        {
+          "configuration": "release",
+          "exit_code": 0,
+          "SwiftTestingReportedFunctions": 446,
+          "SwiftTestingSuites": 50,
+          "XCTestReportedCases": 25,
+          "retainedChildCaptures": 75,
+          "log": "reports/milestone-06-release.log"
+        }
+      ],
+      "scope": "Combined accepted Core contracts including E05/R03/O03/O05 and pending E02 v5 with two EOF-only whitespace cleanups; isolated Q03 excluded"
+    },
+    {
+      "id": "07",
+      "status": "passed",
+      "source_revision": "9c035ef7b927346de4744289b7de13892c89e7cb",
+      "tasks": [
+        "Q03"
+      ],
+      "verification": "reports/milestone-07-verification.json",
+      "scope": "Focused combined Q03 with accepted E02 scheduling and O05 scoped borrows; E06/Q04 archives excluded",
+      "checks": [
+        {
+          "configuration": "debug",
+          "exit_code": 0,
+          "SwiftTestingReportedFunctions": 56,
+          "SwiftTestingSuites": 8,
+          "retainedChildCaptures": 13,
+          "log": "reports/milestone-07-debug.log"
+        },
+        {
+          "configuration": "release",
+          "exit_code": 0,
+          "SwiftTestingReportedFunctions": 56,
+          "SwiftTestingSuites": 8,
+          "retainedChildCaptures": 13,
+          "log": "reports/milestone-07-release.log"
+        }
+      ]
+    },
+    {
+      "id": "08",
+      "status": "accepted",
+      "source_revision": "101b3749bf531cfdbc42d61198b503e94af4aa5b",
+      "tasks": [
+        "E06",
+        "Q04",
+        "E02",
+        "Q03"
+      ],
+      "verification": "reports/milestone-08-verification.json",
+      "independent_review": "reports/milestone-08-review.md",
+      "source_files_verified_unchanged": 317,
+      "scope": "Focused combined E06 live settings, Q04 FP16 range validation/work, accepted E02 scheduling and Q03 diagnostics; L01/Q02 archives excluded",
+      "checks": [
+        {
+          "configuration": "debug",
+          "exit_code": 0,
+          "swift_testing_reported_functions": 58,
+          "swift_testing_suites": 8,
+          "xctest_tests": 0,
+          "actual_children": 81,
+          "child_matrix": {
+            "E06": 19,
+            "E02": 10,
+            "E03": 4,
+            "Q03": 3,
+            "Q04": 45
+          },
+          "log": "reports/milestone-08-debug.log",
+          "sha256": "ae7b63567dd2df9e3fb4b81b1f072aa88207434534e89fb2a7f435af2ce2dc03"
+        },
+        {
+          "configuration": "release",
+          "exit_code": 0,
+          "swift_testing_reported_functions": 58,
+          "swift_testing_suites": 8,
+          "xctest_tests": 0,
+          "actual_children": 81,
+          "child_matrix": {
+            "E06": 19,
+            "E02": 10,
+            "E03": 4,
+            "Q03": 3,
+            "Q04": 45
+          },
+          "log": "reports/milestone-08-release.log",
+          "sha256": "6953b527140b12e144363adda2a175b5c8601d80f9a1f9ec0dff757cdc7015a1"
+        }
+      ],
+      "limitations": "Only explicitly retained child captures are inventoried here; reported parent test counts can include no-op subprocess entry points. No inferred all-child coverage. No whole-suite, sanitizer, downstream-scale, latency or allocation claim."
+    },
+    {
+      "id": "09",
+      "source_revision": "813255cb389891590db172480667bb47d83fbdd1",
+      "tasks": [
+        "L01",
+        "L02",
+        "Q02",
+        "Q03",
+        "Q04"
+      ],
+      "status": "accepted",
+      "source_files_verified_unchanged": 346,
+      "checks": [
+        {
+          "configuration": "debug",
+          "exit_code": 0,
+          "xctest_tests": 24,
+          "swift_testing_reported_functions": 96,
+          "swift_testing_suites": 18,
+          "actual_children": 9,
+          "child_matrix": {
+            "L01": 4,
+            "L02": 2,
+            "Q03": 3
+          }
+        },
+        {
+          "configuration": "release",
+          "exit_code": 0,
+          "xctest_tests": 24,
+          "swift_testing_reported_functions": 96,
+          "swift_testing_suites": 18,
+          "actual_children": 9,
+          "child_matrix": {
+            "L01": 4,
+            "L02": 2,
+            "Q03": 3
+          }
+        }
+      ],
+      "report": "reports/milestone09.md",
+      "root_verification": "reports/milestone09-verification.json",
+      "independent_review": "reports/milestone09-review.md",
+      "canonical_evidence": "<repo>/.stabilization-recovery/2026-09-29/milestone09",
+      "limitations": "Focused scope only; parent noops distinct from actual children; Q04 valid range controls only; no new sanitizer/public consumer/full-suite/speed claim."
+    },
+    {
+      "id": "10",
+      "status": "accepted",
+      "source_revision": "53976c1f1d21f3005473d209106e0ef3df995438",
+      "tasks": [
+        "S03",
+        "R04",
+        "B01",
+        "V02"
+      ],
+      "source_files_verified_unchanged": 370,
+      "verification": "reports/milestone-10-verification.json",
+      "independent_review": "reports/milestone-10-review.md",
+      "checks": [
+        {
+          "configuration": "debug",
+          "command": "<repo>/.stabilization-recovery/2026-10-02/milestone10/debug/command.json",
+          "command_sha256": "4207c6043865a8b01b64687bb97ee8ee8c13f41594a42de67431b9f9f910a371",
+          "log": "<repo>/.stabilization-recovery/2026-10-02/milestone10/debug/swift-test.log",
+          "log_sha256": "ca751d4c0f1e46fde9e824ef93cb391c179f8c6deedef6010e7aca7c1fff0f59",
+          "exit": 0,
+          "xctest_reported_methods": 20,
+          "xctest_parent_noops": 1,
+          "swift_testing_reported_functions": 22,
+          "swift_testing_parent_noops": 1,
+          "swift_testing_suites": 3,
+          "v01_children": 41,
+          "r04_children": 3,
+          "captured_files": 84,
+          "build_artifacts": 4393,
+          "loaded_bundle_sha256": "dc7737ed7fbb60695c903ac9f40e8b3d742429d45137baf4ce32ac63da0f265e"
+        },
+        {
+          "configuration": "release",
+          "command": "<repo>/.stabilization-recovery/2026-10-02/milestone10/release/command.json",
+          "command_sha256": "74de6be2595991f662d4c8e1b38b733eea672d85824a0c41d21bac5454b2b8f5",
+          "log": "<repo>/.stabilization-recovery/2026-10-02/milestone10/release/swift-test.log",
+          "log_sha256": "02b983e4a1ce43c4272b624574424ca4bf83336367c705d5ddd4c6952f0f0954",
+          "exit": 0,
+          "xctest_reported_methods": 20,
+          "xctest_parent_noops": 1,
+          "swift_testing_reported_functions": 22,
+          "swift_testing_parent_noops": 1,
+          "swift_testing_suites": 3,
+          "v01_children": 41,
+          "r04_children": 3,
+          "captured_files": 84,
+          "build_artifacts": 2898,
+          "loaded_bundle_sha256": "2f572ddfbcecfff19d7a7e71239f89a25aad7fe3c1075d34170261d234a7ee4c"
+        }
+      ],
+      "limitations": [
+        "Reported entries exclude one XCTest and one SwiftTesting parent no-op from exercised-contract counts; BenchmarkContractSwiftTestingEntry exercises invalid-correctness JSON serialization.",
+        "All41V01child captures/config are retained including both outside-UUID write-failure logs; outcomes additionally rely on successful source-associated parent assertions, not independent PID records.",
+        "ActualR04childargv identify helper and loadedMachObinary. Initial retention parser expected a bundle directory, failed offline, and was corrected against retained argv without a test rerun or altered captured bytes.",
+        "The offline verification parser initially assumed 18 records for all provider rejection modes; throwing providers emit 18 provider errors plus 18 missing-validation records. Corrected against source and retained JSON; runtime and captured bytes are unchanged."
+      ],
+      "scope": "Focused merged decoder/heap/binary/benchmark checks including V02 Package defines; no fullsuite, sanitizer, C-on repeat or new audit closure.",
+      "accounting_erratum": "reports/benchmark-test-accounting-erratum-2026-10-02.md"
+    },
+    {
+      "id": "milestone13",
+      "revision": "ea14ae5 (13c6678 + docs)",
+      "result": "PASS",
+      "scope": "first full local CI replay of all REQUIRED_JOBS (test debug/release, lint, repository-checks, consumer, platforms incl. Intel + product×destination matrix, benchmark-contracts, sanitizers address/thread) + Debug EXTENDED=1 + out-of-repo policy + claim ledger",
+      "divergences": "Xcode 27/Swift 6.4 vs CI Xcode 16.2/26.3 (2 of 4 test cells); repository-checks on macOS not ubuntu; Intel compile-only",
+      "evidence": ".stabilization-recovery/2026-10-03/milestone13/report.md"
+    },
+    {
+      "id": "milestone14",
+      "revision": "ddca07e (code: T11 c4305e5, T12 d7f4f3d, P01 a5b2189); docs-only commits 90e09df/e38da2e landed mid-run (progress.md/state.json only)",
+      "result": "PASS",
+      "scope": "full local CI replay of all REQUIRED_JOBS (repository-checks, test debug/release, lint, consumer, platforms incl. Intel compile-only plus VectorCore and Benchmarking 5×5 destinations, benchmark-contracts, sanitizers address 77/thread 39) plus Debug EXTENDED=1 (1556/213, 0 XCTest failures) plus out-of-repo unittest 377 OK plus claim ledger 0 problems",
+      "divergences": "Xcode 27/Swift 6.4 vs CI 16.2/26.3 (2 of 4 test cells); repository-checks on macOS (ruby 2.6.10); capture driver forces --jobs 6; Intel compile-only; non-required jobs not run",
+      "evidence": ".stabilization-recovery/2026-10-03/milestone14/report.md"
+    },
+    {
+      "id": "milestone15",
+      "revision": "858ac7f (code: T14 p2 819d3fe, T15 e2414e3, T14 p3 2cccd8c, T16 614c670); docs-only commits after",
+      "result": "PASS",
+      "scope": "full local CI replay of all REQUIRED_JOBS (repository-checks 438 OK; test debug and release 1594/227 plus 75 XCTest, release with 1 by-design LostStoreCanary known issue; lint 0 serious; consumer 8/8; platforms 5+5 plus Intel compile; benchmark-contracts PASS; sanitizers address 77 / thread 39) plus Debug EXTENDED=1 1594/227 plus out-of-repo unittest 438 plus ledger 0 problems",
+      "divergences": "Xcode 27/Swift 6.4 vs CI 16.2/26.3 (2 of 4 test cells); repository-checks on macOS; --jobs 6; Intel compile-only; the Benchmarking platform builds were re-run separately after a runner-script slip (all exit 0)",
+      "evidence": ".stabilization-recovery/2026-10-03/milestone15/report.md"
+    },
+    {
+      "id": "milestone16",
+      "revision": "cf47327 (code: P02 1544ab4, T17 2da89d3)",
+      "result": "PASS",
+      "scope": "full local CI replay of all REQUIRED_JOBS (repository-checks 497 OK; test debug and release 1658/239, release with 1 by-design LostStoreCanary known issue; performance_gates 22; lint 0 serious; consumer 8; platforms 5+5 plus Intel; benchmark-contracts PASS; sanitizers address 77 / thread 39) plus Debug EXTENDED=1 1658/239, git-less unittest 497, ledger 0, P02RunConsumers final, P02 ASan 41/6",
+      "divergences": "Xcode 27/Swift 6.4 vs CI 16.2/26.3; repository-checks on macOS; the -Xswiftc ASan variant hit the known spawned-helper limit and was superseded by the CI mechanism",
+      "evidence": ".stabilization-recovery/2026-10-03/milestone16/report.md"
+    },
+    {
+      "id": "milestone17",
+      "revision": "04a6ea1 (code: D02 93e08c4, P02 1544ab4, T17 2da89d3)",
+      "result": "PASS",
+      "scope": "full local CI replay of all REQUIRED_JOBS (repository-checks 523; test debug 1694/251 plus XCTest 185 and release 1694/251 with 1 by-design known issue; performance_gates 22; lint 0 serious; consumer 8; platforms 5+5 plus Intel; benchmark-contracts PASS; sanitizers 77 / 39) plus Debug EXTENDED=1 1694/251, git-less 523, ledger 0, D02 consumer and C-contract checks",
+      "divergences": "Xcode 27/Swift 6.4 vs CI 16.2/26.3; repository-checks on macOS",
+      "evidence": ".stabilization-recovery/2026-10-03/milestone17/report.md"
+    },
+    {
+      "id": "milestone18",
+      "revision": "d6bec09 (code: T19 4c552d9, L04 08a3be7, T18 3f59a28 on top of milestone 17); docs-only c5486b0 after",
+      "result": "PASS",
+      "scope": "final full local CI replay of all REQUIRED_JOBS (repository-checks 523 OK; test debug and release 1701/252, release with 1 by-design LostStoreCanary known issue; performance_gates 22; lint 0 serious; consumer 8; platforms 5+5 plus Intel; benchmark-contracts PASS; sanitizers address 77 / thread 39) plus git-less 523, ledger 0, CHANGELOG coverage 91/91, D02 and P02 consumer checks, P02 ASan 41/6",
+      "divergences": "Xcode 27/Swift 6.4 vs CI 16.2/26.3; repository-checks on macOS; host on battery with repeated system sleep during the run. The extra Debug EXTENDED=1 run recorded 3 issues in ChildProbeLauncherTests.deadlineKillsTheWholeGroup under host suspension (passes alone in 3.0 s). Root confirmation 2026-10-17: extended whole suite re-run under caffeinate -i (sleep prevented): rc 0, 1701/252 plus XCTest 75, 0 issues (milestone18/confirm-2026-10-17)",
+      "evidence": ".stabilization-recovery/2026-10-03/milestone18/report.md; milestone18/confirm-2026-10-17/"
+    }
+  ],
+  "execution_state": "running",
+  "pause": {
+    "requested": "2026-10-09 America/Los_Angeles",
+    "reason": "User asked to pause after milestone 17 and summarize what is done and what is next.",
+    "resume_requires_user_instruction": true,
+    "integration_head": "04a6ea1 (code: D02 93e08c4, T17 2da89d3, P02 1544ab4; milestone 17 GATE PASS)",
+    "active_builds_or_tests": false,
+    "active_agents": [],
+    "stop_point": "D01/L04 user decisions; see current-handoff/D01-L04-decision-packet.md",
+    "next_on_resume": "User decisions on D01 (sibling revisions, direct-vs-bridge semantics, sibling-edit authorization) and L04 (corpus/sample budgets, cancellation contract); the lost-store compiler bug filing discussion; the integration worktree relocation out of <tmp>.",
+    "previous_pause": {
+      "requested": "2026-10-06 America/Los_Angeles",
+      "reason": "User asked root to pause after all running agents complete and report the work done and the issues met.",
+      "resume_requires_user_instruction": true,
+      "integration_head": "a528ed6 + this ledger commit (code: T13 ecbb39a, T16 614c670, T14p3 2cccd8c, T15 e2414e3, T14p2 819d3fe)",
+      "active_builds_or_tests": false,
+      "active_agents": [],
+      "staged_work": {
+        "P02c": "workspaces/P02c base 29b5bba; phase C tree edb74c29736cc5559ac80c6645fcedeb7fb402f0 staged; P-1..P-3 approved, not applied",
+        "D02": "workspaces/D02 at 74ceae1; phases 2-4 in the worktree (47 files, unstaged); patches in D02/phase2-4/patches"
+      },
+      "next_on_resume": "Apply P02 P-1..P-3, then the P02 phase C review (split A/B) and the D02 phases 2-4 review (split A/B), concurrently; then P02 D..G, milestone 16, D02 phase 5 and merge; then STOP at D01/L04 (user decision packet now includes the IndexableVector.isNormalized downstream item).",
+      "previous_pause": {
+        "requested": "2026-10-05 America/Los_Angeles",
+        "reason": "User asked to stop at a good pausing point and report what was accomplished and what remains.",
+        "resume_requires_user_instruction": true,
+        "integration_head": "90e09df (code: P01 a5b2189, T12 d7f4f3d, T11 c4305e5)",
+        "active_builds_or_tests": false,
+        "next_on_resume": "Milestone 14 PASSED. Dispatch the T15 and T14 phase-1 inventories (dispatches drafted; set <TIP> to the integration HEAD and create the worktrees), then T13, then P02 → D02 → D01/L04.",
+        "previous_pause": {
+          "requested": "2026-10-02 America/Los_Angeles",
+          "reason": "User requested a good stopping point and discussion of completed work.",
+          "handoff": "PAUSE_HANDOFF.md",
+          "accepted_core_patches": 32,
+          "remaining_tasks": 11,
+          "latest_production_revision": "53976c1f1d21f3005473d209106e0ef3df995438",
+          "resume_requires_user_instruction": true,
+          "active_builds_or_tests": true,
+          "resumed": "2026-10-03 America/Los_Angeles by explicit user instruction (\"resume\")"
+        },
+        "resumed": "2026-10-05 America/Los_Angeles by explicit user instruction (\"resume - please continue with the diligence of independant review - stop when the decision involving me is active\")"
+      },
+      "resumed": "2026-10-06 by user instruction; Rosetta items set aside; compiler-bug discussion after the program"
+    },
+    "resumed": "2026-10-16 on user decisions; worktree moved to <integration-worktree>"
+  }
+}

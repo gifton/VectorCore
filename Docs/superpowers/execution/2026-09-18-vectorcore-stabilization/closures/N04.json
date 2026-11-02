@@ -1,0 +1,40 @@
+{
+  "task": "N04",
+  "status": "accepted",
+  "task_base": "0d0bf76",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "NUM-07"
+  ],
+  "disposition_records": {
+    "NUM-07": "Entropy now widens Float to Double, sums magnitudes with compensation, applies only the normalized-probability cutoff p > Float.ulpOfOne (never an absolute-input cutoff), returns exact +0 for all-zero and single-spike input, and NaN for any NaN or infinity on the public route, both entropyFast branches and both internal helpers. Uniform vectors give ln D while D < 2^23 (tested at D in {1,4,8,63,64,65,128,1536}), and +0 for D >= 2^23 under the retained truncated-entropy contract. RED: 16566 issues on unchanged production."
+  },
+  "validation": {
+    "toolchain": "macOS 27 / Xcode 27.0 / Swift 6.4, swiftbuild",
+    "focused": "EntropyRangeContractTests|VectorEntropySuite 30/30 Debug and Release (initial and fix round 1)",
+    "mutations": "absolute-input cutoff (4 tests/3996 issues); NaN propagation removed; dominant-term drop (normalizedCutoffTable 32 issues + 2 tests)",
+    "reference": "independent Double max-scaled reference with a scalar normalized-probability sum, plus closed forms; exact total-1 cutoff table with rational premise",
+    "lint": "0 errors (pre-existing for_where at VectorMath.swift:76)"
+  },
+  "review": "reports/N04-review.md",
+  "rereview": "reports/N04-rereview-1.md; round 2 comment-only, verified mechanically by root",
+  "evidence": "reports/N04-implementation.md",
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/N04",
+  "patch_sha256": "9497a21bcf98ec59668fc40c0dd1b862553758cfeffaa1a8862c8c781a052f8d",
+  "frozen_sha256": {
+    "Sources/VectorCore/Operations/VectorEntropy.swift": "f2760ed73558ce48da56004705574f9c61548a950638ed6bec2773c0a7e08c22",
+    "Sources/VectorCore/Operations/VectorMath.swift": "7db3df6b6f39469862049151b672aa1cf0ed0f331d930a3848c2caf310243e9e",
+    "Tests/ComprehensiveTests/EntropyRangeContractTests.swift": "a65579edf801abf910ea24dee55a132bc4938571b1057660280c241ccf605bba",
+    "Tests/ComprehensiveTests/VectorEntropyTests.swift": "12855c3b3aa446ae68219d6c089ae8997fdeebbcae4edc5f9524ad2694e086f4"
+  },
+  "migrations": [
+    "Spike/all-zero entropy is exact +0 (entropyLarge previously returned -0 for a spike).",
+    "entropyTruncatedContract is internal (no @usableFromInline); entropySmall/entropyLarge internal symbols retained."
+  ],
+  "limitations": [
+    "Truncated entropy, not exact Shannon entropy for tiny probability mass; uniform D >= 2^23 returns +0 by contract.",
+    "No speed claim: the large path moved from the SIMD-provider array chain to a scalar two-pass Double loop, unmeasured.",
+    "Compensation is unobservable at tested widths (verified by inspection).",
+    "Two legacy approximate non-power-of-two invariance tests retained, labeled approximate."
+  ]
+}

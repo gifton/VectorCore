@@ -1,0 +1,14 @@
+# Acceptance that remains outside the current Core repair decisions
+
+The user permits breaking changes and deferred performance targets and downstream intent. Core correctness and bounded measured-work repairs continue under POLICY.md. The items below are neither implementation failures nor completed acceptance claims; their eventual evidence must remain separate from the local Core commits.
+
+| Item | Remaining decision or evidence | Current disposition |
+| --- | --- | --- |
+| D01; staged I01 OWN-03/API-33 and N01 API-39 | Intended pinned VectorIndex/VectorAccelerate revisions, release-versus-main support, direct-versus-bridge score/precision laws, actual CPU and separately GPU executions | Downstream validation remains planned. Sibling source inspection and the VectorAccelerate SP0 design assessment do not substitute for executed consumers. No sibling edits are authorized by the Core repair task. |
+| L04; NUM-29/30/31 | Supported fit/transform and graph/layout shapes, which routes need resource admission or cancellation, output/provider compatibility, measured live/retained memory and scheduling work | Preserve the read-only design inventory. L03 and V04 remain prerequisites. Do not invent a corpus budget or promise interruption inside synchronous BLAS/LAPACK; the current synchronous algorithms do not acquire a new ambient cancellation contract merely from this plan. |
+| P02 API-25/TOOL-10 | Real centroid consumer and contiguous lifetime contract; target-scale workload, raw distributions and resource envelope | The approved local per-query/tiled-Gram/provider repair proceeds after its Core prerequisites. Consumer-backed packing and production-scale acceptance remain staged. |
+| D02 API-38 | Supported pinned downstream source migration | Local public-symbol and explicit consumer fixtures can establish the chosen Core surface. Actual sibling compatibility remains staged independently. |
+| Q02 NUM-21 | Supported peak-live allocation measurement | Functional selection/calibration separation and six matched allocation/work observations are accepted. Authorized Instruments capture failed to attach. Cumulative requested bytes, allocation counts and RSS are not peak-live evidence. |
+| D02 NUM-32 and platform-specific checks | Actual execution on otherwise untested architectures/platforms | Source review and current-host C-gate tests do not establish runtime parity on another architecture. Record unavailable cells explicitly rather than inventing success. |
+
+No additional decision is needed to continue the ready Core tasks. When the relevant integration phase is reached, select the outstanding workload/consumer contract before claiming its acceptance. Historical audit artifacts remain unchanged; task closures and state.json carry the actual evidence and qualifications.

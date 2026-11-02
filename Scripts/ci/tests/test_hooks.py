@@ -30,12 +30,12 @@ class HookTests(unittest.TestCase):
 
     def git(self, *args, cwd=None):
         return subprocess.run(["git", *args], cwd=cwd or self.repo, env=self.env,
-                              check=True, capture_output=True, text=True).stdout.strip()
+                              check=True, capture_output=True, text=True, timeout=60).stdout.strip()
 
     def install(self, *args, repo=None):
         repo = repo or self.repo
         return subprocess.run(["bash", str(repo / ".github/hooks/install-hooks.sh"), *args],
-                              cwd=self.base, env=self.env, capture_output=True, text=True)
+                              cwd=self.base, env=self.env, capture_output=True, text=True, timeout=60)
 
     def hooks_path(self, repo=None):
         repo = repo or self.repo
@@ -103,7 +103,7 @@ sys.exit(int(os.environ.get("LINT_EXIT", "0")))
 
     def run_hook(self):
         return subprocess.run(["bash", str(self.repo / ".github/hooks/pre-commit")],
-                              cwd=self.repo, env=self.env, capture_output=True, text=True)
+                              cwd=self.repo, env=self.env, capture_output=True, text=True, timeout=60)
 
     def test_passes_space_and_newline_filenames_and_propagates_linter_failure(self):
         self.fake_swiftlint()

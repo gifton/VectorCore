@@ -33,18 +33,18 @@ SoA, and projection references are compiled and executed by
 [`consumer_smoke.py`](../Scripts/ci/consumer_smoke.py). This checks public
 consumer usage, not exhaustive numerical correctness or external GPU integration.
 
-## Tutorials: separate refresh pending
+## Tutorials and guides
 
-The following are retained unchanged for a coordinated guide pass:
-
-- [Guides directory](../Guides/)
-- [Performance Guide](Performance_Guide.md)
-- [Nearest-neighbor how-to](HowTo_NearestNeighbor.md)
-
-These tutorials can contain outdated signatures, routing descriptions, or
-performance claims. Until refreshed, use the current references above for
-contracts and the [contribution benchmark instructions](../CONTRIBUTING.md#performance-changes)
-for the benchmark CLI. They are not part of the refreshed-example check.
+The [Performance Guide](Performance_Guide.md) and the
+[nearest-neighbor how-to](HowTo_NearestNeighbor.md) were rewritten with the
+stabilization program and are maintained pages: the claim ledger
+(`Scripts/ci/check_claim_ledger.py`) covers their statements as it covers the
+API overview. Their Swift blocks are fragments, not standalone programs, so
+`consumer_smoke.py` does not compile them. The [Guides directory](../Guides/)
+received small edits in the same program and is otherwise older material; where
+a guide and a reference disagree, the references above and the
+[source](../Sources/VectorCore/) are authoritative. For the benchmark CLI, see
+the [contribution benchmark instructions](../CONTRIBUTING.md#performance-changes).
 
 ## Verification and measurements
 

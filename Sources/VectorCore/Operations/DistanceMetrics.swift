@@ -17,6 +17,14 @@ import simd
 /// Type alias for distance scores
 public typealias DistanceScore = Float
 
+/// Shared finite nonnegative inverse interpretation. The widened Double
+/// expression gives a single final rounding to Float; SearchResultScoreContractTests
+/// exercises the finite domain, signed zero, rejection matrix and positive endpoint.
+private func inverseDistanceRelevance(_ distance: Float) -> Float? {
+    guard distance.isFinite, distance >= 0 else { return nil }
+    return Float(1 / (1 + Double(distance)))
+}
+
 // MARK: - Euclidean Distance
 
 /// Euclidean (L2) distance metric with SIMD acceleration
@@ -28,13 +36,32 @@ public struct EuclideanDistance: DistanceMetric {
 
     public init() {}
 
+    /// Inverse-distance relevance for finite nonnegative input, otherwise nil.
+    /// This interpretation does not change the metric's distance computation.
+    public func relevanceScore(for distance: Float) -> Float? {
+        inverseDistanceRelevance(distance)
+    }
+
     /// Compute Euclidean distance between two vectors
+    ///
+    /// `Vector512Optimized`, `Vector768Optimized` and `Vector1536Optimized` use `EuclideanKernels`, the arithmetic of
+    /// the per-candidate Euclidean search routes on those types, so a concrete call, this witness and search outside the
+    /// GEMM routes return the same result (`MetricWitnessEquivalenceTests`, `MetricSearchWitnessConsistencyTests`).
+    /// The GEMM routes are a different arithmetic and are not covered: `Operations.findNearestBatch` with the explicit
+    /// `BatchSearchCPUStrategy.gram` (its default, `.perQuery`, runs the per-candidate routes), and the off-diagonal
+    /// entries of `BatchOperations.pairwiseDistances` when `enableMatrixRouting` is set and the count reaches
+    /// `matrixRoutingMinN`. An installed `BatchKernelProvider`
+    /// returns its own results from `Operations`. Other vector types use `SIMDOperations.FloatProvider.distanceSquared`.
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
     public func distance<V: VectorProtocol>(_ a: V, _ b: V) -> Float where V.Scalar == Float {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
+
+        if let a = a as? Vector512Optimized, let b = b as? Vector512Optimized { return EuclideanKernels.distance512(a, b) }
+        if let a = a as? Vector768Optimized, let b = b as? Vector768Optimized { return EuclideanKernels.distance768(a, b) }
+        if let a = a as? Vector1536Optimized, let b = b as? Vector1536Optimized { return EuclideanKernels.distance1536(a, b) }
 
         return a.withUnsafeBufferPointer { aBuffer in
             b.withUnsafeBufferPointer { bBuffer in
@@ -49,6 +76,8 @@ public struct EuclideanDistance: DistanceMetric {
     }
 
     /// Optimized batch distance computation
+    ///
+    /// For `Vector512Optimized`, `Vector768Optimized` and `Vector1536Optimized`, each result is `distance(query, $0)`.
     /// - Precondition: Query and all candidates must have the same dimension
     public func batchDistance<Vector: VectorProtocol>(
         query: Vector,
@@ -60,6 +89,10 @@ public struct EuclideanDistance: DistanceMetric {
                    "Dimension mismatch in batch: query has \(query.scalarCount), candidate has \(candidate.scalarCount)")
         }
         #endif
+
+        if query is Vector512Optimized || query is Vector768Optimized || query is Vector1536Optimized {
+            return candidates.map { distance(query, $0) }
+        }
 
         var results = [DistanceScore](repeating: 0, count: candidates.count)
 
@@ -89,13 +122,35 @@ public struct CosineDistance: DistanceMetric {
 
     public init() {}
 
+    /// Inverse-distance relevance for finite nonnegative input, otherwise nil.
+    /// This interpretation does not change the metric's distance computation.
+    public func relevanceScore(for distance: Float) -> Float? {
+        inverseDistanceRelevance(distance)
+    }
+
     /// Compute cosine distance between two vectors
+    ///
+    /// `Vector512Optimized`, `Vector768Optimized` and `Vector1536Optimized` use `CosineKernels.distance*_fused`, the
+    /// arithmetic of every cosine search route on those types (`BatchKernels.range_cosine_fused_*` and the 512 Top-K
+    /// kernel), so a concrete call, this witness and search outside the GEMM routes return the same result
+    /// (`MetricWitnessEquivalenceTests`, `MetricSearchWitnessConsistencyTests`). On those types a squared norm at or
+    /// below `Float.leastNormalMagnitude` makes a vector a zero vector (`CosineKernels.calculateCosineDistance`), so a
+    /// tiny vector against a normal one gives 1.0; other types keep the product guard below (T15's per-family zero
+    /// classes, `T15CosineExceptionalTableTests`). The GEMM routes are a different arithmetic and are not covered:
+    /// `Operations.findNearestBatch` with the explicit `BatchSearchCPUStrategy.gram` (its default, `.perQuery`, runs the
+    /// per-candidate routes), and the off-diagonal entries of `BatchOperations.pairwiseDistances` when
+    /// `enableMatrixRouting` is set and the count reaches `matrixRoutingMinN`. An installed `BatchKernelProvider` returns its own results from `Operations`. Other vector
+    /// types use `SIMDOperations.FloatProvider`.
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
     public func distance<Vector: VectorProtocol>(_ a: Vector, _ b: Vector) -> DistanceScore where Vector.Scalar == Float {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
+
+        if let a = a as? Vector512Optimized, let b = b as? Vector512Optimized { return CosineKernels.distance512_fused(a, b) }
+        if let a = a as? Vector768Optimized, let b = b as? Vector768Optimized { return CosineKernels.distance768_fused(a, b) }
+        if let a = a as? Vector1536Optimized, let b = b as? Vector1536Optimized { return CosineKernels.distance1536_fused(a, b) }
 
         var dotProduct: Float = 0
         var aMagnitudeSq: Float = 0
@@ -137,11 +192,15 @@ public struct CosineDistance: DistanceMetric {
         // genuine zero (or subnormal) vectors where the cosine is undefined.
         let magnitudeProduct = sqrt(aMagnitudeSq) * sqrt(bMagnitudeSq)
         guard magnitudeProduct > Float.leastNormalMagnitude else {
-            return 1.0 // Maximum distance for zero vectors
+            // Maximum distance for zero vectors; a NaN or infinite squared norm dominates the zero rule (NaN)
+            return aMagnitudeSq.isFinite && bMagnitudeSq.isFinite ? 1.0 : .nan
         }
 
-        // Cosine similarity, clamped to [-1, 1] to handle numerical errors
-        let cosineSimilarity = max(-1, min(1, dotProduct / magnitudeProduct))
+        // Cosine similarity, clamped to [-1, 1] to handle finite rounding error. A non-finite similarity (a NaN or
+        // infinite coordinate) gives NaN (T15CosineExceptionalTableTests, witness rows).
+        let rawSimilarity = dotProduct / magnitudeProduct
+        guard rawSimilarity.isFinite else { return .nan }
+        let cosineSimilarity = max(-1, min(1, rawSimilarity))
 
         // Convert to distance (1 - similarity)
         return 1.0 - cosineSimilarity
@@ -156,6 +215,12 @@ public struct ManhattanDistance: DistanceMetric {
     public let identifier = "manhattan"
 
     public init() {}
+
+    /// Inverse-distance relevance for finite nonnegative input, otherwise nil.
+    /// This interpretation does not change the metric's distance computation.
+    public func relevanceScore(for distance: Float) -> Float? {
+        inverseDistanceRelevance(distance)
+    }
 
     /// Compute Manhattan distance between two vectors
     ///
@@ -219,13 +284,37 @@ public struct DotProductDistance: DistanceMetric {
 
     public init() {}
 
+    /// Logistic relevance of negative-dot distance, in [0, 1] for finite input.
+    /// Float rounding may saturate; the mapping is weakly decreasing, not strictly
+    /// ordered or a calibrated probability. Nonfinite input has no score.
+    /// SearchResultScoreContractTests.dotLogisticDomain checks poles and endpoints.
+    public func relevanceScore(for distance: Float) -> Float? {
+        guard distance.isFinite else { return nil }
+        if distance >= 0 {
+            let exponential = Foundation.exp(-Double(distance))
+            return Float(exponential / (1 + exponential))
+        }
+        let exponential = Foundation.exp(Double(distance))
+        return Float(1 / (1 + exponential))
+    }
+
     /// Compute negative dot product as distance
+    ///
+    /// `Vector512Optimized`, `Vector768Optimized` and `Vector1536Optimized` use `DotKernels`, the arithmetic of the
+    /// dot-product search routes on those types, so a concrete call, this witness and search return the same result
+    /// (`MetricWitnessEquivalenceTests`, `MetricSearchWitnessConsistencyTests`); the GEMM routes take only Euclidean
+    /// and cosine. An installed `BatchKernelProvider` returns its own results from `Operations`. Other vector types use
+    /// `SIMDOperations.FloatProvider.dot`.
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
     public func distance<Vector: VectorProtocol>(_ a: Vector, _ b: Vector) -> DistanceScore where Vector.Scalar == Float {
         #if DEBUG
         assert(a.scalarCount == b.scalarCount, "Vector dimension mismatch: \(a.scalarCount) != \(b.scalarCount)")
         #endif
+
+        if let a = a as? Vector512Optimized, let b = b as? Vector512Optimized { return -DotKernels.dot512(a, b) }
+        if let a = a as? Vector768Optimized, let b = b as? Vector768Optimized { return -DotKernels.dot768(a, b) }
+        if let a = a as? Vector1536Optimized, let b = b as? Vector1536Optimized { return -DotKernels.dot1536(a, b) }
 
         var result: Float = 0
 
@@ -253,6 +342,12 @@ public struct ChebyshevDistance: DistanceMetric {
 
     public init() {}
 
+    /// Inverse-distance relevance for finite nonnegative input, otherwise nil.
+    /// This interpretation does not change the metric's distance computation.
+    public func relevanceScore(for distance: Float) -> Float? {
+        inverseDistanceRelevance(distance)
+    }
+
     /// Compute Chebyshev distance (maximum absolute difference)
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -265,9 +360,15 @@ public struct ChebyshevDistance: DistanceMetric {
 
         a.withUnsafeBufferPointer { aBuffer in
             b.withUnsafeBufferPointer { bBuffer in
-                // Find maximum absolute difference directly
+                // Find maximum absolute difference directly. A NaN difference (a NaN coordinate, or same-sign
+                // infinities) makes the distance NaN: `max(result, NaN)` would drop it
+                // (T15MetricExceptionalTableTests.everyMetricPinsItsExceptionalClass).
                 for i in 0..<aBuffer.count {
                     let diff = abs(aBuffer[i] - bBuffer[i])
+                    if diff.isNaN {
+                        result = .nan
+                        return
+                    }
                     result = max(result, diff)
                 }
             }
@@ -291,6 +392,12 @@ public struct HammingDistance: DistanceMetric {
         self.threshold = threshold
     }
 
+    /// Inverse-distance relevance for finite nonnegative input, otherwise nil.
+    /// This interpretation does not change the metric's distance computation.
+    public func relevanceScore(for distance: Float) -> Float? {
+        inverseDistanceRelevance(distance)
+    }
+
     /// Compute Hamming distance (number of differing positions)
     /// - Precondition: Both vectors must have the same dimension
     @inlinable
@@ -304,6 +411,12 @@ public struct HammingDistance: DistanceMetric {
         a.withUnsafeBufferPointer { aBuffer in
             b.withUnsafeBufferPointer { bBuffer in
                 for i in 0..<aBuffer.count {
+                    // A NaN coordinate has no bit value: the distance is NaN, not a 0 bit
+                    // (T15MetricExceptionalTableTests.everyMetricPinsItsExceptionalClass).
+                    if aBuffer[i].isNaN || bBuffer[i].isNaN {
+                        count = .nan
+                        return
+                    }
                     let aBit = aBuffer[i] > threshold ? 1 : 0
                     let bBit = bBuffer[i] > threshold ? 1 : 0
                     if aBit != bBit {
@@ -328,6 +441,12 @@ public struct MinkowskiDistance: DistanceMetric {
     public init(p: Float = 2.0) {
         self.p = p
         self.identifier = "minkowski_\(p)"
+    }
+
+    /// Inverse-distance relevance for finite nonnegative input, otherwise nil.
+    /// This interpretation does not change the metric's distance computation.
+    public func relevanceScore(for distance: Float) -> Float? {
+        inverseDistanceRelevance(distance)
     }
 
     /// Compute Minkowski distance

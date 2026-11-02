@@ -12,6 +12,11 @@ import Foundation
 /// Protocol for types that can create vectors from arrays
 /// This enables generic operations like map and reduce to work with both
 /// static (Vector<D>) and dynamic (DynamicVector) vector types
+///
+/// `create(from:)` is the only requirement and is dynamically dispatched. The operators and the
+/// `createByTransforming(_:_:)` / `createByCombining(_:_:_:)` helpers in this protocol's extension are statically
+/// selected: generic code constrained to `VectorFactory` runs them even when the concrete type declares members
+/// with the same names (D02WitnessDispatchMatrixTests).
 public protocol VectorFactory: VectorProtocol {
     /// Create a new vector from an array of scalars
     /// - Parameter scalars: Array of scalar values
@@ -71,8 +76,8 @@ public extension VectorFactory {
     }
 
     static func / (lhs: Self, rhs: Scalar) -> Self {
-        precondition(rhs != 0, "Division by zero")
-        return lhs * (1 / rhs)
+        guard rhs != 0 else { fatalError("Division by zero") }
+        return try! createByTransforming(lhs) { $0 / rhs }
     }
 
     static func * (lhs: Scalar, rhs: Self) -> Self { rhs * lhs }

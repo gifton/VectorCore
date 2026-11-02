@@ -85,13 +85,13 @@ public protocol AccelerationProvider: Sendable {
 /// }
 /// ```
 public enum AcceleratedOperation: String, Sendable {
-    /// High-performance distance calculations between vectors.
+    /// Distance calculations between vectors.
     case distanceComputation
 
     /// Accelerated matrix-vector and matrix-matrix multiplications.
     case matrixMultiplication
 
-    /// Fast vector normalization using SIMD square root operations.
+    /// Vector normalization.
     case vectorNormalization
 
     /// Batch processing of multiple vectors in parallel.
@@ -159,7 +159,12 @@ public protocol VectorSerializable {
 
 // MARK: - Binary Serialization Extensions
 
-/// Default implementation for vectors that are binary encodable
+/// Checked default for explicit VectorType & BinaryEncodable conformers.
+/// Contract: this distinct throwing witness accepts only dimensions 1...10000,
+/// as the adjacent guard enforces. It is not the nonthrowing VectorProtocol
+/// encoder used by built-ins and the documented DynamicVector adapter, whose
+/// empty-frame behavior is covered by B01BinaryContractTests.emptyDynamicRoundTrip.
+/// Built-ins do not gain protocol conformance merely from having a method.
 extension VectorType where Self: BinaryEncodable {
     public func encodeBinary() throws -> Data {
         // Validate dimension

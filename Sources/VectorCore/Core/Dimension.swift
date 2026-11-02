@@ -6,12 +6,20 @@
 import Foundation
 
 /// Protocol for compile-time dimension specification
+///
+/// A static dimension specifies only its compile-time element count (`value`) and `Sendable` conformance.
+/// It names no storage: `Vector<D>.Storage` is `DimensionStorage<D, Float>` for every `D`, so code that
+/// needs the storage type of a vector writes `Vector<D>.Storage`. Every `Vector<D>` member not specific to
+/// `Dim2`, `Dim3` or `Dim4` (the members of `Vector.swift`'s `where D == Dim2/Dim3/Dim4` extensions) is
+/// available for every static dimension, built-in or custom.
+///
+/// Domain of `value` (unverified contract beyond the widths D02DegenerateWidthTests covers): it must be `>= 0`.
+/// Width 0 gives empty vectors and width 1 single-element vectors; members that need an element (for example
+/// `minElement()`, `maxElement()`, `unitX`, `basis(axis:)`) stop with a precondition failure at width 0, and the
+/// other width-0/width-1 results are the ones that test's table pins. A negative `value` is undefined and untested.
 public protocol StaticDimension: Sendable {
     /// The number of elements in vectors of this dimension
     static var value: Int { get }
-
-    /// The storage type optimized for this dimension
-    associatedtype Storage: VectorStorage
 }
 
 // MARK: - Standard Dimensions
@@ -28,7 +36,6 @@ public protocol StaticDimension: Sendable {
 /// ```
 public struct Dim2: StaticDimension {
     public static let value = 2
-    public typealias Storage = DimensionStorage<Dim2, Float>
 }
 
 /// A 3-dimensional vector type for 3D coordinates and RGB values.
@@ -43,7 +50,6 @@ public struct Dim2: StaticDimension {
 /// ```
 public struct Dim3: StaticDimension {
     public static let value = 3
-    public typealias Storage = DimensionStorage<Dim3, Float>
 }
 
 /// A 4-dimensional vector type for homogeneous coordinates and RGBA.
@@ -58,7 +64,6 @@ public struct Dim3: StaticDimension {
 /// ```
 public struct Dim4: StaticDimension {
     public static let value = 4
-    public typealias Storage = DimensionStorage<Dim4, Float>
 }
 
 /// A 8-dimensional vector type for small feature vectors.
@@ -73,7 +78,6 @@ public struct Dim4: StaticDimension {
 /// ```
 public struct Dim8: StaticDimension {
     public static let value = 8
-    public typealias Storage = DimensionStorage<Dim8, Float>
 }
 
 /// A 16-dimensional vector type for compact features.
@@ -88,14 +92,13 @@ public struct Dim8: StaticDimension {
 /// ```
 public struct Dim16: StaticDimension {
     public static let value = 16
-    public typealias Storage = DimensionStorage<Dim16, Float>
 }
 
-/// A 32-dimensional vector type optimized for small embeddings.
+/// A 32-dimensional vector type for small embeddings.
 ///
 /// `Dim32` provides compile-time dimension safety for 32-element vectors,
 /// commonly used for simple feature vectors and low-dimensional embeddings.
-/// Uses optimized storage for small vectors with minimal memory overhead.
+/// Its 32 elements exceed the 16-element inline tier, so `DimensionStorage` keeps them in heap storage.
 ///
 /// ## Example Usage
 /// ```swift
@@ -104,7 +107,6 @@ public struct Dim16: StaticDimension {
 /// ```
 public struct Dim32: StaticDimension {
     public static let value = 32
-    public typealias Storage = DimensionStorage<Dim32, Float>
 }
 
 /// A 64-dimensional vector type for compact embeddings.
@@ -120,7 +122,6 @@ public struct Dim32: StaticDimension {
 /// ```
 public struct Dim64: StaticDimension {
     public static let value = 64
-    public typealias Storage = DimensionStorage<Dim64, Float>
 }
 
 /// A 128-dimensional vector type for medium-sized embeddings.
@@ -136,7 +137,6 @@ public struct Dim64: StaticDimension {
 /// ```
 public struct Dim128: StaticDimension {
     public static let value = 128
-    public typealias Storage = DimensionStorage<Dim128, Float>
 }
 
 /// A 256-dimensional vector type for standard embeddings.
@@ -152,14 +152,13 @@ public struct Dim128: StaticDimension {
 /// ```
 public struct Dim256: StaticDimension {
     public static let value = 256
-    public typealias Storage = DimensionStorage<Dim256, Float>
 }
 
 /// A 384-dimensional vector type for MiniLM and SBERT embeddings.
 ///
 /// `Dim384` provides compile-time dimension safety for 384-element vectors,
 /// the standard dimension for MiniLM models (all-MiniLM-L6-v2) and many
-/// Sentence-BERT variants. Optimized for on-device/edge embedding scenarios.
+/// Sentence-BERT variants.
 ///
 /// ## Example Usage
 /// ```swift
@@ -167,12 +166,11 @@ public struct Dim256: StaticDimension {
 /// let sbertFeatures = Vector<Dim384>.random(in: -1...1)
 /// ```
 ///
-/// ## Performance Note
-/// 384 dimensions = 96 SIMD4 lanes, aligning perfectly with the stride-16
-/// kernel pattern for maximum SIMD throughput.
+/// ## Layout Note
+/// 384 dimensions = 96 SIMD4 lanes, a multiple of the stride-16 kernel pattern.
+/// No speed comparison with other widths is measured (not verified).
 public struct Dim384: StaticDimension, Sendable {
     public static let value = 384
-    public typealias Storage = DimensionStorage<Dim384, Float>
 }
 
 /// A 512-dimensional vector type for rich embeddings.
@@ -188,14 +186,13 @@ public struct Dim384: StaticDimension, Sendable {
 /// ```
 public struct Dim512: StaticDimension, Sendable {
     public static let value = 512
-    public typealias Storage = DimensionStorage<Dim512, Float>
 }
 
 /// A 768-dimensional vector type for transformer embeddings.
 ///
 /// `Dim768` provides compile-time dimension safety for 768-element vectors,
 /// the standard dimension for BERT base models and many transformer
-/// architectures. Optimized for large-scale NLP applications.
+/// architectures.
 ///
 /// ## Example Usage
 /// ```swift
@@ -204,7 +201,6 @@ public struct Dim512: StaticDimension, Sendable {
 /// ```
 public struct Dim768: StaticDimension, Sendable {
     public static let value = 768
-    public typealias Storage = DimensionStorage<Dim768, Float>
 }
 
 /// A 1024-dimensional vector type.
@@ -219,14 +215,12 @@ public struct Dim768: StaticDimension, Sendable {
 /// ```
 public struct Dim1024: StaticDimension {
     public static let value = 1024
-    public typealias Storage = DimensionStorage<Dim1024, Float>
 }
 
 /// A 1536-dimensional vector type for large embeddings.
 ///
 /// `Dim1536` provides compile-time dimension safety for 1536-element vectors,
 /// commonly used for OpenAI embeddings and large language model outputs.
-/// Optimized for high-dimensional representations with SIMD support.
 ///
 /// ## Example Usage
 /// ```swift
@@ -235,7 +229,6 @@ public struct Dim1024: StaticDimension {
 /// ```
 public struct Dim1536: StaticDimension, Sendable {
     public static let value = 1536
-    public typealias Storage = DimensionStorage<Dim1536, Float>
 }
 
 /// A 2048-dimensional vector type.
@@ -250,14 +243,13 @@ public struct Dim1536: StaticDimension, Sendable {
 /// ```
 public struct Dim2048: StaticDimension {
     public static let value = 2048
-    public typealias Storage = DimensionStorage<Dim2048, Float>
 }
 
 /// A 3072-dimensional vector type for very large embeddings.
 ///
 /// `Dim3072` provides compile-time dimension safety for 3072-element vectors,
 /// suitable for GPT-style embeddings, concatenated features, and
-/// high-dimensional representations. Maximum SIMD optimization for performance.
+/// high-dimensional representations.
 ///
 /// ## Example Usage
 /// ```swift
@@ -266,7 +258,6 @@ public struct Dim2048: StaticDimension {
 /// ```
 public struct Dim3072: StaticDimension {
     public static let value = 3072
-    public typealias Storage = DimensionStorage<Dim3072, Float>
 }
 
 // MARK: - Dynamic Dimension Support
@@ -279,7 +270,7 @@ public struct Dim3072: StaticDimension {
 ///
 /// ## Usage Considerations
 /// - Use when vector dimensions vary at runtime
-/// - Slightly less performant than fixed-dimension vectors
+/// - Speed relative to fixed-dimension vectors is not measured in this repository
 /// - No compile-time dimension checking
 /// - Suitable for variable-length embeddings
 ///
@@ -289,8 +280,8 @@ public struct Dim3072: StaticDimension {
 /// let vector = DynamicVector(dimension: 256, repeating: 0.0)
 /// ```
 ///
-/// - Note: For best performance, use fixed-dimension types (e.g., `Dim256`)
-///   when the dimension is known at compile time.
+/// - Note: Prefer fixed-dimension types (e.g., `Dim256`) when the dimension is
+///   known at compile time: they add compile-time dimension checking.
 public struct DynamicDimension {
     /// The runtime-determined size of vectors with this dimension.
     public let size: Int

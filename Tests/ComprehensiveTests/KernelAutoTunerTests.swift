@@ -13,7 +13,9 @@ final class KernelAutoTunerTests: XCTestCase {
 
     // MARK: - Strategy Selection Heuristics
 
-    func testSmallBatchSelectionFP32() async {
+    @MainActor
+    func testSmallBatchSelectionFP32() async throws {
+        let tuner = KernelAutoTuner()
         // Small batches with FP32 should select cpuAoS (minimal overhead)
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -21,11 +23,13 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuAoS, "Small FP32 batches should use cpuAoS")
     }
 
-    func testSmallBatchSelectionFP16() async {
+    @MainActor
+    func testSmallBatchSelectionFP16() async throws {
+        let tuner = KernelAutoTuner()
         // Small batches with FP16 acceptable should use mixed precision
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -33,11 +37,13 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp16Acceptable
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuMixedPrecision, "Small FP16 batches should use mixed precision")
     }
 
-    func testMediumBatchSelectionFP32() async {
+    @MainActor
+    func testMediumBatchSelectionFP32() async throws {
+        let tuner = KernelAutoTuner()
         // Medium batches with FP32 should select SoA
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -45,11 +51,13 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuSoA, "Medium FP32 batches should use SoA")
     }
 
-    func testMediumBatchSelectionINT8() async {
+    @MainActor
+    func testMediumBatchSelectionINT8() async throws {
+        let tuner = KernelAutoTuner()
         // Medium batches with INT8 acceptable should use quantized
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -57,11 +65,13 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .int8Acceptable
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuQuantized, "Medium INT8 batches should use quantized")
     }
 
-    func testLargeBatchSelectionFP32() async {
+    @MainActor
+    func testLargeBatchSelectionFP32() async throws {
+        let tuner = KernelAutoTuner()
         // Large batches with FP32 should select SoA
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -69,11 +79,13 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuSoA, "Large FP32 batches should use SoA")
     }
 
-    func testLargeBatchSelectionFP16() async {
+    @MainActor
+    func testLargeBatchSelectionFP16() async throws {
+        let tuner = KernelAutoTuner()
         // Large batches with FP16 acceptable should use mixed precision
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -81,57 +93,69 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp16Acceptable
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuMixedPrecision, "Large FP16 batches should use mixed precision")
     }
 
     // MARK: - Multi-Dimensional Support
 
-    func testDimension768Selection() async {
+    @MainActor
+    func testDimension768Selection() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 768,
             batchSize: 500,
             precisionMode: .fp32Full
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuSoA, "768-dim vectors should follow same heuristics")
     }
 
-    func testDimension1536Selection() async {
+    @MainActor
+    func testDimension1536Selection() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 1536,
             batchSize: 100,
             precisionMode: .fp16Acceptable
         )
 
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuMixedPrecision, "1536-dim vectors should follow same heuristics")
     }
 
     // MARK: - Manual Overrides
 
-    func testManualOverridePersists() async {
+    @MainActor
+    func testManualOverridePersists() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 512,
             batchSize: 500,
             precisionMode: .fp32Full
         )
 
-        // Set override
-        await KernelAutoTuner.shared.setOverride(.cpuQuantized, for: workload)
+        // Override with the FP32 strategy the heuristic does not return, so a `setOverride` that stored
+        // nothing would fail this test (PR #56 review SW3-4).
+        let heuristic = try await tuner.selectStrategy(for: workload)
+        let override: KernelStrategy = heuristic == .cpuSoA ? .cpuAoS : .cpuSoA
+        try await tuner.setOverride(override, for: workload)
 
         // Verify override is respected
-        let selected = await KernelAutoTuner.shared.selectStrategy(for: workload)
-        XCTAssertEqual(selected, .cpuQuantized, "Manual override should be respected")
+        let selected = try await tuner.selectStrategy(for: workload)
+        XCTAssertEqual(selected, override, "Manual override should be respected")
+        XCTAssertNotEqual(selected, heuristic, "the override must be observable against the heuristic")
 
         // Cleanup: remove override to avoid influencing other tests
-        await KernelAutoTuner.shared.removeOverride(for: workload)
+        await tuner.removeOverride(for: workload)
     }
 
     // MARK: - Profiling
 
-    func testProfileWorkload512() async {
+    @MainActor
+    func testProfileWorkload512() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 512,
             batchSize: 100,
@@ -139,7 +163,7 @@ final class KernelAutoTunerTests: XCTestCase {
         )
 
         // Profile with minimal iterations for test speed
-        let profiles = await KernelAutoTuner.shared.profileWorkload(
+        let profiles = try await tuner.profileWorkload(
             workload,
             iterations: 10,
             warmupIterations: 2
@@ -149,11 +173,11 @@ final class KernelAutoTunerTests: XCTestCase {
 
         // Verify all profiles have valid data
         for profile in profiles {
-            XCTAssertGreaterThan(profile.throughput, 0, "Throughput should be positive")
-            XCTAssertGreaterThan(profile.latencyMean, 0, "Latency should be positive")
-            XCTAssertGreaterThan(profile.memoryFootprint, 0, "Memory footprint should be positive")
-            XCTAssertGreaterThanOrEqual(profile.accuracy, 0, "Accuracy should be non-negative")
-            XCTAssertLessThanOrEqual(profile.accuracy, 1.0, "Accuracy should be <= 1.0")
+            expectXCTestPerformance("KernelAutoTunerTests.testProfileWorkload512.1", profile.throughput > 0, "Throughput should be positive")
+            expectXCTestPerformance("KernelAutoTunerTests.testProfileWorkload512.2", profile.latencyMean > 0, "Latency should be positive")
+            XCTAssertGreaterThan(profile.estimatedPayloadBytes, 0, "Memory footprint should be positive")
+            XCTAssertGreaterThanOrEqual(profile.syntheticAccuracyScore, 0, "Accuracy should be non-negative")
+            XCTAssertLessThanOrEqual(profile.syntheticAccuracyScore, 1.0, "Accuracy should be <= 1.0")
         }
 
         // Verify profiles are sorted by score (descending)
@@ -166,14 +190,16 @@ final class KernelAutoTunerTests: XCTestCase {
         }
     }
 
-    func testProfileWorkload768() async {
+    @MainActor
+    func testProfileWorkload768() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 768,
             batchSize: 50,
             precisionMode: .fp32Full
         )
 
-        let profiles = await KernelAutoTuner.shared.profileWorkload(
+        let profiles = try await tuner.profileWorkload(
             workload,
             iterations: 10,
             warmupIterations: 2
@@ -182,14 +208,16 @@ final class KernelAutoTunerTests: XCTestCase {
         XCTAssertFalse(profiles.isEmpty, "768-dim profiling should succeed")
     }
 
-    func testProfileWorkload1536() async {
+    @MainActor
+    func testProfileWorkload1536() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 1536,
             batchSize: 50,
             precisionMode: .fp16Acceptable
         )
 
-        let profiles = await KernelAutoTuner.shared.profileWorkload(
+        let profiles = try await tuner.profileWorkload(
             workload,
             iterations: 10,
             warmupIterations: 2
@@ -200,7 +228,9 @@ final class KernelAutoTunerTests: XCTestCase {
 
     // MARK: - Accuracy Measurement
 
-    func testAccuracyBaseline() async {
+    @MainActor
+    func testAccuracyBaseline() async throws {
+        let tuner = KernelAutoTuner()
         // cpuAoS should have perfect accuracy (1.0) against itself
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -208,7 +238,7 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        let profiles = await KernelAutoTuner.shared.profileWorkload(
+        let profiles = try await tuner.profileWorkload(
             workload,
             iterations: 5,
             warmupIterations: 1
@@ -216,18 +246,20 @@ final class KernelAutoTunerTests: XCTestCase {
 
         let aosProfile = profiles.first { $0.strategy == .cpuAoS }
         XCTAssertNotNil(aosProfile, "cpuAoS should be profiled")
-        XCTAssertEqual(Double(aosProfile?.accuracy ?? 0), 1.0, accuracy: 0.01, "cpuAoS should have perfect accuracy")
+        XCTAssertEqual(Double(aosProfile?.syntheticAccuracyScore ?? 0), 1.0, accuracy: 0.01, "cpuAoS should have perfect accuracy")
     }
 
-    func testAccuracyMixedPrecision() async {
-        // Mixed precision should have high accuracy (>0.99 for typical embeddings)
+    @MainActor
+    func testAccuracyMixedPrecision() async throws {
+        let tuner = KernelAutoTuner()
+        // Mixed precision should have high accuracy (>0.99 for this deterministic synthetic dataset)
         let workload = WorkloadCharacteristics(
             dimension: 512,
             batchSize: 50,
             precisionMode: .fp16Acceptable
         )
 
-        let profiles = await KernelAutoTuner.shared.profileWorkload(
+        let profiles = try await tuner.profileWorkload(
             workload,
             iterations: 5,
             warmupIterations: 1
@@ -235,10 +267,12 @@ final class KernelAutoTunerTests: XCTestCase {
 
         let mixedProfile = profiles.first { $0.strategy == .cpuMixedPrecision }
         XCTAssertNotNil(mixedProfile, "cpuMixedPrecision should be profiled")
-        XCTAssertGreaterThan(mixedProfile?.accuracy ?? 0, 0.99, "Mixed precision should have >99% accuracy")
+        XCTAssertGreaterThan(mixedProfile?.syntheticAccuracyScore ?? 0, 0.99, "Mixed precision should have >99% accuracy")
     }
 
-    func testAccuracyQuantized() async {
+    @MainActor
+    func testAccuracyQuantized() async throws {
+        let tuner = KernelAutoTuner()
         // Quantized should have reasonable accuracy (>0.95)
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -246,7 +280,7 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .int8Acceptable
         )
 
-        let profiles = await KernelAutoTuner.shared.profileWorkload(
+        let profiles = try await tuner.profileWorkload(
             workload,
             iterations: 5,
             warmupIterations: 1
@@ -254,12 +288,14 @@ final class KernelAutoTunerTests: XCTestCase {
 
         let quantizedProfile = profiles.first { $0.strategy == .cpuQuantized }
         XCTAssertNotNil(quantizedProfile, "cpuQuantized should be profiled")
-        XCTAssertGreaterThan(quantizedProfile?.accuracy ?? 0, 0.95, "Quantized should have >95% accuracy")
+        XCTAssertGreaterThan(quantizedProfile?.syntheticAccuracyScore ?? 0, 0.95, "Quantized should have >95% accuracy")
     }
 
     // MARK: - Memory Estimation
 
-    func testMemoryEstimationFP32() {
+    @MainActor
+    func testMemoryEstimationFP32() async throws {
+        let tuner = KernelAutoTuner()
         // FP32: (N+1) * D * 4 bytes
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -268,8 +304,7 @@ final class KernelAutoTunerTests: XCTestCase {
         )
 
         // Access the auto-tuner's internal estimation (via profiling)
-        Task {
-            let profiles = await KernelAutoTuner.shared.profileWorkload(
+            let profiles = try await tuner.profileWorkload(
                 workload,
                 iterations: 1,
                 warmupIterations: 0
@@ -279,14 +314,15 @@ final class KernelAutoTunerTests: XCTestCase {
             let expectedMemory = (100 + 1) * 512 * 4  // 206,848 bytes
 
             XCTAssertEqual(
-                fp32Profile?.memoryFootprint,
+                fp32Profile?.estimatedPayloadBytes,
                 expectedMemory,
                 "FP32 memory estimation should be accurate"
             )
-        }
     }
 
-    func testMemoryEstimationMixedPrecision() {
+    @MainActor
+    func testMemoryEstimationMixedPrecision() async throws {
+        let tuner = KernelAutoTuner()
         // Mixed: Query FP32 + Candidates FP16 = D*4 + N*D*2
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -294,8 +330,7 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp16Acceptable
         )
 
-        Task {
-            let profiles = await KernelAutoTuner.shared.profileWorkload(
+            let profiles = try await tuner.profileWorkload(
                 workload,
                 iterations: 1,
                 warmupIterations: 0
@@ -305,14 +340,15 @@ final class KernelAutoTunerTests: XCTestCase {
             let expectedMemory = 512 * 4 + 100 * 512 * 2  // 104,448 bytes
 
             XCTAssertEqual(
-                mixedProfile?.memoryFootprint,
+                mixedProfile?.estimatedPayloadBytes,
                 expectedMemory,
                 "Mixed precision memory estimation should be accurate"
             )
-        }
     }
 
-    func testMemoryEstimationQuantized() {
+    @MainActor
+    func testMemoryEstimationQuantized() async throws {
+        let tuner = KernelAutoTuner()
         // INT8: (N+1) * D * 1 byte
         let workload = WorkloadCharacteristics(
             dimension: 512,
@@ -320,8 +356,7 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .int8Acceptable
         )
 
-        Task {
-            let profiles = await KernelAutoTuner.shared.profileWorkload(
+            let profiles = try await tuner.profileWorkload(
                 workload,
                 iterations: 1,
                 warmupIterations: 0
@@ -331,26 +366,27 @@ final class KernelAutoTunerTests: XCTestCase {
             let expectedMemory = (100 + 1) * 512 * 1  // 51,712 bytes
 
             XCTAssertEqual(
-                quantizedProfile?.memoryFootprint,
+                quantizedProfile?.estimatedPayloadBytes,
                 expectedMemory,
                 "Quantized memory estimation should be accurate"
             )
-        }
     }
 
     // MARK: - Performance Profile Score
 
     func testScoreCalculation() {
+        let tuner = KernelAutoTuner()
         let profile = PerformanceProfile(
             strategy: .cpuAoS,
-            workload: "512_100_fp32Full",
+            workload: KernelProfileWorkload(dimension: 512, batchSize: 100, precisionMode: .fp32Full),
             throughput: 1000,        // 1000 ops/sec
             latencyMean: 0.001,      // 1ms
             latencyP50: 0.001,
             latencyP95: 0.0015,
             latencyP99: 0.002,
-            memoryFootprint: 200_000, // 200KB
-            accuracy: 1.0,            // Perfect
+            estimatedPayloadBytes: 200_000, // 200KB
+            syntheticAccuracyScore: 1.0,            // Perfect
+            measuredSamples: 1, warmupIterations: 0, provenance: KernelProfileProvenance.current(),
             timestamp: Date()
         )
 
@@ -361,16 +397,18 @@ final class KernelAutoTunerTests: XCTestCase {
     }
 
     func testScoreHandlesZeroThroughput() {
+        let tuner = KernelAutoTuner()
         let badProfile = PerformanceProfile(
             strategy: .cpuAoS,
-            workload: "512_100_fp32Full",
+            workload: KernelProfileWorkload(dimension: 512, batchSize: 100, precisionMode: .fp32Full),
             throughput: 0,  // Invalid
             latencyMean: 0.001,
             latencyP50: 0.001,
             latencyP95: 0.001,
             latencyP99: 0.001,
-            memoryFootprint: 200_000,
-            accuracy: 1.0,
+            estimatedPayloadBytes: 200_000,
+            syntheticAccuracyScore: 1.0,
+            measuredSamples: 1, warmupIterations: 0, provenance: KernelProfileProvenance.current(),
             timestamp: Date()
         )
 
@@ -379,23 +417,27 @@ final class KernelAutoTunerTests: XCTestCase {
 
     // MARK: - Edge Cases
 
-    func testUnsupportedDimension() async {
+    @MainActor
+    func testUnsupportedDimension() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 256,  // Unsupported
             batchSize: 100,
             precisionMode: .fp32Full
         )
 
-        let profiles = await KernelAutoTuner.shared.profileWorkload(
-            workload,
-            iterations: 1,
-            warmupIterations: 0
-        )
+        do {
+            _ = try await tuner.profileWorkload(workload, iterations: 1, warmupIterations: 0)
+            XCTFail("Unsupported dimension must throw")
+        } catch let error as VectorError {
+            XCTAssertEqual(error.kind, .invalidConfiguration)
+        }
 
-        XCTAssertTrue(profiles.isEmpty, "Unsupported dimension should return empty profiles")
     }
 
-    func testZeroBatchSize() async {
+    @MainActor
+    func testZeroBatchSize() async throws {
+        let tuner = KernelAutoTuner()
         let workload = WorkloadCharacteristics(
             dimension: 512,
             batchSize: 0,
@@ -403,13 +445,15 @@ final class KernelAutoTunerTests: XCTestCase {
         )
 
         // Strategy selection should still work (heuristic)
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload)
+        let strategy = try await tuner.selectStrategy(for: workload)
         XCTAssertEqual(strategy, .cpuAoS, "Zero batch should fall through to cpuAoS")
     }
 
     // MARK: - Workload Hash Consistency
 
-    func testWorkloadHashConsistency() async {
+    @MainActor
+    func testWorkloadHashConsistency() async throws {
+        let tuner = KernelAutoTuner()
         let workload1 = WorkloadCharacteristics(
             dimension: 512,
             batchSize: 100,
@@ -422,17 +466,22 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        // Set override for workload1
-        await KernelAutoTuner.shared.setOverride(.cpuQuantized, for: workload1)
+        // Override workload1 with the strategy the heuristic does not return for it (PR #56 review SW3-4)
+        let heuristic = try await tuner.selectStrategy(for: workload2)
+        let override: KernelStrategy = heuristic == .cpuSoA ? .cpuAoS : .cpuSoA
+        try await tuner.setOverride(override, for: workload1)
 
         // workload2 should get the same override (same hash)
-        let strategy = await KernelAutoTuner.shared.selectStrategy(for: workload2)
-        XCTAssertEqual(strategy, .cpuQuantized, "Identical workloads should share overrides")
+        let strategy = try await tuner.selectStrategy(for: workload2)
+        XCTAssertEqual(strategy, override, "Identical workloads should share overrides")
+        XCTAssertNotEqual(strategy, heuristic, "the shared override must be observable against the heuristic")
     }
 
     // MARK: - Strategy Count Validation
 
-    func testAvailableStrategiesCount() async {
+    @MainActor
+    func testAvailableStrategiesCount() async throws {
+        let tuner = KernelAutoTuner()
         // FP32: Should have 2 strategies (cpuAoS, cpuSoA)
         let fp32Workload = WorkloadCharacteristics(
             dimension: 512,
@@ -440,7 +489,7 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp32Full
         )
 
-        let fp32Profiles = await KernelAutoTuner.shared.profileWorkload(
+        let fp32Profiles = try await tuner.profileWorkload(
             fp32Workload,
             iterations: 1,
             warmupIterations: 0
@@ -455,7 +504,7 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .fp16Acceptable
         )
 
-        let fp16Profiles = await KernelAutoTuner.shared.profileWorkload(
+        let fp16Profiles = try await tuner.profileWorkload(
             fp16Workload,
             iterations: 1,
             warmupIterations: 0
@@ -470,7 +519,7 @@ final class KernelAutoTunerTests: XCTestCase {
             precisionMode: .int8Acceptable
         )
 
-        let int8Profiles = await KernelAutoTuner.shared.profileWorkload(
+        let int8Profiles = try await tuner.profileWorkload(
             int8Workload,
             iterations: 1,
             warmupIterations: 0

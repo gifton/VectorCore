@@ -1,0 +1,35 @@
+{
+  "task": "T06",
+  "status": "accepted",
+  "task_base": "696dc9f",
+  "integration_revision": "recorded in state.json after local commit",
+  "closed_records": [
+    "T06-UNGATED-CLOCK-ASSERTIONS",
+    "T06-CLOCK-ASSERTION-CLASS"
+  ],
+  "disposition_records": {
+    "T06-UNGATED-CLOCK-ASSERTIONS": "Milestone 12 (EXTENDED=1, strict off) found QuantizedKernelsTests.testQuantizationOverhead `ratio > 1.0` (FP32/INT8 Date() timing ratio) and MixedPrecisionKernelTests NEON `gflops > 0.1` evaluating outside V03's strict-performance gate. Both are now expectPerformance sites with inventory rows (policy 75 assertions / 30 observations). Debug EXTENDED=1 whole suite: exit 0, 1449/199, 0 issues; under STRICT_PERF=1 the predicates are evaluated (the INT8 speed claim fails in Debug behind the gate, as expected).",
+    "T06-CLOCK-ASSERTION-CLASS": "V03's policy is an explicit inventory that cannot discover missed sites. Closed with a scope-aware clock-taint DETECTOR (Scripts/ci/tests/test_clock_derived_assertions.py, on the shared Scripts/ci/swift_lexing.py extracted from the path policy as a pure refactor): a direct #expect/#require/XCTAssert* on a clock-derived name fails unless inventoried or in a reviewed, category-tagged, count-pinned allowlist. Includes implicit-return/get bodies, assertion-helper call-site flow (positional, labelled, trailing closure, init), typed `.now`, and narrowed `.now`. Tests/ classified: 2 gated performance claims; 23 allowlisted (INJECTED-CLOCK 5, TIMESTAMP 13, FIXTURE 5). Recall 66 of 73 inventoried sites; the 7 production-supplied values are pinned."
+  },
+  "validation": {
+    "policy": "215 tests OK (2 env skips); check_performance_policy 75/30",
+    "suite": "Debug EXTENDED=1 and EXTENDED=0 exit 0 at T06 (696dc9f, includes V04 A+B)",
+    "reviews": "independent review + 3 scoped re-reviews; final round root-verified (old detector flags 3 control-flow FPs, new flags only the true trailing closure)"
+  },
+  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T06",
+  "patch_sha256": "071a05cdeb6a8e0e7a78afb61140359a3ed265531c584025361fe477d3a0a41a",
+  "frozen_sha256": {
+    "Scripts/ci/performance_sites.json": "a7893c8d570f79edc0a9453c99b8ffd0a27bfaeec3b8472aaf62015112dba027",
+    "Scripts/ci/swift_lexing.py": "476b29cac36de3cf315c7b6157b0a21bb10abaa109ce6578bf8a3c16eebd5ecd",
+    "Scripts/ci/tests/test_clock_derived_assertions.py": "7fb2cf550beeadce535543a957f1dfefe3e317824a7b231c576f67cdcf6b16dd",
+    "Scripts/ci/tests/test_performance_policy.py": "f8fbebf5085c3f2f452c7fb1e8a1cf4798df89c97adaa85634ad5c40db50279d",
+    "Scripts/ci/tests/test_swift_test_output_paths.py": "67921e32dda0482e1b6fa8ed8265ee855374bb712a090f8f4e7f4cee2d5faad9",
+    "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift": "9a4a2f3ddec7033d0c6b17692978dc0bbaef6a7aed898a642bb655c3a0f83b7d",
+    "Tests/ComprehensiveTests/QuantizedKernelsTests.swift": "7f2d162b0bf2f05999fd944086e1e9f0ab3bcf5e3f39bdaf3ee1fc07cfacef90"
+  },
+  "limitations": [
+    "Lexical heuristic with documented limits: multiple trailing closures (first only), S.init/Self/.init helpers, Date?-typed and spaced `.now`, parameter flow beyond direct helper calls, helper chains, overloads by name, production-supplied measurements (inventory covers the 7 known).",
+    "Allowlist categories beyond the brief (INJECTED-CLOCK/TIMESTAMP/FIXTURE) accepted by root ruling."
+  ],
+  "incident": "The implementer ran a machine-wide pkill of swift processes once; disclosed, surfaced to the user, PID-only rule now standing."
+}

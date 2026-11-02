@@ -4,22 +4,16 @@ import VectorCoreBenchmarking
 
 struct BatchBench: BenchmarkSuite {
     static let name = "batch"
-
-    static func run(options: CLIOptions, progress: ProgressReporter) async -> [BenchResult] {
-        var results: [BenchResult] = []
-        for dim in options.dims {
-            switch dim {
-            case 512: results += await run512(options)
-            case 768: results += await run768(options)
-            case 1536: results += await run1536(options)
-            default: fputs("[batch] unsupported dimension: \(dim)\n", stderr)
-            }
-        }
-        return results
+    static func catalog(options: ValidatedOptions, progress: BenchmarkProgressReporter) -> [BenchmarkCase] {
+        catalog(options: options, provider: nil)
     }
-
-    private static func providers(forDim dim: Int) -> [(mode: String, provider: CPUComputeProvider)] {
-        // Tune automatic thresholds per dimension so N≈1000 flips to parallel
+    static func run(options: ValidatedOptions, progress: BenchmarkProgressReporter, provider: (any ComputeProvider)?) async -> [BenchResult] {
+        await CaseExecution.run(catalog(options: options, provider: provider), options: options, progress: progress, suite: name)
+    }
+    private static func providers(forDim dim: Int, injected: (any ComputeProvider)?) -> [(mode: String, provider: any ComputeProvider)] {
+        if let injected { return [("injected", injected)] }
+        // Automatic-mode threshold per dimension: CPUComputeProvider(.automatic) parallelizes when count >= threshold, so
+        // N >= 800 takes the parallel path at 512/768/1536. A benchmark setting, not a measured crossover.
         let autoThreshold: Int
         switch dim {
         case 512, 768: autoThreshold = 800
@@ -28,272 +22,303 @@ struct BatchBench: BenchmarkSuite {
         }
         let automatic = CPUComputeProvider(mode: .automatic, parallelizationThreshold: autoThreshold)
         return [
-            ("sequential", .sequential),
-            ("parallel", .parallel),
+            ("sequential", CPUComputeProvider.sequential),
+            ("parallel", CPUComputeProvider.parallel),
             ("automatic", automatic)
         ]
     }
 
-    private static func abCompareEnabled(_ options: CLIOptions) -> Bool {
-        // Prefer CLI flag if set; fallback to env (default on)
-        if let flag = options.abCompare { return flag }
-        let env = ProcessInfo.processInfo.environment["VC_BATCH_AB"]
-        if let env, env == "0" { return false }
-        return true
+    static func catalog(options: ValidatedOptions, provider injected: (any ComputeProvider)?) -> [BenchmarkCase] {
+        catalog512(options: options, injected: injected) + catalog768(options: options, injected: injected) + catalog1536(options: options, injected: injected)
     }
 
-    private static func soaEnabled(_ options: CLIOptions) -> Bool {
-        if let flag = options.preferSoA { return flag }
-        let env = ProcessInfo.processInfo.environment["VC_SOA"]
-        return env == "1"
-    }
-
-    private static func mixedPrecisionEnabled(_ options: CLIOptions) -> Bool {
-        if let flag = options.useMixedPrecision { return flag }
-        let env = ProcessInfo.processInfo.environment["VC_MIXED_PRECISION"]
-        return env == "1"
-    }
-
-    // Batch sizes are profile-driven (see CLIOptions.batchNs)
-
-    private static func run512(_ options: CLIOptions) async -> [BenchResult] {
-        // Prepare inputs (deterministic via centralized seeds)
-        let qSeed = InputSeeds.batch(dim: 512, n: 0, runSeed: options.runSeed).query
-        let qArr = InputFactory.randomArray(count: 512, seed: qSeed)
-        let queryG = try! Vector<Dim512>(qArr)
-        let queryO = try! Vector512Optimized(qArr)
-
-        var all: [BenchResult] = []
-        for n in options.batchNs {
-            let baseSeed = InputSeeds.batch(dim: 512, n: n, runSeed: options.runSeed).baseCandidates
-            let candsArr: [[Float]] = (0..<n).map { i in
-                InputFactory.randomArray(count: 512, seed: baseSeed &+ UInt64(i))
-            }
-            let candsG: [Vector<Dim512>] = candsArr.map { try! Vector<Dim512>($0) }
-            let candsO: [Vector512Optimized] = candsArr.map { try! Vector512Optimized($0) }
-
-            for (mode, provider) in providers(forDim: 512) {
-                // Generic
-                var labelG = "batch.euclidean2.512.N\(n).generic.\(mode)"
-                if Filters.shouldRun(name: labelG, options: options) {
-                    let resG = await runBatchGeneric(name: labelG, query: queryG, candidates: candsG, provider: provider, options: options, minChunk: 256)
-                    all.append(contentsOf: resG)
-                }
-
-                // Optimized
-                var labelO = "batch.euclidean2.512.N\(n).optimized.\(mode)"
-                if Filters.shouldRun(name: labelO, options: options) {
-                    let resO = await runBatchOptimized(name: labelO, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 256)
-                    all.append(contentsOf: resO)
-                }
-
-                if (options.abOnly ?? false) || abCompareEnabled(options) {
-                    // Euclidean with sqrt for A/B
-                    labelG = "batch.euclidean.512.N\(n).generic.\(mode)"
-                    if Filters.shouldRun(name: labelG, options: options) {
-                        let resG2 = await runBatchGenericEuclid(name: labelG, query: queryG, candidates: candsG, provider: provider, options: options, minChunk: 256)
-                        all.append(contentsOf: resG2)
+    private static func catalog512(options: ValidatedOptions, injected: (any ComputeProvider)?) -> [BenchmarkCase] {
+        var cases: [BenchmarkCase] = []
+        if options.dims.contains(512) {
+            for n in options.batchNs {
+                for (mode, provider) in providers(forDim: 512, injected: injected) {
+                    if true {
+                        let label = "batch.euclidean2.512.N\(n).generic.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector<Dim512>($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchGeneric(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
                     }
-
-                    labelO = "batch.euclidean.512.N\(n).optimized.\(mode)"
-                    if Filters.shouldRun(name: labelO, options: options) {
-                        let resO2 = await runBatchOptimizedEuclid(name: labelO, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 256)
-                        all.append(contentsOf: resO2)
+                    if true {
+                        let label = "batch.euclidean2.512.N\(n).optimized.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector512Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimized(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if options.abCompare == true {
+                        let label = "batch.euclidean.512.N\(n).generic.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector<Dim512>($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchGenericEuclid(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if options.abCompare == true {
+                        let label = "batch.euclidean.512.N\(n).optimized.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector512Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimizedEuclid(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if true {
+                        let label = "batch.cosine.512.N\(n).optimized-fused.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector512Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimizedCosineFused(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if true {
+                        let label = "batch.cosine.512.N\(n).optimized-preNorm.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector512Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    let normalizedQuery = (try? query.normalized().get()) ?? query
+                    let normalizedCandidates = candidates.map { (try? $0.normalized().get()) ?? $0 }
+                    return await runBatchOptimizedCosinePreNorm(name: label, query: normalizedQuery, candidates: normalizedCandidates, provider: provider, options: options, minChunk: 256)
+                        })
                     }
                 }
-
-                // Cosine fused (optimized)
-                let labelCF = "batch.cosine.512.N\(n).optimized-fused.\(mode)"
-                if Filters.shouldRun(name: labelCF, options: options) {
-                    let fused = await runBatchOptimizedCosineFused(name: labelCF, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 256)
-                    all.append(contentsOf: fused)
+                if options.abOnly != true && options.preferSoA == true && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 512) {
+                    let label = "batch.euclidean2.512.N\(n).optimized-soa"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector512Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchSoA512(name: label, query: query, candidates: candidates, options: options)
+                    })
                 }
-
-                // Cosine pre-normalized (optimized)
-                let qNorm = (try? queryO.normalized().get()) ?? queryO
-                let candsNorm512: [Vector512Optimized] = candsO.map { (try? $0.normalized().get()) ?? $0 }
-                let labelCP = "batch.cosine.512.N\(n).optimized-preNorm.\(mode)"
-                if Filters.shouldRun(name: labelCP, options: options) {
-                    let pren = await runBatchOptimizedCosinePreNorm(name: labelCP, query: qNorm, candidates: candsNorm512, provider: provider, options: options, minChunk: 256)
-                    all.append(contentsOf: pren)
+                if options.abOnly != true && options.useMixedPrecision == true && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 512) {
+                    let label = "batch.euclidean2.512.N\(n).optimized-fp16"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector512Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchFP16_512(name: label, query: query, candidates: candidates, options: options)
+                    })
                 }
-            }
-
-            // SoA (Structure-of-Arrays) benchmarks when enabled (skip in ab-only)
-            if (options.abOnly ?? false) == false && soaEnabled(options) && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 512) {
-                let labelSoA = "batch.euclidean2.512.N\(n).optimized-soa"
-                let soaResult = await runBatchSoA512(name: labelSoA, query: queryO, candidates: candsO, options: options)
-                all.append(contentsOf: soaResult)
-            }
-
-            // FP16 Mixed-Precision benchmarks when enabled (skip in ab-only)
-            if (options.abOnly ?? false) == false && mixedPrecisionEnabled(options) && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 512) {
-                let labelFP16 = "batch.euclidean2.512.N\(n).optimized-fp16"
-                let fp16Result = await runBatchFP16_512(name: labelFP16, query: queryO, candidates: candsO, options: options)
-                all.append(contentsOf: fp16Result)
-
-                let labelCosineFP16 = "batch.cosine.512.N\(n).optimized-fp16"
-                let cosineFP16Result = await runBatchCosineFP16_512(name: labelCosineFP16, query: queryO, candidates: candsO, options: options)
-                all.append(contentsOf: cosineFP16Result)
-            }
-        }
-        return all
-    }
-
-    private static func run768(_ options: CLIOptions) async -> [BenchResult] {
-        let qSeed = InputSeeds.batch(dim: 768, n: 0, runSeed: options.runSeed).query
-        let qArr = InputFactory.randomArray(count: 768, seed: qSeed)
-        let queryG = try! Vector<Dim768>(qArr)
-        let queryO = try! Vector768Optimized(qArr)
-
-        var all: [BenchResult] = []
-        for n in options.batchNs {
-            let baseSeed = InputSeeds.batch(dim: 768, n: n, runSeed: options.runSeed).baseCandidates
-            let candsArr: [[Float]] = (0..<n).map { i in
-                InputFactory.randomArray(count: 768, seed: baseSeed &+ UInt64(i))
-            }
-            let candsG: [Vector<Dim768>] = candsArr.map { try! Vector<Dim768>($0) }
-            let candsO: [Vector768Optimized] = candsArr.map { try! Vector768Optimized($0) }
-
-            for (mode, provider) in providers(forDim: 768) {
-                let labelG = "batch.euclidean2.768.N\(n).generic.\(mode)"
-                let resG = await runBatchGeneric(name: labelG, query: queryG, candidates: candsG, provider: provider, options: options, minChunk: 256)
-                all.append(contentsOf: resG)
-
-                let labelO = "batch.euclidean2.768.N\(n).optimized.\(mode)"
-                let resO = await runBatchOptimized(name: labelO, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 256)
-                all.append(contentsOf: resO)
-
-                if (options.abOnly ?? false) || abCompareEnabled(options) {
-                    let eG = await runBatchGenericEuclid(name: "batch.euclidean.768.N\(n).generic.\(mode)", query: queryG, candidates: candsG, provider: provider, options: options, minChunk: 256)
-                    all.append(contentsOf: eG)
-                    let eO = await runBatchOptimizedEuclid(name: "batch.euclidean.768.N\(n).optimized.\(mode)", query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 256)
-                    all.append(contentsOf: eO)
-                }
-
-                // Cosine fused (optimized)
-                let labelCF = "batch.cosine.768.N\(n).optimized-fused.\(mode)"
-                let fused = await runBatchOptimizedCosineFused(name: labelCF, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 256)
-                all.append(contentsOf: fused)
-
-                // Cosine pre-normalized (optimized)
-                let qNorm = (try? queryO.normalized().get()) ?? queryO
-                let candsNorm768: [Vector768Optimized] = candsO.map { (try? $0.normalized().get()) ?? $0 }
-                let labelCP = "batch.cosine.768.N\(n).optimized-preNorm.\(mode)"
-                let pren = await runBatchOptimizedCosinePreNorm(name: labelCP, query: qNorm, candidates: candsNorm768, provider: provider, options: options, minChunk: 256)
-                all.append(contentsOf: pren)
-            }
-
-            // SoA (Structure-of-Arrays) benchmarks when enabled (skip in ab-only)
-            if (options.abOnly ?? false) == false && soaEnabled(options) && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 768) {
-                let labelSoA = "batch.euclidean2.768.N\(n).optimized-soa"
-                if Filters.shouldRun(name: labelSoA, options: options) {
-                    let soaResult = await runBatchSoA768(name: labelSoA, query: queryO, candidates: candsO, options: options)
-                    all.append(contentsOf: soaResult)
-                }
-            }
-
-            // FP16 Mixed-Precision benchmarks when enabled (skip in ab-only)
-            if (options.abOnly ?? false) == false && mixedPrecisionEnabled(options) && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 768) {
-                let labelFP16 = "batch.euclidean2.768.N\(n).optimized-fp16"
-                if Filters.shouldRun(name: labelFP16, options: options) {
-                    let fp16Result = await runBatchFP16_768(name: labelFP16, query: queryO, candidates: candsO, options: options)
-                    all.append(contentsOf: fp16Result)
-                }
-
-                let labelCosineFP16 = "batch.cosine.768.N\(n).optimized-fp16"
-                if Filters.shouldRun(name: labelCosineFP16, options: options) {
-                    let cosineFP16Result = await runBatchCosineFP16_768(name: labelCosineFP16, query: queryO, candidates: candsO, options: options)
-                    all.append(contentsOf: cosineFP16Result)
+                if options.abOnly != true && options.useMixedPrecision == true && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 512) {
+                    let label = "batch.cosine.512.N\(n).optimized-fp16"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 512, count: n, runSeed: options.runSeed) { try Vector512Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchCosineFP16_512(name: label, query: query, candidates: candidates, options: options)
+                    })
                 }
             }
         }
-        return all
+        return cases
     }
 
-    private static func run1536(_ options: CLIOptions) async -> [BenchResult] {
-        let qSeed = InputSeeds.batch(dim: 1536, n: 0, runSeed: options.runSeed).query
-        let qArr = InputFactory.randomArray(count: 1536, seed: qSeed)
-        let queryG = try! Vector<Dim1536>(qArr)
-        let queryO = try! Vector1536Optimized(qArr)
-
-        var all: [BenchResult] = []
-        for n in options.batchNs {
-            let baseSeed = InputSeeds.batch(dim: 1536, n: n, runSeed: options.runSeed).baseCandidates
-            let candsArr: [[Float]] = (0..<n).map { i in
-                InputFactory.randomArray(count: 1536, seed: baseSeed &+ UInt64(i))
-            }
-            let candsG: [Vector<Dim1536>] = candsArr.map { try! Vector<Dim1536>($0) }
-            let candsO: [Vector1536Optimized] = candsArr.map { try! Vector1536Optimized($0) }
-
-            for (mode, provider) in providers(forDim: 1536) {
-                let labelG = "batch.euclidean2.1536.N\(n).generic.\(mode)"
-                if Filters.shouldRun(name: labelG, options: options) {
-                    let resG = await runBatchGeneric(name: labelG, query: queryG, candidates: candsG, provider: provider, options: options, minChunk: 512)
-                    all.append(contentsOf: resG)
-                }
-
-                let labelO = "batch.euclidean2.1536.N\(n).optimized.\(mode)"
-                if Filters.shouldRun(name: labelO, options: options) {
-                    let resO = await runBatchOptimized(name: labelO, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 512)
-                    all.append(contentsOf: resO)
-                }
-
-                if (options.abOnly ?? false) || abCompareEnabled(options) {
-                    let nameG = "batch.euclidean.1536.N\(n).generic.\(mode)"
-                    if Filters.shouldRun(name: nameG, options: options) {
-                        let eG = await runBatchGenericEuclid(name: nameG, query: queryG, candidates: candsG, provider: provider, options: options, minChunk: 512)
-                        all.append(contentsOf: eG)
+    private static func catalog768(options: ValidatedOptions, injected: (any ComputeProvider)?) -> [BenchmarkCase] {
+        var cases: [BenchmarkCase] = []
+        if options.dims.contains(768) {
+            for n in options.batchNs {
+                for (mode, provider) in providers(forDim: 768, injected: injected) {
+                    if true {
+                        let label = "batch.euclidean2.768.N\(n).generic.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector<Dim768>($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchGeneric(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
                     }
-                    let nameO = "batch.euclidean.1536.N\(n).optimized.\(mode)"
-                    if Filters.shouldRun(name: nameO, options: options) {
-                        let eO = await runBatchOptimizedEuclid(name: nameO, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 512)
-                        all.append(contentsOf: eO)
+                    if true {
+                        let label = "batch.euclidean2.768.N\(n).optimized.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector768Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimized(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if options.abCompare == true {
+                        let label = "batch.euclidean.768.N\(n).generic.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector<Dim768>($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchGenericEuclid(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if options.abCompare == true {
+                        let label = "batch.euclidean.768.N\(n).optimized.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector768Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimizedEuclid(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if true {
+                        let label = "batch.cosine.768.N\(n).optimized-fused.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector768Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimizedCosineFused(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 256)
+                        })
+                    }
+                    if true {
+                        let label = "batch.cosine.768.N\(n).optimized-preNorm.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector768Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    let normalizedQuery = (try? query.normalized().get()) ?? query
+                    let normalizedCandidates = candidates.map { (try? $0.normalized().get()) ?? $0 }
+                    return await runBatchOptimizedCosinePreNorm(name: label, query: normalizedQuery, candidates: normalizedCandidates, provider: provider, options: options, minChunk: 256)
+                        })
                     }
                 }
-
-                // Cosine fused (optimized)
-                let labelCF = "batch.cosine.1536.N\(n).optimized-fused.\(mode)"
-                if Filters.shouldRun(name: labelCF, options: options) {
-                    let fused = await runBatchOptimizedCosineFused(name: labelCF, query: queryO, candidates: candsO, provider: provider, options: options, minChunk: 512)
-                    all.append(contentsOf: fused)
+                if options.abOnly != true && options.preferSoA == true && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 768) {
+                    let label = "batch.euclidean2.768.N\(n).optimized-soa"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector768Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchSoA768(name: label, query: query, candidates: candidates, options: options)
+                    })
                 }
-
-                // Cosine pre-normalized (optimized)
-                let qNorm = (try? queryO.normalized().get()) ?? queryO
-                let candsNorm1536: [Vector1536Optimized] = candsO.map { (try? $0.normalized().get()) ?? $0 }
-                let labelCP = "batch.cosine.1536.N\(n).optimized-preNorm.\(mode)"
-                if Filters.shouldRun(name: labelCP, options: options) {
-                    let pren = await runBatchOptimizedCosinePreNorm(name: labelCP, query: qNorm, candidates: candsNorm1536, provider: provider, options: options, minChunk: 512)
-                    all.append(contentsOf: pren)
+                if options.abOnly != true && options.useMixedPrecision == true && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 768) {
+                    let label = "batch.euclidean2.768.N\(n).optimized-fp16"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector768Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchFP16_768(name: label, query: query, candidates: candidates, options: options)
+                    })
                 }
-            }
-
-            // SoA (Structure-of-Arrays) benchmarks when enabled (skip in ab-only)
-            if (options.abOnly ?? false) == false && soaEnabled(options) && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 1536) {
-                let labelSoA = "batch.euclidean2.1536.N\(n).optimized-soa"
-                if Filters.shouldRun(name: labelSoA, options: options) {
-                    let soaResult = await runBatchSoA1536(name: labelSoA, query: queryO, candidates: candsO, options: options)
-                    all.append(contentsOf: soaResult)
-                }
-            }
-
-            // FP16 Mixed-Precision benchmarks when enabled (skip in ab-only)
-            if (options.abOnly ?? false) == false && mixedPrecisionEnabled(options) && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 1536) {
-                let labelFP16 = "batch.euclidean2.1536.N\(n).optimized-fp16"
-                if Filters.shouldRun(name: labelFP16, options: options) {
-                    let fp16Result = await runBatchFP16_1536(name: labelFP16, query: queryO, candidates: candsO, options: options)
-                    all.append(contentsOf: fp16Result)
-                }
-
-                let labelCosineFP16 = "batch.cosine.1536.N\(n).optimized-fp16"
-                if Filters.shouldRun(name: labelCosineFP16, options: options) {
-                    let cosineFP16Result = await runBatchCosineFP16_1536(name: labelCosineFP16, query: queryO, candidates: candsO, options: options)
-                    all.append(contentsOf: cosineFP16Result)
+                if options.abOnly != true && options.useMixedPrecision == true && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 768) {
+                    let label = "batch.cosine.768.N\(n).optimized-fp16"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 768, count: n, runSeed: options.runSeed) { try Vector768Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchCosineFP16_768(name: label, query: query, candidates: candidates, options: options)
+                    })
                 }
             }
         }
-        return all
+        return cases
+    }
+
+    private static func catalog1536(options: ValidatedOptions, injected: (any ComputeProvider)?) -> [BenchmarkCase] {
+        var cases: [BenchmarkCase] = []
+        if options.dims.contains(1536) {
+            for n in options.batchNs {
+                for (mode, provider) in providers(forDim: 1536, injected: injected) {
+                    if true {
+                        let label = "batch.euclidean2.1536.N\(n).generic.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n, runSeed: options.runSeed) { try Vector<Dim1536>($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchGeneric(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 512)
+                        })
+                    }
+                    if true {
+                        let label = "batch.euclidean2.1536.N\(n).optimized.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n,
+                        runSeed: options.runSeed) { try Vector1536Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimized(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 512)
+                        })
+                    }
+                    if options.abCompare == true {
+                        let label = "batch.euclidean.1536.N\(n).generic.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n, runSeed: options.runSeed) { try Vector<Dim1536>($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchGenericEuclid(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 512)
+                        })
+                    }
+                    if options.abCompare == true {
+                        let label = "batch.euclidean.1536.N\(n).optimized.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n,
+                        runSeed: options.runSeed) { try Vector1536Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimizedEuclid(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 512)
+                        })
+                    }
+                    if true {
+                        let label = "batch.cosine.1536.N\(n).optimized-fused.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n,
+                        runSeed: options.runSeed) { try Vector1536Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return await runBatchOptimizedCosineFused(name: label, query: query, candidates: candidates, provider: provider, options: options, minChunk: 512)
+                        })
+                    }
+                    if true {
+                        let label = "batch.cosine.1536.N\(n).optimized-preNorm.\(mode)"
+                        cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n,
+                        runSeed: options.runSeed) { try Vector1536Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    let normalizedQuery = (try? query.normalized().get()) ?? query
+                    let normalizedCandidates = candidates.map { (try? $0.normalized().get()) ?? $0 }
+                    return await runBatchOptimizedCosinePreNorm(name: label, query: normalizedQuery, candidates: normalizedCandidates, provider: provider, options: options, minChunk: 512)
+                        })
+                    }
+                }
+                if options.abOnly != true && options.preferSoA == true && BatchKernels_SoA.shouldUseSoA(candidateCount: n, dimension: 1536) {
+                    let label = "batch.euclidean2.1536.N\(n).optimized-soa"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n,
+                        runSeed: options.runSeed) { try Vector1536Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchSoA1536(name: label, query: query, candidates: candidates, options: options)
+                    })
+                }
+                if options.abOnly != true && options.useMixedPrecision == true && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 1536) {
+                    let label = "batch.euclidean2.1536.N\(n).optimized-fp16"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n,
+                        runSeed: options.runSeed) { try Vector1536Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchFP16_1536(name: label, query: query, candidates: candidates, options: options)
+                    })
+                }
+                if options.abOnly != true && options.useMixedPrecision == true && MixedPrecisionKernels.shouldUseMixedPrecision(candidateCount: n, dimension: 1536) {
+                    let label = "batch.cosine.1536.N\(n).optimized-fp16"
+                    cases.append(BenchmarkCase(label, boundary: Boundaries.record(label, options)) {
+                    let fixture = try BatchFixtures.makeFixture(dim: 1536, count: n,
+                        runSeed: options.runSeed) { try Vector1536Optimized($0) }
+                    let query = fixture.query
+                    let candidates = fixture.candidates
+                    return try await runBatchCosineFP16_1536(name: label, query: query, candidates: candidates, options: options)
+                    })
+                }
+            }
+        }
+        return cases
     }
 
     // MARK: - Helpers (generic & optimized)
@@ -302,170 +327,200 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector<D>,
         candidates: [Vector<D>],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
-                var local: Float = 0
-                for i in range { local += query.euclideanDistanceSquared(to: candidates[i]) }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
+                    var local: Float = 0
+                    for i in range { local += query.euclideanDistanceSquared(to: candidates[i]) }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
+                    var local: Float = 0
+                    for i in range { local += query.euclideanDistanceSquared(to: candidates[i]) }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            // Correctness computation (out-of-band)
+            var outputs = [Float](repeating: 0, count: n)
+            for i in 0..<n { outputs[i] = query.euclideanDistanceSquared(to: candidates[i]) }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
-                var local: Float = 0
-                for i in range { local += query.euclideanDistanceSquared(to: candidates[i]) }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        // Correctness computation (out-of-band)
-        var outputs = [Float](repeating: 0, count: n)
-        for i in 0..<n { outputs[i] = query.euclideanDistanceSquared(to: candidates[i]) }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimized(
         name: String,
         query: Vector512Optimized,
         candidates: [Vector512Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                // Compute distances for this range using blocked kernel into shared buffer segment
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid2_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    // Compute this range's distances with range_euclid2_512 into a per-range [Float] created here, then sum them
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid2_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid2_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_euclid2_512(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid2_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_euclid2_512(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimized(
         name: String,
         query: Vector768Optimized,
         candidates: [Vector768Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid2_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid2_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid2_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_euclid2_768(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid2_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_euclid2_768(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimized(
         name: String,
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid2_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid2_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid2_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_euclid2_1536(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid2_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_euclid2_1536(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     // MARK: - Euclidean (sqrt) A/B helpers
@@ -474,159 +529,190 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector<D>,
         candidates: [Vector<D>],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
-                var local: Float = 0
-                for i in range { local += EuclideanDistance().distance(query, candidates[i]) }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
+                    var local: Float = 0
+                    for i in range { local += EuclideanDistance().distance(query, candidates[i]) }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
+                    var local: Float = 0
+                    for i in range { local += EuclideanDistance().distance(query, candidates[i]) }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            for i in 0..<n { outputs[i] = EuclideanDistance().distance(query, candidates[i]) }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { @Sendable range in
-                var local: Float = 0
-                for i in range { local += EuclideanDistance().distance(query, candidates[i]) }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        for i in 0..<n { outputs[i] = EuclideanDistance().distance(query, candidates[i]) }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimizedEuclid(
         name: String,
         query: Vector512Optimized,
         candidates: [Vector512Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            return [res.withCorrectness(observations.statistics)]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        return [res]
     }
 
     private static func runBatchOptimizedEuclid(
         name: String,
         query: Vector768Optimized,
         candidates: [Vector768Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_euclid_768(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_euclid_768(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimizedEuclid(
         name: String,
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_euclid_1536(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     // MARK: - Cosine (fused & pre-normalized) optimized helpers
@@ -635,243 +721,292 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector512Optimized,
         candidates: [Vector512Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_cosine_fused_512(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimizedCosineFused(
         name: String,
         query: Vector768Optimized,
         candidates: [Vector768Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_cosine_fused_768(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimizedCosineFused(
         name: String,
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        let _ = [Float](repeating: 0, count: n)
-        await Harness.warmupAsync {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            let _ = [Float](repeating: 0, count: n)
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            var outputs = [Float](repeating: 0, count: n)
+            outputs.withUnsafeMutableBufferPointer { out in
+                BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: 0..<n, out: out)
+            }
+            let stats = Correctness.vector(currents: outputs, references: refs)
+            let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+                meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent,
+                correctness: observations.combining(stats))
+            return [out]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-        }
-        var outputs = [Float](repeating: 0, count: n)
-        outputs.withUnsafeMutableBufferPointer { out in
-            BatchKernels.range_cosine_fused_1536(query: query, candidates: candidates, range: 0..<n, out: out)
-        }
-        let refs: [Double] = query.withUnsafeBufferPointer { qb in
-            candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
-        }
-        let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
-        return [out]
     }
 
     private static func runBatchOptimizedCosinePreNorm(
         name: String,
         query: Vector512Optimized,
         candidates: [Vector512Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        let _ = [Float](repeating: 0, count: n)
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_preNorm_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            let _ = [Float](repeating: 0, count: n)
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_preNorm_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_preNorm_512(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            return [res.withCorrectness(observations.statistics)]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_preNorm_512(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        return [res]
     }
 
     private static func runBatchOptimizedCosinePreNorm(
         name: String,
         query: Vector768Optimized,
         candidates: [Vector768Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        let _ = [Float](repeating: 0, count: n)
-        await Harness.warmupAsync {
-            let sum = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_preNorm_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(sum ?? 0)
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            let _ = [Float](repeating: 0, count: n)
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_preNorm_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_preNorm_768(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            return [res.withCorrectness(observations.statistics)]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let total = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_preNorm_768(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-            blackHole(total ?? 0)
-        }
-        return [res]
     }
 
     private static func runBatchOptimizedCosinePreNorm(
         name: String,
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized],
-        provider: CPUComputeProvider,
-        options: CLIOptions,
+        provider: any ComputeProvider,
+        options: ValidatedOptions,
         minChunk: Int
     ) async -> [BenchResult] {
-        let n = candidates.count
-        let _ = [Float](repeating: 0, count: n)
-        await Harness.warmupAsync {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_preNorm_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
+        return await BatchExecution.run(name: name) {
+            let n = candidates.count
+            let refs: [Double] = query.withUnsafeBufferPointer { qb in
+                candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
+            }
+            let observations = ProviderObservations(reference: refs.reduce(0, +))
+            let _ = [Float](repeating: 0, count: n)
+            try await Harness.warmupAsync {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_preNorm_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+                let observedValue = try await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
+                    var local: Float = 0
+                    var tmp = [Float](repeating: 0, count: range.count)
+                    tmp.withUnsafeMutableBufferPointer { sub in
+                        BatchKernels.range_cosine_preNorm_1536(query: query, candidates: candidates, range: range, out: sub)
+                        for j in 0..<sub.count { local += sub[j] }
+                    }
+                    return local
+                } _: { $0 + $1 }
+                observations.observe(observedValue)
+                blackHole(observedValue)
+            }
+            return [res.withCorrectness(observations.statistics)]
         }
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
-            let _ = try? await provider.parallelReduce(items: 0..<n, initial: Float(0), minChunk: minChunk) { range in
-                var local: Float = 0
-                var tmp = [Float](repeating: 0, count: range.count)
-                tmp.withUnsafeMutableBufferPointer { sub in
-                    BatchKernels.range_cosine_preNorm_1536(query: query, candidates: candidates, range: range, out: sub)
-                    for j in 0..<sub.count { local += sub[j] }
-                }
-                return local
-            } _: { $0 + $1 }
-        }
-        return [res]
     }
 
     // MARK: - SoA (Structure-of-Arrays) Benchmark Functions
@@ -880,11 +1015,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector512Optimized,
         candidates: [Vector512Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Build SoA once (this cost is part of the benchmark)
+        // Build SoA once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let soa = SoA<Vector512Optimized>.build(from: candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -893,14 +1029,14 @@ struct BatchBench: BenchmarkSuite {
         defer { resultsPtr.deallocate() }
         resultsPtr.initialize(repeating: 0)
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
             BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: resultsPtr)
-            var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
             BatchKernels_SoA.euclid2_512(query: query, soa: soa, out: resultsPtr)
             var total: Float = 0
             for i in 0..<n { total += resultsPtr[i] }
@@ -915,7 +1051,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -923,11 +1060,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector768Optimized,
         candidates: [Vector768Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Build SoA once (this cost is part of the benchmark)
+        // Build SoA once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let soa = SoA<Vector768Optimized>.build(from: candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -936,14 +1074,14 @@ struct BatchBench: BenchmarkSuite {
         defer { resultsPtr.deallocate() }
         resultsPtr.initialize(repeating: 0)
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
             BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: resultsPtr)
-            var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
             BatchKernels_SoA.euclid2_768(query: query, soa: soa, out: resultsPtr)
             var total: Float = 0
             for i in 0..<n { total += resultsPtr[i] }
@@ -957,7 +1095,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -965,11 +1104,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Build SoA once (this cost is part of the benchmark)
+        // Build SoA once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let soa = SoA<Vector1536Optimized>.build(from: candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -978,14 +1118,14 @@ struct BatchBench: BenchmarkSuite {
         defer { resultsPtr.deallocate() }
         resultsPtr.initialize(repeating: 0)
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
             BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: resultsPtr)
-            var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
             BatchKernels_SoA.euclid2_1536(query: query, soa: soa, out: resultsPtr)
             var total: Float = 0
             for i in 0..<n { total += resultsPtr[i] }
@@ -999,7 +1139,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -1009,11 +1150,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector512Optimized,
         candidates: [Vector512Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        // Convert candidates to FP16 once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -1022,19 +1164,19 @@ struct BatchBench: BenchmarkSuite {
         defer { resultsPtr.deallocate() }
         resultsPtr.initialize(repeating: 0)
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
             MixedPrecisionKernels.range_euclid2_mixed_512(
                 query: query,
                 candidatesFP16: candidatesFP16,
                 range: 0..<n,
                 out: resultsPtr
             )
-            var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
             MixedPrecisionKernels.range_euclid2_mixed_512(
                 query: query,
                 candidatesFP16: candidatesFP16,
@@ -1057,7 +1199,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -1065,11 +1208,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector768Optimized,
         candidates: [Vector768Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        // Convert candidates to FP16 once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -1078,19 +1222,19 @@ struct BatchBench: BenchmarkSuite {
         defer { resultsPtr.deallocate() }
         resultsPtr.initialize(repeating: 0)
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
             MixedPrecisionKernels.range_euclid2_mixed_768(
                 query: query,
                 candidatesFP16: candidatesFP16,
                 range: 0..<n,
                 out: resultsPtr
             )
-            var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+            var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
             MixedPrecisionKernels.range_euclid2_mixed_768(
                 query: query,
                 candidatesFP16: candidatesFP16,
@@ -1112,7 +1256,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -1120,11 +1265,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        // Convert candidates to FP16 once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_1536(candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -1134,7 +1280,7 @@ struct BatchBench: BenchmarkSuite {
         resultsPtr.initialize(repeating: 0)
 
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
                 MixedPrecisionKernels.range_euclid2_mixed_1536(
 
                     query: query,
@@ -1147,12 +1293,12 @@ struct BatchBench: BenchmarkSuite {
 
                 )
 
-                var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
                 MixedPrecisionKernels.range_euclid2_mixed_1536(
 
                     query: query,
@@ -1180,7 +1326,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.euclid2(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -1188,11 +1335,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector512Optimized,
         candidates: [Vector512Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        // Convert candidates to FP16 once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_512(candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -1202,7 +1350,7 @@ struct BatchBench: BenchmarkSuite {
         resultsPtr.initialize(repeating: 0)
 
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
                 MixedPrecisionKernels.range_cosine_mixed_512(
 
                     query: query,
@@ -1215,12 +1363,12 @@ struct BatchBench: BenchmarkSuite {
 
                 )
 
-                var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
                 MixedPrecisionKernels.range_cosine_mixed_512(
 
                     query: query,
@@ -1248,7 +1396,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -1256,11 +1405,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector768Optimized,
         candidates: [Vector768Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        // Convert candidates to FP16 once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -1270,7 +1420,7 @@ struct BatchBench: BenchmarkSuite {
         resultsPtr.initialize(repeating: 0)
 
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
                 MixedPrecisionKernels.range_cosine_mixed_768(
 
                     query: query,
@@ -1283,12 +1433,12 @@ struct BatchBench: BenchmarkSuite {
 
                 )
 
-                var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
                 MixedPrecisionKernels.range_cosine_mixed_768(
 
                     query: query,
@@ -1316,7 +1466,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 
@@ -1324,11 +1475,12 @@ struct BatchBench: BenchmarkSuite {
         name: String,
         query: Vector1536Optimized,
         candidates: [Vector1536Optimized],
-        options: CLIOptions
-    ) async -> [BenchResult] {
+        options: ValidatedOptions
+    ) async throws -> [BenchResult] {
         let n = candidates.count
 
-        // Convert candidates to FP16 once (this cost is part of the benchmark)
+        // Convert candidates to FP16 once, before warmup and timing. This preparation is outside the timed body
+        // (see the case's measurement boundary: inputPreparation = excluded).
         let candidatesFP16 = MixedPrecisionKernels.convertToFP16_1536(candidates)
 
         // Allocate results buffer once to avoid excessive allocations in warmup loop
@@ -1338,7 +1490,7 @@ struct BatchBench: BenchmarkSuite {
         resultsPtr.initialize(repeating: 0)
 
 
-        await Harness.warmupAsync {
+        try await Harness.warmupAsync {
                 MixedPrecisionKernels.range_cosine_mixed_1536(
 
                     query: query,
@@ -1351,12 +1503,12 @@ struct BatchBench: BenchmarkSuite {
 
                 )
 
-                var sum: Float = 0
-            for i in 0..<n { sum += resultsPtr[i] }
-            blackHole(sum)
+                var total: Float = 0
+            for i in 0..<n { total += resultsPtr[i] }
+            blackHole(total)
         }
 
-        let res = await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
+        let res = try await Harness.measureAsync(name: name, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats, unitCount: n, samples: options.samples) {
                 MixedPrecisionKernels.range_cosine_mixed_1536(
 
                     query: query,
@@ -1384,7 +1536,8 @@ struct BatchBench: BenchmarkSuite {
             candidates.map { cand in cand.withUnsafeBufferPointer { cb in DoubleRef.cosineDist(qb, cb) } }
         }
         let stats = Correctness.vector(currents: outputs, references: refs)
-        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples, meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
+        let out = BenchResult(name: res.name, iterations: res.iterations, totalNanoseconds: res.totalNanoseconds, unitCount: res.unitCount, samples: res.samples,
+            meanNsPerOp: res.meanNsPerOp, medianNsPerOp: res.medianNsPerOp, p90NsPerOp: res.p90NsPerOp, stddevNsPerOp: res.stddevNsPerOp, rsdPercent: res.rsdPercent, correctness: stats)
         return [out]
     }
 }

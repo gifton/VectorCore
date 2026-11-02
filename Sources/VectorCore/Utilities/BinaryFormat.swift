@@ -161,10 +161,10 @@ internal enum BinaryFormat {
 
         // Read and validate dimension
         let dimension = try readUInt32(from: data, at: 6)
-        guard dimension > 0 && dimension <= maxDimension else {
+        guard dimension <= maxDimension else {
             throw VectorError.invalidDimension(
                 Int(dimension),
-                reason: "Must be between 1 and \(maxDimension)"
+                reason: "Must be between 0 and \(maxDimension)"
             )
         }
 
@@ -196,31 +196,5 @@ internal enum BinaryFormat {
                 reason: "CRC32 mismatch: expected \(storedChecksum), calculated \(calculatedChecksum)"
             )
         }
-    }
-}
-
-// MARK: - UnsafeRawBufferPointer Extensions
-
-extension UnsafeRawBufferPointer {
-    /// Load unaligned value from buffer
-    @inlinable
-    func loadUnaligned<T>(fromByteOffset offset: Int, as type: T.Type) -> T {
-        assert(offset >= 0 && offset + MemoryLayout<T>.size <= count)
-        return self.baseAddress!.advanced(by: offset).loadUnaligned(as: type)
-    }
-}
-
-extension UnsafeRawPointer {
-    /// Load unaligned value from pointer
-    @inlinable
-    func loadUnaligned<T>(as type: T.Type) -> T {
-        let buffer = UnsafeMutableRawPointer.allocate(
-            byteCount: MemoryLayout<T>.size,
-            alignment: MemoryLayout<T>.alignment
-        )
-        defer { buffer.deallocate() }
-
-        buffer.copyMemory(from: self, byteCount: MemoryLayout<T>.size)
-        return buffer.load(as: type)
     }
 }

@@ -70,7 +70,7 @@ internal func vectorMemorySize<Vector: SIMD>(_ type: Vector.Type) -> Int where V
 /// Get memory alignment requirement of a SIMD vector type.
 ///
 /// - Parameter type: The SIMD vector type to query
-/// - Returns: Required alignment in bytes for optimal performance
+/// - Returns: `MemoryLayout<Vector>.alignment` in bytes
 ///
 /// ## Example
 /// ```swift
@@ -98,49 +98,23 @@ internal func vectorMemoryAlignment<Vector: SIMD>(_ type: Vector.Type) -> Int wh
 /// }
 /// ```
 public func isAligned<T>(_ pointer: UnsafePointer<T>, to alignment: Int) -> Bool {
-    return Int(bitPattern: pointer) % alignment == 0
+    return alignment > 0 && Int(bitPattern: pointer) % alignment == 0
 }
 
-/// Copy memory with alignment optimization.
-///
-/// This function checks alignment and uses optimized copy operations
-/// when both source and destination meet alignment requirements.
-///
-/// - Parameters:
-///   - source: Source memory pointer
-///   - destination: Destination memory pointer
-///   - count: Number of elements to copy
-///   - preferredAlignment: Preferred alignment for optimization (default: 64)
-///
-/// ## Performance Notes
-/// - Aligned copy uses bulk memory operations
-/// - Unaligned copy falls back to element-wise operations
-/// - 64-byte alignment optimal for cache lines
-///
-/// ## Example
-/// ```swift
-/// alignedCopy(
-///     from: sourceBuffer,
-///     to: destBuffer,
-///     count: 1024,
-///     preferredAlignment: 64
-/// )
-/// ```
+/// Replace `count` initialized destination elements with initialized source elements.
+/// Both ranges must be valid, naturally aligned and nonoverlapping. Old destination
+/// values are released. For uninitialized storage, use `initialize(from:count:)`.
+/// `preferredAlignment` is a positive compatibility hint; it does not change ownership
+/// operations or promise a measured optimization. `count` must be nonnegative.
 public func alignedCopy<T>(
     from source: UnsafePointer<T>,
     to destination: UnsafeMutablePointer<T>,
     count: Int,
     preferredAlignment: Int = 64
 ) {
-    if isAligned(source, to: preferredAlignment) && isAligned(destination, to: preferredAlignment) {
-        // Use optimized copy for aligned memory
-        destination.initialize(from: source, count: count)
-    } else {
-        // Fallback to element-wise copy
-        for i in 0..<count {
-            destination[i] = source[i]
-        }
-    }
+    guard count >= 0 else { fatalError("Count must be nonnegative") }
+    guard preferredAlignment > 0 else { fatalError("Preferred alignment must be positive") }
+    destination.update(from: source, count: count)
 }
 
 // MARK: - Buffer Utilities
@@ -217,13 +191,13 @@ internal func secureZero<T>(_ buffer: UnsafeMutableBufferPointer<T>) {
 
 // MARK: - Sendable Buffer Wrapper
 
-/// Thread-safe wrapper for UnsafeMutablePointer to enable Sendable conformance
+/// `@unchecked Sendable` wrapper for UnsafeMutablePointer: it owns the allocation and
+/// frees it in `deinit`. It adds no synchronization.
 ///
-/// This wrapper provides controlled concurrent access to unsafe memory buffers.
-/// The buffer is isolated within the wrapper and only accessed through the
-/// nonisolated pointer property, making it safe to use across concurrency domains.
+/// The pointer is reachable from any isolation domain (`nonisolated var pointer`); the
+/// compiler does not check accesses through it.
 ///
-/// - Warning: Caller is responsible for ensuring thread-safe access patterns
+/// - Warning: The caller must synchronize concurrent reads and writes through `pointer`
 internal final class SendableBufferWrapper<T> {
     private let buffer: UnsafeMutablePointer<T>
     public let capacity: Int
@@ -247,7 +221,7 @@ internal final class SendableBufferWrapper<T> {
 
 extension SendableBufferWrapper: @unchecked Sendable {}
 
-/// Thread-safe wrapper for UnsafeMutableBufferPointer to enable Sendable conformance
+/// `@unchecked Sendable` wrapper for UnsafeMutableBufferPointer; it adds no synchronization
 internal final class SendableMutableBufferWrapper<T> {
     private let buffer: UnsafeMutableBufferPointer<T>
 

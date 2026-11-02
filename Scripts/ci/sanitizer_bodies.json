@@ -1,0 +1,937 @@
+{
+  "schemaVersion": 1,
+  "sanitizers": {
+    "address": [
+      {
+        "id": "MemoryPoolTests/testAcquire_ReturnsBufferWithCountAndAlignment",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_ReturnsBufferWithCountAndAlignment\\(\\)",
+        "displayName": "testAcquire_ReturnsBufferWithCountAndAlignment()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_ReusesReturnedBuffer_IncreasesHitRate",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_ReusesReturnedBuffer_IncreasesHitRate\\(\\)",
+        "displayName": "testAcquire_ReusesReturnedBuffer_IncreasesHitRate()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts\\(\\)",
+        "displayName": "testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse\\(\\)",
+        "displayName": "testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testReturn_RespectsMaxBuffersPerSizeLimit",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testReturn_RespectsMaxBuffersPerSizeLimit\\(\\)",
+        "displayName": "testReturn_RespectsMaxBuffersPerSizeLimit()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testReturn_RespectsMaxTotalMemoryLimit",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testReturn_RespectsMaxTotalMemoryLimit\\(\\)",
+        "displayName": "testReturn_RespectsMaxTotalMemoryLimit()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testRetentionLimitUsesBytesAcrossElementTypes",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testRetentionLimitUsesBytesAcrossElementTypes\\(\\)",
+        "displayName": "testRetentionLimitUsesBytesAcrossElementTypes()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testCleanupSubtractsBytesAcrossElementTypes",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testCleanupSubtractsBytesAcrossElementTypes\\(\\)",
+        "displayName": "testCleanupSubtractsBytesAcrossElementTypes()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testCleanup_RemovesStaleEntries_UpdatesStats",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testCleanup_RemovesStaleEntries_UpdatesStats\\(\\)",
+        "displayName": "testCleanup_RemovesStaleEntries_UpdatesStats()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testWithBuffer_ProvidesWritableAlignedBuffer",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testWithBuffer_ProvidesWritableAlignedBuffer\\(\\)",
+        "displayName": "testWithBuffer_ProvidesWritableAlignedBuffer()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testWithBuffer_OrdinaryZeroAndSmallAcquisitions",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testWithBuffer_OrdinaryZeroAndSmallAcquisitions\\(\\)",
+        "displayName": "testWithBuffer_OrdinaryZeroAndSmallAcquisitions()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testStatistics_TotalInUseTracksAcquireAndReturn",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testStatistics_TotalInUseTracksAcquireAndReturn\\(\\)",
+        "displayName": "testStatistics_TotalInUseTracksAcquireAndReturn()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testStatistics_BufferCountByTypeReflectsPools",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testStatistics_BufferCountByTypeReflectsPools\\(\\)",
+        "displayName": "testStatistics_BufferCountByTypeReflectsPools()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testConcurrentAcquireAndReturn_NoLeaksNoCrashes",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testConcurrentAcquireAndReturn_NoLeaksNoCrashes\\(\\)",
+        "displayName": "testConcurrentAcquireAndReturn_NoLeaksNoCrashes()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testSeparateTypePools_DoNotInterfere",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testSeparateTypePools_DoNotInterfere\\(\\)",
+        "displayName": "testSeparateTypePools_DoNotInterfere()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_CountZero_ReturnsZeroLengthHandle",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_CountZero_ReturnsZeroLengthHandle\\(\\)",
+        "displayName": "testAcquire_CountZero_ReturnsZeroLengthHandle()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_SmallCounts_AlignmentDefaultIsApplied",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_SmallCounts_AlignmentDefaultIsApplied\\(\\)",
+        "displayName": "testAcquire_SmallCounts_AlignmentDefaultIsApplied()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash\\(\\)",
+        "displayName": "testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SIMDProviderBoundsTests/testArrayProviderBoundsAllSizes",
+        "source": "Tests/ComprehensiveTests/SIMDProviderBoundsTests.swift",
+        "filter": "^ComprehensiveTests\\.SIMDProviderBoundsTests/testArrayProviderBoundsAllSizes\\(\\)",
+        "displayName": "ArraySIMDProvider ops are in-bounds for sizes 1...64",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SIMDProviderBoundsTests/testFloatReductionsBounds",
+        "source": "Tests/ComprehensiveTests/SIMDProviderBoundsTests.swift",
+        "filter": "^ComprehensiveTests\\.SIMDProviderBoundsTests/testFloatReductionsBounds\\(\\)",
+        "displayName": "SwiftFloatSIMDProvider reductions are in-bounds for sizes 1...64",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SIMDProviderBoundsTests/testDoubleReductionsBounds",
+        "source": "Tests/ComprehensiveTests/SIMDProviderBoundsTests.swift",
+        "filter": "^ComprehensiveTests\\.SIMDProviderBoundsTests/testDoubleReductionsBounds\\(\\)",
+        "displayName": "SwiftDoubleSIMDProvider reductions are in-bounds for sizes 1...64",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testDynamicVectorSerialization",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testDynamicVectorSerialization\\(\\)",
+        "displayName": "testDynamicVectorSerialization()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testJSONToBinaryConversion",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testJSONToBinaryConversion\\(\\)",
+        "displayName": "testJSONToBinaryConversion()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testExplicitMixedFormatBatchRoundTrips",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testExplicitMixedFormatBatchRoundTrips\\(\\)",
+        "displayName": "testExplicitMixedFormatBatchRoundTrips()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testConcreteOptimizedJSONAndFP32BinaryDestinations",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testConcreteOptimizedJSONAndFP32BinaryDestinations\\(\\)",
+        "displayName": "testConcreteOptimizedJSONAndFP32BinaryDestinations()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testQuantizedVectorSerialization",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testQuantizedVectorSerialization\\(\\)",
+        "displayName": "testQuantizedVectorSerialization()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testMixedPrecisionExplicitFP32Serialization",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testMixedPrecisionExplicitFP32Serialization\\(\\)",
+        "displayName": "testMixedPrecisionExplicitFP32Serialization()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testJSONDefaultRejectsNonfinite",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testJSONDefaultRejectsNonfinite\\(\\)",
+        "displayName": "testJSONDefaultRejectsNonfinite()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testJSONExplicitNonfiniteStrategyClassification",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testJSONExplicitNonfiniteStrategyClassification\\(\\)",
+        "displayName": "testJSONExplicitNonfiniteStrategyClassification()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testFixedObjectSchemaAndOldArrayRejection",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testFixedObjectSchemaAndOldArrayRejection\\(\\)",
+        "displayName": "testFixedObjectSchemaAndOldArrayRejection()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testWhitespaceAndNestedVectorArray",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testWhitespaceAndNestedVectorArray\\(\\)",
+        "displayName": "testWhitespaceAndNestedVectorArray()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testFixtureSpecificPrettyJSONSize",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testFixtureSpecificPrettyJSONSize\\(\\)",
+        "displayName": "testFixtureSpecificPrettyJSONSize()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SerializationEdgeCaseTests/testConcurrentIndependentValueRoundTrips",
+        "source": "Tests/ComprehensiveTests/SerializationEdgeCaseTests.swift",
+        "filter": "^ComprehensiveTests\\.SerializationEdgeCaseTests/testConcurrentIndependentValueRoundTrips\\(\\)",
+        "displayName": "testConcurrentIndependentValueRoundTrips()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/pageAlignedExposesBytes",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/pageAlignedExposesBytes\\(\\)",
+        "displayName": "Page-aligned SoA exposes a page-aligned, page-length pointer",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/defaultReturnsNil",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/defaultReturnsNil\\(\\)",
+        "displayName": "Non-page-aligned SoA returns nil for pageAlignedBytes",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/dataIntegrity",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/dataIntegrity\\(\\)",
+        "displayName": "Page alignment preserves the SoA data layout",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/rawBufferLength",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/rawBufferLength\\(\\)",
+        "displayName": "withUnsafeRawBuffer exposes the logical data length (both paths)",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/exactPageMultiple",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/exactPageMultiple\\(\\)",
+        "displayName": "Already-page-multiple capacity rounds to itself",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/emptyAligned",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/emptyAligned\\(\\)",
+        "displayName": "Empty page-aligned SoA has no bytesNoCopy pointer",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/consumeTransfersOwnership",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/consumeTransfersOwnership\\(\\)",
+        "displayName": "consumeAllocation transfers ownership of the page-aligned buffer",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "SoAPageAlignTests/consumeNonAlignedNil",
+        "source": "Tests/ComprehensiveTests/SoAPageAlignTests.swift",
+        "filter": "^ComprehensiveTests\\.SoAPageAlignTests/consumeNonAlignedNil\\(\\)",
+        "displayName": "consumeAllocation returns nil for a non-page-aligned SoA",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/pageAlignmentContract",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/pageAlignmentContract\\(\\)",
+        "displayName": "Base address and length satisfy the bytesNoCopy contract",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/lengthRounding",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/lengthRounding\\(\\)",
+        "displayName": "Logical length and padded length round correctly across page boundaries",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/zeroInitialized",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/zeroInitialized\\(\\)",
+        "displayName": "Buffer is zero-initialized including padding",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/mutateReadRoundTrip",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/mutateReadRoundTrip\\(\\)",
+        "displayName": "Mutable write is visible through the read contract",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/copyingInit",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/copyingInit\\(\\)",
+        "displayName": "init(copying:) preserves values and count",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/consumeAllocation",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/consumeAllocation\\(\\)",
+        "displayName": "consumeAllocation transfers ownership and preserves pointer identity",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/optimizedConformance",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/optimizedConformance\\(\\)",
+        "displayName": "Vector512Optimized conforms to the read contract",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "UnifiedVectorBufferTests/dynamicConformance",
+        "source": "Tests/ComprehensiveTests/UnifiedVectorBufferTests.swift",
+        "filter": "^ComprehensiveTests\\.UnifiedVectorBufferTests/dynamicConformance\\(\\)",
+        "displayName": "DynamicVector conforms to the read contract",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/heapEvictsInitialNaN",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/heapEvictsInitialNaN\\(\\)",
+        "displayName": "heapEvictsInitialNaN()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/publicSelectionKeepsNaNsLastAndPreservesCount",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/publicSelectionKeepsNaNsLastAndPreservesCount\\(\\)",
+        "displayName": "publicSelectionKeepsNaNsLastAndPreservesCount()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/canonicalMembershipAndOrderBothDirections",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/canonicalMembershipAndOrderBothDirections\\(\\)",
+        "displayName": "canonicalMembershipAndOrderBothDirections()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/publicHeapEvictionAndCrossover",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/publicHeapEvictionAndCrossover\\(\\)",
+        "displayName": "publicHeapEvictionAndCrossover()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/nanCandidatesFillRemainingPositions",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/nanCandidatesFillRemainingPositions\\(\\)",
+        "displayName": "nanCandidatesFillRemainingPositions()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/numericInfinityOutranksNaN",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/numericInfinityOutranksNaN\\(\\)",
+        "displayName": "numericInfinityOutranksNaN()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/exactTiesAndSignedZeroKeepOriginalPositionsAndBits",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/exactTiesAndSignedZeroKeepOriginalPositionsAndBits\\(\\)",
+        "displayName": "exactTiesAndSignedZeroKeepOriginalPositionsAndBits()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/pointerIDsAreLabelsAfterSelection",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/pointerIDsAreLabelsAfterSelection\\(\\)",
+        "displayName": "pointerIDsAreLabelsAfterSelection()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/explicitTiePoliciesRespectTheirScope",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/explicitTiePoliciesRespectTheirScope\\(\\)",
+        "displayName": "explicitTiePoliciesRespectTheirScope()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/disjointMergesKeepGlobalIndicesAndDestinationPolicy",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/disjointMergesKeepGlobalIndicesAndDestinationPolicy\\(\\)",
+        "displayName": "disjointMergesKeepGlobalIndicesAndDestinationPolicy()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/publicDotProductMaximizesWithNaNsLast",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/publicDotProductMaximizesWithNaNsLast\\(\\)",
+        "displayName": "publicDotProductMaximizesWithNaNsLast()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/existingPublicSelectionEdges",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/existingPublicSelectionEdges\\(\\)",
+        "displayName": "existingPublicSelectionEdges()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNContractTests/comparatorLaws",
+        "source": "Tests/ComprehensiveTests/TopKNaNContractTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNContractTests/comparatorLaws\\(\\)",
+        "displayName": "comparatorLaws()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "QuantizedEuclideanOverflowRegressionTests/testAccumulateEuclidDiffSqNoInt16Wrap",
+        "source": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "filter": "^ComprehensiveTests\\.QuantizedEuclideanOverflowRegressionTests/testAccumulateEuclidDiffSqNoInt16Wrap\\(\\)",
+        "displayName": "testAccumulateEuclidDiffSqNoInt16Wrap()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "QuantizedEuclideanOverflowRegressionTests/testAccumulateEuclidDiffSqMidRangeNoWrap",
+        "source": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "filter": "^ComprehensiveTests\\.QuantizedEuclideanOverflowRegressionTests/testAccumulateEuclidDiffSqMidRangeNoWrap\\(\\)",
+        "displayName": "testAccumulateEuclidDiffSqMidRangeNoWrap()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "QuantizedEuclideanOverflowRegressionTests/testEuclidean512MaxSpreadNoOverflow",
+        "source": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "filter": "^ComprehensiveTests\\.QuantizedEuclideanOverflowRegressionTests/testEuclidean512MaxSpreadNoOverflow\\(\\)",
+        "displayName": "testEuclidean512MaxSpreadNoOverflow()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "QuantizedEuclideanOverflowRegressionTests/testBatchEuclidean512MaxSpreadNoOverflow",
+        "source": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "filter": "^ComprehensiveTests\\.QuantizedEuclideanOverflowRegressionTests/testBatchEuclidean512MaxSpreadNoOverflow\\(\\)",
+        "displayName": "testBatchEuclidean512MaxSpreadNoOverflow()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "StorageBorrowContractTests/fp16Borrow512",
+        "source": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+        "filter": "^ComprehensiveTests\\.StorageBorrowContractTests/fp16Borrow512\\(\\)",
+        "displayName": "fp16Borrow512()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "StorageBorrowContractTests/fp16Borrow768",
+        "source": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+        "filter": "^ComprehensiveTests\\.StorageBorrowContractTests/fp16Borrow768\\(\\)",
+        "displayName": "fp16Borrow768()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "StorageBorrowContractTests/fp16Borrow1536",
+        "source": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+        "filter": "^ComprehensiveTests\\.StorageBorrowContractTests/fp16Borrow1536\\(\\)",
+        "displayName": "fp16Borrow1536()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "StorageBorrowContractTests/directFP16KernelMatrix",
+        "source": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+        "filter": "^ComprehensiveTests\\.StorageBorrowContractTests/directFP16KernelMatrix\\(\\)",
+        "displayName": "directFP16KernelMatrix()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "StorageBorrowContractTests/externalConformerLayoutMatrix",
+        "source": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+        "filter": "^ComprehensiveTests\\.StorageBorrowContractTests/externalConformerLayoutMatrix\\(\\)",
+        "displayName": "externalConformerLayoutMatrix()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "StorageBorrowContractTests/ownedDynamicSliceSurvivesSourceChange",
+        "source": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+        "filter": "^ComprehensiveTests\\.StorageBorrowContractTests/ownedDynamicSliceSurvivesSourceChange\\(\\)",
+        "displayName": "ownedDynamicSliceSurvivesSourceChange()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "StorageBorrowContractTests/fp16SoAStorageRemainsOwned",
+        "source": "Tests/ComprehensiveTests/StorageBorrowContractTests.swift",
+        "filter": "^ComprehensiveTests\\.StorageBorrowContractTests/fp16SoAStorageRemainsOwned\\(\\)",
+        "displayName": "fp16SoAStorageRemainsOwned()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/reductionIdentityAndOrderedAssociativity",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/reductionIdentityAndOrderedAssociativity\\(\\)",
+        "displayName": "reductionIdentityAndOrderedAssociativity()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/preCancelledThrowingRoutesAndExecute",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/preCancelledThrowingRoutesAndExecute\\(\\)",
+        "displayName": "preCancelledThrowingRoutesAndExecute()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/cancellationBetweenUnitsAndOriginalBodyError",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/cancellationBetweenUnitsAndOriginalBodyError\\(\\)",
+        "displayName": "cancellationBetweenUnitsAndOriginalBodyError()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/reductionCombineCancellationAndRegionAcrossProvidersAndOverloads",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/reductionCombineCancellationAndRegionAcrossProvidersAndOverloads\\(\\)",
+        "displayName": "reductionCombineCancellationAndRegionAcrossProvidersAndOverloads()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      }
+    ],
+    "thread": [
+      {
+        "id": "MemoryPoolTests/testAcquire_ReturnsBufferWithCountAndAlignment",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_ReturnsBufferWithCountAndAlignment\\(\\)",
+        "displayName": "testAcquire_ReturnsBufferWithCountAndAlignment()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_ReusesReturnedBuffer_IncreasesHitRate",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_ReusesReturnedBuffer_IncreasesHitRate\\(\\)",
+        "displayName": "testAcquire_ReusesReturnedBuffer_IncreasesHitRate()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts\\(\\)",
+        "displayName": "testAcquire_PowerOfTwoBucketing_ReusesAcrossCounts()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse\\(\\)",
+        "displayName": "testAcquire_AlignmentRequirement_PreventsLowerAlignedReuse()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testReturn_RespectsMaxBuffersPerSizeLimit",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testReturn_RespectsMaxBuffersPerSizeLimit\\(\\)",
+        "displayName": "testReturn_RespectsMaxBuffersPerSizeLimit()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testReturn_RespectsMaxTotalMemoryLimit",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testReturn_RespectsMaxTotalMemoryLimit\\(\\)",
+        "displayName": "testReturn_RespectsMaxTotalMemoryLimit()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testRetentionLimitUsesBytesAcrossElementTypes",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testRetentionLimitUsesBytesAcrossElementTypes\\(\\)",
+        "displayName": "testRetentionLimitUsesBytesAcrossElementTypes()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testCleanupSubtractsBytesAcrossElementTypes",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testCleanupSubtractsBytesAcrossElementTypes\\(\\)",
+        "displayName": "testCleanupSubtractsBytesAcrossElementTypes()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testCleanup_RemovesStaleEntries_UpdatesStats",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testCleanup_RemovesStaleEntries_UpdatesStats\\(\\)",
+        "displayName": "testCleanup_RemovesStaleEntries_UpdatesStats()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testWithBuffer_ProvidesWritableAlignedBuffer",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testWithBuffer_ProvidesWritableAlignedBuffer\\(\\)",
+        "displayName": "testWithBuffer_ProvidesWritableAlignedBuffer()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testWithBuffer_OrdinaryZeroAndSmallAcquisitions",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testWithBuffer_OrdinaryZeroAndSmallAcquisitions\\(\\)",
+        "displayName": "testWithBuffer_OrdinaryZeroAndSmallAcquisitions()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testStatistics_TotalInUseTracksAcquireAndReturn",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testStatistics_TotalInUseTracksAcquireAndReturn\\(\\)",
+        "displayName": "testStatistics_TotalInUseTracksAcquireAndReturn()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testStatistics_BufferCountByTypeReflectsPools",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testStatistics_BufferCountByTypeReflectsPools\\(\\)",
+        "displayName": "testStatistics_BufferCountByTypeReflectsPools()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testConcurrentAcquireAndReturn_NoLeaksNoCrashes",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testConcurrentAcquireAndReturn_NoLeaksNoCrashes\\(\\)",
+        "displayName": "testConcurrentAcquireAndReturn_NoLeaksNoCrashes()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testSeparateTypePools_DoNotInterfere",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testSeparateTypePools_DoNotInterfere\\(\\)",
+        "displayName": "testSeparateTypePools_DoNotInterfere()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_CountZero_ReturnsZeroLengthHandle",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_CountZero_ReturnsZeroLengthHandle\\(\\)",
+        "displayName": "testAcquire_CountZero_ReturnsZeroLengthHandle()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testAcquire_SmallCounts_AlignmentDefaultIsApplied",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testAcquire_SmallCounts_AlignmentDefaultIsApplied\\(\\)",
+        "displayName": "testAcquire_SmallCounts_AlignmentDefaultIsApplied()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "MemoryPoolTests/testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash",
+        "source": "Tests/ComprehensiveTests/MemoryPoolTests.swift",
+        "filter": "^ComprehensiveTests\\.MemoryPoolTests/testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash\\(\\)",
+        "displayName": "testReturn_AfterPoolDeallocated_FreesBufferWithoutCrash()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/cpuSequential",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/cpuSequential\\(\\)",
+        "displayName": "CPUComputeProvider .sequential conforms",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/cpuParallel",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/cpuParallel\\(\\)",
+        "displayName": "CPUComputeProvider .parallel conforms",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/cpuAutomatic",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/cpuAutomatic\\(\\)",
+        "displayName": "CPUComputeProvider .automatic (parallel path) conforms",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/defaultsConform",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/defaultsConform\\(\\)",
+        "displayName": "ComputeProvider default implementations conform",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/reduceIdentityInvariant",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/reduceIdentityInvariant\\(\\)",
+        "displayName": "parallelReduce is mode-invariant for an identity initial (C5)",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/swiftBufferPool",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/swiftBufferPool\\(\\)",
+        "displayName": "SwiftBufferPool conforms",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/mockBufferPool",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/mockBufferPool\\(\\)",
+        "displayName": "MockBufferProvider conforms",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ProviderConformanceTests/accelerationProvider",
+        "source": "Tests/ComprehensiveTests/ProviderConformanceTests.swift",
+        "filter": "^ComprehensiveTests\\.ProviderConformanceTests/accelerationProvider\\(\\)",
+        "displayName": "AccelerationProvider laws A1/A3/A4 + type preservation",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/batchSelectionPreservesInputEdgeBehavior",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/batchSelectionPreservesInputEdgeBehavior\\(\\)",
+        "displayName": "batchSelectionPreservesInputEdgeBehavior()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/genericOperationsSelectsNumericScoresBeforeNaNs",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/genericOperationsSelectsNumericScoresBeforeNaNs\\(\\)",
+        "displayName": "genericOperationsSelectsNumericScoresBeforeNaNs()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/optimizedParallelFiniteTiesUseOriginalIndices",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/optimizedParallelFiniteTiesUseOriginalIndices\\(\\)",
+        "displayName": "optimizedParallelFiniteTiesUseOriginalIndices()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/optimizedParallelEuclideanRetainsNaNsAfterNumericCandidates",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/optimizedParallelEuclideanRetainsNaNsAfterNumericCandidates\\(\\)",
+        "displayName": "optimizedParallelEuclideanRetainsNaNsAfterNumericCandidates()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/optimizedParallelDotNegationKeepsNaNsLast",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/optimizedParallelDotNegationKeepsNaNsLast\\(\\)",
+        "displayName": "optimizedParallelDotNegationKeepsNaNsLast()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/batchSerialHeapAndSortKeepNaNsLast",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/batchSerialHeapAndSortKeepNaNsLast\\(\\)",
+        "displayName": "batchSerialHeapAndSortKeepNaNsLast()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/batchParallelHeapAndSortPreserveGlobalIndices",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/batchParallelHeapAndSortPreserveGlobalIndices\\(\\)",
+        "displayName": "batchParallelHeapAndSortPreserveGlobalIndices()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "TopKNaNWrapperTests/gemmBatchEuclideanFormattingPreservesSelectedNaNs",
+        "source": "Tests/ComprehensiveTests/TopKNaNWrapperTests.swift",
+        "filter": "^ComprehensiveTests\\.TopKNaNWrapperTests/gemmBatchEuclideanFormattingPreservesSelectedNaNs\\(\\)",
+        "displayName": "gemmBatchEuclideanFormattingPreservesSelectedNaNs()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/reductionIdentityAndOrderedAssociativity",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/reductionIdentityAndOrderedAssociativity\\(\\)",
+        "displayName": "reductionIdentityAndOrderedAssociativity()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/preCancelledThrowingRoutesAndExecute",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/preCancelledThrowingRoutesAndExecute\\(\\)",
+        "displayName": "preCancelledThrowingRoutesAndExecute()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/cancellationBetweenUnitsAndOriginalBodyError",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/cancellationBetweenUnitsAndOriginalBodyError\\(\\)",
+        "displayName": "cancellationBetweenUnitsAndOriginalBodyError()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "ExecutionSchedulingContractTests/reductionCombineCancellationAndRegionAcrossProvidersAndOverloads",
+        "source": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "filter": "^ComprehensiveTests\\.ExecutionSchedulingContractTests/reductionCombineCancellationAndRegionAcrossProvidersAndOverloads\\(\\)",
+        "displayName": "reductionCombineCancellationAndRegionAcrossProvidersAndOverloads()",
+        "kind": "actual function body",
+        "deadlineSeconds": 15
+      },
+      {
+        "id": "FP16DiagnosticsBoundaryTests/isolatedConcurrency",
+        "source": "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift",
+        "filter": "^ComprehensiveTests\\.FP16DiagnosticsBoundaryTests/isolatedConcurrency\\(\\)",
+        "displayName": "isolatedConcurrency()",
+        "kind": "isolated parent and child",
+        "deadlineSeconds": 49
+      }
+    ]
+  }
+}

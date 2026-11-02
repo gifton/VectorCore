@@ -146,17 +146,25 @@ struct MixedPrecisionPart1ValidationTests {
         #expect(relativeError < 0.01, "Cosine 768: Relative error \(String(format: "%.4f%%", relativeError * 100)) exceeds 1%")
     }
 
-    // MARK: - Memory Footprint Tests
+    // MARK: - Scalar Payload Width Model
 
-    @Test("Memory savings validation")
+    // Stored scalar payload of real vector storage, not process memory: it excludes headers,
+    // capacity, allocation rounding, conversion temporaries and sharing (stride includes per-element
+    // padding). Owning-handle layouts are
+    // not payload and are not compared. The inputs are the real `storage` arrays, so an FP16 vector
+    // that stored Float, or the wrong element count, fails here.
+    @Test("Stored scalar payload width ratio (real storage, not measured memory)")
     func testMemoryFootprint() throws {
-        let fp32Size = MemoryLayout<Vector512Optimized>.stride
-        let fp16Size = MemoryLayout<MixedPrecisionKernels.Vector512FP16>.stride
+        let fp32Vector = try Vector512Optimized((0..<512).map { Float($0) * 0.01 })
+        let fp16Vector = MixedPrecisionKernels.Vector512FP16(from: fp32Vector)
+        let fp32Payload = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(fp32Vector.storage)
+        let fp16Payload = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(fp16Vector.storage)
 
-        // FP16 should be roughly 50% of FP32 size
-        let ratio = Double(fp16Size) / Double(fp32Size)
-
-        #expect(ratio < 0.6 && ratio > 0.4, "Memory ratio \(String(format: "%.2f", ratio)) not close to 50%")
+        // Independent literal expectations: 512 x 4 and 512 x 2 bytes.
+        #expect(fp32Payload == 2048, "FP32 stored scalar payload for 512 scalars")
+        #expect(fp16Payload == 1024, "FP16 stored scalar payload for 512 scalars")
+        let ratio = Double(fp16Payload) / Double(fp32Payload)
+        #expect(abs(ratio - 0.5) < 1e-12, "Logical scalar payload ratio \(ratio) is not 1:2")
     }
 
     // MARK: - Edge Case Tests

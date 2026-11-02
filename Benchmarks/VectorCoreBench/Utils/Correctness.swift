@@ -5,12 +5,31 @@ import VectorCoreBenchmarking
 // CorrectnessStats moved to VectorCoreBenchmarking library
 
 enum Correctness {
+    /// The relative-error floor. The denominator of every relative error is `max(|ref|, referenceFloor)`, so a
+    /// reference smaller than the floor (zero included) is never a denominator: below it the reported relative error
+    /// is the absolute error divided by the floor, a mixed rel/abs criterion whose absolute tolerance is
+    /// `threshold * referenceFloor`. A relative error against a zero reference is undefined, which is why a floor is
+    /// needed at all: against the pre-T11 floor of 1e-12, a matrix diagonal error of 3e-5 read as a relative error of 3e7.
+    ///
+    /// The value 1 is a stated convention: it is the square of the coordinate bound of the benchmark fixtures
+    /// (`InputFactory.randomArray` draws from -1...1; `testFixtureCoordinatesLieWithinTheStatedBound`), so the metric
+    /// turns absolute only below the magnitude of one fixture term. The floor cannot make a derived threshold unsound: a relative bound `|c - r| <= a * |r|` gives
+    /// `|c - r| / max(|r|, f) <= a` for every floor `f`; and the route whose error does not scale with `|r|` (the
+    /// matrix norm identity, where a zero diagonal reference still carries rounding error of the size of the summed
+    /// norms) is gated on absolute error instead (`CorrectnessPolicy`). Pinned by
+    /// `BenchmarkCorrectnessPolicyTests.testRelativeErrorNeverDividesByReferenceBelowFloor` (with a negative control on
+    /// the pre-T11 metric) and `testOnlyCorrectnessComputesRelativeErrors`.
+    static let referenceFloor: Double = 1
+
+    /// `absError / max(|ref|, referenceFloor)`: the only relative-error computation in the benchmark sources
+    /// (`testOnlyCorrectnessComputesRelativeErrors`).
     @inline(__always)
-    static func relErr(absError: Double, ref: Double, epsilon: Double = 1e-12) -> Double {
-        absError / max(abs(ref), epsilon)
+    static func relErr(absError: Double, ref: Double) -> Double {
+        absError / max(abs(ref), referenceFloor)
     }
 
     static func scalar(current: Float, reference: Double) -> CorrectnessStats {
+        guard current.isFinite && reference.isFinite else { return CorrectnessStats(invalidReason: "Nonfinite scalar observation") }
         let curr = Double(current)
         let absErr = abs(curr - reference)
         let rel = relErr(absError: absErr, ref: reference)
@@ -18,8 +37,10 @@ enum Correctness {
     }
 
     static func vector(currents: [Float], references: [Double]) -> CorrectnessStats {
-        let n = min(currents.count, references.count)
-        guard n > 0 else { return CorrectnessStats(samples: 0, maxAbsError: 0, meanAbsError: 0, maxRelError: 0, meanRelError: 0) }
+        guard currents.count == references.count else { return CorrectnessStats(invalidReason: "Vector length mismatch: \(currents.count) versus \(references.count)") }
+        let n = currents.count
+        guard n > 0 else { return CorrectnessStats(invalidReason: "Empty comparison") }
+        guard currents.allSatisfy({ $0.isFinite }) && references.allSatisfy({ $0.isFinite }) else { return CorrectnessStats(invalidReason: "Nonfinite vector observation") }
         var maxAbs = 0.0
         var sumAbs = 0.0
         var maxRel = 0.0
@@ -98,9 +119,14 @@ enum DoubleRef {
         let n = min(a.count, b.count)
         var dot = 0.0, sa = 0.0, sb = 0.0
         for i in 0..<n { let x = Double(a[i]); let y = Double(b[i]); dot += x*y; sa += x*x; sb += y*y }
+        // The library's cosine policy (T15): a NaN or infinite coordinate on either side gives NaN, even against a
+        // zero vector, and the clamp applies only to a finite similarity (T15DoubleRefCosineTests).
+        guard sa.isFinite && sb.isFinite else { return .nan }
         let mag = sqrt(sa * sb)
         if mag <= Double.ulpOfOne { return 1.0 }
-        let cosSim = max(-1.0, min(1.0, dot / mag))
+        let similarity = dot / mag
+        guard similarity.isFinite else { return .nan }
+        let cosSim = max(-1.0, min(1.0, similarity))
         return 1.0 - cosSim
     }
 }

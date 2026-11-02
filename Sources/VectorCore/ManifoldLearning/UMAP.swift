@@ -256,16 +256,16 @@ extension Operations {
         try config.validate()
         let coordinateCount = try UMAPChecked.layoutCount(points: vectors.count, dimensions: dimensions)
         try UMAPChecked.schedule(epochs: config.epochs ?? (vectors.count <= 10_000 ? 500 : 200), negativeRate: config.negativeSampleRate)
-        let knn: KNNGraph
         if let graph {
             guard graph.pointCount == vectors.count else {
                 throw VectorError.dimensionMismatch(
                     expected: vectors.count, actual: graph.pointCount)
             }
-            knn = graph
-        } else {
-            knn = try KNNGraph.bruteForce(vectors, neighbors: config.neighbors)
         }
+        // UMAPPreflightTests.rejectedCurvePrecedesGraphConstructionForBothInitializers and
+        // UMAPPreflightTests.rejectedCurvePrecedesPCAWithSuppliedGraph exercise early rejection.
+        let curve = try UMAPLayout.fitABParams(spread: config.spread, minDist: config.minDist)
+        let knn = try graph ?? KNNGraph.bruteForce(vectors, neighbors: config.neighbors)
         let initial: [Float]
         switch config.initialization {
         case .pca:
@@ -274,7 +274,7 @@ extension Operations {
             initial = UMAPLayout.randomCoordinates(
                 count: coordinateCount, seed: config.seed)
         }
-        return try umapLayout(graph: knn, dimensions: dimensions, initial: initial, config: config)
+        return try umapLayout(graph: knn, dimensions: dimensions, initial: initial, curve: curve, config: config)
     }
 
     /// Graph-only UMAP for callers that no longer hold the original
@@ -293,7 +293,6 @@ extension Operations {
         let coordinateCount = try UMAPChecked.layoutCount(points: graph.pointCount, dimensions: dimensions)
         try UMAPChecked.schedule(epochs: config.epochs ?? (graph.pointCount <= 10_000 ? 500 : 200), negativeRate: config.negativeSampleRate)
         let n = graph.pointCount
-        let initial: [Float]
         if let provided = initialCoordinates {
             guard provided.count == n else {
                 throw VectorError.dimensionMismatch(expected: n, actual: provided.count)
@@ -305,22 +304,29 @@ extension Operations {
             for row in provided {
                 guard row.allSatisfy({ $0.isFinite }) else { throw VectorError.invalidData("UMAP initial coordinates must be finite") }
             }
+        }
+        // Keep supplied-coordinate validation ahead of fitting; both precede coordinate allocation.
+        // UMAPPreflightTests.cheapValidationPrecedesRejectedCurve pins this ordering.
+        let curve = try UMAPLayout.fitABParams(spread: config.spread, minDist: config.minDist)
+        let initial: [Float]
+        if let provided = initialCoordinates {
             var flat = [Float](repeating: 0, count: coordinateCount)
             for i in 0..<n {
-                for c in 0..<m { flat[i * m + c] = provided[i][c] }
+                for c in 0..<dimensions { flat[i * dimensions + c] = provided[i][c] }
             }
             initial = flat
         } else {
             initial = UMAPLayout.randomCoordinates(count: coordinateCount, seed: config.seed)
         }
-        return try umapLayout(graph: graph, dimensions: dimensions, initial: initial, config: config)
+        return try umapLayout(graph: graph, dimensions: dimensions, initial: initial, curve: curve, config: config)
     }
 
-    /// Shared tail: fuzzy set → curve fit → SGD.
+    /// Shared tail: fuzzy set → SGD with the entry point's preflighted curve.
     private static func umapLayout(
         graph: KNNGraph,
         dimensions: Int,
         initial: [Float],
+        curve: (a: Float, b: Float),
         config: UMAPConfig
     ) throws -> UMAPResult {
         let n = graph.pointCount
@@ -332,7 +338,6 @@ extension Operations {
         guard edges.count > 0 else {
             throw VectorError.invalidData("kNN graph produced no usable edges")
         }
-        let curve = try UMAPLayout.fitABParams(spread: config.spread, minDist: config.minDist)
         let epochs = config.epochs ?? (n <= 10_000 ? 500 : 200)
         var coordinates = initial
         try UMAPLayout.optimize(

@@ -1123,6 +1123,18 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Fixed
 
+- Precision analysis returns an FP32 sentinel with zero statistics for samples
+  containing no finite observations (A:AP7), retaining the first vector's dimension.
+  Zero expected error is a sentinel, not an accuracy measurement
+  (`PrecisionStatisticsRangeTests.noFiniteObservationsAcrossSupportedWidths`,
+  `sentinelControlsAcrossSupportedWidths`).
+- UMAP preflights curve coefficient publication after cheap input validation and
+  before graph construction, PCA, coordinate allocation, or fuzzy-edge processing
+  (A:LC5); rejected curves still throw `.operationFailed`
+  (`UMAPPreflightTests.rejectedCurvePrecedesGraphConstructionForBothInitializers`,
+  `rejectedCurvePrecedesPCAWithSuppliedGraph`, `rejectedCurvePrecedesFuzzyEdgesOnGraphRoutes`,
+  `cheapValidationPrecedesRejectedCurve`).
+
 - **`OperationProgress.percentage` saturates at `Int.max` (VC-F007).** Extreme
   overcomplete progress no longer traps during integer conversion. Percentages
   above 100 and ordinary fractional truncation are preserved

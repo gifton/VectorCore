@@ -32914,6 +32914,86 @@
     "originalFingerprint": null,
     "origin": "2026-10-28 F007 repair"
    }
+  },
+  {
+   "id": "VC-REMEDIATION-AP7-SENTINEL",
+   "path": "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift",
+   "symbol": "enum MixedPrecisionKernels::func analyzePrecision",
+   "fingerprint": "a95bf4dbbb7256eb",
+   "statement": "with no finite observations, returns an fp32 sentinel with zero statistics and expected error; that zero error is not an accuracy measurement. empty input has dimension zero; otherwise the first vector's dimension is retained (precisionstatisticsrangetests.nofiniteobservationsacrosssupportedwidths, precisionstatisticsrangetests.sentinelcontrolsacrosssupportedwidths).",
+   "kind": "comment",
+   "lineHint": 3424,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/PrecisionStatisticsRangeTests.swift::PrecisionStatisticsRangeTests.noFiniteObservationsAcrossSupportedWidths",
+     "Tests/ComprehensiveTests/PrecisionStatisticsRangeTests.swift::PrecisionStatisticsRangeTests.sentinelControlsAcrossSupportedWidths"
+    ],
+    "domain": "NaN, both infinity signs, mixed specials and multiple vectors at widths 512/768/1536; empty, zero and later-finite controls.",
+    "limitations": "Literal zero expected error is a no-observation sentinel, not a measured accuracy bound. Custom malformed vector storage and universal finite-statistic behavior are outside these fixtures."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-11-01 AP7/LC5 remediation batch"
+   }
+  },
+  {
+   "id": "VC-REMEDIATION-AP7-CHANGELOG",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "9b21bc95a93042a4",
+   "statement": "- precision analysis returns an fp32 sentinel with zero statistics for samples containing no finite observations (a:ap7), retaining the first vector's dimension. zero expected error is a sentinel, not an accuracy measurement (`precisionstatisticsrangetests.nofiniteobservationsacrosssupportedwidths`, `sentinelcontrolsacrosssupportedwidths`).",
+   "kind": "markdown",
+   "lineHint": 1126,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/PrecisionStatisticsRangeTests.swift::PrecisionStatisticsRangeTests.noFiniteObservationsAcrossSupportedWidths",
+     "Tests/ComprehensiveTests/PrecisionStatisticsRangeTests.swift::PrecisionStatisticsRangeTests.sentinelControlsAcrossSupportedWidths"
+    ],
+    "domain": "NaN, both infinity signs, mixed specials and multiple vectors at widths 512/768/1536; empty, zero and later-finite controls.",
+    "limitations": "Literal zero expected error is a no-observation sentinel, not a measured accuracy bound. Custom malformed vector storage and universal finite-statistic behavior are outside these fixtures."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-11-01 AP7/LC5 remediation batch"
+   }
+  },
+  {
+   "id": "VC-REMEDIATION-LC5-CHANGELOG",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Fixed",
+   "fingerprint": "7c04e3788084d20d",
+   "statement": "- umap preflights curve coefficient publication after cheap input validation and before graph construction, pca, coordinate allocation, or fuzzy-edge processing (a:lc5); rejected curves still throw `.operationfailed` (`umappreflighttests.rejectedcurveprecedesgraphconstructionforbothinitializers`, `rejectedcurveprecedespcawithsuppliedgraph`, `rejectedcurveprecedesfuzzyedgesongraphroutes`, `cheapvalidationprecedesrejectedcurve`).",
+   "kind": "markdown",
+   "lineHint": 1131,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/UMAPPreflightTests.swift::UMAPPreflightTests.rejectedCurvePrecedesGraphConstructionForBothInitializers",
+     "Tests/ComprehensiveTests/UMAPPreflightTests.swift::UMAPPreflightTests.rejectedCurvePrecedesPCAWithSuppliedGraph",
+     "Tests/ComprehensiveTests/UMAPPreflightTests.swift::UMAPPreflightTests.rejectedCurvePrecedesFuzzyEdgesOnGraphRoutes",
+     "Tests/ComprehensiveTests/UMAPPreflightTests.swift::UMAPPreflightTests.cheapValidationPrecedesRejectedCurve"
+    ],
+    "domain": "Three literal unpublishable coefficient fixtures; both public entries, vector random/PCA, supplied graph and supplied/random coordinates; cheap config/count/schedule/shape/finiteness precedence.",
+    "limitations": "Payload/provider/empty-edge witnesses observe graph, PCA and fuzzy-stage ordering. Coordinate allocation ordering follows adjacent source order; fitting itself allocates calibration buffers. No universal spread threshold or timing guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-11-01 AP7/LC5 remediation batch"
+   }
   }
  ],
  "bodyPinDescribers": [

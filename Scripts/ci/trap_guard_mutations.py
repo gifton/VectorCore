@@ -35,6 +35,11 @@ def delete_guard(source, target):
     return (text[:index] + text[index + len(needle):]).encode()
 
 
+def validate_output_path(output, repository):
+    if output.resolve().is_relative_to(repository.resolve()):
+        raise ValueError('output must be outside the repository to avoid recursive snapshots')
+
+
 def validate_reused_source(source_hashes, reused_input):
     if reused_input is not None and source_hashes != reused_input['sourceHashes']:
         raise ValueError('Reused disposable snapshot does not match its original production hashes')
@@ -67,6 +72,10 @@ def main():
         parser.error('targets must be distinct known IDs')
     targets = [t for t in manifest['targets'] if t['id'] in selected]
     output = args.output.resolve()
+    try:
+        validate_output_path(output, repo)
+    except ValueError as error:
+        parser.error(str(error))
     output.mkdir(parents=True, exist_ok=False)
     tree = output / 'source'
     reused_input = None

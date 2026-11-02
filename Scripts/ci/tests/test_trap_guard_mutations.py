@@ -2,6 +2,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+import tempfile
 import sys
 
 CI = Path(__file__).resolve().parents[1]
@@ -12,6 +13,19 @@ spec.loader.exec_module(module)
 
 
 class TrapMutationEditorTests(unittest.TestCase):
+    def test_output_cannot_recursively_copy_itself(self):
+        for output in [Path('/tmp/repo'), Path('/tmp/repo/evidence')]:
+            with self.subTest(output=output), self.assertRaisesRegex(ValueError, 'outside the repository'):
+                module.validate_output_path(output, Path('/tmp/repo'))
+        module.validate_output_path(Path('/tmp/repo-evidence'), Path('/tmp/repo'))
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary) / 'repo'
+            repository.mkdir()
+            link = Path(temporary) / 'output-link'
+            link.symlink_to(repository, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, 'outside the repository'):
+                module.validate_output_path(link / 'evidence', repository)
+
     def test_reuse_refuses_unrestored_mutant(self):
         original = {'Sources/file.swift': 'original-hash'}
         module.validate_reused_source(original, {'sourceHashes': original})

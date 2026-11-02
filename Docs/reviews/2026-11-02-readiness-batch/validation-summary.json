@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "base": "24c4e57c50b83517f620bb39bc5c8561343ee1a6",
+  "validated_source": "a5609bb1acbe50edc5dba089eb2d28ab1d8faa82",
+  "swift_validated_source": "25be224b9e1e5a0e66230e4dad7bad2a83de60ec",
+  "compiled_inputs_unchanged_since_swift_validation": true,
+  "branch": "codex/audit-top-six-2026-10-27",
+  "source_was_clean": true,
+  "swift": {
+    "debug": {
+      "swift_testing_reported_tests": 1752,
+      "swift_testing_suites": 264,
+      "swift_testing_skip_events": 18,
+      "swift_testing_summary": "Test run with 1752 tests in 264 suites passed after 222.242 seconds.",
+      "xctest": {
+        "reported": 202,
+        "skipped": 28,
+        "failures": 0,
+        "summary": "Executed 202 tests, with 28 tests skipped and 0 failures (0 unexpected) in 56.169 (56.183) seconds"
+      },
+      "elapsed_seconds": 382.80990195902996
+    },
+    "release": {
+      "swift_testing_reported_tests": 1752,
+      "swift_testing_suites": 264,
+      "swift_testing_skip_events": 18,
+      "swift_testing_summary": "Test run with 1752 tests in 264 suites passed after 24.864 seconds.",
+      "xctest": {
+        "reported": 202,
+        "skipped": 28,
+        "failures": 0,
+        "summary": "Executed 202 tests, with 28 tests skipped and 0 failures (0 unexpected) in 49.659 (49.672) seconds"
+      },
+      "elapsed_seconds": 428.03031779197045
+    }
+  },
+  "python": {
+    "tests": 591,
+    "reported_seconds": 246.137
+  },
+  "lint": {
+    "version": "0.65.1",
+    "warnings": 5483,
+    "errors": 0,
+    "previous_warnings": 5458,
+    "new_warning_delta": {
+      "line_length": 23,
+      "vertical_parameter_alignment": 2
+    }
+  },
+  "checks": {
+    "full-debug": {
+      "exit": 0,
+      "elapsed_seconds": 382.80990195902996,
+      "sources_unchanged": true,
+      "source_revision": "25be224b9e1e5a0e66230e4dad7bad2a83de60ec",
+      "result_record": "integration-evidence/full-debug-result.json"
+    },
+    "full-release": {
+      "exit": 0,
+      "elapsed_seconds": 428.03031779197045,
+      "sources_unchanged": true,
+      "source_revision": "25be224b9e1e5a0e66230e4dad7bad2a83de60ec",
+      "result_record": "integration-evidence/full-release-result.json"
+    },
+    "full-policy-repaired": {
+      "exit": 0,
+      "elapsed_seconds": 246.84524608403444,
+      "sources_unchanged": true,
+      "source_revision": "a5609bb1acbe50edc5dba089eb2d28ab1d8faa82",
+      "result_record": "integration-evidence/full-policy-repaired-result.json"
+    },
+    "final-ledger-repaired": {
+      "exit": 0,
+      "elapsed_seconds": 2.8254316670354456,
+      "sources_unchanged": true,
+      "source_revision": "a5609bb1acbe50edc5dba089eb2d28ab1d8faa82",
+      "result_record": "integration-evidence/final-ledger-repaired-result.json"
+    },
+    "final-github-repaired": {
+      "exit": 0,
+      "elapsed_seconds": 0.1394379169214517,
+      "sources_unchanged": true,
+      "source_revision": "a5609bb1acbe50edc5dba089eb2d28ab1d8faa82",
+      "result_record": "integration-evidence/final-github-repaired-result.json"
+    },
+    "final-lint": {
+      "exit": 0,
+      "elapsed_seconds": 0.926525208982639,
+      "sources_unchanged": true,
+      "source_revision": "25be224b9e1e5a0e66230e4dad7bad2a83de60ec",
+      "result_record": "integration-evidence/final-lint-result.json"
+    },
+    "final-diff-repaired": {
+      "exit": 0,
+      "elapsed_seconds": 0.04399274999741465,
+      "sources_unchanged": true,
+      "source_revision": "a5609bb1acbe50edc5dba089eb2d28ab1d8faa82",
+      "result_record": "integration-evidence/final-diff-repaired-result.json"
+    }
+  },
+  "compiler": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0\n",
+  "swift_frontend_sha256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+  "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+  "changed_path_sha256": {
+    "Docs/executed-ci-contracts.md": "ae49897b2c973558287babce5e932c96ce3bbe958c1d20e8ab8ee4ecfa7fb539",
+    "Docs/reviews/2026-11-02-readiness-batch/compiler/MinimalImporter.swift": "4c3cc72e71f40aa00b2d9b51e99c63baf41c14058067e06ae515a04c9ea639e1",
+    "Docs/reviews/2026-11-02-readiness-batch/compiler/MinimalLibrary.swift": "367f09dfa104b4986db138ca02a02b249da5ac5c9858b3a6e24f02ccc482a393",
+    "Docs/reviews/2026-11-02-readiness-batch/compiler/PublicImport.swift": "62844e55c95d11f51ad126c0f947f488ad3ee1fa64887710fcc05c5eeeeb103e",
+    "Docs/reviews/2026-11-02-readiness-batch/compiler/README.md": "7ce857927efb94e13f9bfc7d2bd6ba9d3b3f53e2f64dba380349fb296ae9fb8d",
+    "Docs/reviews/2026-11-02-readiness-batch/compiler/outcome-matrix.json": "96333d7ec620ab7470d9262d15831401d36b907a40e76cdb6035eb2546c2e0d4",
+    "Docs/reviews/2026-11-02-readiness-batch/compiler/run.py": "f25cf8c6fff1be9c2d535ec8b7cd4ac7ff908a250c40642490b76444b0c6e81a",
+    "Package.swift": "92fe2d07ad2cebc9f2d0877e7a1f447f1f6ba8c06f34994edbc283ddc7c147b0",
+    "Scripts/ci/check_ci_contracts.py": "553adef07523b7075eea57f3315cf40df533661889f50b889d3dad320b394a65",
+    "Scripts/ci/tests/test_child_probe_launch_policy.py": "1fe60de966301aacc374896b0e86104e6bb25d4287e1d8ef3860cc230b06ecb5",
+    "Scripts/ci/tests/test_ci_contracts.py": "02923064b575ed4e679f0d4679a52e0994ff5035286456884fce66b7669acd64",
+    "Scripts/ci/tests/test_clock_derived_assertions.py": "342a73a407bc3a961666499fa96df89edbb75f7f9912189f89915ae39e63638f",
+    "Scripts/ci/tests/test_compiler_reproducer_deadline.py": "f697a2dd7b6a7b4c430a289cb0ef9caeb6ce9aae50bfbb3aa42a1656b70b7444",
+    "Scripts/ci/tests/test_trap_guard_mutations.py": "102a378dd9847faef691c506d3ee20ba09550a91f17774da657fb309a9f4614f",
+    "Scripts/ci/trap_guard_mutations.json": "ad50248ee035fd1626419fe0ba7dfffaa07dec065206845392109fbb84b031f6",
+    "Scripts/ci/trap_guard_mutations.py": "a8ace1885718589d3beb4d6223d2a9d9459d0b813bbcda9b2dcb0071fed691c2",
+    "Tests/BenchmarkContractTests/RunnerContractTests.swift": "64e2f464429ceec72a778f0ccbd5371413dd49518972aa704299140284c96edc",
+    "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift": "348fea19bfd2965c9b5066dab39f1852fbb8034c422e03d5d771acdb63d9d3b9",
+    "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift": "eb1425833bfd04b4e4b90cda7de712b0886fb6af822d9fbc0ef56607282f26cc",
+    "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift": "4b5403d2996e7d3880dfe048f2b9244f8b4cc98a97369ea9e938ab4631500eab",
+    "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift": "158aaf781f8b4bc87bdbe5ef64541cf7561fa1329925f8667c1b3f830b311b7f",
+    "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift": "b8af58c7c365a6a5a8986f9c32b78ef21165279f2af6dcc74bf737bb9226fbff",
+    "Tests/ComprehensiveTests/D02DegenerateWidthTests.swift": "e44e477a25f32a3b744c517dd71a69146f84f46746db3527d47b5c0f3854eb95",
+    "Tests/ComprehensiveTests/D02DimensionReachabilityTests.swift": "366ab229b7f61e03a494b4193498be1ca7517dc01eea3faa3acf0545ef9585c8",
+    "Tests/ComprehensiveTests/D02FactoryContractTests.swift": "86327199de064864806f44a56dced82f1a78bb31d5d48af6c3b201657445585c",
+    "Tests/ComprehensiveTests/E06ConfigurationTestHelpers.swift": "d616a4562f7532ffa298cf3ceacabbb8157d1719f8619c8bad8c94f74dd200d5",
+    "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift": "953b90d1a4ebc0ecc3a19c60ae7511b9b52861ed3d5c373ae8d73baf8d03698a",
+    "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift": "d0a5eeea56ed4040f2229d212f3ac4d44ffa5a50de96c3a7bba544add9667dc3",
+    "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift": "4d82a4e902bca65c1f7264b7693000190be14018678811bbb59320982ba8a480",
+    "Tests/ComprehensiveTests/HeapMembershipContractTests.swift": "33651ba7dbcc753bdd97734a4084cafa0f0d19bed337916cbd77b15dd39e0f62",
+    "Tests/ComprehensiveTests/KernelAutoTunerTests.swift": "81e13600e80704cd7d0961ada858ccb06902612c1df1662021659929f7754087",
+    "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift": "e185c7d41747900af0dc7520755947d63c58a79d0bff3e2ef54a2ba0d1ffa8c8",
+    "Tests/ComprehensiveTests/LoggingPublicConsumerTests.swift": "12c81c8ffc9e0b595c0ca5462c3737c2b7a243b980d7f791d40d69f0ff9a1c7a",
+    "Tests/ComprehensiveTests/MatrixMetricContractTests.swift": "f1e65d4d0b238d25f57ba5a6dc1974f6b20f51eebdb10a18ed38319d7bf61c97",
+    "Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift": "5a786eef643f73639ba2a6b36c80a784e1af98e4a490781934ddf455e1627a00",
+    "Tests/ComprehensiveTests/MixedPrecisionAutoTunerTests.swift": "bb864bf877e16aaf35608901084a23522c9e8f68e4b8ed0f3810f57a3511c710",
+    "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift": "79a26401aeb1c0bc144d0b6e623a66fb078df6eb5344aefe8c2c80230919a017",
+    "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift": "151b2125c10e1806fc85f4a21051dc4378811b390e75a93aad05dd3a0cdae9de",
+    "Tests/ComprehensiveTests/P01RedSupport.swift": "92ccd81d9a4be39e169716ed834a48d02b47a41c19d92e92868e3a1bab84436c",
+    "Tests/ComprehensiveTests/P01TopKBufferRedTests.swift": "a26f2c7d69c2a10f63c1ba6c61140c207aed29c232f01e3e052cfb4b53ab7a90",
+    "Tests/ComprehensiveTests/PCACenteringContractTests.swift": "5617eb97812091c608fca6ec29ba17f9f0256fa8f0c68fea472e3adf79f10ded",
+    "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift": "d410e23bc33da2e6d39f4d45d615c11f1d5410f1906f59b4059c9325981da170",
+    "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift": "d33ef6ad631fe03d897718840ccf3ea6a3c9f3b0981a80deb40bc6eecaf5a38a",
+    "Tests/ComprehensiveTests/SearchResultScoreContractTests.swift": "e0b7aef04eef678ebbb0e308b5a65467816953b6e2d6360df2c32e9fe301473e",
+    "Tests/ComprehensiveTests/SoAFP16CacheIdentityTests.swift": "eaa34fcb0afe00d0b3310d6e5d3866deeb35d9c29339e751fd36accb5c40b9b4",
+    "Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift": "5c7b6cd5bd8d8b2e77fdce6c31e4d2f6982b22f401655cd11e367daa85fa683a",
+    "Tests/ComprehensiveTests/TrapObservation.swift": "4cf1c273caa718ac97f3d7a9ce098024cc014ec9bdc4116e555735c91f6d482a",
+    "Tests/ComprehensiveTests/TuningInputBoundaryTests.swift": "18e8da9c5a80c6d002b8220f0f776933eb72759990de979012e9204826ea3efc",
+    "Tests/ComprehensiveTests/UMAPRangeContractTests.swift": "b141bc5a86581deeeb243fd5a808c1316d3b6281c1bbbf996245d4cfa10a6ea5",
+    "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift": "1f2b03c99dbf2ef3cdaa74e0028427e07e7be54a8d72c55c38449f1245838890",
+    "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift": "fe651707836b1cbb403ab1b5fd73721a425f48571b333f7fa9814f403a6c1759",
+    "Tests/ComprehensiveTests/VectorDispatchContractTests.swift": "797f9423cf2773632a762e58d57fb8d07f20e239450f7e35449d87eaa0569ea4",
+    "Tests/ComprehensiveTests/VectorShapeContractTests.swift": "8ff3f15997e142ec4eae5ef1462a4a5f909a4667340fc444f653db1b0a3d8376",
+    "Tests/VectorCoreTestSupport/ChildProbeBudget.swift": "11244e906b118979b134d89d048335d0149a4c2431280b3ed0fbd914b053fa59",
+    "Tests/VectorCoreTestSupport/ChildProbeLauncher.swift": "e7c3b9d72e18425f4d2d860aa5a70ab249e2a27be58d85681b6430342cdee73d"
+  },
+  "production_sources_and_benchmarks_unchanged": true,
+  "archive_root": "/Users/goftin/dev/projects/VectorCore-readiness-2026-11-02-evidence",
+  "limits": [
+    "Compiler inherited-default witness crash remains; explicit witness compile accommodation only.",
+    "EnvCapture leaves escape the fixture process group on this host.",
+    "KNearest own guard placement remains equivalent to downstream rejection.",
+    "Swift 6.0, actual sanitizer runtimes, hosted CI, device/Intel/downstream runtime and controlled performance were not qualified here."
+  ]
+}

@@ -25,9 +25,9 @@ struct UMAPPreflightTests {
     private func vectors() -> [LC5AccessVector] { [LC5AccessVector([0]), LC5AccessVector([1]), LC5AccessVector([2])] }
 
     private func expectKind(_ kind: VectorError.ErrorKind, _ body: () throws -> Void) {
-        do { try body(); Issue.record("Expected VectorError.\(kind)") }
-        catch let error as VectorError { #expect(error.kind == kind) }
-        catch { Issue.record("Wrong error family: \(error)") }
+        do { try body(); Issue.record("Expected VectorError.\(kind)") } catch let error as VectorError {
+            #expect(error.kind == kind)
+        } catch { Issue.record("Wrong error family: \(error)") }
     }
 
     @Test func rejectedCurvePrecedesGraphConstructionForBothInitializers() {
@@ -90,8 +90,8 @@ struct UMAPPreflightTests {
                     try Operations.umap(values, dimensions: 1, graph: g, config: config(words, initialization: .pca))
                 }
                 Issue.record("Expected PCA provider witness")
-            } catch is LC5ProviderReached { }
-            catch { Issue.record("PCA provider witness was not reached: \(error)") }
+            } catch is LC5ProviderReached {
+            } catch { Issue.record("PCA provider witness was not reached: \(error)") }
             for initial: [[Float]]? in [nil, [[0], [1], [2]]] {
                 expectKind(.invalidData) {
                     _ = try Operations.umap(graph: empty, dimensions: 1, initialCoordinates: initial, config: config(words))

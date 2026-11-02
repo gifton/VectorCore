@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "id": "basis",
+      "file": "Sources/VectorCore/Initializers/ConvenienceInitializers.swift",
+      "remove": "        precondition(axis >= 0 && axis < D.value, \"Axis index out of bounds\")\n",
+      "filter": "D02DimensionInvalidCaseTests/trappingFormsTrap|D02DegenerateWidthTests/trappingOutcomes",
+      "failure": "dimension reads"
+    },
+    {
+      "id": "pattern",
+      "file": "Sources/VectorCore/Initializers/ConvenienceInitializers.swift",
+      "remove": "        precondition(!pattern.isEmpty, \"Pattern cannot be empty\")\n",
+      "filter": "D02DimensionInvalidCaseTests/trappingFormsTrap",
+      "failure": "dimension reads"
+    },
+    {
+      "id": "min",
+      "file": "Sources/VectorCore/Operations/VectorCoreOperations.swift",
+      "remove": "        precondition(!array.isEmpty, \"minElement requires a nonzero dimension\")\n",
+      "filter": "D02DegenerateWidthTests/trappingOutcomes",
+      "failure": "downstream"
+    },
+    {
+      "id": "max",
+      "file": "Sources/VectorCore/Operations/VectorCoreOperations.swift",
+      "remove": "        precondition(!array.isEmpty, \"maxElement requires a nonzero dimension\")\n",
+      "filter": "D02DegenerateWidthTests/trappingOutcomes",
+      "failure": "downstream"
+    },
+    {
+      "id": "heap",
+      "file": "Sources/VectorCore/Operations/MinHeap.swift",
+      "remove": "        precondition(capacity.map { $0 >= 0 } ?? true, \"Heap capacity must be nonnegative\")\n",
+      "filter": "HeapMembershipContractTests/negativeCapacity",
+      "failure": "returned"
+    },
+    {
+      "id": "nearest",
+      "file": "Sources/VectorCore/Operations/MinHeap.swift",
+      "remove": "        precondition(k >= 0, \"Heap capacity must be nonnegative\")\n",
+      "filter": "HeapMembershipContractTests/negativeCapacity",
+      "equivalentDownstream": true
+    },
+    {
+      "id": "unrolled-count",
+      "file": "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+      "remove": "    precondition(count >= 0, \"count must be nonnegative\")\n",
+      "occurrence": 0,
+      "filter": "ComprehensiveTests.ExecutionBoundaryTests/testLoopGuardWitnesses",
+      "runner": "xctest",
+      "failure": "returned"
+    },
+    {
+      "id": "unrolled-width",
+      "file": "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+      "remove": "    precondition(stride > 0, \"width must be positive\")\n",
+      "filter": "ComprehensiveTests.ExecutionBoundaryTests/testLoopGuardWitnesses",
+      "runner": "xctest",
+      "failure": "returned"
+    },
+    {
+      "id": "vectorized-count",
+      "file": "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+      "remove": "    precondition(count >= 0, \"count must be nonnegative\")\n",
+      "occurrence": 1,
+      "filter": "ComprehensiveTests.ExecutionBoundaryTests/testLoopGuardWitnesses",
+      "runner": "xctest",
+      "failure": "returned"
+    },
+    {
+      "id": "vectorized-width",
+      "file": "Sources/VectorCore/Optimization/OptimizationAttributes.swift",
+      "remove": "    precondition(vectorWidth > 0, \"width must be positive\")\n",
+      "filter": "ComprehensiveTests.ExecutionBoundaryTests/testLoopGuardWitnesses",
+      "runner": "xctest",
+      "failure": "returned"
+    },
+    {
+      "id": "topk-zero",
+      "file": "Sources/VectorCore/Operations/Kernels/TopKSelectionKernels.swift",
+      "remove": "        guard k > 0 else { return }\n",
+      "filter": "P01TopKBufferRedTests/zeroCapacityTopKBufferIgnoresPushInChild",
+      "failure": "zero-capacity push child"
+    }
+  ]
+}

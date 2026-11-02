@@ -143,6 +143,16 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
         }
     }
 
+    // These empty/negative-domain cases terminate if a guard is absent, avoiding a missing-width
+    // guard's nonprogressing loop. The complete existing domain matrix remains below.
+    func testLoopGuardWitnesses() throws {
+        for loop in ["unrolled", "vectorized"] {
+            for pair in ["0:0", "0:-1", "-1:1"] {
+                try runChild("domain:\(loop):\(pair)", expectsTrap: true)
+            }
+        }
+    }
+
     private func runChild(_ mode: String, expectsTrap: Bool) throws {
         var env = ProcessInfo.processInfo.environment
         env["E01_CHILD"] = mode
@@ -159,17 +169,22 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
         }
         try handle.close()
         let log = try String(contentsOf: output, encoding: .utf8)
+        print("E01_CHILD_RESULT \(mode) status=\(process.statusDescription) reason=\(process.reasonDescription)")
         if expectsTrap {
-            XCTAssertEqual(process.terminationReason, .uncaughtSignal, "\(mode): \(log.prefix(1000))")
+            let expected = mode.hasSuffix("-1:1") ? "count must be nonnegative" : "width must be positive"
+            let failures = trapObservationFailures(process, output: log, id: mode, diagnostic: expected,
+                                                   forbidden: ["E01_BODY_REACHED"])
+            XCTAssertTrue(failures.isEmpty, "\(mode): \(failures): \(log.prefix(2000))")
             XCTAssertFalse(log.contains("E01_BODY_REACHED"), "validation must precede body: \(mode)")
             #if DEBUG
-            let expected = mode.hasSuffix("-1:1") ? "count must be nonnegative" : "width must be positive"
             XCTAssertTrue(log.contains(expected), "explicit domain rejection: \(mode): \(log.prefix(1000))")
             #endif
         } else {
             XCTAssertEqual(process.terminationStatus, 0, "\(mode): \(log.prefix(2000))")
         }
-        try FileManager.default.removeItem(at: output)
+        if ProcessInfo.processInfo.environment["TRAP_CAPTURE_DIRECTORY"] == nil {
+            try FileManager.default.removeItem(at: output)
+        } else { print("E01_CHILD_CAPTURE \(mode) \(output.path)") }
     }
 
     @MainActor
@@ -214,6 +229,7 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
         if mode.hasPrefix("domain:") {
             let parts = mode.split(separator: ":")
             let count = Int(parts[2])!, width = Int(parts[3])!
+            trapStage("TRAP_BEFORE \(mode)")
             if parts[1] == "unrolled" {
                 try unrolledLoop(count: count, by: width) { _ in
                     FileHandle.standardError.write(Data("E01_BODY_REACHED\n".utf8)); throw E01Sentinel.stop
@@ -223,6 +239,7 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
                     FileHandle.standardError.write(Data("E01_BODY_REACHED\n".utf8)); throw E01Sentinel.stop
                 }
             }
+            trapStage("TRAP_RETURNED \(mode)")
             XCTFail("invalid loop domain returned")
         } else if mode == "hints" {
             try await checkHints()

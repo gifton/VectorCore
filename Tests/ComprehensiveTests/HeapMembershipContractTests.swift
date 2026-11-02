@@ -24,6 +24,9 @@ import Glibc
         let result=heap.getSorted()
         #expect(result.count == 1 && result[0].index == 1 && result[0].distance.isFinite)
     }
+    // Exercises capacity rejection at the public initializer boundary. For "nearest", the own k
+    // precondition and MinHeap's delegated precondition have no observable boundary between them;
+    // the mutation runner records that redundant-placement survivor explicitly.
     @Test(.serialized,arguments:["empty","bulk","nearest"])
     func negativeCapacity(_ scenario:String) throws {
         var env=ProcessInfo.processInfo.environment;env["R04_SCENARIO"]=scenario
@@ -42,7 +45,9 @@ import Glibc
         }
         try file.close();let output=try String(contentsOf:path,encoding:.utf8)
         print("R04_CHILD_RESULT \(scenario) status=\(child.statusDescription) reason=\(child.reasonDescription) capture=\(path.path)")
-        #expect(child.terminationReason == .uncaughtSignal)
+        let failures = trapObservationFailures(child, output: output, id: "heap-\(scenario)",
+                                               diagnostic: "Heap capacity must be nonnegative")
+        #expect(failures.isEmpty, "\(scenario): \(failures): \(output)")
         #expect(output.contains("R04_STARTED \(scenario)"))
         #expect(!output.contains("R04_ACCEPTED"))
         #if DEBUG
@@ -53,12 +58,14 @@ import Glibc
         guard let scenario=ProcessInfo.processInfo.environment["R04_SCENARIO"] else { return }
         print("R04_INVOCATION "+String(decoding:try JSONSerialization.data(withJSONObject:["argv":CommandLine.arguments,"scenario":scenario],options:[.sortedKeys]),as:UTF8.self))
         print("R04_STARTED \(scenario)");fflush(stdout)
+        trapStage("TRAP_BEFORE heap-\(scenario)")
         switch scenario {
         case "empty": _ = MinHeap<Int>(capacity:-1,compare:<)
         case "bulk": _ = MinHeap<Int>(from:[],capacity:-1,compare:<)
         case "nearest": _ = KNearestHeap(k:-1)
         default:throw NSError(domain:"R04.scenario",code:1)
         }
+        trapStage("TRAP_RETURNED heap-\(scenario)")
         print("R04_ACCEPTED")
     }
 }

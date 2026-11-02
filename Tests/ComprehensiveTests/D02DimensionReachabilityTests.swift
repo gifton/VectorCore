@@ -23,6 +23,12 @@ private enum D02V7: StaticDimension { static let value = 7 }
 private enum D02V17: StaticDimension { static let value = 17 }
 private enum D02V100: StaticDimension { static let value = 100 }
 
+// Each query is flushed. The basis guard reads the dimension once (zero times for a negative axis);
+// missing guards reach additional storage/subscript queries. The mutation runner checks this boundary.
+private enum D02TrapV0: StaticDimension { static var value: Int { trapDimensionRead(0) } }
+private enum D02TrapV7: StaticDimension { static var value: Int { trapDimensionRead(7) } }
+private enum D02TrapV17: StaticDimension { static var value: Int { trapDimensionRead(17) } }
+
 /// Fixture values with the exceptional cases the brief names: finite, signed zero, NaN, +/-infinity, large magnitude.
 private func d02Fixture(_ n: Int, exceptional: Bool) -> [Float] {
     var state: UInt32 = 0x1234_5678 &+ UInt32(n)
@@ -177,9 +183,11 @@ struct D02DimensionReachabilityTests {
 
 /// Records every provider call; with `distinctive`, array-returning and index-returning calls return values that
 /// cannot come from the default provider, so a result shows which provider produced it.
-private final class D02RecordingSIMDProvider: ArraySIMDProvider, @unchecked Sendable {
+final class D02RecordingSIMDProvider: ArraySIMDProvider, @unchecked Sendable {
     let calls = OSAllocatedUnfairLock(initialState: [String]())
     let base = DefaultArraySIMDProvider()
+    let stageWitness: Bool
+    init(stageWitness: Bool = false) { self.stageWitness = stageWitness }
     func note(_ name: String) { calls.withLock { $0.append(name) } }
     func add(_ a: [Float], _ b: [Float]) -> [Float] { note("add"); return base.add(a, b) }
     func subtract(_ a: [Float], _ b: [Float]) -> [Float] { note("subtract"); return base.subtract(a, b) }
@@ -205,8 +213,14 @@ private final class D02RecordingSIMDProvider: ArraySIMDProvider, @unchecked Send
     func sqrt(_ a: [Float]) -> [Float] { note("sqrt"); return Array(repeating: 9, count: a.count) }
     func log(_ a: [Float]) -> [Float] { note("log"); return base.log(a) }
     func clip(_ a: [Float], min: Float, max: Float) -> [Float] { note("clip"); return Array(repeating: 321, count: a.count) }
-    func minIndex(_ a: [Float]) -> Int { note("minIndex"); return a.count - 1 }
-    func maxIndex(_ a: [Float]) -> Int { note("maxIndex"); return a.count - 2 }
+    func minIndex(_ a: [Float]) -> Int {
+        if stageWitness { trapStage("TRAP_DOWNSTREAM minIndex"); return base.minIndex(a) }
+        note("minIndex"); return a.count - 1
+    }
+    func maxIndex(_ a: [Float]) -> Int {
+        if stageWitness { trapStage("TRAP_DOWNSTREAM maxIndex"); return base.maxIndex(a) }
+        note("maxIndex"); return a.count - 2
+    }
 }
 
 @Suite("D02 custom-dimension provider dispatch")
@@ -274,14 +288,16 @@ struct D02DimensionInvalidCaseTests {
 
     @Test func trapChildProbe() {
         guard let specification = ProcessInfo.processInfo.environment["D02_TRAP_PROBE"] else { return }
+        trapStage("TRAP_BEFORE \(specification)")
         switch specification {
-        case "unitX-V0": _ = Vector<D02V0>.unitX
-        case "basis-out-of-range": _ = Vector<D02V7>.basis(axis: 7)
-        case "e-negative": _ = Vector<D02V7>.e(-1)
-        case "oneHot-out-of-range": _ = Vector<D02V17>.oneHot(at: 17)
-        case "pattern-empty": _ = Vector<D02V7>.repeatingPattern([])
-        default: break
+        case "unitX-V0": _ = Vector<D02TrapV0>.unitX
+        case "basis-out-of-range": _ = Vector<D02TrapV7>.basis(axis: 7)
+        case "e-negative": _ = Vector<D02TrapV7>.e(-1)
+        case "oneHot-out-of-range": _ = Vector<D02TrapV17>.oneHot(at: 17)
+        case "pattern-empty": _ = Vector<D02TrapV7>.repeatingPattern([])
+        default: Issue.record("Unknown trap specification \(specification)")
         }
+        trapStage("TRAP_RETURNED \(specification)")
         print("D02_TRAP_NOT_TAKEN \(specification)")
     }
 
@@ -302,11 +318,16 @@ struct D02DimensionInvalidCaseTests {
             try handle.close()
             let diagnostic = try String(contentsOf: url, encoding: .utf8)
             print("D02_CHILD_CAPTURE \(specification) \(url.path)")
+            print("D02_CHILD_RESULT \(specification) status=\(process.statusDescription) reason=\(process.reasonDescription)")
             if timedOut {
                 throw NSError(domain: "D02.childTimeout", code: 1,
                               userInfo: [NSLocalizedDescriptionKey: "Child deadline exceeded: \(url.path)"])
             }
-            #expect(process.terminationReason == .uncaughtSignal, "\(specification): \(diagnostic)")
+            let diagnosticName = specification == "pattern-empty" ? "Pattern cannot be empty" : "Axis index out of bounds"
+            let reads = ["e-negative", "pattern-empty"].contains(specification) ? 0 : 1
+            let failures = trapObservationFailures(process, output: diagnostic, id: specification,
+                                                   diagnostic: diagnosticName, dimensionReads: reads)
+            #expect(failures.isEmpty, "\(specification): \(failures): \(diagnostic)")
             #expect(!diagnostic.contains("D02_TRAP_NOT_TAKEN"), "\(specification)")
         }
     }

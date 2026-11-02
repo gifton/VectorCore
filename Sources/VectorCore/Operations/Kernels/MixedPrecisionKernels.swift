@@ -3420,6 +3420,11 @@ public enum MixedPrecisionKernels {
     ///
     /// The expected-error figures are a fixed heuristic model (0.05% × D^(1/4) for FP16, 0.5% for INT8),
     /// not verified against measured error for any dataset.
+    ///
+    /// With no finite observations, returns an FP32 sentinel with zero statistics and expected error;
+    /// that zero error is not an accuracy measurement. Empty input has dimension zero; otherwise the
+    /// first vector's dimension is retained (PrecisionStatisticsRangeTests.noFiniteObservationsAcrossSupportedWidths,
+    /// PrecisionStatisticsRangeTests.sentinelControlsAcrossSupportedWidths).
     public static func analyzePrecision<V: AnalyzableVector>(
         _ vectors: [V]
     ) -> PrecisionProfile {
@@ -3451,6 +3456,14 @@ public enum MixedPrecisionKernels {
                     }
                 }
             }
+        }
+
+        guard valueCount > 0 else {
+            return PrecisionProfile(
+                minValue: 0, maxValue: 0, meanValue: 0, stdDev: 0,
+                dynamicRange: 0, recommendedPrecision: .fp32, expectedError: 0,
+                outlierCount: 0, dimension: dimension
+            )
         }
 
         let mean = sum / Double(valueCount)

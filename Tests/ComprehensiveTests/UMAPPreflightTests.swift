@@ -173,6 +173,7 @@ private struct LC5AccessVector: VectorProtocol {
     static let borrows = LC5BorrowCount()
     var storage: [Float]
     var scalarCount: Int { storage.count }
+    subscript(index: Int) -> Float { storage[index] }
     init() { storage = [0] }
     init(_ array: [Float]) { storage = array }
     init(repeating value: Float) { storage = [value] }

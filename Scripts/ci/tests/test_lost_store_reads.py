@@ -1,11 +1,12 @@
-"""Policy (T15, lost-store class closure): no direct read of a known-value local after a mutable-pointer closure.
+"""Policy (T15 / VC-C002): review lost-store shapes involving known-value locals and borrowed buffers.
 
 WHY: Swift 6.4.0 (swiftlang-6.4.0.34.1, Xcode 27.0) miscompiles this shape at -O: SIL RedundantLoadElimination
 forwards the value a local held before `withUnsafeMutableBufferPointer` / `withUnsafeMutablePointer(to:)` across
 the closure call when the closure stays out of line and hands the pointer to a callee through an `inout` argument,
 so a read after the closure returns the old value although memory holds the new one. Upstream issue
-swiftlang/swift#92562 (rdar://188227399); PR #92580 and its 6.4.x backports (#92630, #92631, #92632) are believed to fix
-this mechanism (unverified for this form; see T15/lost-store-investigation). Found by
+swiftlang/swift#92562 (rdar://188227399). The related PR #92580/backports do not establish which compiler builds
+pass this shape. Docs/reviews/2026-11-01-compiler-qualification records passing Swift.org 6.4.2 and failing Xcode
+Swift 6.4.2 builds with distinct full identities. Originally found by
 `MatrixMetricContractTests.zeroQuerySoASuffixBehavioralRegression` in Release (T15 lost-store investigation); the
 pure-Swift reproducer is the Release canary Tests/ComprehensiveTests/LostStoreCanaryTests.swift.
 Whether the trigger fires depends on inlining, so unrelated edits can arm or disarm it; this guard flags the
@@ -25,6 +26,15 @@ Scripts/ci/swift_lexing._mask), in one function or closure body:
      or, for the pointer form, any use of `x` (or `a.b`) that is not a plain assignment target, an `&x` argument or
      an argument label `x:`.
 
+INSIDE-BORROW INOUT FORM (VC-C002; hits are prefixed `inout:`): the same literal-initialized owner calls
+`withUnsafeMutableBufferPointer` with a closure literal. Its named or implicit `$0` parameter is passed as the
+whole `&buffer` argument of a call, then directly read using the subscript/first/last/read-only-borrow forms above
+in that closure's own brace scope. Both trailing and parenthesized closures are checked; a new local binding ends
+the region. `FixtureControls.test_retained_compiler_repro_and_controls` pins the independently miscompiled
+ReturnInsideInout.swift and the tested by-value control. `test_inout_handoff_then_same_body_read_is_flagged` and
+`test_inout_handoff_controls_pass` pin spelling, order, masking and binding controls. The flag requests review;
+it does not establish that the callee writes the pointee or that a particular compiler will lose that write.
+
 CAPTURED-VAR FORM (T16 phase 1 concern C5; hits are prefixed `captured:`): a local `var x = ...` declared before a
 `withUnsafe[Mutable][Buffer]Pointer` / `withUnsafe[Mutable]Bytes` call whose closure literal assigns `x` (`x = `,
 `x += `, `x[i] = `), followed by any use of `x` after the call in `x`'s scope. The fix is the W2 shape: declare the
@@ -36,17 +46,24 @@ the same file asserts the correct value on every toolchain). The earlier out-of-
 same for K1-K5. The form is flagged because the T15 class rule covers it, not because a miscompile of it was
 observed. Allowlisted bodies carry an owner tag.
 
-ACCEPTED (must-pass controls below): reading the values through the buffer inside the closure and returning them
-(`let observed = x.withUnsafeMutableBufferPointer { all in ...; return Array(all) }`, investigation W2, which has
-no call between the write and the read); `[T](repeating:count:)` and other non-literal array initializers
-(investigation W1 and v02; this only holds because that initialization is not forwardable today, so such a site
-should cite swiftlang/swift#92562 in a comment, as the control does); re-entering
-`withUnsafeMutableBufferPointer` to read (v06).
+ACCEPTED (must-pass controls below): the W2 fixtures return values from the borrow using direct stores or by-value
+buffer arguments. Returning from inside the borrow alone is not a workaround: the retained ReturnInsideInout.swift
+still loses the store on the tested Xcode compiler. The by-value control kept its write in the recorded compiler
+qualification; this is not a guarantee for arbitrary callees. The existing non-literal-initializer controls
+(`[T](repeating:count:)`, investigation W1/v02) and re-entered mutable borrow control (v06) are also accepted; their
+historical passing results do not establish safety for every compiler build.
 
-ALLOWLIST: ALLOWED maps `path::function::name` to a reason, for reviewed sites that cannot be rewritten; each entry
-must still match a hit (a stale entry fails).
+ALLOWLIST: ALLOWED maps `path::function::name` (with `inout:` or `captured:` for those forms) to a reason, for reviewed
+sites that cannot be rewritten; each entry must still match a hit (a stale entry fails).
 
-LIMITS (lexical heuristic, not dataflow): stores between the declaration and the call (`x[0] = 5`) are not tracked
+LIMITS (lexical heuristic, not dataflow): the inside-borrow form only examines the closure's own brace scope;
+nested control-flow/closure/function bodies and if/while/for/catch headers, pointer aliases, rebased buffers,
+reads through helpers (including Array(buffer)), and other pointer APIs are not followed. Only the single
+named/typed parameter and implicit `$0` signatures exercised by the fixtures are supported. Writer calls require
+an identifier followed by `(`; parenthesized, optional, force-unwrapped and subscripted callables are not matched.
+Tuple/multiple-binding shadows and complex capture-list expressions are not resolved. Like the post-borrow buffer form, it requires a literal owner
+initializer. It does not prove absence of compiler defects in accepted source. Other existing limits:
+stores between the declaration and the call (`x[0] = 5`) are not tracked
 as known values; an initializer that is more than one array literal (`[a] + rest + [b]`, `[T](...)`, `[1, 2].map`)
 is not a literal initializer; passing the whole array to a function after the closure is not a read (a non-inlined
 callee reads memory, investigation `show(values)`; an inlined one is not modelled); arrays that are stored
@@ -82,7 +99,7 @@ _SPEC.loader.exec_module(lexing)
 SCANNED = ('Sources', 'Tests')
 ISSUE = 'swiftlang/swift#92562'
 
-# Reviewed sites that keep the shape: `path::function::name` (`captured:` prefix for the captured-var form) -> reason.
+# Reviewed sites that keep the shape: `path::function::name` (`captured:` / `inout:` prefixes for those forms) -> reason.
 # Tags: [T14] / [T16] code owned by those tasks; [T15] T15-owned bodies; [T15-touched file] pre-existing bodies in a
 # file T15 changed; [pre-existing] files T15 did not touch.
 _CAPTURED = ('; captured var written in the closure and read after it. This form was not reproduced on Swift 6.4.0: in '
@@ -303,10 +320,52 @@ def _reads(mask, name, start, end, pointer_form):
     return hits
 
 
+# Single-parameter closure signatures used by the buffer API, with an optional capture list and result type.
+_BORROW_HEADER = re.compile(
+    r'\s*(?:\[[^\]]*\]\s*)?'
+    r'(?:\(\s*([A-Za-z_]\w*)\s*(?::[^)]*)?\)|([A-Za-z_]\w*))\s*'
+    r'(?:async\s+)?(?:throws\s+)?(?:->\s*[^{};]*?)?\bin\b')
+
+
+def _inout_read_inside_borrow(mask, scopes, callee_end):
+    """VC-C002 heuristic: &parameter in a call, then a direct read in the same closure brace scope."""
+    opening = _skip_space(mask, callee_end)
+    if opening < len(mask) and mask[opening] == '(':
+        argument = _skip_space(mask, opening + 1)
+        opening = argument if mask[argument:argument + 1] == '{' else _skip_space(mask, _match_close(mask, opening))
+    if mask[opening:opening + 1] != '{':
+        return False                                      # function reference, not a closure literal
+    end = _match_close(mask, opening) - 1
+    header = _BORROW_HEADER.match(mask, opening + 1)
+    name = (header.group(1) or header.group(2)) if header else '$0'
+    start = header.end() if header else opening + 1
+    scope = scopes.at[opening + 1]
+    # Nested brace bodies may declare another buffer or another $0. Deliberately do not follow them.
+    body = [mask[i] if scopes.at[i] == scope and mask[i] not in '{}' else ' ' for i in range(start, end)]
+    # Conditional/loop bindings belong to their nested bodies, unlike a same-body let/var or guard binding.
+    # Skip these headers too; their conditions and binding initializers are outside this heuristic.
+    # Exclude compiler directives and argument labels (test_labels_and_directives_do_not_hide_following_statements).
+    for header in re.finditer(r'(?<![\w.$#])(?:if|while|for|catch)\b(?!\s*:)[^{};]*\{', mask[start:end]):
+        if scopes.at[start + header.start()] == scope:
+            body[header.start():header.end()] = ' ' * (header.end() - header.start())
+    body = ''.join(body)
+    rebound = re.search(r'\b(?:var|let)\s+' + re.escape(name) + r'(?![\w$])', body)
+    if rebound:
+        body = body[:rebound.start()]
+    argument = re.compile(r'[(,:]\s*&\s*' + re.escape(name) + r'\s*(?=[,)])')
+    for call in re.finditer(r'\b[A-Za-z_]\w*\s*\(', body):
+        opening = body.index('(', call.start())
+        end = _match_close(body, opening)
+        if argument.search(body, opening, end) and _reads(body, name, end, len(body), False):
+            return True
+    return False
+
+
 def scan_source(path, source):
     """Hits in one file: `path::function::name@line` per flagged call."""
     mask = lexing._mask(source, keep_interpolations=True)
     scopes = lexing._Scopes(source)
+    borrow_scopes = None
     hits = []
     calls = [(m, False) for m in _BUFFER_CALL.finditer(mask)] + [(m, True) for m in _POINTER_CALL.finditer(mask)]
     for match, pointer_form in sorted(calls, key=lambda item: item[0].start()):
@@ -323,9 +382,15 @@ def scan_source(path, source):
             scope_end = scopes.closes[scopes.at[declared[0]]]
         callee = 'withUnsafeMutablePointer' if pointer_form else 'withUnsafeMutableBufferPointer'
         end = _call_end(mask, mask.find(callee, call) + len(callee))
+        line = source.count('\n', 0, call) + 1
         if _reads(mask, name, end, scope_end, pointer_form):
-            line = source.count('\n', 0, call) + 1
             hits.append(f'{path}::{_owner_name(scopes, call)}::{name}@{line}')
+        if not pointer_form:
+            if borrow_scopes is None:
+                # Match the interpolation-preserving mask; older forms keep their existing scope model.
+                borrow_scopes = lexing._Scopes(mask)
+            if _inout_read_inside_borrow(mask, borrow_scopes, match.end()):
+                hits.append(f'inout:{path}::{_owner_name(scopes, call)}::{name}@{line}')
     return hits
 
 
@@ -371,7 +436,7 @@ def scan_captured_source(path, source):
 
 
 def scan(files):
-    """files: {relative path: source}. Returns sorted hits of both forms."""
+    """files: {relative path: source}. Returns sorted hits of all three forms."""
     hits = []
     for path in sorted(files):
         hits.extend(scan_source(path, files[path]))
@@ -549,8 +614,161 @@ MUST_PASS_CAPTURED = {
 }
 
 
+# VC-C002: explicit inout buffer handoff followed by a direct read in the same closure body.
+# The exact compiler repro and by-value control are retained under Docs/reviews/ below.
+# These spelling/order fixtures exercise the scanner, not compiler behavior.
+_INOUT_PREFIX = 'func f() {\n    var values: [Float] = [2]\n    '
+MUST_FAIL_INOUT = {
+    'named parameter':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); return buffer[0] }',
+    'implicit parameter':
+        'values.withUnsafeMutableBufferPointer { writeOne(&$0); return $0[0] }',
+    'parenthesized closure argument':
+        'values.withUnsafeMutableBufferPointer({ buffer in writeOne(&buffer); return buffer[0] })',
+    'empty arguments and trailing closure':
+        'values.withUnsafeMutableBufferPointer() { buffer in writeOne(&buffer); return buffer[0] }',
+    'parenthesized parameter':
+        'values.withUnsafeMutableBufferPointer { (buffer) in writeOne(&buffer); return buffer[0] }',
+    'typed parameter and result':
+        'values.withUnsafeMutableBufferPointer { (buffer: inout UnsafeMutableBufferPointer<Float>) -> Float in '
+        'writeOne(&buffer); return buffer[0] }',
+    'capture list':
+        'values.withUnsafeMutableBufferPointer { [factor] buffer in writeOne(&buffer); return buffer[0] * factor }',
+    'labeled argument and whitespace':
+        'values.withUnsafeMutableBufferPointer { buffer in writer.fill(output: & /* pointer */ buffer); '
+        'return buffer [0] }',
+    'second argument':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(1, &buffer); return buffer[0] }',
+    'first and last reads':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); return buffer.first! + buffer.last! }',
+    'compound assignment reads the old element':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); buffer[0] += 1 }',
+    'single-line interpolation read':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); print("value=\\(buffer[0])") }',
+    'multi-line interpolation read':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); print("""\n\\(buffer[0])\n""") }',
+    'same spelling in nested scope does not hide later outer read':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); '
+        'do { let buffer = other; print(buffer[0]) }; return buffer[0] }',
+    'multiple handoffs produce one diagnostic':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); writeOne(&buffer); return buffer[0] }',
+}
+MUST_PASS_INOUT = {
+    'by-value handoff':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(buffer); return buffer[0] }',
+    'implicit by-value handoff':
+        'values.withUnsafeMutableBufferPointer { writeOne($0); return $0[0] }',
+    'direct store then read':
+        'values.withUnsafeMutableBufferPointer { buffer in buffer[0] = 1; return buffer[0] }',
+    'read before handoff':
+        'values.withUnsafeMutableBufferPointer { buffer in let value = buffer[0]; writeOne(&buffer); return value }',
+    'read within the writer arguments precedes return':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer, old: buffer[0]) }',
+    'store after handoff with no read':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); buffer[0] = 3 }',
+    'different buffer passed inout':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&other); return buffer[0] }',
+    'element passed inout, not the buffer value':
+        'values.withUnsafeMutableBufferPointer { buffer in writeScalar(&buffer[0]); return buffer[0] }',
+    'member passed inout, not the buffer value':
+        'values.withUnsafeMutableBufferPointer { buffer in writePointer(&buffer.baseAddress); return buffer[0] }',
+    'same prefix is a different name':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer2); return buffer[0] }',
+    'commented-out handoff':
+        'values.withUnsafeMutableBufferPointer { buffer in /* writeOne(&buffer) */ return buffer[0] }',
+    'string text is not a handoff':
+        'values.withUnsafeMutableBufferPointer { buffer in print("writeOne(&buffer)"); return buffer[0] }',
+    'comment and string text are not reads':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); /* buffer[0] */ print("buffer[0]") }',
+    'separate borrow does not inherit the inout handoff':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer) }; '
+        'values.withUnsafeMutableBufferPointer { buffer in return buffer[0] }',
+    'nested closure parameter is a separate binding':
+        'values.withUnsafeMutableBufferPointer { buffer in writeOne(&buffer); '
+        'other.withUnsafeBufferPointer { buffer in return buffer[0] } }',
+    'nested implicit closure parameter is a separate binding':
+        'values.withUnsafeMutableBufferPointer { writeOne(&$0); other.map { $0[0] } }',
+    'shadowed parameter is a separate binding':
+        'values.withUnsafeMutableBufferPointer { buffer in var buffer = other; writeOne(&buffer); return buffer[0] }',
+    'nested local is a separate binding':
+        'values.withUnsafeMutableBufferPointer { buffer in do { var buffer = other; '
+        'writeOne(&buffer); print(buffer[0]) }; return buffer[0] }',
+    'nested function body is not an executed handoff':
+        'values.withUnsafeMutableBufferPointer { buffer in func unused() { writeOne(&buffer) }; return buffer[0] }',
+}
+
+
 class FixtureControls(unittest.TestCase):
     """The guard bites on every investigation shape and accepts the workarounds."""
+
+    def test_retained_compiler_repro_and_controls(self):
+        probes = ROOT / 'Docs/reviews/2026-11-01-compiler-qualification/probes'
+        expected = {
+            'LostStoreObserved.swift': ['Sources/Probe.swift::observedValue::values@10'],
+            'ReturnInsideInout.swift': ['inout:Sources/Probe.swift::observedValue::values@10'],
+            'ByValueReturnInside.swift': [],
+        }
+        for filename, hits in expected.items():
+            with self.subTest(filename):
+                self.assertEqual(scan({'Sources/Probe.swift': (probes / filename).read_text()}), hits)
+
+    def test_inout_handoff_then_same_body_read_is_flagged(self):
+        for label, call in MUST_FAIL_INOUT.items():
+            for layout in (call, call.replace('; ', '\n')):
+                with self.subTest(label=label, layout=layout):
+                    source = _INOUT_PREFIX + layout + '\n}\n'
+                    self.assertEqual(scan({'Sources/X.swift': source}), ['inout:Sources/X.swift::f::values@3'])
+
+    def test_inout_handoff_controls_pass(self):
+        for label, call in MUST_PASS_INOUT.items():
+            for layout in (call, call.replace('; ', '\n')):
+                with self.subTest(label=label, layout=layout):
+                    self.assertEqual(scan({'Tests/Y.swift': _INOUT_PREFIX + layout + '\n}\n'}), [])
+
+    def test_interpolated_nested_closures_keep_their_own_bindings(self):
+        for parameter, handoff, nested in (
+            ('buffer in ', 'writeOne(&buffer)', 'other.map { buffer in buffer[0] }'),
+            ('', 'writeOne(&$0)', 'other.map { $0[0] }'),
+        ):
+            for quote in ('"', '"""\n'):
+                with self.subTest(parameter=parameter, quote=quote):
+                    close = '"' if quote == '"' else '\n"""'
+                    call = ('values.withUnsafeMutableBufferPointer { ' + parameter + handoff
+                            + '; print(' + quote + '\\(' + nested + ')' + close + ') }')
+                    self.assertEqual(scan({'Tests/Y.swift': _INOUT_PREFIX + call + '\n}\n'}), [])
+
+    def test_labels_and_directives_do_not_hide_following_statements(self):
+        bodies = [f'log({label}: count)\nwriteOne(&buffer)\nprint(buffer[0])\ndo {{ print(0) }}'
+                  for label in ('if', 'while', 'for', 'catch')]
+        bodies.append('#if DEBUG\nwriteOne(&buffer)\nprint(buffer[0])\n#endif\nif enabled { print(0) }')
+        for body in bodies:
+            with self.subTest(body=body):
+                source = (_INOUT_PREFIX + 'values.withUnsafeMutableBufferPointer { buffer in\n'
+                          + body + '\n}\n}\n')
+                self.assertEqual(scan({'Sources/X.swift': source}), ['inout:Sources/X.swift::f::values@3'])
+
+    def test_conditional_shadow_ends_before_outer_buffer_read(self):
+        for statement in (
+            'if let buffer = optional { print(buffer.count) }',
+            'if var buffer = optional { buffer[0] = 1 }',
+            'while let buffer = next() { print(buffer.count) }',
+            'for case let buffer? in optionals { print(buffer.count) }',
+            'if let buffer = optional, buffer[0] > 0 { print(buffer.count) }',
+        ):
+            for outer_read in ('', '; return buffer[0]'):
+                with self.subTest(statement=statement, outer_read=outer_read):
+                    source = (_INOUT_PREFIX + 'values.withUnsafeMutableBufferPointer { buffer in '
+                              'writeOne(&buffer); ' + statement + outer_read + ' }\n}\n')
+                    expected = ['inout:Sources/X.swift::f::values@3'] if outer_read else []
+                    self.assertEqual(scan({'Sources/X.swift': source}), expected)
+
+    def test_inout_allowlist_requires_live_hit_and_reason(self):
+        key = 'inout:Tests/Z.swift::f::values'
+        hits = [key + '@3']
+        self.assertEqual(problems(hits, {key: 'reviewed compiler canary'}), [])
+        self.assertEqual(problems(hits, {}), [f'lost-store read shape (see {ISSUE}): {key}@3'])
+        self.assertEqual(problems([], {key: 'reviewed compiler canary'}), [f'stale allowlist entry: {key}'])
+        self.assertEqual(problems(hits, {key: ' '}), [f'allowlist entry without a reason: {key}'])
 
     def test_captured_var_shapes_are_flagged(self):
         for label, (source, expected) in MUST_FAIL_CAPTURED.items():

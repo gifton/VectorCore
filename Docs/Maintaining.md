@@ -155,6 +155,10 @@ records the tested Swift.org toolchain, SDK, commands and limits for the 0.4.0
 candidate. It distinguishes that compiler build from Xcode 27.2's bundled
 compiler, whose default Release canary remains failing.
 
+The [VC-C002 scanner repair](reviews/2026-11-01-lost-store-scanner-repair/README.md)
+closes the reported inside-borrow `inout` detection gap and records its regression
+tests and explicit lexical limits.
+
 Do not move or delete published version tags. For each new release, use a
 SwiftPM-compatible semantic version tag such as `vX.Y.Z`, verify its commit and
 CI, and test resolution/build from a clean downstream consumer. Explain API,

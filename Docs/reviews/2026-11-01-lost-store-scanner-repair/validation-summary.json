@@ -1,0 +1,117 @@
+{
+  "issue": "VC-C002",
+  "disposition": "repaired within documented lexical scope",
+  "base_commit": "9ab1b5e388eff483ab8a34200d6d64889e45c376",
+  "branch": "codex/audit-top-six-2026-10-27",
+  "source_sha256": {
+    "Scripts/ci/tests/test_lost_store_reads.py": "8628a0265880fe3f38987744ff9956e77b447782f8a005db25175b0c07817d59",
+    "Tests/ComprehensiveTests/LostStoreCanaryTests.swift": "fe10fc42f6e48375753727ea313955e8217b1a0a32f78125f95c0ecc6e901e31"
+  },
+  "tests": {
+    "retained_red": {
+      "tests": 3,
+      "expected_failures": 1,
+      "log": "retained-red.log"
+    },
+    "new_fixture_red": {
+      "expected_subtest_failures": 16,
+      "log": "fixtures-red.log"
+    },
+    "review_scope_red": {
+      "expected_subtest_failures": 9,
+      "log": "review-red.log"
+    },
+    "review_header_red": {
+      "expected_subtest_failures": 5,
+      "log": "headers-red.log"
+    },
+    "scanner_final": {
+      "tests": 15,
+      "exit_code": 0,
+      "log": "scanner-reviewed-final.log"
+    },
+    "policy_final": {
+      "tests": 565,
+      "exit_code": 0,
+      "log": "policy-reviewed-final.log",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Scripts/ci/tests",
+        "-v"
+      ]
+    },
+    "debug_canaries": {
+      "tests": 9,
+      "suites": 3,
+      "exit_code": 0,
+      "log": "canary-debug.log",
+      "command": [
+        "/usr/bin/caffeinate",
+        "-i",
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "test",
+        "--build-system",
+        "native",
+        "--jobs",
+        "3",
+        "-c",
+        "debug",
+        "--scratch-path",
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-debug",
+        "--sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+        "--filter",
+        "LostStoreCanaryTests",
+        "-v"
+      ]
+    },
+    "release_canaries": {
+      "tests": 9,
+      "suites": 3,
+      "exit_code": 0,
+      "log": "canary-release.log",
+      "command": [
+        "/usr/bin/caffeinate",
+        "-i",
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "test",
+        "--build-system",
+        "native",
+        "--jobs",
+        "3",
+        "-c",
+        "release",
+        "--scratch-path",
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-release",
+        "--sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+        "--filter",
+        "LostStoreCanaryTests",
+        "-v"
+      ]
+    }
+  },
+  "compiler_identity": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0\n",
+  "swift_frontend_sha256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+  "tree_comparison": {
+    "file_count": 328,
+    "baseline_hits": 79,
+    "final_hits": 79,
+    "added": [],
+    "removed": [],
+    "inout_hits": [],
+    "allowlist_changed": false,
+    "problems": [],
+    "current_scanner_sha256": "8628a0265880fe3f38987744ff9956e77b447782f8a005db25175b0c07817d59",
+    "comparison": "Both scanner revisions evaluated on the final Sources/Tests contents."
+  },
+  "full_policy_source_stable_during_run": true,
+  "swift_canary_diff_stable_during_both_runs": true,
+  "scope": "Targeted Swift validation only for this repair; previous full-suite qualification remains a separate historical record.",
+  "raw_archive": "/Users/goftin/dev/projects/VectorCore-scanner-repair-2026-11-01-evidence"
+}

@@ -4,15 +4,17 @@ import VectorCore
 // Canary for a Swift 6.4.0 optimizer bug (T15 lost-store investigation). At -O, SIL RedundantLoadElimination
 // forwards the value an array literal stored across a `withUnsafeMutableBufferPointer` call whose closure stays out
 // of line and receives the buffer `inout`, so an element read after the call returns the literal although memory
-// holds the closure's write. Upstream: swiftlang/swift#92562 (rdar://188227399); PR #92580 and its 6.4.x backports
-// (#92630, #92631, #92632) are believed to fix this mechanism (unverified for this form; see T15/lost-store-investigation).
+// holds the closure's write. Related upstream issue: swiftlang/swift#92562 (rdar://188227399).
+// Docs/reviews/2026-11-01-compiler-qualification records this symptom on Xcode Swift 6.4.2 but passing results on
+// Swift.org 6.4.2. Keep the full compiler identity from the build log; the short version does not distinguish them.
+// This canary observes the result, not whether a particular upstream fix (such as PR #92580) is present.
 //
 // The reproducer is the investigation's pure-Swift form (ladder/d_pure.swift): no VectorCore code is involved.
 // (The second suite below, AdaptiveReducedResultTests, covers the library site hardened against this bug.)
 // Expectations by build:
 // - Debug (`DEBUG` defined, -Onone; RedundantLoadElimination does not run): the store is observed, on every toolchain.
-// - Release, compiler >= 6.4.1: the store must be observed. A lost store means the toolchain lacks the fix, and the
-//   test fails, so a missing backport is signalled.
+// - Release, compiler >= 6.4.1: the store must be observed. A stale value fails the test and blocks qualification
+//   of that compiler build; it does not identify a missing patch.
 // - Release, Swift 6.4.0 (`compiler(>=6.4) && !compiler(>=6.4.1)`): the bug is expected. A lost store is recorded as a
 //   known issue; `isIntermittent: true` keeps the test passing if this build does not reproduce it.
 // - Release, compiler < 6.4 (CI runs 6.0 and 6.2; whether they have the bug is not known): a lost store is recorded as
@@ -41,7 +43,7 @@ struct LostStoreCanaryTests {
         #if DEBUG
         #expect(observed == 1, Comment(rawValue: detail))
         #elseif compiler(>=6.4.1)
-        #expect(observed == 1, Comment(rawValue: "toolchain without the swiftlang/swift#92562 fix (PR #92580): " + detail))
+        #expect(observed == 1, Comment(rawValue: "optimized lost-store canary failed (swiftlang/swift#92562 class; retain full compiler identity): " + detail))
         #elseif compiler(>=6.4)
         withKnownIssue("Swift 6.4.0 RedundantLoadElimination lost store, swiftlang/swift#92562", isIntermittent: true) {
             #expect(observed == 1, Comment(rawValue: detail))

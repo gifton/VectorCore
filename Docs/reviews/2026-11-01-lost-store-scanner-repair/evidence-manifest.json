@@ -1,0 +1,185 @@
+{
+  "archive": "/Users/goftin/dev/projects/VectorCore-scanner-repair-2026-11-01-evidence",
+  "files": [
+    {
+      "path": "binding-fix.patch",
+      "bytes": 4606,
+      "sha256": "6062e310462f5e3d313221e3a59d802400354dbd311c38038cbe2a560fe9cf00"
+    },
+    {
+      "path": "canary-debug-result.json",
+      "bytes": 46464,
+      "sha256": "f471991b3ae4a108ccd6a0885d9d3eb8679cf3cf05d63d2bdaa4a4624f1f5b7a"
+    },
+    {
+      "path": "canary-debug-sandbox-result.json",
+      "bytes": 46461,
+      "sha256": "76528cdc43faa3c978d6abf6b2fa819ff8fd62e69530b115bd10e7f77fdb87b0"
+    },
+    {
+      "path": "canary-debug-sandbox.log",
+      "bytes": 13254,
+      "sha256": "fccb3f52ea2d80da6b1f7779968c0f58d586ee7f02caa83f4df39962b83ffccc"
+    },
+    {
+      "path": "canary-debug.log",
+      "bytes": 45385,
+      "sha256": "a75188ba2e4d04551ae6d03fe114564309e018d1cf187170d66e18474f057e5c"
+    },
+    {
+      "path": "canary-release-result.json",
+      "bytes": 52235,
+      "sha256": "11e6befaecfa8ce501ed4ce0a4ea1a1d1cdffbf7445018d15fe08541994e9f8d"
+    },
+    {
+      "path": "canary-release.log",
+      "bytes": 110223,
+      "sha256": "8824660883c0ab4569be5751b3581ec0378d67ce9f7780642f53703f6745d025"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3063,
+      "sha256": "2408be3d5ed3cb7a42a6889dc4c5bd057ba9f846cf9b0fb8768a601e52085bcd"
+    },
+    {
+      "path": "claim-ledger-result.json",
+      "bytes": 43139,
+      "sha256": "2daabf1a1a360817c5ee8bc2fe6f029296d7d78dabf16c2ccc207e79da08db0e"
+    },
+    {
+      "path": "claim-ledger.log",
+      "bytes": 27,
+      "sha256": "c0d7af37d61b7d6aab16bb5662ade28dc3ad570aec1ed0e64c43c52727d5047c"
+    },
+    {
+      "path": "fix.patch",
+      "bytes": 12437,
+      "sha256": "071a671af716676b9ad1cc54a747e5611fd6a6e89aaeb6178a3afcd2b99d5d56"
+    },
+    {
+      "path": "fixtures-red.log",
+      "bytes": 19014,
+      "sha256": "5323e6ebb3418c6378c422ada92d4598d3656352418fbd21e628887942e5069c"
+    },
+    {
+      "path": "header-fix.patch",
+      "bytes": 916,
+      "sha256": "2236e093c312643be4e6eb8c9aa4e5deee096531f1afed03524ac77988105943"
+    },
+    {
+      "path": "header-tests.patch",
+      "bytes": 2407,
+      "sha256": "c0240bc51ad3b1a2e6eb319c935b768b453d32e1d3abb8d705bc87d53f9495ec"
+    },
+    {
+      "path": "headers-red.log",
+      "bytes": 8026,
+      "sha256": "977ee0ed6893a96179741ad121dadf3bb561601b70f32056db9184fd980fe057"
+    },
+    {
+      "path": "interpolation-green.log",
+      "bytes": 382,
+      "sha256": "2ba12a067e0eb9c7d5163c715f045f4fdc908742c7857338ddeb5287ca7872a4"
+    },
+    {
+      "path": "policy-final-result.json",
+      "bytes": 50210,
+      "sha256": "d11464a1f84f7f65c931ac48447c5b9ab6bc0c8c8f75822e41d498ffaf7c71e2"
+    },
+    {
+      "path": "policy-final.log",
+      "bytes": 82898,
+      "sha256": "105739ee86a91746e6a2e9df9147d46cbc9732a85717e22ac01ab3b51d1df748"
+    },
+    {
+      "path": "policy-result.json",
+      "bytes": 43183,
+      "sha256": "1f129c1375a06e2adef6d5449d76382e2b23903c31c37b76d1d58728cc607052"
+    },
+    {
+      "path": "policy-reviewed-final-result.json",
+      "bytes": 51235,
+      "sha256": "d442753ee915ea92458571bb48da8cc9216f8d685f4316e8c6ff6e86440c529b"
+    },
+    {
+      "path": "policy-reviewed-final.log",
+      "bytes": 83065,
+      "sha256": "e0300899332a43b5214c6fd8d0302ebd261fa8f68060c2f85f556d5ac59247c9"
+    },
+    {
+      "path": "policy.log",
+      "bytes": 82580,
+      "sha256": "62af2a2968b3abdbe879011dc7c60a706d883df78b96d9c463bd1a85327e605b"
+    },
+    {
+      "path": "repair.patch",
+      "bytes": 24694,
+      "sha256": "69a084d23bc05dcc754bfcf533a7d8386f08c12e29d6f159cdae9ddf656ee192"
+    },
+    {
+      "path": "retained-green.log",
+      "bytes": 489,
+      "sha256": "4b0d0e781e91058fa8019d40a19de0823874162397034c9731e8907d08e0c950"
+    },
+    {
+      "path": "retained-red.log",
+      "bytes": 1382,
+      "sha256": "baefc1edb3656ad31a3c14a25ee534c77e8ee66e4d58ffa4eafd3b1f9212e874"
+    },
+    {
+      "path": "review-final.txt",
+      "bytes": 1163,
+      "sha256": "2aae35636b197badf029a158a6ce5579e12f0385e670a8aae6078047904bfb7b"
+    },
+    {
+      "path": "review-red.log",
+      "bytes": 10899,
+      "sha256": "1d365bc746fa71282f1b1dad0a905daba24eb548fef8ac306b48d187cefd88a1"
+    },
+    {
+      "path": "review-tests.patch",
+      "bytes": 2094,
+      "sha256": "f60f93f46a4ba3181139c87b95a4d0a8d1e7d122ae1f88dfb725f405f0290a87"
+    },
+    {
+      "path": "scanner-baseline.log",
+      "bytes": 1024,
+      "sha256": "3c9635cb1c08f619cc6d74fe7158f3fb8f14f86d52ae829ed0712ee8bd50d40c"
+    },
+    {
+      "path": "scanner-final.log",
+      "bytes": 1803,
+      "sha256": "4de52283910a7d3d3dfcc70da7cfa0060db65b0225977a32f94e12ecdb9f13f6"
+    },
+    {
+      "path": "scanner-green.log",
+      "bytes": 1511,
+      "sha256": "620dcd42513768d35b9941a333448c32f4c616257b7746b83ef6db5b489fb989"
+    },
+    {
+      "path": "scanner-reviewed-final.log",
+      "bytes": 1957,
+      "sha256": "557b6efa6ecb2916e22fd4327d38415aba6f495a7dc2a723e507c35c6f789880"
+    },
+    {
+      "path": "scope-fix.patch",
+      "bytes": 1324,
+      "sha256": "efdb0ee34a4b4f80ac37b921185e6f4e8e8403b84f463f22011121fc1c022505"
+    },
+    {
+      "path": "test-retained-gap.py",
+      "bytes": 1450,
+      "sha256": "ce2f716669925a72a4865d946539144e80cd845fdec1c69cf802eff386e1f1ea"
+    },
+    {
+      "path": "tests.patch",
+      "bytes": 7733,
+      "sha256": "9d3c34e4bdc0f80abc1e73138b91b572e18a230d22f04e884ebc9a40d12c4e82"
+    },
+    {
+      "path": "tree-comparison.json",
+      "bytes": 352,
+      "sha256": "6caa66c7adb89447904458baf903c88e2ede6c631e10a06a7ae0e2be1cdd0aa3"
+    }
+  ]
+}

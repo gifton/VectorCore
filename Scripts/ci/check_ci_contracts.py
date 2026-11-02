@@ -61,7 +61,7 @@ This table describes configured remote commands. Local verification is recorded 
 
 CI Required has exactly `test`, `lint`, `repository-checks`, `consumer`, `platforms`, `benchmark-contracts`, `sanitizers`; `always()` runs the exact-result aggregate. Missing, skipped, cancelled and failed results reject.
 
-BenchmarkContractTests was already registered before V03. Its reviewed default source membership is `BenchmarkContractTests.swift`, `BenchmarkModelDomainTests.swift`, `BenchmarkSelectionContractTests.swift`, `RunnerContractTests.swift`, `SwiftTestingEntryTests.swift`, with dependencies VectorCoreBenchSupport and VectorCoreBenchmarking. F012 adds the model-domain regressions. The policy rejects target/source exclusions.
+BenchmarkContractTests was already registered before V03. Its reviewed default source membership is `BenchmarkContractTests.swift`, `BenchmarkModelDomainTests.swift`, `BenchmarkSelectionContractTests.swift`, `RunnerContractTests.swift`, `SwiftTestingEntryTests.swift`, with dependencies VectorCoreBenchSupport, VectorCoreBenchmarking and the test-only VectorCoreTestSupport. F012 adds the model-domain regressions. The policy rejects target/source exclusions.
 
 `Scripts/ci/performance_sites.json` inventories 71 existing timing assertions and two intentional gate probes, plus 29 existing measurement bodies and one observation probe. Strict is enabled only by the exact string `1`; disabled lazy predicates do not evaluate. Fixed injected tuning metrics, numerical assertions, allocation counts and liveness deadlines remain active. The unregistered obsolete NSW benchmark source is retired, not registered.
 
@@ -74,9 +74,13 @@ def validate(root=ROOT):
     if (root / 'Docs/executed-ci-contracts.md').read_text() != coverage_text(data):
         raise ValueError('Executable coverage table differs from checked manifest')
     package = (root / 'Package.swift').read_text()
-    registration = re.findall(r'\.testTarget\(\s*name:\s*"BenchmarkContractTests"\s*,\s*dependencies:\s*\["VectorCoreBenchSupport",\s*"VectorCoreBenchmarking"\]\s*\)', package)
+    registration = re.findall(r'\.testTarget\(\s*name:\s*"BenchmarkContractTests"\s*,\s*dependencies:\s*\["VectorCoreBenchSupport",\s*"VectorCoreBenchmarking",\s*"VectorCoreTestSupport"\]\s*\)', package)
     if len(registration) != 1:
         raise ValueError('Preserve default BenchmarkContractTests target/dependencies without source exclusion')
+    if len(re.findall(r'\.target\(\s*name:\s*"VectorCoreTestSupport"\s*,\s*path:\s*"Tests/VectorCoreTestSupport"\s*\)', package)) != 1:
+        raise ValueError('Preserve shared test support target under Tests')
+    if len(re.findall(r'\.testTarget\(\s*name:\s*"ComprehensiveTests"\s*,\s*dependencies:\s*\["VectorCore",\s*"VectorCoreTestSupport"\]', package)) != 1:
+        raise ValueError('ComprehensiveTests must use shared test support')
     actual = {p.name for p in (root / 'Tests/BenchmarkContractTests').glob('*.swift')}
     if actual != BENCHMARK_TEST_SOURCES:
         raise ValueError('Benchmark test source membership changed; update reviewed contract')

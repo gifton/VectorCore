@@ -131,7 +131,7 @@ package enum ChildProbeLaunchError: Error, CustomStringConvertible {
     case unrecognizedRunner(String)
     /// The parent's runner argv carries a selection source that cannot be removed safely.
     case refusedRunnerArgument(String)
-    /// The selector does not name exactly one test.
+    /// The selector does not have the required single-test selection shape.
     case invalidSelection(String)
     /// posix_spawn or its attribute setup failed.
     case spawnFailed(String)

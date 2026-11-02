@@ -19,7 +19,7 @@ This table describes configured remote commands. Local verification is recorded 
 
 CI Required has exactly `test`, `lint`, `repository-checks`, `consumer`, `platforms`, `benchmark-contracts`, `sanitizers`; `always()` runs the exact-result aggregate. Missing, skipped, cancelled and failed results reject.
 
-BenchmarkContractTests was already registered before V03. Its reviewed default source membership is `BenchmarkContractTests.swift`, `BenchmarkModelDomainTests.swift`, `BenchmarkSelectionContractTests.swift`, `RunnerContractTests.swift`, `SwiftTestingEntryTests.swift`, with dependencies VectorCoreBenchSupport and VectorCoreBenchmarking. F012 adds the model-domain regressions. The policy rejects target/source exclusions.
+BenchmarkContractTests was already registered before V03. Its reviewed default source membership is `BenchmarkContractTests.swift`, `BenchmarkModelDomainTests.swift`, `BenchmarkSelectionContractTests.swift`, `RunnerContractTests.swift`, `SwiftTestingEntryTests.swift`, with dependencies VectorCoreBenchSupport, VectorCoreBenchmarking and the test-only VectorCoreTestSupport. F012 adds the model-domain regressions. The policy rejects target/source exclusions.
 
 `Scripts/ci/performance_sites.json` inventories 71 existing timing assertions and two intentional gate probes, plus 29 existing measurement bodies and one observation probe. Strict is enabled only by the exact string `1`; disabled lazy predicates do not evaluate. Fixed injected tuning metrics, numerical assertions, allocation counts and liveness deadlines remain active. The unregistered obsolete NSW benchmark source is retired, not registered.
 

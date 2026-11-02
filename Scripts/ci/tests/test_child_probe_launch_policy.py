@@ -16,19 +16,10 @@ except where a rule reads string literals on purpose):
                function reference (`let f = posix_spawn`) all count: `posix_spawn`, `posix_spawnp`, `fork`,
                `vfork`, `execv`, `execve`, `execvp`, `execvP`, `execl`, `execle`, `execlp`, `popen`; `system`
                only as a call (`system(`; it is unavailable in Swift on Darwin, and the bare word is too
-               common). SPAWN_ALLOWANCES pins the two exceptions by exact count and shape:
+               common). SPAWN_ALLOWANCES pins the sole exception by exact count and shape:
                  - ChildProbeLauncherTests.swift: one posix_spawn of "/bin/sleep" (a group member that the
-                   launcher's group cleanup must remove; never the test binary);
-                 - BenchmarkContractTests/RunnerContractTests.swift: one Process whose argument list is the
-                   literal `["-XCTest", "<one selector>", Bundle(for: Self.self).bundlePath]`, assigned exactly
-                   once: the file may not read the parent argv beyond `CommandLine.arguments[0]` (no copy,
-                   append or reassignment; no `ProcessInfo.processInfo.arguments`, no `unsafeArgv`), so
-                   nothing of the parent's argv is inherited and no selector survives. Its child, testProcessFixture,
-                   dispatches runner-contract or model-domain scenarios in-process and launches no probe (the runner's production
-                   EnvCapture may run `git rev-parse` / `swiftc -version`, each under its own 2 s deadline).
-                   It predates T10 and lives in another test target, which cannot use the launcher without
-                   changing the reviewed BenchmarkContractTests source membership
-                   (Scripts/ci/check_ci_contracts.py). Its deadline still signals only the direct child.
+                   launcher's group cleanup must remove; never the test binary).
+               Benchmark fixtures use the same package-scoped VectorCoreTestSupport launcher.
   R2 selector  In Tests/**/*.swift outside the launcher, no test-runner selector string literal: "--filter",
                "--skip", "--specifier", "-XCTest" and their "=" forms (literal text read from the source; a
                literal inside a comment does not count). SELECTOR_ALLOWANCES pins the exact count per
@@ -42,7 +33,11 @@ except where a rule reads string literals on purpose):
                (`sendToGroup(SIGKILL)`) comes before the reap (`waitpid`); and ONE caller: the spawn
                helper `spawnChildProbeGroupLeader(` is called exactly once in the file, inside
                `launchChildProbe`, so no second entry point can spawn without the refusal and marker.
-  R4 floor     The scan must see the launcher in use: at least MIN_CALL_FILES files with a
+  R4 import    Every launcher caller explicitly imports VectorCoreTestSupport.
+  R5 budget    Ordinary call sites use ChildProbeBudget.standard.deadline/.cleanup. Named exceptions
+               preserve deliberate self-test deadlines, Q03 sanitizer timing and T16 profiler calibration;
+               RunnerContractTests pins its wrapper's ordinary defaults separately.
+  R6 floor     The scan must see the launcher in use: at least MIN_CALL_FILES files with a
                `launchChildProbe(` call, and the launcher itself.
 
 LIMITS (lexical heuristic, not a parser), each NOT detected:
@@ -73,7 +68,7 @@ lexing = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(lexing)
 _mask = lexing._mask
 
-LAUNCHER = 'Tests/ComprehensiveTests/ChildProbeLauncher.swift'
+LAUNCHER = 'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift'
 SPAWN = re.compile(r'\bProcess\b(?!\s*\.\s*TerminationReason\b)|\bNSTask\b|\bNSWorkspace\b'
                    r'|\b(?:posix_spawnp?|v?fork|exec(?:v|ve|vp|vP|l|le|lp)|popen)\b|\bsystem\s*\(')
 SELECTOR_LITERAL = re.compile(r'"(?:--filter|--skip|--specifier|-XCTest)(?:=[^"\\\n]*)?"')
@@ -84,23 +79,15 @@ SPAWN_ALLOWANCES = {
     'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
         'posix_spawn', 1, '"/bin/sleep"', None, None,
         'the launcher self-test spawns /bin/sleep as a member of the child\'s group, never the test binary'),
-    'Tests/BenchmarkContractTests/RunnerContractTests.swift': (
-        'Process', 1, None,
-        r'\.arguments\s*=\s*\[\s*"-XCTest"\s*,\s*"[^",\s]+"\s*,\s*Bundle\(for:\s*Self\.self\)\.bundlePath\s*\]',
-        lambda source, masked: _argv_not_inherited(masked),
-        'pre-T10 leaf launch in another test target: fixed one-selector XCTest argv; its child launches no '
-        'probe (production EnvCapture may run git/swiftc leaves, each under its own 2 s deadline)'),
 }
 # path -> (exact selector-literal count, reason)
 SELECTOR_ALLOWANCES = {
     'Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift': (
         9, 'the vectorcore-bench CLI\'s own --filter option, parsed in-process by CLIOptions; no process launch'),
     'Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift': (
-        8, 'the vectorcore-bench CLI\'s own --filter option; child scenarios use RunnerContractTests\' single pinned leaf launcher'),
+        8, 'the vectorcore-bench CLI\'s own --filter option; child scenarios use RunnerContractTests\' shared group launcher'),
     'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
         36, 'argument-filter fixtures passed to childProbeArguments; its only launches go through launchChildProbe'),
-    'Tests/BenchmarkContractTests/RunnerContractTests.swift': (
-        1, 'the "-XCTest" of its fixed one-selector argument list (see SPAWN_ALLOWANCES)'),
 }
 LAUNCHER_INVARIANTS = (
     ('setpgroup_flag', r'\bPOSIX_SPAWN_SETPGROUP\b', 'code'),
@@ -119,7 +106,7 @@ LAUNCHER_INVARIANTS = (
                         r'(?=[^\]]*"--specifier")(?=[^\]]*"-s")(?=[^\]]*"--xunit-output")', 'raw'),
     ('refuses_configuration', r'childProbeRefusedFlags[^=]*=\s*\[[^\]]*"--configuration-path"', 'raw'),
 )
-RULES = ('spawn', 'selector', 'launcher', 'floor')
+RULES = ('spawn', 'selector', 'launcher', 'import', 'budget', 'floor')
 MIN_CALL_FILES = 24
 
 
@@ -212,19 +199,6 @@ def _sole_caller(masked, function, call):
     return body is not None and len(calls) == 1 and body[0] < calls[0] < body[1]
 
 
-def _argv_not_inherited(masked):
-    """RunnerContractTests: no parent argv beyond argv[0], and exactly one `.arguments` assignment."""
-    problems = []
-    if re.search(r'\bCommandLine\s*\.\s*arguments\b(?!\s*\[\s*0\s*\])', masked):
-        problems.append('reads CommandLine.arguments beyond [0]')
-    if re.search(r'\bProcessInfo\s*\.\s*processInfo\s*\.\s*arguments\b|\bunsafeArgv\b|\bCommandLine\s*\.\s*argc\b', masked):
-        problems.append('reads the parent argv')
-    members = len(re.findall(r'\.\s*arguments\b', masked)) - len(re.findall(r'\bCommandLine\s*\.\s*arguments\b', masked))
-    if members != 1:
-        problems.append(f'expected exactly one `.arguments` use (the pinned assignment), found {members}')
-    return problems
-
-
 def launcher_findings(source):
     masked = _mask(source)
     missing = []
@@ -240,6 +214,26 @@ def launcher_findings(source):
     return missing
 
 
+BUDGET_EXCEPTIONS = {
+    'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': 'deliberate launcher deadline controls',
+    'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift': 'Q03 sanitizer-specific 45-second deadline',
+    'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift': 'T16 profiler calibration workload, 120-second deadline',
+    'Tests/BenchmarkContractTests/RunnerContractTests.swift': 'shared runFixture defaults plus explicit hang control',
+}
+
+
+def budget_findings(source, path=''):
+    if path in BUDGET_EXCEPTIONS:
+        return []
+    masked = _mask(source)
+    findings = []
+    for match in re.finditer(r'\blaunchChildProbe\s*\(', masked):
+        call = _call_text(source, masked, match.start())
+        if not re.search(r'deadline:\s*ChildProbeBudget\.standard\.deadline\s*,\s*cleanup:\s*ChildProbeBudget\.standard\.cleanup', call):
+            findings.append((_line(source, match.start()), 'ordinary child must use ChildProbeBudget.standard'))
+    return findings
+
+
 def scan_tree(root, rules=RULES):
     """Findings for the tree under `root` (a repository checkout or export)."""
     findings, call_files, launcher_seen = [], set(), False
@@ -253,6 +247,10 @@ def scan_tree(root, rules=RULES):
             continue
         if re.search(r'\blaunchChildProbe\s*\(', _mask(source)):
             call_files.add(relative)
+            if 'import' in rules and not re.search(r'(?m)^import\s+VectorCoreTestSupport\s*$', _mask(source)):
+                findings.append(f'{relative}: child launcher consumer must import VectorCoreTestSupport')
+        if 'budget' in rules:
+            findings += [f'{relative}:{line}: {problem}' for line, problem in budget_findings(source, relative)]
         if 'spawn' in rules:
             findings += [f'{relative}:{line}: process creation outside the launcher: {text}'
                          for line, text in spawn_findings(source, relative)]
@@ -283,9 +281,10 @@ PRE_FIX_XCTEST = '''
         process.arguments = ["-XCTest", "ComprehensiveTests.ExecutionBoundaryTests/testChildProbe", Bundle(for: Self.self).bundlePath]
 '''
 POST_FIX_SITE = '''
+import VectorCoreTestSupport
     private func runChild(_ scenario: String) throws {
         let child = try launchChildProbe(.swiftTesting(filter: "FP16DiagnosticsBoundaryTests/childProbe"),
-                                         environment: environment, output: file, deadline: 15, cleanup: .kill(seconds: 2))
+                                         environment: environment, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         print(child.terminationReason == Process.TerminationReason.uncaughtSignal, ProcessInfo.processInfo.processIdentifier)
     }
 '''
@@ -338,6 +337,8 @@ MUTATION_CONTROLS = {
     'selector': ('selector', 'pre_fix_site'),
     'launcher': ('tree', 'launcher_without_group'),
     'floor': ('tree', 'no_callers'),
+    'budget': ('tree', 'ordinary_budget'),
+    'import': ('tree', 'missing_import'),
 }
 
 
@@ -347,10 +348,43 @@ def _write_tree(base, launcher_text, callers=MIN_CALL_FILES):
     path.write_text(launcher_text)
     for index in range(callers):
         path = base / 'Tests' / 'ComprehensiveTests' / f'Caller{index}.swift'
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(POST_FIX_SITE)
 
 
 class ChildProbeLaunchPolicyTests(unittest.TestCase):
+    def test_ordinary_budget_controls(self):
+        self.assertEqual(budget_findings(POST_FIX_SITE), [])
+        for replacement in ['5', '10', '15', '30', '120']:
+            source = POST_FIX_SITE.replace('ChildProbeBudget.standard.deadline', replacement)
+            self.assertNotEqual(budget_findings(source), [])
+        for cleanup in ['.kill(seconds: 2)', '.terminateThenKill(grace: 1, seconds: 1)']:
+            self.assertNotEqual(budget_findings(POST_FIX_SITE.replace('ChildProbeBudget.standard.cleanup', cleanup)), [])
+        runner = (ROOT / 'Tests/BenchmarkContractTests/RunnerContractTests.swift').read_text()
+        self.assertRegex(runner, r'deadline: Double = ChildProbeBudget\.standard\.deadline,\s*cleanup: ChildProbeCleanup = ChildProbeBudget\.standard\.cleanup')
+        self.assertEqual(set(BUDGET_EXCEPTIONS), {
+            'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
+            'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift',
+            'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift',
+            'Tests/BenchmarkContractTests/RunnerContractTests.swift'})
+
+    def test_shared_launcher_is_in_test_support(self):
+        self.assertEqual(LAUNCHER, 'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift')
+        self.assertTrue((ROOT / LAUNCHER).is_file())
+        self.assertFalse((ROOT / 'Tests/ComprehensiveTests/ChildProbeLauncher.swift').exists())
+
+    def test_benchmark_leaf_cannot_bypass_shared_launcher(self):
+        runner = 'Tests/BenchmarkContractTests/RunnerContractTests.swift'
+        old = ('let process = Process()\n'
+               'process.arguments = ["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", '
+               'Bundle(for: Self.self).bundlePath]\n')
+        self.assertNotEqual(spawn_findings(old, runner), [])
+        self.assertNotEqual(selector_findings(old, runner), [])
+        text = (ROOT / runner).read_text()
+        self.assertIn('import VectorCoreTestSupport', text)
+        self.assertIn('try launchChildProbe(', text)
+
+
     def _launcher_text(self):
         return (ROOT / LAUNCHER).read_text(encoding='utf-8')
 
@@ -382,27 +416,9 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
         pinned = ('let process = Process()\n'
                   'process.arguments = ["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", '
                   'Bundle(for: Self.self).bundlePath]\n')
-        self.assertEqual(spawn_findings(pinned, runner), [])
-        self.assertEqual(selector_findings(pinned, runner), [])
-        # Inheriting the parent's argv, a second selector, or a second launch breaks the pinned shape.
-        inherited = pinned.replace('["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", '
-                                   'Bundle(for: Self.self).bundlePath]', 'Array(CommandLine.arguments.dropFirst())')
-        self.assertNotEqual(spawn_findings(inherited, runner), [])
-        self.assertNotEqual(spawn_findings(pinned.replace('/testProcessFixture"', '/testProcessFixture,X/y"'), runner), [])
+        self.assertNotEqual(spawn_findings(pinned, runner), [])
+        self.assertNotEqual(selector_findings(pinned, runner), [])
         self.assertNotEqual(spawn_findings(pinned + 'let other = Process()\n', runner), [])
-        self.assertNotEqual(selector_findings(pinned + 'args += ["--filter", "x"]\n', runner), [])
-        # The pinned literal must be the ONLY argv: appends, reassignments and copies of the parent argv fail.
-        for addition in ('process.arguments! += Array(CommandLine.arguments.dropFirst())\n',
-                         'process.arguments?.append(contentsOf: CommandLine.arguments)\n',
-                         'process.arguments = ["-XCTest", "BenchmarkContractTests.X/testY", Bundle(for: Self.self).bundlePath]\n',
-                         'var argv = CommandLine.arguments\n',
-                         'let argv = ProcessInfo.processInfo.arguments\n',
-                         'let argv = CommandLine.unsafeArgv\n'):
-            with self.subTest(addition=addition):
-                self.assertNotEqual(spawn_findings(pinned + addition, runner), [])
-        # argv[0] (the runner executable) stays allowed.
-        self.assertEqual(spawn_findings('process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])\n' + pinned,
-                                        runner), [])
         for name, count in [('BenchmarkSelectionContractTests.swift', 9), ('BenchmarkModelDomainTests.swift', 8)]:
             bench = 'Tests/BenchmarkContractTests/' + name
             self.assertEqual(selector_findings('options(["--filter", "a"])\n' * count, bench), [])
@@ -457,16 +473,23 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
             'clean': dict(launcher_text=text),
             'launcher_without_group': dict(launcher_text=text.replace('kill(-pid, signal)', 'kill(pid, signal)')),
             'no_callers': dict(launcher_text=text, callers=0),
+            'ordinary_budget': dict(launcher_text=text),
+            'missing_import': dict(launcher_text=text),
         }
         results = {}
         for name, kwargs in cases.items():
             with tempfile.TemporaryDirectory() as directory:
                 base = Path(directory)
                 _write_tree(base, **kwargs)
+                if name in ('ordinary_budget', 'missing_import'):
+                    path = base / 'Tests/ComprehensiveTests/Caller0.swift'
+                    change = (('ChildProbeBudget.standard.deadline', '5') if name == 'ordinary_budget'
+                              else ('import VectorCoreTestSupport', 'import Foundation'))
+                    path.write_text(path.read_text().replace(*change))
                 results[name] = {rules: scan_tree(base, rules)[0]
                                  for rules in [RULES] + [tuple(r for r in RULES if r != rule) for rule in RULES]}
         self.assertEqual(results['clean'][RULES], [])
-        for name in ('launcher_without_group', 'no_callers'):
+        for name in ('launcher_without_group', 'no_callers', 'ordinary_budget', 'missing_import'):
             self.assertNotEqual(results[name][RULES], [], name)
         self.assertEqual(set(MUTATION_CONTROLS), set(RULES))
         for rule, (kind, control) in MUTATION_CONTROLS.items():

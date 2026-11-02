@@ -1,4 +1,5 @@
 import Foundation
+import VectorCoreTestSupport
 import Testing
 @testable import VectorCore
 
@@ -75,7 +76,7 @@ func p01RunChild(_ scenario: String, filter: String, removing prefixes: [String]
     var closed = false
     defer { if !closed { try? file.close() } }
     let run = try launchChildProbe(.swiftTesting(filter: filter), environment: environment, output: file,
-                                   deadline: 15, cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                   deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
     let timedOut = run.timedOut
     closed = true
     try file.close()

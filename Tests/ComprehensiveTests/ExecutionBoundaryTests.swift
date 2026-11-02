@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import VectorCoreTestSupport
 import Darwin
 @testable import VectorCore
 
@@ -151,7 +152,7 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
         defer { try? handle.close() }
         let process = try launchChildProbe(.xctest(selector: "ComprehensiveTests.ExecutionBoundaryTests/testChildProbe",
                                                    bundlePath: Bundle(for: Self.self).bundlePath),
-                                           environment: env, output: handle, deadline: 5, cleanup: .kill(seconds: 2))
+                                           environment: env, output: handle, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if process.timedOut {
             throw NSError(domain: "ExecutionBoundaryTests.childTimeout", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "\(mode): child deadline; cleanup=\(process.cleanup); log=\(output.path)"])

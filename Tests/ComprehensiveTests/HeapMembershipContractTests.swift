@@ -1,4 +1,5 @@
 import Foundation
+import VectorCoreTestSupport
 import Testing
 #if canImport(Darwin)
 import Darwin
@@ -34,7 +35,7 @@ import Glibc
         FileManager.default.createFile(atPath:path.path,contents:nil)
         let file=try FileHandle(forWritingTo:path)
         let child = try launchChildProbe(.swiftTesting(filter: "HeapMembershipContractTests/childProbe"), environment: env, output: file,
-                                         deadline: 15, cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                         deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if child.timedOut {
             try file.close();print("R04_CHILD_TIMEOUT \(scenario) capture=\(path.path)")
             throw NSError(domain:"R04.timeout",code:1)

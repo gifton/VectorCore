@@ -690,8 +690,22 @@ class LiteralExclusion:
         return None if any(rx.search(text) for rx in self.forbidden) else True
 
 
+class DuplicateJSONKey(ValueError):
+    pass
+
+
+def unique_object(pairs):
+    """Reject repeated decoded keys in each JSON object (DuplicateJSONKeys fixtures)."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise DuplicateJSONKey(f'duplicate JSON key {key!r}')
+        result[key] = value
+    return result
+
+
 def load(repo, ledger_path=LEDGER):
-    ledger = json.loads(repo.read(ledger_path))
+    ledger = json.loads(repo.read(ledger_path), object_pairs_hook=unique_object)
     vocabulary = [re.compile(each) for each in ledger['vocabulary']['tierA']]
     exclude = LiteralExclusion(ledger['vocabulary']['excludeLiterals'],
                                [rule['pattern'] for rule in ledger.get('forbiddenPhrases', []) if rule.get('pattern')])
@@ -822,7 +836,10 @@ def check_contracts(ledger, entries):
 def check(repo, ledger_path=LEDGER):
     """List of problem strings (empty when the ledger and the regions agree)."""
     problems = []
-    ledger, vocabulary, exclude = load(repo, ledger_path)
+    try:
+        ledger, vocabulary, exclude = load(repo, ledger_path)
+    except DuplicateJSONKey as error:
+        return [f'R8 {ledger_path}: {error}']
     entries = ledger.get('entries', [])
     region_paths = [region['path'] for region in ledger.get('regions', [])]
     sections = section_scopes(ledger, problems)
@@ -1179,7 +1196,7 @@ def inventory(repo, paths, vocabulary, exclude, everything=False):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or 'Check claim ledger.').split('\n')[0])
     parser.add_argument('--root', default=str(ROOT))
     parser.add_argument('--ledger', default=LEDGER)
     parser.add_argument('--list', nargs='*', metavar='PATH', help='print tier-A statements as JSON lines')
@@ -1187,7 +1204,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     repo = Repo(args.root)
     if args.list is not None:
-        ledger, vocabulary, exclude = load(Repo(ROOT), LEDGER) if not repo.exists(args.ledger) else load(repo, args.ledger)
+        try:
+            ledger, vocabulary, exclude = load(Repo(ROOT), LEDGER) if not repo.exists(args.ledger) else load(repo, args.ledger)
+        except DuplicateJSONKey as error:
+            print(f'R8 {args.ledger}: {error}')
+            return 1
         scopes = section_scopes(ledger, [])
         paths = args.list or [region['path'] for region in ledger['regions']] + list(scopes)
         for row in inventory(repo, paths, vocabulary, exclude, args.all):

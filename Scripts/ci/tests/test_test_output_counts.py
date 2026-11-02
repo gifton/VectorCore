@@ -49,8 +49,27 @@ class XCTestExecuted(unittest.TestCase):
         self.assertEqual(xctest_executed(joined(XC_ONE, XC_ONE, XC_ONE)), 1)
         self.assertEqual(xctest_executed(XC_ONE_FAILED), 1)
         self.assertEqual(xctest_executed(XC_ZERO), 0)
-        self.assertEqual(xctest_executed('\t Executed 185 tests, with 27 tests skipped and 0 failures'), 185)
+        self.assertEqual(xctest_executed('\t Executed 185 tests, with 27 tests skipped and 0 failures'), 158)
         self.assertEqual(xctest_executed(''), 0)
+
+    def test_skipped_counts_are_not_execution(self):
+        for total, skipped, expected in [(1, 1, 0), (5, 5, 0), (5, 4, 1), (5, 2, 3), (5, 0, 5)]:
+            with self.subTest(total=total, skipped=skipped):
+                line = f'Executed {total} tests, with {skipped} tests skipped and 0 failures'
+                self.assertEqual(xctest_executed(line), expected)
+        self.assertEqual(xctest_executed('Executed 1 test, with 1 test skipped and 0 failures'), 0)
+
+    def test_zero_and_malformed_summaries_do_not_prove_execution(self):
+        for line in ['Executed 0 tests, with 0 failures', 'Executed 1 test, with ',
+                     'Executed 1 test, with unknown failures', 'Executed 1 test, with two tests skipped and 0 failures',
+                     'Executed 1 test, with 2 tests skipped and 0 failures',
+                     'Executed -1 tests, with 0 failures', 'Executed 1.5 tests, with 0 failures']:
+            with self.subTest(line=line):
+                self.assertEqual(xctest_executed(line), 0)
+
+    def test_maximum_is_taken_after_subtracting_skips_per_summary(self):
+        self.assertEqual(xctest_executed(joined('Executed 10 tests, with 10 tests skipped and 0 failures',
+                                              'Executed 2 tests, with 0 failures')), 2)
 
 
 class RepresentativeExecuted(unittest.TestCase):
@@ -70,6 +89,15 @@ class RepresentativeExecuted(unittest.TestCase):
         for log in [joined(XC_ZERO, XC_ZERO, ST60_ZERO), joined(XC_ZERO, ST64_ZERO), '']:
             with self.subTest(log=log):
                 self.assertFalse(representative_executed(log))
+
+    def test_mixed_framework_skips_and_execution_on_both_toolchains(self):
+        skipped = 'Executed 1 test, with 1 test skipped and 0 failures'
+        partial = 'Executed 2 tests, with 1 test skipped and 0 failures'
+        for empty, passed in [(ST60_ZERO, ST60_PASS_ONE), (ST64_ZERO, ST64_PASS_ONE)]:
+            with self.subTest(empty=empty):
+                self.assertFalse(representative_executed(joined(skipped, empty)))
+                self.assertTrue(representative_executed(joined(partial, empty)))
+                self.assertTrue(representative_executed(joined(skipped, passed)))
 
     def test_control_the_former_check_misread_the_swift_6_0_log(self):
         def former(log):

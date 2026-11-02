@@ -38,18 +38,25 @@ def comparator_contracts(helper, root):
         name = f"compare-{counter}"
         stdout = helper.run([comparator, *flags], folder, name, expected=expected)
         text = stdout + (folder / (name + ".stderr")).read_text()
-        for fragment in present: assert fragment in text, (name, flags, fragment, text)
-        for fragment in absent: assert fragment not in text, (name, flags, fragment, text)
+        for fragment in present:
+            if fragment not in text:
+                raise AssertionError((name, flags, fragment, text))
+        for fragment in absent:
+            if fragment in text:
+                raise AssertionError((name, flags, fragment, text))
         return stdout
     # The documented lines are read from the README itself, so the test follows the text.
     lines = [line.strip()[2:].split() for line in README.read_text().splitlines() if line.strip().startswith("- swift Scripts/compare_benchmarks.swift")]
-    assert len(lines) == 2, lines
+    if not (len(lines) == 2):
+        raise AssertionError(lines)
     metrics = []
     for tokens in lines:
-        assert tokens[:2] == ["swift", "Scripts/compare_benchmarks.swift"], tokens
+        if not (tokens[:2] == ["swift", "Scripts/compare_benchmarks.swift"]):
+            raise AssertionError(tokens)
         flags = tokens[2:]
         baseline = flags[flags.index("--baseline") + 1]
-        assert flags[flags.index("--current") + 1] == ".bench/results.json", flags
+        if not (flags[flags.index("--current") + 1] == ".bench/results.json"):
+            raise AssertionError(flags)
         flags[flags.index("--current") + 1] = baseline
         metric = flags[flags.index("--metric") + 1]; metrics.append(metric)
         results = json.loads((ROOT / baseline).read_text())["results"]
@@ -61,7 +68,8 @@ def comparator_contracts(helper, root):
             # The former line also asked for the median, which the local file does not carry; the row reader refuses first.
             compare([("median" if flag == "nsPerOp" else flag) for flag in flags], 2,
                     present=("Invalid or missing numeric field", "medianNsPerOp"))
-    assert sorted(metrics) == ["median", "nsPerOp"], metrics
+    if not (sorted(metrics) == ["median", "nsPerOp"]):
+        raise AssertionError(metrics)
     def report(core="release", bench="release", legacy=None):
         value = reporting.run_report()
         if legacy is not None: value["metadata"] = {"buildConfiguration": legacy}
@@ -112,34 +120,46 @@ def main():
     for flag in ["--max-rel-error", "--max-abs-error"]:
         for value in ["-1", "nan", "inf", "-inf", "not-a-number"]:
             result = run(base + [flag, value], 1)
-            assert "finite" in result.stderr or "Invalid" in result.stderr
+            if not ("finite" in result.stderr or "Invalid" in result.stderr):
+                raise AssertionError
     for fmt in ["json", "csv"]:
         result = run(base + ["--format", fmt, "--out", str(root)], 1)
-        assert "Failed to write" in result.stderr
+        if not ("Failed to write" in result.stderr):
+            raise AssertionError
     artifact = root / "finite.json"
     finite = run(base + ["--strict-correctness", "--format", "json", "--out", str(artifact)], 0)
     report = json.loads(artifact.read_text())
-    assert len(report["results"]) == 1 and not report["failures"]
-    assert report["results"][0]["correctness"]["status"] == "valid"
-    assert report["results"][0]["correctness"]["samples"] >= 3
+    if not (len(report["results"]) == 1 and not report["failures"]):
+        raise AssertionError
+    if not (report["results"][0]["correctness"]["status"] == "valid"):
+        raise AssertionError
+    if not (report["results"][0]["correctness"]["samples"] >= 3):
+        raise AssertionError
     # PR #56 review BM5: the pretty banner names the compiled configuration; only a release build is unflagged.
     configuration = report["metadata"]["benchmarkConfiguration"]
-    assert f"configuration: {configuration}" in finite.stdout, finite.stdout
-    assert (f"[WARN {configuration} build" in finite.stdout) == (configuration != "release"), finite.stdout
+    if not (f"configuration: {configuration}" in finite.stdout):
+        raise AssertionError(finite.stdout)
+    if not ((f"[WARN {configuration} build" in finite.stdout) == (configuration != "release")):
+        raise AssertionError(finite.stdout)
     # PR #56 review BM8: an explicit suite list other than batch contradicts --ab-only and is rejected by name, before the
     # dimension check that used to blame the batch suite the user never asked for.
     for arguments in [["--suites", "memory", "--ab-only"], ["--suites", "memory", "--dims", "100", "--ab-only"]]:
         result = run([binary, *arguments], 1)
-        assert "--ab-only" in result.stderr and "Unsupported dimension" not in result.stderr, result.stderr
+        if not ("--ab-only" in result.stderr and "Unsupported dimension" not in result.stderr):
+            raise AssertionError(result.stderr)
     comparisons = comparator_contracts(helper, root)
     # Mechanical family guard: every provider await in BatchBench propagates throws;
     # the shared case boundary is exercised by the Swift process table.
     source = (Path(__file__).resolve().parents[3] / "Benchmarks/VectorCoreBench/Suites/BatchBench.swift").read_text()
-    assert "try? await provider" not in source
+    if "try? await provider" in source:
+        raise AssertionError
     provider_calls = source.count("try await provider.parallelReduce")
-    assert provider_calls == 28, provider_calls
-    assert source.count("return await BatchExecution.run(name: name)") == 14
-    assert source.count("observations.observe(observedValue)") == 28
+    if not (provider_calls == 28):
+        raise AssertionError(provider_calls)
+    if not (source.count("return await BatchExecution.run(name: name)") == 14):
+        raise AssertionError
+    if not (source.count("observations.observe(observedValue)") == 28):
+        raise AssertionError
     print(f"PASS: 10 invalid threshold configurations, JSON/CSV write failures, finite strict real benchmark with its configuration banner, "
           f"2 rejected --ab-only suite lists, {comparisons} comparator invocations (README lines, former forms, configuration warnings), "
           f"28 provider calls / 14 case boundaries. Artifacts: {root}")

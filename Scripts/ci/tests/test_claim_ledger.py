@@ -15,11 +15,15 @@ test code) do not fail. Nothing beyond these fixtures is proven.
 """
 
 import copy
+import contextlib
+import io
 import hashlib
 import importlib.util
 import json
 import re
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -52,6 +56,58 @@ LEDGER_EXCLUDE = re.compile(json.loads((ROOT / LEDGER).read_text(encoding='utf-8
 
 def rules(problems):
     return {problem.split(' ', 1)[0] for problem in problems}
+
+
+class DuplicateJSONKeys(unittest.TestCase):
+    PREFIX = '"vocabulary":{"tierA":[],"excludeLiterals":"^$"}'
+
+    def with_ledger(self, text, callback):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'ledger.json').write_text(text, encoding='utf-8')
+            return callback(chk.Repo(root))
+
+    def test_duplicate_keys_fail_through_normal_diagnostics(self):
+        fragments = ['"schemaVersion":1,"schemaVersion":2',
+                     '"entry":{"id":"first","id":"second"}',
+                     '"entries":[{"evidence":{"kind":"a","kind":"b"}}]',
+                     r'"entry":{"id":"first","\u0069d":"second"}',
+                     r'"schemaVersion":1,"\u0073chemaVersion":2']
+        for fragment in fragments:
+            text = '{' + self.PREFIX + ',' + fragment + '}'
+            with self.subTest(fragment=fragment):
+                problems = self.with_ledger(text, lambda repo: chk.check(repo, 'ledger.json'))
+                self.assertEqual(len(problems), 1, problems)
+                self.assertTrue(problems[0].startswith('R8'), problems)
+                self.assertIn('duplicate JSON key', problems[0])
+
+    def test_duplicates_fail_in_cli_check_and_list_modes(self):
+        text = '{' + self.PREFIX + ',"regions":[],"entries":[],"entries":[]}'
+        for flags in [[], ['--list']]:
+            with self.subTest(flags=flags), contextlib.redirect_stdout(io.StringIO()) as output:
+                status = self.with_ledger(text, lambda repo: chk.main(
+                    ['--root', str(repo.root), '--ledger', 'ledger.json', *flags]))
+                self.assertEqual(status, 1)
+                self.assertIn('duplicate JSON key', output.getvalue())
+
+    def test_cli_duplicate_key_diagnostic_survives_optimization(self):
+        text = '{' + self.PREFIX + ',"regions":[],"entries":[],"entries":[]}'
+        for optimization in [[], ['-O'], ['-OO']]:
+            for flags in [[], ['--list']]:
+                with self.subTest(optimization=optimization, flags=flags):
+                    result = self.with_ledger(text, lambda repo: subprocess.run(
+                        [sys.executable, '-B', *optimization, str(ROOT / 'Scripts/ci/check_claim_ledger.py'),
+                         '--root', str(repo.root), '--ledger', 'ledger.json', *flags],
+                        text=True, capture_output=True, timeout=15))
+                    self.assertEqual(result.returncode, 1)
+                    self.assertIn('duplicate JSON key', result.stdout)
+                    self.assertNotIn('Traceback', result.stderr)
+
+    def test_repeated_keys_in_distinct_objects_and_arrays_are_valid(self):
+        text = '{' + self.PREFIX + ',"left":{"id":1},"right":{"id":2},"rows":[{"id":3},{"id":4}]}'
+        ledger, _, _ = self.with_ledger(text, lambda repo: chk.load(repo, 'ledger.json'))
+        self.assertEqual(ledger['rows'], [{'id': 3}, {'id': 4}])
+        self.assertEqual((ledger['left']['id'], ledger['right']['id']), (1, 2))
 
 
 class LiveLedger(unittest.TestCase):

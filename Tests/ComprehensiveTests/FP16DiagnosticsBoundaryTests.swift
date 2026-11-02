@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import MachO

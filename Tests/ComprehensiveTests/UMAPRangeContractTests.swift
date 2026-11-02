@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -386,7 +387,7 @@ struct UMAPRangeContractTests {
             }
         }
         let process = try launchChildProbe(.swiftTesting(filter: "UMAPRangeContractTests/childProbe"),
-                                           environment: environment, output: output, deadline: 15, cleanup: .kill(seconds: 2))
+                                           environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         record["arguments"] = process.arguments; record["pid"] = process.processIdentifier
         print("L03_CHILD_CAPTURE \(name) \(capture.path)")
         if process.timedOut {

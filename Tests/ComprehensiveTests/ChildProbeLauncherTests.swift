@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import Testing
@@ -174,7 +175,7 @@ private func selfTestMarker(_ line: String) {
     }
 
     @Test func childProbeCannotLaunchAProbe() throws {
-        let (run, log) = try launchSelfTest("nested", deadline: 15, cleanup: .kill(seconds: 2))
+        let (run, log) = try launchSelfTest("nested", deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         try #require(!run.timedOut, "\(log)")
         #expect(run.terminationStatus == 0, "\(log)")
         #expect(log.contains("T10_SELF_TEST_MARKER \(selfTestFilter)"), "\(log)")
@@ -187,7 +188,7 @@ private func selfTestMarker(_ line: String) {
     // MARK: process group (clause 3)
 
     @Test func exitedChildLeavesNoGroupMember() throws {
-        let (run, log) = try launchSelfTest("leave", deadline: 15, cleanup: .kill(seconds: 2))
+        let (run, log) = try launchSelfTest("leave", deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         try #require(!run.timedOut, "\(log)")
         #expect(run.termination == ChildProbeTermination(status: 0, reason: .exit), "\(log)")
         #expect(run.processGroup == run.processIdentifier)

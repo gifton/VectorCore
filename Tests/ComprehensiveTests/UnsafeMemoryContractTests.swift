@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -251,7 +252,7 @@ extension UnsafeMemoryContractTests {
             let output = try FileHandle(forWritingTo: url)
             defer { try? output.close() }
             let process = try launchChildProbe(.swiftTesting(filter: "UnsafeMemoryContractTests/invalidChildProbe"),
-                                               environment: environment, output: output, deadline: 15, cleanup: .kill(seconds: 2))
+                                               environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
             if process.timedOut {
                 throw NSError(domain: "UnsafeMemoryContractTests.childTimeout", code: 1,
                               userInfo: [NSLocalizedDescriptionKey: "\(spec): child deadline; cleanup=\(process.cleanup); log=\(url.path)"])

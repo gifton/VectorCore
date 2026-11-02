@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -362,8 +363,7 @@ extension MatrixMetricContractTests {
         _ = FileManager.default.createFile(atPath: log.path, contents: nil)
         let output = try FileHandle(forWritingTo: log)
         let process = try launchChildProbe(.swiftTesting(filter: "MatrixMetricContractTests/isolatedConfigurationChild"),
-                                           environment: environment, output: output, deadline: 15,
-                                           cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                           environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let timedOut = process.timedOut
         try output.close()
         let text = try String(contentsOf: log, encoding: .utf8)

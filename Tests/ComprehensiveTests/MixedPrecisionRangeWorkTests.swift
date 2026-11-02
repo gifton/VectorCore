@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import CryptoKit
@@ -195,7 +196,7 @@ private func q04HalfValue(bits: UInt16) -> Double {
         _ = FileManager.default.createFile(atPath: stem + ".log", contents: nil)
         let output = try FileHandle(forWritingTo: URL(fileURLWithPath: stem + ".log"))
         let process = try launchChildProbe(.swiftTesting(filter: "MixedPrecisionRangeWorkTests/childProbe"),
-                                           environment: env, output: output, deadline: 15, cleanup: .kill(seconds: 2))
+                                           environment: env, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let args = process.arguments, timedOut = process.timedOut, cleaned = process.cleaned
         try output.close()
         func hash(_ path: String) -> String {

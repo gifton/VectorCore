@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -231,8 +232,7 @@ extension LinearAlgebraRangeTests {
         FileManager.default.createFile(atPath: path.path, contents: nil)
         let file = try FileHandle(forWritingTo: path)
         let process = try launchChildProbe(.swiftTesting(filter: "LinearAlgebraRangeTests/domainChild"),
-                                           environment: env, output: file, deadline: 15,
-                                           cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                           environment: env, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if process.timedOut {
             try file.close()
             print("L01_CHILD_CAPTURE \(path.path)")

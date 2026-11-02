@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -77,8 +78,7 @@ struct VectorShapeContractTests {
                     defer { try? output.close() }
                     // The launcher keeps SwiftPM's helper/bundle arguments on macOS and selects only the probe.
                     let process = try launchChildProbe(.swiftTesting(filter: "VectorShapeContractTests/childProbe"),
-                                                       environment: environment, output: output, deadline: 15,
-                                                       cleanup: .kill(seconds: 2))
+                                                       environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
                     if process.timedOut {
                         let message = "\(specification): child deadline; cleanup=\(process.cleanup); log=\(url.path)"
                         throw NSError(domain: "VectorShapeContractTests.childTimeout", code: 1,

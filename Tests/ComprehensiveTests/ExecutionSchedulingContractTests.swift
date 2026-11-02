@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Testing
 import Foundation
 import Darwin
@@ -58,8 +59,7 @@ private struct E02SpyMetric: DistanceMetric {
         let handle = try FileHandle(forWritingTo: url)
         defer { try? handle.close() }
         let process = try launchChildProbe(.swiftTesting(filter: "ExecutionSchedulingContractTests/childProbe"),
-                                           environment: env, output: handle, deadline: 15,
-                                           cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                           environment: env, output: handle, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if process.timedOut {
             let cleanup = process.cleanup
             try handle.close()

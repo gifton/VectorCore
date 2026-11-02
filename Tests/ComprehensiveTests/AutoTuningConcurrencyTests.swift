@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import os
@@ -39,7 +40,7 @@ private struct E05ReentrantMetric: DistanceMetric {
         _ = FileManager.default.createFile(atPath: output.path, contents: nil)
         let file = try FileHandle(forWritingTo: output)
         let process = try launchChildProbe(.swiftTesting(filter: "AutoTuningConcurrencyTests/childProbe"),
-                                           environment: environment, output: file, deadline: 15, cleanup: .kill(seconds: 2))
+                                           environment: environment, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let arguments = process.arguments, timedOut = process.timedOut, cleaned = process.cleaned
         try file.close()
         let log = try String(contentsOf: output, encoding: .utf8)

@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Testing
 import Foundation
 import Darwin
@@ -39,8 +40,7 @@ func d03RunChild(scenario: String, filter: String) throws -> D03ChildResult {
     _ = FileManager.default.createFile(atPath: url.path, contents: nil)
     let handle = try FileHandle(forWritingTo: url)
     defer { try? handle.close() }
-    let process = try launchChildProbe(.swiftTesting(filter: filter), environment: env, output: handle, deadline: 15,
-                                       cleanup: .terminateThenKill(grace: 1, seconds: 1))
+    let process = try launchChildProbe(.swiftTesting(filter: filter), environment: env, output: handle, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
     if process.timedOut {
         let cleanup = process.cleanup
         try handle.close()

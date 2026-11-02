@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -21,7 +22,7 @@ import Testing
         let output = try FileHandle(forWritingTo: url)
         defer { try? output.close() }
         let result = try launchChildProbe(.swiftTesting(filter: "TuningInputBoundaryTests/invalidTuningChild"),
-                                          environment: environment, output: output, deadline: 10, cleanup: .kill(seconds: 2))
+                                          environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let diagnostic = try String(contentsOf: url, encoding: .utf8)
         try #require(!result.timedOut, "Child timeout: \(url.path)")
         #expect(result.terminationReason == .uncaughtSignal)

@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -226,8 +227,7 @@ extension MemoryPoolBoundaryTests {
         _ = FileManager.default.createFile(atPath: url.path, contents: nil)
         let output = try FileHandle(forWritingTo: url)
         let process = try launchChildProbe(.swiftTesting(filter: "MemoryPoolBoundaryTests/guardChildProbe"),
-                                           environment: environment, output: output, deadline: 15,
-                                           cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                           environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let timeout = process.timedOut
         try output.close()
         let text = try String(contentsOf: url, encoding: .utf8)

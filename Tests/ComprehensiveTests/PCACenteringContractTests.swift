@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 #if canImport(Darwin)
@@ -46,8 +47,7 @@ import Glibc
         FileManager.default.createFile(atPath: path.path, contents: nil)
         let file = try FileHandle(forWritingTo: path)
         let process = try launchChildProbe(.swiftTesting(filter: "PCACenteringContractTests/childProbe"),
-                                           environment: env, output: file, deadline: 15,
-                                           cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                           environment: env, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if process.timedOut {
             try file.close()
             print("L02_CHILD_CAPTURE \(path.path)")

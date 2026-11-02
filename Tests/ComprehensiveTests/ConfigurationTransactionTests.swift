@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import Testing
@@ -168,7 +169,7 @@ extension ConfigurationTransactionTests {
         _ = FileManager.default.createFile(atPath: output.path, contents: nil)
         let file = try FileHandle(forWritingTo: output)
         let process = try launchChildProbe(.swiftTesting(filter: "ConfigurationTransactionTests/globalChildProbe"),
-                                           environment: environment, output: file, deadline: 15, cleanup: .kill(seconds: 2))
+                                           environment: environment, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if process.timedOut {
             let cleaned = process.cleaned
             try file.close()

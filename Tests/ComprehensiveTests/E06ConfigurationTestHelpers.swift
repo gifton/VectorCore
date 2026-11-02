@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import Testing
@@ -36,7 +37,7 @@ private func e06RunIsolatedChild(_ scenario: String, filter: String) throws {
     FileManager.default.createFile(atPath: path.path, contents: nil)
     let file = try FileHandle(forWritingTo: path)
     let process = try launchChildProbe(.swiftTesting(filter: filter), environment: environment, output: file,
-                                       deadline: 15, cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                       deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
     if process.timedOut {
         try file.close()
         print("E06_CHILD_CAPTURE \(scenario) \(path.path)")

@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 import VectorCore
@@ -90,8 +91,7 @@ struct D02FactoryContractTests {
             _ = FileManager.default.createFile(atPath: url.path, contents: nil)
             let handle = try FileHandle(forWritingTo: url)
             let process = try launchChildProbe(.swiftTesting(filter: "D02FactoryContractTests/createVectorChildProbe"),
-                                               environment: environment, output: handle, deadline: 15,
-                                               cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                               environment: environment, output: handle, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
             let timedOut = process.timedOut
             try handle.close()
             let diagnostic = try String(contentsOf: url, encoding: .utf8)

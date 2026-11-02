@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import XCTest
 @testable import VectorCore
 
@@ -96,7 +97,7 @@ struct Q01ChildContracts {
         _ = FileManager.default.createFile(atPath:url.path,contents:nil)
         let file = try FileHandle(forWritingTo:url)
         let process = try launchChildProbe(.swiftTesting(filter: "Q01ChildContracts/childProbe"), environment: env, output: file,
-                                           deadline: 15, cleanup: .kill(seconds: 2))
+                                           deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if process.timedOut {
             let cleanup = process.cleanup
             try file.close()

@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -104,7 +105,7 @@ struct VectorDispatchContractTests {
         defer { try? output.close(); try? FileManager.default.removeItem(at: url) }
         // The launcher signals only the child's own process group (never this process's group).
         let process = try launchChildProbe(.swiftTesting(filter: "VectorDispatchContractTests/childProbe"),
-                                           environment: environment, output: output, deadline: 15, cleanup: .kill(seconds: 2))
+                                           environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let diagnostic = try String(contentsOf: url, encoding: .utf8)
         try #require(!process.timedOut, "\(specification): child exceeded 15-second deadline; \(diagnostic)")
         let termination = try process.reaped()

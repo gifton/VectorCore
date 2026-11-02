@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import VectorCoreTestSupport
 @testable import VectorCoreBenchSupport
 import VectorCoreBenchmarking
 import VectorCore
@@ -77,6 +78,18 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     // This subprocess entry exists only in the test bundle. It invokes the production runner.
     @MainActor func testProcessFixture() async throws {
         let env = ProcessInfo.processInfo.environment
+        if let control = env["LAUNCHER_CONTROL"], control != "environment" {
+            FileHandle.standardOutput.write(Data("LAUNCHER_CONTROL_READY \(control)\n".utf8))
+            if control == "hang" { while true { sleep(60) } }
+            exit(control == "failure" ? 7 : 0)
+        }
+        if env["LAUNCHER_CONTROL"] == "environment" {
+            var captured = env
+            captured["fixturePID"] = String(getpid())
+            captured["fixturePGID"] = String(getpgrp())
+            try JSONEncoder().encode(captured).write(to: URL(fileURLWithPath: env["LAUNCHER_CONTROL_OUTPUT"]!))
+            return
+        }
         if let encoded = env["F012_TEST_ARGUMENTS"] {
             try await BenchmarkModelDomainTests.runProcessFixture(encoded: encoded)
         }
@@ -88,6 +101,30 @@ final class BenchmarkRunnerContractTests: XCTestCase {
         options.strictCorrectness = env["BENCHMARK_TEST_STRICT"] != "0"
         options.abCompare = false
         exit(await BenchmarkRunner.run(options: options, registry: ["fixture": FixtureSuite.self]))
+    }
+
+    func testFixturePreservesEnvironmentAndMarksChild() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-environment-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let capture = root.appendingPathComponent("environment.json")
+        let inherited = ProcessInfo.processInfo.environment
+        let sentinels = ["ASAN_OPTIONS": "detect_leaks=0", "TSAN_OPTIONS": "halt_on_error=1",
+                         "SWIFT_BACKTRACE": "enable=no",
+                         "DYLD_LIBRARY_PATH": (inherited["DYLD_LIBRARY_PATH"] ?? "") + ":/tmp/vectorcore-library-sentinel",
+                         "DYLD_FRAMEWORK_PATH": (inherited["DYLD_FRAMEWORK_PATH"] ?? "") + ":/tmp/vectorcore-framework-sentinel"]
+        var environment = sentinels
+        environment["LAUNCHER_CONTROL"] = "environment"
+        environment["LAUNCHER_CONTROL_OUTPUT"] = capture.path
+        XCTAssertEqual(try Self.launchFixture(environment: environment, output: root.appendingPathComponent("child.log")), 0)
+        let observed = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: capture))
+        for (key, value) in sentinels { XCTAssertEqual(observed[key], value, key) }
+        for key in ["VECTORCORE_TEST_EXTENDED", "VECTORCORE_STRICT_PERF"] {
+            XCTAssertEqual(observed[key], inherited[key], key)
+        }
+        XCTAssertEqual(observed["VECTORCORE_CHILD_PROBE"], "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture")
+        XCTAssertEqual(observed["fixturePID"], observed["fixturePGID"])
+        // These are environment-string checks; sanitizer runtime loading is not established here.
     }
 
     func testProcessTable() throws {
@@ -130,30 +167,98 @@ final class BenchmarkRunnerContractTests: XCTestCase {
         return try Self.launchFixture(environment: environment, output: output)
     }
 
-    // One pinned leaf entry for both runner and model-domain tests; no parent selector is inherited.
-    // test_child_probe_launch_policy.py pins the single Process and literal argv shape.
+    // Both runner and model-domain fixtures use the shared group launcher and ordinary budget.
     static func launchFixture(environment: [String: String], output: URL) throws -> Int32 {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
-        process.arguments = ["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", Bundle(for: Self.self).bundlePath]
-        var env = ProcessInfo.processInfo.environment.filter { ["PATH", "HOME", "TMPDIR", "DYLD_FRAMEWORK_PATH", "DYLD_LIBRARY_PATH", "SDKROOT"].contains($0.key) }
-        env.merge(environment) { _, supplied in supplied }
-        process.environment = env
+        let run = try runFixture(environment: environment, output: output)
+        if run.timedOut {
+            throw NSError(domain: "BenchmarkRunnerContractTests.childTimeout", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey:
+                            "child deadline; pid=\(run.processIdentifier) pgid=\(run.processGroup) cleaned=\(run.cleaned) "
+                            + "status=\(run.statusDescription) reason=\(run.reasonDescription) log=\(output.path)"])
+        }
+        return try run.reaped().status
+    }
+
+    private static func runFixture(environment: [String: String], output: URL,
+                                   deadline: Double = ChildProbeBudget.standard.deadline,
+                                   cleanup: ChildProbeCleanup = ChildProbeBudget.standard.cleanup) throws -> ChildProbeRun {
+        var inherited = ProcessInfo.processInfo.environment
+        inherited.merge(environment) { _, supplied in supplied }
         _ = FileManager.default.createFile(atPath: output.path, contents: nil)
         let handle = try FileHandle(forWritingTo: output)
         defer { try? handle.close() }
-        process.standardOutput = handle
-        process.standardError = handle
-        let exited = DispatchSemaphore(value: 0)
-        process.terminationHandler = { _ in exited.signal() }
-        try process.run()
-        if exited.wait(timeout: .now() + 15) == .timedOut {
-            if process.isRunning { kill(process.processIdentifier, SIGKILL) }
-            let cleanup = exited.wait(timeout: .now() + 2)
-            throw NSError(domain: "BenchmarkRunnerContractTests.childTimeout", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "child deadline; cleanup=\(cleanup); log=\(output.path)"])
+        return try launchChildProbe(.xctest(selector: "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture",
+                                           bundlePath: Bundle(for: Self.self).bundlePath),
+                                    environment: inherited, output: handle, deadline: deadline, cleanup: cleanup)
+    }
+
+    func testFixtureOrdinaryExitAndFailure() throws {
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-exits-\(UUID().uuidString).log")
+        defer { try? FileManager.default.removeItem(at: output) }
+        for (control, expected): (String, Int32) in [("success", 0), ("failure", 7)] {
+            let run = try Self.runFixture(environment: ["LAUNCHER_CONTROL": control], output: output)
+            XCTAssertFalse(run.timedOut)
+            XCTAssertTrue(run.cleaned)
+            XCTAssertEqual(try run.reaped(), ChildProbeTermination(status: expected, reason: .exit))
+            XCTAssertEqual(run.processIdentifier, run.processGroup)
+            XCTAssertTrue(try String(contentsOf: output, encoding: .utf8).contains("LAUNCHER_CONTROL_READY \(control)"))
         }
-        return process.terminationStatus
+    }
+
+    func testFixtureHangHasBoundedGroupCleanup() throws {
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-hang-\(UUID().uuidString).log")
+        defer { try? FileManager.default.removeItem(at: output) }
+        let start = ContinuousClock.now
+        // Deliberate deadline control: keep independent of the ordinary probe budget.
+        let run = try Self.runFixture(environment: ["LAUNCHER_CONTROL": "hang"], output: output,
+                                      deadline: 3, cleanup: .kill(seconds: 2))
+        XCTAssertLessThan(start.duration(to: .now), .seconds(6))
+        XCTAssertTrue(run.timedOut)
+        XCTAssertTrue(run.cleaned)
+        XCTAssertEqual(try run.reaped(), ChildProbeTermination(status: SIGKILL, reason: .uncaughtSignal))
+        XCTAssertTrue(try String(contentsOf: output, encoding: .utf8).contains("LAUNCHER_CONTROL_READY hang"))
+        XCTAssertEqual(kill(run.processIdentifier, 0), -1)
+        XCTAssertEqual(errno, ESRCH)
+    }
+
+    func testEnvCaptureDescendantEnvironmentAndGroupsAreObserved() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-metadata-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        for name in ["git", "swiftc"] {
+            let script = root.appendingPathComponent(name)
+            let body = """
+            #!/bin/sh
+            group=$(/bin/ps -o pgid= -p $$ | /usr/bin/tr -d ' ')
+            printf '%s\\n' "name=\(name) pid=$$ ppid=$PPID pgid=$group marker=$VECTORCORE_CHILD_PROBE asan=$ASAN_OPTIONS tsan=$TSAN_OPTIONS"
+            """
+            try body.write(to: script, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        }
+        let artifact = root.appendingPathComponent("metadata.json")
+        let run = try Self.runFixture(environment: ["BENCHMARK_TEST_SCENARIO": "match", "BENCHMARK_TEST_OUTPUT": artifact.path,
+                                                    "PATH": root.path + ":/usr/bin:/bin", "ASAN_OPTIONS": "detect_leaks=0",
+                                                    "TSAN_OPTIONS": "halt_on_error=1"], output: root.appendingPathComponent("child.log"))
+        if run.timedOut { throw NSError(domain: "metadata fixture deadline", code: 1) }
+        XCTAssertEqual(try run.reaped(), ChildProbeTermination(status: 0, reason: .exit))
+        let metadata = try JSONDecoder().decode(BenchRun.self, from: Data(contentsOf: artifact)).metadata
+        for (name, observation) in [("git", metadata.runtimeCheckout), ("swiftc", metadata.runtimeToolchain)] {
+            let value = try XCTUnwrap(observation.value)
+            let fields = Dictionary(uniqueKeysWithValues: value.split(separator: " ").compactMap { field -> (String, String)? in
+                let parts = field.split(separator: "=", maxSplits: 1)
+                return parts.count == 2 ? (String(parts[0]), String(parts[1])) : nil
+            })
+            XCTAssertEqual(fields["name"], name)
+            XCTAssertEqual(fields["ppid"], String(run.processIdentifier))
+            XCTAssertGreaterThan(try XCTUnwrap(fields["pid"].flatMap(Int32.init)), 1)
+            XCTAssertGreaterThan(try XCTUnwrap(fields["pgid"].flatMap(Int32.init)), 1)
+            XCTAssertEqual(fields["marker"], "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture")
+            XCTAssertEqual(fields["asan"], "detect_leaks=0")
+            XCTAssertEqual(fields["tsan"], "halt_on_error=1")
+            // Group equality is an observation of Foundation.Process on the executing toolchain.
+            // No assertion here claims that a descendant which starts another group is contained.
+            print("ENV_CAPTURE_DESCENDANT leader=\(run.processIdentifier) group=\(run.processGroup) \(value)")
+        }
     }
 
     func testActualBatchProviderReturnFamily() throws {

@@ -159,6 +159,10 @@ The [VC-C002 scanner repair](reviews/2026-11-01-lost-store-scanner-repair/README
 closes the reported inside-borrow `inout` detection gap and records its regression
 tests and explicit lexical limits.
 
+The [T19 PCA test repair](reviews/2026-11-01-pca-routing-test-repair/README.md)
+closes the routed exact-PCA regression-test hang and records the bounded
+mutation check and full Debug/Release validation.
+
 Do not move or delete published version tags. For each new release, use a
 SwiftPM-compatible semantic version tag such as `vX.Y.Z`, verify its commit and
 CI, and test resolution/build from a clean downstream consumer. Explain API,

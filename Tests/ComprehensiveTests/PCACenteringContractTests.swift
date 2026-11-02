@@ -75,24 +75,45 @@ import Glibc
 }
 
 
+private struct L02UnexpectedProviderCall: Error, CustomStringConvertible {
+    let expected: String
+    let actual: String
+    var description: String { "L02UnexpectedProviderCall: expected \(expected), got \(actual)" }
+}
+
 private final class L02Calls: @unchecked Sendable {
     private let lock = NSLock()
+    private let expected: [String]
     private var entries: [String] = []
-    func add(_ entry: String) { lock.lock(); defer { lock.unlock() }; entries.append(entry) }
+
+    init(expected: [String]) { self.expected = expected }
+
+    func add(_ entry: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        let next = entries.count
+        guard next < expected.count, entry == expected[next] else {
+            throw L02UnexpectedProviderCall(
+                expected: next < expected.count ? expected[next] : "no further calls", actual: entry)
+        }
+        entries.append(entry)
+    }
+
     func read() -> [String] { lock.lock(); defer { lock.unlock() }; return entries }
 }
 private struct L02Forwarding: LinearAlgebraProvider {
     let calls: L02Calls
     func qrThin(_ a: [Float], rows: Int, columns: Int) throws -> QRFactorization {
-        calls.add("qr:\(rows):\(columns)")
+        try calls.add("qr:\(rows):\(columns)")
         return try SwiftLinearAlgebraProvider().qrThin(a, rows: rows, columns: columns)
     }
     func svdThin(_ a: [Float], rows: Int, columns: Int) throws -> SingularValueDecomposition {
-        calls.add("svd:\(rows):\(columns)")
+        try calls.add("svd:\(rows):\(columns)")
         return try SwiftLinearAlgebraProvider().svdThin(a, rows: rows, columns: columns)
     }
     func symmetricEigen(_ a: [Float], dimension: Int, computeEigenvectors: Bool) throws -> SymmetricEigenDecomposition {
-        try SwiftLinearAlgebraProvider().symmetricEigen(a, dimension: dimension, computeEigenvectors: computeEigenvectors)
+        try calls.add("eigen:\(dimension)")
+        return try SwiftLinearAlgebraProvider().symmetricEigen(a, dimension: dimension, computeEigenvectors: computeEigenvectors)
     }
 }
 private final class L02Sentinel: Error, Sendable {}
@@ -142,16 +163,20 @@ extension PCACenteringContractTests {
             data.append(DynamicVector(row))
         }
         for p in [0,1,2,3,4,Int.max] {
-            let calls=L02Calls()
+            let expected: [String]
+            if p >= 3 { expected = ["svd:6:4"] }
+            else {
+                let ell = 1 + p
+                expected = ["qr:6:\(ell)", "qr:4:\(ell)", "qr:6:\(ell)", "svd:\(ell):4"]
+            }
+            // Check the sequence before forwarding: bypassing the exact branch throws
+            // on its first QR call instead of entering Int.max power iterations.
+            let calls = L02Calls(expected: expected)
             let iterations = p >= 3 ? Int.max : 1
             _ = try Operations.$linearAlgebraProvider.withValue(L02Forwarding(calls:calls)) {
                 try PCAModel.fit(data, components: 1, config: PCAConfig(oversampling:p,powerIterations:iterations))
             }
-            if p >= 3 { #expect(calls.read() == ["svd:6:4"]) }
-            else {
-                let ell=1+p
-                #expect(calls.read() == ["qr:6:\(ell)","qr:4:\(ell)","qr:6:\(ell)","svd:\(ell):4"])
-            }
+            #expect(calls.read() == expected)
         }
         for config in [PCAConfig(oversampling:-1),PCAConfig(powerIterations:-1)] {
             #expect(L02Oracle.kind { _ = try PCAModel.fit(data, components:1, config:config) } == .invalidDimension)

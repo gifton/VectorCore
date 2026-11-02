@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import signal
@@ -93,8 +94,8 @@ def main():
     parser.add_argument('--deadline', type=float, default=60)
     parser.add_argument('--allow-failure', action='store_true')
     args = parser.parse_args()
-    if args.deadline <= 0:
-        parser.error('--deadline must be positive')
+    if not math.isfinite(args.deadline) or args.deadline <= 0:
+        parser.error('--deadline must be finite and positive')
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=False)
     args.swiftc = args.swiftc.absolute()

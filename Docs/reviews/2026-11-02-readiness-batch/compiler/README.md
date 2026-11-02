@@ -66,6 +66,11 @@ directory. With `SWIFT_EXEC` set to `VC_COMPILER_BIN/swiftc`, prepend that bin t
   --target VectorCore -v
 ```
 
+The retained `--build-system native` option emits a deprecation warning in the
+recorded builds (`compiler-evidence/current-build.stderr` and
+`compiler-evidence/earlier-build.stderr` under the raw evidence root below).
+It remains in this command to reproduce the recorded invocation.
+
 Supervise the build with a deadline (the recorded builds used
 `Scripts/ci/v03_process.py:run`, 360 seconds); the importer runner does not launch
 SwiftPM. Set `VECTORCORE_TEST_EXTENDED=0` and `VECTORCORE_STRICT_PERF=0` as in the

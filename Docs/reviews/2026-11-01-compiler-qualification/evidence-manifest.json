@@ -1,0 +1,201 @@
+{
+  "raw_evidence_directory": "/Users/goftin/dev/projects/VectorCore-compiler-qualification-2026-11-01-evidence",
+  "files": [
+    {
+      "path": "ByValueReturnInside.swift",
+      "sha256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2",
+      "size": 501
+    },
+    {
+      "path": "LostStoreObserved-O",
+      "sha256": "a5727456277323d44b9c63420967a5cd0d35f46d15e31c85f188e793e77e546c",
+      "size": 51968
+    },
+    {
+      "path": "LostStoreObserved-Onone",
+      "sha256": "dd657f507fee0808c1d54cc0b33004323b2e3094dcc38801a685b0dff7f29085",
+      "size": 54568
+    },
+    {
+      "path": "LostStoreObserved.swift",
+      "sha256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326",
+      "size": 463
+    },
+    {
+      "path": "REPORT-DRAFT.md",
+      "sha256": "45682b1284ff4e5575166b74e5b1257f3a7b1153e8a45332fc2ee05d6ab744af",
+      "size": 3962
+    },
+    {
+      "path": "REPORT.md",
+      "sha256": "62619bea9825c9aa9597e0c4fc883cf2af935a027e4a8e453853213a3057a829",
+      "size": 9563
+    },
+    {
+      "path": "ReturnInsideInout-O",
+      "sha256": "fd1b9ff8d3abefac33d91ae213ea065ee8a325d68c3283dc4ed2442385860135",
+      "size": 51968
+    },
+    {
+      "path": "ReturnInsideInout.swift",
+      "sha256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb",
+      "size": 508
+    },
+    {
+      "path": "artifacts/CompilerBoundaryProbe",
+      "sha256": "f6589fe3ef89c0c1892545b513c96a62ecf736fc3352428ebe77499b69f2206d",
+      "size": 4409368
+    },
+    {
+      "path": "baseline.json",
+      "sha256": "c95c2add96a8e34119c4e9e9cb46baab827e6cc7c5cae9e2c8d61ac96728560f",
+      "size": 3468
+    },
+    {
+      "path": "client-v2-result.json",
+      "sha256": "de595b0151127224a63489e71f0fc9d60c420963798dfafc0dc74bebcef3f894",
+      "size": 1963
+    },
+    {
+      "path": "client-v2.log",
+      "sha256": "0cabfb48611c15da31e7536039ca031b8e38a9439a9a80520a55095d8daa9b40",
+      "size": 35161
+    },
+    {
+      "path": "client/Package.swift",
+      "sha256": "87308ebe3c9a13dd407a50020c72a29c9410a1212c18782b94e79cbc96bb4c81",
+      "size": 401
+    },
+    {
+      "path": "client/Sources/CompilerBoundaryProbe/main.swift",
+      "sha256": "400afb12560236fe98ceef396e970d83175b05cfc4e462ef419cdac705288d1e",
+      "size": 3190
+    },
+    {
+      "path": "debug-result.json",
+      "sha256": "782ae7534a20e4c05ffa594494b7d551b15cafbe172f049d49adf463f152982e",
+      "size": 3960
+    },
+    {
+      "path": "debug.log",
+      "sha256": "ae12c49f93187f2c8aeb73013dfbdc22137763d51c4a358b04037b393888ad46",
+      "size": 5242554
+    },
+    {
+      "path": "official642-ByValueReturnInside-O",
+      "sha256": "ca22e2316d94032023ec766cc3b1640d03f3487f5d2b1ae19376bdead5d0b6c2",
+      "size": 51872
+    },
+    {
+      "path": "official642-LostStoreObserved-O",
+      "sha256": "fe25b33a3eb97d8b1ffd5b13aeac414b0d59ff9d336710c34e89bbfb901cd33c",
+      "size": 51872
+    },
+    {
+      "path": "official642-LostStoreObserved-O-wmo",
+      "sha256": "2887e978844015cbea9689cdec0053f20ade40b0653729de503c1bdb7ddfb095",
+      "size": 51872
+    },
+    {
+      "path": "official642-LostStoreObserved-Onone",
+      "sha256": "cfcda363bfa00f4da8292fdaa6cdd808ffe69e78f4992a4fb809ea4ffe39ef7b",
+      "size": 54272
+    },
+    {
+      "path": "official642-LostStoreObserved-Osize",
+      "sha256": "07a68b3e8c1dd407121e4404d8019c53f10c8eead98f68de9ef60e0d85f64ca3",
+      "size": 51872
+    },
+    {
+      "path": "official642-ReturnInsideInout-O",
+      "sha256": "648bc69f69aa2c8b941f68d4a3ca28d572e43ab093a77b9365cbf87232d985ae",
+      "size": 51872
+    },
+    {
+      "path": "official642-ReturnInsideInout-O-wmo",
+      "sha256": "a1642a5a70a3af54d8124ae1d7794c775613866922628d3369c20cfa9af448dd",
+      "size": 51872
+    },
+    {
+      "path": "official642-ReturnInsideInout-Osize",
+      "sha256": "82f9f25eaf57afdb5d0e31830c4f2eeb68e4dc0305496114589097cf0e827df1",
+      "size": 51872
+    },
+    {
+      "path": "official642-client-build.log",
+      "sha256": "7c95724cae7698ce9b082c45074eebd3e28cfefdca9dd4e755effcea832ef36f",
+      "size": 13036
+    },
+    {
+      "path": "official642-client-result.json",
+      "sha256": "5bcc4e98a5d865782dd5b66b3cca3caca35967617778c5d4b738744332b1ce4f",
+      "size": 770
+    },
+    {
+      "path": "official642-full-release-result.json",
+      "sha256": "42914710657afe62320cf0ef44f5cd1473776bd235660c2529529343cf52d6e1",
+      "size": 1075
+    },
+    {
+      "path": "official642-full-release.log",
+      "sha256": "5aefc48948da4d55ebd1ff050177577a7499731ef05d838966604499cb572ef1",
+      "size": 1190406
+    },
+    {
+      "path": "official642-optimization-results.json",
+      "sha256": "de762f5930023fe992aefde82d0375625aac32248c0cec1016202ebbb91412f7",
+      "size": 3799
+    },
+    {
+      "path": "official642-results.json",
+      "sha256": "b944928abdb37878b9be6ff85a8e1244e1b3c1cc1afad17ec8b4b526cb334c3a",
+      "size": 4793
+    },
+    {
+      "path": "package-signature.txt",
+      "sha256": "896c7e41f89749178cf8cc63f950589a98c0dd70e87d4e5d70f1d683532ce321",
+      "size": 1110
+    },
+    {
+      "path": "probes/ByValueReturnInside.swift",
+      "sha256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2",
+      "size": 501
+    },
+    {
+      "path": "probes/LostStoreObserved.swift",
+      "sha256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326",
+      "size": 463
+    },
+    {
+      "path": "probes/ReturnInsideInout.swift",
+      "sha256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb",
+      "size": 508
+    },
+    {
+      "path": "run-check-v1.py",
+      "sha256": "211b7d701c0d6f4c8b52691c1249db784b25816656247432c3c643a2c2215208",
+      "size": 3718
+    },
+    {
+      "path": "run-check.py",
+      "sha256": "489e07938f1815bac6d01d08458fdfa52733e64cf7c6ecb731f8985358dd815e",
+      "size": 3763
+    },
+    {
+      "path": "toolchain-identity.json",
+      "sha256": "f96d1178a1a22c538a6515b3c82a4f9ab36782a895db52c6bfd92fe59a44dba7",
+      "size": 1681
+    },
+    {
+      "path": "validation-summary.json",
+      "sha256": "b0a52d5730fc554a0191653bd39d74deffbf655f6b5f359b8c207752076795e0",
+      "size": 5363
+    }
+  ],
+  "exclusions": [
+    "downloaded toolchain package and extracted toolchain (identified by URL/package hash/compiler hashes)",
+    "SwiftPM build caches and full test bundles",
+    "transient test child directories; full parent streams retained"
+  ],
+  "note": "Paths are relative to the durable raw evidence directory. This manifest does not hash itself."
+}

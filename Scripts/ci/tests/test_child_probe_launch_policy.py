@@ -36,6 +36,7 @@ except where a rule reads string literals on purpose):
   R4 import    Every launcher caller explicitly imports VectorCoreTestSupport.
   R5 budget    Ordinary call sites use ChildProbeBudget.standard.deadline/.cleanup. Named exceptions
                preserve deliberate self-test deadlines, Q03 sanitizer timing and T16 profiler calibration;
+               each nonstandard call is pinned by budget shape, enclosing function and count.
                RunnerContractTests pins its wrapper's ordinary defaults separately.
   R6 floor     The scan must see the launcher in use: at least MIN_CALL_FILES files with a
                `launchChildProbe(` call, and the launcher itself.
@@ -214,23 +215,42 @@ def launcher_findings(source):
     return missing
 
 
+# Exact nonstandard call shapes, each allowed once inside the named function. Other calls in
+# these files use the ordinary rule; the counters reject duplicate or missing exception calls.
 BUDGET_EXCEPTIONS = {
-    'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': 'deliberate launcher deadline controls',
-    'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift': 'Q03 sanitizer-specific 45-second deadline',
-    'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift': 'T16 profiler calibration workload, 120-second deadline',
-    'Tests/BenchmarkContractTests/RunnerContractTests.swift': 'shared runFixture defaults plus explicit hang control',
+    'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
+        ('launcherSelfTestChild', r'deadline:\s*1,\s*cleanup:\s*\.kill\(seconds:\s*1\)\s*\)$'),
+        ('launchSelfTest', r'deadline:\s*deadline,\s*cleanup:\s*cleanup\s*\)$')),
+    'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift': (
+        ('runChild', r'deadline:\s*Double\(deadline\),\s*cleanup:\s*\.kill\(seconds:\s*2\)\s*\)$'),),
+    'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift': (
+        ('profilerRowsRunInAnIsolatedChild', r'deadline:\s*120,\s*cleanup:\s*\.terminateThenKill\(grace:\s*1,\s*seconds:\s*1\)\s*\)$'),),
+    'Tests/BenchmarkContractTests/RunnerContractTests.swift': (
+        ('runFixture', r'deadline:\s*deadline,\s*cleanup:\s*cleanup\s*\)$'),),
 }
+STANDARD_BUDGET = r'deadline:\s*ChildProbeBudget\.standard\.deadline\s*,\s*cleanup:\s*ChildProbeBudget\.standard\.cleanup\s*\)$'
 
 
 def budget_findings(source, path=''):
-    if path in BUDGET_EXCEPTIONS:
-        return []
     masked = _mask(source)
     findings = []
+    exceptions = BUDGET_EXCEPTIONS.get(path, ())
+    counts = [0] * len(exceptions)
+    bodies = [_function_body(masked, function) for function, _ in exceptions]
     for match in re.finditer(r'\blaunchChildProbe\s*\(', masked):
-        call = _call_text(source, masked, match.start())
-        if not re.search(r'deadline:\s*ChildProbeBudget\.standard\.deadline\s*,\s*cleanup:\s*ChildProbeBudget\.standard\.cleanup', call):
+        # Match the masked slice too: raw comment/string text must never supply real budget arguments.
+        call = _call_text(masked, masked, match.start())
+        if re.search(STANDARD_BUDGET, call):
+            continue
+        for index, ((_, pattern), body) in enumerate(zip(exceptions, bodies)):
+            if body and body[0] < match.start() < body[1] and re.search(pattern, call):
+                counts[index] += 1
+                break
+        else:
             findings.append((_line(source, match.start()), 'ordinary child must use ChildProbeBudget.standard'))
+    for (function, _), count in zip(exceptions, counts):
+        if count != 1:
+            findings.append((0, f'expected exactly 1 budget exception in {function}, found {count}'))
     return findings
 
 
@@ -361,12 +381,65 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
         for cleanup in ['.kill(seconds: 2)', '.terminateThenKill(grace: 1, seconds: 1)']:
             self.assertNotEqual(budget_findings(POST_FIX_SITE.replace('ChildProbeBudget.standard.cleanup', cleanup)), [])
         runner = (ROOT / 'Tests/BenchmarkContractTests/RunnerContractTests.swift').read_text()
-        self.assertRegex(runner, r'deadline: Double = ChildProbeBudget\.standard\.deadline,\s*cleanup: ChildProbeCleanup = ChildProbeBudget\.standard\.cleanup')
+        self.assertRegex(_mask(runner), r'deadline: Double = ChildProbeBudget\.standard\.deadline,\s*cleanup: ChildProbeCleanup = ChildProbeBudget\.standard\.cleanup')
         self.assertEqual(set(BUDGET_EXCEPTIONS), {
             'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
             'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift',
             'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift',
             'Tests/BenchmarkContractTests/RunnerContractTests.swift'})
+
+    def test_budget_comment_and_string_decoys_do_not_allow_inflation(self):
+        pair = 'deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup'
+        nonstandard = POST_FIX_SITE.replace(pair, 'deadline: 120, cleanup: .kill(seconds: 2)')
+        self.assertNotEqual(nonstandard, POST_FIX_SITE)
+        decoys = {
+            'block_comment': nonstandard.replace('deadline: 120', '/* ' + pair + ' */ deadline: 120'),
+            'line_comment': nonstandard.replace('deadline: 120', '// ' + pair + '\n deadline: 120'),
+            'string': nonstandard.replace('environment: environment', 'environment: ["note": "' + pair + '"]'),
+            'raw_string': nonstandard.replace('environment: environment', 'environment: ["note": #"' + pair + ')"#]'),
+            'multiline_string': nonstandard.replace('environment: environment', 'environment: ["note": """\n' + pair + ')\n"""]'),
+        }
+        for name, source in decoys.items():
+            with self.subTest(decoy=name):
+                self.assertNotEqual(budget_findings(source), [])
+        # Comments between real arguments remain whitespace, rather than hiding a valid call.
+        standard = POST_FIX_SITE.replace(', cleanup: ChildProbeBudget.standard.cleanup',
+                                         ', /* diagnostic ) */ cleanup: ChildProbeBudget.standard.cleanup')
+        self.assertEqual(budget_findings(standard), [])
+
+    def test_exception_files_reject_additional_nonstandard_calls(self):
+        nonstandard = POST_FIX_SITE.replace('ChildProbeBudget.standard.deadline', '120')
+        for path in BUDGET_EXCEPTIONS:
+            source = (ROOT / path).read_text()
+            with self.subTest(path=path):
+                self.assertEqual(budget_findings(source, path), [])
+                self.assertEqual(budget_findings(source + POST_FIX_SITE, path), [])
+                self.assertNotEqual(budget_findings(source + nonstandard, path), [])
+
+    def test_exception_calls_have_pinned_budget_shapes_and_counts(self):
+        mutations = {
+            'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': ('deadline: 1, cleanup: .kill(seconds: 1)', 'deadline: 120, cleanup: .kill(seconds: 1)'),
+            'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift': ('deadline: Double(deadline)', 'deadline: 120'),
+            'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift': ('deadline: 120', 'deadline: 121'),
+            'Tests/BenchmarkContractTests/RunnerContractTests.swift': ('deadline: deadline, cleanup: cleanup', 'deadline: 120, cleanup: cleanup'),
+        }
+        for path, (old, new) in mutations.items():
+            source = (ROOT / path).read_text()
+            with self.subTest(path=path):
+                self.assertEqual(source.count(old), 1)
+                self.assertNotEqual(budget_findings(source.replace(old, new), path), [])
+                # A duplicate file is rejected too; the scoped copies below exercise exact counters.
+                self.assertNotEqual(budget_findings(source + source, path), [])
+                masked = _mask(source)
+                for function, _ in BUDGET_EXCEPTIONS[path]:
+                    body = _function_body(masked, function)
+                    self.assertIsNotNone(body)
+                    match = next(m for m in re.finditer(r'\blaunchChildProbe\s*\(', masked)
+                                 if body[0] < m.start() < body[1])
+                    call = _call_text(source, masked, match.start())
+                    duplicated = source[:body[1]] + call + '\n' + source[body[1]:]
+                    self.assertIn((0, f'expected exactly 1 budget exception in {function}, found 2'),
+                                  budget_findings(duplicated, path))
 
     def test_shared_launcher_is_in_test_support(self):
         self.assertEqual(LAUNCHER, 'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift')

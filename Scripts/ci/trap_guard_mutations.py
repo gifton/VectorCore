@@ -87,7 +87,7 @@ def main():
         tree = previous / 'source'
     elif args.source_ref:
         tree.mkdir()
-        archive = subprocess.check_output(['git', 'archive', args.source_ref], cwd=repo)
+        archive = subprocess.check_output(['git', 'archive', args.source_ref], cwd=repo, timeout=30)
         with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
             stream.extractall(tree, filter='data')
     else:
@@ -140,7 +140,7 @@ def main():
     source_hashes = {str(p.relative_to(tree)): hashlib.sha256(p.read_bytes()).hexdigest()
                      for p in (tree / 'Sources').rglob('*') if p.is_file()}
     validate_reused_source(source_hashes, reused_input)
-    write_json(output / 'input.json', {'revision': subprocess.check_output(['git', 'rev-parse', args.source_ref or 'HEAD'], cwd=repo, text=True).strip(),
+    write_json(output / 'input.json', {'revision': subprocess.check_output(['git', 'rev-parse', args.source_ref or 'HEAD'], cwd=repo, text=True, timeout=30).strip(),
                                      'configuration': args.configuration, 'targets': targets, 'sourceHashes': source_hashes, 'reusedInput': reused_input,
                                      'testHashes': {str(p.relative_to(tree)): hashlib.sha256(p.read_bytes()).hexdigest()
                                                     for p in (tree / 'Tests').rglob('*') if p.is_file()}})

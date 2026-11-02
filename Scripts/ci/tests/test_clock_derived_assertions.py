@@ -385,8 +385,7 @@ def scan(tests_dir, root):
 # Reviewed non-performance hits: (file, test, normalized expression) -> reason. Every Tests/ hit
 # was classified before it was listed. Performance claims are NOT allowlisted: they are gated with
 # expectPerformance and inventoried (the two found by milestone 12 were migrated by T06).
-# Category prefixes: DEADLINE (a bound whose failure means a hang or leak, a correctness check; none
-# remain after `.now` was narrowed, because bare `.now()` timeout arguments are not clock reads),
+# Category prefixes: DEADLINE (a bound checking deadline/cleanup liveness rather than performance),
 # INJECTED-CLOCK (a deterministic fake clock, no wall time), TIMESTAMP (a stored Date compared as
 # an ordered value, not a duration), FIXTURE (name-based over-approximation: a literal-valued
 # fixture that merely carries `timestamp: Date()` metadata).
@@ -399,6 +398,10 @@ _V04_CALIBRATION = ('INJECTED-CLOCK: asserts harness calibration against a deter
                     'ScriptedClock passed as now:; no wall-clock value is compared (V04 phase C)')
 _OP = 'Tests/ComprehensiveTests/OperationProgressTests.swift'
 _ENTRIES = {
+    ('Tests/BenchmarkContractTests/RunnerContractTests.swift', 'testFixtureHangHasBoundedGroupCleanup',
+     'start.duration(to:.now)'): (
+        'DEADLINE: deliberate hanging fixture uses a 3-second deadline and 2-second kill cleanup; '
+        'the always-active 6-second assertion checks bounded launcher cleanup, not throughput'),
     **{('Tests/ComprehensiveTests/LoggingContractTests.swift', test, 'clock.readCount==' + count): _INJECTED
        for test, count in [('timerBoundaryReadings', '5'), ('timerReportsCumulativeNotLapElapsed', '4'),
                            ('timerInvalidThresholdSuppressesButStillReadsClock', '3'),

@@ -1,0 +1,430 @@
+{
+  "schema_version": 1,
+  "batch_base": "d448a3e694ea85ba3e6b7ac6a2f3d28cdaedcafc",
+  "validated_source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+  "swift_validated_source": "60a87a11b58c28064626fc48023855c4b9042945",
+  "branch": "codex/audit-top-six-2026-10-27",
+  "source_was_clean": true,
+  "compiled_inputs_identical": true,
+  "compiled_input_count": 387,
+  "changed_path_sha256": {
+    "Docs/reviews/2026-11-04-release-preparation/compiler/README.md": "3fab1e71407b2cab311972630bf9ef52790845318cfeb836ea6b1e9a7a2f95e8",
+    "Docs/reviews/2026-11-04-release-preparation/compiler/existential-outcome-matrix.json": "4761ca8486767dca06863203f088c4c8c827717c0f35f832ce2017876bd1ed22",
+    "Docs/reviews/2026-11-04-release-preparation/compiler/final-review-fix.md": "86afd3760ef34822c130d37de157b015e89dc46d24f1844ff33cdc7e8134ee7b",
+    "Docs/reviews/2026-11-04-release-preparation/compiler/outcome-matrix.json": "87ea1e1fd77d861d8186d8023cdd97158f32f55cfeb1df2619235d76ab428141",
+    "Docs/superpowers/plans/2026-11-04-release-preparation.md": "46f17f148b3567739173a8795d0c57a361e6f3787d1d9a6f41a9e742a927dc3a",
+    "Scripts/ci/consumer_collection_witness.py": "a068593998a8e46ca91665b6867dd4fdf394aca4efccf7bc3910311cdf8bcaf4",
+    "Scripts/ci/consumer_smoke.py": "c5ba8f5a441524b1f2fc34265f62912ede1864f0cf46d8b21c71f0cabf751b22",
+    "Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift": "b52d1c9cf18d0ea915c7befcb020674baee8884cc40feb71521b82d51931ce25",
+    "Scripts/ci/tests/test_clock_derived_assertions.py": "8f5890fe04b25b90b460d85130ef24d45a80f7ab3c98594b99e1945adcabd07e",
+    "Scripts/ci/tests/test_reduction_nan_guard.py": "dfae945ba951dd8687d8a7785f04a61ffb49d0dadf7ac7552d603a845b9ac04a",
+    "Sources/VectorCore/Operations/ExecutionContext.swift": "d97d95da573b7bdc2bedc828a0965e332000c2c239b5ff7ed9912047e97a923b",
+    "Sources/VectorCore/Operations/ExecutionOperations.swift": "a1834a92767e32db08394e6648e1abf6503b5bd0cd29a12abe847b2bf4b318f6",
+    "Sources/VectorCore/Operations/TransformOperations.swift": "4103ede595ea39a25d9f4e00340b662695fe004c5e82ba1b9b1eddd630de34cb",
+    "Sources/VectorCore/Protocols/VectorProtocol.swift": "d4d5d9984f3c97bdc2f23099f75a71d2d55b3e24d85f57f6a8f8a40d46cfcbc5",
+    "Sources/VectorCoreBenchmarking/EnvCapture.swift": "239a8cb517f6a3ba6dc7a8cb1af5e566c09f145410a81cf389930bf27ea7f6cc",
+    "Sources/VectorCoreBenchmarking/MetadataProcess.swift": "86401bfb8ae8fe8bfd4dd3ea418af6226b9e9f044fa12bf17d8ddbe36257586d",
+    "Tests/BenchmarkContractTests/RunnerContractTests.swift": "4e8ef35358cbdb684160dd554f7d38c492d64c7eb292ad17ad07023587159db4",
+    "Tests/ComprehensiveTests/AutomaticRowSchedulingTests.swift": "45f868d4d5177c5b92e5a0dcc64d31935ba0d9775a29f2fd81316925ddc719a5"
+  },
+  "swift": {
+    "debug": {
+      "swift_testing_reported": 1757,
+      "swift_testing_suites": 265,
+      "swift_testing_skip_events": 18,
+      "xctest_reported": 207,
+      "xctest_skipped": 28,
+      "xctest_failures": 0,
+      "command_seconds": 392.74166579102166,
+      "swift_testing_seconds": 223.732
+    },
+    "release": {
+      "swift_testing_reported": 1757,
+      "swift_testing_suites": 265,
+      "swift_testing_skip_events": 18,
+      "xctest_reported": 207,
+      "xctest_skipped": 28,
+      "xctest_failures": 0,
+      "command_seconds": 443.62808312498964,
+      "swift_testing_seconds": 25.359
+    }
+  },
+  "python": {
+    "tests": 592,
+    "seconds": 255.599,
+    "result": "OK"
+  },
+  "consumer_smoke": {
+    "documentation_programs": 8,
+    "contracts": 21,
+    "qualified_native_adapter": "qualified-tool-lookup.json"
+  },
+  "d02": {
+    "configurations": [
+      "debug",
+      "release"
+    ],
+    "fixtures_each": 10,
+    "bindings_each": 61,
+    "symbolgraph_scan_tsv_dispatch_members_each": 77
+  },
+  "lint": {
+    "version": "0.65.1",
+    "warnings": 5483,
+    "errors": 0,
+    "prior_warnings": 5483
+  },
+  "qualification_identity": {
+    "frontend_sha256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+    "sdksettings_sha256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+    "base": "d448a3e694ea85ba3e6b7ac6a2f3d28cdaedcafc"
+  },
+  "checks": {
+    "integrated-debug": {
+      "source": "60a87a11b58c28064626fc48023855c4b9042945",
+      "command": [
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "test",
+        "--build-system",
+        "native",
+        "--jobs",
+        "3",
+        "-c",
+        "debug",
+        "--scratch-path",
+        "/private/tmp/vectorcore-release-prep-2026-11-04/build-debug",
+        "--sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+        "-v"
+      ],
+      "exit": 0,
+      "seconds": 392.74166579102166,
+      "result_record": "integration-evidence/integrated-debug-result.json",
+      "sources_unchanged": true
+    },
+    "integrated-release": {
+      "source": "60a87a11b58c28064626fc48023855c4b9042945",
+      "command": [
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "test",
+        "--build-system",
+        "native",
+        "--jobs",
+        "3",
+        "-c",
+        "release",
+        "--scratch-path",
+        "/private/tmp/vectorcore-release-prep-2026-11-04/build-release",
+        "--sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+        "-v"
+      ],
+      "exit": 0,
+      "seconds": 443.62808312498964,
+      "result_record": "integration-evidence/integrated-release-result.json",
+      "sources_unchanged": true
+    },
+    "integrated-d02-debug": {
+      "source": "60a87a11b58c28064626fc48023855c4b9042945",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "Scripts/ci/tests/D02RunConsumers.py",
+        "/private/tmp/vectorcore-release-prep-2026-11-04/build-debug/arm64-apple-macosx/debug",
+        "/private/tmp/vectorcore-release-prep-2026-11-04/integration-evidence/integrated-d02-debug-consumers",
+        "final"
+      ],
+      "exit": 0,
+      "seconds": 39.35417258401867,
+      "result_record": "integration-evidence/integrated-d02-debug-result.json",
+      "sources_unchanged": true
+    },
+    "integrated-d02-release": {
+      "source": "60a87a11b58c28064626fc48023855c4b9042945",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "Scripts/ci/tests/D02RunConsumers.py",
+        "/private/tmp/vectorcore-release-prep-2026-11-04/build-release/arm64-apple-macosx/release",
+        "/private/tmp/vectorcore-release-prep-2026-11-04/integration-evidence/integrated-d02-release-consumers",
+        "final"
+      ],
+      "exit": 0,
+      "seconds": 36.11533558298834,
+      "result_record": "integration-evidence/integrated-d02-release-result.json",
+      "sources_unchanged": true
+    },
+    "final-python": {
+      "source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Scripts/ci/tests",
+        "-v"
+      ],
+      "exit": 0,
+      "seconds": 256.3758448329754,
+      "result_record": "integration-evidence/final-python-result.json",
+      "sources_unchanged": true
+    },
+    "final-consumer-smoke": {
+      "source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "Scripts/ci/consumer_smoke.py"
+      ],
+      "exit": 0,
+      "seconds": 85.18575879104901,
+      "result_record": "integration-evidence/final-consumer-smoke-result.json",
+      "sources_unchanged": true
+    },
+    "final-claims": {
+      "source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "Scripts/ci/check_claim_ledger.py"
+      ],
+      "exit": 0,
+      "seconds": 2.839404416969046,
+      "result_record": "integration-evidence/final-claims-result.json",
+      "sources_unchanged": true
+    },
+    "final-github": {
+      "source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+      "command": [
+        "ruby",
+        "Scripts/ci/validate_github.rb"
+      ],
+      "exit": 0,
+      "seconds": 0.1343864588998258,
+      "result_record": "integration-evidence/final-github-result.json",
+      "sources_unchanged": true
+    },
+    "final-lint": {
+      "source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+      "command": [
+        "/private/tmp/vectorcore-swiftlint-0.65.1/swiftlint",
+        "lint",
+        "--no-cache",
+        "--config",
+        ".swiftlint.yml",
+        "--reporter",
+        "json"
+      ],
+      "exit": 0,
+      "seconds": 0.8227842079941183,
+      "result_record": "integration-evidence/final-lint-result.json",
+      "sources_unchanged": true
+    },
+    "final-whitespace": {
+      "source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "d448a3e694ea85ba3e6b7ac6a2f3d28cdaedcafc"
+      ],
+      "exit": 0,
+      "seconds": 0.0434594169491902,
+      "result_record": "integration-evidence/final-whitespace-result.json",
+      "sources_unchanged": true
+    }
+  },
+  "performance": [
+    {
+      "operation": "map",
+      "rows": 999,
+      "width": 4,
+      "base_median_seconds": 0.000388354,
+      "fixed_median_seconds": 0.00037485450000000005,
+      "base_over_fixed_median": 1.03601263957082,
+      "checksum": 2294.991974592209
+    },
+    {
+      "operation": "map",
+      "rows": 1000,
+      "width": 4,
+      "base_median_seconds": 0.0003082505,
+      "fixed_median_seconds": 0.0003125215,
+      "base_over_fixed_median": 0.9863337402386715,
+      "checksum": 2297.023414373398
+    },
+    {
+      "operation": "map",
+      "rows": 2000,
+      "width": 4,
+      "base_median_seconds": 0.000586792,
+      "fixed_median_seconds": 0.0003964585,
+      "base_over_fixed_median": 1.480084296338709,
+      "checksum": 4593.786787748337
+    },
+    {
+      "operation": "map",
+      "rows": 4096,
+      "width": 4,
+      "base_median_seconds": 0.001108417,
+      "fixed_median_seconds": 0.000603333,
+      "base_over_fixed_median": 1.8371562636222452,
+      "checksum": 9409.482977628708
+    },
+    {
+      "operation": "map",
+      "rows": 999,
+      "width": 768,
+      "base_median_seconds": 0.0015431665,
+      "fixed_median_seconds": 0.001555833,
+      "base_over_fixed_median": 0.99185870205864,
+      "checksum": 2295.519829392433
+    },
+    {
+      "operation": "map",
+      "rows": 1000,
+      "width": 768,
+      "base_median_seconds": 0.001631833,
+      "fixed_median_seconds": 0.000464792,
+      "base_over_fixed_median": 3.510888741630665,
+      "checksum": 2297.857714176178
+    },
+    {
+      "operation": "map",
+      "rows": 2000,
+      "width": 768,
+      "base_median_seconds": 0.0031868955,
+      "fixed_median_seconds": 0.0009751045,
+      "base_over_fixed_median": 3.268260478748688,
+      "checksum": 4595.161738038063
+    },
+    {
+      "operation": "map",
+      "rows": 4096,
+      "width": 768,
+      "base_median_seconds": 0.006550896,
+      "fixed_median_seconds": 0.0017094375,
+      "base_over_fixed_median": 3.8321939234397275,
+      "checksum": 9409.366402029991
+    },
+    {
+      "operation": "normalize",
+      "rows": 999,
+      "width": 4,
+      "base_median_seconds": 0.0003075,
+      "fixed_median_seconds": 0.00030329200000000004,
+      "base_over_fixed_median": 1.0138744180525696,
+      "checksum": 953.7516768919304
+    },
+    {
+      "operation": "normalize",
+      "rows": 1000,
+      "width": 4,
+      "base_median_seconds": 0.0002853335,
+      "fixed_median_seconds": 0.0003041455,
+      "base_over_fixed_median": 0.9381480245474617,
+      "checksum": 954.6954682515934
+    },
+    {
+      "operation": "normalize",
+      "rows": 2000,
+      "width": 4,
+      "base_median_seconds": 0.0005307705,
+      "fixed_median_seconds": 0.0003876045,
+      "base_over_fixed_median": 1.3693610368300677,
+      "checksum": 1908.7617615601048
+    },
+    {
+      "operation": "normalize",
+      "rows": 4096,
+      "width": 4,
+      "base_median_seconds": 0.0009866039999999999,
+      "fixed_median_seconds": 0.000591438,
+      "base_over_fixed_median": 1.6681444208860436,
+      "checksum": 3908.9064545417204
+    },
+    {
+      "operation": "normalize",
+      "rows": 999,
+      "width": 768,
+      "base_median_seconds": 0.0043358749999999995,
+      "fixed_median_seconds": 0.0043167085000000004,
+      "base_over_fixed_median": 1.0044400728008387,
+      "checksum": 62.60779983570683
+    },
+    {
+      "operation": "normalize",
+      "rows": 1000,
+      "width": 768,
+      "base_median_seconds": 0.0042692715,
+      "fixed_median_seconds": 0.0008538755,
+      "base_over_fixed_median": 4.999875860122465,
+      "checksum": 62.668276457319735
+    },
+    {
+      "operation": "normalize",
+      "rows": 2000,
+      "width": 768,
+      "base_median_seconds": 0.0084579795,
+      "fixed_median_seconds": 0.0014730205,
+      "base_over_fixed_median": 5.741929253530416,
+      "checksum": 125.25645658749272
+    },
+    {
+      "operation": "normalize",
+      "rows": 4096,
+      "width": 768,
+      "base_median_seconds": 0.0173251665,
+      "fixed_median_seconds": 0.002815542,
+      "base_over_fixed_median": 6.153403678581246,
+      "checksum": 256.3751338038419
+    },
+    {
+      "operation": "matrix",
+      "rows": 256,
+      "width": 768,
+      "base_median_seconds": 0.004014292,
+      "fixed_median_seconds": 0.0010791045,
+      "base_over_fixed_median": 3.72002155490965,
+      "checksum": 5576.382256746292
+    },
+    {
+      "operation": "matrix",
+      "rows": 1000,
+      "width": 768,
+      "base_median_seconds": 0.060557333000000005,
+      "fixed_median_seconds": 0.0124034795,
+      "base_over_fixed_median": 4.8822858940509395,
+      "checksum": 21702.43967628479
+    }
+  ],
+  "performance_limits": "Isolated AB3 change, 18 workloads, 14 samples per variant; short single-host run with documented background CPU activity, not broad performance certification. Peak RSS captured, not allocation rates.",
+  "first_python_run": {
+    "tests": 591,
+    "failures": 2,
+    "record": "integration-evidence/integrated-python.stderr",
+    "resolved_by": "62780666be88554ca2859e2e92cd5d3ad6666dba",
+    "issues": [
+      "exact metadata liveness registration",
+      "typed Int reduction census"
+    ]
+  },
+  "reviews": [
+    "task-1-review-v1.md",
+    "task-2-review-v1.md",
+    "task-3-review-v1.md",
+    "task-3-fix1-review.md",
+    "final-review.md",
+    "final-fix-review.md"
+  ],
+  "remaining_qualifications": [
+    "Actual Swift 6.0",
+    "oldest supported OS and other platforms/architectures",
+    "real sanitizer runtimes",
+    "hosted CI",
+    "broader controlled performance",
+    "precompiled-client ABI compatibility"
+  ]
+}

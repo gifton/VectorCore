@@ -42,29 +42,29 @@
 
 **Interfaces:** Owns the inherited `subscript(index: Int) -> Scalar` behavior without deleting it or requiring all downstream conformers to add a new implementation. Other tracks consume ordinary vector APIs and do not modify this protocol. No shared Package changes without coordination.
 
-- [ ] Reproduce the known public importer failure against a fresh base Release module and explicit-subscript control. Establish Debug-built-module behavior, then link and run the passing control. Retain exact module/compiler identities.
-- [ ] Trace the source-level trigger using controlled comparisons, reading the prior investigation to avoid repeating its 19 paired experiments. Test the smallest source-level accommodation; no speculative broad refactor or build-flag workaround.
-- [ ] Add durable public-client fixtures covering inherited and explicit witnesses, direct/generic Collection access, and ordinary value correctness. A baseline inherited case must fail for the known compiler reason before accepting a fix.
-- [ ] If a compatible minimal accommodation succeeds, verify compile/link/runtime across Debug/Release module and client modes on the qualified compiler, and compile-control the installed Xcode compiler where feasible. Verify relevant existing Collection/API tests.
-- [ ] If no defensible accommodation exists after focused investigation, produce a concrete support recommendation backed by the matrix; report the unresolved release decision without claiming the compiler fixed. Do not silently change the public contract.
-- [ ] Run covering checks, self-review, commit the scoped result locally, and write the report with the precise remaining limits.
+- [x] Reproduce the known public importer failure against a fresh base Release module and explicit-subscript control. Establish Debug-built-module behavior, then link and run the passing control. Retain exact module/compiler identities.
+- [x] Trace the source-level trigger using controlled comparisons, reading the prior investigation to avoid repeating its 19 paired experiments. Test the smallest source-level accommodation; no speculative broad refactor or build-flag workaround.
+- [x] Add durable public-client fixtures covering inherited and explicit witnesses, direct/generic Collection access, and ordinary value correctness. A baseline inherited case must fail for the known compiler reason before accepting a fix.
+- [x] If a compatible minimal accommodation succeeds, verify compile/link/runtime across Debug/Release module and client modes on the qualified compiler, and compile-control the installed Xcode compiler where feasible. Verify relevant existing Collection/API tests.
+- [x] If no defensible accommodation exists after focused investigation, produce a concrete support recommendation backed by the matrix; report the unresolved release decision without claiming the compiler fixed. Do not silently change the public contract.
+- [x] Run covering checks, self-review, commit the scoped result locally, and write the report with the precise remaining limits.
 
 ### Task 2: AB3 row scheduling
 
 **Files:**
 - Modify: `Sources/VectorCore/Operations/ExecutionOperations.swift`, `TransformOperations.swift`, and the internal chunk-hint declaration/documentation as needed.
-- Inspect: `Sources/VectorCore/Utilities/BoundedExecution.swift`, `Operations/CPUContext.swift`, `Protocols/ExecutionContext.swift`.
+- Inspect: `Sources/VectorCore/Utilities/BoundedExecution.swift`, `Operations/CPUContext.swift`, `Operations/ExecutionContext.swift`.
 - Test: `Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift` or a dedicated `AutomaticRowSchedulingTests.swift`.
 - Create: a focused bounded Release benchmark driver/fixture under the task evidence or maintained benchmark tooling if appropriate.
 
 **Interfaces:** `preferredChunkSize` currently represents Float elements; `BoundedExecution` minimum represents row items at these call sites. Keep worker-count bounds, order, dimension validation, factory errors, cancellation, and nested-region serialization intact. Task 1 may change default accessor implementation without changing its behavior.
 
-- [ ] Reproduce the one-worker case with the real `CPUContext.automatic` path on this host at 1000, 2000, and 4096 nonempty rows. Check actual submission observations and output rather than a copied chunk formula. Keep a one-core control.
-- [ ] Select and document a consistent unit conversion (or operation-specific row minimum), with overflow-safe arithmetic and explicit empty/zero-width handling. Apply it to map, normalize, and distance-matrix call sites; search all consumers of the hint for the same defect class.
-- [ ] Add regression coverage demonstrating multiple bounded worker submissions for representative wide rows on a multicore context. Include output order/value checks, single-core and nested controls, empty/zero-width/ragged behavior, cancellation and factory-error propagation using existing tests where adequate.
-- [ ] Re-derive the newly reachable parallel paths. Review captured data and shared writes; preserve numeric operation order within each output and deterministic assembly.
-- [ ] Run focused Debug/Release checks and prepare paired base/fixed Release measurement with warm-up, medians/distribution, identical data and compiler identity. Ask the coordinator to schedule measurements after other heavy work; do not claim a speedup from task counts.
-- [ ] Self-review, commit locally, and write the report with benchmark instructions and any remaining cost-balancing limitations.
+- [x] Reproduce the one-worker case with the real `CPUContext.automatic` path on this host at 1000, 2000, and 4096 nonempty rows. Check actual submission observations and output rather than a copied chunk formula. Keep a one-core control.
+- [x] Select and document a consistent unit conversion (or operation-specific row minimum), with overflow-safe arithmetic and explicit empty/zero-width handling. Apply it to map, normalize, and distance-matrix call sites; search all consumers of the hint for the same defect class.
+- [x] Add regression coverage demonstrating multiple bounded worker submissions for representative wide rows on a multicore context. Include output order/value checks, single-core and nested controls, empty/zero-width/ragged behavior, cancellation and factory-error propagation using existing tests where adequate.
+- [x] Re-derive the newly reachable parallel paths. Review captured data and shared writes; preserve numeric operation order within each output and deterministic assembly.
+- [x] Run focused Debug/Release checks and prepare paired base/fixed Release measurement with warm-up, medians/distribution, identical data and compiler identity. Ask the coordinator to schedule measurements after other heavy work; do not claim a speedup from task counts.
+- [x] Self-review, commit locally, and write the report with benchmark instructions and any remaining cost-balancing limitations.
 
 ### Task 3: EnvCapture subprocess lifetime
 
@@ -75,18 +75,23 @@
 
 **Interfaces:** Preserve `collectMetadata(...) -> BenchMetadata` and `observe(command: [String], timeout: TimeInterval = 2) -> RuntimeObservation`, including non-macOS unavailable behavior. Define the supported descendant/parent-death contract explicitly; arbitrary processes that deliberately escape ownership cannot be assumed contained.
 
-- [ ] Reproduce real metadata command lifetime with controlled executables: success, nonzero exit, a hanging leaf and a hanging grandchild, including the outer supervisor dying. Retain PID/group/parent observations and clean up owned fixtures independently.
-- [ ] Compare minimal safe implementation approaches, then implement the least invasive one that gives bounded execution and cleanup under its stated ownership model. Avoid unsafe post-fork Swift/Foundation work, process-wide signal handlers/reapers, PATH/shell interpolation vulnerabilities, and PID reuse races.
-- [ ] Add behavioral tests for successful output, failure/timeout observation, descendant cleanup after normal leader exit and timeout, and the actual parent-death guarantee chosen. Exercise real processes under a separate bounded controller; use handshakes rather than fixed startup sleeps.
-- [ ] Ensure returning metadata cannot wait indefinitely on descendant output handles, and inability to observe/clean up is reported truthfully. Preserve executable/argument boundaries and environment semantics; bound output where required by the implementation.
-- [ ] Run focused Debug/Release and relevant subprocess-policy checks. Explain every ownership limitation; do not claim arbitrary orphan containment without evidence.
-- [ ] Self-review, commit locally, and write the report, including production resource ownership and retained red/green evidence.
+- [x] Reproduce real metadata command lifetime with controlled executables: success, nonzero exit, a hanging leaf and a hanging grandchild, including the outer supervisor dying. Retain PID/group/parent observations and clean up owned fixtures independently.
+- [x] Compare minimal safe implementation approaches, then implement the least invasive one that gives bounded execution and cleanup under its stated ownership model. Avoid unsafe post-fork Swift/Foundation work, process-wide signal handlers/reapers, PATH/shell interpolation vulnerabilities, and PID reuse races.
+- [x] Add behavioral tests for successful output, failure/timeout observation, descendant cleanup after normal leader exit and timeout, and the actual parent-death guarantee chosen. Exercise real processes under a separate bounded controller; use handshakes rather than fixed startup sleeps.
+- [x] Ensure returning metadata cannot wait indefinitely on descendant output handles, and inability to observe/clean up is reported truthfully. Preserve executable/argument boundaries and environment semantics; bound output where required by the implementation.
+- [x] Run focused Debug/Release and relevant subprocess-policy checks. Explain every ownership limitation; do not claim arbitrary orphan containment without evidence.
+- [x] Self-review, commit locally, and write the report, including production resource ownership and retained red/green evidence.
 
 ## Integration and completion
 
-- [ ] Task-scoped spec/quality reviews on each complete diff; fix findings through the original implementer and scoped re-review.
-- [ ] Cherry-pick approved task commits onto the carried branch; resolve any shared policy changes explicitly.
-- [ ] Run combined full Debug and Release, full Python discovery, claim ledger, workflow validation, whitespace and pinned SwiftLint. Record warnings and skips accurately; do not broaden testing after clean results without new cause.
-- [ ] Run the paired AB3 Release performance experiment with concurrent heavy work stopped; retain the limitations of a single-host measurement.
-- [ ] One broad final review of this batch plus affected boundaries, then one consolidated fix wave if needed and covering checks.
-- [ ] Commit a concise readiness report and evidence manifest, preserve branch/evidence, and state which release qualifications remain (Swift 6.0, real sanitizer runtime, hosted CI, other supported platforms and controlled broader performance).
+- [x] Task-scoped spec/quality reviews on each complete diff; fix findings through the original implementer and scoped re-review.
+- [x] Cherry-pick approved task commits onto the carried branch; resolve any shared policy changes explicitly.
+- [x] Run combined full Debug and Release, full Python discovery, claim ledger, workflow validation, whitespace and pinned SwiftLint. Record warnings and skips accurately; do not broaden testing after clean results without new cause.
+- [x] Run the paired AB3 Release performance experiment with concurrent heavy work stopped; retain the limitations of a single-host measurement.
+- [x] One broad final review of this batch plus affected boundaries, then one consolidated fix wave if needed and covering checks.
+- [x] Commit a concise readiness report and evidence manifest, preserve branch/evidence, and state which release qualifications remain (Swift 6.0, real sanitizer runtime, hosted CI, other supported platforms and controlled broader performance).
+
+
+## Completion record
+
+Final implementation `62780666be88554ca2859e2e92cd5d3ad6666dba`; full Swift/D02 source `60a87a11b58c28064626fc48023855c4b9042945` with 387 byte-identical package inputs. All Critical/Important task and final review findings addressed; combined Swift, final Python and required consumers pass. No public compiler-support contract was removed. See `Docs/reviews/2026-11-04-release-preparation/README.md` for the retained ownership/qualification limits, warnings, scoped performance results and deferred Minor follow-ups.

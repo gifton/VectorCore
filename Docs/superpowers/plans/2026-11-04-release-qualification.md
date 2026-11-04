@@ -35,11 +35,11 @@
 
 **Interfaces:** All workers start from the same candidate; compiler/SDK qualification is independent of sanitizer/platform execution. Use the project's Xcode 16.2 / Swift 6.0-series floor as the first supported combination to seek.
 
-- [ ] Inventory existing official toolchains/SDKs and prior qualification evidence. Obtain an official signed Swift 6.0-series macOS toolchain if absent, extracting it locally and recording exact download/hash/signature/version.
-- [ ] Probe real compiler/SDK compatibility and the retained numerical canaries under ordinary Debug/Release optimization. If an installed SDK is too new, distinguish SDK/toolchain incompatibility from library failure; investigate a legitimate available older combination without modifying the declared floor.
-- [ ] On a usable combination, execute full Debug/Release suites and required downstream consumers, including inherited/explicit Collection witnesses. Retain actual body counts, skips, diagnostics and exact input identities.
-- [ ] If environment access prevents a cell, preserve the concrete failed command and identify the precise hosted/toolchain requirement. Do not claim the floor qualified from Swift 6.4 language mode.
-- [ ] Self-review and commit the task report plus any independently verified scoped repair. Return evidence inclusion paths and remaining gaps.
+- [x] Inventory existing official toolchains/SDKs and prior qualification evidence. Obtain an official signed Swift 6.0-series macOS toolchain if absent, extracting it locally and recording exact download/hash/signature/version.
+- [x] Probe real compiler/SDK compatibility and the retained numerical canaries under ordinary Debug/Release optimization. If an installed SDK is too new, distinguish SDK/toolchain incompatibility from library failure; investigate a legitimate available older combination without modifying the declared floor.
+- [x] On a usable combination, execute full Debug/Release suites and required downstream consumers, including inherited/explicit Collection witnesses. Retain actual body counts, skips, diagnostics and exact input identities.
+- [x] If environment access prevents a cell, preserve the concrete failed command and identify the precise hosted/toolchain requirement. Do not claim the floor qualified from Swift 6.4 language mode.
+- [x] Self-review and commit the task report plus any independently verified scoped repair. Return evidence inclusion paths and remaining gaps.
 
 ## Task 2: Real sanitizer qualification
 
@@ -47,11 +47,11 @@
 
 **Interfaces:** Use `Scripts/ci/sanitizer_bodies.json` and the existing mandatory driver, not a substitute hand-picked list. Qualified Swift.org 6.4.2 identity is in the preceding readiness report.
 
-- [ ] Record the compiler, SDK, test host and ASan/TSan runtime identities. Execute an isolated intentional diagnostic control for each sanitizer to show instrumentation can detect the intended class; retain the expected failing observation.
-- [ ] Run `check_sanitizers.py` separately for address and thread with fresh output/build roots, two jobs and native build system. Preserve all pinned bodies, actual loaded host/bundle/runtime evidence, and Q03 child identities/markers.
-- [ ] Investigate failures before changing code. A wrapper/runner accommodation must preserve the actual instrumented workload and runtime; a source defect needs a focused red/green regression and review.
-- [ ] Verify metadata's new process path with actual sanitizer runtime propagation where the existing mandatory bodies do not cover it; distinguish protected-system-executable behavior from an instrumentable child. Keep process ownership and deadline limitations explicit.
-- [ ] Self-review and commit the report and any covering repair; state exact body counts, exclusions such as leak detection, and remaining host/platform limitations.
+- [x] Record the compiler, SDK, test host and ASan/TSan runtime identities. Execute an isolated intentional diagnostic control for each sanitizer to show instrumentation can detect the intended class; retain the expected failing observation.
+- [x] Run `check_sanitizers.py` separately for address and thread with fresh output/build roots, two jobs and native build system. Preserve all pinned bodies, actual loaded host/bundle/runtime evidence, and Q03 child identities/markers.
+- [x] Investigate failures before changing code. A wrapper/runner accommodation must preserve the actual instrumented workload and runtime; a source defect needs a focused red/green regression and review.
+- [x] Verify metadata's new process path with actual sanitizer runtime propagation where the existing mandatory bodies do not cover it; distinguish protected-system-executable behavior from an instrumentable child. Keep process ownership and deadline limitations explicit.
+- [x] Self-review and commit the report and any covering repair; state exact body counts, exclusions such as leak detection, and remaining host/platform limitations.
 
 ## Task 3: Apple platform and architecture qualification
 
@@ -59,16 +59,22 @@
 
 **Interfaces:** Product/platform inventory comes from Package.swift; hosted workflow is the reference matrix. Compiler qualification remains separate from compile-only platform success.
 
-- [ ] Inventory installed SDKs, simulator runtimes, available architectures and library products. Record Xcode/frontend/SDK identities without changing global selection.
-- [ ] Execute Release compilation for every library product at iOS Simulator, tvOS Simulator, visionOS Simulator and Mac Catalyst using the existing workflow commands and fresh destination scratch roots. Retain concrete missing-runtime/SDK/build failures.
-- [ ] Compile library and tests for `x86_64-apple-macosx14.0`; perform a bounded runtime smoke only if existing host support makes it available. Label compile-only results explicitly.
-- [ ] Run a meaningful simulator library smoke where an already installed runtime is usable; no device provisioning, paid downloads, or oldest-OS claim based solely on deployment flags.
-- [ ] Self-review and commit the report and any scoped portability repair, with exact supported/untested cells and evidence paths.
+- [x] Inventory installed SDKs, simulator runtimes, available architectures and library products. Record Xcode/frontend/SDK identities without changing global selection.
+- [x] Execute Release compilation for every library product at iOS Simulator, tvOS Simulator, visionOS Simulator and Mac Catalyst using the existing workflow commands and fresh destination scratch roots. Retain concrete missing-runtime/SDK/build failures.
+- [x] Compile library and tests for `x86_64-apple-macosx14.0`; perform a bounded runtime smoke only if existing host support makes it available. Label compile-only results explicitly.
+- [x] Run a meaningful simulator library smoke where an already installed runtime is usable; no device provisioning, paid downloads, or oldest-OS claim based solely on deployment flags.
+- [x] Self-review and commit the report and any scoped portability repair, with exact supported/untested cells and evidence paths.
 
 ## Coordinator integration and completion
 
-- [ ] Verify the fresh accepted baseline and source identities; create a plan-specific ledger and isolated worker worktrees. Existing full native suites are retained as baseline, not repeated before every qualification cell.
-- [ ] Inspect authenticated remote workflow/ref/run availability; prepare exact candidate-specific hosted CI execution. Do not substitute previous remote checks or change branch protections.
-- [ ] Independently review each task's evidence and any diff, integrate approved commits, and run covering checks for actual changes. Re-run a cell only when its relevant inputs changed or its evidence is incomplete.
-- [ ] Conduct one final review of the qualification conclusions and any repairs; resolve material findings through one consolidated fix wave and scoped re-review.
-- [ ] Commit a concise qualification matrix, remaining blockers and a hashed bounded evidence archive. Preserve branches/worktrees and state precisely which release gates passed and which remain open.
+- [x] Verify the fresh accepted baseline and source identities; create a plan-specific ledger and isolated worker worktrees. Existing full native suites are retained as baseline, not repeated before every qualification cell.
+- [x] Inspect authenticated remote workflow/ref/run availability; prepare exact candidate-specific hosted CI execution. Do not substitute previous remote checks or change branch protections.
+- [x] Independently review each task's evidence and any diff, integrate approved commits, and run covering checks for actual changes. Re-run a cell only when its relevant inputs changed or its evidence is incomplete.
+- [x] Conduct one final review of the qualification conclusions and any repairs; resolve material findings through one consolidated fix wave and scoped re-review.
+- [x] Commit a concise qualification matrix, remaining blockers and a hashed bounded evidence archive. Preserve branches/worktrees and state precisely which release gates passed and which remain open.
+
+## Completion record
+
+Local qualification evidence and the narrow sanitizer launcher repair are complete at `0ecf6bd392e91b49cb5c7529fea8160d1410e107`; all 387 package inputs are unchanged. Full integrated Python discovery passed 594 tests. All task/final local-batch reviews approved; inherited warnings remain. Full Swift6.0 suites, hosted candidate CI and the Xcode27.2 numerical failure remain explicit open release gates. See `Docs/reviews/2026-11-04-release-qualification/README.md`.
+
+- [ ] After publication approval, push the final reviewed candidate to `codex/qualification-0.4.0-2026-11-04`, dispatch `ci.yml`, and verify the exact returned run SHA and required job results.

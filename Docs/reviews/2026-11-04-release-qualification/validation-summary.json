@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "batch_base": "d628a2c419300d37c8462d24b2b1069f71867f79",
+  "validated_source": "0ecf6bd392e91b49cb5c7529fea8160d1410e107",
+  "branch": "codex/audit-top-six-2026-10-27",
+  "source_was_clean": true,
+  "unchanged_package_input_count": 387,
+  "package_inputs_identical": true,
+  "changed_executable_inputs": {
+    "Scripts/ci/check_sanitizers.py": "f2d56cc250f6753ddae60ecafae0f737a7fd400178fbf1f88bdc5c19498779b9",
+    "Scripts/ci/tests/test_sanitizer_log.py": "848f41801788700a16467c68da09725cd1b6ae4d3bc6199b12149b75f8dce9ff"
+  },
+  "swift60": {
+    "status": "local checks verified; full floor suite gate remains open",
+    "pure_swift_probe_cases": 12,
+    "collection_witness_compile_link_run_cases": 8,
+    "numerical_importer_cases": 4,
+    "numerical_importer_checks": 20,
+    "documentation_programs": 8,
+    "compile_contracts": 21,
+    "full_suite_test_bodies": {
+      "debug": 0,
+      "release": 0
+    },
+    "full_suite_skip_events": {
+      "debug": 0,
+      "release": 0
+    },
+    "command_records_with_verified_output_hashes": 149,
+    "full_suite_attempts": {
+      "debug": {
+        "exit": 1,
+        "executed_bodies": 0,
+        "inputs_unchanged": true,
+        "record": "task-1-evidence/full-debug/result.json"
+      },
+      "release": {
+        "exit": 1,
+        "executed_bodies": 0,
+        "inputs_unchanged": true,
+        "record": "task-1-evidence/full-release/result.json"
+      }
+    }
+  },
+  "sanitizers": {
+    "address": {
+      "sanitizer": "address",
+      "hostSHA256": "9b2b116ce29b756e9a6319526bd803a19946916273544a75ace08de58386f5b8",
+      "runtimeSHA256": "0f77b71ea4342b04be5163a7c02d69376f5ecd5ce71e40278b41473850485180",
+      "manifestSHA256": "91b7eb0850136ff08ac6c0261e80f2db1c0624bfd86607582b1a3bd4546a4f86",
+      "buildSystem": "native",
+      "leakDetection": false,
+      "scope": "Pinned valid bodies only; no whole-suite or hosted-CI claim.",
+      "testLaunch": "direct SwiftPM helper",
+      "completed_bodies": 77,
+      "result_record": "task-2-evidence/address-qualified/result.json",
+      "driver_seconds": 201.27597112499643
+    },
+    "thread": {
+      "sanitizer": "thread",
+      "hostSHA256": "9b2b116ce29b756e9a6319526bd803a19946916273544a75ace08de58386f5b8",
+      "runtimeSHA256": "703112657f82fc3522365b529f83919cddc61d114fd7c6bdc8ddaa2088debfe3",
+      "manifestSHA256": "91b7eb0850136ff08ac6c0261e80f2db1c0624bfd86607582b1a3bd4546a4f86",
+      "buildSystem": "native",
+      "leakDetection": false,
+      "scope": "Pinned valid bodies only; no whole-suite or hosted-CI claim.",
+      "testLaunch": "direct SwiftPM helper",
+      "completed_bodies": 39,
+      "result_record": "task-2-evidence/thread/result.json",
+      "driver_seconds": 244.12557895900682
+    }
+  },
+  "platforms": {
+    "sourceBase": "77defdf6161ab7600309d3432691fa9d388d088e",
+    "implementationBase": "d628a2c419300d37c8462d24b2b1069f71867f79",
+    "evidenceRoot": "/private/tmp/vectorcore-qualification-2026-11-04/task-3-evidence",
+    "platformCompile": {
+      "VectorCore-ios": {
+        "exit": 0,
+        "elapsedSeconds": 40.11244037502911,
+        "timeout": false
+      },
+      "VectorCore-tvos": {
+        "exit": 0,
+        "elapsedSeconds": 47.12748204206582,
+        "timeout": false
+      },
+      "VectorCore-visionos": {
+        "exit": 0,
+        "elapsedSeconds": 52.10334333300125,
+        "timeout": false
+      },
+      "VectorCore-catalyst": {
+        "exit": 0,
+        "elapsedSeconds": 42.927036084001884,
+        "timeout": false
+      },
+      "VectorCoreBenchmarking-ios": {
+        "exit": 0,
+        "elapsedSeconds": 40.491401582956314,
+        "timeout": false
+      },
+      "VectorCoreBenchmarking-tvos": {
+        "exit": 0,
+        "elapsedSeconds": 40.45116745796986,
+        "timeout": false
+      },
+      "VectorCoreBenchmarking-visionos": {
+        "exit": 0,
+        "elapsedSeconds": 39.99860195803922,
+        "timeout": false
+      },
+      "VectorCoreBenchmarking-catalyst": {
+        "exit": 0,
+        "elapsedSeconds": 41.09804704191629,
+        "timeout": false
+      }
+    },
+    "intelCompile": {
+      "exit": 0,
+      "elapsedSeconds": 110.54477525001857,
+      "timeout": false
+    },
+    "intelRuntime": "unavailable: arch -x86_64 uname -m exits 1 with Bad CPU type in executable",
+    "publicSimulatorSmoke": {
+      "exit": 0,
+      "observation": "VECTORCORE_PLATFORM_SMOKE_PASS platform=ios-os27.0.0 arch=arm64 version=0.3.3"
+    },
+    "canaryPair": {
+      "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326",
+      "expectedObservation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+      "runtime": "iOS 27.0 (24A434), arm64",
+      "results": {
+        "xcode-debug": {
+          "processExit": 0,
+          "actualObservation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "accepted": true
+        },
+        "xcode-release": {
+          "processExit": 0,
+          "actualObservation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "accepted": false
+        },
+        "swiftorg-release": {
+          "processExit": 0,
+          "actualObservation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "accepted": true
+        }
+      },
+      "xcodeReleaseNumericallyQualified": false,
+      "scope": "The paired control qualifies only this pure-Swift canary on this runtime; library product compilation used the Xcode compiler."
+    },
+    "scope": "Platform compilation and bounded simulator checks; Xcode Release numerical canary fails. No oldest-OS/device/Intel-runtime/App Store qualification."
+  },
+  "python": {
+    "tests": 594,
+    "unittest_seconds": 253.066,
+    "result": "OK"
+  },
+  "checks": {
+    "integrated-python": {
+      "source": "0ecf6bd392e91b49cb5c7529fea8160d1410e107",
+      "exit": 0,
+      "seconds": 253.84097045799717,
+      "record": "integration-evidence/integrated-python-result.json",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Scripts/ci/tests",
+        "-v"
+      ]
+    },
+    "integrated-claims": {
+      "source": "0ecf6bd392e91b49cb5c7529fea8160d1410e107",
+      "exit": 0,
+      "seconds": 3.0105714579112828,
+      "record": "integration-evidence/integrated-claims-result.json",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "Scripts/ci/check_claim_ledger.py"
+      ]
+    },
+    "integrated-github": {
+      "source": "0ecf6bd392e91b49cb5c7529fea8160d1410e107",
+      "exit": 0,
+      "seconds": 0.18589266703929752,
+      "record": "integration-evidence/integrated-github-result.json",
+      "argv": [
+        "ruby",
+        "Scripts/ci/validate_github.rb"
+      ]
+    },
+    "integrated-whitespace": {
+      "source": "0ecf6bd392e91b49cb5c7529fea8160d1410e107",
+      "exit": 0,
+      "seconds": 0.022568666958250105,
+      "record": "integration-evidence/integrated-whitespace-result.json",
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "d628a2c419300d37c8462d24b2b1069f71867f79"
+      ]
+    }
+  },
+  "hosted_preflight": {
+    "local_candidate": "77defdf6161ab7600309d3432691fa9d388d088e",
+    "remote_main": "7d9c962af774d9aae3cd2445d487ec5a941a7a65",
+    "candidate_is_remote_branch_tip": false,
+    "candidate_workflow_sha256": "8a5e429194b68f54ac90be112cd0c9a7d24bf429d809b1ab947be37d2c2a7a7d",
+    "observed_hosted_run": {
+      "id": 41378600891,
+      "head_sha": "7d9c962af774d9aae3cd2445d487ec5a941a7a65",
+      "event": "push",
+      "conclusion": "success",
+      "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891"
+    },
+    "jobs": [
+      {
+        "name": "SDK type-name collisions (Xcode 26.3 SDK only)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212322"
+      },
+      {
+        "name": "SwiftLint",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212582"
+      },
+      {
+        "name": "Repository checks",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212612"
+      },
+      {
+        "name": "Instrumented contracts (thread)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212625"
+      },
+      {
+        "name": "Executed benchmark contracts",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212689"
+      },
+      {
+        "name": "Tests (Xcode 26.3, debug)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212698"
+      },
+      {
+        "name": "Perf Smoke (artifact only)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212699"
+      },
+      {
+        "name": "Instrumented contracts (address)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212717"
+      },
+      {
+        "name": "Apple platform compilation",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212765"
+      },
+      {
+        "name": "Tests (Xcode 16.2, debug)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212771"
+      },
+      {
+        "name": "Documentation consumers",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212832"
+      },
+      {
+        "name": "Tests (Xcode 26.3, release)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064212842"
+      },
+      {
+        "name": "Tests (Xcode 16.2, release)",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125064213071"
+      },
+      {
+        "name": "CI Required",
+        "conclusion": "success",
+        "url": "https://github.com/gifton/VectorCore/actions/runs/41378600891/job/125105031934"
+      }
+    ],
+    "qualifies_local_candidate": false,
+    "remote_mutation_performed": false,
+    "next_action": "After final local review, publish candidate to a dedicated qualification ref and workflow_dispatch ci.yml on that exact ref; verify returned run head_sha before accepting results."
+  },
+  "reviews": [
+    "task-1-review-v1.md",
+    "task-2-review-v1.md",
+    "task-3-review-v1.md",
+    "final-review.md"
+  ],
+  "release_qualified": false,
+  "remaining": [
+    "Matching Xcode16.2 full Debug/Release suites on the candidate",
+    "Hosted candidate CI, including Xcode26.3/default-backend sanitizer execution",
+    "Installed Xcode27.2 Release numerical compiler failure",
+    "Unexecuted OS/device/platform runtime and broader controlled performance cells"
+  ]
+}

@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 import VectorCoreTestSupport
 @testable import VectorCoreBenchSupport
-import VectorCoreBenchmarking
+@testable import VectorCoreBenchmarking
 import VectorCore
 
 private enum InjectedFailure: Error { case provider }
@@ -88,6 +88,24 @@ final class BenchmarkRunnerContractTests: XCTestCase {
             captured["fixturePID"] = String(getpid())
             captured["fixturePGID"] = String(getpgrp())
             try JSONEncoder().encode(captured).write(to: URL(fileURLWithPath: env["LAUNCHER_CONTROL_OUTPUT"]!))
+            return
+        }
+        if let command = env["METADATA_TEST_COMMAND"], let result = env["METADATA_TEST_RESULT"] {
+            let argv = try JSONDecoder().decode([String].self, from: Data(command.utf8))
+                .map { $0 == "@OWNER_PID@" ? String(getpid()) : $0 }
+            if env["METADATA_TEST_IGNORED_SIGNALS"] == "1" {
+                signal(SIGTERM, SIG_IGN)
+                signal(SIGINT, SIG_IGN)
+                var mask = sigset_t()
+                sigemptyset(&mask)
+                sigaddset(&mask, SIGTERM)
+                pthread_sigmask(SIG_BLOCK, &mask, nil)
+            }
+            if let value = env["METADATA_TEST_LOADER_VALUE"] {
+                setenv(env["METADATA_TEST_LOADER_KEY"] ?? "DYLD_LIBRARY_PATH", value, 1)
+            }
+            let observation = EnvCapture.observe(command: argv, timeout: Double(env["METADATA_TEST_TIMEOUT"] ?? "2")!)
+            try JSONEncoder().encode(observation).write(to: URL(fileURLWithPath: result))
             return
         }
         if let encoded = env["F012_TEST_ARGUMENTS"] {
@@ -249,16 +267,207 @@ final class BenchmarkRunnerContractTests: XCTestCase {
                 return parts.count == 2 ? (String(parts[0]), String(parts[1])) : nil
             })
             XCTAssertEqual(fields["name"], name)
-            XCTAssertEqual(fields["ppid"], String(run.processIdentifier))
+            // The metadata command is now a child of the dedicated guardian.
+            XCTAssertNotEqual(fields["ppid"], String(run.processIdentifier))
+            XCTAssertEqual(fields["ppid"], fields["pgid"])
             XCTAssertGreaterThan(try XCTUnwrap(fields["pid"].flatMap(Int32.init)), 1)
             XCTAssertGreaterThan(try XCTUnwrap(fields["pgid"].flatMap(Int32.init)), 1)
             XCTAssertEqual(fields["marker"], "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture")
             XCTAssertEqual(fields["asan"], "detect_leaks=0")
             XCTAssertEqual(fields["tsan"], "halt_on_error=1")
-            // Group equality is an observation of Foundation.Process on the executing toolchain.
-            // No assertion here claims that a descendant which starts another group is contained.
+            // A command that deliberately starts another group is outside metadata ownership.
             print("ENV_CAPTURE_DESCENDANT leader=\(run.processIdentifier) group=\(run.processGroup) \(value)")
         }
+    }
+
+    // Removing the group sweep must fail both the normal-exit and deadline rows.
+    func testMetadataLifetimeNormalExitAndTimeout() throws {
+        for scenario in ["exit", "failure", "timeout"] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-lifetime-" + UUID().uuidString)
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let pidFile = root.appendingPathComponent("pid")
+            let control = root.appendingPathComponent("continue")
+            try Data().write(to: control)
+            let script = """
+            /bin/sh -c 'i=0; while [ -f "$1" ] && [ "$i" -lt 1500 ]; do /bin/sleep 0.02; i=$((i+1)); done' leaf "$3" &
+            child=$!
+            printf '%s' "$child" > "$1"
+            /bin/ps -o pid=,ppid=,pgid= -p $$ -p "$child"
+            if [ "$2" = exit ]; then printf 'complete'; exit 0; fi
+            if [ "$2" = failure ]; then exit 7; fi
+            wait
+            """
+            let result = root.appendingPathComponent("result.json")
+            let argv = ["/bin/sh", "-c", script, "fixture", pidFile.path, scenario, control.path]
+            let run = try Self.runFixture(environment: [
+                "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(argv), encoding: .utf8)),
+                "METADATA_TEST_RESULT": result.path, "METADATA_TEST_TIMEOUT": "1"
+            ], output: root.appendingPathComponent("child.log"))
+            XCTAssertFalse(run.timedOut)
+            XCTAssertEqual(try run.reaped().status, 0)
+            let pid = try XCTUnwrap(Int32(String(contentsOf: pidFile, encoding: .utf8)))
+            defer { Self.finishMetadataFixture(control: control, pid: pid) }
+            let end = ContinuousClock.now.advanced(by: .seconds(2))
+            while kill(pid, 0) == 0 && ContinuousClock.now < end { usleep(10_000) }
+            XCTAssertEqual(kill(pid, 0), -1, "left descendant alive: \(scenario), pid=\(pid)")
+            let observation = try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
+            if scenario == "exit" {
+                XCTAssertTrue(observation.value?.hasSuffix("complete") == true)
+                print("METADATA_LIFETIME \(scenario) \(observation.value ?? "missing")")
+            } else {
+                XCTAssertTrue(observation.unavailableReason?.contains(scenario == "timeout" ? "timeout" : "failed: 7") == true)
+            }
+        }
+    }
+
+    func testMetadataTimerSurvivesObserverAndGuardianDeath() throws {
+        for victim in ["observer", "guardian"] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-death-" + UUID().uuidString)
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let pidFile = root.appendingPathComponent("pid")
+            let control = root.appendingPathComponent("continue")
+            try Data().write(to: control)
+            let script = """
+            printf '%s' "$$" > "$1"
+            /bin/ps -axo pid=,ppid=,pgid=,comm= | /usr/bin/awk -v group="$PPID" '$3 == group' > "$1.groups"
+            if [ "$3" = observer ]; then kill -KILL "$2"; else kill -KILL "$PPID"; fi
+            i=0; while [ -f "$4" ] && [ "$i" -lt 1500 ]; do /bin/sleep 0.02; i=$((i+1)); done
+            """
+            let argv = ["/bin/sh", "-c", script, "fixture", pidFile.path, "@OWNER_PID@", victim, control.path]
+            let run = try Self.runFixture(environment: [
+                "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(argv), encoding: .utf8)),
+                "METADATA_TEST_RESULT": root.appendingPathComponent("result.json").path,
+                "METADATA_TEST_TIMEOUT": "1", "METADATA_TEST_IGNORED_SIGNALS": "1"
+            ], output: root.appendingPathComponent("child.log"))
+            XCTAssertFalse(run.timedOut)
+            let pid = try XCTUnwrap(Int32(String(contentsOf: pidFile, encoding: .utf8)))
+            defer { Self.finishMetadataFixture(control: control, pid: pid) }
+            let end = ContinuousClock.now.advanced(by: .seconds(3))
+            while kill(pid, 0) == 0 && ContinuousClock.now < end { usleep(10_000) }
+            XCTAssertEqual(kill(pid, 0), -1, "timer lost after \(victim) death, pid=\(pid)")
+            let groups = try String(contentsOfFile: pidFile.path + ".groups", encoding: .utf8)
+            print("METADATA_DEATH \(victim) outer=\(run.processIdentifier) \(groups)")
+            if victim == "observer" {
+                XCTAssertEqual(try run.reaped(), ChildProbeTermination(status: SIGKILL, reason: .uncaughtSignal))
+            } else {
+                let data = try Data(contentsOf: root.appendingPathComponent("result.json"))
+                let observation = try JSONDecoder().decode(RuntimeObservation.self, from: data)
+                XCTAssertNil(observation.value)
+                XCTAssertNotNil(observation.unavailableReason)
+            }
+        }
+    }
+
+    // Fixture cleanup uses its private control file, never a possibly recycled numeric PID.
+    private static func finishMetadataFixture(control: URL, pid: pid_t) {
+        try? FileManager.default.removeItem(at: control)
+        let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+        while kill(pid, 0) == 0 && ContinuousClock.now < deadline { usleep(10_000) }
+        XCTAssertEqual(kill(pid, 0), -1, "fixture did not finish after independent cleanup")
+    }
+
+    func testMetadataEscapedOutputHandleDoesNotBlockObservation() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-escape-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let control = root.appendingPathComponent("continue")
+        try Data().write(to: control)
+        let pidFile = root.appendingPathComponent("pid")
+        let script = """
+        set -m
+        /bin/sh -c 'i=0; while [ -f "$1" ] && [ "$i" -lt 1500 ]; do /bin/sleep 0.02; i=$((i+1)); done' escaped "$1" &
+        printf '%s' "$!" > "$2"
+        printf escaped-output
+        """
+        let argv = ["/bin/sh", "-c", script, "fixture", control.path, pidFile.path]
+        let result = root.appendingPathComponent("result.json")
+        let run = try Self.runFixture(environment: [
+            "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(argv), encoding: .utf8)),
+            "METADATA_TEST_RESULT": result.path, "METADATA_TEST_TIMEOUT": "0.5"
+        ], output: root.appendingPathComponent("child.log"))
+        XCTAssertFalse(run.timedOut)
+        XCTAssertEqual(try run.reaped().status, 0)
+        let pid = try XCTUnwrap(Int32(String(contentsOf: pidFile, encoding: .utf8)))
+        defer { Self.finishMetadataFixture(control: control, pid: pid) }
+        let observation = try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
+        XCTAssertEqual(observation.value, "escaped-output")
+        // Deliberate group escape is not contained; its inherited output descriptor cannot block us.
+        XCTAssertEqual(kill(pid, 0), 0)
+    }
+
+    func testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-environment-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        // Re-sign a temporary copy to exercise an unprotected native target, without a new build target.
+        let reader = root.appendingPathComponent("printenv")
+        try Data(contentsOf: URL(fileURLWithPath: "/usr/bin/printenv")).write(to: reader)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: reader.path)
+        let result = root.appendingPathComponent("result.json")
+        let sign = ["/usr/bin/codesign", "--force", "--sign", "-", reader.path]
+        let signed = try Self.runFixture(environment: [
+            "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(sign), encoding: .utf8)),
+            "METADATA_TEST_RESULT": result.path
+        ], output: root.appendingPathComponent("sign.log"))
+        XCTAssertFalse(signed.timedOut)
+        XCTAssertEqual(try signed.reaped().status, 0)
+        let marker = root.appendingPathComponent("injected")
+        let startup = root.appendingPathComponent("startup")
+        try "/usr/bin/touch \"\(marker.path)\"\n".write(to: startup, atomically: true, encoding: .utf8)
+        let value = "/tmp/$(touch \(marker.path)); spaces ' \" `touch \(marker.path)`"
+        for key in ["DYLD_LIBRARY_PATH", "DYLD_FRAMEWORK_PATH", "LD_LIBRARY_PATH", "IFS", "armed", "PWD", "SHLVL"] {
+            for protected in [false, true] {
+                let argv = (protected ? ["/usr/bin/env"] : []) + [reader.path, key]
+                let run = try Self.runFixture(environment: [
+                    "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(argv), encoding: .utf8)),
+                    "METADATA_TEST_RESULT": result.path, "METADATA_TEST_LOADER_VALUE": value, "METADATA_TEST_LOADER_KEY": key,
+                    "ENV": startup.path, "BASH_ENV": startup.path, "IFS": ":",
+                    "BASH_FUNC_printf%%": "() { /usr/bin/touch \"\(marker.path)\"; builtin printf \"$@\"; }"
+                ], output: root.appendingPathComponent("environment-\(key)-\(protected).log"))
+                XCTAssertFalse(run.timedOut)
+                XCTAssertEqual(try run.reaped().status, 0)
+                let observation = try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
+                let stripped = protected && key.hasPrefix("DYLD_")
+                XCTAssertEqual(observation.value, stripped ? nil : value)
+                if stripped { XCTAssertNotNil(observation.unavailableReason) }
+                XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+            }
+        }
+    }
+
+    func testMetadataOutputAndArgumentBoundaries() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-output-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let literal = "spaces; $(touch " + root.appendingPathComponent("injected").path + ") ' \" $HOME"
+        let cases: [([String], String?)] = [
+            (["/usr/bin/printf", "%s", literal], literal),
+            (["/usr/bin/false"], nil),
+            (["printf", "must-not-resolve-a-shell-builtin"], nil),
+            (["/bin/sh", "-c", "kill -TERM $$; printf signal-was-ignored"], nil),
+            (["/bin/sleep", "30"], nil),
+            (["/bin/sh", "-c", "printf partial; exit 7"], nil),
+            (["/bin/sh", "-c", "/usr/bin/head -c 100000 /dev/zero"], nil),
+            (["/bin/sh", "-c", "printf '\\377'"], nil),
+            (["/usr/bin/printf", "truncated\0argument"], nil)
+        ]
+        for (index, fixture) in cases.enumerated() {
+            let result = root.appendingPathComponent("result.json")
+            let start = ContinuousClock.now
+            let run = try Self.runFixture(environment: [
+                "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(fixture.0), encoding: .utf8)),
+                "METADATA_TEST_RESULT": result.path, "METADATA_TEST_TIMEOUT": "0.5", "METADATA_TEST_IGNORED_SIGNALS": "1"
+            ], output: root.appendingPathComponent("child-\(index).log"))
+            XCTAssertFalse(run.timedOut)
+            XCTAssertEqual(try run.reaped().status, 0)
+            XCTAssertLessThan(start.duration(to: .now), .seconds(5))
+            let observation = try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
+            XCTAssertEqual(observation.value, fixture.1, "case \(index)")
+            if fixture.1 == nil { XCTAssertNotNil(observation.unavailableReason, "case \(index)") }
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent("injected").path))
     }
 
     func testActualBatchProviderReturnFamily() throws {

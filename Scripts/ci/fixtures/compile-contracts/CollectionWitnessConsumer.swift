@@ -32,6 +32,16 @@ private func collectionElement<C: Collection>(_ value: C, at index: Int) -> C.El
 @inline(never)
 private func vectorElement<V: VectorProtocol>(_ value: V, at index: Int) -> V.Scalar { value[index] }
 
+@inline(never)
+private func firstCollectionElement<C: Collection>(_ value: C) -> C.Element {
+    value[value.startIndex]
+}
+
+@inline(never)
+private func vectorElementMatches<V: VectorProtocol>(_ value: V, at index: Int, expected: Double) -> Bool {
+    abs(Double(value[index]) - expected) < 0.0001
+}
+
 @main
 struct CollectionWitnessConsumer {
     static func main() {
@@ -39,6 +49,10 @@ struct CollectionWitnessConsumer {
         precondition(abs(vector[0] - 1.25) < 0.0001, "direct subscript")
         precondition(abs(collectionElement(vector, at: 1) + 2.5) < 0.0001, "Collection witness")
         precondition(abs(vectorElement(vector, at: 2) - 4) < 0.0001, "VectorProtocol witness")
+        let existentialCollection: any Collection<Float> = vector
+        precondition(abs(firstCollectionElement(existentialCollection) - 1.25) < 0.0001, "existential Collection witness")
+        let existentialVector: any VectorProtocol = vector
+        precondition(vectorElementMatches(existentialVector, at: 1, expected: -2.5), "existential VectorProtocol witness")
         let elements = collectionElements(vector)
         precondition(elements.count == 3, "iteration count")
         for (actual, expected) in zip(elements, [Float(1.25), -2.5, 4]) {

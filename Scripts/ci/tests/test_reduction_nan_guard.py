@@ -524,6 +524,9 @@ MUST_FLAG = [
      ' for x in a { if x.isNaN { continue }; m = max(m, x) }\n return m\n}\n', ['Sources/A.swift::f::F1:m']),
     ('unknown accumulator type counts (conservative)', 'func f<S: FloatingPoint>(_ a: [S]) -> S {\n var scale: S = 0\n'
      ' for x in a { scale = max(scale, x) }\n return scale\n}\n', ['Sources/A.swift::f::F1:scale']),
+    ('nested Float width fold', 'func f(_ a: [Float]) -> Float {\n var width: Float = max(1, a[0])\n'
+     ' for x in a.dropFirst() { width = min(width, max(1, x)) }\n return width\n}\n',
+     ['Sources/A.swift::f::F1:width']),
 ]
 
 # Must-PASS fixtures: no site.
@@ -554,6 +557,8 @@ MUST_PASS = [
      ' for x in a { if x > b { out = x } }\n return out\n}\n'),
     ('declarations of fmax-like names', 'extension SIMD4<Float> {\n func pointwiseMax(_ a: Self) -> Self { self }\n}\n'),
     ('parameter clamp by constants', 'func f(_ t: Float) -> Float {\n let c = Swift.max(0, Swift.min(1, t))\n return c\n}\n'),
+    ('nested Int width fold', 'func f(_ a: [Int]) -> Int {\n var width: Int = max(1, a[0])\n'
+     ' for x in a.dropFirst() { width = min(width, max(1, x)) }\n return width\n}\n'),
 ]
 
 
@@ -719,8 +724,9 @@ class RealTree(unittest.TestCase):
             self.assertIn(anchor, sites)
         self.assertGreater(sum(sites.values()), 40)
         # RD14: the Int8 minMax folds, the buffer pool's peak, the tuning `var N_star: Int` (two comparisons) and the
-        # triangular iterator's `private var col = 1` are typed int and excluded.
+        # triangular iterator's `private var col = 1`, and minimumRows' `var width: Int` are typed int and excluded.
         self.assertEqual(sorted(excluded), [
+            'Sources/VectorCore/Operations/ExecutionOperations.swift::ExecutionOperations.minimumRows::F1:width',
             'Sources/VectorCore/Protocols/SIMDStorage.swift::SIMDStorage.minMax::F1:globalMax',
             'Sources/VectorCore/Protocols/SIMDStorage.swift::SIMDStorage.minMax::F1:globalMin',
             'Sources/VectorCore/Providers/AutoTuning.swift::AutoTuning.calculateTuning::F7:N_star',

@@ -108,3 +108,7 @@ Raw evidence: `/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence`.
 Its `archive-inclusion.txt` selects sources, modules/objects, logs and command
 records while excluding build caches. The task report records focused tests,
 warnings, failed attempts and integration checks owned by the coordinator.
+
+Final review added public inherited-default existential checks; see
+[the separate fixture-extension record](final-review-fix.md). Original matrix
+records retain their original fixture scope.

@@ -34,6 +34,10 @@ _R01 = "Scripts/ci/fixtures/compile-contracts/R01MetricScalarContract.swift"
 _R02 = "Scripts/ci/fixtures/compile-contracts/R02CollectionUpdateConsumer.swift"
 _B01 = "Scripts/ci/fixtures/B01BareConformanceNegative.swift"
 CONTRACTS = (
+    {"id": "Collection-inherited-witness", "path": "Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+     "expect": "run", "marker": "COLLECTION_WITNESS_OK"},
+    {"id": "Collection-explicit-witness", "path": "Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+     "define": "EXPLICIT_WITNESS", "expect": "run", "marker": "COLLECTION_WITNESS_OK"},
     {"id": "F008-public-tuning-consumer", "path": "Scripts/ci/fixtures/compile-contracts/F008TuningConsumer.swift",
      "expect": "run", "marker": "F008_PUBLIC_TUNING_OK"},
     {"id": "F001-storage-let-negative", "path": "Scripts/ci/fixtures/compile-contracts/F001StorageLetNegative.swift",

@@ -1,0 +1,400 @@
+{
+  "base": "d448a3e694ea85ba3e6b7ac6a2f3d28cdaedcafc",
+  "evidenceRoot": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence",
+  "qualifiedCompiler": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)",
+  "comparisonCompiler": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)",
+  "cases": [
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/baseline-debug-clients/summary.json",
+      "summarySHA256": "568181ead24d8a98cb2f5a90b48b87d1a28db921683f68738d93c97b628c68d1",
+      "scope": "compile/link/runtime",
+      "results": [
+        {
+          "binarySHA256": "2d89046ced2b9479d30a8e63966f15568898a13237fa31720f5187b7df3b5904",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "fb9aeeac93623b1873d69173cb1f7bb410755e61a6c1e4019624538653622e92",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "binarySHA256": "e6f051d5e3ae411d1330f32db9f4aab7a575b9c3620734612e63c42bcfd93cdb",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "c25b09f6c60a681d126b85233372d34001a85842f7842285ae1257e6efb97195",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    },
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/baseline-release-clients/summary.json",
+      "summarySHA256": "ae1bbe52a77bcee03f820f2749c097d421d054186bc632b1b05aad3e99d4157a",
+      "scope": "compile/link/runtime",
+      "results": [
+        {
+          "compileExit": 1,
+          "mode": "debug",
+          "passed": false,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "ce8d55c8b9a8ab48ecd0739c3d107fcc43f10b9f9fe38a0ae3c4ee913c14c1b7",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "compileExit": 1,
+          "mode": "release",
+          "passed": false,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "12c49e25ec377bc247454607a0a15cdc0f85f71c1b00c99e375be57d8dd6e41d",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    },
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/explicit-read-debug-clients/summary.json",
+      "summarySHA256": "bd431d539f7fbd01336249fd0ca94dcbd6beb07101a487d7e096c9ac7585efab",
+      "scope": "compile/link/runtime",
+      "results": [
+        {
+          "binarySHA256": "0923188a5c2c3155d2718133bf0149bc9393cf184ddefb6822cf391b609caf9b",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "6861d3449fa31b4a7b8886c56725b9e33936e92136bad282925f7771cf28633d",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "binarySHA256": "3e9f8c56b4afa5bf69d1ebb5963afd5165192b88bf34ebbc8ba21dc16e0b41c5",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "e16cb1806f26b27c607fadb214dafee4b61090548c94d9d542d068a5c30ec235",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    },
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/explicit-read-release-clients/summary.json",
+      "summarySHA256": "ce4dffc2290f9d021a586251e26f61c3205012cd35346be2e50f2c1f065b2d65",
+      "scope": "compile/link/runtime",
+      "results": [
+        {
+          "binarySHA256": "f12321e97f9ad143f47a17472b3ebed6c2696949e31a52b99b71a749c1ea1999",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "f6433f25f2cc275e9662e83c8838a2bfbdc2677010d0f5953b356bf701ca1ecb",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "binarySHA256": "fe5cca0c27ef6f2df8fc19bf76ed80e608c5d4bc9c9fdc0aef8e8926400c3994",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "19d99418437af135d27189e9ed4d4a3954050ab8cbf929cc7a63e9691e042604",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    },
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-debug-clients/summary.json",
+      "summarySHA256": "fef9cb9824758e70a680b2acf7b84116f754874da67cc45feb292010c772ff40",
+      "scope": "compile/link/runtime",
+      "results": [
+        {
+          "binarySHA256": "70d42f1817dbbcf2a5b58bb497c922317310789cd55945b731187bfa8949fe1c",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "b5fda66bd92fe7e4ec71ac770dce857af75054c6105d9aa9725674174411595f",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "binarySHA256": "d73d3a9992b3acd58c2f1d121b58ce8825f337431bdbecd6ff942a10220f77e2",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "f33a18a4fc16bbabe29727ed453722f8d248a3a6c2ff84894100e0121115b5de",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    },
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-release-clients/summary.json",
+      "summarySHA256": "a4bdcbb6c16056f8416e0409d60b9295814574520661560e62ee9a475d73b979",
+      "scope": "compile/link/runtime",
+      "results": [
+        {
+          "binarySHA256": "13badece7df5f796b6ef70c735d29535a718867fa378a8cedbbadd801d9ee7aa",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "f87724ef31ac4ebaa935f1242e48122a49a75686a60ab4b5095f5c3762395774",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "binarySHA256": "8109e4afd9cea6cad189fc2225ed276c5d89d0bf2c9ecc31859a928bd78cd92a",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "d06e4644211d9cb45c66e30233512cc75100ca5c207c36d22fa3efb277351005",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    },
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/summary.json",
+      "summarySHA256": "7d521cf0d202df2b161bf6abf2034816e9459ee5091f469cfdf2e6c307cd67ff",
+      "scope": "compile only",
+      "results": [
+        {
+          "argv": [
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "--version"
+          ],
+          "elapsedSeconds": 0.1322084590792656,
+          "exit": 0,
+          "status": "completed",
+          "timeout": false
+        },
+        {
+          "argv": [
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "-swift-version",
+            "6",
+            "-target",
+            "arm64-apple-macosx14.0",
+            "-sdk",
+            "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+            "-module-cache-path",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/module-cache",
+            "-Onone",
+            "-Xcc",
+            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-Xcc",
+            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "-parse-as-library",
+            "-module-name",
+            "WitnessProbe",
+            "-c",
+            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "-o",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/inherited.o"
+          ],
+          "elapsedSeconds": 2.408962417044677,
+          "exit": 0,
+          "status": "completed",
+          "timeout": false
+        },
+        {
+          "argv": [
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "-swift-version",
+            "6",
+            "-target",
+            "arm64-apple-macosx14.0",
+            "-sdk",
+            "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+            "-module-cache-path",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/module-cache",
+            "-Onone",
+            "-Xcc",
+            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-Xcc",
+            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "-parse-as-library",
+            "-module-name",
+            "WitnessProbe",
+            "-D",
+            "EXPLICIT_WITNESS",
+            "-c",
+            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "-o",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/explicit.o"
+          ],
+          "elapsedSeconds": 0.2957497499883175,
+          "exit": 0,
+          "status": "completed",
+          "timeout": false
+        }
+      ]
+    },
+    {
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/summary.json",
+      "summarySHA256": "0e4635bdd30b3ab34797d9efa7375dc6982c379c5bba75c6a74ccde7f055846c",
+      "scope": "compile only",
+      "results": [
+        {
+          "argv": [
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "--version"
+          ],
+          "elapsedSeconds": 0.1315756250405684,
+          "exit": 0,
+          "status": "completed",
+          "timeout": false
+        },
+        {
+          "argv": [
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "-swift-version",
+            "6",
+            "-target",
+            "arm64-apple-macosx14.0",
+            "-sdk",
+            "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+            "-module-cache-path",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/module-cache",
+            "-O",
+            "-Xcc",
+            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-Xcc",
+            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "-parse-as-library",
+            "-module-name",
+            "WitnessProbe",
+            "-c",
+            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "-o",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/inherited.o"
+          ],
+          "elapsedSeconds": 2.5485292080556974,
+          "exit": 0,
+          "status": "completed",
+          "timeout": false
+        },
+        {
+          "argv": [
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "-swift-version",
+            "6",
+            "-target",
+            "arm64-apple-macosx14.0",
+            "-sdk",
+            "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+            "-module-cache-path",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/module-cache",
+            "-O",
+            "-Xcc",
+            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-Xcc",
+            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "-parse-as-library",
+            "-module-name",
+            "WitnessProbe",
+            "-D",
+            "EXPLICIT_WITNESS",
+            "-c",
+            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "-o",
+            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/explicit.o"
+          ],
+          "elapsedSeconds": 0.3514150839764625,
+          "exit": 0,
+          "status": "completed",
+          "timeout": false
+        }
+      ]
+    }
+  ]
+}

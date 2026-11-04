@@ -77,4 +77,4 @@
 
 Local qualification evidence and the narrow sanitizer launcher repair are complete at `0ecf6bd392e91b49cb5c7529fea8160d1410e107`; all 387 package inputs are unchanged. Full integrated Python discovery passed 594 tests. All task/final local-batch reviews approved; inherited warnings remain. Full Swift6.0 suites, hosted candidate CI and the Xcode27.2 numerical failure remain explicit open release gates. See `Docs/reviews/2026-11-04-release-qualification/README.md`.
 
-- [ ] After publication approval, push the final reviewed candidate to `codex/qualification-0.4.0-2026-11-04`, dispatch `ci.yml`, and verify the exact returned run SHA and required job results.
+- [ ] Execute the approved hosted qualification step: push the final reviewed candidate to `codex/qualification-0.4.0-2026-11-04`, dispatch `ci.yml`, and verify the exact returned run SHA and required job results.

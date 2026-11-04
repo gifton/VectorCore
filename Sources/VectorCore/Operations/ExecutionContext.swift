@@ -20,7 +20,8 @@ public protocol ExecutionContext: Sendable {
     /// Maximum number of concurrent threads/operations
     var maxThreadCount: Int { get }
 
-    /// Preferred chunk size for parallel operations
+    /// Preferred work granularity in Float scalar elements.
+    /// Row-based operations convert this hint to a positive number of rows (AutomaticRowSchedulingTests).
     var preferredChunkSize: Int { get }
 
     /// Execute work within this context

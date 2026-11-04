@@ -37,8 +37,11 @@ extension ExecutionOperations {
         _ vectors: [V],
         context: any ExecutionContext = CPUContext.automatic
     ) async throws -> [V] where V.Scalar == Float {
-        try await BoundedExecution.map(0..<vectors.count, limit: context.maxThreadCount,
-            parallel: vectors.count >= parallelThreshold, minimum: context.preferredChunkSize,
+        let limit = context.maxThreadCount
+        try BoundedExecution.validate(limit: limit)
+        let minimum = try minimumRows(vectors, preferredElements: context.preferredChunkSize)
+        return try await BoundedExecution.map(0..<vectors.count, limit: limit,
+            parallel: vectors.count >= parallelThreshold, minimum: minimum,
             phase: "transform.normalize") { index in
             let output = NormalizationCore.permissive(vectors[index].toArray())
             return try V.create(from: output)

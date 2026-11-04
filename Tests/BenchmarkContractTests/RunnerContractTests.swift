@@ -94,11 +94,12 @@ final class BenchmarkRunnerContractTests: XCTestCase {
             let argv = try JSONDecoder().decode([String].self, from: Data(command.utf8))
                 .map { $0 == "@OWNER_PID@" ? String(getpid()) : $0 }
             if env["METADATA_TEST_IGNORED_SIGNALS"] == "1" {
-                signal(SIGTERM, SIG_IGN)
-                signal(SIGINT, SIG_IGN)
                 var mask = sigset_t()
                 sigemptyset(&mask)
-                sigaddset(&mask, SIGTERM)
+                for number in [SIGINT, SIGQUIT, SIGTERM] {
+                    signal(number, SIG_IGN)
+                    sigaddset(&mask, number)
+                }
                 pthread_sigmask(SIG_BLOCK, &mask, nil)
             }
             if let value = env["METADATA_TEST_LOADER_VALUE"] {
@@ -446,7 +447,9 @@ final class BenchmarkRunnerContractTests: XCTestCase {
             (["/usr/bin/printf", "%s", literal], literal),
             (["/usr/bin/false"], nil),
             (["printf", "must-not-resolve-a-shell-builtin"], nil),
-            (["/bin/sh", "-c", "kill -TERM $$; printf signal-was-ignored"], nil),
+            (["/bin/sh", "-c", "kill -INT $$; printf SIGINT-was-ignored"], nil),
+            (["/bin/sh", "-c", "kill -QUIT $$; printf SIGQUIT-was-ignored"], nil),
+            (["/bin/sh", "-c", "kill -TERM $$; printf SIGTERM-was-ignored"], nil),
             (["/bin/sleep", "30"], nil),
             (["/bin/sh", "-c", "printf partial; exit 7"], nil),
             (["/bin/sh", "-c", "/usr/bin/head -c 100000 /dev/zero"], nil),

@@ -32,9 +32,9 @@ enum MetadataProcess {
         shift 2
     done
     shift
-    "$@" 3>&- &
-    child=$!
-    wait "$child"
+    # Foreground launch preserves SIGINT/SIGQUIT defaults; an asynchronous job ignores them.
+    # Covered by testMetadataOutputAndArgumentBoundaries; the independent timer still owns timeout.
+    "$@" 3>&-
     result=$?
     printf '%s\n' "$result" >&3
     exit "$result"

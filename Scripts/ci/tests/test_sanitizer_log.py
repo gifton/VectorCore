@@ -49,5 +49,65 @@ class VerifyBodyTests(unittest.TestCase):
                 verify_body(row, log)
 
 
+class DirectSanitizerHostTests(unittest.TestCase):
+    """Direct host launch preserves the manifest selection and loader environment."""
+
+    def test_direct_host_configuration_preserves_body_filters_and_sanitizer_options(self):
+        import tempfile
+        import check_sanitizers as driver
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            toolchain, platform = root / 'toolchain/usr', root / 'MacOSX.platform'
+            host = toolchain / 'libexec/swift/pm/swiftpm-testing-helper'
+            swift = toolchain / 'bin/swift'
+            for file in (host, swift):
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.touch()
+            for sanitizer, short in [('address', 'asan'), ('thread', 'tsan')]:
+                runtime = toolchain / ('lib/clang/21/lib/darwin/libclang_rt.' + short + '_osx_dynamic.dylib')
+                runtime.parent.mkdir(parents=True, exist_ok=True)
+                runtime.touch()
+                original = {'ASAN_OPTIONS': 'detect_leaks=0:halt_on_error=1',
+                            'TSAN_OPTIONS': 'halt_on_error=1', 'Q03_TSAN': '1', 'PATH': '/bin'}
+                selected_host, selected_runtime, environment = driver.sanitizer_host_environment(
+                    swift, platform, sanitizer, original)
+                self.assertEqual(selected_host, host)
+                self.assertEqual(selected_runtime, runtime)
+                self.assertEqual(environment['DYLD_INSERT_LIBRARIES'], str(runtime))
+                self.assertEqual(environment['DYLD_PRINT_LIBRARIES'], '1')
+                self.assertIn(str(toolchain / 'lib/swift/macosx/testing'), environment['DYLD_LIBRARY_PATH'].split(':'))
+                self.assertIn(str(platform / 'Developer/usr/lib'), environment['DYLD_LIBRARY_PATH'].split(':'))
+                self.assertEqual(environment['DYLD_FRAMEWORK_PATH'], str(platform / 'Developer/Library/Frameworks'))
+                for key, value in original.items():
+                    self.assertEqual(environment[key], value)
+                self.assertNotIn('DYLD_INSERT_LIBRARIES', original)
+                rows = driver.sanitizer_manifest(driver.ROOT)['sanitizers'][sanitizer]
+                for row in rows:
+                    bundle = root / 'a bundle.xctest/Contents/MacOS/bundle'
+                    command = driver.sanitizer_test_command(host, bundle, row['filter'])
+                    self.assertEqual(command, [str(host), '--test-bundle-path', str(bundle), '--filter',
+                                               row['filter'], str(bundle), '--testing-library', 'swift-testing'])
+
+    def test_missing_or_ambiguous_runtime_is_rejected(self):
+        import tempfile
+        import check_sanitizers as driver
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            swift = root / 'usr/bin/swift'
+            swift.parent.mkdir(parents=True)
+            swift.touch()
+            host = root / 'usr/libexec/swift/pm/swiftpm-testing-helper'
+            host.parent.mkdir(parents=True)
+            host.touch()
+            with self.assertRaisesRegex(ValueError, 'exactly one.*runtime'):
+                driver.sanitizer_host_environment(swift, root / 'platform', 'address', {})
+            for version in ['20', '21']:
+                runtime = root / ('usr/lib/clang/' + version + '/lib/darwin/libclang_rt.asan_osx_dynamic.dylib')
+                runtime.parent.mkdir(parents=True)
+                runtime.touch()
+            with self.assertRaisesRegex(ValueError, 'exactly one.*runtime'):
+                driver.sanitizer_host_environment(swift, root / 'platform', 'address', {})
+
+
 if __name__ == '__main__':
     unittest.main()

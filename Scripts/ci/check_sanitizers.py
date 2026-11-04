@@ -21,6 +21,32 @@ Q03_MARKERS = ['Q03_BODY_BEGIN concurrency', 'Q03_WORKERS_JOINED completedLoops=
                'Q03_STABLE_TOTALS_JOINED', 'Q03_ATOMIC_BATCHES_JOINED', 'Q03_RESULT concurrency', 'Q03_BODY_END concurrency']
 
 
+def sanitizer_host_environment(swift, platform, sanitizer, environment):
+    """Select one toolchain runtime and the direct helper (DirectSanitizerHostTests)."""
+    toolchain = Path(swift).resolve().parents[1]
+    host = toolchain / 'libexec/swift/pm/swiftpm-testing-helper'
+    if not host.is_file():
+        raise ValueError('SwiftPM test host is unavailable')
+    short = {'address': 'asan', 'thread': 'tsan'}[sanitizer]
+    runtimes = sorted((toolchain / 'lib/clang').glob('*/lib/darwin/libclang_rt.' + short + '_osx_dynamic.dylib'))
+    if len(runtimes) != 1:
+        raise ValueError('Expected exactly one selected-toolchain sanitizer runtime: ' + str(runtimes))
+    child = dict(environment)
+    child['DYLD_INSERT_LIBRARIES'] = str(runtimes[0])
+    child['DYLD_PRINT_LIBRARIES'] = '1'
+    # The aggregate bundle also imports XCTest; both Testing and XCTest support libraries
+    # must be discoverable when the helper is invoked without SwiftPM's launcher.
+    child['DYLD_LIBRARY_PATH'] = ':'.join(map(str, [toolchain / 'lib/swift/macosx/testing',
+        toolchain / 'lib/swift/macosx', Path(platform) / 'Developer/usr/lib']))
+    child['DYLD_FRAMEWORK_PATH'] = str(Path(platform) / 'Developer/Library/Frameworks')
+    return host, runtimes[0], child
+
+
+def sanitizer_test_command(host, bundle, selector):
+    return list(map(str, [host, '--test-bundle-path', bundle, '--filter', selector,
+                          bundle, '--testing-library', 'swift-testing']))
+
+
 def verify_body(row, log):
     label = row['displayName']
     rendered = label if label.endswith('()') else '"' + label + '"'
@@ -85,29 +111,27 @@ def main():
     bundles = find_test_bundles(bin_path, targets.values())
     artifacts = retain_artifacts(scratch, output / 'artifacts')
     write_json(output / 'artifacts.json', artifacts)
-    swift = Path(swift_path).resolve()
-    # Observed on Swift 6.4 / Xcode 27 (v5 evidence): 0 dyld lines via /usr/bin/swift vs 6045 via the xcrun-resolved
-    # swift with DYLD_PRINT_LIBRARIES=1; unverified elsewhere. All invocations use the xcrun-resolved binary.
-    host = swift.parents[1] / 'libexec/swift/pm/swiftpm-testing-helper'
-    if not host.is_file():
-        raise ValueError('SwiftPM test host is unavailable')
+    _, platform = run(['xcrun', '--sdk', 'macosx', '--show-sdk-platform-path'], output, 'find-platform',
+                      cwd=ROOT, environment=env, timeout=60)
+    # Signed Swift.org 6.4.2 launchers strip DYLD_PRINT_LIBRARIES before the host starts
+    # (Docs/reviews/2026-11-04-release-qualification/sanitizers.md). Execute that same helper
+    # directly with the pinned bundle/filter and explicit runtime, retaining image proof below.
+    host, runtime, env = sanitizer_host_environment(swift_path, platform.strip(), args.sanitizer, env)
     shutil.copy2(host, output / host.name)
-    env['DYLD_PRINT_LIBRARIES'] = '1'
     if args.sanitizer == 'thread':
         env['Q03_TSAN'] = '1'
         env['Q03_CHILD_LOG_DIR'] = str(output)
     completed = []
     for index, row in enumerate(rows):
         bundle = bundles[targets[row['id']]]
-        _, log = run([swift_path, 'test', '--skip-build', '--disable-xctest', *flags, '--filter', row['filter'], '--verbose'],
+        _, log = run(sanitizer_test_command(host, bundle, row['filter']),
                      output, f'body-{index:03d}', cwd=ROOT, environment=env, timeout=row['deadlineSeconds'])
         verify_body(row, log)
         check_no_rebuild(log, row['id'])
         # dyld reports actual loaded image paths; these are separate from the swift launcher.
         if str(host) not in log or not in_log(bundle, log):
             raise ValueError('Actual SwiftPM host/loaded bundle image evidence missing')
-        runtime = 'libclang_rt.' + ('asan' if args.sanitizer == 'address' else 'tsan')
-        if runtime not in log:
+        if not in_log(runtime, log):
             raise ValueError('Actual sanitizer image missing')
         completed.append({'id': row['id'], 'target': targets[row['id']], 'command': f'body-{index:03d}.json', 'kind': row['kind']})
     # The Q03 parent runs in its row's bundle; the child must report that bundle's identity.
@@ -118,6 +142,7 @@ def main():
     write_json(output / 'result.json', {'sanitizer': args.sanitizer, 'completed': completed,
                'manifestSHA256': sha(ROOT / 'Scripts/ci/sanitizer_bodies.json'), 'host': str(host), 'hostSHA256': sha(host),
                'buildSystem': args.swift_build_system or 'toolchain default', 'binPath': str(bin_path),
+               'runtime': str(runtime), 'runtimeSHA256': sha(runtime), 'testLaunch': 'direct SwiftPM helper',
                'loadedBundles': {t: {'path': str(b), 'sha256': sha(b)} for t, b in bundles.items()}, 'q03Child': q03,
                'leakDetection': False, 'scope': 'Pinned valid bodies only; no whole-suite or hosted-CI claim.'})
     print('V03_SANITIZERS_COMPLETE', args.sanitizer, len(completed))

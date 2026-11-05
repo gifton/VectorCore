@@ -68,7 +68,7 @@ enum Boundaries {
         .init(family: "dot",
               file: "Suites/DotProductBench.swift",
               symbols: ["catalog"],
-              sha256: "d3eb21ca41deceeaf59f550873c06d13328ecb138f0ab6b0bc6569d41cfd1992"),
+              sha256: "ed203803b2587fb340bb781fbc90ec18c3fe841e01265dbeb0dd4ec20651c36d"),
         .init(family: "distance",
               file: "Suites/DistanceBench.swift",
               symbols: ["catalog", "catalog512", "catalog768", "catalog1536"],
@@ -76,7 +76,7 @@ enum Boundaries {
         .init(family: "normalize",
               file: "Suites/NormalizationBench.swift",
               symbols: ["catalog", "catalog512", "catalog768", "catalog1536"],
-              sha256: "dbe7948200595fb1609c05817ca0fabf61ed85caa1f87abf0787a60a71f601e3"),
+              sha256: "c3f766c8871b36bd00d557d3312f6ebeafe48dc5473232ecfe43d9ed70eb371b"),
         .init(family: "noop",
               file: "Suites/NoopBench.swift",
               symbols: ["catalog"],
@@ -88,7 +88,7 @@ enum Boundaries {
         .init(family: "memory",
               file: "Suites/MemoryBench.swift",
               symbols: ["catalog", "alignedAllocate", "alignedRelease"],
-              sha256: "081006cf564ee7550dbbdb6b81311da51907744bb4fcad18336aeffc80a3fe5a"),
+              sha256: "ff58a6f15486b6609c96a03a878fccb2bf4793e1c937610fee5453df07c7d645"),
         .init(family: "boundary",
               file: "Suites/BoundaryBench.swift",
               symbols: ["catalog", "caseName", "matrixConsumerName", "runMeasured", "validated", "validatedMatrix", "entries", "d512",
@@ -345,9 +345,9 @@ enum Boundaries {
             provider: nil, workUnit: "invocation", unitsPerInvocation: 1,
             inputRepresentation: "fp32-vector-pair:\(type)", outputRepresentation: "scalar:Float",
             fixture: fixture(id: "V02-dot-pair", dimension: dim, count: 2, seeds: ["a": String(seeds.a), "b": String(seeds.b)]),
-            inclusions: inclusions(internalAllocation: probe?.value ?? .unverified, validation: .notApplicable),
+            inclusions: inclusions(internalAllocation: probe?.value ?? .unverified),
             consumer: "scalar-sink-v1",
-            notes: ["No out-of-band validation exists for this case (correctnessValidation is notApplicable).",
+            notes: ["A separate dot output is compared with a Double product-and-sum reference after measurement.",
                     probe?.note
                         ?? "Whether the library call allocates is not established from the benchmark source (routeInternalAllocation "
                         + "unverified)."])
@@ -389,12 +389,13 @@ enum Boundaries {
             outputRepresentation: success ? "fp32-vector:\(type) (unit vector, new value)" : "error-outcome:normalization failure",
             fixture: fixture(id: success ? "V02-normalize-constant-2" : "V02-normalize-zero", dimension: dim, count: 1,
                 values: success ? "constant 2.0" : "constant 0.0"),
-            inclusions: inclusions(internalAllocation: probe?.value ?? .unverified, validation: .notApplicable),
+            inclusions: inclusions(internalAllocation: probe?.value ?? .unverified),
             consumer: success ? "u64-bitfold-sink-v1" : "error-outcome-sink-v1",
             notes: (success
                 ? ["The consumer folds every coordinate of the produced unit vector."]
                 : ["The produced result is the failure outcome; the consumer observes that outcome, so it is fully consumed."])
-                + ["No out-of-band validation exists for this case (correctnessValidation is notApplicable).",
+                + [success ? "A separate normalized output is compared coordinate by coordinate with a Double norm reference after measurement."
+                    : "A separate result must fail with invalidOperation for the all-zero input after measurement.",
                    probe?.note ?? (success ? "Result storage allocation is likely but not established from the benchmark source "
                        + "(routeInternalAllocation unverified)."
                            : "Whether constructing the failure value allocates is not established from the benchmark source "
@@ -739,10 +740,12 @@ enum Boundaries {
                 timingScope: .reusedInput, operation: "memory.aligned-copy", route: "alignedCopy(from:to:count:preferredAlignment:)",
                     provider: nil,
                 workUnit: "element", unitsPerInvocation: count, inputRepresentation: "aligned float buffer (count elements)",
-                outputRepresentation: "aligned float buffer (caller-owned, reused)", fixture: sizes,
+                outputRepresentation: "aligned float buffer (caller-owned, reused)",
+                fixture: fixture(id: "V04-memory-copy-index-pattern", dimension: dim, count: count,
+                    values: "source[i] = Float(i % 257 - 128) / 256; destination initially 0"),
                 inclusions: inclusions(callerOutput: .excluded, internalAllocation: probe?.value ?? .unverified,
-                    consumption: .notApplicable, validation: .notApplicable),
-                consumer: retention, notes: [limitation, noValidation]
+                    consumption: .notApplicable),
+                consumer: retention, notes: [limitation, "Every destination bit pattern is compared with its source after measurement; mismatches are invalid comparisons."]
                     + (probe.map { ["Source and destination buffers are allocated outside timing.", $0.note] }
                         ?? ["Source and destination buffers are allocated outside timing; allocation inside alignedCopy is not established "
                             + "(routeInternalAllocation unverified)."]))

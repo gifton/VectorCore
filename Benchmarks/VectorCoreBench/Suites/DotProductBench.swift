@@ -12,8 +12,9 @@ struct DotProductBench: BenchmarkSuite {
                 let a = try Vector<Dim512>(InputFactory.randomArray(count: 512, seed: seeds.a))
                 let b = try Vector<Dim512>(InputFactory.randomArray(count: 512, seed: seeds.b))
                 try Harness.warmup { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
-                return [try Harness.measure(name: "dot.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
-                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }]
+                let result = try Harness.measure(name: "dot.512.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
+                return [result.validated(Correctness.dot(current: a.dotProduct(b), a: a.toArray(), b: b.toArray()))]
             })
         }
         if options.dims.contains(512) {
@@ -22,8 +23,9 @@ struct DotProductBench: BenchmarkSuite {
                 let a = try Vector512Optimized(InputFactory.randomArray(count: 512, seed: seeds.a))
                 let b = try Vector512Optimized(InputFactory.randomArray(count: 512, seed: seeds.b))
                 try Harness.warmup { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
-                return [try Harness.measure(name: "dot.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
-                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }]
+                let result = try Harness.measure(name: "dot.512.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
+                return [result.validated(Correctness.dot(current: a.dotProduct(b), a: a.toArray(), b: b.toArray()))]
             })
         }
         if options.dims.contains(768) {
@@ -32,8 +34,9 @@ struct DotProductBench: BenchmarkSuite {
                 let a = try Vector<Dim768>(InputFactory.randomArray(count: 768, seed: seeds.a))
                 let b = try Vector<Dim768>(InputFactory.randomArray(count: 768, seed: seeds.b))
                 try Harness.warmup { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
-                return [try Harness.measure(name: "dot.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
-                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }]
+                let result = try Harness.measure(name: "dot.768.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
+                return [result.validated(Correctness.dot(current: a.dotProduct(b), a: a.toArray(), b: b.toArray()))]
             })
         }
         if options.dims.contains(768) {
@@ -42,8 +45,9 @@ struct DotProductBench: BenchmarkSuite {
                 let a = try Vector768Optimized(InputFactory.randomArray(count: 768, seed: seeds.a))
                 let b = try Vector768Optimized(InputFactory.randomArray(count: 768, seed: seeds.b))
                 try Harness.warmup { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
-                return [try Harness.measure(name: "dot.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
-                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }]
+                let result = try Harness.measure(name: "dot.768.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
+                return [result.validated(Correctness.dot(current: a.dotProduct(b), a: a.toArray(), b: b.toArray()))]
             })
         }
         if options.dims.contains(1536) {
@@ -52,8 +56,9 @@ struct DotProductBench: BenchmarkSuite {
                 let a = try Vector<Dim1536>(InputFactory.randomArray(count: 1536, seed: seeds.a))
                 let b = try Vector<Dim1536>(InputFactory.randomArray(count: 1536, seed: seeds.b))
                 try Harness.warmup { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
-                return [try Harness.measure(name: "dot.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
-                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }]
+                let result = try Harness.measure(name: "dot.1536.generic", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
+                return [result.validated(Correctness.dot(current: a.dotProduct(b), a: a.toArray(), b: b.toArray()))]
             })
         }
         if options.dims.contains(1536) {
@@ -62,8 +67,9 @@ struct DotProductBench: BenchmarkSuite {
                 let a = try Vector1536Optimized(InputFactory.randomArray(count: 1536, seed: seeds.a))
                 let b = try Vector1536Optimized(InputFactory.randomArray(count: 1536, seed: seeds.b))
                 try Harness.warmup { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
-                return [try Harness.measure(name: "dot.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
-                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }]
+                let result = try Harness.measure(name: "dot.1536.optimized", minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                    samples: options.samples) { withExtendedLifetime((a, b)) { blackHole(a.dotProduct(b)) } }
+                return [result.validated(Correctness.dot(current: a.dotProduct(b), a: a.toArray(), b: b.toArray()))]
             })
         }
         return cases

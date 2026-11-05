@@ -131,6 +131,31 @@ def reporting_contracts(helper, root):
         raise AssertionError(result)
 
 
+def repaired_observation_contracts(helper, root, binary):
+    """Every generic/optimized width and copy fixture must produce independent strict evidence."""
+    path = root / "repaired-family-report.json"
+    helper.run([binary, "--suites", "dot,normalize,memory", "--dims", "512,768,1536", "--no-ab",
+                "--filter", "dot.*,normalize.*,mem.copy.*", "--repeats", "1", "--samples", "2",
+                "--strict-correctness", "--format", "json", "--out", path], root, "repaired-families", timeout=30)
+    report = json.loads(path.read_text())
+    expected = {f"dot.{dim}.{variant}": 1 for dim in [512, 768, 1536] for variant in ["generic", "optimized"]}
+    expected.update({f"normalize.{outcome}.{dim}.{variant}": dim if outcome == "success" else 1
+                     for dim in [512, 768, 1536] for outcome in ["success", "zeroFail"] for variant in ["generic", "optimized"]})
+    expected.update({f"mem.copy.{dim}": dim * 1024 for dim in [512, 768, 1536]})
+    rows = report["results"]
+    if report["failures"] or len(rows) != len(expected) or {row["name"] for row in rows} != set(expected):
+        raise AssertionError(report)
+    for row in rows:
+        observation = row["correctness"]
+        if not (observation["status"] == "valid" and observation["samples"] == expected[row["name"]]
+                and row["boundary"]["inclusions"]["correctnessValidation"] == "excluded"
+                and len(row["sampleNsPerInvocation"]) == 2 and len(row["sampleIterations"]) == 2):
+            raise AssertionError(row)
+        if row["name"].startswith("mem.copy.") and observation["maxAbsError"] != 0:
+            raise AssertionError(row)
+    return len(rows)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -188,6 +213,7 @@ def main():
     product_reports = [root / ("product-" + side + ".json") for side in ("before", "after")]
     for path in product_reports:
         run(product_command + ["--samples", "2", "--strict-correctness", "--format", "json", "--out", str(path)], 0)
+    repaired = repaired_observation_contracts(helper, root, binary)
     comparisons = comparator_contracts(helper, root, product_reports)
     reporting_contracts(helper, root)
     # Mechanical family guard: every provider await in BatchBench propagates throws;
@@ -204,7 +230,7 @@ def main():
         raise AssertionError
     print(f"PASS: 10 invalid threshold configurations, JSON/CSV write failures, finite strict real benchmark with its configuration banner, "
           f"2 rejected --ab-only suite lists, {comparisons} comparator invocations (README, configuration, actual-product controls), "
-          f"executed current-schema reporting table, "
+          f"{repaired} repaired-family strict observations, executed current-schema reporting table, "
           f"28 provider calls / 14 case boundaries. Artifacts: {root}")
 
 

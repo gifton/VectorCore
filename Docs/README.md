@@ -22,6 +22,8 @@ unreleased commits.
 | [Roadmap](ROADMAP.md) | Current documentation priority and explicitly proposed future directions |
 | [Contributing](../CONTRIBUTING.md) | Development, verification, performance evidence, and support policy |
 | [Maintaining and forks](Maintaining.md) | Review, release, and repository-policy maintenance |
+| [Configured CI contracts](executed-ci-contracts.md) | Required commands, selected workloads, and execution limits |
+| [Benchmark measurement boundaries](Benchmark_Measurement_Boundaries.md) | Report identity, timed work, comparison rules, and provenance limits |
 | [Security reporting](../SECURITY.md) / [Code of Conduct](../CODE_OF_CONDUCT.md) | Private reporting and community expectations |
 
 The [source](../Sources/VectorCore/) defines exact signatures.

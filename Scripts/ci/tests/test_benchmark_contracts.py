@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """CLI process contracts; pass the actual built vectorcore-bench executable."""
 import json
+import copy
 import os
 from pathlib import Path
 import subprocess
@@ -22,7 +23,7 @@ def load_reporting():
     return module
 
 
-def comparator_contracts(helper, root):
+def comparator_contracts(helper, root, product_reports=()):
     """PR #56 review SW4-5 and BM5: the baselines README's two comparator lines run against the stored files (each file as
     its own current run), the two former forms exit 2, and the comparator observes both reports' build configurations and
     prints a WARN line for every side that is not a release build."""
@@ -92,7 +93,42 @@ def comparator_contracts(helper, root):
     # Legacy (schema 2) reports carry buildConfiguration only; it is flagged the same way.
     compare(pair("legacy", report(legacy="debug"), report(legacy="debug")) + ["--allow-incompatible"], 0,
             present=("WARN baseline.buildConfiguration=debug", "WARN current.buildConfiguration=debug"))
+    if product_reports:
+        actual_before, actual_after = [json.loads(path.read_text()) for path in product_reports]
+        for actual in (actual_before, actual_after):
+            if not (actual["metadata"]["schemaVersion"] == 3 and len(actual["results"]) == 2 and not actual["failures"]
+                    and all(row["correctness"]["status"] == "valid" for row in actual["results"])):
+                raise AssertionError(actual)
+        # Self-comparison proves a successful current-schema execution without host timing assumptions.
+        compare(["--baseline", product_reports[0], "--current", product_reports[0], "--per-unit"], 0,
+                present=("Compared 2 cases; metric=median; per-unit=true; regressions=0",))
+        # A distinct actual run may regress on a loaded host; retain that exit, never accept it as performance evidence.
+        compare(["--baseline", product_reports[0], "--current", product_reports[1], "--per-unit"], (0, 1),
+                present=("Compared 2 cases; metric=median; per-unit=true;",))
+        for side in (0, 1):
+            for label, mutate, expected, fragment in [
+                ("identity", lambda r: r["metadata"].__setitem__("arch", "incompatible-control"), 2, "Metadata mismatch: arch"),
+                ("missing", lambda r: r["results"].pop(), 1, "Missing in"),
+                ("numeric", lambda r: r["results"][0].__setitem__("medianNsPerOp", -1), 2, "Invalid or missing numeric field"),
+                ("failure", lambda r: r["failures"].append({"name": "control", "reason": "injected failure"}), 2, "Execution/correctness failures"),
+            ]:
+                # Start from one report on both sides: missing-case exit 1 cannot be a timing regression.
+                reports = [copy.deepcopy(actual_before), copy.deepcopy(actual_before)]
+                mutate(reports[side])
+                compare(pair(f"product-{label}-{side}", *reports), expected, present=(fragment,))
     return counter
+
+
+def reporting_contracts(helper, root):
+    """Execute the standalone reporting table; import-safe unittest discovery alone does not run it."""
+    output = root / "reporting"
+    text = helper.run([sys.executable, "-B", Path(__file__).with_name("test_benchmark_reporting.py"), "--output", output],
+                      root, "reporting-contracts", timeout=300)
+    if "V02_REPORTING_COMPLETE" not in text:
+        raise AssertionError("Reporting driver did not complete: " + text)
+    result = json.loads((output / "result.json").read_text())
+    if not (result["marker"] == "V02_REPORTING_COMPLETE" and len(result["cases"]) > 1):
+        raise AssertionError(result)
 
 
 def main():
@@ -147,7 +183,13 @@ def main():
         result = run([binary, *arguments], 1)
         if not ("--ab-only" in result.stderr and "Unsupported dimension" not in result.stderr):
             raise AssertionError(result.stderr)
-    comparisons = comparator_contracts(helper, root)
+    product_command = list(base)
+    product_command[-1] = "batch.euclidean2.512.N2.generic.sequential,batch.euclidean2.512.N2.optimized.sequential"
+    product_reports = [root / ("product-" + side + ".json") for side in ("before", "after")]
+    for path in product_reports:
+        run(product_command + ["--samples", "2", "--strict-correctness", "--format", "json", "--out", str(path)], 0)
+    comparisons = comparator_contracts(helper, root, product_reports)
+    reporting_contracts(helper, root)
     # Mechanical family guard: every provider await in BatchBench propagates throws;
     # the shared case boundary is exercised by the Swift process table.
     source = (Path(__file__).resolve().parents[3] / "Benchmarks/VectorCoreBench/Suites/BatchBench.swift").read_text()
@@ -161,7 +203,8 @@ def main():
     if not (source.count("observations.observe(observedValue)") == 28):
         raise AssertionError
     print(f"PASS: 10 invalid threshold configurations, JSON/CSV write failures, finite strict real benchmark with its configuration banner, "
-          f"2 rejected --ab-only suite lists, {comparisons} comparator invocations (README lines, former forms, configuration warnings), "
+          f"2 rejected --ab-only suite lists, {comparisons} comparator invocations (README, configuration, actual-product controls), "
+          f"executed current-schema reporting table, "
           f"28 provider calls / 14 case boundaries. Artifacts: {root}")
 
 

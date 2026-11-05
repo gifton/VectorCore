@@ -1,4 +1,4 @@
-"""Bounded content-validation fixtures for the two Python benchmark drivers; no Swift build."""
+"""Bounded content-validation fixtures for the Python benchmark drivers; no Swift build."""
 import ast
 import importlib.util
 import json
@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 DRIVERS = (HERE.parent / 'check_benchmark_build_modes.py', HERE / 'test_benchmark_contracts.py')
+REPORTING = HERE / 'test_benchmark_reporting.py'
 
 
 def load(path):
@@ -73,6 +74,12 @@ def probe_contracts(case, root):
         if name.startswith('compare-'):
             (directory / (name + '.stderr')).write_text('')
             return ''  # Required comparator log fragments are deliberately absent.
+        if Path(str(argv[0])).name.startswith('python'):
+            if case == 'reporting-log':
+                return ''  # Required reporting completion evidence is deliberately absent.
+            output = Path(argv[-1]); output.mkdir()
+            (output / 'result.json').write_text(json.dumps({'marker': 'V02_REPORTING_COMPLETE', 'cases': [{}, {}]}))
+            return 'V02_REPORTING_COMPLETE 2'
         stderr = 'finite invalid threshold' if case != 'command' else 'unrelated diagnostic'
         if '--format' in argv:
             if '--strict-correctness' in argv:
@@ -100,6 +107,20 @@ def probe_contracts(case, root):
         contracts.main()
 
 
+def probe_reporting(case, root):
+    reporting = load(REPORTING)
+
+    def run(argv, directory, name, **kwargs):
+        if name == 'compile':
+            Path(argv[-1]).write_text('synthetic comparator')
+        # The first regression comparison must print its hand-derived delta.
+        return ''
+
+    with patch.object(reporting.helper, 'run', run), \
+         patch.object(sys, 'argv', ['reporting', '--output', str(root / 'reporting')]):
+        reporting.main()
+
+
 class BenchmarkGateDurability(unittest.TestCase):
     def run_probe(self, driver, case, optimization):
         return subprocess.run([sys.executable, '-B', *optimization, str(Path(__file__).resolve()),
@@ -107,7 +128,8 @@ class BenchmarkGateDurability(unittest.TestCase):
 
     def test_negative_command_log_and_report_fixtures_in_all_python_modes(self):
         cases = {'modes': ['command', 'compiler-log', 'empty-artifacts', 'record-overwrite', 'banner', 'report'],
-                 'contracts': ['command', 'banner', 'report', 'comparator-log']}
+                 'contracts': ['command', 'banner', 'report', 'comparator-log', 'reporting-log'],
+                 'reporting': ['comparison-log']}
         for optimization in [[], ['-O'], ['-OO']]:
             for driver, fixtures in cases.items():
                 for case in fixtures:
@@ -123,8 +145,8 @@ class BenchmarkGateDurability(unittest.TestCase):
                     result = self.run_probe(driver, 'valid', optimization)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_runtime_asserts_cannot_return_in_the_two_benchmark_drivers(self):
-        for path in DRIVERS:
+    def test_runtime_asserts_cannot_return_in_the_benchmark_drivers(self):
+        for path in (*DRIVERS, REPORTING):
             with self.subTest(driver=path.name):
                 assertions = [node.lineno for node in ast.walk(ast.parse(path.read_text())) if isinstance(node, ast.Assert)]
                 self.assertEqual(assertions, [], f'{path}: optimization removes assert gates at {assertions}')
@@ -134,7 +156,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--probe':
         with tempfile.TemporaryDirectory() as directory:
             try:
-                {'modes': probe_modes, 'contracts': probe_contracts}[sys.argv[2]](sys.argv[3], Path(directory))
+                {'modes': probe_modes, 'contracts': probe_contracts, 'reporting': probe_reporting}[sys.argv[2]](sys.argv[3], Path(directory))
             except BeyondFixture:
                 pass
     else:

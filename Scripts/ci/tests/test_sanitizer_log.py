@@ -88,25 +88,55 @@ class DirectSanitizerHostTests(unittest.TestCase):
                     self.assertEqual(command, [str(host), '--test-bundle-path', str(bundle), '--filter',
                                                row['filter'], str(bundle), '--testing-library', 'swift-testing'])
 
-    def test_missing_or_ambiguous_runtime_is_rejected(self):
+    def test_alias_paths_select_one_canonical_runtime_for_each_sanitizer(self):
         import tempfile
         import check_sanitizers as driver
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory).resolve()
-            swift = root / 'usr/bin/swift'
-            swift.parent.mkdir(parents=True)
-            swift.touch()
-            host = root / 'usr/libexec/swift/pm/swiftpm-testing-helper'
-            host.parent.mkdir(parents=True)
-            host.touch()
-            with self.assertRaisesRegex(ValueError, 'exactly one.*runtime'):
-                driver.sanitizer_host_environment(swift, root / 'platform', 'address', {})
-            for version in ['20', '21']:
-                runtime = root / ('usr/lib/clang/' + version + '/lib/darwin/libclang_rt.asan_osx_dynamic.dylib')
-                runtime.parent.mkdir(parents=True)
-                runtime.touch()
-            with self.assertRaisesRegex(ValueError, 'exactly one.*runtime'):
-                driver.sanitizer_host_environment(swift, root / 'platform', 'address', {})
+        for sanitizer, short in [('address', 'asan'), ('thread', 'tsan')]:
+            for alias_kind in ['version directory', 'runtime file']:
+                with self.subTest(sanitizer=sanitizer, alias_kind=alias_kind), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory).resolve()
+                    swift = root / 'usr/bin/swift'
+                    swift.parent.mkdir(parents=True)
+                    swift.touch()
+                    host = root / 'usr/libexec/swift/pm/swiftpm-testing-helper'
+                    host.parent.mkdir(parents=True)
+                    host.touch()
+                    clang = root / 'usr/lib/clang'
+                    runtime = clang / ('17/lib/darwin/libclang_rt.' + short + '_osx_dynamic.dylib')
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_bytes(b'one runtime image')
+                    alias = clang / ('17.0.0/lib/darwin/' + runtime.name)
+                    if alias_kind == 'version directory':
+                        (clang / '17.0.0').symlink_to('17', target_is_directory=True)
+                    else:
+                        alias.parent.mkdir(parents=True)
+                        alias.symlink_to(runtime)
+                    self.assertTrue(alias.samefile(runtime))
+                    _, selected, environment = driver.sanitizer_host_environment(swift, root / 'platform', sanitizer, {})
+                    self.assertEqual(selected, runtime)
+                    self.assertEqual(environment['DYLD_INSERT_LIBRARIES'], str(runtime))
+
+    def test_missing_or_distinct_canonical_runtimes_are_rejected_for_each_sanitizer(self):
+        import tempfile
+        import check_sanitizers as driver
+        for sanitizer, short in [('address', 'asan'), ('thread', 'tsan')]:
+            for contents in [(b'first image', b'second image'), (b'identical bytes', b'identical bytes')]:
+                with self.subTest(sanitizer=sanitizer, contents=contents), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory).resolve()
+                    swift = root / 'usr/bin/swift'
+                    swift.parent.mkdir(parents=True)
+                    swift.touch()
+                    host = root / 'usr/libexec/swift/pm/swiftpm-testing-helper'
+                    host.parent.mkdir(parents=True)
+                    host.touch()
+                    with self.assertRaisesRegex(ValueError, 'exactly one.*runtime'):
+                        driver.sanitizer_host_environment(swift, root / 'platform', sanitizer, {})
+                    for version, content in zip(['17', '17.0.0'], contents):
+                        runtime = root / ('usr/lib/clang/' + version + '/lib/darwin/libclang_rt.' + short + '_osx_dynamic.dylib')
+                        runtime.parent.mkdir(parents=True)
+                        runtime.write_bytes(content)
+                    with self.assertRaisesRegex(ValueError, 'exactly one.*runtime'):
+                        driver.sanitizer_host_environment(swift, root / 'platform', sanitizer, {})
 
 
 if __name__ == '__main__':

@@ -28,7 +28,10 @@ def sanitizer_host_environment(swift, platform, sanitizer, environment):
     if not host.is_file():
         raise ValueError('SwiftPM test host is unavailable')
     short = {'address': 'asan', 'thread': 'tsan'}[sanitizer]
-    runtimes = sorted((toolchain / 'lib/clang').glob('*/lib/darwin/libclang_rt.' + short + '_osx_dynamic.dylib'))
+    # Version-directory and file aliases must not count as distinct images
+    # (test_alias_paths_select_one_canonical_runtime_for_each_sanitizer).
+    runtimes = sorted({path.resolve(strict=True) for path in (toolchain / 'lib/clang').glob(
+        '*/lib/darwin/libclang_rt.' + short + '_osx_dynamic.dylib')})
     if len(runtimes) != 1:
         raise ValueError('Expected exactly one selected-toolchain sanitizer runtime: ' + str(runtimes))
     child = dict(environment)

@@ -398,22 +398,93 @@ final class BenchmarkRunnerContractTests: XCTestCase {
         XCTAssertEqual(kill(pid, 0), 0)
     }
 
+    private static let metadataEnvironmentReaderSource = #"""
+    #include <stdio.h>
+    #include <stdlib.h>
+    int main(int argc, char **argv) {
+        if (argc != 2) return 64;
+        const char *value = getenv(argv[1]);
+        if (value == NULL) return 1;
+        return puts(value) == EOF ? 74 : 0;
+    }
+    """#
+
+    private static func makeMetadataEnvironmentReader(in root: URL, source: String) throws -> URL {
+        let architecture: String
+        #if arch(arm64)
+        architecture = "arm64"
+        #elseif arch(x86_64)
+        architecture = "x86_64"
+        #else
+        throw NSError(domain: "MetadataEnvironmentReader.architecture", code: 1)
+        #endif
+        let reader = root.appendingPathComponent("environment-reader")
+        let sourceFile = root.appendingPathComponent("environment-reader.c")
+        let compilerLog = root.appendingPathComponent("compiler.log")
+        try source.write(to: sourceFile, atomically: true, encoding: .utf8)
+
+        func observeSetup(_ command: [String], label: String, timeout: String = "2",
+                          environment: [String: String] = [:]) throws -> RuntimeObservation {
+            let result = root.appendingPathComponent(label + ".json")
+            var requested = environment
+            requested["METADATA_TEST_COMMAND"] = try XCTUnwrap(String(data: JSONEncoder().encode(command), encoding: .utf8))
+            requested["METADATA_TEST_RESULT"] = result.path
+            requested["METADATA_TEST_TIMEOUT"] = timeout
+            let run = try Self.runFixture(environment: requested, output: root.appendingPathComponent(label + ".log"))
+            guard !run.timedOut, try run.reaped().status == 0 else {
+                throw NSError(domain: "MetadataEnvironmentReader.fixture", code: 1,
+                              userInfo: [NSLocalizedDescriptionKey: label + " outer fixture failed"])
+            }
+            return try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
+        }
+
+        // Build a test-owned reader for the explicit ordinary host architecture.
+        // The adjacent architecture and execution preflights enforce that fixture contract.
+        let script = #"""
+        set -e
+        /usr/bin/xcrun --sdk macosx --find clang > "$4"
+        /usr/bin/xcrun --sdk macosx clang -v -arch "$3" "$1" -o "$2" >> "$4" 2>&1
+        printf METADATA_READER_COMPILED
+        """#
+        let compile = ["/bin/sh", "-c", script, "metadata-reader-build", sourceFile.path,
+                       reader.path, architecture, compilerLog.path]
+        let built = try observeSetup(compile, label: "compile", timeout: "10")
+        let diagnostics = (try? String(contentsOf: compilerLog, encoding: .utf8)) ?? "compiler log unavailable"
+        print("METADATA_READER_BUILD command=\(compile) architecture=\(architecture)\n\(diagnostics)")
+        guard built.value == "METADATA_READER_COMPILED" else {
+            throw NSError(domain: "MetadataEnvironmentReader.compile", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "\(built); \(diagnostics)"])
+        }
+        let inspected = try observeSetup(["/usr/bin/lipo", "-archs", reader.path], label: "architecture")
+        guard inspected.value == architecture else {
+            throw NSError(domain: "MetadataEnvironmentReader.architecture", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Expected \(architecture): \(inspected)"])
+        }
+        let executed = try observeSetup([reader.path, "VECTORCORE_METADATA_READER_READY"], label: "execute",
+                                       environment: ["VECTORCORE_METADATA_READER_READY": "native-reader-ready"])
+        guard executed.value == "native-reader-ready" else {
+            throw NSError(domain: "MetadataEnvironmentReader.execution", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "\(executed)"])
+        }
+        return reader
+    }
+
+    func testMetadataEnvironmentReaderRejectsFailedBuild() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-invalid-reader-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        XCTAssertThrowsError(try Self.makeMetadataEnvironmentReader(in: root, source: "#error intentional fixture build failure\n")) { error in
+            XCTAssertEqual((error as NSError).domain, "MetadataEnvironmentReader.compile")
+            print("METADATA_READER_EXPECTED_BUILD_FAILURE \(error)")
+        }
+    }
+
     func testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-environment-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        // Re-sign a temporary copy to exercise an unprotected native target, without a new build target.
-        let reader = root.appendingPathComponent("printenv")
-        try Data(contentsOf: URL(fileURLWithPath: "/usr/bin/printenv")).write(to: reader)
-        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: reader.path)
+        let reader = try Self.makeMetadataEnvironmentReader(in: root, source: Self.metadataEnvironmentReaderSource)
         let result = root.appendingPathComponent("result.json")
-        let sign = ["/usr/bin/codesign", "--force", "--sign", "-", reader.path]
-        let signed = try Self.runFixture(environment: [
-            "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(sign), encoding: .utf8)),
-            "METADATA_TEST_RESULT": result.path
-        ], output: root.appendingPathComponent("sign.log"))
-        XCTAssertFalse(signed.timedOut)
-        XCTAssertEqual(try signed.reaped().status, 0)
         let marker = root.appendingPathComponent("injected")
         let startup = root.appendingPathComponent("startup")
         try "/usr/bin/touch \"\(marker.path)\"\n".write(to: startup, atomically: true, encoding: .utf8)
@@ -431,7 +502,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
                 XCTAssertEqual(try run.reaped().status, 0)
                 let observation = try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
                 let stripped = protected && key.hasPrefix("DYLD_")
-                XCTAssertEqual(observation.value, stripped ? nil : value)
+                XCTAssertEqual(observation.value, stripped ? nil : value, "key=\(key) protected=\(protected): \(observation)")
                 if stripped { XCTAssertNotNil(observation.unavailableReason) }
                 XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
             }

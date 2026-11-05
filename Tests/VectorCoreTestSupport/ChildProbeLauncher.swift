@@ -162,7 +162,7 @@ package enum ChildProbeTerminationReason: Int, Sendable {
 }
 
 /// Subprocess probes require macOS process creation and test-runner relaunch support.
-/// Pure selector/result tests remain available on every platform.
+/// Pure selector/result helpers do not depend on this capability.
 package var childProbeProcessesSupported: Bool {
     #if os(macOS)
     true

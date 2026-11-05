@@ -90,6 +90,23 @@ final class BenchmarkRunnerContractTests: XCTestCase {
             try JSONEncoder().encode(captured).write(to: URL(fileURLWithPath: env["LAUNCHER_CONTROL_OUTPUT"]!))
             return
         }
+        if let command = env["METADATA_DIRECT_COMMAND"] {
+            let argv = try JSONDecoder().decode([String].self, from: Data(command.utf8))
+            var targetEnvironment = env
+            if let value = env["METADATA_TEST_LOADER_VALUE"], let key = env["METADATA_TEST_LOADER_KEY"] {
+                targetEnvironment[key] = value
+            }
+            if let encoded = env["METADATA_DIRECT_ENVIRONMENT"] {
+                targetEnvironment.merge(try JSONDecoder().decode([String: String].self, from: Data(encoded.utf8))) { _, supplied in supplied }
+            }
+            do {
+                try replaceMarkedChildProbe(command: argv, environment: targetEnvironment)
+            } catch {
+                guard let result = env["METADATA_DIRECT_ERROR_RESULT"] else { throw error }
+                try (error as NSError).domain.write(toFile: result, atomically: true, encoding: .utf8)
+                return
+            }
+        }
         if let command = env["METADATA_TEST_COMMAND"], let result = env["METADATA_TEST_RESULT"] {
             let argv = try JSONDecoder().decode([String].self, from: Data(command.utf8))
                 .map { $0 == "@OWNER_PID@" ? String(getpid()) : $0 }
@@ -401,11 +418,28 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     private static let metadataEnvironmentReaderSource = #"""
     #include <stdio.h>
     #include <stdlib.h>
+    #include <string.h>
+    #include <unistd.h>
     int main(int argc, char **argv) {
-        if (argc != 2) return 64;
+        if (argc < 2 || argc > 3) return 64;
+        FILE *output = stdout;
+        const char *capture = getenv("VECTORCORE_METADATA_BASELINE_OUTPUT");
+        if (capture != NULL) {
+            output = fopen(capture, "wb");
+            if (output == NULL) return 74;
+            fprintf(stderr, "METADATA_BASELINE_TARGET pid=%d pgid=%d\n", getpid(), getpgrp());
+        }
+        if (argc == 3) {
+            if (strcmp(argv[2], "strip") == 0) {
+                if (unsetenv(argv[1]) != 0) return 74;
+            } else if (strcmp(argv[2], "error") == 0) {
+                fputs("partial output is not a value", output);
+                return 7;
+            } else return 64;
+        }
         const char *value = getenv(argv[1]);
         if (value == NULL) return 1;
-        return puts(value) == EOF ? 74 : 0;
+        return fprintf(output, "%s\n", value) < 0 ? 74 : 0;
     }
     """#
 
@@ -479,6 +513,139 @@ final class BenchmarkRunnerContractTests: XCTestCase {
         }
     }
 
+    private static func metadataEnvironmentWasStripped(termination: ChildProbeTermination?, timedOut: Bool,
+                                                       cleaned: Bool, output: Data, expected: String) throws -> Bool {
+        guard !timedOut, cleaned, let termination, termination.reason == .exit else {
+            throw NSError(domain: "MetadataEnvironmentBaseline.execution", code: 1)
+        }
+        if termination.status == 0 && output == Data((expected + "\n").utf8) { return false }
+        if termination.status == 1 && output.isEmpty { return true }
+        throw NSError(domain: "MetadataEnvironmentBaseline.output", code: Int(termination.status))
+    }
+
+    private static func metadataExpectedStripping(key: String, protected: Bool, baseline: Bool) -> Bool {
+        protected && key.hasPrefix("DYLD_") && baseline
+    }
+
+    func testMetadataEnvironmentBaselineRejectsAmbiguousResults() throws {
+        for key in ["DYLD_LIBRARY_PATH", "DYLD_FRAMEWORK_PATH"] {
+            for baseline in [false, true] {
+                XCTAssertEqual(Self.metadataExpectedStripping(key: key, protected: true, baseline: baseline), baseline)
+                XCTAssertFalse(Self.metadataExpectedStripping(key: key, protected: false, baseline: baseline))
+            }
+        }
+        let literal = "spaces; $(touch never) ' \" `touch never`"
+        let bytes = Data((literal + "\n").utf8)
+        XCTAssertFalse(try Self.metadataEnvironmentWasStripped(termination: .init(status: 0, reason: .exit),
+                           timedOut: false, cleaned: true, output: bytes, expected: literal))
+        XCTAssertTrue(try Self.metadataEnvironmentWasStripped(termination: .init(status: 1, reason: .exit),
+                          timedOut: false, cleaned: true, output: Data(), expected: literal))
+        let invalid: [(ChildProbeTermination?, Bool, Bool, Data)] = [
+            (.init(status: 0, reason: .exit), false, true, Data()),
+            (.init(status: 0, reason: .exit), false, true, Data("wrong value\n".utf8)),
+            (.init(status: 1, reason: .exit), false, true, bytes),
+            (.init(status: 7, reason: .exit), false, true, Data()),
+            (.init(status: 1, reason: .uncaughtSignal), false, true, Data()),
+            (.init(status: 0, reason: .exit), true, true, bytes),
+            (.init(status: 0, reason: .exit), false, false, bytes),
+            (nil, false, true, Data())
+        ]
+        for (termination, timedOut, cleaned, output) in invalid {
+            XCTAssertThrowsError(try Self.metadataEnvironmentWasStripped(termination: termination,
+                                 timedOut: timedOut, cleaned: cleaned, output: output, expected: literal))
+        }
+    }
+
+    private static func metadataDirectBaseline(command: [String], key: String, value: String,
+                                               environment: [String: String], root: URL) throws -> Bool {
+        let capture = root.appendingPathComponent("baseline-" + UUID().uuidString)
+        let log = capture.appendingPathExtension("log")
+        var requested = environment
+        requested["METADATA_DIRECT_COMMAND"] = try XCTUnwrap(String(data: JSONEncoder().encode(command), encoding: .utf8))
+        requested["METADATA_TEST_LOADER_KEY"] = key
+        requested["METADATA_TEST_LOADER_VALUE"] = value
+        requested["VECTORCORE_METADATA_BASELINE_OUTPUT"] = capture.path
+        let run = try Self.runFixture(environment: requested, output: log)
+        let diagnostics = try String(contentsOf: log, encoding: .utf8)
+        guard diagnostics.contains("METADATA_BASELINE_TARGET pid=\(run.processIdentifier) pgid=\(run.processGroup)") else {
+            throw NSError(domain: "MetadataEnvironmentBaseline.identity", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: diagnostics])
+        }
+        let bytes = try Data(contentsOf: capture)
+        print("METADATA_DIRECT_RESULT command=\(command) key=\(key) status=\(run.statusDescription) reason=\(run.reasonDescription) timedOut=\(run.timedOut) cleaned=\(run.cleaned) pid=\(run.processIdentifier) pgid=\(run.processGroup) bytes=\(bytes.count)")
+        let stripped = try Self.metadataEnvironmentWasStripped(termination: run.termination, timedOut: run.timedOut,
+                                                              cleaned: run.cleaned, output: bytes, expected: value)
+        print("METADATA_DIRECT_BASELINE command=\(command) key=\(key) stripped=\(stripped) status=\(run.statusDescription) pid=\(run.processIdentifier) pgid=\(run.processGroup) bytes=\(bytes.count)")
+        return stripped
+    }
+
+    func testMetadataDirectExecRejectsInvalidRequests() throws {
+        let absent = FileManager.default.temporaryDirectory.appendingPathComponent("unmarked-exec-" + UUID().uuidString)
+        XCTAssertThrowsError(try replaceMarkedChildProbe(command: [absent.path], environment: [:])) { error in
+            XCTAssertEqual((error as NSError).domain, "ChildProbeReplacement.unmarked")
+        }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-exec-errors-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let cases: [([String], [String: String], String)] = [
+            ([], [:], "command"), (["relative"], [:], "command"),
+            (["/usr/bin/true", "nul\0argument"], [:], "command"),
+            (["/usr/bin/true"], ["bad=key": "value"], "environment"),
+            (["/usr/bin/true"], ["bad\0key": "value"], "environment"),
+            (["/usr/bin/true"], ["": "value"], "environment"),
+            (["/usr/bin/true"], ["key": "bad\0value"], "environment"),
+            (["/usr/bin/true"], [childProbeMarkerKey: "different"], "environment"),
+            ([root.appendingPathComponent("missing-executable").path], [:], "exec")
+        ]
+        for (index, entry) in cases.enumerated() {
+            let result = root.appendingPathComponent("error-\(index)")
+            let run = try Self.runFixture(environment: [
+                "METADATA_DIRECT_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(entry.0), encoding: .utf8)),
+                "METADATA_DIRECT_ENVIRONMENT": try XCTUnwrap(String(data: JSONEncoder().encode(entry.1), encoding: .utf8)),
+                "METADATA_DIRECT_ERROR_RESULT": result.path
+            ], output: root.appendingPathComponent("error-\(index).log"))
+            XCTAssertFalse(run.timedOut)
+            XCTAssertEqual(try run.reaped(), ChildProbeTermination(status: 0, reason: .exit))
+            XCTAssertEqual(try String(contentsOf: result, encoding: .utf8), "ChildProbeReplacement." + entry.2)
+        }
+    }
+
+    func testMetadataEnvironmentDeterministicPolicyControls() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-policy-controls-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let reader = try Self.makeMetadataEnvironmentReader(in: root, source: Self.metadataEnvironmentReaderSource)
+        let marker = root.appendingPathComponent("injected")
+        let value = "literal $(touch \(marker.path)); ' \" `touch \(marker.path)`"
+        for key in ["DYLD_LIBRARY_PATH", "DYLD_FRAMEWORK_PATH"] {
+            for policy in ["preserve", "strip", "error"] {
+                let command = [reader.path, key] + (policy == "preserve" ? [] : [policy])
+                if policy == "error" {
+                    XCTAssertThrowsError(try Self.metadataDirectBaseline(command: command, key: key, value: value,
+                                                                         environment: [:], root: root)) { error in
+                        XCTAssertEqual((error as NSError).domain, "MetadataEnvironmentBaseline.output")
+                        XCTAssertEqual((error as NSError).code, 7)
+                    }
+                } else {
+                    XCTAssertEqual(try Self.metadataDirectBaseline(command: command, key: key, value: value,
+                                                                  environment: [:], root: root), policy == "strip")
+                }
+                let result = root.appendingPathComponent("observation.json")
+                let run = try Self.runFixture(environment: [
+                    "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(command), encoding: .utf8)),
+                    "METADATA_TEST_RESULT": result.path, "METADATA_TEST_LOADER_KEY": key, "METADATA_TEST_LOADER_VALUE": value
+                ], output: root.appendingPathComponent("\(key)-\(policy).log"))
+                XCTAssertFalse(run.timedOut)
+                XCTAssertEqual(try run.reaped(), ChildProbeTermination(status: 0, reason: .exit))
+                let observation = try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
+                XCTAssertEqual(observation.value, policy == "preserve" ? value : nil)
+                XCTAssertEqual(observation.unavailableReason, policy == "preserve" ? nil
+                               : "Observation command failed: " + (policy == "strip" ? "1" : "7"))
+                XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+            }
+        }
+    }
+
     func testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-environment-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -492,18 +659,23 @@ final class BenchmarkRunnerContractTests: XCTestCase {
         for key in ["DYLD_LIBRARY_PATH", "DYLD_FRAMEWORK_PATH", "LD_LIBRARY_PATH", "IFS", "armed", "PWD", "SHLVL"] {
             for protected in [false, true] {
                 let argv = (protected ? ["/usr/bin/env"] : []) + [reader.path, key]
-                let run = try Self.runFixture(environment: [
+                let requested = [
                     "METADATA_TEST_COMMAND": try XCTUnwrap(String(data: JSONEncoder().encode(argv), encoding: .utf8)),
                     "METADATA_TEST_RESULT": result.path, "METADATA_TEST_LOADER_VALUE": value, "METADATA_TEST_LOADER_KEY": key,
                     "ENV": startup.path, "BASH_ENV": startup.path, "IFS": ":",
                     "BASH_FUNC_printf%%": "() { /usr/bin/touch \"\(marker.path)\"; builtin printf \"$@\"; }"
-                ], output: root.appendingPathComponent("environment-\(key)-\(protected).log"))
+                ]
+                let baseline = try Self.metadataDirectBaseline(command: argv, key: key, value: value,
+                                                               environment: requested, root: root)
+                let stripped = Self.metadataExpectedStripping(key: key, protected: protected, baseline: baseline)
+                if !(protected && key.hasPrefix("DYLD_")) { XCTAssertFalse(baseline, "key=\(key) protected=\(protected)") }
+                let run = try Self.runFixture(environment: requested,
+                                              output: root.appendingPathComponent("environment-\(key)-\(protected).log"))
                 XCTAssertFalse(run.timedOut)
                 XCTAssertEqual(try run.reaped().status, 0)
                 let observation = try JSONDecoder().decode(RuntimeObservation.self, from: Data(contentsOf: result))
-                let stripped = protected && key.hasPrefix("DYLD_")
                 XCTAssertEqual(observation.value, stripped ? nil : value, "key=\(key) protected=\(protected): \(observation)")
-                if stripped { XCTAssertNotNil(observation.unavailableReason) }
+                XCTAssertEqual(observation.unavailableReason, stripped ? "Observation command failed: 1" : nil)
                 XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
             }
         }

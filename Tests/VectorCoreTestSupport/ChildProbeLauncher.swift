@@ -340,6 +340,38 @@ package func launchChildProbe(_ selector: ChildProbeSelector, environment: [Stri
                          timedOut: timedOut, cleaned: cleaned, termination: termination)
 }
 
+/// Replaces an already marked child without spawning another process.
+/// `testMetadataDirectExecRejectsInvalidRequests` exercises refusal/error paths;
+/// `testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation` verifies native PID/group continuity.
+package func replaceMarkedChildProbe(command: [String], environment: [String: String]) throws -> Never {
+    func failure(_ detail: String, code: Int32 = EINVAL) -> NSError {
+        NSError(domain: "ChildProbeReplacement." + detail, code: Int(code))
+    }
+    guard let marker = ProcessInfo.processInfo.environment[childProbeMarkerKey], !marker.isEmpty else {
+        throw failure("unmarked")
+    }
+    guard let executable = command.first, executable.hasPrefix("/"),
+          command.allSatisfy({ !$0.contains("\0") }) else {
+        throw failure("command")
+    }
+    guard environment[childProbeMarkerKey] == marker,
+          environment.allSatisfy({ !$0.key.isEmpty && !$0.key.contains("=") && !$0.key.contains("\0")
+                                   && !$0.value.contains("\0") }) else {
+        throw failure("environment")
+    }
+    let argv: [UnsafeMutablePointer<CChar>?] = command.map { strdup($0) } + [nil]
+    let envp: [UnsafeMutablePointer<CChar>?] = environment.map { strdup("\($0.key)=\($0.value)") } + [nil]
+    defer {
+        argv.forEach { free($0) }
+        envp.forEach { free($0) }
+    }
+    guard argv.dropLast().allSatisfy({ $0 != nil }), envp.dropLast().allSatisfy({ $0 != nil }) else {
+        throw failure("allocation", code: ENOMEM)
+    }
+    execve(executable, argv, envp)
+    throw failure("exec", code: errno)
+}
+
 /// Owns the child's PID and process group from spawn to reap.
 private final class ChildProbeReaper: @unchecked Sendable {
     let pid: pid_t

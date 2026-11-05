@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""Describe full-discovery execution, rejecting partial evidence as qualification.
+
+ScopeControls exercises missing/empty/truncated/failing/skipped output controls.
+This standalone phase-two experiment does not alter the mandatory CI driver.
+"""
+import argparse
+import json
+from pathlib import Path
+import re
+
+
+def images_verified(log, pid, paths):
+    """ScopeControls rejects child-only and plain-text path evidence."""
+    loaded = set(re.findall(r'^dyld\[' + re.escape(str(pid)) + r'\]: <[^>]+> (.+)$', log, re.M))
+    return bool(paths) and all(str(p) in loaded or str(Path(p).resolve()) in loaded for p in paths)
+
+
+def qualifies(scope, command):
+    return (scope['accepted'] and command.get('status') == 'completed'
+            and command.get('exit') == 0 and command.get('timeout') is False)
+
+
+def swift_testing(text, discovery=None):
+    functions, suites, started, ended, skipped, failed, unknown = set(), set(), set(), set(), set(), set(), set()
+    begun = complete = False
+    errors = []
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+            if row['version'] != 0:
+                raise ValueError('unsupported event version')
+            payload = row['payload']
+            kind = payload['kind']
+            if row['kind'] == 'test':
+                (functions if kind == 'function' else suites).add(payload['id'])
+            elif row['kind'] == 'event':
+                ident = payload.get('testID')
+                if ident and ident not in functions | suites:
+                    unknown.add(ident)
+                if kind == 'runStarted': begun = True
+                if kind == 'runEnded': complete = True
+                if kind == 'testStarted': started.add(ident)
+                if kind == 'testEnded':
+                    ended.add(ident)
+                    if not any(m.get('symbol') == 'pass' for m in payload.get('messages', [])):
+                        failed.add(ident)
+                if kind == 'testSkipped': skipped.add(ident)
+                if kind == 'issueRecorded' and not payload.get('issue', {}).get('isKnown', False):
+                    # Unattributed issues remain visible and prevent acceptance.
+                    failed.add(ident or '<unattributed issue>')
+        except (ValueError, TypeError, KeyError) as error:
+            errors.append(str(error))
+    inherited_skips = {f for f in functions if any(f == s or f.startswith(s + '/') for s in skipped if s)}
+    failed_functions = functions & failed & ended
+    passed = (functions & started & ended) - failed_functions - inherited_skips
+    pending = functions - passed - failed_functions - inherited_skips
+    result = {'framework': 'swift-testing', 'discovered': sorted(functions), 'started': sorted(functions & started),
+              'passed': sorted(passed), 'failed': sorted(failed_functions), 'skipped': sorted(inherited_skips),
+              'pending': sorted(pending), 'unknown': sorted(unknown), 'issues': sorted(failed), 'errors': errors,
+              'runStarted': begun, 'runEnded': complete, 'ended': sorted(functions & ended),
+              'interrupted': sorted((functions & started) - ended)}
+    if discovery is not None:
+        # Independent selectors remain authoritative even if the event file is empty.
+        # test_independent_discovery_preserves_exact_empty_and_partial_scope pins this.
+        universe = set(discovery)
+        selector = {f: f.rsplit('/', 1)[0] for f in functions}
+        normalized = set(selector.values())
+        groups = {}
+        for ident, name in selector.items():
+            groups.setdefault(name, []).append(ident)
+        result['selectorCollisions'] = {name: sorted(ids) for name, ids in groups.items() if len(ids) > 1}
+        if result['selectorCollisions']:
+            errors.append('ambiguous event-to-selector mapping')
+        result['eventInventory'] = sorted(functions)
+        result['eventPending'] = result['pending']
+        for key in ['started', 'passed', 'failed', 'skipped', 'ended', 'interrupted']:
+            result['event' + key.title()] = result[key]
+            result[key] = sorted({selector[f] for f in result[key]} & universe)
+        # A selector cannot pass while any corresponding event body remains pending.
+        # Collision controls cover missing starts/ends, failures, skips and full completion.
+        unfinished = {selector[f] for f in pending} & universe
+        result['failed'] = sorted(set(result['failed']) - unfinished)
+        result['skipped'] = sorted(set(result['skipped']) - unfinished - set(result['failed']))
+        result['passed'] = sorted(set(result['passed']) - unfinished - set(result['failed']) - set(result['skipped']))
+        result['discovered'] = sorted(universe)
+        result['pending'] = sorted(universe - set(result['passed']) - set(result['failed']) - set(result['skipped']))
+        result['discoveryMissing'] = sorted(universe - normalized)
+        result['discoveryUnexpected'] = sorted(normalized - universe)
+        if normalized != universe: errors.append('independent discovery differs from event inventory')
+    result['accepted'] = bool(result['discovered']) and begun and complete and not (pending or result['pending'] or failed or result['skipped'] or unknown or errors)
+    return result
+
+
+_CASE = re.compile(r"^Test Case '-\[([^ ]+) ([^\]]+)\]' (started|passed|failed|skipped)\b", re.M)
+_SUMMARY = re.compile(r'^\s*Executed (\d+) tests?, with (?:(\d+) tests? skipped and )?(\d+) failures?', re.M)
+
+
+def xctest(text, discovery):
+    discovered = set(discovery)
+    started, passed, failed, skipped, unknown = set(), set(), set(), set(), set()
+    sets = {'started': started, 'passed': passed, 'failed': failed, 'skipped': skipped}
+    for owner, method, status in _CASE.findall(text):
+        ident = owner + '/' + method
+        sets[status].add(ident)
+        if ident not in discovered: unknown.add(ident)
+    pending = discovered - passed - failed - skipped
+    summaries = _SUMMARY.findall(text)
+    counts = tuple(map(int, (summaries[-1][0], summaries[-1][1] or 0, summaries[-1][2]))) if summaries else None
+    complete = bool(re.search(r"^Test Suite '(?:All|Selected) tests' (passed|failed) at ", text, re.M))
+    result = {'framework': 'xctest', 'discovered': sorted(discovered), 'started': sorted(started),
+              'passed': sorted(passed), 'failed': sorted(failed), 'skipped': sorted(skipped),
+              'pending': sorted(pending), 'unknown': sorted(unknown), 'summaryCounts': counts, 'runEnded': complete}
+    result['accepted'] = (bool(discovered) and complete and counts == (len(discovered), 0, 0)
+                          and passed == discovered == started and not (failed or skipped or unknown or pending))
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--framework', required=True, choices=['swift-testing', 'xctest'])
+    parser.add_argument('--input', type=Path, required=True)
+    parser.add_argument('--command', type=Path, required=True)
+    parser.add_argument('--discovery', type=Path, required=True, help='Independent selectors, one per line')
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    if args.output.exists(): raise ValueError('Refusing to overwrite scope evidence')
+    text = args.input.read_text()
+    result = swift_testing(text, args.discovery.read_text().splitlines()) if args.framework == 'swift-testing' else xctest(text, args.discovery.read_text().splitlines())
+    result['qualified'] = qualifies(result, json.loads(args.command.read_text()))
+    result['counts'] = {key: len(result[key]) for key in ['discovered', 'started', 'passed', 'failed', 'skipped', 'pending', 'unknown']}
+    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
+    print(json.dumps(result['counts'], sort_keys=True), 'qualified=' + str(result['qualified']))
+
+
+if __name__ == '__main__': main()

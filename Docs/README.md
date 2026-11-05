@@ -52,6 +52,7 @@ the [contribution benchmark instructions](../CONTRIBUTING.md#performance-changes
 
 These are dated evidence, not rolling promises of support or performance:
 
+- [0.4.0 remaining release gates, November 5, 2026](reviews/2026-11-05-release-gates/README.md) — compiler acceptance, platform coverage and host readiness
 - [0.4.0 second-phase remediation, November 4, 2026](reviews/2026-11-04-release-phase-two/README.md) — iOS portability, broader sanitizer evidence, independent benchmark validation and remaining gates
 - [0.4.0 first-phase remediation, November 4, 2026](reviews/2026-11-04-release-phase-one/README.md) — compiler investigation, Release sanitizer execution, comparator repairs and remaining gates
 - [0.4.0 qualification, November 4, 2026](reviews/2026-11-04-release-qualification/README.md) — exact-source hosted results and remaining release limits

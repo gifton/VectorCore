@@ -1,0 +1,245 @@
+{
+  "firstUTC": "2026-11-05T20:07:21.894365+00:00",
+  "lastUTC": "2026-11-05T20:08:21.899872+00:00",
+  "durationBetweenFirstAndLastCounterSnapshotSeconds": 60.00547679094598,
+  "frameCount": 5,
+  "intervalCount": 4,
+  "powerSources": [
+    "AC Power",
+    "AC Power",
+    "AC Power",
+    "AC Power",
+    "AC Power"
+  ],
+  "thermalStates": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "lowPowerModes": [
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "startLatenessSeconds": [
+    0.0002113340888172388,
+    0.00235933403018862,
+    0.005441625020466745,
+    0.005817584111355245,
+    0.005688125034794211
+  ],
+  "captureWallSeconds": [
+    0.1730289999395609,
+    0.1745259159943089,
+    0.16418704204261303,
+    0.16677924990653992,
+    0.17640800005756319
+  ],
+  "psCommandSpansSeconds": [
+    0.13426616694778204,
+    0.1373519590124488,
+    0.13731704093515873,
+    0.13983749994076788,
+    0.13892991608008742
+  ],
+  "ready": false,
+  "benchmarkMeasurementsStarted": 0,
+  "timingRetryPerformed": false,
+  "readinessRuleSHA256": "56fb9a40494081f72e03579be4b36f0c2c89dd7154a17577bbc7b2ae221d80bd",
+  "intervals": [
+    {
+      "index": 0,
+      "elapsedSeconds": 15.002147999941371,
+      "processElapsedSeconds": 15.003905021003447,
+      "processMinimumElapsedSeconds": 14.868095958023332,
+      "hostIdlePercent": 78.2739337284033,
+      "newPIDs": [
+        60044
+      ],
+      "exitedPIDs": [
+        60039
+      ],
+      "changedExecutablePIDs": [],
+      "topProcesses": [
+        {
+          "executable": "/usr/libexec/PerfPowerServices",
+          "percentOneCore": 172.48842860426095,
+          "percentOneCoreUpperBound": 174.1984990756542,
+          "pid": 40610
+        },
+        {
+          "executable": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer",
+          "percentOneCore": 44.72169072393691,
+          "percentOneCoreUpperBound": 45.264706516604534,
+          "pid": 609
+        },
+        {
+          "executable": "/Applications/Ghostty.app/Contents/MacOS/ghostty",
+          "percentOneCore": 25.19344127217111,
+          "percentOneCoreUpperBound": 25.558080945450357,
+          "pid": 1533
+        },
+        {
+          "executable": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.80/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)",
+          "percentOneCore": 12.46342200501964,
+          "percentOneCoreUpperBound": 12.711782364977822,
+          "pid": 88254
+        },
+        {
+          "executable": "/usr/libexec/spotlightknowledged.updater",
+          "percentOneCore": 12.19682474284339,
+          "percentOneCoreUpperBound": 12.442749933935872,
+          "pid": 69556
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "elapsedSeconds": 15.003082290990278,
+      "processElapsedSeconds": 15.003051750012673,
+      "processMinimumElapsedSeconds": 14.86571725003887,
+      "hostIdlePercent": 78.61496076139589,
+      "newPIDs": [
+        60047,
+        60050
+      ],
+      "exitedPIDs": [
+        60031,
+        60044
+      ],
+      "changedExecutablePIDs": [],
+      "topProcesses": [
+        {
+          "executable": "/usr/libexec/PerfPowerServices",
+          "percentOneCore": 173.3647289457146,
+          "percentOneCoreUpperBound": 175.10086840866492,
+          "pid": 40610
+        },
+        {
+          "executable": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer",
+          "percentOneCore": 44.72423418779571,
+          "percentOneCoreUpperBound": 45.271949457899545,
+          "pid": 609
+        },
+        {
+          "executable": "/Applications/Ghostty.app/Contents/MacOS/ghostty",
+          "percentOneCore": 24.99491478456596,
+          "percentOneCoreUpperBound": 25.360363960845163,
+          "pid": 1533
+        },
+        {
+          "executable": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.80/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)",
+          "percentOneCore": 12.330824627052598,
+          "percentOneCoreUpperBound": 12.579278675538639,
+          "pid": 88254
+        },
+        {
+          "executable": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.80/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)",
+          "percentOneCore": 11.930905990499433,
+          "percentOneCoreUpperBound": 12.17566545600253,
+          "pid": 87848
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "elapsedSeconds": 15.000375959090889,
+      "processElapsedSeconds": 15.001874604495242,
+      "processMinimumElapsedSeconds": 14.863297334057279,
+      "hostIdlePercent": 79.14230833472524,
+      "newPIDs": [
+        60053,
+        60056
+      ],
+      "exitedPIDs": [
+        60050
+      ],
+      "changedExecutablePIDs": [],
+      "topProcesses": [
+        {
+          "executable": "/usr/libexec/PerfPowerServices",
+          "percentOneCore": 177.04454076723428,
+          "percentOneCoreUpperBound": 178.82976706050545,
+          "pid": 40610
+        },
+        {
+          "executable": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer",
+          "percentOneCore": 44.661085208574306,
+          "percentOneCoreUpperBound": 45.21204043061898,
+          "pid": 609
+        },
+        {
+          "executable": "/Applications/Ghostty.app/Contents/MacOS/ghostty",
+          "percentOneCore": 23.66370932691234,
+          "percentOneCoreUpperBound": 24.01889647874736,
+          "pid": 1533
+        },
+        {
+          "executable": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.80/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)",
+          "percentOneCore": 12.265133848330139,
+          "percentOneCoreUpperBound": 12.514046904908815,
+          "pid": 88254
+        },
+        {
+          "executable": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.80/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)",
+          "percentOneCore": 11.865183831536843,
+          "percentOneCoreUpperBound": 12.11036797249248,
+          "pid": 87848
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "elapsedSeconds": 14.999870540923439,
+      "processElapsedSeconds": 14.999494957970455,
+      "processMinimumElapsedSeconds": 14.860111249960028,
+      "hostIdlePercent": 79.16353618832957,
+      "newPIDs": [
+        60060
+      ],
+      "exitedPIDs": [
+        60056
+      ],
+      "changedExecutablePIDs": [],
+      "topProcesses": [
+        {
+          "executable": "/usr/libexec/PerfPowerServices",
+          "percentOneCore": 177.80598663307865,
+          "percentOneCoreUpperBound": 179.60834579936304,
+          "pid": 40610
+        },
+        {
+          "executable": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer",
+          "percentOneCore": 44.73483953165258,
+          "percentOneCoreUpperBound": 45.28902837133542,
+          "pid": 609
+        },
+        {
+          "executable": "/Applications/Ghostty.app/Contents/MacOS/ghostty",
+          "percentOneCore": 24.93417285371913,
+          "percentOneCoreUpperBound": 25.302636950415515,
+          "pid": 1533
+        },
+        {
+          "executable": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.80/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)",
+          "percentOneCore": 12.200410781348236,
+          "percentOneCoreUpperBound": 12.44943573356484,
+          "pid": 88254
+        },
+        {
+          "executable": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.80/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)",
+          "percentOneCore": 11.800397313107299,
+          "percentOneCoreUpperBound": 12.045670250314076,
+          "pid": 87848
+        }
+      ]
+    }
+  ],
+  "commandCount": 15,
+  "allCommandExitsZero": true,
+  "retainedResultSHA256": "c22bb1302f956cf9a06728eebace9ffc59b9f727286f909c16b4263d52fb53c0"
+}

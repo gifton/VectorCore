@@ -1,0 +1,158 @@
+{
+  "sourceCommit": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+  "policyBoundary": "Deployment floors are advertised package targets, not a policy promise of runtime testing on every device. Recommended evidence is not silently promoted to a new CI/support requirement. Compiler acceptance remains required by release investigation.",
+  "cells": [
+    {
+      "cell": "native macOS: Xcode16.2/26.3 \u00d7 Debug/Release",
+      "requirement": "existing CI required",
+      "status": "historical hosted complete suites; global compiler acceptance unresolved",
+      "basis": ".github/workflows/ci.yml test matrix; earlier hosted source retains its own identity",
+      "remainingChecks": "Exact accepted compiler identity, candidate-source association, whole enabled suites and independent unmodified Release canaries; no pass from CI aggregate alone",
+      "localAvailability": "only local Xcode27.2; see compiler investigator"
+    },
+    {
+      "cell": "VectorCore / iOS Simulator / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "VectorCore / tvOS Simulator / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "VectorCore / visionOS Simulator / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "VectorCore / Mac Catalyst / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "VectorCoreBenchmarking / iOS Simulator / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "VectorCoreBenchmarking / tvOS Simulator / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "VectorCoreBenchmarking / visionOS Simulator / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "VectorCoreBenchmarking / Mac Catalyst / Release compile",
+      "requirement": "existing CI required",
+      "status": "historical local and hosted compilation recorded",
+      "basis": ".github/workflows/ci.yml platforms; first-phase platforms.md",
+      "remainingChecks": "Preserve original source/compiler/product slices; runtime cannot be inferred. Current library-input equality checked separately.",
+      "localAvailability": "all corresponding27.2SDKs installed; current local compiler rejected"
+    },
+    {
+      "cell": "Intel macOS14 x86_64 Debug --build-tests",
+      "requirement": "existing CI required",
+      "status": "historical compilation only",
+      "basis": ".github/workflows/ci.yml Intel step",
+      "remainingChecks": "Compile final test-support changes with accepted toolchain when refresh required; execute separate runtime cell for Intel behavior",
+      "localAvailability": "cross-compiler available; no Intel host or working Rosetta"
+    },
+    {
+      "cell": "Catalyst current macOS27.0.1 arm64 Release package",
+      "requirement": "recommended runtime evidence; explicitly authorized investigation",
+      "status": "NEW complete1982declared:1818pass/163skip/1fail",
+      "basis": "catalyst/counts.json; unfiltered source27a045d",
+      "remainingChecks": "Resolve compiler canary; retain native-host subprocess gate as unavailable; oldest supported macOS/Catalyst and Intel remain untested",
+      "localAvailability": "completed locally"
+    },
+    {
+      "cell": "iOS27.0 arm64 simulator Release package",
+      "requirement": "recommended runtime evidence; explicitly authorized investigation",
+      "status": "prior complete1982declared:1818pass/163skip/1fail",
+      "basis": "phase-two ios/combined-candidate-v2; sourcee748, current package/source/test/benchmark tree unchanged",
+      "remainingChecks": "Resolve compiler canary; fresh source qualification after any code/toolchain change; no claim about devices/minOS",
+      "localAvailability": "installed runtime remains available"
+    },
+    {
+      "cell": "macOS14 minimum runtime arm64 and Intel",
+      "requirement": "recommended to substantiate advertised floor; no policy blanket device-test mandate",
+      "status": "unexecuted",
+      "basis": "Package.swift macOS14; CONTRIBUTING:149",
+      "remainingChecks": "Run ordinary Debug/Release library numerics/providers/storage/concurrency plus canaries on actual macOS14; Intel FP16 portability must execute on Intel",
+      "localAvailability": "no minimum OS or Intel host; installs prohibited"
+    },
+    {
+      "cell": "iOS17 minimum runtime simulator + representative physical arm64 device",
+      "requirement": "recommended to substantiate advertised floor",
+      "status": "unexecuted",
+      "basis": "Package.swift iOS17",
+      "remainingChecks": "Run ordinary enabled suite/bounded public consumer at17; retain117process-isolated limits and compiler acceptance; device check separate from simulator",
+      "localAvailability": "no17runtime; physical phones26.6.1/27.2 only"
+    },
+    {
+      "cell": "tvOS17 minimum and current runtime, simulator + representative physical device",
+      "requirement": "recommended runtime evidence for advertised platform",
+      "status": "compile-only",
+      "basis": "Package.swift tvOS17; CI compile job",
+      "remainingChecks": "Execute ordinary portable tests and public numerical/LAPACK/FP16 consumers; verify platform capability skips instead of assuming iOS counts",
+      "localAvailability": "SDK27.2 installed; no tvOS runtime or device"
+    },
+    {
+      "cell": "visionOS1 minimum and current runtime, simulator + representative physical device",
+      "requirement": "recommended runtime evidence for advertised platform",
+      "status": "compile-only",
+      "basis": "Package.swift visionOS1; CI compile job",
+      "remainingChecks": "Execute ordinary portable tests and public numerical/LAPACK/FP16 consumers; verify exact capability skips; physical device distinct",
+      "localAvailability": "SDK27.2 installed; no visionOS runtime or device"
+    },
+    {
+      "cell": "Mac Catalyst iOS17/macOS14 floor and Intel runtime",
+      "requirement": "recommended portability/runtime evidence for CI Catalyst target",
+      "status": "currentarm64runtime now observed; floor/Intel unexecuted",
+      "basis": "MacOSX27.2SDK VersionMap maps iOSMac17.0 tomacOS14.0; CI covers Catalyst compilation",
+      "remainingChecks": "Exercise same ordinary tests/canaries at oldest compatible macOS14 and on Intel; runtime support not promised for benchmarking products",
+      "localAvailability": "currentarm64host only; Rosetta fails"
+    },
+    {
+      "cell": "physical iOS27.2 arm64e device",
+      "requirement": "recommended device evidence; explicitly authorized investigation",
+      "status": "NEW Release device build/signatures/readiness succeed; test action exits 70 before bodies",
+      "basis": "device-readiness.json and physical-device-local records",
+      "remainingChecks": "Create a dedicated app-hosted test harness or bounded signed public-consumer application; preserve compiler canary and no-provisioning/security-change constraints. No physical execution claimed.",
+      "localAvailability": "Physical device is ready. Current Swift-package scheme uses tool-hosted tests, unsupported on device destinations."
+    },
+    {
+      "cell": "watchOS and Linux",
+      "requirement": "not advertised/not supported",
+      "status": "outside qualification matrix",
+      "basis": "README requirements; nowatchOS package declaration",
+      "remainingChecks": "No inferred support from C condition lists or Linux Python policy job",
+      "localAvailability": "SDK presence alone irrelevant"
+    }
+  ]
+}

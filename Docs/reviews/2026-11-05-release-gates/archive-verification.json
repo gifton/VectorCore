@@ -1,0 +1,28 @@
+{
+  "coordinatorPrivacyReview": "pass",
+  "durableCopy": {
+    "allCopiedHashesMatch": true,
+    "copiedMetadataFiles": 2,
+    "destination": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence",
+    "exactCopiedInventoryBeforeReceipt": true,
+    "payloadManifestSHA256": "d8d0e6709a78f4f0832cbae7dc653d94f006a3ef2b493c7ca8bdcfed58584875",
+    "releaseAcceptance": false,
+    "source": "/private/tmp/vectorcore-release-gates-2026-11-05/archive-stage",
+    "verifiedPayloadBytes": 123894870,
+    "verifiedPayloadFiles": 1458
+  },
+  "metadataOutsidePayload": [
+    "payload-manifest.json",
+    "archive-verification.json",
+    "durable-copy-verification.json"
+  ],
+  "payload": {
+    "allPayloadHashesMatch": true,
+    "exactPayloadInventory": true,
+    "payloadManifestSHA256": "d8d0e6709a78f4f0832cbae7dc653d94f006a3ef2b493c7ca8bdcfed58584875",
+    "releaseAcceptance": false,
+    "verifiedBytes": 123894870,
+    "verifiedFiles": 1458
+  },
+  "payloadManifestPath": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/payload-manifest.json"
+}

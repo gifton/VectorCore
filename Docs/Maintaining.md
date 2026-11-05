@@ -150,9 +150,11 @@ paths.
 
 ## Releases
 
-Start with the [November 4 qualification record](reviews/2026-11-04-release-qualification/README.md)
-for the candidate's hosted results, compiler failures and remaining runtime
-limits. Its successful CI aggregate is not a release sign-off.
+Start with the [November 5 remaining-gate investigation](reviews/2026-11-05-release-gates/README.md)
+for current compiler, platform and measurement-host gates. The
+[November 4 qualification record](reviews/2026-11-04-release-qualification/README.md)
+retains its original hosted results. Neither record supplies release sign-off;
+a successful CI aggregate does not resolve an observed numerical failure.
 
 The [2026-11-01 compiler qualification](reviews/2026-11-01-compiler-qualification/README.md)
 records the tested Swift.org toolchain, SDK, commands and limits for the 0.4.0

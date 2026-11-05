@@ -17,8 +17,9 @@ import VectorCore
 //   of that compiler build; it does not identify a missing patch.
 // - Release, Swift 6.4.0 (`compiler(>=6.4) && !compiler(>=6.4.1)`): the bug is expected. A lost store is recorded as a
 //   known issue; `isIntermittent: true` keeps the test passing if this build does not reproduce it.
-// - Release, compiler < 6.4 (CI runs 6.0 and 6.2; whether they have the bug is not known): a lost store is recorded as
-//   a known issue and never fails the test, and the test never asserts that the bug is present.
+// - Release, compiler < 6.4: the recorded Xcode 26.3 / Swift 6.2.4 hosted Release run observes a lost store;
+//   the recorded Xcode 16.2 / Swift 6.0.3 cells pass (Docs/reviews/2026-11-04-release-qualification/hosted-ci.md).
+//   A lost store is recorded as a known issue and never fails the test; the test never asserts the bug is present.
 // Scripts/ci/tests/test_lost_store_reads.py allowlists the deliberate read below and rejects the shape elsewhere.
 
 @inline(never)

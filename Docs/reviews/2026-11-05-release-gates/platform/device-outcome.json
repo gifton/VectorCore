@@ -1,0 +1,91 @@
+{
+  "sourceCommit": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+  "sourceFilesUnchanged": 388,
+  "sourceWorktreeCleanAfterExecution": true,
+  "platform": "physical iPhone, iOS 27.2 (24B119)",
+  "hardwareArchitecture": "arm64e",
+  "buildArchitecture": "arm64",
+  "buildTarget": "arm64-apple-ios17.0",
+  "selectedSDK": "iPhoneOS27.2",
+  "initialManualBuild": {
+    "exit": 65,
+    "reason": "Cached profile is Xcode-managed; manual/global profile selection was incompatible and also applied to unsupported benchmark executable"
+  },
+  "cachedAutomaticBuild": {
+    "exit": 0,
+    "timeout": false,
+    "elapsedSeconds": 273.8241761249956
+  },
+  "signing": {
+    "generatedApplicationCount": 0,
+    "host": "Xcode iPhoneOS platform xctest agent",
+    "products": [
+      {
+        "appleDevelopmentSignature": true,
+        "bundle": "MinimalTests",
+        "bundleIdentifier": "vectorcore-fixes-2026-10-27-84798d3.MinimalTests",
+        "embeddedProvisioningProfilePresent": false,
+        "executableSHA256": "7c0d0c884951026833a5721d23901cb9550180f0dad83b9a8c29be92b6e3d7ea",
+        "profileScope": "Standalone .xctest bundle has no embedded profile; no profile-use claim. Standard platform test agent launch decides device admissibility.",
+        "signatureVerificationExit": 0,
+        "signingTeamMatchesSelectedBuildTeam": true
+      },
+      {
+        "appleDevelopmentSignature": true,
+        "bundle": "ComprehensiveTests",
+        "bundleIdentifier": "vectorcore-fixes-2026-10-27-84798d3.ComprehensiveTests",
+        "embeddedProvisioningProfilePresent": false,
+        "executableSHA256": "fdbfa47addfbceeb36ac7604be68ec3abfee23e2693b403d080c802498e682e1",
+        "profileScope": "Standalone .xctest bundle has no embedded profile; no profile-use claim. Standard platform test agent launch decides device admissibility.",
+        "signatureVerificationExit": 0,
+        "signingTeamMatchesSelectedBuildTeam": true
+      },
+      {
+        "appleDevelopmentSignature": true,
+        "bundle": "BenchmarkContractTests",
+        "bundleIdentifier": "vectorcore-fixes-2026-10-27-84798d3.BenchmarkContractTests",
+        "embeddedProvisioningProfilePresent": false,
+        "executableSHA256": "c2537f389b42519bdffd464ec04381a244012e30101d2336deb337704dc592ae",
+        "profileScope": "Standalone .xctest bundle has no embedded profile; no profile-use claim. Standard platform test agent launch decides device admissibility.",
+        "signatureVerificationExit": 0,
+        "signingTeamMatchesSelectedBuildTeam": true
+      }
+    ],
+    "unrelatedApplicationReplacement": "No .app product or app-hosted test bundle is in this xctestrun; no manual installation performed."
+  },
+  "readiness": {
+    "ddiServicesAvailable": true,
+    "developerMode": "enabled",
+    "guardPlanSHA256": "a3dc2b364406609fe58767c4ff4cf2ded157db4b607dc0c8f6a60634a42cfbee",
+    "paired": true,
+    "payloadSHA256": "8e5384bf782e45a358d6a77864b3577db2e752f723137fd544424096f58d38cb",
+    "ready": true,
+    "tunnelState": "connected"
+  },
+  "testAction": {
+    "exit": 70,
+    "timeout": false,
+    "elapsedSeconds": 1.5898713340284303,
+    "deadlineSeconds": 900
+  },
+  "testBodiesExecuted": 0,
+  "testStartRecordsObserved": 0,
+  "result": "infrastructure-unsupported-tool-hosted-device-tests",
+  "diagnostics": [
+    "xcodebuild: error: Failed to build workspace VectorCore with scheme VectorCore-Package.: Cannot test target \u201cMinimalTests\u201d on \u201c<physical device>\u201d: Tool-hosted testing is unavailable on device destinations. Select a host application for the test target, or use a simulator destination instead.",
+    "Cannot test target \u201cComprehensiveTests\u201d on \u201c<physical device>\u201d: Tool-hosted testing is unavailable on device destinations. Select a host application for the test target, or use a simulator destination instead.",
+    "Cannot test target \u201cBenchmarkContractTests\u201d on \u201c<physical device>\u201d: Tool-hosted testing is unavailable on device destinations. Select a host application for the test target, or use a simulator destination instead."
+  ],
+  "nextRequirement": "A dedicated app-hosted test harness or bounded signed public-consumer application is required; not new provisioning or device security changes. Not built in this task.",
+  "applicationBundlesGenerated": 0,
+  "manualAppInstallations": 0,
+  "provisioningUpdatesAllowed": false,
+  "rawCommandRecordSHA256": "9fc4e3cb60cd140c7bb15f0dd0027f0e612f0719820e2841cdb50432a38a1a3f",
+  "rawStdoutSHA256": "2eed38cfdba6c1e7eaf29cdc09d90675e36ae0bfdb7008863cb93151453684ae",
+  "rawStderrSHA256": "cdca0a042cfadce41ee2f87b9dfe8084650223f86411a6caa6b58dd4be8011fb",
+  "limitations": [
+    "No physical-device method passed or failed because Xcode rejected before execution.",
+    "Build/signature/readiness successes do not establish physical runtime correctness.",
+    "Standalone .xctest bundles had no embedded provisioning profiles; actual signatures matched selected development team, no profile-use claim."
+  ]
+}

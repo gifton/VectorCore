@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -452,7 +453,7 @@ struct P02GramRouteTests {
     /// In a fresh child (the E06 isolation helper; the configuration is restored afterwards): with
     /// `enableMatrixRouting = false`, `.gram` still runs its tiles and returns the sorted tile scores; with it false and
     /// then true (and `matrixRoutingMinN = 1`), the default runs no Gram tile and every row equals `findNearest`.
-    @Test func matrixRoutingFlagDoesNotAffectBatchSearch() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func matrixRoutingFlagDoesNotAffectBatchSearch() async throws {
         try await e06IsolatedScenario("p02-matrix-routing-flag",
                                       filter: "P02GramRouteTests/matrixRoutingFlagDoesNotAffectBatchSearch") {
             let all = try p02Vectors(p02Rows(.near, width: 512), as: Vector512Optimized.self)

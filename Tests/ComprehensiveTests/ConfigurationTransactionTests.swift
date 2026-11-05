@@ -185,19 +185,19 @@ extension ConfigurationTransactionTests {
         print("E03 child \(scenario) exit=\(process.statusDescription) log=\(output.path)")
     }
 
-    @Test func concurrentBatchIncrementsPreserveAllUpdates() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func concurrentBatchIncrementsPreserveAllUpdates() throws {
         try runGlobalChild("increments", result: "E03 increment round=2 actual=101 expected=101")
     }
 
-    @Test func concurrentIndependentFieldsPreserveBothTotals() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func concurrentIndependentFieldsPreserveBothTotals() throws {
         try runGlobalChild("independent", result: "E03 fields round=2 threshold=101 chunk=101 expected=101,101")
     }
 
-    @Test func batchRollbackPreservesEveryFieldAndErrorIdentity() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func batchRollbackPreservesEveryFieldAndErrorIdentity() throws {
         try runGlobalChild("rollback", result: "E03 rollback six-fields identity=true restored=true")
     }
 
-    @Test func concurrentSnapshotsObserveCompleteTuples() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func concurrentSnapshotsObserveCompleteTuples() throws {
         try runGlobalChild("snapshots", result: "E03 tuple observations=100 valid=true")
     }
 

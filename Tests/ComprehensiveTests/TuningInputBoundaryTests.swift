@@ -12,7 +12,7 @@ import Testing
         print("F008_INVALID_TUNING_ACCEPTED")
     }
 
-    @Test(arguments: ["threshold", "threshold-min", "chunk-zero", "chunk-negative", "chunk-min"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: ["threshold", "threshold-min", "chunk-zero", "chunk-negative", "chunk-min"])
     func invalidTuningRejectsAtConstruction(_ scenario: String) throws {
         let environment = ProcessInfo.processInfo.environment.merging([
             "F008_INVALID_TUNING": scenario, "SWIFT_BACKTRACE": "enable=no"

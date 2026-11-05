@@ -59,6 +59,7 @@ control. No git history is used, so the test passes in a git-less export.
 """
 
 import importlib.util
+import json
 import re
 import unittest
 from pathlib import Path
@@ -372,6 +373,29 @@ def _write_tree(base, launcher_text, callers=MIN_CALL_FILES):
         path.write_text(POST_FIX_SITE)
 
 
+def host_operations_outside_macos(source):
+    """Conservative source gate: native test-process operations require an enclosing macOS branch.
+
+    This follows nested #if/#else/#endif structure, not arbitrary Swift conditions.
+    Compiler typechecking and simulator execution establish the actual SDK boundary.
+    """
+    stack, violations = [], []
+    for line, text in enumerate(_mask(source).splitlines(), 1):
+        stripped = text.strip()
+        if stripped.startswith('#if '):
+            stack.append(stripped == '#if os(macOS)')
+        elif stripped.startswith(('#else', '#elseif')):
+            if stack:
+                stack[-1] = False
+        elif stripped == '#endif':
+            if stack:
+                stack.pop()
+        elif re.search(r'\b(?:posix_spawn|posix_spawnp|execve|fork|vfork)\s*\(', text):
+            if not any(stack):
+                violations.append(line)
+    return violations
+
+
 class ChildProbeLaunchPolicyTests(unittest.TestCase):
     def test_ordinary_budget_controls(self):
         self.assertEqual(budget_findings(POST_FIX_SITE), [])
@@ -440,6 +464,44 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
                     duplicated = source[:body[1]] + call + '\n' + source[body[1]:]
                     self.assertIn((0, f'expected exactly 1 budget exception in {function}, found 2'),
                                   budget_findings(duplicated, path))
+
+    def test_capability_inventory_matches_individual_swift_testing_gates(self):
+        inventory = json.loads((ROOT / 'Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json').read_text())
+        expected = {(row['path'], row['method']) for row in inventory
+                    if row['contract'] == 'Swift Testing subprocess isolation'}
+        observed = set()
+        for path in (ROOT / 'Tests/ComprehensiveTests').glob('*.swift'):
+            source = _mask(path.read_text())
+            # Test attributes precede their function declaration. Reject a suite-level gate:
+            # adding one would silently disable otherwise portable numerical tests.
+            self.assertNotRegex(source, r'@Suite[^{}]*childProbeProcessesSupported')
+            for match in re.finditer(r'@Test(?P<attributes>[^{}]*?)\bfunc\s+(?P<name>\w+)\s*\(', source):
+                if 'childProbeProcessesSupported' in match['attributes']:
+                    observed.add((str(path.relative_to(ROOT)), match['name']))
+        self.assertEqual(observed, expected)
+        self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
+                          'portableTerminationPreservesExitAndSignalDiagnostics'), observed)
+        self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
+                          'unreapedChildReadsFailWithoutTrapping'), observed)
+
+    def test_native_process_operations_require_macos_compile_boundary(self):
+        for path in (ROOT / 'Tests').rglob('*.swift'):
+            self.assertEqual(host_operations_outside_macos(path.read_text()), [], str(path))
+        operation = 'posix_spawn(&pid, path, nil, nil, argv, env)'
+        self.assertEqual(host_operations_outside_macos('#if os(macOS)\n' + operation + '\n#endif'), [])
+        for source in [operation, '#if os(iOS)\n' + operation + '\n#endif',
+                       '#if os(macOS)\n#else\n' + operation + '\n#endif']:
+            self.assertNotEqual(host_operations_outside_macos(source), [])
+        self.assertEqual(host_operations_outside_macos('// ' + operation), [])
+        self.assertEqual(host_operations_outside_macos('#if os(macOS)\n#if DEBUG\n' + operation + '\n#endif\n#endif'), [])
+
+    def test_portable_result_types_do_not_reference_foundation_process(self):
+        # The iOS SDK has no Process type, including its nested TerminationReason.
+        paths = [ROOT / LAUNCHER, *sorted((ROOT / 'Tests/ComprehensiveTests').glob('*.swift')),
+                 *sorted((ROOT / 'Tests/BenchmarkContractTests').glob('*.swift'))]
+        violations = [str(path.relative_to(ROOT)) for path in paths
+                      if re.search(r'\bProcess\s*\.', _mask(path.read_text()))]
+        self.assertEqual(violations, [])
 
     def test_shared_launcher_is_in_test_support(self):
         self.assertEqual(LAUNCHER, 'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift')

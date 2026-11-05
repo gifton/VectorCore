@@ -223,7 +223,7 @@ extension LinearAlgebraRangeTests {
         }
     }
 
-    @Test(.serialized, arguments: ["nonfinite", "overflow", "lower", "immutability"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized, arguments: ["nonfinite", "overflow", "lower", "immutability"])
     func boundedDomain(_ scenario: String) throws {
         var env = ProcessInfo.processInfo.environment
         env["L01_SCENARIO"] = scenario

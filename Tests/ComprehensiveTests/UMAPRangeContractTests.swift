@@ -366,7 +366,7 @@ struct UMAPRangeContractTests {
         print("L03_CHILD_END \(name)")
     }
 
-    @Test(arguments: ["csr", "csrMatrix", "dimensions", "vectorDimensions", "negativeRate", "vectorNegativeRate", "epochs", "vectorEpochs", "product"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: ["csr", "csrMatrix", "dimensions", "vectorDimensions", "negativeRate", "vectorNegativeRate", "epochs", "vectorEpochs", "product"])
     func boundedPublicRejections(_ name: String) throws {
         if ProcessInfo.processInfo.environment["L03_VALID_ONLY"] == "1" { return }
         let evidenceRoot = FileManager.default.temporaryDirectory.appendingPathComponent("L03-children")

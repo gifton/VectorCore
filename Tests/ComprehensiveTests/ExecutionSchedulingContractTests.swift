@@ -49,7 +49,7 @@ private struct E02SpyMetric: DistanceMetric {
 }
 
 @Suite struct ExecutionSchedulingContractTests {
-    @Test(arguments: ["defaultBound", "cancelSerial", "factory1", "factory1000", "shape", "batchControl", "gatedCancellation", "shortBatch", "reverseAndError"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: ["defaultBound", "cancelSerial", "factory1", "factory1000", "shape", "batchControl", "gatedCancellation", "shortBatch", "reverseAndError"])
     func boundedRegressionChild(scenario: String) throws {
         var env = ProcessInfo.processInfo.environment
         env["E02_CHILD"] = scenario; env["SWIFT_BACKTRACE"] = "enable=no"
@@ -769,7 +769,7 @@ extension ExecutionSchedulingContractTests {
 
 
 extension ExecutionSchedulingContractTests {
-    @Test func watchdogRejectsTimedOutChild() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func watchdogRejectsTimedOutChild() throws {
         do {
             try boundedRegressionChild(scenario: "watchdog")
             Issue.record("Watchdog child unexpectedly returned")
@@ -781,7 +781,7 @@ extension ExecutionSchedulingContractTests {
 }
 
 extension ExecutionSchedulingContractTests {
-    @Test func publicGenericNearestBoundaryWorkerObservation() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func publicGenericNearestBoundaryWorkerObservation() async throws {
         try await e06IsolatedScenario("generic-nearest", filter: "ExecutionSchedulingContractTests/publicGenericNearestBoundaryWorkerObservation") {
         try await BatchOperations.updateConfiguration { $0.parallelThreshold = 35 }
         // Live threshold neighbors retain the independent numerical and worker controls.

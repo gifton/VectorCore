@@ -127,6 +127,8 @@ package enum ChildProbeRunnerShape: Sendable, Equatable {
 package enum ChildProbeLaunchError: Error, CustomStringConvertible {
     /// A child probe tried to launch a probe.
     case nestedLaunch(String)
+    /// This platform does not support relaunching a test runner.
+    case unsupportedPlatform(String)
     /// The parent's runner argv has a shape the launcher cannot re-select from.
     case unrecognizedRunner(String)
     /// The parent's runner argv carries a selection source that cannot be removed safely.
@@ -144,18 +146,35 @@ package enum ChildProbeLaunchError: Error, CustomStringConvertible {
         switch self {
         case .nestedLaunch(let message), .unrecognizedRunner(let message), .refusedRunnerArgument(let message),
              .invalidSelection(let message), .spawnFailed(let message), .waitStatusUnavailable(let message),
-             .unreaped(let message):
+             .unreaped(let message), .unsupportedPlatform(let message):
             return message
         }
     }
 }
 
+/// Portable result labels; raw values preserve existing capture diagnostics.
+/// `portableTerminationPreservesExitAndSignalDiagnostics` pins both labels and values.
+package enum ChildProbeTerminationReason: Int, Sendable {
+    case exit = 1
+    case uncaughtSignal = 2
+}
+
+/// Subprocess probes require macOS process creation and test-runner relaunch support.
+/// Pure selector/result tests remain available on every platform.
+package var childProbeProcessesSupported: Bool {
+    #if os(macOS)
+    true
+    #else
+    false
+    #endif
+}
+
 package struct ChildProbeTermination: Sendable, Equatable {
     /// Exit code for `.exit`, signal number for `.uncaughtSignal` (as Foundation `Process` reports).
     package let status: Int32
-    package let reason: Process.TerminationReason
+    package let reason: ChildProbeTerminationReason
 
-    package init(status: Int32, reason: Process.TerminationReason) {
+    package init(status: Int32, reason: ChildProbeTerminationReason) {
         self.status = status
         self.reason = reason
     }
@@ -190,7 +209,7 @@ package struct ChildProbeRun: Sendable {
     package var isRunning: Bool { termination == nil }
     /// Nil for an unreaped child, so `== 0` / `== .uncaughtSignal` assertions fail rather than trap.
     package var terminationStatus: Int32? { termination?.status }
-    package var terminationReason: Process.TerminationReason? { termination?.reason }
+    package var terminationReason: ChildProbeTerminationReason? { termination?.reason }
     /// For diagnostics: the value as before, or "unreaped".
     package var statusDescription: String { termination.map { String($0.status) } ?? "unreaped" }
     package var reasonDescription: String { termination.map { String($0.reason.rawValue) } ?? "unreaped" }
@@ -302,6 +321,7 @@ package func childProbeArguments(for selector: ChildProbeSelector, executable: S
 /// child leaves behind. See the file header for the contract.
 package func launchChildProbe(_ selector: ChildProbeSelector, environment: [String: String], output: FileHandle,
                       deadline: Double, cleanup: ChildProbeCleanup) throws -> ChildProbeRun {
+    #if os(macOS)
     try refuseNestedChildProbeLaunch(selector, environment: ProcessInfo.processInfo.environment)
     let executable = CommandLine.arguments[0]
     let arguments = try childProbeArguments(for: selector, executable: executable,
@@ -338,12 +358,16 @@ package func launchChildProbe(_ selector: ChildProbeSelector, environment: [Stri
     }
     return ChildProbeRun(executable: executable, arguments: arguments, processIdentifier: pid, processGroup: pid,
                          timedOut: timedOut, cleaned: cleaned, termination: termination)
+    #else
+    throw ChildProbeLaunchError.unsupportedPlatform("Child-process probes require macOS")
+    #endif
 }
 
 /// Replaces an already marked child without spawning another process.
 /// `testMetadataDirectExecRejectsInvalidRequests` exercises refusal/error paths;
 /// `testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation` verifies native PID/group continuity.
 package func replaceMarkedChildProbe(command: [String], environment: [String: String]) throws -> Never {
+    #if os(macOS)
     func failure(_ detail: String, code: Int32 = EINVAL) -> NSError {
         NSError(domain: "ChildProbeReplacement." + detail, code: Int(code))
     }
@@ -370,8 +394,12 @@ package func replaceMarkedChildProbe(command: [String], environment: [String: St
     }
     execve(executable, argv, envp)
     throw failure("exec", code: errno)
+    #else
+    throw ChildProbeLaunchError.unsupportedPlatform("Child-process probes require macOS")
+    #endif
 }
 
+#if os(macOS)
 /// Owns the child's PID and process group from spawn to reap.
 private final class ChildProbeReaper: @unchecked Sendable {
     let pid: pid_t
@@ -476,3 +504,5 @@ private func spawnChildProbeGroupLeader(executable: String, arguments: [String],
     try check(posix_spawn(&pid, executable, &actions, &attributes, argv, envp), "posix_spawn \(executable)")
     return pid
 }
+
+#endif

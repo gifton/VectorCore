@@ -27,7 +27,7 @@ import Glibc
     // Exercises capacity rejection at the public initializer boundary. For "nearest", the own k
     // precondition and MinHeap's delegated precondition have no observable boundary between them;
     // the mutation runner records that redundant-placement survivor explicitly.
-    @Test(.serialized,arguments:["empty","bulk","nearest"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized,arguments:["empty","bulk","nearest"])
     func negativeCapacity(_ scenario:String) throws {
         var env=ProcessInfo.processInfo.environment;env["R04_SCENARIO"]=scenario
         // Never write into the package tree: default to a unique temporary directory.

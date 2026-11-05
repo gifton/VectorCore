@@ -154,6 +154,7 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
     }
 
     private func runChild(_ mode: String, expectsTrap: Bool) throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         var env = ProcessInfo.processInfo.environment
         env["E01_CHILD"] = mode
         let output = FileManager.default.temporaryDirectory.appendingPathComponent("E01-\(UUID().uuidString).log")

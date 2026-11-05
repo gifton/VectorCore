@@ -242,7 +242,7 @@ extension UnsafeMemoryContractTests {
         print("O04_INVALID_ACCEPTED")
     }
 
-    @Test func invalidInputsRejectInBoundedChildren() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func invalidInputsRejectInBoundedChildren() throws {
         for spec in ["normalize", "copy-count", "copy-zero-hint", "copy-negative-hint", "alloc-zero", "alloc-small", "alloc-odd", "storage-negative", "storage-overflow",
             "storage-zero-alignment", "storage-odd-alignment"] {
             let environment = ProcessInfo.processInfo.environment

@@ -343,7 +343,7 @@ import Testing
         print("R02_REENTRANT_SNAPSHOT_COMPLETE")
     }
 
-    @Test func reentrantMetricMutatesOutsideLockAndKeepsCapturedCandidates() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func reentrantMetricMutatesOutsideLockAndKeepsCapturedCandidates() throws {
         var environment = ProcessInfo.processInfo.environment
         environment["R02_REENTRANT_PROBE"] = "1"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("R02-reentrant-\(UUID().uuidString).log")

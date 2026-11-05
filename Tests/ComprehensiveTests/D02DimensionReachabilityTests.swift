@@ -301,7 +301,7 @@ struct D02DimensionInvalidCaseTests {
         print("D02_TRAP_NOT_TAKEN \(specification)")
     }
 
-    @Test("R6: the trapping forms trap (child-isolated)")
+    @Test("R6: the trapping forms trap (child-isolated)", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func trappingFormsTrap() throws {
         if ProcessInfo.processInfo.environment["D02_SKIP_TRAPS"] == "1" { return }
         for specification in ["unitX-V0", "basis-out-of-range", "e-negative", "oneHot-out-of-range", "pattern-empty"] {

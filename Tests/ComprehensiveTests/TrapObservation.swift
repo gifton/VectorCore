@@ -50,7 +50,7 @@ func trapObservationFailures(_ run: ChildProbeRun, output: String, id: String,
         raise(mode == "unrelated" ? SIGABRT : SIGTRAP)
     }
 
-    @Test(arguments: ["before", "unrelated", "downstream"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: ["before", "unrelated", "downstream"])
     func unrelatedSignalsCannotSatisfyObservation(_ mode: String) throws {
         var env = ProcessInfo.processInfo.environment
         env["TRAP_OBSERVATION_CONTROL"] = mode

@@ -218,6 +218,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     private static func runFixture(environment: [String: String], output: URL,
                                    deadline: Double = ChildProbeBudget.standard.deadline,
                                    cleanup: ChildProbeCleanup = ChildProbeBudget.standard.cleanup) throws -> ChildProbeRun {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         var inherited = ProcessInfo.processInfo.environment
         inherited.merge(environment) { _, supplied in supplied }
         _ = FileManager.default.createFile(atPath: output.path, contents: nil)
@@ -582,6 +583,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testMetadataDirectExecRejectsInvalidRequests() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS process replacement")
         let absent = FileManager.default.temporaryDirectory.appendingPathComponent("unmarked-exec-" + UUID().uuidString)
         XCTAssertThrowsError(try replaceMarkedChildProbe(command: [absent.path], environment: [:])) { error in
             XCTAssertEqual((error as NSError).domain, "ChildProbeReplacement.unmarked")

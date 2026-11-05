@@ -242,7 +242,7 @@ struct D02DegenerateWidthTests {
         print("D02_EDGE_NOT_TAKEN \(specification)")
     }
 
-    @Test("Trapping outcomes trap in a child (message checked in Debug builds)")
+    @Test("Trapping outcomes trap in a child (message checked in Debug builds)", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func trappingOutcomes() throws {
         if ProcessInfo.processInfo.environment["D02_SKIP_TRAPS"] == "1" { return }
         var traps: [(String, String, String)] = []

@@ -229,10 +229,13 @@ exits 2 when the comparison is invalid: either report records an execution or co
 array (never waivable), incompatible run metadata (unless `--allow-incompatible`), a present but different boundary
 (never waivable), zero matched cases, a missing requested statistic, or malformed input. A report has a median, p90 and
 mean only when it was run with `--samples` of 2 or more, and the comparator never substitutes another statistic, so
-the benchmark step above passes `--samples 5`. These exit codes are read from the script's `main()` and its report
-reader. The benchmark-contracts CI job (`Scripts/ci/tests/test_benchmark_contracts.py`) runs the comparator only for
-the baselines README invocations (exit 0 against the stored files; exit 2 without `--allow-incompatible` and for a
-missing statistic) and for its build-configuration warnings; the other exit codes are not verified by a test. See
+the benchmark step above passes `--samples 5`. The required benchmark-contracts command
+(`Scripts/ci/tests/test_benchmark_contracts.py`) executes the baselines README/configuration controls and the
+current-schema tables in `Scripts/ci/tests/test_benchmark_reporting.py`. It also compares actual strict-correctness
+product reports and checks identity, missing-case, invalid-numeric and recorded-failure controls on both report sides.
+The [November 4 comparator execution record](reviews/2026-11-04-release-phase-one/benchmarks/README.md)
+records the local commands, expected exits and limitations. Contract success does not establish performance acceptance;
+the distinct-run timing result remains an observation, and the optional adversarial CSV branch is outside that run. See
 [Comparing reports across runs](Benchmark_Measurement_Boundaries.md#comparing-reports-across-runs) and
 `Benchmarks/baselines/README.md`.
 

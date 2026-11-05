@@ -63,11 +63,22 @@ def swift_testing(text, discovery=None):
               'runStarted': begun, 'runEnded': complete, 'ended': sorted(functions & ended),
               'interrupted': sorted((functions & started) - ended)}
     if discovery is not None:
-        normalized = {f.rsplit('/', 1)[0] for f in functions}
-        result['discoveryMissing'] = sorted(set(discovery) - normalized)
-        result['discoveryUnexpected'] = sorted(normalized - set(discovery))
-        if normalized != set(discovery): errors.append('independent discovery differs from event inventory')
-    result['accepted'] = bool(functions) and begun and complete and not (pending or failed or inherited_skips or unknown or errors)
+        # Independent selectors remain authoritative even if the event file is empty.
+        # test_independent_discovery_preserves_exact_empty_and_partial_scope pins this.
+        universe = set(discovery)
+        selector = {f: f.rsplit('/', 1)[0] for f in functions}
+        normalized = set(selector.values())
+        result['eventInventory'] = sorted(functions)
+        result['eventPending'] = result['pending']
+        for key in ['started', 'passed', 'failed', 'skipped', 'ended', 'interrupted']:
+            result['event' + key.title()] = result[key]
+            result[key] = sorted({selector[f] for f in result[key]} & universe)
+        result['discovered'] = sorted(universe)
+        result['pending'] = sorted(universe - set(result['passed']) - set(result['failed']) - set(result['skipped']))
+        result['discoveryMissing'] = sorted(universe - normalized)
+        result['discoveryUnexpected'] = sorted(normalized - universe)
+        if normalized != universe: errors.append('independent discovery differs from event inventory')
+    result['accepted'] = bool(result['discovered']) and begun and complete and not (result['pending'] or failed or result['skipped'] or unknown or errors)
     return result
 
 

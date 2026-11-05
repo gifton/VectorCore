@@ -52,12 +52,31 @@ class ScopeControls(unittest.TestCase):
                     begin+end.replace('passed','skipped')+summary.replace('0 failures','1 test skipped and 0 failures')]:
             with self.subTest(bad=bad):self.assertFalse(checker.xctest(bad,['M.S/f'])['accepted'])
 
-    def test_independent_discovery_catches_missing_function_inventory(self):
+    def test_independent_discovery_preserves_exact_empty_and_partial_scope(self):
+        universe = ['M.S/f()', 'M.S/missing()']
         text = stream(item('event', kind='testStarted', testID='M.S/f()/F.swift:1:1'),
                       item('event', kind='testEnded', testID='M.S/f()/F.swift:1:1', messages=[{'symbol':'pass'}]),
                       item('event', kind='runEnded'))
-        self.assertFalse(checker.swift_testing(text, ['M.S/f()', 'M.S/missing()'])['accepted'])
-        self.assertTrue(checker.swift_testing(text, ['M.S/f()'])['accepted'])
+        for output, passed, pending in [('', [], universe), (text, ['M.S/f()'], ['M.S/missing()'])]:
+            with self.subTest(output=bool(output)):
+                result = checker.swift_testing(output, universe)
+                self.assertEqual(result['discovered'], universe)
+                self.assertEqual(result['passed'], passed)
+                self.assertEqual(result['pending'], pending)
+                self.assertEqual(len(result['discovered']), 2)
+                self.assertEqual(len(result['pending']), len(pending))
+                self.assertFalse(result['accepted'])
+        full = checker.swift_testing(text, ['M.S/f()'])
+        self.assertTrue(full['accepted'])
+        self.assertEqual(full['eventInventory'], ['M.S/f()/F.swift:1:1'])
+        self.assertEqual(full['started'], ['M.S/f()'])
+
+    def test_unexpected_event_inventory_cannot_expand_independent_universe(self):
+        result = checker.swift_testing(stream(), ['M.S/other()'])
+        self.assertEqual(result['discovered'], ['M.S/other()'])
+        self.assertEqual(result['pending'], ['M.S/other()'])
+        self.assertEqual(result['discoveryUnexpected'], ['M.S/f()'])
+        self.assertFalse(result['accepted'])
 
     def test_interrupted_failing_function_stays_pending_until_end(self):
         text = stream(item('event', kind='testStarted', testID='M.S/f()/F.swift:1:1'),

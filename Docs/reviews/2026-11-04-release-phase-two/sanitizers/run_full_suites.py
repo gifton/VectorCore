@@ -16,31 +16,23 @@ from check_sanitizers import sanitizer_host_environment
 from swiftpm_products import check_no_rebuild
 from v03_process import run, sha, test_environment, write_json
 from scope_check import swift_testing, xctest, qualifies, images_verified
+from source_binding import capture_source, admit_association
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--driver-result', type=Path, required=True)
-    parser.add_argument('--source-identity', type=Path, required=True,
-                        help='Pre-build JSON: inputs path/hash map and packageSHA256 (phase-one identity format).')
+    parser.add_argument('--association', type=Path, required=True,
+                        help='Fresh producer association.json; independently supplied source/result pairs are refused.')
     parser.add_argument('--scope', required=True, help='Exact source scope, e.g. baseline or combined commits.')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     output = args.output.resolve()
     if output.exists(): raise ValueError('Use a fresh output directory')
     output.mkdir(parents=True)
-    identity = json.loads(args.source_identity.read_text())
-    inputs = identity['inputs']
-    if not inputs or not any(p.startswith('Tests/') for p in inputs):
-        raise ValueError('Source identity must include test inputs')
-    _, tracked = run(['/usr/bin/git', 'ls-files', 'Sources', 'Tests', 'Benchmarks'], output, 'tracked-inputs',
-                     cwd=ROOT, environment=test_environment(), timeout=15)
-    if set(tracked.splitlines()) != set(inputs):
-        raise ValueError('Source identity must include every tracked Sources/Tests/Benchmarks input')
-    mismatches = [p for p, digest in inputs.items() if sha(ROOT / p) != digest]
-    if mismatches or sha(ROOT / 'Package.swift') != identity['packageSHA256']:
-        raise ValueError('Source identity mismatch: ' + str(mismatches))
-    data = json.loads(args.driver_result.read_text())
+    current = capture_source(ROOT, output, 'admission', test_environment())
+    bound = admit_association(args.association, ROOT, current)
+    driver_result, source_identity = bound['driverResult'], bound['sourceIdentity']
+    data = bound['data']
     if data['configuration'] != 'release' or data['buildSystem'] != 'native':
         raise ValueError('This experiment requires the verified native Release layout')
     sanitizer = data['sanitizer']
@@ -61,11 +53,22 @@ def main():
     if str(host) != data['host'] or sha(runtime) != data['runtimeSHA256']:
         raise ValueError('Selected helper/runtime differs from build qualification')
     shutil.copytree(bundle.parents[2], output / bundle.parents[2].name)
-    for path in [host, runtime, args.driver_result, args.source_identity]:
+    xctest_host = Path('/Applications/Xcode.app/Contents/Developer/usr/bin/xctest').resolve()
+    for path in [host, runtime, xctest_host, driver_result, source_identity, args.association]:
         shutil.copy2(path, output / path.name)
-    write_json(output / 'identity.json', {'scope': args.scope, 'sourceIdentitySHA256': sha(args.source_identity),
-        'driverResultSHA256': sha(args.driver_result), 'bundleSHA256': sha(bundle), 'inventory': list(map(str, inventory)),
-        'hostSHA256': sha(host), 'runtimeSHA256': sha(runtime), 'sourceInputs': inputs,
+    proof = output / 'association-evidence'
+    proof.mkdir()
+    for name, path in bound['records'].items():
+        shutil.copy2(path, proof / path.name)
+        if name in ['driverCommand', 'buildCommand']:
+            command = json.loads(path.read_text())
+            for stream in ['stdout', 'stderr']:
+                source = Path(command[stream]['path'])
+                shutil.copy2(source, proof / source.name)
+    write_json(output / 'identity.json', {'scope': args.scope, 'sourceIdentitySHA256': sha(source_identity),
+        'associationSHA256': sha(args.association), 'xctestHost': str(xctest_host), 'xctestHostSHA256': sha(xctest_host),
+        'driverResultSHA256': sha(driver_result), 'bundleSHA256': sha(bundle), 'inventory': list(map(str, inventory)),
+        'hostSHA256': sha(host), 'runtimeSHA256': sha(runtime), 'sourceInputs': bound['identity']['inputs'],
         'frontendSHA256': sha(swift.parent / 'swift-frontend'), 'packageSHA256': sha(ROOT / 'Package.swift')})
     flags = ['--configuration', 'release', '--jobs', '2', '--scratch-path', Path(data['binPath']).parents[1],
              '--sanitize', sanitizer, '--build-system', 'native', '-Xswiftc', '-enable-testing']
@@ -92,7 +95,7 @@ def main():
             deadline = 1200
             loaded_host = host
         else:
-            loaded_host = Path('/Applications/Xcode.app/Contents/Developer/usr/bin/xctest').resolve()
+            loaded_host = xctest_host
             argv = [loaded_host, '-XCTest', ','.join(sorted(xctests)), bundle.parents[2]]
             deadline = 1200
         try:
@@ -114,8 +117,8 @@ def main():
         results[framework] = {'counts': result['counts'], 'qualified': result['qualified'], 'exit': command.get('exit'),
                               'timeout': command['timeout'], 'imagesVerified': result['imagesVerified']}
         print(framework, results[framework], flush=True)
-    if any(sha(ROOT / p) != digest for p, digest in inputs.items()) or sha(bundle) != data['loadedBundles'][next(iter(data['loadedBundles']))]['sha256']:
-        raise ValueError('Source or executed bundle changed during execution')
+    # A changed source, command record, result or retained bundle invalidates the run.
+    admit_association(args.association, ROOT, capture_source(ROOT, output, 'after-execution', test_environment()))
     write_json(output / 'summary.json', {'scope': args.scope, 'sanitizer': sanitizer, 'results': results,
         'note': 'Complete nonempty XCTest discovery is selected explicitly; bounded single/comma probes exclude the automatic Swift Testing overlap. Exact executed coverage is still checked.'})
 

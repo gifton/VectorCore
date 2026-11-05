@@ -4,15 +4,24 @@ These tools extend the phase-two execution record without changing the pinned sa
 
 `scope_check.py` reads independent discovery plus Swift Testing version-0 events or XCTest started/ended summaries. Missing/empty/truncated output, failed or skipped tests, unknown selectors, nonzero exits and timeouts cannot qualify a complete unskipped scope. `test_scope_check.py` names the negative controls. Failed, skipped and pending selectors are retained individually. Parameterized functions count once; their individual argument cases remain in the raw event stream. Child-probe helper functions can return without an active scenario; their ordinary pass is not evidence that every child scenario executed.
 
-`run_full_suites.py` consumes the mandatory driver's native Release result and a prebuild source identity containing every tracked `Sources`, `Tests` and `Benchmarks` file hash plus `packageSHA256`. It verifies retained bundle/helper/runtime identity, independently inventories both frameworks, then executes both hosts with bounded capture and actual loaded-image checks. It performs no compilation. Example, from the exact source tree used for the supplied build:
+`build_bound_sanitizers.py` creates the admitted source/build association. It requires fresh, separate scratch and evidence roots, captures package/source/CI/producer input hashes before and after the unchanged mandatory driver, fixes only this experiment's explicit Release/native/two-job invocation, and binds its successful outer/build command records, exact mandatory result and matching retained bundle. The effective build root is `<fresh scratch base>/<SHA256(prebuild snapshot)>`; admission checks that digest against both actual command argv and the resulting bundle paths, so replacing source snapshots cannot relabel an old build. Failed commands, changed inputs and stale/swapped result or artifact records cannot produce/admit an accepted association. `test_source_binding.py` exercises these controls through the actual producer with an explicitly synthetic driver, including an unchanged selector whose body changes between builds. No native compilation is part of those controls.
+
+`run_full_suites.py` now **requires that association**. The earlier independent `--driver-result`/`--source-identity` interface is removed. Admission rechecks current inputs against both bound snapshots, then verifies the command/result/artifact links before discovery or execution. It retains the resolved XCTest executable alongside the helper/runtime, plus associated command/source/result records. After execution it rechecks the association. Historical baseline evidence remains unchanged and is not retroactively associated by this producer.
+
+From the exact integrated source root, preserving the established verified-toolchain lookup `PATH`, `SDKROOT` and `SWIFT_EXEC` environment:
 
 ```sh
+python3 Docs/reviews/2026-11-04-release-phase-two/sanitizers/build_bound_sanitizers.py \
+  --sanitizer address \
+  --scratch-root /absolute/fresh-address-build \
+  --output /absolute/fresh-address-bound
 python3 Docs/reviews/2026-11-04-release-phase-two/sanitizers/run_full_suites.py \
-  --driver-result /absolute/mandatory-output/result.json \
-  --source-identity /absolute/prebuild-identity.json \
-  --scope 'exact commits and changed-input inclusion' \
-  --output /absolute/fresh-broader-output
+  --association /absolute/fresh-address-bound/association.json \
+  --scope 'exact integrated commits and changed-input inclusion' \
+  --output /absolute/fresh-address-broader
 ```
+
+Repeat with `thread` and different fresh paths. The producer retains all original mandatory output under `mandatory/`; it does not replace the required workload or alter the driver's Debug default. Source capture includes regular files under Sources, Tests, Benchmarks and Scripts/ci even if gitignored; `.build`, `.swiftpm`, `.git` and `__pycache__` cache directories are excluded, and source-directory symlinks are refused. Keep those inputs, Package.swift and the producer helpers quiescent through build and qualification. The before/after mechanism detects persistent drift; it is not an authenticity signature or a proof against a transient edit reverted between snapshots.
 
 Every command uses `Scripts/ci/v03_process.py` with the existing diagnostic settings: ASan `detect_leaks=0:halt_on_error=1`, TSan `halt_on_error=1`, extended tests and strict performance disabled. A 1200-second full-suite outer deadline is separate from the unchanged mandatory driver and normal child deadlines. The unselected baseline XCTest host additionally auto-runs Swift Testing on this toolchain. Bounded single-method/comma-list probes execute exactly one/two XCTest methods with zero Swift Testing functions. The final runner explicitly selects the complete nonempty XCTest discovery list and still requires exact executed coverage; there is no empty-list fallback.
 
@@ -44,3 +53,9 @@ One failed unsupported XCTest-discovery invocation dumped the inherited environm
 Remaining work is the combined-source rerun after the shared-launcher and benchmark-contract changes are integrated. The coordinator authorized a 1,200-second **whole-suite** budget after observing progress in the baseline; mandatory per-body and child deadlines are unchanged. This record does not qualify the changed source or claim release readiness.
 
 The final runner avoids the baseline overlap through `-XCTest <complete comma-separated discovery list>`. `xctest-selector-mode.json` verifies the observed single/comma modes; `test_selected_xctest_terminal_label_still_requires_all_discovery` rejects an incomplete selected scope even with a successful terminal summary.
+
+## Review fix round 1
+
+Independent discovery is now authoritative for Swift Testing headline selectors and counts. With two independently discovered functions and empty events, discovered/pending are exactly two/two; a partial inventory with one completed function reports discovered/passed/pending exactly two/one/one. Event IDs, source locations and event-only state remain in separate `event*` fields; unexpected event inventory cannot expand the independent universe. Exact-set controls cover these cases. The baseline's previously retained counts/lists and archive selection are immutable; separate fix evidence lives in `/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-fix-1/`.
+
+Review-fix verification passes 21 scoped controls, including real fixture producers for ASan/TSan modes and a both-snapshots replacement control that cannot rebind the original build command. These are fixture-only admission observations; the settled-source native producer/full-suite run remains pending.

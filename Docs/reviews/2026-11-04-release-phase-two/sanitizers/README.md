@@ -1,4 +1,23 @@
-# Broader Release sanitizer experiments
+# Broader Release sanitizer execution — final v2 results
+
+Final native binaries were built from clean candidate **`e7482a962c67dd0b806059b651c9f59eb678a632`**, using separately bound Release/native builds and the unchanged mandatory ASan/TSan drivers (**77/39 required workloads passed**). Both complete frameworks load the expected host, runtime and aggregate bundle; source and qualification-tool before/after checks match.
+
+| Final observed scope | Discovered | Passed | Skipped | Failed | Pending | Host outcome |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| ASan Swift Testing | 1,764 | 1,746 | 18 | 0 | 0 | exit 0, 496.50s / 1,200s budget |
+| ASan XCTest | 218 | 190 | 28 | 0 | 0 | exit 0, 173.94s / 1,200s budget |
+| TSan Swift Testing, complete additional sweep | 1,764 | 1,746 | 18 | 0 | 0 | exit 0, 1,372.03s / authorized 2,400s budget |
+| TSan XCTest, reconciled real selectors | 218 | 190 | 28 | 0 | 0 | exit 0, 662.60s / 1,200s budget |
+
+**Strict no-skips qualification is false in every cell.** Explicit skipped IDs remain in the scope records. Parameterized functions count once; argument cases remain in the native event streams. This is current-host arm64 execution, with no release-readiness, minimum-OS, other-architecture or production-binary-equivalence claim.
+
+The original TSan Swift Testing command genuinely timed out at 1,200.19s, leaving 138 pending functions (1,608 passed / 18 skipped); it remains unchanged. A first additional native attempt launched with an incomplete compiler-fixture environment and was interrupted, unqualified. Its native exit is unrecorded; supervisor/abort/process records document cleanup. The corrected additional sweep starts fresh, keeps all 1,764 independent selectors and normal body/child deadlines, matches the original selected environment except its separate Q03 log directory, and completes without merging prior outcomes.
+
+TSan repeatedly emits **“Invalid dyld module map detected” / “Backtraces may be unreliable.”** These diagnostics limit qualification; recognizing their exact spellings does not establish harmlessness or fully reliable sanitizer reporting. Original TSan XCTest discovery admitted the two warning lines as selectors, producing raw **220 discovered / 2 pending**. The later typed-parser commit **`5a3301055f38d4fbf506985e3feedf3da154c7b4`** separately reconciles the unchanged raw streams to the 218 real methods above and retains both diagnostic records. No native XCTest rerun was made for accounting. Unknown/malformed stdout and ambiguous/incomplete inventories reject mechanically; 31 fixture-only tooling controls pass.
+
+See [final-outcomes.md](final-outcomes.md) for exact source/binary identities, chronology, evidence paths and limits. Final supplemental evidence is `/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-final/`; its explicit manifest preserves original/fix selections and excludes the private environment diagnostic. ASan still uses `detect_leaks=0:halt_on_error=1`; the earlier independent `leaks` positive/negative capability and small public-consumer observations below remain separate, bounded results.
+
+# Historical baseline and tooling development — 2026-11-04
 
 These tools extend the phase-two execution record without changing the pinned sanitizer manifest or CI driver. They report function execution status, not branch coverage, minimum-OS support, production-binary equivalence or release readiness.
 
@@ -50,7 +69,7 @@ The standalone Darwin leak control detects seven of eight requested allocations:
 
 One failed unsupported XCTest-discovery invocation dumped the inherited environment. The original diagnostic stays private and is explicitly excluded from shareable evidence; the derivative omits the entire environment section while preserving argv and error context. `sensitive-artifact-exclusion.json` and redaction metadata preserve that exception and hashes. The explicit inclusion list and final exact-value scan exclude the raw file. Reviewers should use only `address-xctest-discovery.redacted.stderr`.
 
-Remaining work is the combined-source rerun after the shared-launcher and benchmark-contract changes are integrated. The coordinator authorized a 1,200-second **whole-suite** budget after observing progress in the baseline; mandatory per-body and child deadlines are unchanged. This record does not qualify the changed source or claim release readiness.
+At the earlier baseline handoff, the combined-source rerun after shared-launcher and benchmark-contract integration remained pending; that stage is superseded by the final v2 results above. The coordinator authorized a 1,200-second **whole-suite** budget after observing progress in the baseline; mandatory per-body and child deadlines are unchanged. This record does not qualify the changed source or claim release readiness.
 
 The final runner avoids the baseline overlap through `-XCTest <complete comma-separated discovery list>`. `xctest-selector-mode.json` verifies the observed single/comma modes; `test_selected_xctest_terminal_label_still_requires_all_discovery` rejects an incomplete selected scope even with a successful terminal summary.
 
@@ -58,7 +77,7 @@ The final runner avoids the baseline overlap through `-XCTest <complete comma-se
 
 Independent discovery is now authoritative for Swift Testing headline selectors and counts. With two independently discovered functions and empty events, discovered/pending are exactly two/two; a partial inventory with one completed function reports discovered/passed/pending exactly two/one/one. Event IDs, source locations and event-only state remain in separate `event*` fields; unexpected event inventory cannot expand the independent universe. Exact-set controls cover these cases. The baseline's previously retained counts/lists and archive selection are immutable; separate fix evidence lives in `/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-fix-1/`.
 
-Review-fix verification passes 21 scoped controls, including real fixture producers for ASan/TSan modes and a both-snapshots replacement control that cannot rebind the original build command. These are fixture-only admission observations; the settled-source native producer/full-suite run remains pending.
+Review-fix verification passes 21 scoped controls, including real fixture producers for ASan/TSan modes and a both-snapshots replacement control that cannot rebind the original build command. These are fixture-only admission observations; the settled-source native producer/full-suite run was still pending at that review stage; final v2 execution is recorded above.
 
 Review fix round 2 rejects non-injective event-ID-to-selector mappings and retains the full conflicting IDs in `selectorCollisions`. A selector remains pending while any associated event body is pending; completed failure or skip outcomes take precedence over another body's pass, without changing the exact event-level outcomes. Even fully completed collisions remain invalid. Raw event pending state independently prevents acceptance. The two collision controls cover untouched, started-but-unfinished, fully passed, failed and skipped second bodies; 23 scoped tests pass. Binding, executable retention and native execution settings are unchanged.
 

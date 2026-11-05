@@ -1,6 +1,7 @@
 import VectorCoreTestSupport
 import Foundation
 import Darwin
+import MachO
 import Testing
 
 // T10: pins the contract of ChildProbeLauncher.swift (see its header). The end-to-end tests launch

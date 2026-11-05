@@ -10,6 +10,12 @@ from pathlib import Path
 import re
 
 
+def images_verified(log, pid, paths):
+    """ScopeControls rejects child-only and plain-text path evidence."""
+    loaded = set(re.findall(r'^dyld\[' + re.escape(str(pid)) + r'\]: <[^>]+> (.+)$', log, re.M))
+    return bool(paths) and all(str(p) in loaded or str(Path(p).resolve()) in loaded for p in paths)
+
+
 def qualifies(scope, command):
     return (scope['accepted'] and command.get('status') == 'completed'
             and command.get('exit') == 0 and command.get('timeout') is False)
@@ -48,13 +54,14 @@ def swift_testing(text, discovery=None):
         except (ValueError, TypeError, KeyError) as error:
             errors.append(str(error))
     inherited_skips = {f for f in functions if any(f == s or f.startswith(s + '/') for s in skipped if s)}
-    failed_functions = functions & failed
+    failed_functions = functions & failed & ended
     passed = (functions & started & ended) - failed_functions - inherited_skips
     pending = functions - passed - failed_functions - inherited_skips
     result = {'framework': 'swift-testing', 'discovered': sorted(functions), 'started': sorted(functions & started),
               'passed': sorted(passed), 'failed': sorted(failed_functions), 'skipped': sorted(inherited_skips),
               'pending': sorted(pending), 'unknown': sorted(unknown), 'issues': sorted(failed), 'errors': errors,
-              'runStarted': begun, 'runEnded': complete}
+              'runStarted': begun, 'runEnded': complete, 'ended': sorted(functions & ended),
+              'interrupted': sorted((functions & started) - ended)}
     if discovery is not None:
         normalized = {f.rsplit('/', 1)[0] for f in functions}
         result['discoveryMissing'] = sorted(set(discovery) - normalized)
@@ -79,7 +86,7 @@ def xctest(text, discovery):
     pending = discovered - passed - failed - skipped
     summaries = _SUMMARY.findall(text)
     counts = tuple(map(int, (summaries[-1][0], summaries[-1][1] or 0, summaries[-1][2]))) if summaries else None
-    complete = bool(re.search(r"^Test Suite 'All tests' (passed|failed) at ", text, re.M))
+    complete = bool(re.search(r"^Test Suite '(?:All|Selected) tests' (passed|failed) at ", text, re.M))
     result = {'framework': 'xctest', 'discovered': sorted(discovered), 'started': sorted(started),
               'passed': sorted(passed), 'failed': sorted(failed), 'skipped': sorted(skipped),
               'pending': sorted(pending), 'unknown': sorted(unknown), 'summaryCounts': counts, 'runEnded': complete}

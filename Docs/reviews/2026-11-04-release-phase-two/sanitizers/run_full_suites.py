@@ -13,9 +13,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / 'Scripts/ci'))
 from check_sanitizers import sanitizer_host_environment
-from swiftpm_products import check_no_rebuild, in_log
+from swiftpm_products import check_no_rebuild
 from v03_process import run, sha, test_environment, write_json
-from scope_check import swift_testing, xctest, qualifies
+from scope_check import swift_testing, xctest, qualifies, images_verified
 
 
 def main():
@@ -89,25 +89,25 @@ def main():
         if framework == 'testing':
             argv = [host, '--test-bundle-path', bundle, '--no-parallel', '--event-stream-output-path',
                     output / 'testing.events.jsonl', '--event-stream-version', '0', bundle, '--testing-library', 'swift-testing']
-            deadline = 600
+            deadline = 1200
             loaded_host = host
         else:
             loaded_host = Path('/Applications/Xcode.app/Contents/Developer/usr/bin/xctest').resolve()
-            argv = [loaded_host, bundle.parents[2]]
-            deadline = 600
+            argv = [loaded_host, '-XCTest', ','.join(sorted(xctests)), bundle.parents[2]]
+            deadline = 1200
         try:
             run(argv, output, name, cwd=ROOT, environment=env, timeout=deadline, expected=None)
         except RuntimeError:
             # run() retains timeout/cleanup metadata; the partial scope remains unqualified.
             pass
         command = json.loads((output / (name + '.json')).read_text())
-        log = (output / (name + '.stdout')).read_text() + (output / (name + '.stderr')).read_text()
+        log = (output / (name + '.stdout')).read_text() + '\n' + (output / (name + '.stderr')).read_text()
         if framework == 'testing':
             events = output / 'testing.events.jsonl'
             result = swift_testing(events.read_text() if events.exists() else '', testing)
         else:
             result = xctest(log, xctests)
-        result['imagesVerified'] = all(in_log(p, log) for p in [loaded_host, runtime, bundle])
+        result['imagesVerified'] = images_verified(log, command['pid'], [loaded_host, runtime, bundle])
         result['qualified'] = qualifies(result, command) and result['imagesVerified']
         result['counts'] = {k: len(result[k]) for k in ['discovered', 'started', 'passed', 'failed', 'skipped', 'pending', 'unknown']}
         write_json(output / (framework + '-scope.json'), result)
@@ -117,7 +117,7 @@ def main():
     if any(sha(ROOT / p) != digest for p, digest in inputs.items()) or sha(bundle) != data['loadedBundles'][next(iter(data['loadedBundles']))]['sha256']:
         raise ValueError('Source or executed bundle changed during execution')
     write_json(output / 'summary.json', {'scope': args.scope, 'sanitizer': sanitizer, 'results': results,
-        'note': 'XCTest host also runs Swift Testing in this toolchain; its extra text is retained as overlapping execution, not added to XCTest counts.'})
+        'note': 'Complete nonempty XCTest discovery is selected explicitly; bounded single/comma probes exclude the automatic Swift Testing overlap. Exact executed coverage is still checked.'})
 
 
 if __name__ == '__main__': main()

@@ -59,6 +59,15 @@ class ScopeControls(unittest.TestCase):
         self.assertFalse(checker.swift_testing(text, ['M.S/f()', 'M.S/missing()'])['accepted'])
         self.assertTrue(checker.swift_testing(text, ['M.S/f()'])['accepted'])
 
+    def test_interrupted_failing_function_stays_pending_until_end(self):
+        text = stream(item('event', kind='testStarted', testID='M.S/f()/F.swift:1:1'),
+                      item('event', kind='issueRecorded', testID='M.S/f()/F.swift:1:1'))
+        result = checker.swift_testing(text)
+        self.assertEqual(result['failed'], [])
+        self.assertEqual(result['pending'], ['M.S/f()/F.swift:1:1'])
+        self.assertEqual(result['interrupted'], ['M.S/f()/F.swift:1:1'])
+        self.assertFalse(result['accepted'])
+
     def test_suite_skip_retains_all_descendant_functions(self):
         text = '\n'.join([item('test', id='M.S', kind='suite'),
                           item('test', id='M.S/f()/F.swift:1:1', kind='function'),
@@ -69,6 +78,21 @@ class ScopeControls(unittest.TestCase):
         self.assertEqual(result['skipped'], ['M.S/f()/F.swift:1:1'])
         self.assertEqual(result['pending'], [])
         self.assertFalse(result['accepted'])
+
+    def test_selected_xctest_terminal_label_still_requires_all_discovery(self):
+        text = "Test Case '-[M.S f]' started.\nTest Case '-[M.S f]' passed (0.01 seconds).\n" + \
+               "Test Suite 'Selected tests' passed at date.\n Executed 1 test, with 0 failures (0 unexpected) in 0.01 seconds\n"
+        self.assertTrue(checker.xctest(text, ['M.S/f'])['accepted'])
+        self.assertFalse(checker.xctest(text, ['M.S/f', 'M.S/missing'])['accepted'])
+        self.assertFalse(checker.xctest(text, [])['accepted'])
+
+    def test_parent_images_reject_child_only_and_printed_path_controls(self):
+        paths = ['/host', '/runtime', '/bundle']
+        lines = '\n'.join('dyld[42]: <uuid> ' + p for p in paths)
+        self.assertTrue(checker.images_verified(lines, 42, paths))
+        for bad in [lines.replace('[42]', '[43]'), '\n'.join(paths), lines.splitlines()[0]]:
+            self.assertFalse(checker.images_verified(bad, 42, paths))
+        self.assertFalse(checker.images_verified(lines, 42, []))
 
     def test_empty_discovery_and_nonzero_exit_never_qualify(self):
         self.assertFalse(checker.xctest('',[])['accepted'])

@@ -35,3 +35,5 @@ Sensitivity was measured independently by replacing the ideal exact result with 
 | 1536 | optimized | 71/1536 | 39/1536 | yes |
 
 Raw analysis and script are retained as `benchmarks/dot-analysis.json`, `analyze-dot.py` and the bounded `dot-bound-analysis.*` command artifacts under `/private/tmp/vectorcore-release-phase-two-2026-11-04`. The original failing reports remain intact; the actual comparator refused them with exit 2 even for self-comparison.
+
+The coordinator reviewed and authorized this policy repair. The six rules are implemented by source commit `73b7e7d0638dd0335dae963613a5a6ee1d090ec6`; the original failures remain retained. `testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth` pins counts/domains/bounds and rejects largest-product omissions and above-bound perturbations. `testEveryDotRouteRetainsEachSignedCoordinateExactly` pairs signed one-hot vectors at every index of each actual generic/optimized width and rejects deliberately omitted contributions with exact bit comparisons, independently of the random-fixture bound. Final seed-0 strict execution passes all six dot routes under these reviewed rules.

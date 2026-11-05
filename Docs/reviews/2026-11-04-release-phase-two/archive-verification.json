@@ -1,0 +1,92 @@
+{
+  "fileCount": 35077,
+  "logicalBytes": 3080501814,
+  "manifestSHA256": "79746cbcb4835fcafa9e1e210222e4b7a72b1b9abc75af763dcaa6b04ed40dd5",
+  "secondDestinationReadPassed": true,
+  "sourceBeforeAfterAndDestinationHashesMatch": true,
+  "symlinkCount": 0,
+  "uniquePayloadBytes": 2626025065,
+  "uniquePayloads": 16306,
+  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence",
+  "manifest": "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence/manifest.json",
+  "selectionSHA256": "79647705242d595702dea03b699b2b109b354feba724898f0fa056162d952588",
+  "freezeReceiptSHA256": "de043f0d06538354e4ad379e55fef3eed0d7dec2a65c2da8e12884a0715cc6cf",
+  "testedNativeSource": "e7482a962c67dd0b806059b651c9f59eb678a632",
+  "reportCommit": "265f9a22e69895cf58aeec25c74fb0020c044e14",
+  "posthocParserCommit": "5a3301055f38d4fbf506985e3feedf3da154c7b4",
+  "benchmarkProductCommit": "6d574f3ff122554ae8bec18f039ffa4a6981920e",
+  "benchmarkShippingReuseInputCount": 182,
+  "globalBenchmarkSourceEquality": false,
+  "releaseSignoff": false,
+  "independentClosureReview": {
+    "status": "APPROVED_LOCAL_PHASE_CLOSURE",
+    "reviewer": "/root/phase2_final_review",
+    "review": "closure-review.md",
+    "reviewSHA256": "7cd9d209a6e7e699af2ed4f9f466d73477fc51878de2da340d9c5a63e699529d",
+    "verification": "closure-verification.json",
+    "verificationSHA256": "4555fe239fc85c85bee994b5ff2bcdfa3903358f3ed7a7afa7851cce8f742cec",
+    "allPayloadsIndependentlyVerified": true,
+    "outstandingFindings": [],
+    "scope": "Review approves the final receipt/plan commit. Its subsequentFinalizationCommitVerified=false is the recorded cutoff, not a later failure."
+  },
+  "finalizationCommands": {
+    "selection": {
+      "record": "finalization/selection.json",
+      "sha256": "eba6d93693b93d645115ef24471ac4968d6d03af1d75dd9c9720172a8f5fd4ee",
+      "argv": [
+        "python3",
+        "-B",
+        "/private/tmp/vectorcore-release-phase-two-2026-11-04/select-evidence.py",
+        "/private/tmp/vectorcore-release-phase-two-2026-11-04/selection-catalog.json"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 180,
+      "elapsedSeconds": 6.311493291985244,
+      "stdout": {
+        "bytes": 182,
+        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/selection.stdout",
+        "sha256": "3616378f38ee1da404c76273565cc9af3711383d2592671bcb9c073198081cf9"
+      },
+      "stderr": {
+        "bytes": 0,
+        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/selection.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "freeze": {
+      "record": "finalization/freeze.json",
+      "sha256": "f20b880859d3b76162533caaa0c1444524b6aadf73e386d394ad68969d70862d",
+      "argv": [
+        "python3",
+        "-B",
+        "/private/tmp/vectorcore-release-phase-two-2026-11-04/freeze-evidence.py",
+        "/private/tmp/vectorcore-release-phase-two-2026-11-04/archive-selection.json",
+        "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 300,
+      "elapsedSeconds": 17.196321250055917,
+      "stdout": {
+        "bytes": 320,
+        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/freeze.stdout",
+        "sha256": "68aa7e10aed30413bdecaee806f860179e3051076ce2bad6f8606d4c50365af9"
+      },
+      "stderr": {
+        "bytes": 0,
+        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/freeze.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "finalCommitVerification": "final-commit-verification.json",
+  "scope": "35,077 immutable payloads. Compiler/SDK payloads and bulk caches excluded. Archive-generated metadata, subsequent closure review, finalization command copies, final plan completion, this receipt and final-commit verification are outside the immutable payload to avoid self-referential hashes. Private diagnostic excluded; its approved redacted derivative is retained.",
+  "commitAssociation": "The commit containing this receipt completes documentation after reviewed report commit265f9a2. It does not claim new native, timing or hosted execution.",
+  "finalRecordLinkCheck": {
+    "record": "finalization/final-record-links.json",
+    "sha256": "ee26c572f923281e9ca6d17c4677006ae99f3ca64e650d095f945bf77c203732",
+    "resolvedLocalLinks": 18,
+    "missing": []
+  }
+}

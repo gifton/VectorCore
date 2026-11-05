@@ -71,6 +71,50 @@ class ScopeControls(unittest.TestCase):
         self.assertEqual(full['eventInventory'], ['M.S/f()/F.swift:1:1'])
         self.assertEqual(full['started'], ['M.S/f()'])
 
+    def test_selector_collision_preserves_unfinished_event_body_as_pending(self):
+        first, second = 'M.S/f()/F.swift:1:1', 'M.S/f()/F.swift:2:1'
+        for state in ['not-started', 'started', 'passed']:
+            with self.subTest(second=state):
+                rows = [item('test', id=first, kind='function'), item('test', id=second, kind='function'),
+                        item('event', kind='runStarted'), item('event', kind='testStarted', testID=first),
+                        item('event', kind='testEnded', testID=first, messages=[{'symbol':'pass'}])]
+                if state != 'not-started': rows.append(item('event', kind='testStarted', testID=second))
+                if state == 'passed': rows.append(item('event', kind='testEnded', testID=second, messages=[{'symbol':'pass'}]))
+                rows.append(item('event', kind='runEnded'))
+                result = checker.swift_testing('\n'.join(rows), ['M.S/f()'])
+                self.assertFalse(result['accepted'])
+                self.assertEqual(result['discovered'], ['M.S/f()'])
+                self.assertEqual(result['eventInventory'], [first, second])
+                self.assertEqual(result['selectorCollisions'], {'M.S/f()':[first, second]})
+                self.assertEqual(result['eventPending'], [] if state == 'passed' else [second])
+                self.assertEqual(result['pending'], [] if state == 'passed' else ['M.S/f()'])
+                self.assertEqual(result['passed'], ['M.S/f()'] if state == 'passed' else [])
+                self.assertEqual(result['failed'], [])
+                self.assertEqual(result['skipped'], [])
+
+    def test_selector_collision_retains_completed_failure_and_skip_events(self):
+        first, second = 'M.S/f()/A.swift:1:1', 'M.S/f()/B.swift:1:1'
+        for state in ['failed', 'skipped']:
+            with self.subTest(second=state):
+                rows = [item('test', id=first, kind='function'), item('test', id=second, kind='function'),
+                        item('event', kind='runStarted'), item('event', kind='testStarted', testID=first),
+                        item('event', kind='testEnded', testID=first, messages=[{'symbol':'pass'}])]
+                if state == 'failed':
+                    rows += [item('event', kind='testStarted', testID=second),
+                             item('event', kind='issueRecorded', testID=second),
+                             item('event', kind='testEnded', testID=second, messages=[{'symbol':'fail'}])]
+                else: rows.append(item('event', kind='testSkipped', testID=second))
+                rows.append(item('event', kind='runEnded'))
+                result = checker.swift_testing('\n'.join(rows), ['M.S/f()'])
+                self.assertFalse(result['accepted'])
+                self.assertEqual(result['eventPassed'], [first])
+                self.assertEqual(result['event' + state.title()], [second])
+                self.assertEqual(result['selectorCollisions'], {'M.S/f()':[first, second]})
+                self.assertEqual(result['passed'], [])
+                self.assertEqual(result[state], ['M.S/f()'])
+                self.assertEqual(result['pending'], [])
+                self.assertEqual(result['eventPending'], [])
+
     def test_unexpected_event_inventory_cannot_expand_independent_universe(self):
         result = checker.swift_testing(stream(), ['M.S/other()'])
         self.assertEqual(result['discovered'], ['M.S/other()'])

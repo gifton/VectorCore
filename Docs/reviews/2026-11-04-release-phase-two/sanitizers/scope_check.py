@@ -68,17 +68,29 @@ def swift_testing(text, discovery=None):
         universe = set(discovery)
         selector = {f: f.rsplit('/', 1)[0] for f in functions}
         normalized = set(selector.values())
+        groups = {}
+        for ident, name in selector.items():
+            groups.setdefault(name, []).append(ident)
+        result['selectorCollisions'] = {name: sorted(ids) for name, ids in groups.items() if len(ids) > 1}
+        if result['selectorCollisions']:
+            errors.append('ambiguous event-to-selector mapping')
         result['eventInventory'] = sorted(functions)
         result['eventPending'] = result['pending']
         for key in ['started', 'passed', 'failed', 'skipped', 'ended', 'interrupted']:
             result['event' + key.title()] = result[key]
             result[key] = sorted({selector[f] for f in result[key]} & universe)
+        # A selector cannot pass while any corresponding event body remains pending.
+        # Collision controls cover missing starts/ends, failures, skips and full completion.
+        unfinished = {selector[f] for f in pending} & universe
+        result['failed'] = sorted(set(result['failed']) - unfinished)
+        result['skipped'] = sorted(set(result['skipped']) - unfinished - set(result['failed']))
+        result['passed'] = sorted(set(result['passed']) - unfinished - set(result['failed']) - set(result['skipped']))
         result['discovered'] = sorted(universe)
         result['pending'] = sorted(universe - set(result['passed']) - set(result['failed']) - set(result['skipped']))
         result['discoveryMissing'] = sorted(universe - normalized)
         result['discoveryUnexpected'] = sorted(normalized - universe)
         if normalized != universe: errors.append('independent discovery differs from event inventory')
-    result['accepted'] = bool(result['discovered']) and begun and complete and not (result['pending'] or failed or result['skipped'] or unknown or errors)
+    result['accepted'] = bool(result['discovered']) and begun and complete and not (pending or result['pending'] or failed or result['skipped'] or unknown or errors)
     return result
 
 

@@ -129,6 +129,8 @@ package enum ChildProbeLaunchError: Error, CustomStringConvertible {
     case nestedLaunch(String)
     /// This platform does not support relaunching a test runner.
     case unsupportedPlatform(String)
+    /// Loaded or explicitly requested sanitizer images conflict.
+    case sanitizerRuntime(String)
     /// The parent's runner argv has a shape the launcher cannot re-select from.
     case unrecognizedRunner(String)
     /// The parent's runner argv carries a selection source that cannot be removed safely.
@@ -146,7 +148,7 @@ package enum ChildProbeLaunchError: Error, CustomStringConvertible {
         switch self {
         case .nestedLaunch(let message), .unrecognizedRunner(let message), .refusedRunnerArgument(let message),
              .invalidSelection(let message), .spawnFailed(let message), .waitStatusUnavailable(let message),
-             .unreaped(let message), .unsupportedPlatform(let message):
+             .unreaped(let message), .unsupportedPlatform(let message), .sanitizerRuntime(let message):
             return message
         }
     }
@@ -326,7 +328,11 @@ package func launchChildProbe(_ selector: ChildProbeSelector, environment: [Stri
     let executable = CommandLine.arguments[0]
     let arguments = try childProbeArguments(for: selector, executable: executable,
                                             parentArguments: Array(CommandLine.arguments.dropFirst()))
-    var childEnvironment = environment
+    let loadedImages = (0..<_dyld_image_count()).compactMap { index -> String? in
+        guard let name = _dyld_get_image_name(index) else { return nil }
+        return String(cString: name)
+    }
+    var childEnvironment = try childProbeEnvironment(environment, loadedImages: loadedImages)
     childEnvironment[childProbeMarkerKey] = selector.description
     let pid = try spawnChildProbeGroupLeader(executable: executable, arguments: arguments,
                                              environment: childEnvironment, output: output.fileDescriptor)
@@ -506,3 +512,34 @@ private func spawnChildProbeGroupLeader(executable: String, arguments: [String],
 }
 
 #endif
+
+/// Preserves caller settings and preloads the single sanitizer already instrumenting this host.
+/// A test runner can lose DYLD_INSERT_LIBRARIES from its environment after dyld used it; loading
+/// its instrumented child bundle without preloading that runtime aborts before the probe runs.
+/// `childSanitizerEnvironmentRetainsExplicitSettingsAndRepairsMissingPreload` and
+/// `childSanitizerEnvironmentRejectsConflictsAndAmbiguousImages` pin the merge/refusal rules.
+package func childProbeEnvironment(_ environment: [String: String], loadedImages: [String]) throws -> [String: String] {
+    func canonical(_ path: String) -> String {
+        URL(fileURLWithPath: path).resolvingSymlinksInPath().path
+    }
+    func isSanitizer(_ path: String) -> Bool {
+        ["libclang_rt.asan_osx_dynamic.dylib", "libclang_rt.tsan_osx_dynamic.dylib"]
+            .contains(URL(fileURLWithPath: path).lastPathComponent)
+    }
+    let runtimes = Set(loadedImages.map(canonical).filter(isSanitizer))
+    guard runtimes.count <= 1 else {
+        throw ChildProbeLaunchError.sanitizerRuntime("Ambiguous loaded child-probe sanitizer runtimes: \(runtimes.sorted())")
+    }
+    guard let runtime = runtimes.first else { return environment }
+    let supplied = environment["DYLD_INSERT_LIBRARIES"] ?? ""
+    let libraries = supplied.split(separator: ":").map { canonical(String($0)) }
+    let requestedRuntimes = Set(libraries.filter(isSanitizer))
+    guard requestedRuntimes.isSubset(of: runtimes) else {
+        throw ChildProbeLaunchError.sanitizerRuntime(
+            "Caller sanitizer preload \(requestedRuntimes.sorted()) conflicts with loaded runtime \(runtime)")
+    }
+    guard !libraries.contains(runtime) else { return environment }
+    var result = environment
+    result["DYLD_INSERT_LIBRARIES"] = supplied.isEmpty ? runtime : supplied + ":" + runtime
+    return result
+}

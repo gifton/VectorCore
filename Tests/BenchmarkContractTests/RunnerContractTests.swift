@@ -140,6 +140,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testFixturePreservesEnvironmentAndMarksChild() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-environment-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -164,6 +165,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testProcessTable() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let scenarios = ["match", "mismatch", "nan-current", "nan-reference", "positive-infinity", "negative-infinity", "short", "long", "empty-comparison", "missing",
             "empty", "provider-warmup", "provider-builtin-warmup", "provider-calibration", "provider-fixed", "provider-later-sample", "nonfinite-timing"]
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("benchmark-contract-\(UUID().uuidString)")
@@ -230,6 +232,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testFixtureOrdinaryExitAndFailure() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let output = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-exits-\(UUID().uuidString).log")
         defer { try? FileManager.default.removeItem(at: output) }
         for (control, expected): (String, Int32) in [("success", 0), ("failure", 7)] {
@@ -243,6 +246,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testFixtureHangHasBoundedGroupCleanup() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let output = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-hang-\(UUID().uuidString).log")
         defer { try? FileManager.default.removeItem(at: output) }
         let start = ContinuousClock.now
@@ -259,6 +263,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testEnvCaptureDescendantEnvironmentAndGroupsAreObserved() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("launcher-metadata-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -301,6 +306,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
 
     // Removing the group sweep must fail both the normal-exit and deadline rows.
     func testMetadataLifetimeNormalExitAndTimeout() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         for scenario in ["exit", "failure", "timeout"] {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-lifetime-" + UUID().uuidString)
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -341,6 +347,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testMetadataTimerSurvivesObserverAndGuardianDeath() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         for victim in ["observer", "guardian"] {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-death-" + UUID().uuidString)
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -388,6 +395,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testMetadataEscapedOutputHandleDoesNotBlockObservation() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-escape-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -505,6 +513,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testMetadataEnvironmentReaderRejectsFailedBuild() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-invalid-reader-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -615,6 +624,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testMetadataEnvironmentDeterministicPolicyControls() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-policy-controls-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -651,6 +661,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-environment-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -686,6 +697,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testMetadataOutputAndArgumentBoundaries() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("metadata-output-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -721,6 +733,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testActualBatchProviderReturnFamily() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("benchmark-provider-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let expectedNames = Set([512, 768, 1536].flatMap { dim in
@@ -757,6 +770,7 @@ final class BenchmarkRunnerContractTests: XCTestCase {
     }
 
     func testBadObservationSurvivesLaterGoodResultsAndReference() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("benchmark-observed-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         for phase in ["warmup", "calibration", "fixed", "later"] {

@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import XCTest
 import VectorCore
@@ -339,7 +340,8 @@ final class BenchmarkSelectionContractTests: XCTestCase {
         var samplesClock: [UInt64] = [0,UInt64.max,0,1]
         XCTAssertThrowsError(try Harness.measure(name: "sum", minTimeSeconds: 0, repeats: 1, samples: 2, now: { samplesClock.removeFirst() }) {})
     }
-    func testMetadataBoundedCommands() {
+    func testMetadataBoundedCommands() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         XCTAssertEqual(EnvCapture.observe(command: ["/usr/bin/printf", "comma,quote\"\nline"]).value, "comma,quote\"\nline")
         XCTAssertNotNil(EnvCapture.observe(command: ["/usr/bin/false"]).unavailableReason)
         let timed = EnvCapture.observe(command: ["/bin/sleep", "1"], timeout: 0.02)

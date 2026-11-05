@@ -102,6 +102,7 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
     }
 
     func testHintValidationBeforeEmptySequentialParallelAndNestedRouting() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         try runChild("hints", expectsTrap: false)
     }
 
@@ -129,10 +130,12 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
 
     // Each dangerous family runs in a fresh child with a deadline; baseline traps cannot kill the suite.
     func testLargeRepresentableReductionLengthsInChild() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         try runChild("largeLengths", expectsTrap: false)
     }
 
     func testDangerousBoundariesInChildren() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         for mode in ["batch", "ranges", "unrepresentable", "hugeLoops"] {
             try runChild(mode, expectsTrap: false)
         }
@@ -146,6 +149,7 @@ final class ExecutionBoundaryTests: XCTestCase, @unchecked Sendable {
     // These empty/negative-domain cases terminate if a guard is absent, avoiding a missing-width
     // guard's nonprogressing loop. The complete existing domain matrix remains below.
     func testLoopGuardWitnesses() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         for loop in ["unrolled", "vectorized"] {
             for pair in ["0:0", "0:-1", "-1:1"] {
                 try runChild("domain:\(loop):\(pair)", expectsTrap: true)

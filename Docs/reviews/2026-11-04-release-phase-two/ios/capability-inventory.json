@@ -1411,5 +1411,29 @@
       "runFixture",
       "launchChildProbe/replaceMarkedChildProbe"
     ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift",
+    "method": "testMetadataBoundedCommands",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Invokes host metadata commands through EnvCapture; iOS reports this subprocess capability unavailable.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataBoundedCommands",
+      "EnvCapture.observe",
+      "MetadataProcess.observe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "method": "sanitizerChildImagesMatchParent",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Launches a real child and observes its loaded sanitizer image and inherited runtime options.",
+    "category": "process-containment",
+    "callChain": [
+      "sanitizerChildImagesMatchParent",
+      "launchSelfTest",
+      "launchChildProbe"
+    ]
   }
 ]

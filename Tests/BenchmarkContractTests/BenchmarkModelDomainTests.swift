@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import XCTest
 import VectorCore
@@ -69,6 +70,7 @@ final class BenchmarkModelDomainTests: XCTestCase {
     }
 
     func testUnsupportedModelsRejectedBeforeExecution() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         for strict in [false, true] {
             for overrides in Self.overrides {
                 for format in ["pretty", "json", "csv"] {
@@ -87,6 +89,7 @@ final class BenchmarkModelDomainTests: XCTestCase {
     }
 
     func testBoundaryBelowReachesExecutionWithoutAllocatingFixture() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let result = try launch(arguments: batchArguments(count: 16_776_695), format: "json")
         XCTAssertEqual(result.status, 97, result.log)
         XCTAssertTrue(result.log.contains("F012_CASE_EXECUTION_REACHED"), result.log)
@@ -169,6 +172,7 @@ final class BenchmarkModelDomainTests: XCTestCase {
     }
 
     func testSelectedValidRoutesReachExecutionDespiteExcludedInvalidRoutes() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let base = ["--suites", "batch", "--dims", "512", "--batch-ns", "16776696", "--repeats", "1", "--samples", "1"]
         let selections = [
             ["--filter", "*.optimized.sequential"],
@@ -191,6 +195,7 @@ final class BenchmarkModelDomainTests: XCTestCase {
     }
 
     func testUnsupportedInjectedResultsAreReportedWithoutTrapping() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         for n in [16_776_696, Int.max] {
             let name = "batch.euclidean2.512.N\(n).generic.injected"
             for strict in [false, true] {
@@ -218,6 +223,7 @@ final class BenchmarkModelDomainTests: XCTestCase {
     }
 
     func testUnavailableUnsupportedModelDoesNotRejectExecutableSelection() throws {
+        try XCTSkipIf(!childProbeProcessesSupported, "Requires macOS child-process isolation")
         let result = try launch(arguments: ["--suites", ModelDomainResultSuite.name, "--no-ab", "--strict-correctness", "--repeats", "1"],
                                 format: "json", resultName: "unavailable")
         XCTAssertEqual(result.status, 0, result.log)

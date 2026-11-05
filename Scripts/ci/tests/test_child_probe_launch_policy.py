@@ -484,6 +484,19 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
         self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
                           'unreapedChildReadsFailWithoutTrapping'), observed)
 
+    def test_xctest_capability_skip_precedes_assertions_and_error_catches(self):
+        inventory = json.loads((ROOT / 'Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json').read_text())
+        violations = []
+        for row in inventory:
+            if row['contract'] != 'XCTest subprocess boundary':
+                continue
+            source = _mask((ROOT / row['path']).read_text())
+            body = _function_body(source, row['method'])
+            self.assertIsNotNone(body, row)
+            if not re.match(r'\s*try XCTSkipIf\(!childProbeProcessesSupported,', source[body[0] + 1:body[1]]):
+                violations.append(row['path'] + '/' + row['method'])
+        self.assertEqual(violations, [])
+
     def test_native_process_operations_require_macos_compile_boundary(self):
         for path in (ROOT / 'Tests').rglob('*.swift'):
             self.assertEqual(host_operations_outside_macos(path.read_text()), [], str(path))

@@ -174,6 +174,64 @@ private func selfTestMarker(_ line: String) {
         #endif
     }
 
+    @Test func childSanitizerEnvironmentRetainsExplicitSettingsAndRepairsMissingPreload() throws {
+        let runtime = "/runtime/libclang_rt.asan_osx_dynamic.dylib"
+        let original = ["ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1", "TOKEN": "kept",
+                        "DYLD_INSERT_LIBRARIES": "/caller/first.dylib:/caller/second.dylib"]
+        let repaired = try childProbeEnvironment(original, loadedImages: ["/usr/lib/libSystem.B.dylib", runtime])
+        #expect(repaired["DYLD_INSERT_LIBRARIES"] == "/caller/first.dylib:/caller/second.dylib:" + runtime)
+        #expect(repaired["ASAN_OPTIONS"] == original["ASAN_OPTIONS"] && repaired["TOKEN"] == "kept")
+        #expect(try childProbeEnvironment(original, loadedImages: []) == original)
+        #expect(try childProbeEnvironment(repaired, loadedImages: [runtime, runtime]) == repaired)
+        let tsan = "/runtime/libclang_rt.tsan_osx_dynamic.dylib"
+        let thread = try childProbeEnvironment(["TSAN_OPTIONS": "halt_on_error=1"], loadedImages: [tsan])
+        #expect(thread == ["TSAN_OPTIONS": "halt_on_error=1", "DYLD_INSERT_LIBRARIES": tsan])
+    }
+
+    @Test func childSanitizerEnvironmentRejectsConflictsAndAmbiguousImages() {
+        let asan = "/runtime/libclang_rt.asan_osx_dynamic.dylib"
+        let tsan = "/runtime/libclang_rt.tsan_osx_dynamic.dylib"
+        for (environment, images) in [(["DYLD_INSERT_LIBRARIES": tsan], [asan]),
+                                      (["DYLD_INSERT_LIBRARIES": "/other/libclang_rt.asan_osx_dynamic.dylib"], [asan]),
+                                      ([:], [asan, tsan]),
+                                      ([:], [asan, "/other/libclang_rt.asan_osx_dynamic.dylib"])] {
+            #expect(throws: ChildProbeLaunchError.self) {
+                _ = try childProbeEnvironment(environment, loadedImages: images)
+            }
+        }
+    }
+
+    @Test func childSanitizerEnvironmentDeduplicatesFilesystemAliases() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let runtime = directory.appendingPathComponent("libclang_rt.asan_osx_dynamic.dylib")
+        try Data().write(to: runtime)
+        let alias = directory.appendingPathComponent("runtime-alias.dylib")
+        try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: runtime)
+        let original = ["DYLD_INSERT_LIBRARIES": alias.path]
+        #expect(try childProbeEnvironment(original, loadedImages: [runtime.path, alias.path]) == original)
+    }
+
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
+    func sanitizerChildImagesMatchParent() throws {
+        let images = (0..<_dyld_image_count()).compactMap { index -> String? in
+            guard let name = _dyld_get_image_name(index) else { return nil }
+            return String(cString: name)
+        }
+        let expected = try childProbeEnvironment([:], loadedImages: images)["DYLD_INSERT_LIBRARIES"] ?? "none"
+        let (run, log) = try launchSelfTest("sanitizer", deadline: ChildProbeBudget.standard.deadline,
+                                           cleanup: ChildProbeBudget.standard.cleanup)
+        try #require(!run.timedOut, "\(log)")
+        #expect(run.terminationStatus == 0, "\(log)")
+        #expect(log.contains("T10_SANITIZER_IMAGE \(expected)"), "\(log)")
+        for key in ["ASAN_OPTIONS", "TSAN_OPTIONS"] {
+            #expect(log.contains("T10_SANITIZER_OPTION \(key)=\(ProcessInfo.processInfo.environment[key] ?? "absent")"), "\(log)")
+        }
+        print("T10_SANITIZER_CHILD_CAPTURE\n" + log)
+        print("T10_SANITIZER_CHILD_VERIFIED image=\(expected) pid=\(run.processIdentifier)")
+    }
+
     // MARK: results (clause 5)
 
     @Test func unreapedChildReadsFailWithoutTrapping() {
@@ -243,6 +301,19 @@ private func selfTestMarker(_ line: String) {
         selfTestMarker("T10_CHILD pid=\(getpid()) pgid=\(getpgrp())")
         selfTestMarker("T10_SELF_TEST_MARKER \(ProcessInfo.processInfo.environment[childProbeMarkerKey] ?? "absent")")
         switch scenario {
+        case "sanitizer":
+            let images = (0..<_dyld_image_count()).compactMap { index -> String? in
+                guard let name = _dyld_get_image_name(index) else { return nil }
+                let path = String(cString: name)
+                let file = URL(fileURLWithPath: path).lastPathComponent
+                return ["libclang_rt.asan_osx_dynamic.dylib", "libclang_rt.tsan_osx_dynamic.dylib"].contains(file)
+                    ? URL(fileURLWithPath: path).resolvingSymlinksInPath().path : nil
+            }
+            if images.isEmpty { selfTestMarker("T10_SANITIZER_IMAGE none") }
+            for image in images { selfTestMarker("T10_SANITIZER_IMAGE \(image)") }
+            for key in ["ASAN_OPTIONS", "TSAN_OPTIONS"] {
+                selfTestMarker("T10_SANITIZER_OPTION \(key)=\(ProcessInfo.processInfo.environment[key] ?? "absent")")
+            }
         case "nested":
             do {
                 _ = try launchChildProbe(.swiftTesting(filter: "Never/launched"), environment: [:],

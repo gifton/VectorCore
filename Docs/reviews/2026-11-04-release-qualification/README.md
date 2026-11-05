@@ -1,38 +1,52 @@
 # VectorCore 0.4.0 qualification — 2026-11-04
 
-The local qualification batch is complete, independently reviewed and retained on the carried branch. **This is not a 0.4.0 release sign-off.** Real Swift 6.0 consumer checks, the selected ASan/TSan workloads and Apple compilation cells pass. Full Swift 6.0 suites still need a matching XCTest environment, and Xcode 27.2's Release numerical canary fails on the iOS simulator as well as the previously observed macOS host.
+The local and hosted qualification batch is complete. [CI run 41946052293](https://github.com/gifton/VectorCore/actions/runs/41946052293) passed all 14 jobs, including matching Swift 6.0 full suites and actual hosted ASan/TSan workloads. **This is not a 0.4.0 release sign-off:** the compiler-specific Release numerical failures and the remaining execution limits below still require an explicit release decision.
 
-Validated implementation/tooling: `0ecf6bd392e91b49cb5c7529fea8160d1410e107` on `codex/audit-top-six-2026-10-27`. All **387 tracked package inputs** under Sources, Tests, Benchmarks and Package.swift are byte-identical to `d628a2c419300d37c8462d24b2b1069f71867f79`. The only executable repository changes are the sanitizer launcher and its Python regressions. The later record-only commit adds this matrix, completed plan, summary and evidence manifest; all earlier commits and worktrees remain preserved.
+The tested implementation is `f779d92d8945edd46fe0807607d487ee42c711a3`, carried on `codex/audit-top-six-2026-10-27` and published on `codex/qualification-0.4.0-2026-11-04`. The final record-only commit follows that tested source. All earlier commits and worktrees remain preserved; this pass does not merge main, cut a release branch or publish a release.
 
-## Results
+## Hosted results
 
-| Gate | Observed result | Exact scope |
-| --- | --- | --- |
-| Actual Swift.org 6.0.3 | 12 pure-Swift probes, 8 inherited/explicit witness cases, 20 numerical importer checks, 8 documentation programs and 21 contracts pass | Existing SDK 15.2 and current arm64 macOS runtime; [compiler report](swift-6.0.md) |
-| Full Swift 6.0 Debug/Release | Both stop before tests; 0 executed bodies | Independent two-line XCTest import reproduces the older compiler crash against the installed Swift 6.4.2 overlay; matching Xcode 16.2 hosted cells remain open |
-| AddressSanitizer | 77/77 pinned bodies pass | Actual selected helper, bundle and ASan images verified; intentional overflow diagnostic also detected; leak detection disabled |
-| ThreadSanitizer | 39/39 pinned entries pass, including Q03 child | Actual child images, identities, six-worker workload and deadlines verified; intentional race diagnostic also detected |
-| Metadata runtime propagation | Both ASan and TSan child observations pass | Caller explicitly restores insertion before the real EnvCapture path; protected-shell behavior and ownership limits remain separate; [sanitizer report](sanitizers.md) |
-| Apple library compilation | Both library products at all four simulator/Catalyst destinations pass | Eight Release cells, measured arm64 + x86_64 slices, local Xcode 27.2; [platform report](platforms.md) |
-| Intel macOS | Library, benchmark and all three test executables compile | Runtime unavailable on this host; compile-only |
-| iOS 27 arm64 public-library smoke | Listed arithmetic, QR/eigen and metadata assertions pass | Bounded external client, not a full simulator suite |
-| iOS compiler canary | Xcode Debug passes; **Xcode Release fails**; Swift.org Release passes | Same source/SDK/runtime: Xcode returns stale `2.0 / 40000000`, expected `1.0 / 3f800000` |
-| Integrated repository checks | **594 Python tests pass**, claim ledger 0 problems, nine GitHub YAML/template files and workflow policies pass, whitespace clean | Clean `0ecf6bd` source; exact records in [validation summary](validation-summary.json) |
+| Cell | Verified result |
+| --- | --- |
+| Xcode 16.2 debug | 211 XCTest / 28 skips; 1757 Swift Testing / 18 skips; zero unexpected failures; 0 known canary issues; all 22 downstream contracts pass |
+| Xcode 16.2 release | 211 XCTest / 28 skips; 1757 Swift Testing / 18 skips; zero unexpected failures; 0 known canary issues; all 22 downstream contracts pass |
+| Xcode 26.3 debug | 211 XCTest / 28 skips; 1757 Swift Testing / 18 skips; zero unexpected failures; 0 known canary issues; all 22 downstream contracts pass |
+| Xcode 26.3 release | 211 XCTest / 28 skips; 1757 Swift Testing / 18 skips; zero unexpected failures; 1 known canary issue; all 22 downstream contracts pass |
+| ASan / TSan | 77/77 and 39/39 pinned Debug entries; actual Q03 child verified |
+| Benchmark contracts | Four build modes, eight strict-correctness runs, four expected mismatch failures, 144 route rows and 40 C-tail cases |
+| Repository checks / lint | 596 Python tests; nine GitHub YAML/template files and workflow policies; SwiftLint 0.65.1 passes with zero errors |
+| Consumers / platform compilation | Eight documentation programs and 21 contracts; eight library product/destination cells and Intel library/test compilation |
+| Other jobs / aggregate | SDK collision check, artifact-only performance smoke and CI Required all pass; overall 14/14 jobs succeed |
 
-The accepted native Debug/Release baseline from the [preceding repair batch](../2026-11-04-release-preparation/README.md) was not repeated: package inputs are unchanged. Existing compiler/build warnings remain visible. No numerical assertion, optimizer pass, sanitizer report, test membership or required CI gate was suppressed. No Swift production or test sources changed.
+The [hosted execution record](hosted-ci.md) and [machine-readable summary](hosted-validation-summary.json) bind the results to the exact candidate, jobs and artifact hashes. Full-suite counts include reported skips. Strict-performance controls run separately and retain their expected assertion failures; they establish gate behavior and numerical checks, not broad timing acceptance.
 
-## Sanitizer launcher repair
+The original hosted failures exposed test-infrastructure portability defects. The reviewed repairs canonicalize sanitizer runtime aliases, restore selected private XCTest framework paths, replace a copied system executable with a test-owned native reader, and compare the two OS-dependent loader-environment rows with an independent direct-exec baseline. Deterministic preserve/strip/error controls retain strict expectations. A final formatting-only fix resolves one overlong diagnostic line. All failed and superseded runs remain recorded; no numerical assertion, sanitizer option, pinned body set, required workflow gate or deployment floor was weakened.
 
-The signed Swift.org `swift-driver`/`swift-package` launch path removed dyld tracing before the test helper, causing the original driver to reject missing image evidence after a passing first body. The driver now invokes the exact selected SwiftPM helper with the same bundle and manifest filter, preloads the selected toolchain's unique runtime, and supplies the needed support-library paths. It retains finite deadlines, fail-fast options, exact started/passed-body checks and Q03 validation, and now records the runtime hash and requires its exact path in the loaded-image log. The original failed attempts, focused red/green tests and both fresh full manifest runs are retained. Task reviews and the final combined review found no open Critical/Important issue in this local batch.
+Production `Sources/`, `Benchmarks/` and `Package.swift` are unchanged from `d628a2c`. Hosted repairs change the sanitizer driver, its Python tests, the metadata XCTest fixture and a test-only marked-child exec helper. Their scoped reviews have no open Critical/Important finding. See the three repair reports: [runtime/native fixture](hosted-fix-1.md), [private frameworks](hosted-fix-2.md), and [independent OS baseline](hosted-fix-3.md).
+
+## Earlier local qualification
+
+The local phase validated tooling at `0ecf6bd392e91b49cb5c7529fea8160d1410e107`. At that point all 387 package inputs matched the preceding repair baseline; later hosted fixture changes are described above. Its [validation summary](validation-summary.json) remains an unchanged historical snapshot.
+
+| Cell | Observed local result and scope |
+| --- | --- |
+| Genuine Swift.org 6.0.3 | 12 pure-Swift probes, eight Collection witness cases, 20 numerical importer checks, eight documentation programs and 21 contracts pass. Both local full-suite attempts stop before bodies at an independently reproduced newer-XCTest-overlay mismatch; later matching hosted results are recorded above. [Compiler report](swift-6.0.md) |
+| Swift.org 6.4.2 sanitizers | 77 ASan bodies and 39 TSan entries pass, including the real Q03 child. Both intentional diagnostic controls are detected. Metadata runtime-propagation checks pass with insertion explicitly restored by the caller. Selected Debug scope; leak detection disabled. [Sanitizer report](sanitizers.md) |
+| Apple compilation | Both library products compile in eight Release simulator/Catalyst cells, with measured arm64 and x86_64 slices. Intel library/benchmark/test executables compile; Intel runtime is unavailable. [Platform report](platforms.md) |
+| iOS 27 arm64 smoke | Listed public arithmetic, QR/eigen and metadata assertions pass; this is a bounded client, not a full simulator suite |
+| iOS compiler canary | Xcode 27.2 Debug passes; **Release returns stale `2.0` instead of `1.0`**. The Swift.org 6.4.2 Release control passes on the same SDK/runtime, but qualifies that canary only |
+| Local repository checks | 594 Python tests and claim/GitHub/whitespace checks pass at `0ecf6bd`; after hosted repairs, 596 Python tests pass at `efcc4ac`. Pinned lint and the affected metadata test pass at formatting successor `f779d92` |
+
+The accepted native Debug/Release baseline from the [preceding repair batch](../2026-11-04-release-preparation/README.md) was reused only while all package inputs were identical. Hosted suites execute the final changed fixtures afresh. Existing compiler/build/lint warnings remain visible.
 
 ## What still prevents broader acceptance
 
-1. **Run hosted CI on the carried candidate.** Existing Xcode 16.2 full suites can resolve the local XCTest mismatch; Xcode 26.3 execution must qualify the changed sanitizer launcher in its hosted/default-backend environment. The [hosted preflight](hosted-ci.md) verifies an active recent matrix, but its successful old-main run does not qualify these local commits. The next authorized qualification step publishes the reviewed candidate to the new qualification ref and dispatches `ci.yml` against that exact source.
-2. **Resolve or explicitly scope the affected Xcode compiler.** Installed Xcode 27.2 returns the wrong canary value under ordinary Release optimization. The passing Swift.org compiler is a different binary and the simulator paired control covers that canary only. No complete Swift.org simulator-library or App Store build qualification is claimed.
-3. **Retain the remaining test boundaries.** Minimum-OS and physical-device execution, tvOS/visionOS/Catalyst/Intel runtime, full simulator suites, Release sanitizer builds, leak detection and broader controlled performance remain unexecuted by this pass. Previously documented benchmark-reporting/comparator and documentation cleanup remains separate follow-up work.
+1. **Resolve or explicitly scope affected compilers.** Xcode 27.2's ordinary Release numerical canary fails on macOS and iOS. The final hosted Xcode 26.3 / Swift 6.2.4 Release run also records the existing lost-store canary issue (`2.0` instead of `1.0`) under unchanged known-issue policy. A successful CI aggregate does not erase an observed wrong numerical result. The passing Swift.org compiler is a different binary; no complete Swift.org simulator-library or App Store qualification is claimed.
+2. **Keep execution limits explicit.** Minimum-OS and physical-device runs, tvOS/visionOS/Catalyst/Intel runtime, full simulator suites, Release/full-suite sanitizer coverage, leak detection and broad controlled performance remain unexecuted by this pass. Compile success does not establish runtime support for those cells.
+3. **Finish the remaining release follow-up.** Previously recorded benchmark-reporting/mandatory comparator work and documentation-reference/count cleanup remain separate tasks. Existing metadata ownership, foreign-reaper, selector and trap-provenance limitations remain unchanged.
 
-## Evidence and execution decisions
+## Evidence
 
-Frozen local evidence: `/Users/goftin/dev/projects/VectorCore-qualification-2026-11-04-evidence`. [The manifest](evidence-manifest.json) hashes the selected original failures, passing controls, command records, loaded artifacts, reviews, source snapshots and final checks. Compiler/SDK payloads and bulk build/module caches remain outside this bounded archive; original worktrees and scratch evidence are preserved. This frozen local phase precedes hosted execution; no remote mutation, main merge, tag or release occurred during that phase.
+The separate hosted archive is `/Users/goftin/dev/projects/VectorCore-hosted-qualification-2026-11-04-evidence`; its [manifest](hosted-evidence-manifest.json) records selected failures, repair controls, reviews, final command outputs and artifacts. Source/copy hashes and a second destination read verify the frozen bytes. Final-run GitHub artifact ZIP digests and reviewed member bytes were checked; original ZIPs and omitted build caches remain in scratch. Hosted sanitizer runtime image bytes are not retained for an independent offline rehash, so the record distinguishes producer-recorded hashes from locally rehashed helper/bundle bytes.
 
-The [plan](../../superpowers/plans/2026-11-04-release-qualification.md) and frozen progress ledger retain the execution decisions: parallel isolated workers following the existing preference (possible integration rework); reuse of the fresh, byte-identical native baseline while running new qualification cells (possible later discovery of an environment difference); and preservation of worktrees/evidence (disk usage). These decisions did not convert unavailable or failing cells into passing gates.
+The original local archive, `/Users/goftin/dev/projects/VectorCore-qualification-2026-11-04-evidence`, and its [manifest](evidence-manifest.json) remain unchanged, as does the preceding release-preparation archive. The [completed plan](../../superpowers/plans/2026-11-04-release-qualification.md) and retained ledger record the execution decisions and limitations.

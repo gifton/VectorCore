@@ -1,5 +1,7 @@
 # Release preparation batch — 2026-11-04
 
+> Later qualification: the [November 4 qualification record](../2026-11-04-release-qualification/README.md) adds matching Swift 6.0 full-suite, actual hosted sanitizer and candidate-specific CI results. The dated results and boundaries below describe this earlier repair batch.
+
 The three authorized tracks are implemented, independently reviewed, integrated and locally validated on `codex/audit-top-six-2026-10-27`. All earlier commits remain ancestors. The branch and evidence remain local; no main-branch merge, push, tag or release was performed.
 
 Final validated implementation: `62780666be88554ca2859e2e92cd5d3ad6666dba`. Full Swift suites and external D02 consumers ran at `60a87a11b58c28064626fc48023855c4b9042945`; all **387 tracked package inputs** under Sources, Tests, Benchmarks and Package.swift are byte-identical at the final revision. The final wave changes consumer fixtures, Python policies and documentation. Its affected checks ran again. The later record-only commit adds this report, validation summary, manifest and completed plan.

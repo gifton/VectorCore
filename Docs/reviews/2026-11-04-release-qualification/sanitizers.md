@@ -1,5 +1,7 @@
 # Real sanitizer qualification — 2026-11-04
 
+> Hosted follow-up: [run 41946052293](hosted-ci.md) at `f779d92` passes the same 77 ASan / 39 TSan manifest on Xcode 26.3, including Q03. Later runtime-alias and private-framework launcher repairs are documented there. The results and identities below remain the earlier local Swift.org 6.4.2 phase.
+
 The mandatory manifest passed on the qualified Swift.org 6.4.2 toolchain: **77/77 AddressSanitizer bodies and 39/39 ThreadSanitizer entries**, including Q03's actual instrumented child. Every body has a zero exit, its exact started/passed event, and loaded helper, bundle and selected sanitizer image evidence. No selected body was skipped. Separate intentional heap-overflow and concurrent-write controls each produced the expected sanitizer diagnostic and exited with signal 6. Actual metadata child runtime propagation passed for both runtimes.
 
 This qualifies these selected Debug instrumented paths on this arm64 macOS host. It does not qualify leak detection, the complete suite, Release sanitizer builds, older operating systems, other platforms/architectures, Swift 6.0 or hosted CI.

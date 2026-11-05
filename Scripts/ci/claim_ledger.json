@@ -25452,23 +25452,23 @@
    "id": "V04-C-0913",
    "path": "README.md",
    "symbol": "section VectorCore::section Requirements and compatibility",
-   "fingerprint": "91608ccaff973ce5",
-   "statement": "deployment targets are distinct from tested configurations. the [september 6 verification record](docs/verification-topk-nan-contract-2026-09-05.md) records full debug and release tests on apple m3 max, macos 26.5.2, swift 6.3.3. the [ci workflow](.github/workflows/ci.yml) defines the current macos test and apple platform compile matrix; consult its run results for coverage on a given commit. simulator compilation does not establish runtime behavior on devices. linux is not a supported or tested platform for this package.",
+   "fingerprint": "7741263c0d045dd7",
+   "statement": "deployment targets are distinct from tested configurations. the [november 4 qualification record](docs/reviews/2026-11-04-release-qualification/readme.md) records full hosted debug/release suites with xcode 16.2 and 26.3, selected sanitizer workloads, apple platform compilation and the remaining runtime limits. it also records compiler-specific release numerical failures; a green ci aggregate does not resolve those failures. the [hosted execution record](docs/reviews/2026-11-04-release-qualification/hosted-ci.md) identifies the exact tested commit and compiler versions. simulator compilation does not establish runtime behavior on devices. linux is not a supported or tested platform for this package.",
    "kind": "markdown",
    "lineHint": 152,
    "category": "measurement-boundary",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "Docs/verification-topk-nan-contract-2026-09-05.md records the September 6 full Debug and Release runs on Apple M3 Max, macOS 26.5.2, Swift 6.3.3",
-    "domain": "the record it links",
-    "limitations": "One host; cited as reviewed text (the harness copy omits Docs records); the CI and platform sentences are policy and pointers, not measurements."
+    "reference": "The paragraph links Docs/reviews/2026-11-04-release-qualification/README.md and hosted-ci.md, which identify run 41946052293 at f779d92, four hosted full-suite cells, selected sanitizer/platform checks and the observed Release compiler failures. The exact-source records are in hosted-validation-summary.json.",
+    "domain": "The linked qualification records and the explicit distinction between deployment targets, executed tests and compiler numerical acceptance.",
+    "limitations": "Reviewed text and linked evidence, not a universal platform or compiler guarantee. Full suites have stated skips; strict-gate/sanitizer binary evidence is separate. Oldest-OS/device/other-runtime limits remain explicit. As with the prior entry, the mutation harness omits the linked dated Docs records."
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "T13 phase 2B"
+    "originalStatement": "deployment targets are distinct from tested configurations. the [september 6 verification record](docs/verification-topk-nan-contract-2026-09-05.md) records full debug and release tests on apple m3 max, macos 26.5.2, swift 6.3.3. the [ci workflow](.github/workflows/ci.yml) defines the current macos test and apple platform compile matrix; consult its run results for coverage on a given commit. simulator compilation does not establish runtime behavior on devices. linux is not a supported or tested platform for this package.",
+    "originalFingerprint": "91608ccaff973ce5",
+    "origin": "T13 phase 2B; reference updated for the 2026-11-04 hosted qualification record"
    }
   },
   {

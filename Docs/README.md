@@ -50,6 +50,7 @@ the [contribution benchmark instructions](../CONTRIBUTING.md#performance-changes
 
 These are dated evidence, not rolling promises of support or performance:
 
+- [0.4.0 qualification, November 4, 2026](reviews/2026-11-04-release-qualification/README.md) — exact-source hosted results and remaining release limits
 - [0.3.1 verification baseline](verification-baseline-0.3.1.md)
 - [Top-K contract and 0.3.3 verification](verification-topk-nan-contract-2026-09-05.md)
 - [Public-readiness acceptance, September 7, 2026](verification-public-readiness-2026-09-07.md)

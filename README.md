@@ -150,12 +150,15 @@ The manifest requires Swift tools 6.0 and declares these minimum deployment
 targets: macOS 14, iOS 17, tvOS 17, and visionOS 1. watchOS is not supported.
 
 Deployment targets are distinct from tested configurations. The
-[September 6 verification record](Docs/verification-topk-nan-contract-2026-09-05.md)
-records full Debug and Release tests on Apple M3 Max, macOS 26.5.2, Swift 6.3.3.
-The [CI workflow](.github/workflows/ci.yml) defines the current macOS test and
-Apple platform compile matrix; consult its run results for coverage on a given
-commit. Simulator compilation does not establish runtime behavior on devices.
-Linux is not a supported or tested platform for this package.
+[November 4 qualification record](Docs/reviews/2026-11-04-release-qualification/README.md)
+records full hosted Debug/Release suites with Xcode 16.2 and 26.3, selected
+sanitizer workloads, Apple platform compilation and the remaining runtime limits.
+It also records compiler-specific Release numerical failures; a green CI
+aggregate does not resolve those failures. The
+[hosted execution record](Docs/reviews/2026-11-04-release-qualification/hosted-ci.md)
+identifies the exact tested commit and compiler versions. Simulator compilation
+does not establish runtime behavior on devices. Linux is not a supported or
+tested platform for this package.
 
 `VectorCoreBenchmarking` and `vectorcore-bench` are macOS host tooling, not part of
 the library's platform support; see

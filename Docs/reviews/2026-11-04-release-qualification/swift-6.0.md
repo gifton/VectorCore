@@ -1,6 +1,8 @@
 # Actual Swift 6.0-series qualification — 2026-11-04
 
-**The full Swift 6.0 release gate remains open.** Genuine Swift.org 6.0.3 compiled
+> Hosted follow-up: [run 41946052293](hosted-ci.md) at `f779d92` passes matching Xcode 16.2 / Swift 6.0.3 Debug and Release full suites and all downstream contract checks. This closes the matching full-suite gap; the local failed attempts below remain distinct evidence.
+
+**The local attempts below did not close the full Swift 6.0 suite gate.** Genuine Swift.org 6.0.3 compiled
 and executed the library's downstream checks with the installed macOS 15.2 SDK.
 Both full package test attempts failed before executing tests because importing
 the installed Xcode 27.2 XCTest overlay independently crashes Swift 6.0.3. This

@@ -93,6 +93,8 @@ def main():
     parser.add_argument('--scratch-root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--jobs', type=int, default=3)
+    parser.add_argument('--configuration', choices=['debug', 'release'], default='debug',
+                        help='SwiftPM build configuration (default: debug).')
     parser.add_argument('--swift-build-system', choices=BUILD_SYSTEMS, default=None,
                         help='Pass --build-system to every swift invocation; default is the toolchain default.')
     args = parser.parse_args()
@@ -107,8 +109,12 @@ def main():
     env = test_environment()
     env['ASAN_OPTIONS'] = 'detect_leaks=0:halt_on_error=1'
     env['TSAN_OPTIONS'] = 'halt_on_error=1'
-    flags = ['--jobs', args.jobs, '--scratch-path', scratch, '--sanitize', args.sanitizer,
+    flags = ['--configuration', args.configuration, '--jobs', args.jobs, '--scratch-path', scratch, '--sanitize', args.sanitizer,
              *build_system_flags(args.swift_build_system)]
+    if args.configuration == 'release':
+        # @testable imports require this with `swift build --build-tests` in Release;
+        # SanitizerConfigurationTests pins the same flags for build and product discovery.
+        flags += ['-Xswiftc', '-enable-testing']
     swift_path = find_swift(output, cwd=ROOT, environment=env)
     run([swift_path, 'build', '--build-tests', *flags, '--verbose'], output, 'build', cwd=ROOT, environment=env, timeout=1200)
     bin_path = resolve_bin_path(swift_path, flags, output, 'bin-path', cwd=ROOT, environment=env)
@@ -146,7 +152,7 @@ def main():
     q03 = verify_q03(output, sha(bundles[q03_targets.pop()]), sha(host)) if args.sanitizer == 'thread' else None
     write_json(output / 'result.json', {'sanitizer': args.sanitizer, 'completed': completed,
                'manifestSHA256': sha(ROOT / 'Scripts/ci/sanitizer_bodies.json'), 'host': str(host), 'hostSHA256': sha(host),
-               'buildSystem': args.swift_build_system or 'toolchain default', 'binPath': str(bin_path),
+               'configuration': args.configuration, 'buildSystem': args.swift_build_system or 'toolchain default', 'binPath': str(bin_path),
                'runtime': str(runtime), 'runtimeSHA256': sha(runtime), 'testLaunch': 'direct SwiftPM helper',
                'loadedBundles': {t: {'path': str(b), 'sha256': sha(b)} for t, b in bundles.items()}, 'q03Child': q03,
                'leakDetection': False, 'scope': 'Pinned valid bodies only; no whole-suite or hosted-CI claim.'})

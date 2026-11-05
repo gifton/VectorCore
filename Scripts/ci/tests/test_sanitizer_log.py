@@ -160,5 +160,92 @@ class DirectSanitizerHostTests(unittest.TestCase):
                         driver.sanitizer_host_environment(swift, root / 'platform', sanitizer, {})
 
 
+class SanitizerConfigurationTests(unittest.TestCase):
+    def test_configuration_agrees_across_build_discovery_execution_and_evidence(self):
+        import json
+        import tempfile
+        from unittest.mock import patch
+        import check_sanitizers as driver
+        for sanitizer in ['address', 'thread']:
+            for selection, configuration in [([], 'debug'), (['--configuration', 'debug'], 'debug'),
+                                              (['--configuration', 'release'], 'release')]:
+                with self.subTest(sanitizer=sanitizer, selection=selection), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    output = root / 'output'
+                    bin_path = root / configuration
+                    host, runtime = root / 'helper', root / 'runtime'
+                    host.write_bytes(b'host')
+                    runtime.write_bytes(b'runtime')
+                    rows = driver.sanitizer_manifest(driver.ROOT)['sanitizers'][sanitizer]
+                    targets = {driver.target_of_filter(row['filter']) for row in rows}
+                    bundles = {target: bin_path / (target + '.xctest') for target in targets}
+                    for bundle in bundles.values():
+                        bundle.parent.mkdir(parents=True, exist_ok=True)
+                        bundle.write_bytes(configuration.encode())
+                    commands, discovered = [], []
+
+                    def execute(argv, *args, **kwargs):
+                        commands.append(list(map(str, argv)))
+                        if argv[0] == 'xcrun':
+                            return {}, '/selected/MacOSX.platform'
+                        if str(argv[0]) == str(host):
+                            selector = argv[argv.index('--filter') + 1]
+                            row = next(row for row in rows if row['filter'] == selector)
+                            label = row['displayName']
+                            rendered = label if label.endswith('()') else '"' + label + '"'
+                            return {}, ('Test ' + rendered + ' started.\nTest ' + rendered + ' passed' + TAIL
+                                        + str(host) + str(argv[2]) + str(runtime))
+                        return {}, ''
+
+                    def discover(swift, flags, *args, **kwargs):
+                        discovered.extend(flags)
+                        return bin_path
+
+                    argv = ['check_sanitizers.py', '--sanitizer', sanitizer, '--scratch-root', str(root / 'scratch'),
+                            '--output', str(output), '--jobs', '2', *selection]
+                    with patch.object(sys, 'argv', argv), patch.object(driver, 'find_swift', return_value='/swift'), \
+                            patch.object(driver, 'run', side_effect=execute), \
+                            patch.object(driver, 'resolve_bin_path', side_effect=discover), \
+                            patch.object(driver, 'find_test_bundles', return_value=bundles) as find_bundles, \
+                            patch.object(driver, 'retain_artifacts', return_value=[]), \
+                            patch.object(driver, 'sanitizer_host_environment', return_value=(host, runtime, {})), \
+                            patch.object(driver, 'verify_q03', return_value={'verified': True}):
+                        driver.main()
+                    build = commands[0]
+                    self.assertEqual(build[build.index('--configuration') + 1], configuration)
+                    self.assertEqual(discovered[discovered.index('--configuration') + 1], configuration)
+                    self.assertEqual(build[3:-1], list(map(str, discovered)))
+                    self.assertEqual('-enable-testing' in build, configuration == 'release')
+                    if configuration == 'release':
+                        self.assertEqual(build[build.index('-enable-testing') - 1], '-Xswiftc')
+                    find_bundles.assert_called_once()
+                    self.assertEqual(find_bundles.call_args.args[0], bin_path)
+                    bodies = [argv for argv in commands if argv[0] == str(host)]
+                    self.assertEqual(len(bodies), len(rows))
+                    for argv in bodies:
+                        self.assertIn(Path(argv[2]), bundles.values())
+                        self.assertEqual(argv[2], argv[-3])
+                    result = json.loads((output / 'result.json').read_text())
+                    self.assertEqual(result['configuration'], configuration)
+                    self.assertEqual(result['binPath'], str(bin_path))
+                    self.assertEqual({v['path'] for v in result['loadedBundles'].values()},
+                                     {str(bundle) for bundle in bundles.values()})
+
+    def test_invalid_configuration_rejects_before_any_build_or_output(self):
+        import tempfile
+        from unittest.mock import patch
+        import check_sanitizers as driver
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            argv = ['check_sanitizers.py', '--sanitizer', 'address', '--scratch-root', str(root / 'scratch'),
+                    '--output', str(root / 'output'), '--configuration', 'Release']
+            with patch.object(sys, 'argv', argv), patch.object(driver, 'find_swift') as lookup:
+                with self.assertRaises(SystemExit) as error:
+                    driver.main()
+            self.assertEqual(error.exception.code, 2)
+            lookup.assert_not_called()
+            self.assertFalse((root / 'output').exists())
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -67,6 +67,30 @@ def probe_modes(case, root):
 
 def probe_contracts(case, root):
     contracts = load(DRIVERS[1])
+    if case.startswith('repaired-'):
+        rows = []
+        for dim, copy_samples in [(512, 524288), (768, 786432), (1536, 1572864)]:
+            names = [(f'dot.{dim}.{variant}', 1) for variant in ['generic', 'optimized']]
+            names += [(f'normalize.{outcome}.{dim}.{variant}', dim if outcome == 'success' else 1)
+                      for outcome in ['success', 'zeroFail'] for variant in ['generic', 'optimized']]
+            names += [(f'mem.copy.{dim}', copy_samples)]
+            for name, samples in names:
+                rows.append({'name': name, 'correctness': {'status': 'valid', 'samples': samples, 'maxAbsError': 0},
+                             'boundary': {'inclusions': {'correctnessValidation': 'excluded'}},
+                             'sampleNsPerInvocation': [1, 2], 'sampleIterations': [1, 1]})
+        report = {'results': rows, 'failures': []}
+        if case == 'repaired-missing': rows.pop()
+        elif case == 'repaired-duplicate': rows[1] = rows[0]
+        elif case == 'repaired-status': rows[0]['correctness']['status'] = 'invalid'
+        elif case == 'repaired-samples': rows[0]['correctness']['samples'] = 0
+        elif case == 'repaired-boundary': rows[0]['boundary']['inclusions']['correctnessValidation'] = 'included'
+        elif case == 'repaired-raw': rows[0]['sampleIterations'] = []
+        elif case == 'repaired-copy': rows[-1]['correctness']['maxAbsError'] = 1
+        elif case == 'repaired-failure': report['failures'].append({'name': rows[0]['name'], 'reason': 'control'})
+        def family_run(argv, directory, name, **kwargs):
+            Path(argv[-1]).write_text(json.dumps(report))
+            return ''
+        return contracts.repaired_observation_contracts(SimpleNamespace(run=family_run), root, str(root / 'binary'))
 
     def run(argv, directory, name, **kwargs):
         if name == 'compile':
@@ -103,6 +127,7 @@ def probe_contracts(case, root):
     with patch.object(contracts.importlib.util, 'spec_from_file_location', return_value=spec), \
          patch.object(contracts.importlib.util, 'module_from_spec', return_value=helper), \
          patch.object(contracts, 'comparator_contracts', return_value=0), \
+         patch.object(contracts, 'repaired_observation_contracts', return_value=21), \
          patch.object(sys, 'argv', ['contracts', str(root / 'binary'), '--output', str(root)]):
         contracts.main()
 
@@ -128,7 +153,8 @@ class BenchmarkGateDurability(unittest.TestCase):
 
     def test_negative_command_log_and_report_fixtures_in_all_python_modes(self):
         cases = {'modes': ['command', 'compiler-log', 'empty-artifacts', 'record-overwrite', 'banner', 'report'],
-                 'contracts': ['command', 'banner', 'report', 'comparator-log', 'reporting-log'],
+                 'contracts': ['command', 'banner', 'report', 'comparator-log', 'reporting-log', 'repaired-missing', 'repaired-duplicate',
+                               'repaired-status', 'repaired-samples', 'repaired-boundary', 'repaired-raw', 'repaired-copy', 'repaired-failure'],
                  'reporting': ['comparison-log']}
         for optimization in [[], ['-O'], ['-OO']]:
             for driver, fixtures in cases.items():
@@ -144,6 +170,8 @@ class BenchmarkGateDurability(unittest.TestCase):
                 with self.subTest(optimization=optimization, driver=driver):
                     result = self.run_probe(driver, 'valid', optimization)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            result = self.run_probe('contracts', 'repaired-valid', optimization)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_runtime_asserts_cannot_return_in_the_benchmark_drivers(self):
         for path in (*DRIVERS, REPORTING):

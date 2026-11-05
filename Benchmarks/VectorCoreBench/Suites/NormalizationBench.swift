@@ -27,8 +27,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.success.512.generic", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.success.512.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.success.512.optimized",
                                    boundary: Boundaries.record("normalize.success.512.optimized", options)) {
@@ -43,8 +44,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.success.512.optimized", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.success.512.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.zeroFail.512.generic",
                                    boundary: Boundaries.record("normalize.zeroFail.512.generic", options)) {
@@ -59,8 +61,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.zeroFail.512.generic", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.zeroFail.512.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.zeroFail.512.optimized",
                                    boundary: Boundaries.record("normalize.zeroFail.512.optimized", options)) {
@@ -75,8 +78,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.zeroFail.512.optimized", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.zeroFail.512.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         return cases
     }
@@ -97,8 +101,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.success.768.generic", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.success.768.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.success.768.optimized",
                                    boundary: Boundaries.record("normalize.success.768.optimized", options)) {
@@ -113,8 +118,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.success.768.optimized", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.success.768.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.zeroFail.768.generic",
                                    boundary: Boundaries.record("normalize.zeroFail.768.generic", options)) {
@@ -129,8 +135,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.zeroFail.768.generic", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.zeroFail.768.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.zeroFail.768.optimized",
                                    boundary: Boundaries.record("normalize.zeroFail.768.optimized", options)) {
@@ -145,8 +152,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.zeroFail.768.optimized", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.zeroFail.768.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         return cases
     }
@@ -167,8 +175,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.success.1536.generic", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.success.1536.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.success.1536.optimized",
                                    boundary: Boundaries.record("normalize.success.1536.optimized", options)) {
@@ -183,8 +192,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.success.1536.optimized", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.success.1536.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.zeroFail.1536.generic",
                                    boundary: Boundaries.record("normalize.zeroFail.1536.generic", options)) {
@@ -199,8 +209,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.zeroFail.1536.generic", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.zeroFail.1536.generic", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         cases.append(BenchmarkCase("normalize.zeroFail.1536.optimized",
                                    boundary: Boundaries.record("normalize.zeroFail.1536.optimized", options)) {
@@ -215,8 +226,9 @@ struct NormalizationBench: BenchmarkSuite {
                 }
             }
             try Harness.warmup(body)
-            return [try Harness.measure(name: "normalize.zeroFail.1536.optimized", minTimeSeconds: options.minTimeSeconds,
-                                        repeats: options.repeats, samples: options.samples, body)]
+            let result = try Harness.measure(name: "normalize.zeroFail.1536.optimized", minTimeSeconds: options.minTimeSeconds,
+                                        repeats: options.repeats, samples: options.samples, body)
+            return [result.validated(Correctness.normalization(current: vector.normalized().map { $0.toArray() }, input: vector.toArray()))]
         })
         return cases
     }

@@ -406,15 +406,16 @@
   },
   {
     "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
-    "method": "concreteProtocolOnlyOperators",
+    "method": "concreteProtocolOnlyMismatchesRejectBeforeBorrow",
     "contract": "Swift Testing subprocess isolation",
-    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "reason": "Mismatched +=/-= dimensions must trap before borrowing; each rejection runs in a bounded subprocess. Valid arithmetic and copy preservation run separately without this capability gate.",
     "category": "isolated-probe",
     "callChain": [
-      "concreteProtocolOnlyOperators",
+      "concreteProtocolOnlyMismatchesRejectBeforeBorrow",
       "child",
-      "launchChildProbe/replaceMarkedChildProbe"
-    ]
+      "launchChildProbe"
+    ],
+    "portableCompanion": "concreteProtocolOnlyOperatorsPreserveCopy"
   },
   {
     "path": "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift",

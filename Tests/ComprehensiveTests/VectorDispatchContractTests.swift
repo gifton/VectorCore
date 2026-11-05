@@ -446,7 +446,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func concreteProtocolOnlyOperators() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func concreteProtocolOnlyMismatchesRejectBeforeBorrow() throws {
         for route in ["plus", "minus"] {
             for n in 0...3 {
                 for m in 0...3 where n != m {
@@ -455,6 +455,11 @@ struct VectorDispatchContractTests {
                     #expect(!output.contains("S02_MUTABLE_BORROW") && !output.contains("S02_READ_BORROW"))
                 }
             }
+        }
+    }
+
+    @Test func concreteProtocolOnlyOperatorsPreserveCopy() {
+        for route in ["plus", "minus"] {
             for n in [0, 1, 2, 3, 2048] {
                 var lhs = S02ProtocolOnly(Array(repeating: 2, count: n))
                 let copy = lhs

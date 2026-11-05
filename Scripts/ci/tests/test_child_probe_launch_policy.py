@@ -396,6 +396,30 @@ def host_operations_outside_macos(source):
     return violations
 
 
+def portable_test_findings(source, name):
+    """Conservatively reject capability traits/compile gates/child calls in a positive control."""
+    masked = _mask(source)
+    match = re.search(r'@Test(?P<attributes>[^{}]*?)\bfunc\s+' + re.escape(name) + r'\s*\(', masked)
+    if match is None:
+        return ['missing test']
+    findings = []
+    if re.search(r'\.\s*(?:enabled|disabled)\b', match['attributes']):
+        findings.append('conditional test trait')
+    depth = 0
+    for line in masked[:match.start()].splitlines():
+        if line.strip().startswith('#if '):
+            depth += 1
+        elif line.strip() == '#endif':
+            depth -= 1
+    if depth:
+        findings.append('conditional compilation')
+    body = _function_body(masked, name)
+    if body is None or re.search(r'#if\b|\b(?:childProbeProcessesSupported|launchChildProbe)\b|\bchild\s*\(',
+                                 masked[body[0]:body[1]]):
+        findings.append('conditional or subprocess body')
+    return findings
+
+
 class ChildProbeLaunchPolicyTests(unittest.TestCase):
     def test_ordinary_budget_controls(self):
         self.assertEqual(budget_findings(POST_FIX_SITE), [])
@@ -483,6 +507,20 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
                           'portableTerminationPreservesExitAndSignalDiagnostics'), observed)
         self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
                           'unreapedChildReadsFailWithoutTrapping'), observed)
+
+    def test_portable_arithmetic_positive_control_is_independently_reachable(self):
+        source = (ROOT / 'Tests/ComprehensiveTests/VectorDispatchContractTests.swift').read_text()
+        self.assertEqual(portable_test_findings(source, 'concreteProtocolOnlyOperatorsPreserveCopy'), [])
+        positive = '@Suite struct S { @Test func positive() { let value = 1 } }'
+        self.assertEqual(portable_test_findings(positive, 'positive'), [])
+        mutations = [positive.replace('@Test', '@Test(.enabled(if: false))'),
+                     '#if os(macOS)\n' + positive + '\n#endif',
+                     positive.replace('let value = 1', 'if childProbeProcessesSupported { let value = 1 }'),
+                     positive.replace('let value = 1', 'try child("mismatch")'),
+                     positive.replace('@Test', '')]
+        for mutated in mutations:
+            with self.subTest(source=mutated):
+                self.assertNotEqual(portable_test_findings(mutated, 'positive'), [])
 
     def test_xctest_capability_skip_precedes_assertions_and_error_catches(self):
         inventory = json.loads((ROOT / 'Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json').read_text())

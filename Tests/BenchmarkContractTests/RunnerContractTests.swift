@@ -572,7 +572,9 @@ final class BenchmarkRunnerContractTests: XCTestCase {
                           userInfo: [NSLocalizedDescriptionKey: diagnostics])
         }
         let bytes = try Data(contentsOf: capture)
-        print("METADATA_DIRECT_RESULT command=\(command) key=\(key) status=\(run.statusDescription) reason=\(run.reasonDescription) timedOut=\(run.timedOut) cleaned=\(run.cleaned) pid=\(run.processIdentifier) pgid=\(run.processGroup) bytes=\(bytes.count)")
+        print("METADATA_DIRECT_RESULT command=\(command) key=\(key) status=\(run.statusDescription)"
+              + " reason=\(run.reasonDescription) timedOut=\(run.timedOut) cleaned=\(run.cleaned)"
+              + " pid=\(run.processIdentifier) pgid=\(run.processGroup) bytes=\(bytes.count)")
         let stripped = try Self.metadataEnvironmentWasStripped(termination: run.termination, timedOut: run.timedOut,
                                                               cleaned: run.cleaned, output: bytes, expected: value)
         print("METADATA_DIRECT_BASELINE command=\(command) key=\(key) stripped=\(stripped) status=\(run.statusDescription) pid=\(run.processIdentifier) pgid=\(run.processGroup) bytes=\(bytes.count)")

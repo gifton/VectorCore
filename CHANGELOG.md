@@ -1252,20 +1252,35 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   build failure introduced by N01 (never released); arm64 behavior is unchanged. The off-macOS fallbacks
   are compile-verified only, and the simulator and Catalyst destinations are not supported tooling hosts.
 
-- **`vectorcore-bench` correctness gate.** The generic `batch.euclidean2` cases
-  no longer record correctness failures on correct output, so the guide's CI
-  comparison runs without `--exclude`. The Euclidean and squared-Euclidean
-  batch routes, their `boundary` companions and the `matrix` routes are held to
-  thresholds derived from each route's worst-case rounding bound for the case's
-  dimension and candidate count, replacing a fixed relative `1e-6` that the
-  generic route's long FP32 sums legitimately exceed. A relative error now
-  divides by `max(|ref|, 1)`, and the `matrix` routes, whose diagonal
-  references are zero, are gated on absolute error. `noop.scalar-add` and the
-  `mem.alloc`, `mem.pool` and `mem.fill` cases declare that they have no output
-  to validate instead of recording "Missing validation"; `dot`, `normalize` and
-  `mem.copy` still record it. Other validated routes keep the fixed
-  thresholds. Regression coverage: `BenchmarkCorrectnessPolicyTests` in
-  [BenchmarkContractTests](Tests/BenchmarkContractTests/BenchmarkContractTests.swift).
+- **`vectorcore-bench` correctness gate.** Dot, normalization success/zero-failure and
+  `mem.copy` now record independent observations outside timing instead of "Missing validation":
+  Double arithmetic references for dot and normalized coordinates, `invalidOperation` for zero
+  normalization, and exact source/destination bits for copy. Copy setup now uses
+  `Float(i % 257 - 128)/256`; old fixture/boundary identities need fresh compatible reports.
+  The six dot routes use reviewed absolute forward-error bounds for the bounded LCG fixtures
+  at D = 512, 768 and 1536 (`k32=D` generic, `k32=D/16+5` optimized, `k64=D`, scale `D·B²`,
+  `B=1`, existing margin), replacing the empirical relative limit that falsely rejected three
+  seed-0 results. These conservative bounds can miss small defects and do not cover arbitrary
+  vector magnitudes; source/model limits and sensitivity are in
+  [the dot analysis](Docs/reviews/2026-11-04-release-phase-two/benchmarks/dot-bound-analysis.md).
+  Exact signed one-hot tests cover every index of all six actual dot routes independently
+  of those bounds. The existing Euclidean/squared-Euclidean batch, boundary and matrix
+  derived rules, relative denominator `max(|ref|, 1)`, other fixed arithmetic thresholds and
+  strict/override behavior are preserved. `noop.scalar-add`, `mem.alloc`, `mem.pool` and
+  `mem.fill` remain explicitly nonnumerical. Regression coverage includes
+  `testEveryRepairedCatalogCaseCarriesStrictObservation`,
+  `testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth`,
+  `testEveryDotRouteRetainsEachSignedCoordinateExactly`,
+  `testNormalizationReferenceRejectsWrongCoordinatesAndOutcomes` and
+  `testCopyRejectsTailPermutationULPAndSignedZeroCorruption` in
+  [BenchmarkNumericalObservationTests](Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift),
+  plus `testValidationRequirementIsDeclaredPerCase`,
+  `testDerivedThresholdsFollowTheRoundingCounts` and
+  `testRelativeErrorNeverDividesByReferenceBelowFloor` in the existing
+  [BenchmarkCorrectnessPolicyTests](Tests/BenchmarkContractTests/BenchmarkContractTests.swift).
+  The original T11 Euclidean/matrix policy repair remains part of this Unreleased change;
+  the [phase-two execution record](Docs/reviews/2026-11-04-release-phase-two/benchmarks/README.md)
+  reports the added validation without claiming timing or release acceptance.
 
 - **Benchmark metadata `binarySizes.vectorCoreLibraryBytes`.** A loaded image is
   now matched by file name (`libVectorCore.dylib`, or the binary inside

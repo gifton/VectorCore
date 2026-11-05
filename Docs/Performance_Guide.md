@@ -239,30 +239,46 @@ the distinct-run timing result remains an observation, and the optional adversar
 [Comparing reports across runs](Benchmark_Measurement_Boundaries.md#comparing-reports-across-runs) and
 `Benchmarks/baselines/README.md`.
 
-**Correctness gate.** A report records a correctness failure, which the comparison above rejects with exit 2, when a
-case's comparison with its Double reference exceeds the case's threshold. The Euclidean and squared-Euclidean `batch`
-routes, their `boundary` companions and the `matrix` routes are held to thresholds derived from each route's worst-case
-rounding bound for the case's dimension and candidate count: `γ_k = k·u/(1 − k·u)` with `u = 2^-24` and `k` counted from
-the route's summation (`CorrectnessPolicy` in `Benchmarks/VectorCoreBench/Utils/CorrectnessPolicy.swift`;
-`testDerivedThresholdsFollowTheRoundingCounts` and `testGenericSquaredEuclideanBoundHoldsAndStillCatchesDroppedWork`
-in `BenchmarkCorrectnessPolicyTests`). The `matrix` routes are gated on absolute error, because their diagonal
-references are zero (`testMatrixZeroReferenceIsGatedOnAbsoluteError`), and a relative error never divides by a
-reference smaller than 1 (`testRelativeErrorNeverDividesByReferenceBelowFloor`). The bounds for the `batch.euclidean`
-`generic` routes (`vDSP_distancesq`) and the `matrix` routes (`vDSP_svesq`, `cblas_sgemm`) assume that Accelerate
-evaluates each inner product with binary32 operations in some order, not with a fast matrix-multiplication algorithm;
-that assumption is not verified. The thresholds are worst-case bounds, so a defect that moves a result by less than its
-threshold, such as one small term dropped from one distance, passes them. The other validated routes keep fixed
-relative thresholds (FP32 `1e-6`, FP16 `2e-3`, FP16 cosine `3e-3`), which are not derived from their summations and are
-not verified to bound their rounding error.
+**Correctness gate.** A required missing or invalid observation, or an error above its case's threshold, records a
+correctness failure; the comparator rejects reports carrying those failures with exit 2. The Euclidean and
+squared-Euclidean `batch` routes, their `boundary` companions and the `matrix` routes retain thresholds derived from
+each route's worst-case rounding bound for its dimension and candidate count: `γ_k = k·u/(1 − k·u)`, with
+`u32 = 2^-24`, `u64 = 2^-53` and counts read from the route's summation (`CorrectnessPolicy`;
+`BenchmarkCorrectnessPolicyTests.testDerivedThresholdsFollowTheRoundingCounts` and
+`testGenericSquaredEuclideanBoundHoldsAndStillCatchesDroppedWork`). The six canonical `dot` routes at D = 512, 768 and
+1536 now use the absolute bound `(γ32(k32) + γ64(D))·D·B²`, with the existing evaluation margin, `B = 1`,
+`k32 = D` for generic sequential sums and `k32 = D/16 + 5` for optimized accumulator/reduction sums; the Double
+reference conservatively uses `k64 = D`. These rules apply to the bounded LCG fixtures in `[-1,1)` (coordinates are
+multiples of `2^-23`), not arbitrary vector magnitudes; signed cancellation prevents a bound proportional to the dot
+result (`BenchmarkNumericalObservationTests.testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth`). The `matrix` routes
+also use absolute error because diagonal references are zero (`testMatrixZeroReferenceIsGatedOnAbsoluteError`), and
+relative error divides by `max(|ref|, 1)` (`testRelativeErrorNeverDividesByReferenceBelowFloor`). The `batch.euclidean`
+generic (`vDSP_distancesq`) and matrix (`vDSP_svesq`, `cblas_sgemm`) bounds assume binary32 inner products in some order,
+not fast matrix multiplication; that Accelerate assumption is not verified. Worst-case bounds can admit small defects:
+the dot omission/sign sensitivity and source/model limits are recorded in
+[the reviewed dot analysis](reviews/2026-11-04-release-phase-two/benchmarks/dot-bound-analysis.md). Exact signed one-hot
+checks at every index in all six actual dot routes cover omitted contributions independently of those loose bounds
+(`testEveryDotRouteRetainsEachSignedCoordinateExactly`), not arbitrary numerical defects. Other arithmetic comparisons
+keep fixed relative thresholds (FP32 `1e-6`, FP16 `2e-3`, FP16 cosine `3e-3`), which are not derived from their summations
+and are not verified to bound their rounding error.
 
-`noop.scalar-add` and the `mem.alloc`, `mem.pool` and `mem.fill` cases declare that they have no VectorCore output to
-validate, so they record no failure (`testValidationRequirementIsDeclaredPerCase`). The `dot`, `normalize` and
-`mem.copy` cases have an output but no validation yet, so each records "Missing validation": a report that includes the
-`dot` or `normalize` suite (both in the default suite list) or the `memory` suite cannot be compared. The T11 runs of the
-`batch` command above on 2026-10-04 recorded no correctness failure, but on that loaded host the comparison still exited
-1 from timing noise alone: four back-to-back pairs of runs of the same binary each found 2 to 7 `parallel` or
-`automatic` cases more than 10% slower (an observation of one host, outside this repository; not verified by a test
-here). Run regression comparisons on a quiet host.
+`noop.scalar-add`, `mem.alloc`, `mem.pool` and `mem.fill` require no numerical observation
+(`testValidationRequirementIsDeclaredPerCase`). The former `dot`, `normalize` and `mem.copy` "Missing validation" gap
+is repaired: after measurement, dot compares a separate concrete result with a Double product-and-sum, successful
+normalization compares every coordinate with a Double norm reference, zero-vector normalization must fail with
+`invalidOperation`, and copy compares all source/destination bit patterns exactly. Copy uses the fixture
+`Float(i % 257 - 128)/256`, replacing uniform 0.5 data; mismatches are invalid evidence even under numeric threshold
+overrides. `BenchmarkNumericalObservationTests.testEveryRepairedCatalogCaseCarriesStrictObservation` covers all 21
+cases at widths 512, 768 and 1536; `testDotDoubleReferenceRejectsFloatCancellationAndDroppedTerms`,
+`testNormalizationReferenceRejectsWrongCoordinatesAndOutcomes` and
+`testCopyRejectsTailPermutationULPAndSignedZeroCorruption` exercise independent wrong-output controls. These checks
+observe separate post-measurement arithmetic calls and the final copied destination, not every timed invocation;
+missing/invalid required observations still fail closed. The updated fixture/boundary identities require fresh
+compatible reports; [the phase-two record](reviews/2026-11-04-release-phase-two/benchmarks/README.md) separates correctness
+checks from pending quiet-host timing acceptance. The T11 runs of the `batch` command above on 2026-10-04 recorded no
+correctness failure, but on that loaded host the comparison still exited 1 from timing noise alone: four back-to-back
+pairs of runs of the same binary each found 2 to 7 `parallel` or `automatic` cases more than 10% slower (an observation
+of one host, outside this repository; not verified by a test here). Run regression comparisons on a quiet host.
 
 ---
 

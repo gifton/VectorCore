@@ -24020,10 +24020,10 @@
    "id": "V04-C-0785",
    "path": "Docs/Performance_Guide.md",
    "symbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
-   "fingerprint": "e082455734b03749",
-   "statement": "**correctness gate.** a report records a correctness failure, which the comparison above rejects with exit 2, when a case's comparison with its double reference exceeds the case's threshold. the euclidean and squared-euclidean `batch` routes, their `boundary` companions and the `matrix` routes are held to thresholds derived from each route's worst-case rounding bound for the case's dimension and candidate count: `γ_k = k·u/(1 − k·u)` with `u = 2^-24` and `k` counted from the route's summation (`correctnesspolicy` in `benchmarks/vectorcorebench/utils/correctnesspolicy.swift`; `testderivedthresholdsfollowtheroundingcounts` and `testgenericsquaredeuclideanboundholdsandstillcatchesdroppedwork` in `benchmarkcorrectnesspolicytests`). the `matrix` routes are gated on absolute error, because their diagonal references are zero (`testmatrixzeroreferenceisgatedonabsoluteerror`), and a relative error never divides by a reference smaller than 1 (`testrelativeerrorneverdividesbyreferencebelowfloor`). the bounds for the `batch.euclidean` `generic` routes (`vdsp_distancesq`) and the `matrix` routes (`vdsp_svesq`, `cblas_sgemm`) assume that accelerate evaluates each inner product with binary32 operations in some order, not with a fast matrix-multiplication algorithm; that assumption is not verified. the thresholds are worst-case bounds, so a defect that moves a result by less than its threshold, such as one small term dropped from one distance, passes them. the other validated routes keep fixed relative thresholds (fp32 `1e-6`, fp16 `2e-3`, fp16 cosine `3e-3`), which are not derived from their summations and are not verified to bound their rounding error.",
+   "fingerprint": "2766d2b27fdcff9c",
+   "statement": "**correctness gate.** a required missing or invalid observation, or an error above its case's threshold, records a correctness failure; the comparator rejects reports carrying those failures with exit 2. the euclidean and squared-euclidean `batch` routes, their `boundary` companions and the `matrix` routes retain thresholds derived from each route's worst-case rounding bound for its dimension and candidate count: `γ_k = k·u/(1 − k·u)`, with `u32 = 2^-24`, `u64 = 2^-53` and counts read from the route's summation (`correctnesspolicy`; `benchmarkcorrectnesspolicytests.testderivedthresholdsfollowtheroundingcounts` and `testgenericsquaredeuclideanboundholdsandstillcatchesdroppedwork`). the six canonical `dot` routes at d = 512, 768 and 1536 now use the absolute bound `(γ32(k32) + γ64(d))·d·b²`, with the existing evaluation margin, `b = 1`, `k32 = d` for generic sequential sums and `k32 = d/16 + 5` for optimized accumulator/reduction sums; the double reference conservatively uses `k64 = d`. these rules apply to the bounded lcg fixtures in `[-1,1)` (coordinates are multiples of `2^-23`), not arbitrary vector magnitudes; signed cancellation prevents a bound proportional to the dot result (`benchmarknumericalobservationtests.testdotmodelsusesignedsumabsoluteboundsateverywidth`). the `matrix` routes also use absolute error because diagonal references are zero (`testmatrixzeroreferenceisgatedonabsoluteerror`), and relative error divides by `max(|ref|, 1)` (`testrelativeerrorneverdividesbyreferencebelowfloor`). the `batch.euclidean` generic (`vdsp_distancesq`) and matrix (`vdsp_svesq`, `cblas_sgemm`) bounds assume binary32 inner products in some order, not fast matrix multiplication; that accelerate assumption is not verified. worst-case bounds can admit small defects: the dot omission/sign sensitivity and source/model limits are recorded in [the reviewed dot analysis](reviews/2026-11-04-release-phase-two/benchmarks/dot-bound-analysis.md). exact signed one-hot checks at every index in all six actual dot routes cover omitted contributions independently of those loose bounds (`testeverydotrouteretainseachsignedcoordinateexactly`), not arbitrary numerical defects. other arithmetic comparisons keep fixed relative thresholds (fp32 `1e-6`, fp16 `2e-3`, fp16 cosine `3e-3`), which are not derived from their summations and are not verified to bound their rounding error.",
    "kind": "markdown",
-   "lineHint": 233,
+   "lineHint": 242,
    "category": "numerical-accuracy",
    "disposition": "retained",
    "evidence": {
@@ -24032,10 +24032,12 @@
      "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testDerivedThresholdsFollowTheRoundingCounts",
      "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testGenericSquaredEuclideanBoundHoldsAndStillCatchesDroppedWork",
      "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testMatrixZeroReferenceIsGatedOnAbsoluteError",
-     "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testRelativeErrorNeverDividesByReferenceBelowFloor"
+     "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testRelativeErrorNeverDividesByReferenceBelowFloor",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testEveryDotRouteRetainsEachSignedCoordinateExactly"
     ],
-    "domain": "CorrectnessPolicy rules for every case ID of the Euclidean and squared-Euclidean batch routes, their boundary companions and the matrix routes at D in {512, 768, 1536}; actual route outputs on the run-seed-0 fixtures at the CI recipe sizes (N 100 and 1000; matrix N 1, 3, 8, 17)",
-    "limitations": "The thresholds are worst-case bounds under the standard rounding model; the Accelerate routes (vDSP_distancesq, vDSP_svesq, cblas_sgemm) rest on the stated assumption that they are binary32 inner products in some order, marked not verified in the statement. The pass-through sentence follows from the thresholds by definition. The fixed thresholds of the other routes are stated as not verified."
+    "domain": "Existing Euclidean/squared-Euclidean batch, boundary and matrix policy models plus exactly six canonical dot routes at D in {512,768,1536}; bounded LCG inputs in [-1,1) on a 2^-23 lattice, generic k32=D, optimized k32=D/16+5, conservative Double k64=D, absolute scale D*B^2 with B=1 and existing margin. Actual seed-0 catalog observations, exact signed one-hot contributions at every index and named perturbation/domain controls.",
+    "limitations": "Named tests pin model counts/domains and exercise finite fixtures; the source-based forward-error derivation assumes round-to-nearest and the stated no-underflow bounded-input model, not arbitrary magnitudes. Conservative dot bounds miss small omissions/sign errors; exact one-hot tests cover omitted-coordinate contributions, not arbitrary numerical defects. Existing Accelerate inner-product assumptions remain unverified. Other arithmetic thresholds remain empirical. Source/model proof and sensitivity are retained in Docs/reviews/2026-11-04-release-phase-two/benchmarks/dot-bound-analysis.md."
    },
    "acceptedContract": null,
    "history": {
@@ -24054,6 +24056,23 @@
       "fingerprint": "6dfe7a9b6e10ceba",
       "symbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
       "revision": "21383ce (T11 round 0)"
+     },
+     {
+      "statement": "**correctness gate.** a report records a correctness failure, which the comparison above rejects with exit 2, when a case's comparison with its double reference exceeds the case's threshold. the euclidean and squared-euclidean `batch` routes, their `boundary` companions and the `matrix` routes are held to thresholds derived from each route's worst-case rounding bound for the case's dimension and candidate count: `γ_k = k·u/(1 − k·u)` with `u = 2^-24` and `k` counted from the route's summation (`correctnesspolicy` in `benchmarks/vectorcorebench/utils/correctnesspolicy.swift`; `testderivedthresholdsfollowtheroundingcounts` and `testgenericsquaredeuclideanboundholdsandstillcatchesdroppedwork` in `benchmarkcorrectnesspolicytests`). the `matrix` routes are gated on absolute error, because their diagonal references are zero (`testmatrixzeroreferenceisgatedonabsoluteerror`), and a relative error never divides by a reference smaller than 1 (`testrelativeerrorneverdividesbyreferencebelowfloor`). the bounds for the `batch.euclidean` `generic` routes (`vdsp_distancesq`) and the `matrix` routes (`vdsp_svesq`, `cblas_sgemm`) assume that accelerate evaluates each inner product with binary32 operations in some order, not with a fast matrix-multiplication algorithm; that assumption is not verified. the thresholds are worst-case bounds, so a defect that moves a result by less than its threshold, such as one small term dropped from one distance, passes them. the other validated routes keep fixed relative thresholds (fp32 `1e-6`, fp16 `2e-3`, fp16 cosine `3e-3`), which are not derived from their summations and are not verified to bound their rounding error.",
+      "fingerprint": "e082455734b03749",
+      "symbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
+      "revision": "57d9a82 (before phase-two benchmark documentation reconciliation)",
+      "evidence": {
+       "kind": "named-test",
+       "reference": [
+        "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testDerivedThresholdsFollowTheRoundingCounts",
+        "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testGenericSquaredEuclideanBoundHoldsAndStillCatchesDroppedWork",
+        "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testMatrixZeroReferenceIsGatedOnAbsoluteError",
+        "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testRelativeErrorNeverDividesByReferenceBelowFloor"
+       ],
+       "domain": "CorrectnessPolicy rules for every case ID of the Euclidean and squared-Euclidean batch routes, their boundary companions and the matrix routes at D in {512, 768, 1536}; actual route outputs on the run-seed-0 fixtures at the CI recipe sizes (N 100 and 1000; matrix N 1, 3, 8, 17)",
+       "limitations": "The thresholds are worst-case bounds under the standard rounding model; the Accelerate routes (vDSP_distancesq, vDSP_svesq, cblas_sgemm) rest on the stated assumption that they are binary32 inner products in some order, marked not verified in the statement. The pass-through sentence follows from the thresholds by definition. The fixed thresholds of the other routes are stated as not verified."
+      }
      }
     ],
     "revisedIn": "T11 fix round 1"
@@ -24063,17 +24082,23 @@
    "id": "V04-C-0786",
    "path": "Docs/Performance_Guide.md",
    "symbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
-   "fingerprint": "a4e2a4f86c4779a3",
-   "statement": "`noop.scalar-add` and the `mem.alloc`, `mem.pool` and `mem.fill` cases declare that they have no vectorcore output to validate, so they record no failure (`testvalidationrequirementisdeclaredpercase`). the `dot`, `normalize` and `mem.copy` cases have an output but no validation yet, so each records \"missing validation\": a report that includes the `dot` or `normalize` suite (both in the default suite list) or the `memory` suite cannot be compared. the t11 runs of the `batch` command above on 2026-10-04 recorded no correctness failure, but on that loaded host the comparison still exited 1 from timing noise alone: four back-to-back pairs of runs of the same binary each found 2 to 7 `parallel` or `automatic` cases more than 10% slower (an observation of one host, outside this repository; not verified by a test here). run regression comparisons on a quiet host.",
+   "fingerprint": "0df774d45d0db48b",
+   "statement": "`noop.scalar-add`, `mem.alloc`, `mem.pool` and `mem.fill` require no numerical observation (`testvalidationrequirementisdeclaredpercase`). the former `dot`, `normalize` and `mem.copy` \"missing validation\" gap is repaired: after measurement, dot compares a separate concrete result with a double product-and-sum, successful normalization compares every coordinate with a double norm reference, zero-vector normalization must fail with `invalidoperation`, and copy compares all source/destination bit patterns exactly. copy uses the fixture `float(i % 257 - 128)/256`, replacing uniform 0.5 data; mismatches are invalid evidence even under numeric threshold overrides. `benchmarknumericalobservationtests.testeveryrepairedcatalogcasecarriesstrictobservation` covers all 21 cases at widths 512, 768 and 1536; `testdotdoublereferencerejectsfloatcancellationanddroppedterms`, `testnormalizationreferencerejectswrongcoordinatesandoutcomes` and `testcopyrejectstailpermutationulpandsignedzerocorruption` exercise independent wrong-output controls. these checks observe separate post-measurement arithmetic calls and the final copied destination, not every timed invocation; missing/invalid required observations still fail closed. the updated fixture/boundary identities require fresh compatible reports; [the phase-two record](reviews/2026-11-04-release-phase-two/benchmarks/readme.md) separates correctness checks from pending quiet-host timing acceptance. the t11 runs of the `batch` command above on 2026-10-04 recorded no correctness failure, but on that loaded host the comparison still exited 1 from timing noise alone: four back-to-back pairs of runs of the same binary each found 2 to 7 `parallel` or `automatic` cases more than 10% slower (an observation of one host, outside this repository; not verified by a test here). run regression comparisons on a quiet host.",
    "kind": "markdown",
-   "lineHint": 249,
+   "lineHint": 265,
    "category": "robustness",
    "disposition": "retained",
    "evidence": {
     "kind": "named-test",
-    "reference": "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testValidationRequirementIsDeclaredPerCase",
-    "domain": "CorrectnessPolicy.validation over the full catalog (all suites, --prefer-soa, --use-mixed-precision) and the gate on synthetic results",
-    "limitations": "Which suite sources record a comparison is a lexical check of Suites/*.swift. The sentences about the T11 runs (no correctness failure; four same-binary comparison pairs exiting 1 with 2 to 7 parallel or automatic cases more than 10% slower: T11/after/cli/compare5 and T11/final/cli/compare-1..3, outside the repository) are observations of one host and are stated as not verified."
+    "reference": [
+     "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testValidationRequirementIsDeclaredPerCase",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testEveryRepairedCatalogCaseCarriesStrictObservation",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testDotDoubleReferenceRejectsFloatCancellationAndDroppedTerms",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testNormalizationReferenceRejectsWrongCoordinatesAndOutcomes",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testCopyRejectsTailPermutationULPAndSignedZeroCorruption"
+    ],
+    "domain": "All 21 repaired catalog cases at widths 512,768,1536 on seed 0; independent Double arithmetic references for concrete dot/normalization calls, zero-input invalidOperation outcome and complete bit-pattern copying on the index-pattern fixture. Named helper controls exercise wrong arithmetic/outcomes, copy bits/shape and retained per-case validation requirements.",
+    "limitations": "Arithmetic validation observes separate post-measurement calls; copy observes the final source/destination, not every timed invocation. Exact-copy mismatch invalidity cannot be waived by numeric overrides. Tests cover named wrong-output fixtures, not arbitrary implementation defects. Updated fixture/boundary identities require compatible reports; no timing or release acceptance follows. The retained 2026-10-04 T11 loaded-host comparisons are external historical observations explicitly not verified by a repository test; their older statement/evidence are preserved in history.superseded."
    },
    "acceptedContract": null,
    "history": {
@@ -24086,6 +24111,18 @@
       "fingerprint": "c0c74540ccb171e1",
       "symbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
       "revision": "21383ce (T11 round 0)"
+     },
+     {
+      "statement": "`noop.scalar-add` and the `mem.alloc`, `mem.pool` and `mem.fill` cases declare that they have no vectorcore output to validate, so they record no failure (`testvalidationrequirementisdeclaredpercase`). the `dot`, `normalize` and `mem.copy` cases have an output but no validation yet, so each records \"missing validation\": a report that includes the `dot` or `normalize` suite (both in the default suite list) or the `memory` suite cannot be compared. the t11 runs of the `batch` command above on 2026-10-04 recorded no correctness failure, but on that loaded host the comparison still exited 1 from timing noise alone: four back-to-back pairs of runs of the same binary each found 2 to 7 `parallel` or `automatic` cases more than 10% slower (an observation of one host, outside this repository; not verified by a test here). run regression comparisons on a quiet host.",
+      "fingerprint": "a4e2a4f86c4779a3",
+      "symbol": "section VectorCore Performance Guide::section Benchmarking::section Performance Regression Detection",
+      "revision": "57d9a82 (before phase-two benchmark documentation reconciliation)",
+      "evidence": {
+       "kind": "named-test",
+       "reference": "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testValidationRequirementIsDeclaredPerCase",
+       "domain": "CorrectnessPolicy.validation over the full catalog (all suites, --prefer-soa, --use-mixed-precision) and the gate on synthetic results",
+       "limitations": "Which suite sources record a comparison is a lexical check of Suites/*.swift. The sentences about the T11 runs (no correctness failure; four same-binary comparison pairs exiting 1 with 2 to 7 parallel or automatic cases more than 10% slower: T11/after/cli/compare5 and T11/final/cli/compare-1..3, outside the repository) are observations of one host and are stated as not verified."
+      }
      }
     ],
     "revisedIn": "T11 fix round 1"
@@ -30129,23 +30166,46 @@
    "id": "V04-C-1014",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Fixed",
-   "fingerprint": "b827a466a6a5989e",
-   "statement": "- **`vectorcore-bench` correctness gate.** the generic `batch.euclidean2` cases no longer record correctness failures on correct output, so the guide's ci comparison runs without `--exclude`. the euclidean and squared-euclidean batch routes, their `boundary` companions and the `matrix` routes are held to thresholds derived from each route's worst-case rounding bound for the case's dimension and candidate count, replacing a fixed relative `1e-6` that the generic route's long fp32 sums legitimately exceed. a relative error now divides by `max(|ref|, 1)`, and the `matrix` routes, whose diagonal references are zero, are gated on absolute error. `noop.scalar-add` and the `mem.alloc`, `mem.pool` and `mem.fill` cases declare that they have no output to validate instead of recording \"missing validation\"; `dot`, `normalize` and `mem.copy` still record it. other validated routes keep the fixed thresholds. regression coverage: `benchmarkcorrectnesspolicytests` in [benchmarkcontracttests](tests/benchmarkcontracttests/benchmarkcontracttests.swift).",
+   "fingerprint": "6157ee941eea07f4",
+   "statement": "- **`vectorcore-bench` correctness gate.** dot, normalization success/zero-failure and `mem.copy` now record independent observations outside timing instead of \"missing validation\": double arithmetic references for dot and normalized coordinates, `invalidoperation` for zero normalization, and exact source/destination bits for copy. copy setup now uses `float(i % 257 - 128)/256`; old fixture/boundary identities need fresh compatible reports. the six dot routes use reviewed absolute forward-error bounds for the bounded lcg fixtures at d = 512, 768 and 1536 (`k32=d` generic, `k32=d/16+5` optimized, `k64=d`, scale `d·b²`, `b=1`, existing margin), replacing the empirical relative limit that falsely rejected three seed-0 results. these conservative bounds can miss small defects and do not cover arbitrary vector magnitudes; source/model limits and sensitivity are in [the dot analysis](docs/reviews/2026-11-04-release-phase-two/benchmarks/dot-bound-analysis.md). exact signed one-hot tests cover every index of all six actual dot routes independently of those bounds. the existing euclidean/squared-euclidean batch, boundary and matrix derived rules, relative denominator `max(|ref|, 1)`, other fixed arithmetic thresholds and strict/override behavior are preserved. `noop.scalar-add`, `mem.alloc`, `mem.pool` and `mem.fill` remain explicitly nonnumerical. regression coverage includes `testeveryrepairedcatalogcasecarriesstrictobservation`, `testdotmodelsusesignedsumabsoluteboundsateverywidth`, `testeverydotrouteretainseachsignedcoordinateexactly`, `testnormalizationreferencerejectswrongcoordinatesandoutcomes` and `testcopyrejectstailpermutationulpandsignedzerocorruption` in [benchmarknumericalobservationtests](tests/benchmarkcontracttests/benchmarknumericalobservationtests.swift), plus `testvalidationrequirementisdeclaredpercase`, `testderivedthresholdsfollowtheroundingcounts` and `testrelativeerrorneverdividesbyreferencebelowfloor` in the existing [benchmarkcorrectnesspolicytests](tests/benchmarkcontracttests/benchmarkcontracttests.swift). the original t11 euclidean/matrix policy repair remains part of this unreleased change; the [phase-two execution record](docs/reviews/2026-11-04-release-phase-two/benchmarks/readme.md) reports the added validation without claiming timing or release acceptance.",
    "kind": "markdown",
-   "lineHint": 484,
+   "lineHint": 1255,
    "category": "measurement-boundary",
    "disposition": "retained",
    "evidence": {
-    "kind": "adjacent-invariant",
-    "reference": "the change described is in the tree accepted by T11 (Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/closures/T11.json, sha256 4acf5962252e5579)",
-    "domain": "the T11 change set described by this note",
-    "limitations": "The closure records acceptance of the task's change set (closed records, validation, limitations); it is not a sentence-by-sentence check of this note. It is cited as reviewed text, not as an R4 dated artifact: the test harness's temporary copy holds Sources, Tests, Benchmarks and the ledger's literal paths only. Figures that come from records outside the repository are disclosed as such in the note."
+    "kind": "named-test",
+    "reference": [
+     "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testValidationRequirementIsDeclaredPerCase",
+     "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testDerivedThresholdsFollowTheRoundingCounts",
+     "Tests/BenchmarkContractTests/BenchmarkContractTests.swift::BenchmarkCorrectnessPolicyTests.testRelativeErrorNeverDividesByReferenceBelowFloor",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testEveryRepairedCatalogCaseCarriesStrictObservation",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testEveryDotRouteRetainsEachSignedCoordinateExactly",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testNormalizationReferenceRejectsWrongCoordinatesAndOutcomes",
+     "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift::BenchmarkNumericalObservationTests.testCopyRejectsTailPermutationULPAndSignedZeroCorruption"
+    ],
+    "domain": "All 21 repaired catalog cases at widths 512,768,1536 on seed 0; independent Double arithmetic references for concrete dot/normalization calls, zero-input invalidOperation outcome and complete bit-pattern copying on the index-pattern fixture. Named helper controls exercise wrong arithmetic/outcomes, copy bits/shape and retained per-case validation requirements.",
+    "limitations": "Arithmetic validation observes separate post-measurement calls; copy observes the final source/destination, not every timed invocation. Exact-copy mismatch invalidity cannot be waived by numeric overrides. Tests cover named wrong-output fixtures, not arbitrary implementation defects. Updated fixture/boundary identities require compatible reports; no timing or release acceptance follows. The retained 2026-10-04 T11 loaded-host comparisons are external historical observations explicitly not verified by a repository test; their older statement/evidence are preserved in history.superseded."
    },
    "acceptedContract": null,
    "history": {
     "originalStatement": null,
     "originalFingerprint": null,
-    "origin": "T13 phase 2B"
+    "origin": "T13 phase 2B",
+    "superseded": [
+     {
+      "statement": "- **`vectorcore-bench` correctness gate.** the generic `batch.euclidean2` cases no longer record correctness failures on correct output, so the guide's ci comparison runs without `--exclude`. the euclidean and squared-euclidean batch routes, their `boundary` companions and the `matrix` routes are held to thresholds derived from each route's worst-case rounding bound for the case's dimension and candidate count, replacing a fixed relative `1e-6` that the generic route's long fp32 sums legitimately exceed. a relative error now divides by `max(|ref|, 1)`, and the `matrix` routes, whose diagonal references are zero, are gated on absolute error. `noop.scalar-add` and the `mem.alloc`, `mem.pool` and `mem.fill` cases declare that they have no output to validate instead of recording \"missing validation\"; `dot`, `normalize` and `mem.copy` still record it. other validated routes keep the fixed thresholds. regression coverage: `benchmarkcorrectnesspolicytests` in [benchmarkcontracttests](tests/benchmarkcontracttests/benchmarkcontracttests.swift).",
+      "fingerprint": "b827a466a6a5989e",
+      "symbol": "section Changelog::section [Unreleased]::section Fixed",
+      "revision": "57d9a82 (before phase-two benchmark documentation reconciliation)",
+      "evidence": {
+       "kind": "adjacent-invariant",
+       "reference": "the change described is in the tree accepted by T11 (Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/closures/T11.json, sha256 4acf5962252e5579)",
+       "domain": "the T11 change set described by this note",
+       "limitations": "The closure records acceptance of the task's change set (closed records, validation, limitations); it is not a sentence-by-sentence check of this note. It is cited as reviewed text, not as an R4 dated artifact: the test harness's temporary copy holds Sources, Tests, Benchmarks and the ledger's literal paths only. Figures that come from records outside the repository are disclosed as such in the note."
+      }
+     }
+    ]
    }
   },
   {

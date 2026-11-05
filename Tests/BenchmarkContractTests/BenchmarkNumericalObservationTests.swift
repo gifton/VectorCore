@@ -6,7 +6,7 @@ import VectorCoreBenchmarking
 
 final class BenchmarkNumericalObservationTests: XCTestCase {
     // Removing an observation from any repaired catalog case must fail this table.
-    func testEveryRepairedCatalogCaseCarriesStrictObservation() async throws {
+    @MainActor func testEveryRepairedCatalogCaseCarriesStrictObservation() async throws {
         let options = try ValidatedOptions(parseCLI(arguments: ["--suites", "dot,normalize,memory", "--dims", "512,768,1536",
             "--repeats", "1", "--samples", "2", "--no-ab"], environment: [:]))
         let progress = BenchmarkProgressReporter(format: .none)

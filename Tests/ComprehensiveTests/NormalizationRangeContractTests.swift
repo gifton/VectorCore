@@ -347,7 +347,7 @@ import Testing
         print("N01_GUARD_ACCEPTED")
     }
 
-    @Test func invalidInputsRejectInChildren() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func invalidInputsRejectInChildren() throws {
         if ProcessInfo.processInfo.environment["N01_SKIP_GUARDS"] == "1" { return }
         let cases = ["empty","zero","nan","infinity","double","optimized384","optimized512","optimized768","optimized1536","pointerZero","pointerNaN","pointerInfinity",
             "negativeDimension","toleranceNegative","toleranceNaN","toleranceInfinity","toleranceNegativeInfinity","divideZero","divideNegativeZero","divideAssignZero",

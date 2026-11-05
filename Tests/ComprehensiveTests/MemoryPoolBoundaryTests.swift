@@ -210,7 +210,7 @@ extension MemoryPoolBoundaryTests {
         FileHandle.standardOutput.write(Data("E04_UNEXPECTED_RETURN\n".utf8))
     }
 
-    @Test(.serialized, arguments: [
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized, arguments: [
         "configuration-negative", "configuration-buffer-negative", "configuration-alignment",
         "internal-negative-budget", "internal-overflow-budget", "internal-negative-per-size",
         "typed-negative-budget", "typed-negative-per-size", "memory-negative-budget", "memory-negative-per-size",

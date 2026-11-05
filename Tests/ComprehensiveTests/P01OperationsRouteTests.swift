@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -14,7 +15,7 @@ struct P01OperationsRouteTests {
 
     // MARK: Provider precedence (O3)
 
-    @Test func providerPrecedence() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func providerPrecedence() async throws {
         try await e06IsolatedScenario("p01-ops-provider-precedence", filter: "P01OperationsRouteTests/providerPrecedence") {
             let calls = P01OpsCalls()
             let metric = P01OpsSpyMetric(calls: calls, token: 41)
@@ -122,7 +123,7 @@ struct P01OperationsRouteTests {
 
     // MARK: Serial, parallel, nested and cancelled execution (O5, H3)
 
-    @Test func serialParallelNestedAndCancelled() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func serialParallelNestedAndCancelled() async throws {
         try await e06IsolatedScenario("p01-ops-execution", filter: "P01OperationsRouteTests/serialParallelNestedAndCancelled") {
             let count = 4097, k = 3
             // Repeated values give exact ties across ranges; the minimum (0) occurs at several indices.
@@ -312,7 +313,7 @@ struct P01OperationsRouteTests {
 
     // MARK: Extreme partitions and partial capacities (O8, O9, O14, Q5)
 
-    @Test func extremePartitions() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func extremePartitions() async throws {
         try await e06IsolatedScenario("p01-ops-partitions", filter: "P01OperationsRouteTests/extremePartitions") {
             let count = 41
             func providers() -> [(String, P01RecordingProvider)] {
@@ -409,7 +410,7 @@ struct P01OperationsRouteTests {
 
     // MARK: Custom and parameterized witnesses (CS12, O5, T7)
 
-    @Test func customAndParameterizedWitnesses() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func customAndParameterizedWitnesses() async throws {
         try await e06IsolatedScenario("p01-ops-witnesses", filter: "P01OperationsRouteTests/customAndParameterizedWitnesses") {
             // A custom metric on Vector512Optimized is not replaced by a built-in kernel: it streams, called once
             // per candidate in index order within each range.

@@ -78,9 +78,9 @@ private func q03Marker(_ message: String) {
         }
     }
 
-    @Test func isolatedBoundaryRecords() throws { try runChild("records") }
-    @Test func isolatedConstructors() throws { try runChild("constructors") }
-    @Test func isolatedConcurrency() throws { try runChild("concurrency") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func isolatedBoundaryRecords() throws { try runChild("records") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func isolatedConstructors() throws { try runChild("constructors") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func isolatedConcurrency() throws { try runChild("concurrency") }
     @Test func childProbe() throws {
         guard let scenario = ProcessInfo.processInfo.environment["Q03_SCENARIO"] else { return }
         q03Marker("Q03_BODY_BEGIN \(scenario)")

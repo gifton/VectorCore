@@ -181,7 +181,7 @@ private func q04HalfValue(bits: UInt16) -> Double {
         }
     }
 
-    @Test(arguments: [512, 768, 1536], [0, 1, 2])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: [512, 768, 1536], [0, 1, 2])
     func namedRejectionMatrix(width: Int, metric: Int) throws {
         for invalid in ["negative", "upper", "empty", "extreme", "capacity"] { try runChild(width: width, metric: metric, invalid: invalid) }
     }

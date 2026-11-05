@@ -194,7 +194,7 @@ import Testing
         print("I02_INVALID_LIMIT_ACCEPTED")
     }
 
-    @Test func negativeLimitsRejectAtInitialization() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func negativeLimitsRejectAtInitialization() throws {
         for limit in ["maxSize", "maxBytes"] {
             var environment = ProcessInfo.processInfo.environment
             environment["I02_NEGATIVE_LIMIT"] = limit

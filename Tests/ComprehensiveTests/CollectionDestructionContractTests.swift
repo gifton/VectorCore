@@ -75,7 +75,7 @@ private struct DestructionVector: IndexableVector {
         emit("F002_DESTRUCTION_COMPLETE")
     }
 
-    @Test(arguments: ["update", "removeAll", "remove"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: ["update", "removeAll", "remove"])
     func destructionCanReenter(_ scenario: String) throws {
         let environment = ProcessInfo.processInfo.environment.merging(["F002_DESTRUCTION": scenario]) { _, new in new }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("F002-\(scenario)-\(UUID().uuidString).log")

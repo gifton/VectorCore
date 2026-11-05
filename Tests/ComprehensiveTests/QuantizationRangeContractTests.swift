@@ -115,8 +115,8 @@ struct Q01ChildContracts {
             #expect(log.contains("Q01_VALUE 127"))
         }
     }
-    @Test func finiteOutlierSaturates() throws { try runChild("outlier",diagnostic:nil) }
-    @Test func namedRejectionMatrix() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func finiteOutlierSaturates() throws { try runChild("outlier",diagnostic:nil) }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func namedRejectionMatrix() throws {
         let finite = "Quantization requires finite input coordinates"
         for bad in ["nan","inf","negativeInf"] {
             for name in ["scalar","scheme"] { try runChild("\(name):512:\(bad)",diagnostic:finite) }

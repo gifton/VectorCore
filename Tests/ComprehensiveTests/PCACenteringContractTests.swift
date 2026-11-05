@@ -38,7 +38,7 @@ import Glibc
         } else { try check() }
     }
 
-    @Test(.serialized, arguments: ["oversampling", "finite"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized, arguments: ["oversampling", "finite"])
     func oversamplingInBoundedChild(_ scenario: String) throws {
         var env = ProcessInfo.processInfo.environment
         env["L02_SCENARIO"] = scenario

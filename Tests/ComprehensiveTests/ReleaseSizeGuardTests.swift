@@ -43,10 +43,10 @@ import Testing
         return "MatrixDistance rows must share a dimension"
     }
 
-    @Test(arguments: kernelScenarios)
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: kernelScenarios)
     func kernelTrapsBeforeWriting(scenario: String) throws { try runChild(scenario, checksSentinel: true) }
 
-    @Test(arguments: matrixScenarios)
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: matrixScenarios)
     func matrixRowsOfUnequalLengthTrap(scenario: String) throws { try runChild(scenario, checksSentinel: false) }
 
     private func runChild(_ scenario: String, checksSentinel: Bool) throws {

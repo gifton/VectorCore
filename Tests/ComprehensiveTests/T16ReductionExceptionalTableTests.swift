@@ -187,7 +187,7 @@ struct T16ReductionExceptionalTableTests {
 struct T16ReductionProfilerTests {
     static let selector = "T16ReductionProfilerTests/profilerRowsChild"
 
-    @Test func profilerRowsRunInAnIsolatedChild() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func profilerRowsRunInAnIsolatedChild() throws {
         var environment = ProcessInfo.processInfo.environment
         environment["SWIFT_BACKTRACE"] = "enable=no"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("T16-profiler-\(UUID().uuidString).log")

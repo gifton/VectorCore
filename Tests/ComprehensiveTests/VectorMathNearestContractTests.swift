@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -60,7 +61,7 @@ struct VectorMathNearestContractTests {
         #expect(calls.count == 0)
     }
 
-    @Test func negativeKReturnsEmptyWithoutMetricInChild() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func negativeKReturnsEmptyWithoutMetricInChild() throws {
         let child = try p01RunChild("vectormath-negative-k", filter: "VectorMathNearestContractTests/p01Child")
         #expect(child.run.terminationStatus == 0 && child.run.terminationReason == .exit,
                 "negative k child status=\(child.run.statusDescription) reason=\(child.run.reasonDescription): \(child.tail)")

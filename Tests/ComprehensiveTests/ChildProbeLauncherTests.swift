@@ -1,6 +1,7 @@
 import VectorCoreTestSupport
 import Foundation
 import Darwin
+import MachO
 import Testing
 
 // T10: pins the contract of ChildProbeLauncher.swift (see its header). The end-to-end tests launch
@@ -148,6 +149,90 @@ private func selfTestMarker(_ line: String) {
         #expect(child == ["-XCTest", "M.C/testProbe", "/b.xctest"])
     }
 
+    @Test func portableTerminationPreservesExitAndSignalDiagnostics() throws {
+        for (reason, status, description) in [(ChildProbeTerminationReason.exit, Int32(7), "1"),
+                                               (.uncaughtSignal, Int32(9), "2")] {
+            let result = ChildProbeRun(executable: "/x", arguments: [], processIdentifier: 42, processGroup: 42,
+                                       timedOut: false, cleaned: true,
+                                       termination: ChildProbeTermination(status: status, reason: reason))
+            #expect(try result.reaped() == ChildProbeTermination(status: status, reason: reason))
+            #expect(result.terminationStatus == status && result.terminationReason == reason)
+            #expect(result.statusDescription == String(status) && result.reasonDescription == description)
+            #expect(result.cleanup == .success && !result.isRunning)
+        }
+    }
+
+    @Test func subprocessCapabilityMatchesPlatform() {
+        #if os(macOS)
+        #expect(childProbeProcessesSupported)
+        #else
+        #expect(!childProbeProcessesSupported)
+        #expect(throws: ChildProbeLaunchError.self) {
+            _ = try launchChildProbe(.swiftTesting(filter: "Never/launched"), environment: [:],
+                                     output: .standardOutput, deadline: ChildProbeBudget.standard.deadline,
+                                     cleanup: ChildProbeBudget.standard.cleanup)
+        }
+        #endif
+    }
+
+    @Test func childSanitizerEnvironmentRetainsExplicitSettingsAndRepairsMissingPreload() throws {
+        let runtime = "/runtime/libclang_rt.asan_osx_dynamic.dylib"
+        let original = ["ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1", "TOKEN": "kept",
+                        "DYLD_INSERT_LIBRARIES": "/caller/first.dylib:/caller/second.dylib"]
+        let repaired = try childProbeEnvironment(original, loadedImages: ["/usr/lib/libSystem.B.dylib", runtime])
+        #expect(repaired["DYLD_INSERT_LIBRARIES"] == "/caller/first.dylib:/caller/second.dylib:" + runtime)
+        #expect(repaired["ASAN_OPTIONS"] == original["ASAN_OPTIONS"] && repaired["TOKEN"] == "kept")
+        #expect(try childProbeEnvironment(original, loadedImages: []) == original)
+        #expect(try childProbeEnvironment(repaired, loadedImages: [runtime, runtime]) == repaired)
+        let tsan = "/runtime/libclang_rt.tsan_osx_dynamic.dylib"
+        let thread = try childProbeEnvironment(["TSAN_OPTIONS": "halt_on_error=1"], loadedImages: [tsan])
+        #expect(thread == ["TSAN_OPTIONS": "halt_on_error=1", "DYLD_INSERT_LIBRARIES": tsan])
+    }
+
+    @Test func childSanitizerEnvironmentRejectsConflictsAndAmbiguousImages() {
+        let asan = "/runtime/libclang_rt.asan_osx_dynamic.dylib"
+        let tsan = "/runtime/libclang_rt.tsan_osx_dynamic.dylib"
+        for (environment, images) in [(["DYLD_INSERT_LIBRARIES": tsan], [asan]),
+                                      (["DYLD_INSERT_LIBRARIES": "/other/libclang_rt.asan_osx_dynamic.dylib"], [asan]),
+                                      ([:], [asan, tsan]),
+                                      ([:], [asan, "/other/libclang_rt.asan_osx_dynamic.dylib"])] {
+            #expect(throws: ChildProbeLaunchError.self) {
+                _ = try childProbeEnvironment(environment, loadedImages: images)
+            }
+        }
+    }
+
+    @Test func childSanitizerEnvironmentDeduplicatesFilesystemAliases() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let runtime = directory.appendingPathComponent("libclang_rt.asan_osx_dynamic.dylib")
+        try Data().write(to: runtime)
+        let alias = directory.appendingPathComponent("runtime-alias.dylib")
+        try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: runtime)
+        let original = ["DYLD_INSERT_LIBRARIES": alias.path]
+        #expect(try childProbeEnvironment(original, loadedImages: [runtime.path, alias.path]) == original)
+    }
+
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
+    func sanitizerChildImagesMatchParent() throws {
+        let images = (0..<_dyld_image_count()).compactMap { index -> String? in
+            guard let name = _dyld_get_image_name(index) else { return nil }
+            return String(cString: name)
+        }
+        let expected = try childProbeEnvironment([:], loadedImages: images)["DYLD_INSERT_LIBRARIES"] ?? "none"
+        let (run, log) = try launchSelfTest("sanitizer", deadline: ChildProbeBudget.standard.deadline,
+                                           cleanup: ChildProbeBudget.standard.cleanup)
+        try #require(!run.timedOut, "\(log)")
+        #expect(run.terminationStatus == 0, "\(log)")
+        #expect(log.contains("T10_SANITIZER_IMAGE \(expected)"), "\(log)")
+        for key in ["ASAN_OPTIONS", "TSAN_OPTIONS"] {
+            #expect(log.contains("T10_SANITIZER_OPTION \(key)=\(ProcessInfo.processInfo.environment[key] ?? "absent")"), "\(log)")
+        }
+        print("T10_SANITIZER_CHILD_CAPTURE\n" + log)
+        print("T10_SANITIZER_CHILD_VERIFIED image=\(expected) pid=\(run.processIdentifier)")
+    }
+
     // MARK: results (clause 5)
 
     @Test func unreapedChildReadsFailWithoutTrapping() {
@@ -161,7 +246,7 @@ private func selfTestMarker(_ line: String) {
         let exited = ChildProbeRun(executable: "/x", arguments: [], processIdentifier: 4242, processGroup: 4242,
                                    timedOut: false, cleaned: true, termination: ChildProbeTermination(status: 0, reason: .exit))
         #expect(exited.terminationStatus == 0 && exited.terminationReason == .exit && !exited.isRunning)
-        #expect(exited.statusDescription == "0" && exited.reasonDescription == "\(Process.TerminationReason.exit.rawValue)")
+        #expect(exited.statusDescription == "0" && exited.reasonDescription == "\(ChildProbeTerminationReason.exit.rawValue)")
         #expect((try? exited.reaped()) == ChildProbeTermination(status: 0, reason: .exit))
     }
 
@@ -174,7 +259,7 @@ private func selfTestMarker(_ line: String) {
         try refuseNestedChildProbeLaunch(.swiftTesting(filter: "P/c"), environment: ["PATH": "/usr/bin"])
     }
 
-    @Test func childProbeCannotLaunchAProbe() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func childProbeCannotLaunchAProbe() throws {
         let (run, log) = try launchSelfTest("nested", deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         try #require(!run.timedOut, "\(log)")
         #expect(run.terminationStatus == 0, "\(log)")
@@ -187,7 +272,7 @@ private func selfTestMarker(_ line: String) {
 
     // MARK: process group (clause 3)
 
-    @Test func exitedChildLeavesNoGroupMember() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func exitedChildLeavesNoGroupMember() throws {
         let (run, log) = try launchSelfTest("leave", deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         try #require(!run.timedOut, "\(log)")
         #expect(run.termination == ChildProbeTermination(status: 0, reason: .exit), "\(log)")
@@ -196,14 +281,14 @@ private func selfTestMarker(_ line: String) {
         try expectGrandchildRemoved(log, group: run.processIdentifier)
     }
 
-    @Test func deadlineKillsTheWholeGroup() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func deadlineKillsTheWholeGroup() throws {
         let (run, log) = try launchSelfTest("hang", deadline: 3, cleanup: .kill(seconds: 2))
         #expect(run.timedOut && run.cleaned, "\(log)")
         #expect(run.termination == ChildProbeTermination(status: SIGKILL, reason: .uncaughtSignal), "\(log)")
         try expectGrandchildRemoved(log, group: run.processIdentifier)
     }
 
-    @Test func deadlineTerminatesTheWholeGroup() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func deadlineTerminatesTheWholeGroup() throws {
         let (run, log) = try launchSelfTest("hang", deadline: 3, cleanup: .terminateThenKill(grace: 1, seconds: 1))
         #expect(run.timedOut && run.cleaned, "\(log)")
         #expect(run.termination == ChildProbeTermination(status: SIGTERM, reason: .uncaughtSignal), "\(log)")
@@ -211,11 +296,25 @@ private func selfTestMarker(_ line: String) {
     }
 
     /// The probe body; a no-op unless launched by the tests above.
-    @Test func launcherSelfTestChild() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func launcherSelfTestChild() throws {
+        #if os(macOS)
         guard let scenario = ProcessInfo.processInfo.environment[selfTestScenarioKey] else { return }
         selfTestMarker("T10_CHILD pid=\(getpid()) pgid=\(getpgrp())")
         selfTestMarker("T10_SELF_TEST_MARKER \(ProcessInfo.processInfo.environment[childProbeMarkerKey] ?? "absent")")
         switch scenario {
+        case "sanitizer":
+            let images = (0..<_dyld_image_count()).compactMap { index -> String? in
+                guard let name = _dyld_get_image_name(index) else { return nil }
+                let path = String(cString: name)
+                let file = URL(fileURLWithPath: path).lastPathComponent
+                return ["libclang_rt.asan_osx_dynamic.dylib", "libclang_rt.tsan_osx_dynamic.dylib"].contains(file)
+                    ? URL(fileURLWithPath: path).resolvingSymlinksInPath().path : nil
+            }
+            if images.isEmpty { selfTestMarker("T10_SANITIZER_IMAGE none") }
+            for image in images { selfTestMarker("T10_SANITIZER_IMAGE \(image)") }
+            for key in ["ASAN_OPTIONS", "TSAN_OPTIONS"] {
+                selfTestMarker("T10_SANITIZER_OPTION \(key)=\(ProcessInfo.processInfo.environment[key] ?? "absent")")
+            }
         case "nested":
             do {
                 _ = try launchChildProbe(.swiftTesting(filter: "Never/launched"), environment: [:],
@@ -245,6 +344,7 @@ private func selfTestMarker(_ line: String) {
         default:
             Issue.record("unknown self-test scenario \(scenario)")
         }
+        #endif
     }
 
     // MARK: helpers

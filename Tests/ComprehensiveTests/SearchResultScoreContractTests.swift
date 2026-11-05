@@ -246,7 +246,7 @@ import Testing
         print("R05_REENTRANT_SCORE_COMPLETE")
     }
 
-    @Test func reentrantScoreRunsOutsideLockAndKeepsSelectedSnapshot() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func reentrantScoreRunsOutsideLockAndKeepsSelectedSnapshot() throws {
         let diagnostic = try r05RunScoreChild()
         #expect(diagnostic.contains("R05_REENTRANT_SCORE_COMPLETE"))
     }

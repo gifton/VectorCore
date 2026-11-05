@@ -60,7 +60,7 @@ struct VectorShapeContractTests {
         }
     }
 
-    @Test func fixedStorageBoundaryMatrix() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func fixedStorageBoundaryMatrix() throws {
         let logs = FileManager.default.temporaryDirectory.appendingPathComponent("S01-children-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: logs, withIntermediateDirectories: true)
         print("S01 child logs: \(logs.path)")

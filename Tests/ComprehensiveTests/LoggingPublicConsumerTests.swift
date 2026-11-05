@@ -67,7 +67,7 @@ private final class D03Counter: @unchecked Sendable {
 }
 
 @Suite struct LoggingPublicConsumerTests {
-    @Test func publicConsumerChild() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func publicConsumerChild() throws {
         let result = try d03RunChild(scenario: "public",
                                      filter: "LoggingPublicConsumerTests/childProbe")
         #expect(result.status == 0, "public child failed: \(result.output.prefix(4000))")

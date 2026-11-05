@@ -95,7 +95,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    private func child(_ specification: String) throws -> (Process.TerminationReason, Int32, String) {
+    private func child(_ specification: String) throws -> (ChildProbeTerminationReason, Int32, String) {
         var environment = ProcessInfo.processInfo.environment
         environment["S02_PROBE"] = specification
         environment["SWIFT_BACKTRACE"] = "enable=no"
@@ -189,7 +189,7 @@ struct VectorDispatchContractTests {
     }
 
     // Removing any binary preflight is caught before a short RHS can be borrowed.
-    @Test func mutationBoundaryMatrix() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func mutationBoundaryMatrix() throws {
         for route in ["add", "subtract", "multiply", "plus", "minus"] {
             for n in 0...3 {
                 for m in 0...3 where n != m {
@@ -226,7 +226,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func aggregateMetadataPreflight() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func aggregateMetadataPreflight() throws {
         for operation in ["centroid", "statistics"] {
             for position in 0...2 {
                 for size in [1, 3] {
@@ -239,7 +239,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func genericFactoryFailuresPropagate() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func genericFactoryFailuresPropagate() throws {
         for operation in ["centroid", "normalize"] {
             let (_, status, output) = try child("sentinel:\(operation)")
             #expect(status == 0 && output.contains("S02_SENTINEL"), "\(operation): \(output)")
@@ -250,7 +250,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func invalidBatchDimensions() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func invalidBatchDimensions() throws {
         for dimension in [0, -1, Int.min] {
             for count in [0, 1] {
                 let (_, status, output) = try child("batch:\(dimension):\(count)")
@@ -259,7 +259,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func negativeNonthrowingConstructors() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func negativeNonthrowingConstructors() throws {
         for constructor in ["random", "zeros", "ones", "pattern"] {
             for dimension in [-1, Int.min] {
                 let (reason, _, output) = try child("constructor:\(constructor):\(dimension)")
@@ -269,7 +269,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func extremeLookupSeparateProbe() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func extremeLookupSeparateProbe() throws {
         let (_, status, output) = try child("lookup")
         #expect(status == 0 && output.contains("S02_LOOKUP_128"), "\(output)")
     }
@@ -325,7 +325,7 @@ struct VectorDispatchContractTests {
     }
 
     // Run after preflight repair; baseline short-RHS evidence uses S02Spy instead.
-    @Test func concreteShortRHSRejection() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func concreteShortRHSRejection() throws {
         for route in ["add", "subtract", "multiply", "plus", "minus"] {
             for n in 1...3 {
                 for m in 0..<n {
@@ -414,7 +414,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func arrayBoundaryAndZeroCentroidProbes() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func arrayBoundaryAndZeroCentroidProbes() throws {
         for operation in ["centroid", "statistics"] {
             let (_, status, output) = try child("array:\(operation)")
             #expect(status == 0 && output.contains("S02_ERROR_dimensionMismatch"), "\(output)")
@@ -427,7 +427,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func boundsErrorExtremeProbe() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func boundsErrorExtremeProbe() throws {
         let (_, status, output) = try child("errorHelper")
         #expect(status == 0 && output.contains("S02_ERROR_HELPER_-1"), "\(output)")
     }
@@ -446,7 +446,7 @@ struct VectorDispatchContractTests {
         }
     }
 
-    @Test func concreteProtocolOnlyOperators() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func concreteProtocolOnlyMismatchesRejectBeforeBorrow() throws {
         for route in ["plus", "minus"] {
             for n in 0...3 {
                 for m in 0...3 where n != m {
@@ -455,6 +455,11 @@ struct VectorDispatchContractTests {
                     #expect(!output.contains("S02_MUTABLE_BORROW") && !output.contains("S02_READ_BORROW"))
                 }
             }
+        }
+    }
+
+    @Test func concreteProtocolOnlyOperatorsPreserveCopy() {
+        for route in ["plus", "minus"] {
             for n in [0, 1, 2, 3, 2048] {
                 var lhs = S02ProtocolOnly(Array(repeating: 2, count: n))
                 let copy = lhs

@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -9,7 +10,7 @@ import Testing
 struct P01TopKBufferRedTests {
     static let childFilter = "P01TopKBufferRedTests/p01Child"
 
-    @Test func zeroCapacityTopKBufferIgnoresPushInChild() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func zeroCapacityTopKBufferIgnoresPushInChild() throws {
         let child = try p01RunChild("topk-zero-capacity", filter: Self.childFilter)
         #expect(child.run.terminationStatus == 0 && child.run.terminationReason == .exit,
                 "zero-capacity push child status=\(child.run.statusDescription) reason=\(child.run.reasonDescription): \(child.tail)")
@@ -17,7 +18,7 @@ struct P01TopKBufferRedTests {
     }
 
     /// Control (green before and after P01): a negative capacity traps before any buffer exists.
-    @Test func negativeCapacityTopKBufferTrapsControl() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func negativeCapacityTopKBufferTrapsControl() throws {
         let child = try p01RunChild("topk-negative-capacity", filter: Self.childFilter)
         let failures = trapObservationFailures(child.run, output: child.output, id: "topk-negative-capacity",
                                                diagnostic: "Can't construct Array with count < 0")

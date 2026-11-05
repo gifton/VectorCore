@@ -232,6 +232,8 @@ class SanitizerConfigurationTests(unittest.TestCase):
                                      {str(bundle) for bundle in bundles.values()})
 
     def test_invalid_configuration_rejects_before_any_build_or_output(self):
+        from contextlib import redirect_stderr
+        from io import StringIO
         import tempfile
         from unittest.mock import patch
         import check_sanitizers as driver
@@ -239,9 +241,12 @@ class SanitizerConfigurationTests(unittest.TestCase):
             root = Path(directory)
             argv = ['check_sanitizers.py', '--sanitizer', 'address', '--scratch-root', str(root / 'scratch'),
                     '--output', str(root / 'output'), '--configuration', 'Release']
-            with patch.object(sys, 'argv', argv), patch.object(driver, 'find_swift') as lookup:
+            diagnostic = StringIO()
+            with patch.object(sys, 'argv', argv), patch.object(driver, 'find_swift') as lookup, \
+                    redirect_stderr(diagnostic):
                 with self.assertRaises(SystemExit) as error:
                     driver.main()
+            self.assertIn("argument --configuration: invalid choice: 'Release'", diagnostic.getvalue())
             self.assertEqual(error.exception.code, 2)
             lookup.assert_not_called()
             self.assertFalse((root / 'output').exists())

@@ -27,6 +27,8 @@ Every selected row has zero exit, exact started/passed evidence, no skip, and ac
 
 Each build uses fresh scratch roots, `--jobs 2 --swift-build-system native`, a 1200-second build deadline and a 2400-second outer supervisor. Ordinary bodies retain 15 seconds; Q03 retains a 49-second parent, 45-second child and 2-second cleanup. `VECTORCORE_TEST_EXTENDED=0`, `VECTORCORE_STRICT_PERF=0`, ASan `detect_leaks=0:halt_on_error=1` and TSan `halt_on_error=1` remain unchanged. Compiler work is sequential within this track. Times are evidence of bounded execution, not benchmark acceptance.
 
+Each accepted `build.stdout` retains 38 compiler warning headers, covering CBLAS/API deprecations, unused values and weak-variable mutability, unnecessary `try`/`await` effects, non-Sendable metatype capture, and subnormal-literal conversion. Each `build.stderr` also retains the native-build-system deprecation warning. These existing build diagnostics are distinct from runtime sanitizer diagnostics; they were neither suppressed nor repaired in this track.
+
 The verified Swift.org frontend SHA256 is `956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301`; MacOSX27.2 SDK settings SHA256 is `82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6`. The retained extracted payload was reused without installation, and its existing compiler qualification applies only to these identical inputs. Per-command records retain selected environment and executable hashes; identity snapshots retain source/SDK/compiler hashes. The actual SwiftPM helper and both sanitizer runtime bytes are copied under `selected-runtime/`, not just named by hash.
 
 | Loaded artifact | ASan SHA256 | TSan SHA256 |

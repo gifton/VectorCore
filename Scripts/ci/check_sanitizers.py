@@ -41,7 +41,9 @@ def sanitizer_host_environment(swift, platform, sanitizer, environment):
     # must be discoverable when the helper is invoked without SwiftPM's launcher.
     child['DYLD_LIBRARY_PATH'] = ':'.join(map(str, [toolchain / 'lib/swift/macosx/testing',
         toolchain / 'lib/swift/macosx', Path(platform) / 'Developer/usr/lib']))
-    child['DYLD_FRAMEWORK_PATH'] = str(Path(platform) / 'Developer/Library/Frameworks')
+    child['DYLD_FRAMEWORK_PATH'] = ':'.join(map(str, [
+        Path(platform) / 'Developer/Library/Frameworks',
+        Path(platform) / 'Developer/Library/PrivateFrameworks']))
     return host, runtimes[0], child
 
 

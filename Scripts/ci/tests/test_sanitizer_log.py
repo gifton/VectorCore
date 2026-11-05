@@ -77,7 +77,9 @@ class DirectSanitizerHostTests(unittest.TestCase):
                 self.assertEqual(environment['DYLD_PRINT_LIBRARIES'], '1')
                 self.assertIn(str(toolchain / 'lib/swift/macosx/testing'), environment['DYLD_LIBRARY_PATH'].split(':'))
                 self.assertIn(str(platform / 'Developer/usr/lib'), environment['DYLD_LIBRARY_PATH'].split(':'))
-                self.assertEqual(environment['DYLD_FRAMEWORK_PATH'], str(platform / 'Developer/Library/Frameworks'))
+                self.assertEqual(environment['DYLD_FRAMEWORK_PATH'].split(':'),
+                                 [str(platform / 'Developer/Library/Frameworks'),
+                                  str(platform / 'Developer/Library/PrivateFrameworks')])
                 for key, value in original.items():
                     self.assertEqual(environment[key], value)
                 self.assertNotIn('DYLD_INSERT_LIBRARIES', original)
@@ -87,6 +89,25 @@ class DirectSanitizerHostTests(unittest.TestCase):
                     command = driver.sanitizer_test_command(host, bundle, row['filter'])
                     self.assertEqual(command, [str(host), '--test-bundle-path', str(bundle), '--filter',
                                                row['filter'], str(bundle), '--testing-library', 'swift-testing'])
+
+    def test_selected_framework_roots_replace_inherited_paths_for_each_sanitizer(self):
+        import tempfile
+        import check_sanitizers as driver
+        for sanitizer, short in [('address', 'asan'), ('thread', 'tsan')]:
+            with self.subTest(sanitizer=sanitizer), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                swift = root / 'toolchain/usr/bin/swift'
+                host = root / 'toolchain/usr/libexec/swift/pm/swiftpm-testing-helper'
+                runtime = root / ('toolchain/usr/lib/clang/17/lib/darwin/libclang_rt.' + short + '_osx_dynamic.dylib')
+                for file in [swift, host, runtime]:
+                    file.parent.mkdir(parents=True, exist_ok=True)
+                    file.touch()
+                platform = root / 'selected platform/MacOSX.platform'
+                public = platform / 'Developer/Library/Frameworks'
+                private = platform / 'Developer/Library/PrivateFrameworks'
+                _, _, environment = driver.sanitizer_host_environment(
+                    swift, platform, sanitizer, {'DYLD_FRAMEWORK_PATH': '/unrelated/developer/Frameworks'})
+                self.assertEqual(environment['DYLD_FRAMEWORK_PATH'].split(':'), [str(public), str(private)])
 
     def test_alias_paths_select_one_canonical_runtime_for_each_sanitizer(self):
         import tempfile

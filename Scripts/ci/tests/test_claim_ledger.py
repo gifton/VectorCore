@@ -225,7 +225,7 @@ class TemporaryRepository(unittest.TestCase):
         (cls.root / 'Scripts/ci').mkdir(parents=True)
         shutil.copy2(ROOT / LEDGER, cls.root / LEDGER)
         # Literal paths outside those trees that the ledger names (Markdown regions, forbidden-phrase paths and the
-        # files of named-test references, which R3 opens; a policy test under Scripts/ci/tests can be cited evidence).
+        # files of named-test references, which R3 opens, and dated artifacts, which R4 hashes).
         ledger = json.loads((ROOT / LEDGER).read_text(encoding='utf-8'))
         literal = {region['path'] for region in ledger['regions']}
         literal |= {path for rule in ledger['forbiddenPhrases'] for path in rule['paths'] if not chk.GLOB_META.search(path)}
@@ -234,6 +234,8 @@ class TemporaryRepository(unittest.TestCase):
                 references = entry['evidence']['reference']
                 for reference in (references if isinstance(references, list) else [references]):
                     literal.add(reference.split('::', 1)[0])
+            elif entry['evidence']['kind'] == 'dated-artifact':
+                literal.add(entry['evidence']['reference']['path'])
         for path in sorted(literal):
             if not (cls.root / path).exists():
                 (cls.root / path).parent.mkdir(parents=True, exist_ok=True)

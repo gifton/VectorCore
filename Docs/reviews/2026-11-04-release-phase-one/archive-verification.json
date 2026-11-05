@@ -1,0 +1,83 @@
+{
+  "fileCount": 3175,
+  "logicalBytes": 213540401,
+  "manifestSHA256": "2b1f8d8356c5bde2595fdc087e2fb3eeef3769d4bd546810c9175bf8a1947c71",
+  "secondDestinationReadPassed": true,
+  "sourceBeforeAfterAndDestinationHashesMatch": true,
+  "symlinkCount": 0,
+  "uniquePayloadBytes": 210526244,
+  "uniquePayloads": 1542,
+  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-one-2026-11-04-evidence",
+  "manifest": "/Users/goftin/dev/projects/VectorCore-release-phase-one-2026-11-04-evidence/manifest.json",
+  "selectionSHA256": "c1972de8d86c581959909570f29216f1f9bd2955370b47b3a59266857c286e25",
+  "testedImplementation": "2782f11bee56f70511856dbaebcff68b47819234",
+  "freezeReceiptSHA256": "19c1a457ba5be29e8a2e2b44211e05925364ae4cfc34b11a1f0dd360b04f0b07",
+  "independentClosureReview": {
+    "status": "approved-for-final-documentation-commit",
+    "reviewer": "/root/release_phase1_final_review",
+    "review": "closure-review.md",
+    "reviewSHA256": "e5954067d94be3d6b3480288e2175d6828afdbf4981f603d9cb3382ff6b6a2ea",
+    "verification": "closure-verification.json",
+    "verificationSHA256": "d4e20373bba02afc12033016cfb4324d8bb07145f1dc4c4b7be1dcf5950e2601",
+    "passed": true,
+    "scope": "Combined checks and all 3175 archive payloads independently verified. Closure review predates the enclosing final documentation commit; its finalCommitVerified=false is the recorded review cutoff, not a subsequent failure."
+  },
+  "scope": "3175 selected task, coordinator and review payloads. Compiler/SDK payloads and bulk caches excluded. Archive-generated metadata, subsequent closure review, final plan completion and this receipt are outside the immutable payload to avoid self-referential hashes.",
+  "finalizationCommands": {
+    "selection": {
+      "record": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/selection.json",
+      "sha256": "1d42bc6a62572b9780b3c828971e2bea45ccead6af8466f70ad1119f84939875",
+      "argv": [
+        "python3",
+        "-B",
+        "/private/tmp/vectorcore-release-phase-one-2026-11-04/select-evidence.py"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 120,
+      "elapsedSeconds": 0.5148350419476628,
+      "stdout": {
+        "bytes": 143,
+        "path": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/selection.stdout",
+        "sha256": "99015c147770259fc1558244942621b22684e0dd8c274c933e23e465df21d44b"
+      },
+      "stderr": {
+        "bytes": 0,
+        "path": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/selection.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "freeze": {
+      "record": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/freeze.json",
+      "sha256": "8fee815ef493b3333430ba322ce3de0222090a4df771571be36b5d1068f21138",
+      "argv": [
+        "python3",
+        "-B",
+        "/private/tmp/vectorcore-release-phase-one-2026-11-04/freeze-evidence.py",
+        "/private/tmp/vectorcore-release-phase-one-2026-11-04/archive-selection.json",
+        "/Users/goftin/dev/projects/VectorCore-release-phase-one-2026-11-04-evidence"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 180,
+      "elapsedSeconds": 1.4378593750298023,
+      "stdout": {
+        "bytes": 316,
+        "path": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/freeze.stdout",
+        "sha256": "b1acf48ff8e4f143bd19b274bba9db7e73c19a2beaa0bce339867946e770067b"
+      },
+      "stderr": {
+        "bytes": 0,
+        "path": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/freeze.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "finalRecordLinkCheck": {
+    "record": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/final-record-links.json",
+    "sha256": "0ed8d30cc6fcd579e554f35b92022557874467d369210a429cc53af2a1614fc8",
+    "resolvedLocalLinks": 56,
+    "deferredLinks": 0
+  },
+  "commitAssociation": "The commit containing this final receipt and completed plan is the documentation successor of tested implementation 2782f11. It does not claim a new native or hosted execution."
+}

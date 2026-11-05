@@ -35,11 +35,11 @@
 
 **Interfaces:** Produces exact-toolchain outcome matrix, a reviewed narrow repair if justified, and a supported-compiler recommendation for later qualification. Consumes no other worker changes.
 
-- [ ] Verify the known failing and passing executable identities; reuse retained qualified payloads without installation.
-- [ ] Reproduce the original and inside-borrow lost-store probes in ordinary Debug/Release, retaining `1.0` / `3f800000` acceptance and the `2.0` / `40000000` failure.
-- [ ] Investigate the optimizer defect with bounded small probes/IR and public primary-source evidence where useful. Evaluate source-level accommodations without changing the original canary or suppressing optimization; establish each variant's exact scope and failure controls.
-- [ ] If a library repair is justified, coordinate the specific paths first, capture a focused regression before the edit, repair narrowly and run covering Debug/Release/public-consumer checks. Otherwise provide concrete compiler-support options and the exact unresolved blocker; do not invent a general workaround from one passing probe.
-- [ ] Commit reproducible probes/report and any verified repair. State which compiler/platform/API shapes remain unqualified; write the assigned full report and return the short contract.
+- [x] Verify the known failing and passing executable identities; reuse retained qualified payloads without installation.
+- [x] Reproduce the original and inside-borrow lost-store probes in ordinary Debug/Release, retaining `1.0` / `3f800000` acceptance and the `2.0` / `40000000` failure.
+- [x] Investigate the optimizer defect with bounded small probes/IR and public primary-source evidence where useful. Evaluate source-level accommodations without changing the original canary or suppressing optimization; establish each variant's exact scope and failure controls.
+- [x] If a library repair is justified, coordinate the specific paths first, capture a focused regression before the edit, repair narrowly and run covering Debug/Release/public-consumer checks. Otherwise provide concrete compiler-support options and the exact unresolved blocker; do not invent a general workaround from one passing probe.
+- [x] Commit reproducible probes/report and any verified repair. State which compiler/platform/API shapes remain unqualified; write the assigned full report and return the short contract.
 
 ### Task 2: Available runtime and expanded sanitizer qualification
 
@@ -47,12 +47,12 @@
 
 **Interfaces:** Produces current environment inventory, Release sanitizer capability/execution results, bounded additional platform evidence and an explicit missing-environment matrix. Final acceptance of the combined candidate waits for Task 1 and integration.
 
-- [ ] Inventory available toolchains, SDKs, simulator runtimes, architecture execution and attached usable devices through read-only checks. Map missing minimum-OS/device/tvOS/visionOS/Catalyst/Intel/full-simulator coverage; do not download or provision environments.
-- [ ] Add explicit `--configuration {debug,release}` selection to the existing sanitizer driver if required, keeping Debug as default. First add direct tests proving build and product-discovery configuration agree, default compatibility is preserved and invalid values reject. Thread the selected configuration through execution/evidence without changing the manifest or diagnostics.
-- [ ] Run covering Python/CI-contract checks and actual Release ASan/TSan pinned workloads using a verified compiler and fresh scratch roots. Retain failed bodies and actual loaded images; do not skip optimizer-induced failures. Preserve existing Q03 deadlines and child identity checks.
-- [ ] Probe leak-detection capability with an intentional independent diagnostic control before making any coverage claim. Document unsupported capability instead of treating a clean no-op as a pass.
-- [ ] Execute a bounded additional runtime cell where an available environment can add useful evidence (prefer Catalyst runtime and existing iOS full-suite feasibility). Preserve exact test scope and setup failures. No repeat of already accepted unchanged compile matrices.
-- [ ] Self-review, commit the driver/direct-test change and the report; return exact completed counts, unsupported cells and requirements for final qualification.
+- [x] Inventory available toolchains, SDKs, simulator runtimes, architecture execution and attached usable devices through read-only checks. Map missing minimum-OS/device/tvOS/visionOS/Catalyst/Intel/full-simulator coverage; do not download or provision environments.
+- [x] Add explicit `--configuration {debug,release}` selection to the existing sanitizer driver if required, keeping Debug as default. First add direct tests proving build and product-discovery configuration agree, default compatibility is preserved and invalid values reject. Thread the selected configuration through execution/evidence without changing the manifest or diagnostics.
+- [x] Run covering Python/CI-contract checks and actual Release ASan/TSan pinned workloads using a verified compiler and fresh scratch roots. Retain failed bodies and actual loaded images; do not skip optimizer-induced failures. Preserve existing Q03 deadlines and child identity checks.
+- [x] Probe leak-detection capability with an intentional independent diagnostic control before making any coverage claim. Document unsupported capability instead of treating a clean no-op as a pass.
+- [x] Execute a bounded additional runtime cell where an available environment can add useful evidence (prefer Catalyst runtime and existing iOS full-suite feasibility). Preserve exact test scope and setup failures. No repeat of already accepted unchanged compile matrices.
+- [x] Self-review, commit the driver/direct-test change and the report; return exact completed counts, unsupported cells and requirements for final qualification.
 
 ### Task 3: Benchmark reporting and mandatory comparator execution
 
@@ -60,11 +60,11 @@
 
 **Interfaces:** Produces reconciled open benchmark findings, tested reporting/comparator repairs and a reproducible actual-product comparison command. Final performance acceptance waits for a settled compiler/source and quiet host.
 
-- [ ] Locate the original open reporting/comparator findings (including the previously referenced D089 where available) and trace each against current code. Mark already repaired findings with evidence rather than redispatching historical work.
-- [ ] Exercise the actual comparator against valid current-schema reports and negative controls for incompatible identity, missing cases and invalid numerical records; retain baseline failures and intended nonzero exits.
-- [ ] Repair demonstrated reporting/execution gaps with focused red/green tests. Coordinate any mandatory workflow wiring; tests must exercise actual execution, not merely module import.
-- [ ] Run the real Release benchmark product to generate small strict-correctness reports with recorded source/compiler/build-mode identity; execute the actual comparator on those reports and preserve results. Do not interpret concurrent-host timing as performance acceptance.
-- [ ] Run covering tests once against final changed inputs, commit narrow changes/report and identify the exact remaining controlled-measurement gate.
+- [x] Locate the original open reporting/comparator findings (including the previously referenced D089 where available) and trace each against current code. Mark already repaired findings with evidence rather than redispatching historical work.
+- [x] Exercise the actual comparator against valid current-schema reports and negative controls for incompatible identity, missing cases and invalid numerical records; retain baseline failures and intended nonzero exits.
+- [x] Repair demonstrated reporting/execution gaps with focused red/green tests. Coordinate any mandatory workflow wiring; tests must exercise actual execution, not merely module import.
+- [x] Run the real Release benchmark product to generate small strict-correctness reports with recorded source/compiler/build-mode identity; execute the actual comparator on those reports and preserve results. Do not interpret concurrent-host timing as performance acceptance.
+- [x] Run covering tests once against final changed inputs, commit narrow changes/report and identify the exact remaining controlled-measurement gate.
 
 ### Task 4: Coordinator documentation, review and phase completion
 
@@ -72,8 +72,8 @@
 
 **Interfaces:** Consumes the three worker reports. Historical dated reports/archives remain immutable except a clearly labelled forward link where needed; current support claims are not broadened by draft worker results.
 
-- [ ] Record task ownership, baseline, worktree paths and progress in a plan-specific ledger. Check shared-file/interface conflicts before dispatch.
-- [ ] Audit current documentation references/counts against source and accepted evidence; repair demonstrated stale current claims while retaining matching ledger history. Avoid broad style rewrites or historical count rewriting.
-- [ ] Obtain independent scoped task reviews, return material findings to the original worker, integrate accepted commits into the carried branch, and run covering integration checks for actual changes.
-- [ ] Obtain a final review of the phase diff and conclusions; resolve material findings in one consolidated fix wave with scoped re-review.
-- [ ] Preserve bounded evidence and commit the phase report with exact source/test associations, remaining compiler/support decisions, unavailable environments and the next combined-qualification steps. This phase is not release sign-off.
+- [x] Record task ownership, baseline, worktree paths and progress in a plan-specific ledger. Check shared-file/interface conflicts before dispatch.
+- [x] Audit current documentation references/counts against source and accepted evidence; repair demonstrated stale current claims while retaining matching ledger history. Avoid broad style rewrites or historical count rewriting.
+- [x] Obtain independent scoped task reviews, return material findings to the original worker, integrate accepted commits into the carried branch, and run covering integration checks for actual changes.
+- [x] Obtain a final review of the phase diff and conclusions; resolve material findings in one consolidated fix wave with scoped re-review.
+- [x] Preserve bounded evidence and commit the phase report with exact source/test associations, remaining compiler/support decisions, unavailable environments and the next combined-qualification steps. This phase is not release sign-off.

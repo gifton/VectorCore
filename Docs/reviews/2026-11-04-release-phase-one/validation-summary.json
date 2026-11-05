@@ -1,0 +1,160 @@
+{
+  "date": "2026-11-04",
+  "phase": "first-phase remediation",
+  "base": "2dcb24091c6dc21be4db409ecdd0756220e93b8c",
+  "testedImplementation": "2782f11bee56f70511856dbaebcff68b47819234",
+  "releaseSignoff": false,
+  "combinedChecks": [
+    {
+      "name": "python-suite",
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Scripts/ci/tests",
+        "-v"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 900,
+      "elapsedSeconds": 250.64459545898717,
+      "archiveRecord": "coordinator/combined-checks/python-suite.json",
+      "recordSHA256": "e79f5bbb1b56f47e91db7032ecbeaffceeaa8a0a667214acc222f077993c8174",
+      "testsPassed": 598
+    },
+    {
+      "name": "compiler-driver",
+      "argv": [
+        "python3",
+        "-B",
+        "Docs/reviews/2026-11-04-release-phase-one/compiler/test_run.py"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 60,
+      "elapsedSeconds": 0.0887212079251185,
+      "archiveRecord": "coordinator/combined-checks/compiler-driver.json",
+      "recordSHA256": "513750aff258dbcdc921943e25d89af9e71496c1c22dd5ba3c3b33e946f01318",
+      "testsPassed": 2
+    },
+    {
+      "name": "claims",
+      "argv": [
+        "python3",
+        "Scripts/ci/check_claim_ledger.py"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 180,
+      "elapsedSeconds": 2.76274083298631,
+      "archiveRecord": "coordinator/combined-checks/claims.json",
+      "recordSHA256": "66175d5ba6f1441999d23d8f4321785a3d2a2003e96f8289fc352bfc5d2b42f5"
+    },
+    {
+      "name": "ci-contracts",
+      "argv": [
+        "python3",
+        "Scripts/ci/check_ci_contracts.py"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 30,
+      "elapsedSeconds": 0.04582679097075015,
+      "archiveRecord": "coordinator/combined-checks/ci-contracts.json",
+      "recordSHA256": "5dd903c9d757b5fd5d0b99432f91238649d8352223d823ad5857a73ed612448e"
+    },
+    {
+      "name": "github",
+      "argv": [
+        "ruby",
+        "Scripts/ci/validate_github.rb"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 120,
+      "elapsedSeconds": 0.08585816598497331,
+      "archiveRecord": "coordinator/combined-checks/github.json",
+      "recordSHA256": "a11cc47a9565b9ce22d6de798a199cb3329747e79c2877d9e3d6fd6b5c558d0b"
+    },
+    {
+      "name": "whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 30,
+      "elapsedSeconds": 0.022007416002452374,
+      "archiveRecord": "coordinator/combined-checks/whitespace.json",
+      "recordSHA256": "ee7d1df6cee18c274df245f14e46c37e3c746fbe46924adbf70dafc3a5d49d40"
+    }
+  ],
+  "inputIdentity": {
+    "files": 563,
+    "changedDuringChecks": [],
+    "archiveBefore": "coordinator/combined-checks/source-before.json",
+    "archiveAfter": "coordinator/combined-checks/source-after.json"
+  },
+  "protectedPathsUnchangedFromBase": [
+    "Sources/",
+    "Tests/",
+    "Benchmarks/",
+    "Package.swift",
+    ".github/workflows/ci.yml"
+  ],
+  "workerCommitsPreserved": {
+    "compiler": "91884df08120e095b8a0038e557a4dc0035abd58",
+    "runtimeReport": "e08d24a08bbc07a527dcce19869ed95a3eb84d43",
+    "runtimeCleanup": "b37a6f7aa0ef7e9f0807968a96bb919aa997d6f6",
+    "benchmarks": "b8ab28fc1d72ac3459f71529947cfb705eecbf22",
+    "datedArtifactFixture": "438c6a41c405b6673ddebf37ea279bd85101019e"
+  },
+  "taskEvidence": {
+    "compiler": {
+      "record": "compiler/README.md",
+      "matrixCells": 32,
+      "knownXcodeReleasePositiveFailures": 3,
+      "expectedNegativeControls": 4
+    },
+    "runtime": {
+      "record": "runtime-sanitizers/README.md",
+      "configuration": "release",
+      "addressBodiesPassed": 77,
+      "threadEntriesPassed": 39,
+      "scope": "Pinned optimized testable workloads, including Q03; not whole-suite or production-binary equivalence",
+      "iOSFullSuiteBodiesExecuted": 0,
+      "iOSPackageBuildExit": 65,
+      "leakDetectionQualified": false
+    },
+    "benchmarks": {
+      "record": "benchmarks/result-summary.json",
+      "actualCLICalls": 17,
+      "actualComparatorInvocations": 320,
+      "distinctRunComparisonExit": 1,
+      "performanceAccepted": false
+    }
+  },
+  "review": {
+    "implementationVerdict": "No new Critical or Important implementation findings",
+    "archiveRecord": "review/final-review.md",
+    "completionReceipt": "archive-verification.json"
+  },
+  "limitations": [
+    "Exact Xcode Release compiler numerical failure remains unresolved; no support restriction adopted.",
+    "Full iOS package tests fail compilation in Process-dependent shared test support.",
+    "Leak detection and whole-suite sanitizers are unqualified beyond the stated selected workload.",
+    "Minimum-OS, physical-device, Intel, tvOS/visionOS and broader Catalyst/simulator runtime coverage remain open.",
+    "No quiet-host performance acceptance or new hosted CI run.",
+    "Optional adversarial CSV, report completeness, independent dot/normalize/mem.copy validation, general build provenance and thermal/power compatibility remain open.",
+    "Initial benchmark RED/GREEN top-level environment/deadline capture is incomplete; final covering and actual-product runs are captured.",
+    "Existing compiler warnings and native-build-system deprecation diagnostics remain."
+  ],
+  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-one-2026-11-04-evidence",
+  "archiveReceipt": "archive-verification.json",
+  "association": "Combined checks ran at testedImplementation. Final report/index/plan and archive receipts are later documentation-only records. Native task executions retain their own exact input manifests."
+}

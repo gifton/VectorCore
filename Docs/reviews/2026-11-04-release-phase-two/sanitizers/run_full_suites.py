@@ -17,6 +17,7 @@ from swiftpm_products import check_no_rebuild
 from v03_process import run, sha, test_environment, write_json
 from scope_check import swift_testing, xctest, qualifies, images_verified
 from source_binding import capture_source, admit_association
+from discovery import partition_discovery, xctest_command, known_warning_records, PARSER_VERSION
 
 
 def main():
@@ -74,13 +75,17 @@ def main():
              '--sanitize', sanitizer, '--build-system', 'native', '-Xswiftc', '-enable-testing']
     _, log = run([swift, 'test', 'list', '--skip-build', *flags], output, 'swift-list', cwd=ROOT, environment=env, timeout=60)
     check_no_rebuild(log, 'full discovery')
-    full = set((output / 'swift-list.stdout').read_text().splitlines())
     _, log = run([host, '--test-bundle-path', bundle, '--list-tests', bundle, '--testing-library', 'swift-testing'],
                  output, 'testing-list', cwd=ROOT, environment=env, timeout=30)
-    testing = set((output / 'testing-list.stdout').read_text().splitlines())
-    if not testing or not testing <= full: raise ValueError('Missing or inconsistent discovery')
-    xctests = full - testing
-    if not xctests: raise ValueError('Missing XCTest discovery')
+    discovery = partition_discovery((output / 'swift-list.stdout').read_text(),
+        (output / 'testing-list.stdout').read_text(), full_source=str(output / 'swift-list.stdout'),
+        helper_source=str(output / 'testing-list.stdout'))
+    for stream in ['swift-list.stderr', 'testing-list.stderr']:
+        discovery['diagnostics'] += known_warning_records((output / stream).read_text(), source=str(output / stream))
+    discovery.update(parserVersion=PARSER_VERSION, parserSHA256=sha(Path(__file__).with_name('discovery.py')),
+        limitation='Known warnings remain runtime/backtrace qualification limitations; classification is not suppression or proof of reliable diagnostics.')
+    write_json(output / 'discovery.json', discovery)
+    testing, xctests = set(discovery['swiftTesting']), set(discovery['xctest'])
     for name, selectors in [('testing', testing), ('xctest', xctests)]:
         (output / (name + '-discovery.txt')).write_text('\n'.join(sorted(selectors)) + '\n')
     if sanitizer == 'thread':
@@ -96,7 +101,7 @@ def main():
             loaded_host = host
         else:
             loaded_host = xctest_host
-            argv = [loaded_host, '-XCTest', ','.join(sorted(xctests)), bundle.parents[2]]
+            argv = xctest_command(loaded_host, bundle.parents[2], xctests)
             deadline = 1200
         try:
             run(argv, output, name, cwd=ROOT, environment=env, timeout=deadline, expected=None)
@@ -110,16 +115,22 @@ def main():
             result = swift_testing(events.read_text() if events.exists() else '', testing)
         else:
             result = xctest(log, xctests)
+        result['discoveryDiagnostics'] = discovery['diagnostics']
+        result['runtimeDiagnostics'] = [item for stream in ['stdout', 'stderr']
+            for item in known_warning_records((output / (name + '.' + stream)).read_text(),
+                                             source=str(output / (name + '.' + stream)))]
+        result['diagnosticLimitation'] = discovery['limitation'] if result['discoveryDiagnostics'] or result['runtimeDiagnostics'] else None
         result['imagesVerified'] = images_verified(log, command['pid'], [loaded_host, runtime, bundle])
         result['qualified'] = qualifies(result, command) and result['imagesVerified']
         result['counts'] = {k: len(result[k]) for k in ['discovered', 'started', 'passed', 'failed', 'skipped', 'pending', 'unknown']}
         write_json(output / (framework + '-scope.json'), result)
         results[framework] = {'counts': result['counts'], 'qualified': result['qualified'], 'exit': command.get('exit'),
-                              'timeout': command['timeout'], 'imagesVerified': result['imagesVerified']}
+                              'timeout': command['timeout'], 'imagesVerified': result['imagesVerified'],
+                              'runtimeDiagnostics': result['runtimeDiagnostics'], 'diagnosticLimitation': result['diagnosticLimitation']}
         print(framework, results[framework], flush=True)
     # A changed source, command record, result or retained bundle invalidates the run.
     admit_association(args.association, ROOT, capture_source(ROOT, output, 'after-execution', test_environment()))
-    write_json(output / 'summary.json', {'scope': args.scope, 'sanitizer': sanitizer, 'results': results,
+    write_json(output / 'summary.json', {'scope': args.scope, 'sanitizer': sanitizer, 'results': results, 'discovery': discovery,
         'note': 'Complete nonempty XCTest discovery is selected explicitly; bounded single/comma probes exclude the automatic Swift Testing overlap. Exact executed coverage is still checked.'})
 
 

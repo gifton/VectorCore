@@ -49,7 +49,9 @@ private struct E02SpyMetric: DistanceMetric {
 }
 
 @Suite struct ExecutionSchedulingContractTests {
-    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: ["defaultBound", "cancelSerial", "factory1", "factory1000", "shape", "batchControl", "gatedCancellation", "shortBatch", "reverseAndError"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"),
+          arguments: ["defaultBound", "cancelSerial", "factory1", "factory1000", "shape", "batchControl",
+                      "gatedCancellation", "shortBatch", "reverseAndError"])
     func boundedRegressionChild(scenario: String) throws {
         var env = ProcessInfo.processInfo.environment
         env["E02_CHILD"] = scenario; env["SWIFT_BACKTRACE"] = "enable=no"

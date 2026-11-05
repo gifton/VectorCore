@@ -18,7 +18,9 @@ private final class E06Values<T: Sendable>: @unchecked Sendable {
          c.enableMatrixRouting ? 1 : 0, UInt64(bitPattern: Int64(c.matrixRoutingMinN))]
     }
 
-    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized, arguments: ["defaultBatch", "threshold", "chunks", "invalid", "domains", "linear", "partitions", "snapshot", "routes512", "routes768", "routes1536", "pairwise", "nested"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized,
+          arguments: ["defaultBatch", "threshold", "chunks", "invalid", "domains", "linear",
+                      "partitions", "snapshot", "routes512", "routes768", "routes1536", "pairwise", "nested"])
     func configurationScenarioInBoundedChild(_ scenario: String) throws {
         var environment = ProcessInfo.processInfo.environment
         environment["E06_SCENARIO"] = scenario

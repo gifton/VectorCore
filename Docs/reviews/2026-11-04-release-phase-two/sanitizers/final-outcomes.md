@@ -38,7 +38,7 @@ Both final-v2 producers use fresh outputs and source-digest-derived scratch root
 | macOS 27.2 SDK settings | `82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6` |
 | v2 candidate source tar | `5046dcc63a09dc09560c1398c124732465fa4189b3fc27ecdc38922e4f70fb12` |
 
-The selected Swift.org frontend and existing Xcode SDK are used through a local lookup adapter. No SDK/toolchain/runtime was installed and global Xcode selection was unchanged. Each package build uses two jobs. The ASan/TSan full runs overlap only after both builds and iOS execution finish; no performance measurements overlap native tests. The complete additional TSan sweep overlaps the tail of its existing XCTest run, then continues alone. The retained resource-condition record documents this; normal child/body deadlines remain unchanged.
+The selected Swift.org frontend and existing Xcode SDK are used through a local lookup adapter. No SDK/toolchain/runtime was installed and global Xcode selection was unchanged. Each package build uses two jobs. The retained coordinator resource records report both package builds and iOS execution finished before authorization for overlapping ASan/TSan full runs, and report performance measurements held until native completion. The no-timing-overlap observation is scoped to those recorded coordinator preconditions and observations. Native timestamps establish a narrower ordering: the XCTest terminal summary at 22:09:49.447 local precedes the corrected additional TSan Swift Testing runStarted event at 22:10:32.169633 by approximately 42.72 seconds. Normal child/body deadlines remain unchanged.
 
 ## Chronology and evidence selection
 

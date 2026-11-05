@@ -32,7 +32,7 @@ class CIContractTests(unittest.TestCase):
         result = POLICY.validate(ROOT)
         self.assertEqual(result['sanitizerBodies'], {'address': 77, 'thread': 39})
         self.assertEqual(result['benchmarkTestSources'], ['BenchmarkContractTests.swift', 'BenchmarkModelDomainTests.swift',
-                                                        'BenchmarkSelectionContractTests.swift', 'RunnerContractTests.swift',
+                                                        'BenchmarkNumericalObservationTests.swift', 'BenchmarkSelectionContractTests.swift', 'RunnerContractTests.swift',
                                                         'SwiftTestingEntryTests.swift'])
 
     def test_shared_test_support_membership_is_required(self):

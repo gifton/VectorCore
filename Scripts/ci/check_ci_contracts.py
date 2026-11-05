@@ -8,7 +8,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[2]
 BENCHMARK_TEST_SOURCES = {'BenchmarkContractTests.swift', 'BenchmarkModelDomainTests.swift', 'BenchmarkSelectionContractTests.swift',
-                          'RunnerContractTests.swift', 'SwiftTestingEntryTests.swift'}
+                          'RunnerContractTests.swift', 'SwiftTestingEntryTests.swift', 'BenchmarkNumericalObservationTests.swift'}
 
 
 def sanitizer_manifest(root=ROOT):

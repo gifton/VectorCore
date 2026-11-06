@@ -2,6 +2,8 @@
 
 **The available investigations are complete; 0.4.0 is not release-ready.** Three Astra investigators covered compiler acceptance, platform/skip coverage and performance preparation, with independent cross-reviews and coordinator verification. This phase preserves the intended support policy and the genuine compiler failures. It does not publish, tag, merge main or cut the release branch.
 
+**Later November 5 follow-up:** the installed Xcode 27.3 beta still fails the three Release numerical probes. The reviewed copy builds successfully, and its Xcode test-launch compatibility has been repaired. The [beta follow-up below](#installed-xcode-273-beta-follow-up) and [validation record](xcode-27.3-beta-validation.json) describe that later work; the original sections and frozen archive retain their earlier source/toolchain scope.
+
 Investigation source: **`27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb`**, the clean carried `codex/audit-top-six-2026-10-27` branch. Integration uses the managed worktree `/Users/goftin/.codex/worktrees/0bd4/VectorCore`. The captured executions precede the report integration and its comment-only canary clarification; they are not runs of the later documentation commit. Production sources, package declarations, benchmark implementations, workflow gates, numerical assertions and compiler predicates remain unchanged.
 
 | Track | New evidence | Remaining gate |
@@ -55,3 +57,28 @@ Fresh integration checks pass for the claim ledger, CI contracts, GitHub configu
 Raw capture root: `/private/tmp/vectorcore-release-gates-2026-11-05`. Durable selected evidence: `/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence`. The [archive receipt](archive-verification.json) records the payload manifest and verification scope. Explicit selections exclude caches, private device/profile records and the earlier excluded environment diagnostic. No prior archive or failed attempt is rewritten. Repository-facing reports link durable copies; embedded producer paths retain their original capture identities.
 
 The remaining sequence is concrete: accepted compiler/distribution scope, chosen runtime coverage, a qualified measurement host, exact-source hosted/downstream acceptance, then release notes/version/support decisions and the separately agreed release integration. This report supplies evidence and prepared tools, not release sign-off.
+
+## Installed Xcode 27.3 beta follow-up
+
+Xcode **27.3 beta, build 27C5020n**, was subsequently installed and tested on native arm64 macOS 27.0.1 (26A434), starting from clean reviewed commit `314c722ff50b5367c069eb09ffbc1866764cd2c3`. Its frontend SHA-256 is `93a7373a7f558b211b9820797d40d7554a0fef2c917d039fa0fa894b60fd55eb`. The unchanged sixteen-cell compiler matrix rejects the same three Release positive probes: `CopyInoutReturnInside`, `LostStoreObserved` and `ReturnInsideInout` return stale `2.0` instead of `1.0`. Eleven positive cells pass and both deliberate no-write controls are correctly rejected. Every compilation and execution exits zero; the numerical predicate supplies the rejection. This beta does not close the compiler gate.
+
+The original IDE compilation errors came from the older checkout's partial `VCProgressReporter` rename: remaining unqualified `ProgressReporter` references resolved to Foundation's newer type. The reviewed checkout already consistently uses `BenchmarkProgressReporter` and builds under the beta. The older checkout's edits were preserved.
+
+Actual Xcode execution then exposed a test-launch compatibility gap. Swift Testing children now use a fresh `xctest` selection of `Module.Suite/method()` with a uniquely identified loaded test bundle, derived from the caller's `#fileID`. Missing or ambiguous bundle evidence is rejected. The launcher removes three inherited IDE session variables and explicitly selects the intended test framework. Existing SwiftPM selection handling, recursion refusal, process groups, trap assertions and deadline budgets remain in place. A helper that exited zero without running tests was rejected during investigation; real child markers and a neighboring-test sentinel establish execution and selection in the regression tests.
+
+The complete Debug run passed, while exposing priority-inversion diagnostics in both the child launcher and benchmarking metadata reaper. Both reapers subsequently received the caller's QoS before starting. A class-wide mechanical guard covers both sites and rejects omitted, fixed, late or overwritten priority assignments. The benchmark environment fixture also now captures only the fields its test asserts.
+
+| Verification | Result | Source scope |
+| --- | --- | --- |
+| Unfiltered Xcode Debug | **1,940 passed / 46 skipped / zero failed**, 1,986 Xcode summary tests; 98 runtime-warning records | Launcher fix, patch `957c76e4…`, before the two reaper QoS adjustments |
+| Xcode process/lifetime/shape follow-up | **62 passed**, no skips or runtime warnings | Final executable-source patch `553c921c…` |
+| SwiftPM with multiple filters | **11 XCTest + 25 Swift Testing passed** | Same final patch |
+| Xcode Address Sanitizer | **30 passed**, no skips or runtime warnings; child ASan image verified | Same final patch; `detect_leaks=0:halt_on_error=1` |
+| Xcode Thread Sanitizer | **30 passed**, no skips or runtime warnings; child TSan image verified | Same final patch; `halt_on_error=1` |
+| Process policies, claim ledger, CI contracts | **32 policy tests passed; both contract checks passed** | Same final executable inputs |
+
+The 509-input manifest identifies six changed test/benchmark-support/CI files. Numerical kernels and the compiler reproducer are unchanged. The full-suite result precedes the QoS follow-up; the final source received the targeted checks shown above. These scoped sanitizer checks do not establish whole-project leak or race freedom. Historical sanitizer diagnostics and platform gaps retain their original dispositions. The first, unmodified-source Debug attempt was intentionally cancelled after repeated launch failures and is retained separately, not counted as a completed suite.
+
+An additional cleanup remains: `MixedPrecisionPerformanceBenchmark.benchmarkEuclideanBatchThroughput` runs substantial timing-only work in ordinary Debug tests despite having no assertions. Its gate was left unchanged for this verification. No timing from these test runs is performance-acceptance evidence. Previously prepared benchmark products still belong to their recorded source/compiler combination; prepare fresh products when a qualifying compiler is selected.
+
+Selected evidence is retained at `/Users/goftin/dev/projects/VectorCore-xcode-27.3-beta-2026-11-05-evidence`; `final-manifest.json` and its verification receipt describe the final selection. DerivedData and SwiftPM build trees, raw device metadata and the earlier excluded environment diagnostic are excluded. The complete compiler-probe artifacts, including their small module cache, are retained. The [structured validation record](xcode-27.3-beta-validation.json) binds compiler, host, source patches, input hashes and test outcomes. Hosted CI, downstream-consumer qualification, support-policy decisions and release integration remain outstanding.

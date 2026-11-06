@@ -84,7 +84,12 @@ final class BenchmarkRunnerContractTests: XCTestCase {
             exit(control == "failure" ? 7 : 0)
         }
         if env["LAUNCHER_CONTROL"] == "environment" {
-            var captured = env
+            // Capture only the fields asserted by testFixturePreservesEnvironmentAndMarksChild.
+            let keys: Set<String> = ["ASAN_OPTIONS", "TSAN_OPTIONS", "SWIFT_BACKTRACE",
+                                     "DYLD_LIBRARY_PATH", "DYLD_FRAMEWORK_PATH", "VECTORCORE_TEST_EXTENDED",
+                                     "VECTORCORE_STRICT_PERF", "VECTORCORE_CHILD_PROBE", "SWIFT_TESTING_ENABLED",
+                                     "XCTestConfigurationFilePath", "XCTestSessionIdentifier", "XCTestBundlePath"]
+            var captured = env.filter { keys.contains($0.key) }
             captured["fixturePID"] = String(getpid())
             captured["fixturePGID"] = String(getpgrp())
             try JSONEncoder().encode(captured).write(to: URL(fileURLWithPath: env["LAUNCHER_CONTROL_OUTPUT"]!))
@@ -151,6 +156,10 @@ final class BenchmarkRunnerContractTests: XCTestCase {
                          "DYLD_LIBRARY_PATH": (inherited["DYLD_LIBRARY_PATH"] ?? "") + ":/tmp/vectorcore-library-sentinel",
                          "DYLD_FRAMEWORK_PATH": (inherited["DYLD_FRAMEWORK_PATH"] ?? "") + ":/tmp/vectorcore-framework-sentinel"]
         var environment = sentinels
+        environment["SWIFT_TESTING_ENABLED"] = "1"  // The XCTest child must override this.
+        for key in ["XCTestConfigurationFilePath", "XCTestSessionIdentifier", "XCTestBundlePath"] {
+            environment[key] = "parent-session-sentinel"
+        }
         environment["LAUNCHER_CONTROL"] = "environment"
         environment["LAUNCHER_CONTROL_OUTPUT"] = capture.path
         XCTAssertEqual(try Self.launchFixture(environment: environment, output: root.appendingPathComponent("child.log")), 0)
@@ -161,6 +170,10 @@ final class BenchmarkRunnerContractTests: XCTestCase {
         }
         XCTAssertEqual(observed["VECTORCORE_CHILD_PROBE"], "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture")
         XCTAssertEqual(observed["fixturePID"], observed["fixturePGID"])
+        XCTAssertEqual(observed["SWIFT_TESTING_ENABLED"], "0")
+        for key in ["XCTestConfigurationFilePath", "XCTestSessionIdentifier", "XCTestBundlePath"] {
+            XCTAssertNil(observed[key], key)
+        }
         // These are environment-string checks; sanitizer runtime loading is not established here.
     }
 

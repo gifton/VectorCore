@@ -54,12 +54,14 @@ enum MetadataProcess {
             // If the OS cannot terminate the guardian, the caller still returns after its deadline;
             // this thread remains responsible for eventual reaping and owns no output descriptors.
             let reaped = DispatchSemaphore(value: 0)
-            Thread {
+            let thread = Thread {
                 var result: Int32 = 0
                 var waited: pid_t
                 repeat { waited = waitpid(pid, &result, 0) } while waited == -1 && errno == EINTR
                 if waited == pid { reaped.signal() }
-            }.start()
+            }
+            thread.qualityOfService = Thread.current.qualityOfService
+            thread.start()
             output.closeWriter()
             status.closeWriter()
             armed.close()

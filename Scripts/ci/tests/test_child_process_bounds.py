@@ -4,12 +4,72 @@ This mechanical gate covers the repeated unbounded-wait defect. Runtime tests
 still establish each driver's exit handling, diagnostics and process cleanup.
 """
 import ast
+import importlib.util
 from pathlib import Path
 import re
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[3]
+
+_LEXER_SPEC = importlib.util.spec_from_file_location('reaper_swift_lexing', ROOT / 'Scripts/ci/swift_lexing.py')
+_LEXER = importlib.util.module_from_spec(_LEXER_SPEC)
+_LEXER_SPEC.loader.exec_module(_LEXER)
+THREAD_CONSTRUCTOR = re.compile(r'\bThread\s*(?:\.\s*init\s*)?(?:\{|\()')
+REAPER_FILES = {'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift',
+                'Sources/VectorCoreBenchmarking/MetadataProcess.swift'}
+
+
+def reaper_qos_problems(source):
+    """Lexical guard for the current single-reaper files, not general Swift data-flow analysis.
+
+    Both current Thread constructors back semaphore waits. New constructors require classification;
+    aliases/dynamic construction are outside this scanner. Swift typechecking and the Xcode checker
+    provide separate runtime evidence. Comments and string literals cannot satisfy the guard.
+    """
+    code = _LEXER._mask(source)
+    named = re.search(r'\b(?:let|var)\s+(\w+)\s*=\s*(?:Foundation\.)?Thread\s*\{', code)
+    if len(THREAD_CONSTRUCTOR.findall(code)) != 1 or named is None:
+        return ['expected one named reaper Thread']
+    name = re.escape(named[1])
+    starts = list(re.finditer(r'\b' + name + r'\s*\.\s*start\s*\(\s*\)', code))
+    assignments = list(re.finditer(r'\b' + name + r'\s*\.\s*qualityOfService\s*=(?!=)', code))
+    inherited = re.search(r'\b' + name + r'\s*\.\s*qualityOfService\s*=\s*'
+                          r'Thread\s*\.\s*current\s*\.\s*qualityOfService\b', code)
+    if (len(starts) != 1 or len(assignments) != 1 or inherited is None
+            or not named.start() < assignments[0].start() == inherited.start() < starts[0].start()):
+        return ['reaper must receive caller QoS before start']
+    return []
+
+
+class ReaperQoSTests(unittest.TestCase):
+    def test_all_current_thread_constructors_are_reviewed_reapers(self):
+        observed = {}
+        for directory in ['Sources', 'Tests', 'Benchmarks', 'Scripts/ci']:
+            for path in (ROOT / directory).rglob('*.swift'):
+                count = len(THREAD_CONSTRUCTOR.findall(_LEXER._mask(path.read_text())))
+                if count:
+                    observed[str(path.relative_to(ROOT))] = count
+        self.assertEqual(observed, {path: 1 for path in REAPER_FILES})
+
+    def test_both_reapers_request_the_callers_qos_before_start(self):
+        for path in sorted(REAPER_FILES):
+            with self.subTest(path=path):
+                self.assertEqual(reaper_qos_problems((ROOT / path).read_text()), [])
+
+    def test_qos_guard_rejects_omission_fixed_priority_late_assignment_and_decoys(self):
+        assignment = 'thread.qualityOfService = Thread.current.qualityOfService\n'
+        start = 'thread.start()\n'
+        good = 'let thread = Thread { reap() }\nthread.name = "reaper"\n' + assignment + start
+        self.assertEqual(reaper_qos_problems(good), [])
+        for bad in [good.replace(assignment, ''), good.replace('Thread.current.qualityOfService', '.userInitiated'),
+                    good.replace(assignment + start, start + assignment),
+                    good.replace(assignment, '// ' + assignment),
+                    good.replace(assignment, 'let decoy = "' + assignment.strip() + '"\n'),
+                    good + 'Thread { anotherReaper() }.start()\n',
+                    good.replace(start, 'thread.qualityOfService = .default\n' + start)]:
+            with self.subTest(source=bad):
+                self.assertNotEqual(reaper_qos_problems(bad), [])
 
 
 SUBPROCESS_BLOCKING = ("run", "call", "check_call", "check_output")

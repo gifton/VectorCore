@@ -27,9 +27,11 @@ except where a rule reads string literals on purpose):
   R3 launcher  The launcher keeps its load-bearing tokens: the process-group spawn flag and pgroup call,
                POSIX_SPAWN_CLOEXEC_DEFAULT, WNOWAIT, a negative-PID kill, the selection flags in the dropped
                set (`--filter`, `--skip`, `--specifier`, `-s`, `--xunit-output`) and the refused set
-               (`--configuration-path`), the selector shape check; three ORDERS, checked inside the
+               (`--configuration-path`), the selector shape check; four ORDERS, checked inside the
                function bodies: in `launchChildProbe` the nested-launch refusal and the child-marker
-               assignment both come before the spawn call; in the reaper's `run` the group sweep
+               assignment both come before the spawn call, and `var childEnvironment = try
+               childProbeEnvironment(...)` precedes that spawn using `environment: childEnvironment`;
+               in the reaper's `run` the group sweep
                (`sendToGroup(SIGKILL)`) comes before the reap (`waitpid`); and ONE caller: the spawn
                helper `spawnChildProbeGroupLeader(` is called exactly once in the file, inside
                `launchChildProbe`, so no second entry point can spawn without the refusal and marker.
@@ -89,7 +91,7 @@ SELECTOR_ALLOWANCES = {
     'Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift': (
         8, 'the vectorcore-bench CLI\'s own --filter option; child scenarios use RunnerContractTests\' shared group launcher'),
     'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
-        36, 'argument-filter fixtures passed to childProbeArguments; its only launches go through launchChildProbe'),
+        40, 'argument-filter fixtures passed to childProbeArguments; its only launches go through launchChildProbe'),
 }
 LAUNCHER_INVARIANTS = (
     ('setpgroup_flag', r'\bPOSIX_SPAWN_SETPGROUP\b', 'code'),
@@ -101,6 +103,10 @@ LAUNCHER_INVARIANTS = (
                               r'\bspawnChildProbeGroupLeader\s*\('), 'order'),
     ('marker_before_spawn', ('launchChildProbe', r'\bchildEnvironment\s*\[\s*childProbeMarkerKey\s*\]\s*=(?!=)',
                              r'\bspawnChildProbeGroupLeader\s*\('), 'order'),
+    ('environment_before_spawn', ('launchChildProbe',
+                                  r'\bvar\s+childEnvironment\s*=\s*try\s+childProbeEnvironment\s*\(',
+                                  r'\bspawnChildProbeGroupLeader\s*\(\s*executable:\s*executable\s*,\s*'
+                                  r'arguments:\s*arguments\s*,\s*environment:\s*childEnvironment\s*,'), 'order'),
     ('sweep_before_reap', ('run', r'\bsendToGroup\s*\(\s*SIGKILL\s*\)', r'\bwaitpid\s*\('), 'order'),
     ('single_test_selector', r'\bfunc\s+childProbeArguments\b[^{]*\{\s*try\s+validateSingleTestSelection\s*\(', 'code'),
     ('single_spawn_caller', ('launchChildProbe', r'\bspawnChildProbeGroupLeader\s*\('), 'sole_caller'),
@@ -615,11 +621,12 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
         self.assertEqual(launcher_findings(text), [])
         refusal = '    try refuseNestedChildProbeLaunch(selector, environment: ProcessInfo.processInfo.environment)\n'
         marker = '    childEnvironment[childProbeMarkerKey] = selector.description\n'
+        preparation = '    var childEnvironment = try childProbeEnvironment(environment, loadedImages: loadedImages)\n'
         spawn = ('    let pid = try spawnChildProbeGroupLeader(executable: executable, arguments: arguments,\n'
                  '                                             environment: childEnvironment, output: output.fileDescriptor)\n')
         sweep = '            sendToGroup(SIGKILL)\n'
         reap = '            repeat { waited = waitpid(pid, &status, 0) } while waited == -1 && errno == EINTR\n'
-        for piece in (refusal, marker, spawn, sweep, reap):
+        for piece in (refusal, marker, preparation, spawn, sweep, reap):
             self.assertEqual(text.count(piece), 1, piece)
         mutations = {
             'setpgroup_flag': [lambda s: s.replace('POSIX_SPAWN_SETPGROUP | ', '')],
@@ -632,6 +639,12 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
                                      lambda s: s.replace(refusal, '').replace(spawn, spawn + refusal)],
             'marker_before_spawn': [lambda s: s.replace(marker, ''),
                                     lambda s: s.replace(marker, '').replace(spawn, spawn + marker)],
+            # Preparation must produce the environment actually passed to the sole spawn.
+            'environment_before_spawn': [lambda s: s.replace(preparation, ''),
+                                         lambda s: s.replace(preparation, '    var childEnvironment = environment\n'),
+                                         lambda s: s.replace(preparation, '').replace(spawn, spawn + preparation),
+                                         lambda s: s.replace(spawn, spawn.replace('environment: childEnvironment',
+                                                                                 'environment: environment'))],
             # Removed, and moved after the reap (the group ID could then be recycled before the sweep).
             'sweep_before_reap': [lambda s: s.replace(sweep, ''),
                                   lambda s: s.replace(sweep, '').replace(reap, reap + sweep)],

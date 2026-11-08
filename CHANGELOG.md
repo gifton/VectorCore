@@ -5,6 +5,13 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+`0.4.0-alpha.1` is an experimental integration preview of the changes collected
+under **Unreleased** below. It includes the breaking by-value `SIMDStorage`
+migration and retains the known Xcode optimizer limitations. See
+[release status](RELEASE_STATUS.md) for the exact dependency and validation scope.
+Stable 0.4.0 admission remains pending; the Unreleased ledger is retained until
+that release is finalized.
+
 ## [Unreleased]
 
 The changes below are present after `v0.3.3`; they are not included in that
@@ -60,6 +67,17 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   See [Benchmark measurement boundaries](Docs/Benchmark_Measurement_Boundaries.md#the-opt-in-boundary-suite).
 
 ### Changed
+
+- **Breaking: `SIMDStorage` uses `withUnsafeMutableElements`.** The new mutable-borrow
+  requirement takes `(UnsafeMutableBufferPointer<Element>) throws -> R` by value and
+  remains `rethrows`; the old descriptor-inout requirement is removed, with no default
+  fallback. Custom conformers must implement the new requirement, and generic callers
+  must use the new name. Rebuild the library and consumers together. ContiguousArray
+  has an explicit adapter; its standard-library method remains available. This changes
+  the API boundary and does not qualify an affected compiler. See the
+  [migration guide](Docs/SIMDStorage_Migration.md), `SIMDStorageMutationTests`
+  (`concreteAndGenericReadAfterMutation`, `newOnlyConformerUsesTheRequirement`) and
+  the external `SIMDStorage*` compile contracts.
 
 - **Breaking: dynamic storage uses value semantics (VC-F001).**
   `AlignedDynamicArrayStorage` and `DynamicArrayStorage` are now structs.
@@ -124,9 +142,9 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   `any DistanceMetric<Float>`, are requirements with default implementations, so conformers still
   compile. A conforming type that already declares a method with the same signature now implements that
   requirement: calls through the protocol (generic or existential) reach that method instead of the
-  default. Rename such a method if it was not meant to implement the requirement. A comparison of the
-  public symbol graphs of 0.3.3 and this release found no other requirement added to a public protocol
-  that existed in 0.3.3.
+  default. Rename such a method if it was not meant to implement the requirement. The separate
+  `SIMDStorage.withUnsafeMutableElements` migration has no default implementation and requires
+  conformers to update explicitly.
 
 - **Breaking: `MutableVectorCollection.update(id:vector:)` has no default implementation, and collection
   IDs are not reused (R02).** The requirement stays, but its protocol-extension default is removed: a
@@ -446,7 +464,7 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   which cannot waive report integrity.
 
 - **Breaking: `StaticDimension` requires only `value`.** Source that names `D.Storage` or a
-  `DimN.Storage` alias no longer compiles; other source compiles unchanged. The `Storage`
+  `DimN.Storage` alias no longer compiles; for this dimension change, other source compiles unchanged. The `Storage`
   associated-type requirement is removed, and every `Vector<D>` member that is not specific to `Dim2`,
   `Dim3` or `Dim4` is now available for every static dimension. The convenience initializers, the NaN and infinity handling
   members, `VectorCoreOperations` (and `Vector`'s conformance to it), the `VectorMath` members,
@@ -1229,15 +1247,15 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   `Scripts/ci/tests` and `Scripts/ci/fixtures` were executed by nothing: not a
   SwiftPM test target, not collected by unittest, not called by any workflow.
   They are removed; what remains in those directories is read or executed by a
-  live test or regenerates a committed table. The ten must-not-compile fixtures
+  live test or regenerates a committed table. The twelve must-not-compile fixtures
   (`R01MetricScalarContract`, `R02CollectionUpdateConsumer`, the five D02
   negatives, `B01BareConformanceNegative`, `R05OldPropertyNegative` and
-  `F001StorageLetNegative`) and their
+  `F001StorageLetNegative`, plus the two SIMDStorage migration negatives) and their
   positive controls are compiled by `consumer_smoke.py` in the consumer job, from
   the documentation examples' scratch package: a negative must fail with one
   error on each expected line and the named diagnostic, a control must build or
   run and print its marker. The table is checked without a compiler by
-  `test_consumer_smoke.CompileContractTests.test_table_names_the_ten_negatives_and_their_controls`
+  `test_consumer_smoke.CompileContractTests.test_table_names_the_negatives_and_their_controls`
   and the judgement by `ContractJudgementTests.test_negative_with_every_code_line_erroring`.
   The stale paragraph in
   `Docs/README.md` that called the Performance Guide and the how-to "retained

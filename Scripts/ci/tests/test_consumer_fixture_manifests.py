@@ -32,6 +32,7 @@ def load(name, relative):
 D02 = load('f011_d02', 'Scripts/ci/tests/D02RunConsumers.py')
 SMOKE = load('f011_smoke', 'Scripts/ci/consumer_smoke.py')
 DRIVERS = {
+    'Scripts/ci/consumer_buffer_value.py': 'Scripts/ci/fixtures/compile-contracts',
     'Scripts/ci/tests/D02RunConsumers.py': 'Scripts/ci/tests/D02',
     'Scripts/ci/tests/D02CContract.py': 'Scripts/ci/tests/D02C',
     'Scripts/ci/fixtures/B01_public_driver.py': 'Scripts/ci/fixtures',

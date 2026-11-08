@@ -28,6 +28,10 @@ PATTERNS = [
 # Paths (relative to the repository root, '/' separated) allowed to contain such literals, with the reason.
 ALLOWLIST = {
     'Scripts/ci/swiftpm_products.py': 'the single place that knows both layouts',
+    'Scripts/ci/bounded_native_qualification.py': 'candidate-pinned retained native evidence validation, not product discovery; '
+                                                    'rejects a different layout rather than selecting build products',
+    'Scripts/ci/tests/test_bounded_native_qualification.py': 'synthetic native receipt/modulemap fixtures exercising '
+                                                          'the candidate-pinned validator; never discover or build products',
     'Scripts/ci/tests/test_no_native_layout_literals.py': 'defines the patterns and their negative controls',
     'Scripts/ci/claim_ledger.json': 'claim-ledger data that quotes Docs/Performance_Guide.md command lines verbatim (live '
                                     'and tombstoned statements); never resolved as a path',

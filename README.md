@@ -19,6 +19,16 @@ alongside VectorIndex, VectorAccelerate, EmbedKit, and SwiftTopics.
 
 ## Installation
 
+For the experimental 0.4.0 integration preview, pin the exact prerelease:
+
+```swift
+.package(url: "https://github.com/gifton/VectorCore.git", exact: "0.4.0-alpha.1")
+```
+
+Read [release status](RELEASE_STATUS.md) for its remaining compiler/platform
+limitations and the breaking `SIMDStorage` migration. The installation example
+below selects the stable release line.
+
 Add VectorCore to your Swift Package Manager dependencies:
 
 ```swift
@@ -40,8 +50,8 @@ If this dependency resolves to `0.3.3`, it does **not** include the later
 MemoryPool lifetime/bookkeeping fixes or the Intel macOS/Mac Catalyst FP16
 compile fixes described in this checkout. See [Unreleased changes](CHANGELOG.md#unreleased)
 before relying on those fixes; consult documentation at the resolved tag for
-a released dependency's behavior. This documentation refresh does not publish
-a new package version.
+a released dependency's behavior. The stable installation example does not select
+the alpha preview.
 
 ## Quick Start
 

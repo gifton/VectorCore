@@ -3,6 +3,7 @@
 The references below describe the code in this checkout. For an installed
 release, read the files at its tag and consult the [changelog](../CHANGELOG.md).
 A feature on `main` is not necessarily in the latest published release.
+For the active 0.4.0 integration preview, start with [release status](../RELEASE_STATUS.md).
 In particular, `v0.3.3` does not include the subsequent MemoryPool and Intel
 macOS/Mac Catalyst FP16 fixes listed under [Unreleased](../CHANGELOG.md#unreleased).
 The installation example's version requirement does not itself include
@@ -17,6 +18,7 @@ unreleased commits.
 | [Package boundaries](Package_Boundaries.md) | What Core owns and where the surrounding libraries fit |
 | [Numerical behavior](Numerical_Behavior.md) | Score conventions, Top-K ordering, precision, and validation boundaries |
 | [Memory alignment](Memory_Alignment.md) | Contiguity, allocation, borrowing, transfer, and caller obligations |
+| [SIMDStorage migration](SIMDStorage_Migration.md) | The 0.4.0 by-value mutable-borrow requirement and conformer/caller changes |
 | [SoA layout contract](SoA_Layout_Contract.md) | Frozen FP32 lane layout and logical versus allocated bytes |
 | [Linear algebra and projection](Linear_Algebra_and_Projection.md) | Factorization shapes, PCA, KNNGraph, UMAP, and scale limits |
 | [Roadmap](ROADMAP.md) | Current documentation priority and explicitly proposed future directions |

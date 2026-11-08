@@ -34,6 +34,12 @@ _R01 = "Scripts/ci/fixtures/compile-contracts/R01MetricScalarContract.swift"
 _R02 = "Scripts/ci/fixtures/compile-contracts/R02CollectionUpdateConsumer.swift"
 _B01 = "Scripts/ci/fixtures/B01BareConformanceNegative.swift"
 CONTRACTS = (
+    {"id": "SIMDStorage-new-conformer", "path": "Scripts/ci/fixtures/compile-contracts/SIMDStorageValueConformerPositive.swift",
+     "expect": "compile"},
+    {"id": "SIMDStorage-legacy-call", "path": "Scripts/ci/fixtures/compile-contracts/SIMDStorageLegacyCallNegative.swift",
+     "expect": "fail", "errorLines": [6], "diagnostics": ["has no member 'withUnsafeMutableBufferPointer'"]},
+    {"id": "SIMDStorage-legacy-conformer", "path": "Scripts/ci/fixtures/compile-contracts/SIMDStorageLegacyConformerNegative.swift",
+     "expect": "fail", "errorLines": [5], "diagnostics": ["does not conform to protocol 'SIMDStorage'"]},
     {"id": "Collection-inherited-witness", "path": "Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
      "expect": "run", "marker": "COLLECTION_WITNESS_OK"},
     {"id": "Collection-explicit-witness", "path": "Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",

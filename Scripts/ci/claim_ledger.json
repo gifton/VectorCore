@@ -30850,12 +30850,12 @@
    "id": "D02-C-0002",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Changed",
-   "fingerprint": "0919f59bccc9573e",
-   "statement": "- **breaking: `staticdimension` requires only `value`.** source that names `d.storage` or a `dimn.storage` alias no longer compiles; other source compiles unchanged. the `storage` associated-type requirement is removed, and every `vector<d>` member that is not specific to `dim2`, `dim3` or `dim4` is now available for every static dimension. the convenience initializers, the nan and infinity handling members, `vectorcoreoperations` (and `vector`'s conformance to it), the `vectormath` members, normalization and entropy were available only when `d.storage` conformed to `vectorstorageoperations`. migration: a custom dimension declares only `static let value`; name a vector's storage as `vector<d>.storage` (always `dimensionstorage<d, float>`); delete custom `typealias storage` declarations, which no longer constrain anything. `dynamicdimension.storage` stays. the formerly constrained public members keep their source spelling but get new mangled names, so a binary built against an earlier vectorcore must be rebuilt. covered by `builtinwidthequivalence`, `nonbuiltinwidths` and the external consumer `scripts/ci/tests/d02/reachability.swift`. a dimension's `value` must be `>= 0`; the results at widths 0 and 1 are listed member by member in `d02degeneratewidthtests`.",
+   "fingerprint": "4f15189b14fa79de",
+   "statement": "- **breaking: `staticdimension` requires only `value`.** source that names `d.storage` or a `dimn.storage` alias no longer compiles; for this dimension change, other source compiles unchanged. the `storage` associated-type requirement is removed, and every `vector<d>` member that is not specific to `dim2`, `dim3` or `dim4` is now available for every static dimension. the convenience initializers, the nan and infinity handling members, `vectorcoreoperations` (and `vector`'s conformance to it), the `vectormath` members, normalization and entropy were available only when `d.storage` conformed to `vectorstorageoperations`. migration: a custom dimension declares only `static let value`; name a vector's storage as `vector<d>.storage` (always `dimensionstorage<d, float>`); delete custom `typealias storage` declarations, which no longer constrain anything. `dynamicdimension.storage` stays. the formerly constrained public members keep their source spelling but get new mangled names, so a binary built against an earlier vectorcore must be rebuilt. covered by `builtinwidthequivalence`, `nonbuiltinwidths` and the external consumer `scripts/ci/tests/d02/reachability.swift`. a dimension's `value` must be `>= 0`; the results at widths 0 and 1 are listed member by member in `d02degeneratewidthtests`.",
    "kind": "markdown",
    "lineHint": 29,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "named-test",
     "reference": [
@@ -30867,9 +30867,9 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "D02 phase 2-4 (staged; applied at the P02 merge)"
+    "originalStatement": "- **breaking: `staticdimension` requires only `value`.** source that names `d.storage` or a `dimn.storage` alias no longer compiles; other source compiles unchanged. the `storage` associated-type requirement is removed, and every `vector<d>` member that is not specific to `dim2`, `dim3` or `dim4` is now available for every static dimension. the convenience initializers, the nan and infinity handling members, `vectorcoreoperations` (and `vector`'s conformance to it), the `vectormath` members, normalization and entropy were available only when `d.storage` conformed to `vectorstorageoperations`. migration: a custom dimension declares only `static let value`; name a vector's storage as `vector<d>.storage` (always `dimensionstorage<d, float>`); delete custom `typealias storage` declarations, which no longer constrain anything. `dynamicdimension.storage` stays. the formerly constrained public members keep their source spelling but get new mangled names, so a binary built against an earlier vectorcore must be rebuilt. covered by `builtinwidthequivalence`, `nonbuiltinwidths` and the external consumer `scripts/ci/tests/d02/reachability.swift`. a dimension's `value` must be `>= 0`; the results at widths 0 and 1 are listed member by member in `d02degeneratewidthtests`.",
+    "originalFingerprint": "0919f59bccc9573e",
+    "origin": "D02 phase 2-4 (staged; applied at the P02 merge); scope clarified for SIMDStorage API migration, 2026-11-06"
    }
   },
   {
@@ -32784,8 +32784,8 @@
    "id": "R56-C-0005",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Fixed",
-   "fingerprint": "2198a4777e7d78a4",
-   "statement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the ten must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative` and `f001storageletnegative`) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_ten_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
+   "fingerprint": "7fd89b2c0b5184d4",
+   "statement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the twelve must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative` and `f001storageletnegative`, plus the two simdstorage migration negatives) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
    "kind": "markdown",
    "lineHint": 1208,
    "category": "robustness",
@@ -32793,7 +32793,7 @@
    "evidence": {
     "kind": "named-test",
     "reference": [
-     "Scripts/ci/tests/test_consumer_smoke.py::CompileContractTests.test_table_names_the_ten_negatives_and_their_controls",
+     "Scripts/ci/tests/test_consumer_smoke.py::CompileContractTests.test_table_names_the_negatives_and_their_controls",
      "Scripts/ci/tests/test_consumer_smoke.py::ContractJudgementTests.test_negative_with_every_code_line_erroring"
     ],
     "domain": "compile-contract table and judgement; removal of never-run fixtures",
@@ -32809,6 +32809,11 @@
       "statement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the nine must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative`) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_nine_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
       "fingerprint": "46429a5718856c1c",
       "revision": "84798d3"
+     },
+     {
+      "statement": "- **the never-run consumer fixtures are gone, and the must-not-compile contracts now run.** forty-six fixture, probe and driver files under `tests/*consumers`, `scripts/ci/tests` and `scripts/ci/fixtures` were executed by nothing: not a swiftpm test target, not collected by unittest, not called by any workflow. they are removed; what remains in those directories is read or executed by a live test or regenerates a committed table. the ten must-not-compile fixtures (`r01metricscalarcontract`, `r02collectionupdateconsumer`, the five d02 negatives, `b01bareconformancenegative`, `r05oldpropertynegative` and `f001storageletnegative`) and their positive controls are compiled by `consumer_smoke.py` in the consumer job, from the documentation examples' scratch package: a negative must fail with one error on each expected line and the named diagnostic, a control must build or run and print its marker. the table is checked without a compiler by `test_consumer_smoke.compilecontracttests.test_table_names_the_ten_negatives_and_their_controls` and the judgement by `contractjudgementtests.test_negative_with_every_code_line_erroring`. the stale paragraph in `docs/readme.md` that called the performance guide and the how-to \"retained unchanged\" is rewritten, and the how-to's four throwing calls now say `try`.",
+      "fingerprint": "2198a4777e7d78a4",
+      "revision": "bdf990847babf567be1cbce22d2606e7102b1a47 before SIMDStorage migration"
      }
     ]
    }
@@ -33063,6 +33068,128 @@
     "originalStatement": null,
     "originalFingerprint": null,
     "origin": "2026-11-01 AP7/LC5 remediation batch"
+   }
+  },
+  {
+   "id": "SIMD-MUTATION-C-0001",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section Changed",
+   "fingerprint": "bdaf28e751678203",
+   "statement": "- **breaking: `simdstorage` uses `withunsafemutableelements`.** the new mutable-borrow requirement takes `(unsafemutablebufferpointer<element>) throws -> r` by value and remains `rethrows`; the old descriptor-inout requirement is removed, with no default fallback. custom conformers must implement the new requirement, and generic callers must use the new name. rebuild the library and consumers together. contiguousarray has an explicit adapter; its standard-library method remains available. this changes the api boundary and does not qualify an affected compiler. see the [migration guide](docs/simdstorage_migration.md), `simdstoragemutationtests` (`concreteandgenericreadaftermutation`, `newonlyconformerusestherequirement`) and the external `simdstorage*` compile contracts.",
+   "kind": "markdown",
+   "lineHint": 64,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/SIMDStorageMutationTests.swift::SIMDStorageMutationTests.concreteAndGenericReadAfterMutation",
+     "Tests/ComprehensiveTests/SIMDStorageMutationTests.swift::SIMDStorageMutationTests.newOnlyConformerUsesTheRequirement"
+    ],
+    "domain": "The new concrete/generic by-value operation and a conformer implementing only the new requirement.",
+    "limitations": "The declaration defines the source/witness requirement change. Old-call and old-conformer compile rejection is checked separately by the SIMDStorage entries in consumer_smoke.py and consumer_buffer_value.py. No binary compatibility or compiler qualification claim."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "SIMDStorage by-value API migration, 2026-11-06"
+   }
+  },
+  {
+   "id": "ALPHA-INSTALL-C-0001",
+   "path": "README.md",
+   "symbol": "section VectorCore::section Installation",
+   "fingerprint": "eed295b2b2f3d30a",
+   "statement": "for the experimental 0.4.0 integration preview, pin the exact prerelease:",
+   "kind": "markdown",
+   "lineHint": 22,
+   "category": "non-claim",
+   "disposition": "not-a-claim",
+   "reason": "Prerelease channel and exact-version selection instruction; exact describes a package version requirement, not numerical accuracy.",
+   "evidence": {
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "0.4.0-alpha.1 exact-version integration instructions, 2026-11-07"
+   }
+  },
+  {
+   "id": "ALPHA-INSTALL-C-0002",
+   "path": "README.md",
+   "symbol": "section VectorCore::section Installation",
+   "fingerprint": "754e70ca2990290e",
+   "statement": ".package(url: \"https://github.com/gifton/vectorcore.git\", exact: \"0.4.0-alpha.1\")",
+   "kind": "markdown",
+   "lineHint": 25,
+   "category": "non-claim",
+   "disposition": "not-a-claim",
+   "reason": "SwiftPM manifest version requirement; the exact argument pins a version and makes no correctness or performance claim.",
+   "evidence": {
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "0.4.0-alpha.1 exact-version integration instructions, 2026-11-07"
+   }
+  },
+  {
+   "id": "ALPHA-INSTALL-C-0003",
+   "path": "README.md",
+   "symbol": "section VectorCore::section Installation",
+   "fingerprint": "ead2dd0a2fe63904",
+   "statement": "read [release status](release_status.md) for its remaining compiler/platform limitations and the breaking `simdstorage` migration. the installation example below selects the stable release line.",
+   "kind": "markdown",
+   "lineHint": 28,
+   "category": "non-claim",
+   "disposition": "not-a-claim",
+   "reason": "Navigation to compiler/platform limitations and the API migration, plus a stable-release channel label; no robustness guarantee.",
+   "evidence": {
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "0.4.0-alpha.1 exact-version integration instructions, 2026-11-07"
+   }
+  },
+  {
+   "id": "ALPHA-INSTALL-C-0004",
+   "path": "README.md",
+   "symbol": "section VectorCore::section Installation",
+   "fingerprint": "c6a55baa15eb6363",
+   "statement": "if this dependency resolves to `0.3.3`, it does **not** include the later memorypool lifetime/bookkeeping fixes or the intel macos/mac catalyst fp16 compile fixes described in this checkout. see [unreleased changes](changelog.md#unreleased) before relying on those fixes; consult documentation at the resolved tag for a released dependency's behavior. the stable installation example does not select the alpha preview.",
+   "kind": "markdown",
+   "lineHint": 49,
+   "category": "non-claim",
+   "disposition": "not-a-claim",
+   "reason": "Version-resolution warning and historical scope of the unchanged 0.3.3 tag; stable is a version-channel label, not a runtime-correctness claim.",
+   "evidence": {
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "0.4.0-alpha.1 exact-version integration instructions, 2026-11-07"
    }
   }
  ],

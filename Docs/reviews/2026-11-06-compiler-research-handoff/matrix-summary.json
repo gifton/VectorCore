@@ -1,0 +1,951 @@
+{
+  "documentSourceRevision": "bdf990847babf567be1cbce22d2606e7102b1a47",
+  "flags": {
+    "common": [
+      "-swift-version",
+      "6",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-sdk",
+      "<explicit SDK>",
+      "-module-cache-path",
+      "<fresh per-matrix cache>"
+    ],
+    "debug": [
+      "-Onone",
+      "-D",
+      "DEBUG"
+    ],
+    "release": [
+      "-O"
+    ]
+  },
+  "kind": "Derived research-handoff index; no new native executions",
+  "limitations": [
+    "One arm64 host, macOS 27.0.1 (26A434); deployment target 14 is not a minimum-OS runtime test.",
+    "SIL/LLVM IR retained for four shapes per compiler; no first responsible pass proven.",
+    "Summary artifact and binary hashes are historical records; companion bundle excludes executables and caches.",
+    "Five matrix summaries, all 160 compile/run command records, and their 320 stdout/stderr stream hashes were rechecked while preparing this index.",
+    "Eight probe sources still match this document baseline; old full-library results remain tied to their historical revisions."
+  ],
+  "matrices": [
+    {
+      "allCompileAndRunExitsZero": true,
+      "bundleEvidencePath": "evidence/xcode-27.2",
+      "cells": [
+        {
+          "accepted": true,
+          "binarySHA256": "1de849793db4d84d3a50a001af730a9931972e2fd2dd64a995a86a50a814485e",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "c49d32c898d6c64691c4eea8d4f8529b3d3efc90498473a0c3786df0b2ed76bb",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "eab2e7ed18da6402ce5021cac8b73fb047d46e428bad31742e26947d32936953",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "052a16adb3936488fd5f4f403f10b376d367cff4d40b4b262205ed17863f0246",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "44b974893acc4acbc6c73b971a11144985f66eaed7900d5bcb37725650c5b53f",
+          "compileExit": 0,
+          "configuration": "debug",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "52319c20d9c227470a6067c5e8ea1b2df2ae1c88a7ce93dd225f4ed727c7910a",
+          "compileExit": 0,
+          "configuration": "release",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "157e373bfe726f6f1c737bad6e23155316ae1495f68affc9ba0babe54ce55157",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "8dded33095f484ed092ead86190e3ea25ff426f8a620a65b7f65f52f859c54de",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "5202dfeef38670c6573f9805be1c89c7cc16de8e75026c97b6cc1e62ffbbbdb2",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "b23e43d4efbf2c838ed88d5bdfb930d52b17b3631b89ff1c4ebb43dc75cbef89",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "d197248c1b1e13f3d49053ba28903eebc90ad93d47f3252a8bfb699a9e742a11",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "c414a8d3ac171270d9b06973499e836d3140c1a34456779dcf8256b01140a730",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "f00a555b8b49ff60d23faa5e0deb8b5b30a98ca40c5afec26245c6e1daedd818",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "22907819eed48086d5881bfa2b75ff0e4816f7494523be3bcf2c3513ee4cb7be",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "e9da68144516e003355e0088c82985e5725348cad5ccccfb51ca5f1badddf5d8",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "a6ad642000377889624885f121e4d1ba1e94c60713b555d0a04e314d80953a6d",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0\nswift-driver version: 1.168.6",
+      "frontendSHA256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "label": "xcode-27.2",
+      "negativeControlsPassed": 2,
+      "positiveFailures": 3,
+      "positivePasses": 11,
+      "sdkCapturePath": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "sdkSettingsSHA256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+      "sourceRevision": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+      "sourceState": "",
+      "summarySHA256": "f85f7800d6419a3ca98d541bb93cfb7fec36abeae4547020accf10a10807bb27",
+      "summarySourcePath": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/compiler/xcode-control/summary.json",
+      "target": "arm64-apple-macosx14.0",
+      "xcodeBuild": "27B52"
+    },
+    {
+      "allCompileAndRunExitsZero": true,
+      "bundleEvidencePath": "evidence/clt-6.2",
+      "cells": [
+        {
+          "accepted": true,
+          "binarySHA256": "d5a14741a810126084c850098f8ad96cda4e9d673b7eedebfeda932d4e3b16ce",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "856f66e44a71c8e7f3c8ba091bc3c64a2adb3efdf5792404ba5ddd0628142f88",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "4c168fe2d3ff72092f3c56d8d115b71520787d9159ce563632bfe3a8701c59df",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "ea32a2a4774abf1855ebbcbefce842b4e2d3de69d8e8c9d4bf0dca35ea94385a",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "97ae4afd48c9559cb9fcdf47fbffcd3236deeb0192c7ef51e0eada528be70bfe",
+          "compileExit": 0,
+          "configuration": "debug",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "a5255f899d02ea19fbfb3911c51904c2062eb63d3c5119893e4a3f4471bbbf32",
+          "compileExit": 0,
+          "configuration": "release",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "d353980a8035d94ed53859302fde6f4f0f096f0f8cb4819c8a34894273102cfd",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "88267c1bad544b36313c6f4e385f80b49446a1c1fbf7657573526b212ab04e27",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "f3598c07c13e23723ad15bd82636fd30f774ba1440548c2b0039cc4ce210dcef",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "457606c2c11ec0fda212aac538e317e953260b77ab6888dd47c5e06b6ce23dbf",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "2a8093537b202917ee1952ebd1b6ce8161ee39379df6f0089c7bffb9eab792b3",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "4106340eceba69e91464197da329bf59a04f2e39082d6c45bf221b4528d98a7c",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "0669e8aab395838379b14e33284ffe0e03cf03355c0cf6aa4facaef6b9eecb79",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "1c605ac2ee560d14fb1d12c59d8cbd819c7e5bf4e5b3b4eff13d57dea2e71f37",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "8f860238fc4884ba2b81f67ccd1337c4b57375e9af80c17807d7d0697607d22f",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "7629406fe4a9b28ecbdd08a2c1ae7d36fa76cb642839c7307843f2d0886de75a",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.2 (swiftlang-6.2.0.19.9 clang-1700.3.19.1)\nTarget: arm64-apple-macosx28.0\nswift-driver version: 1.127.14.1",
+      "frontendSHA256": "720112638833dcb8e8190859cde6b9657ec88c720b7b2e4fc419764f7f9ca47b",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "label": "clt-6.2",
+      "negativeControlsPassed": 2,
+      "positiveFailures": 3,
+      "positivePasses": 11,
+      "sdkCapturePath": "/Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk",
+      "sdkSettingsSHA256": "7a2223423d955944a74542b8a72fda83cf970fa30749ba305fa904451f3a16c1",
+      "sourceRevision": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+      "sourceState": "",
+      "summarySHA256": "fdba64e7d834a1f1f55011770b9c0f55772a908871d766b114e79aa432622a98",
+      "summarySourcePath": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/compiler/clt-candidate/summary.json",
+      "target": "arm64-apple-macosx14.0",
+      "xcodeBuild": null
+    },
+    {
+      "allCompileAndRunExitsZero": true,
+      "bundleEvidencePath": "evidence/swiftorg-6.4.2",
+      "cells": [
+        {
+          "accepted": true,
+          "binarySHA256": "0f52ee142b414cac71f22419b93da53d99d5d09774adc531169603e430b17491",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "93b15350961fa0c846abbbc77e2026c588371fd87770c7b73733bdd331d3b0a9",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "198606fead775d057cd5d00263643926fcc23c546d4e78535665698d7b845123",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "e6faa537f88245c0e6a6d75c6841a4c3fe96589a3491f23730f0818398ba2316",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "9388b70ed3c95154bdcaf07a0fe2e8223e0c5e195c6dafeded4ffa85a0315f0c",
+          "compileExit": 0,
+          "configuration": "debug",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "d4ebdf5d4a34bd929b6d2f36f0c2f12f3a2ae2cd7f0a1c610b87792e5a066732",
+          "compileExit": 0,
+          "configuration": "release",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "71025267492f5ab0071623a56bd07f6e909a0e0bb3762c53d649128620bbb4cd",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "a3d923d6d4c8acf98b3f9ce3aa95126622cb6524da7291c22b423f012da57ddf",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "238ae2a660cdf6e8a793c6b8ce1f45ca7e7188425b96fb9b7cf49f736002c605",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "53166a18dad8880c9f341ebfc4aec421715f9542591854020ed2cfcad680e28c",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "ecd40a9fc94a3c2060058842824b8b9ad99233202d111317e82735b42249afda",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "4210648548b3835fad5716c61aef7ac345ea6a557f1f60044891644c59b32bed",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "17d49559b23114e70a7dd0865e937128e396cb3ff634dea76bcda373285657b0",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "3ba3c727e3fedf4c2f41f36cabbf7e5cf05d2bfd42ff89cb10f827a09976d3b9",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "5735c347801804a47cded094ed3d40daed351db3e7e72ba70535b728958a71c6",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "3b0957a7b6e0aa4351f56935feb9cab5ca9bd69dba5bf3c44742ffba7a38143a",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0",
+      "frontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "label": "swiftorg-6.4.2",
+      "negativeControlsPassed": 2,
+      "positiveFailures": 0,
+      "positivePasses": 14,
+      "sdkCapturePath": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "sdkSettingsSHA256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+      "sourceRevision": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+      "sourceState": "",
+      "summarySHA256": "5983655fd453331524a275ab6f516f420de6ec5e1259327689e1f1483cf2b259",
+      "summarySourcePath": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/compiler/swiftorg-control/summary.json",
+      "target": "arm64-apple-macosx14.0",
+      "xcodeBuild": null
+    },
+    {
+      "allCompileAndRunExitsZero": true,
+      "bundleEvidencePath": "evidence/swiftorg-6.0.3",
+      "cells": [
+        {
+          "accepted": true,
+          "binarySHA256": "8853c4abd1051c5097a1015d5b8e1181e41ae424c1f4640867161bce844dabde",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "c7d006f0dd4a110e429cb6b38da76962a70e3fec3a8e33d0de47356cd18e4876",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "8086f7946d2616f82c58008d82b7620f87a7018ea185e8ea3a8287f4e5738c8a",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "d92a3c989346dc62de77272461b550598d721d068fe7434e53bbb0070c8421a5",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "e6aabbc6458466e9ca7295293e25087a5a48714d5be6fa83a07103c52fdc5f23",
+          "compileExit": 0,
+          "configuration": "debug",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "d27610e5295f0343059f22200bfbb0becc213eb804fe0d6428ddd281a463ae4a",
+          "compileExit": 0,
+          "configuration": "release",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "70c5e42a0989afd712448a84f7aca4e69129f5f8735ca3481890f727b8145eff",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "74dfcd0b5d6ca4d01fae670fa21ddc54c3c2e87866efe04077d7245f13ea540c",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "2c071dcfab9fcca9dbcb9348487440c01d686e95562ede8cfdc94661492e58f0",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "1422f2450e531492fb0f98c32ad32229197697b71684696f41369267ce0f46a2",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "b14524181bd3ae2b56861036fc44fe3c85d35f2bd1f4b31d2577dc5d66e0cd60",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "858f4411b7355e6f45eb90bbeaccd17390e59fea31c46b69a28e2b05b33620fb",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "94630edb8a0b5088fe182764723a9897e5a7953a6001104600dda65367bee1b6",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "0f84266ce15be8efa81ecf1c7cba043eff1a517894f98c5a7387b9996b6cad97",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "e6ce1e8f24b26e96c3cca1d23de1dc2d9b0f8b9a6c902406f1ac9100c960fdc3",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "45e8083c14d1a55c6efcd1428ef687be75c1625401b987078c9512c184262d37",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.0.3 (swift-6.0.3-RELEASE)\nTarget: arm64-apple-macosx18.0",
+      "frontendSHA256": "ed347b34041039d1ec6c4f0f387d5df668222d44c9a40d344905bfa311609b41",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "label": "swiftorg-6.0.3",
+      "negativeControlsPassed": 2,
+      "positiveFailures": 0,
+      "positivePasses": 14,
+      "sdkCapturePath": "/Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk",
+      "sdkSettingsSHA256": "2fa5c0ce1bbcd261b132b572b1a9eece3b5905b04640a44deae1a6a8812928fb",
+      "sourceRevision": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+      "sourceState": "",
+      "summarySHA256": "ba392a62158f8847d169462745cef4de33c7fba8840018559713c8008c62135b",
+      "summarySourcePath": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/compiler/swiftorg603-control/summary.json",
+      "target": "arm64-apple-macosx14.0",
+      "xcodeBuild": null
+    },
+    {
+      "allCompileAndRunExitsZero": true,
+      "bundleEvidencePath": "evidence/xcode-27.3-beta",
+      "cells": [
+        {
+          "accepted": true,
+          "binarySHA256": "805d28b013a030abf2cbe9d5d9b876197dc8d66505eac48ea17b45d9ab282ded",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "d673538f983e908b8e701529a158e6d89daabfa6a253a1a8b01961872440aca6",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "18233a0f43d6d182d8fc0396e9c17a36aec02a71c7bdd0cf787d495d86525e49"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "8a9e6f93fb0f6a49661c9bc0804d16f524f14a307cdf7059154e3d9b30ceaceb",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "b5107069ab5b4e2810207b0be294a73de560824b0262748f8c5454c082faafb9",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "CopyInoutReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "6f8a5825ec273ded3446a06161a2b3da2d96557295952ffecc009ba2c64e7dfe"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "56a8c29bed3d4a5830ab0cb234c3625b3c8cb304e936bc0eeb9728ca299ec33d",
+          "compileExit": 0,
+          "configuration": "debug",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "38e5d9662f69f51738151641dd2074047ee13e296d2456eb58fb3e9ec281a26f",
+          "compileExit": 0,
+          "configuration": "release",
+          "negativeControlPassed": true,
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "NoWriteNegative.swift",
+          "runExit": 0,
+          "sourceSHA256": "23d415157500fe9a28d795e59f40baa9bcd53d1c2489f41446160397c1d8ba8f"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "d805ff0a7e59fe135ecf7535839dedded126ad3d6c14efc5b58e4257148e1b8c",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "6e1f1c34a04cb88419e36edf3babf8e107fcc8ba90bdfc12c85e1139cab0141d",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "NonLiteralReadAfter.swift",
+          "runExit": 0,
+          "sourceSHA256": "91c19ae4bb4ec094dfaaa6bfe46177ec38c3226fac64d1b21b23e986a6913169"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "044684d4dec0d3eb56797ff0e992bd0be6de9fbcec9859b38b43b01d84fde39b",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "6446f864ffdae0a3c001b7de8f11c70e5ec4892ffcbfbcdce1ba3fab51bd57f4",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "OutOfLineRead.swift",
+          "runExit": 0,
+          "sourceSHA256": "877fc883bb0bcb32bd69be7baa59094471ae026b6558a7a0200ef8f29c8535b8"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "cb7f18350c723336db5d1e0ccc6173c2b93420ac5f16356964f9d26167fe8c3b",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "3ca81c2f0b50080c98e938da3d51775868fc4aae7efe04354274b614981c3192",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ByValueReturnInside.swift",
+          "runExit": 0,
+          "sourceSHA256": "c2cd619d60c24a64ea20ea6c5493998bf611407f2a9117a0db47b3a89e81c1a2"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "239716f70a6714871d9e36a4ab85504f5b63ad980d87ad0c5a42ff6c9943c173",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "7e935c7615f4e6bcb9a87abfd824c1ce41090c675479037a31771c0a0fe520f0",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "LostStoreObserved.swift",
+          "runExit": 0,
+          "sourceSHA256": "d6bda153f1ed5d79a393d04ea385690fcdef616f4391d73ab47b2ed2d9221326"
+        },
+        {
+          "accepted": true,
+          "binarySHA256": "c62633813ab40ee839dc482a0553e85aa1b53925a17c7f0b5d31902deb29fa3e",
+          "compileExit": 0,
+          "configuration": "debug",
+          "observation": "LOST_STORE observed=1.0 bits=3f800000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        },
+        {
+          "accepted": false,
+          "binarySHA256": "df107df4a27a3fdb6fe79e6d0e799d7f615c1142eb583e2be565c905e88a9bfa",
+          "compileExit": 0,
+          "configuration": "release",
+          "observation": "LOST_STORE observed=2.0 bits=40000000 expected=1.0",
+          "probe": "ReturnInsideInout.swift",
+          "runExit": 0,
+          "sourceSHA256": "990bd81d2ace4596f6cde91d09a1bca4aab9b920e200ed7cdef0103ceaf274bb"
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0\nswift-driver version: 1.168.6",
+      "frontendSHA256": "93a7373a7f558b211b9820797d40d7554a0fef2c917d039fa0fa894b60fd55eb",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "label": "xcode-27.3-beta",
+      "negativeControlsPassed": 2,
+      "positiveFailures": 3,
+      "positivePasses": 11,
+      "sdkCapturePath": "/Users/goftin/Downloads/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "sdkSettingsSHA256": "b57cfc491bdb4fd38c1c044fa558b2578fb560d630219a82f76b9b181f45789c",
+      "sourceRevision": "314c722ff50b5367c069eb09ffbc1866764cd2c3",
+      "sourceState": "",
+      "summarySHA256": "5912f6e5e4aabf2bcbf22933da7b6993fe254ce7ad5bdccfec00d8dd5ce3cc31",
+      "summarySourcePath": "/Users/goftin/dev/projects/VectorCore-xcode-27.3-beta-2026-11-05-evidence/compiler-probes/summary.json",
+      "target": "arm64-apple-macosx14.0",
+      "xcodeBuild": "27C5020n"
+    }
+  ],
+  "negativeAcceptance": "exit == 0 and exact combined output == LOST_STORE observed=2.0 bits=40000000 expected=1.0 followed by one newline and positive predicate rejects",
+  "positiveAcceptance": "exit == 0 and exact combined stdout+stderr == LOST_STORE observed=1.0 bits=3f800000 expected=1.0 followed by one newline",
+  "preparedDate": "2026-11-06"
+}

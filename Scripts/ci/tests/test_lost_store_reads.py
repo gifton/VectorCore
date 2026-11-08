@@ -18,7 +18,8 @@ Scripts/ci/swift_lexing._mask), in one function or closure body:
      (an Array or ContiguousArray literal, empty or not), or, for the pointer form, any `var x = <expr>`;
      a member path `withUnsafeMutablePointer(to: &a.b)` always counts (a stored property's initial value is a
      known value the guard cannot see; investigation variant w06);
-  2. then `x.withUnsafeMutableBufferPointer` (trailing closure, or a function passed in parentheses) or
+  2. then `x.withUnsafeMutableBufferPointer` / `x.withUnsafeMutableElements` (trailing closure, or a function
+     passed in parentheses) or
      `withUnsafeMutablePointer(to: &x)`;
   3. then, after that call's closing `)` or `}` and inside the scope that declares `x` (up to a new `var`/`let x`),
      a direct read: `x[...]` (not a plain `x[...] = ...` store), `x.first`, `x.last`, `x.withUnsafeBufferPointer`,
@@ -36,7 +37,7 @@ ReturnInsideInout.swift and the tested by-value control. `test_inout_handoff_the
 it does not establish that the callee writes the pointee or that a particular compiler will lose that write.
 
 CAPTURED-VAR FORM (T16 phase 1 concern C5; hits are prefixed `captured:`): a local `var x = ...` declared before a
-`withUnsafe[Mutable][Buffer]Pointer` / `withUnsafe[Mutable]Bytes` call whose closure literal assigns `x` (`x = `,
+`withUnsafe[Mutable][Buffer]Pointer` / `withUnsafe[Mutable]Bytes` / `withUnsafeMutableElements` call whose closure literal assigns `x` (`x = `,
 `x += `, `x[i] = `), followed by any use of `x` after the call in `x`'s scope. The fix is the W2 shape: declare the
 accumulator inside the closure and return it. Status on Swift 6.4.0: not reproduced. The shapes K1-K5, K7 (captured
 array-element write) and K8 (mutable-buffer closure, captured counter) are pinned in
@@ -52,6 +53,15 @@ still loses the store on the tested Xcode compiler. The by-value control kept it
 qualification; this is not a guarantee for arbitrary callees. The existing non-literal-initializer controls
 (`[T](repeating:count:)`, investigation W1/v02) and re-entered mutable borrow control (v06) are also accepted; their
 historical passing results do not establish safety for every compiler build.
+
+The distinct-name `withUnsafeMutableElements` borrow follows the same lexical review policy
+(`test_named_element_borrow_literal_owner_postread`,
+`test_named_element_borrow_captured_assignment_then_read`, and
+`test_named_element_reentry_preserves_existing_pointer_read_policy`). This is spelling coverage, not
+evidence of a new numerical failure or a general API-safety claim. The scanner does not typecheck
+callbacks: passing its immutable by-value parameter directly with `&` is not valid Swift. A mutable
+local descriptor copy can be passed inout, but following that alias remains outside this heuristic
+(`test_named_element_borrow_preserves_initializer_and_alias_limits`).
 
 ALLOWLIST: ALLOWED maps `path::function::name` (with `inout:` or `captured:` for those forms) to a reason, for reviewed
 sites that cannot be rewritten; each entry must still match a hit (a stale entry fails).
@@ -109,6 +119,14 @@ _CAPTURED = ('; captured var written in the closure and read after it. This form
              'run (T15/final-fix/01.log, one host) while the d_pure control lost its store in the same run. Not proof for '
              'every body; the trigger follows inlining')
 ALLOWED = {
+    'Tests/ComprehensiveTests/SIMDStorageMutationTests.swift::concreteAndGenericReadAfterMutation::concrete':
+        'strict by-value API regression assertion in SIMDStorageMutationTests.concreteAndGenericReadAfterMutation: '
+        'literal-owner read after withUnsafeMutableElements must observe the write; no known-issue suppression. '
+        'Retained test shape, not a general source-safety waiver.',
+    'captured:Tests/ComprehensiveTests/SIMDStorageMutationTests.swift::callbackRunsOnceIncludingEmptyStorage::calls':
+        'strict by-value API regression assertion in SIMDStorageMutationTests.callbackRunsOnceIncludingEmptyStorage: '
+        'captured counter must equal one after the callback, including empty storage; no known-issue suppression. '
+        'Retained test shape, not a general source-safety waiver.',
     'Tests/ComprehensiveTests/LostStoreCanaryTests.swift::lostStoreCanaryObservedValue::values':
         'the deliberate pure-Swift reproducer of the Release canary test (LostStoreCanaryTests)',
     'Tests/ComprehensiveTests/LostStoreCanaryTests.swift::lostStoreCanaryCapturedPointer::m':
@@ -220,7 +238,8 @@ ALLOWED = {
         '[pre-existing] file not touched by T15' + _CAPTURED,
 }
 
-_BUFFER_CALL = re.compile(r'(?<![\w.$])([A-Za-z_]\w*)\s*\.\s*withUnsafeMutableBufferPointer\b')
+_MUTABLE_BUFFER_METHOD = r'(?:withUnsafeMutableBufferPointer|withUnsafeMutableElements)'
+_BUFFER_CALL = re.compile(r'(?<![\w.$])([A-Za-z_]\w*)\s*\.\s*(?P<callee>' + _MUTABLE_BUFFER_METHOD + r')\b')
 _POINTER_CALL = re.compile(r'\bwithUnsafeMutablePointer\s*\(\s*to\s*:\s*&\s*([A-Za-z_]\w*(?:\s*\.\s*[A-Za-z_]\w*)*)')
 _OPEN = {'(': ')', '[': ']', '{': '}'}
 
@@ -314,7 +333,7 @@ def _reads(mask, name, start, end, pointer_form):
                 continue                                   # x = v is a store
             if mask.startswith(':', match.end()) and not mask.startswith('::', match.end()):
                 continue                                   # an argument label `x:`
-            if re.match(r'\.\s*(withUnsafeMutableBufferPointer|withUnsafeMutableBytes)\b', mask[k:]):
+            if re.match(r'\.\s*(' + _MUTABLE_BUFFER_METHOD + r'|withUnsafeMutableBytes)\b', mask[k:]):
                 continue
             hits.append(match.start())
     return hits
@@ -380,7 +399,7 @@ def scan_source(path, source):
             if not pointer_form and not _literal_initializer(mask, declared[1]):
                 continue
             scope_end = scopes.closes[scopes.at[declared[0]]]
-        callee = 'withUnsafeMutablePointer' if pointer_form else 'withUnsafeMutableBufferPointer'
+        callee = 'withUnsafeMutablePointer' if pointer_form else match.group('callee')
         end = _call_end(mask, mask.find(callee, call) + len(callee))
         line = source.count('\n', 0, call) + 1
         if _reads(mask, name, end, scope_end, pointer_form):
@@ -394,7 +413,8 @@ def scan_source(path, source):
     return hits
 
 
-_CAPTURED_CALL = re.compile(r'\b(withUnsafe(?:Mutable)?(?:Buffer)?Pointer|withUnsafe(?:Mutable)?Bytes)\b')
+_CAPTURED_CALL = re.compile(r'\b(' + _MUTABLE_BUFFER_METHOD
+                            + r'|withUnsafe(?:Mutable)?(?:Buffer)?Pointer|withUnsafe(?:Mutable)?Bytes)\b')
 _ANY_VAR = re.compile(r'\bvar\s+([A-Za-z_]\w*)\b\s*(?::[^=\n{]+)?=(?!=)')
 _ASSIGN = r'\s*(?:\[[^\]]*\]\s*)?(?:[-+*/&|^]|<<|>>)?=(?!=)'
 
@@ -700,6 +720,59 @@ MUST_PASS_INOUT = {
 
 class FixtureControls(unittest.TestCase):
     """The guard bites on every investigation shape and accepts the workarounds."""
+
+    def test_named_element_borrow_literal_owner_postread(self):
+        # Guard fixtures, not new numerical reproductions. Each writer takes a value descriptor.
+        for call in ('values.withUnsafeMutableElements(writeByValue)',
+                     'values.withUnsafeMutableElements { buffer in writeByValue(buffer) }',
+                     'values.withUnsafeMutableElements({ buffer in writeByValue(buffer) })',
+                     'values.withUnsafeMutableElements() { writeByValue($0) }'):
+            with self.subTest(call=call):
+                source = ('func f() -> Float {\n var values: ContiguousArray<Float> = [2]\n '
+                          + call + '\n return values[0]\n}\n')
+                self.assertEqual(scan({'Sources/X.swift': source}), ['Sources/X.swift::f::values@3'])
+
+    def test_named_element_borrow_captured_assignment_then_read(self):
+        for assignment in ('count = 1', 'count += 1'):
+            with self.subTest(assignment=assignment):
+                source = ('func f() -> Int {\n var count = 0\n var values = input\n '
+                          'values.withUnsafeMutableElements { buffer in ' + assignment
+                          + ' }\n return count\n}\n')
+                self.assertEqual(scan({'Sources/X.swift': source}), ['captured:Sources/X.swift::f::count@4'])
+
+    def test_named_element_reentry_preserves_existing_pointer_read_policy(self):
+        for method in ('withUnsafeMutableBufferPointer', 'withUnsafeMutableElements'):
+            for later_read in ('', '\n print(values[0])'):
+                with self.subTest(method=method, later_read=later_read):
+                    source = ('func f() {\n var values: ContiguousArray<Float> = [2]\n '
+                              'withUnsafeMutablePointer(to: &values) { mutateOwner($0) }\n '
+                              'values.' + method + ' { print($0[0]) }' + later_read + '\n}\n')
+                    expected = (['Sources/X.swift::f::values@3', 'Sources/X.swift::f::values@4']
+                                if later_read else [])
+                    self.assertEqual(scan({'Sources/X.swift': source}), expected)
+
+    def test_named_element_borrow_preserves_initializer_and_alias_limits(self):
+        controls = (
+            'func f() { var values = ContiguousArray(repeating: Float(2), count: 1); '
+            'values.withUnsafeMutableElements(writeByValue); print(values[0]) }',
+            'func f() -> Float { var values: ContiguousArray<Float> = [2]; '
+            'return values.withUnsafeMutableElements { buffer in writeByValue(buffer); return buffer[0] } }',
+            # A mutable local copy is valid; following this descriptor alias remains out of scope.
+            'func f() -> Float { var values: ContiguousArray<Float> = [2]; '
+            'return values.withUnsafeMutableElements { buffer in var copy = buffer; '
+            'writeIndirect(&copy); return copy[0] } }',
+            'func f() { var count = 0; var values = input; '
+            'values.withUnsafeMutableElements { buffer in count = 1 } }',
+            'func f() { var count = 0; var values = input; '
+            'values.withUnsafeMutableElements { buffer in var count = 1; print(count) }; print(count) }',
+            'func f() { var values: ContiguousArray<Float> = [2]; '
+            'values.withUnsafeMutableElements(writeByValue); /* values[0] */ print("values[0]") }',
+            'func f() { var values: ContiguousArray<Float> = [2]; '
+            'values.withUnsafeMutableElementsOther(writeByValue); print(values[0]) }',
+        )
+        for source in controls:
+            with self.subTest(source=source):
+                self.assertEqual(scan({'Sources/X.swift': source}), [])
 
     def test_retained_compiler_repro_and_controls(self):
         probes = ROOT / 'Docs/reviews/2026-11-01-compiler-qualification/probes'

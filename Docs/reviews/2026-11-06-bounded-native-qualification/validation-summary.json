@@ -1,0 +1,160 @@
+{
+  "candidate": {
+    "baseHEAD": "bdf990847babf567be1cbce22d2606e7102b1a47",
+    "compiledInputCount": 389,
+    "compiledSourceManifestSHA256": "f2869bf68bb9286d33f2107566a2fb53d6913f95c76dced68d9affde448bd6eb",
+    "frontendSHA256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f"
+  },
+  "compilerProfile": "known-failing",
+  "completedDate": "2026-11-07",
+  "draft": true,
+  "freshKernelCoverage": {
+    "cells": 4,
+    "consumerTarget": "native compiler default, no explicit target",
+    "deliberateMismatchRejections": 4,
+    "directTailControls": 40,
+    "normalCLI": 8,
+    "performanceAccepted": false,
+    "publicRouteObservations": 144
+  },
+  "freshPlatformCoverage": {
+    "actions": 8,
+    "diagnosticClean": false,
+    "exitZeroActions": 8,
+    "nonquietChangedReportingOptions": [
+      "omitted -quiet",
+      "added result bundle"
+    ],
+    "nonquietIOSDiscriminatorErrors": 0,
+    "originalConsoleErrorMessages": 7,
+    "retainedArtifacts": 60,
+    "runtimeExecuted": false
+  },
+  "independentReview": {
+    "initialMaterialFindings": 1,
+    "remainingMaterialFindingsInReviewedScope": 0,
+    "resolved": 1
+  },
+  "nativeAssessment": {
+    "compiledSourceManifestSHA256": "f2869bf68bb9286d33f2107566a2fb53d6913f95c76dced68d9affde448bd6eb",
+    "compilerObservations": {
+      "correctPositiveCells": 11,
+      "knownFailures": [
+        "CopyInoutReturnInside",
+        "LostStoreObserved",
+        "ReturnInsideInout"
+      ],
+      "negativeControls": 2,
+      "positiveCells": 14
+    },
+    "compilerProfile": "known-failing",
+    "draft": true,
+    "migration": [
+      {
+        "compileContracts": 6,
+        "legacyOptimizedInout": "known-failing",
+        "omittedWriteControls": 2,
+        "positiveObservations": 48,
+        "producer": "debug",
+        "swiftTestingDisabled": 18,
+        "swiftTestingReported": 1775,
+        "xctestReported": 218,
+        "xctestSkipped": 28
+      },
+      {
+        "compileContracts": 6,
+        "legacyOptimizedInout": "known-failing",
+        "omittedWriteControls": 2,
+        "positiveObservations": 48,
+        "producer": "release",
+        "swiftTestingDisabled": 18,
+        "swiftTestingReported": 1775,
+        "xctestReported": 218,
+        "xctestSkipped": 28
+      }
+    ],
+    "nativeEvidence": "accepted",
+    "problems": [],
+    "releaseAdmitted": false,
+    "remainingGates": [
+      "User-approved support boundary and admission policy",
+      "Old CI compiler tuples and hosted exact-candidate acceptance",
+      "Optional C kernels and architecture-dependent routes",
+      "Platform/device and minimum-OS runtime coverage",
+      "Sanitizer and controlled performance qualification",
+      "Downstream release-reference resolution and release materials",
+      "Arbitrary downstream callbacks, custom conformers and generic/inlinable compositions are not certified"
+    ],
+    "residual": {
+      "correctPositiveObservations": 31,
+      "knownFailures": [
+        "new.aggregate.inout",
+        "new.concrete.copied-inout",
+        "new.inside.copied-inout"
+      ],
+      "omittedWriteControls": 2,
+      "positiveObservations": 34,
+      "producerConfiguration": "release"
+    },
+    "schemaVersion": 1,
+    "scope": "Retained native macOS 27.0.1 (26A434) arm64 evidence for the pinned migrated candidate only; no arbitrary downstream composition guarantee.",
+    "supportPolicyAdopted": false,
+    "verifiedFiles": 1140
+  },
+  "nativeEvidence": "accepted",
+  "nextCoverageDecision": "User question pending; recommend current iOS simulator/Catalyst runtime and app-hosted iOS consumer preparation before deciding remaining runtime evidence bar",
+  "phase": "bounded-native-qualification",
+  "priorManifests": [
+    {
+      "filesVerified": 1578,
+      "manifest": "selected-evidence-manifest.json",
+      "root": "/Users/goftin/dev/projects/VectorCore-buffer-api-migration-2026-11-06-evidence",
+      "sha256": "02e3aead78e1f4f4e5dcd4648ef1fcecf392dfdf735c5138d156f600e6b08b4d"
+    },
+    {
+      "filesVerified": 143,
+      "manifest": "manifest.json",
+      "root": "/Users/goftin/dev/projects/VectorCore-workaround-qualification-2026-11-06-evidence",
+      "sha256": "8dcc77adb7a1185faf7316ce82fc2b9d9ca82d68c7a710794fe5b5a7400cdfa9"
+    }
+  ],
+  "releaseAdmitted": false,
+  "remainingReleaseGates": [
+    "Final support wording and admission policy",
+    "Platform/minimum-OS/Intel/device runtime scope and evidence",
+    "Required legacy compiler tuples and exact-candidate hosted CI",
+    "Chosen sanitizer refresh",
+    "Controlled exclusive performance acceptance",
+    "Downstream release reference and release materials"
+  ],
+  "schemaVersion": 1,
+  "scope": "Pinned stable Xcode 27.2 native evidence assessment plus fresh optional C-mode and generic platform compilation",
+  "supportPolicyAdopted": false,
+  "validation": {
+    "commands": {
+      "diff-check": {
+        "exit": 0,
+        "record": "/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/diff-check.json",
+        "sha256": "02ca6a7898110d008098df9e5890c015503576762f27f475202f715420171cff"
+      },
+      "discovery": {
+        "exit": 0,
+        "record": "/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/discovery.json",
+        "sha256": "20576c2121830f5a4721fb0179eede905e31128ba8b0cfa63bcedd4ce02d4c3c"
+      },
+      "workflows": {
+        "exit": 0,
+        "record": "/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/workflows.json",
+        "sha256": "89efa6d954e82ffc5a463ea093a1032ed9e3996a4e2d5030878c839b00b07747"
+      }
+    },
+    "diffCheck": "passed",
+    "inputEntries": 298,
+    "inputsUnchanged": true,
+    "pythonResult": "passed",
+    "pythonTests": 644,
+    "uniqueCanonicalInputFiles": 151,
+    "workflowFiles": 9,
+    "workflowResult": "passed"
+  }
+}

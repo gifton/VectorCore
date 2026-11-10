@@ -4,6 +4,22 @@ This is the entry point for the active release-preparation work. Dated reviews
 are historical evidence; directories ending in `-evidence` contain local records
 and build artifacts.
 
+## Compiler support decision — 2026-11-10
+
+The user adopted [bounded compiler qualification](Docs/reviews/2026-11-10-compiler-acceptance/decision.md)
+for exact Xcode 27.2 build 27B52, prioritizing macOS and iOS consumers of the
+shipped implementations and assessed by-value buffer patterns. Additional
+descriptor/view inout handoffs through helper/conformer chains remain excluded
+on affected combinations. Compiler failures stay visible; supported numerical
+routes must pass. The policy is adopted, but fresh qualification and its
+validator/CI integration remain pending.
+
+Stable iOS acceptance additionally requires at least one app-hosted Release
+consumer run on a physical iPhone or iPad. Minimum-OS, Intel and other declared
+platform coverage remain open; existing deployment declarations and required CI
+are unchanged. The [implementation plan](Docs/superpowers/plans/2026-11-10-compiler-acceptance.md)
+awaits review. No candidate or release is admitted by the policy decision.
+
 ## Integration preview: 0.4.0-alpha.1
 
 **Status: experimental integration preview.** This snapshot is for fresh
@@ -47,8 +63,8 @@ describes version requirements and the resolved file.
   buffer descriptors/views by value. Do not add inout handoffs of those views or
   pointer-bearing wrappers inside callback/helper/conformer chains. The reviewed
   stdlib borrow-entry adapter is the specific starting point described in the
-  [boundary proposal](Docs/reviews/2026-11-06-workaround-qualification/qualification-proposal.md).
-  This testing convention is not a complete proof against compiler miscompilation.
+  [adopted policy](Docs/reviews/2026-11-10-compiler-acceptance/decision.md).
+  The restriction is not a complete proof against compiler miscompilation.
 - Fresh simulator validation targets arm64 iOS. The user deferred further
   Catalyst and Intel runtime qualification for this prerelease effort. Existing
   deployment declarations and required CI jobs remain unchanged; minimum-OS,
@@ -94,4 +110,5 @@ does not establish integration into that application.
 
 All new local artifacts for this effort are grouped under the existing evidence
 root's `integration-preview/` subdirectory. No additional release worktree is
-needed. Final stable support wording and release admission remain separate work.
+needed. Implementing the adopted qualification policy, settling remaining
+coverage, and final release admission remain separate work.

@@ -107,8 +107,13 @@ borrow remains unambiguous. Public concrete vector storage can still reach that
 standard-library method; this migration does not remove it or repair the compiler.
 
 The original compiler canary and concrete inout diagnostic remain separate from
-the by-value API checks. Passing the new API tests does not satisfy the existing
-release-admission policy on a compiler that fails the canary. The
+the by-value API checks. The [policy adopted on 2026-11-10](reviews/2026-11-10-compiler-acceptance/decision.md)
+permits bounded qualification of exact Xcode 27.2 build 27B52 with documented
+restrictions; the compiler remains known-failing. Additional descriptor/view or
+pointer-bearing-wrapper inout handoffs are excluded transitively through helper
+and conformer chains. Arbitrary external implementations do not inherit
+qualification from this by-value signature. Passing the new API tests alone does
+not qualify a candidate or admit a release. The
 [migration validation report](reviews/2026-11-06-buffer-api-migration/README.md)
 records exact source/toolchain evidence and remaining limits; the
 [earlier audit](reviews/2026-11-06-workaround-audit/README.md) records why a

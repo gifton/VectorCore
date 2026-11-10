@@ -103,6 +103,52 @@ class CompilerQualificationTests(unittest.TestCase):
         f.save(repin=True)
         self.assertRejected()
 
+    def test_original_lost_store_format_preserves_wrong_bits_and_process_exit(self):
+        case = {'format': 'lost-store', 'correct': {'value': '3f800000'},
+                'observed': {'value': '40000000'}, 'role': 'diagnostic'}
+        command = {'record': {'exit': 0}, 'text': 'LOST_STORE observed=2.0 bits=40000000 expected=1.0\n'}
+        result = self.qualifier.observations(case, command)
+        self.assertFalse(result['numericalCorrect'])
+        self.assertEqual(result['failures'], ['value'])
+        for text in ['LOST_STORE observed=1.0 bits=40000000 expected=1.0\n',
+                     command['text'] * 2, command['text'].rstrip(), '']:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                self.qualifier.observations(case, dict(command, text=text))
+        with self.assertRaises(ValueError):
+            self.qualifier.observations(case, dict(command, record={'exit': 1}))
+
+    def test_required_rows_in_diagnostic_group_cannot_fail(self):
+        f = self.fixture
+        f.case_specs[2]['requiredCorrectRows'] = ['first']
+        f.save()
+        self.assertRejected()
+
+    def test_diagnostic_required_rows_must_exist_and_be_unique(self):
+        f = self.fixture
+        for names in [['unknown'], ['first', 'first']]:
+            f.case_specs[2]['requiredCorrectRows'] = names
+            f.save()
+            with self.subTest(names=names):
+                self.assertRejected()
+
+    def test_auxiliary_checks_cannot_be_ignored(self):
+        f = self.fixture
+        f.capture['checks'] = [{'id': 'unassessed-suite', 'format': 'trust-green-summary', 'command': 'supported'}]
+        f.save(repin=True)
+        self.assertRejected()
+        f.profile['checks'] = f.capture['checks']
+        f.save()
+        self.assertRejected()
+
+    def test_standalone_diagnostic_can_have_its_own_omitted_write_control(self):
+        f = self.fixture
+        f.add_case('diagnostic-omitted', 'negative-control', '1', '2', negative_for='compiler')
+        f.capture['commands']['diagnostic-omitted'] = f.commands['diagnostic-omitted']['receipt']
+        f.save(repin=True)
+        result = self.check()
+        self.assertEqual(result['vectorCoreQualification'], 'accepted', result)
+        self.assertFalse(result['observations']['diagnostic-omitted']['numericalCorrect'])
+
     def test_cli_output_is_exclusive_and_incomplete_input_returns_nonzero(self):
         f = self.fixture
         output = f.root / 'result.json'

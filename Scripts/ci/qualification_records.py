@@ -12,6 +12,7 @@ from pathlib import Path
 
 POLICY = 'vc-0.4.0-xcode27.2-bounded-v1'
 CASE_METADATA = ('id', 'format', 'command', 'producer', 'client', 'compileCommand', 'binary')
+OPTIONAL_CASE_METADATA = ('witness',)
 
 
 def require(condition, message):
@@ -154,14 +155,36 @@ def verify_command(expected, receipt, pins):
     return {'record': record, **streams, 'text': streams['stdout'] + streams['stderr']}
 
 
+def option(argv, flag):
+    require(argv.count(flag) == 1 and argv.index(flag) + 1 < len(argv), 'missing/duplicate ' + flag)
+    return argv[argv.index(flag) + 1]
+
+
+def compile_flags(argv, mode, identity, profile, pins):
+    require(option(argv, '-swift-version') == identity['swiftVersion'], 'language mode differs')
+    require(option(argv, '-target') == identity['target'], 'target differs')
+    require(pins.resolve(option(argv, '-sdk')) == pins.resolve(profile['identityFiles']['sdkSettingsSHA256']).parent,
+            'SDK selection differs')
+    require([arg for arg in argv if arg.startswith('-O')] == ['-Onone' if mode == 'debug' else '-O'],
+            'unsupported optimization')
+    allowed = {'-swift-version', '-target', '-sdk', '-module-cache-path', '-I', '-Xcc', '-parse-as-library',
+               '-O', '-Onone', '-o', '-D', '-module-name', '-emit-module', '-emit-module-path', '-emit-object',
+               '-emit-sil', '-emit-ir', '-typecheck', '-framework'}
+    for arg in argv[1:]:
+        require(not arg.startswith('-') or arg in allowed or arg.startswith(('-fmodule-map-file=', '-I/')),
+                'unsupported compiler flag: ' + arg)
+
+
 def verify_bindings(profile, capture, commands, cases, pins):
     producers = capture['producers']
     require(same(producers, profile['producers']) and type(producers) is dict and bool(producers),
             'producer inventory differs')
     for producer in producers.values():
+        kind = producer.get('kind', 'library')
+        require(kind in ('standalone', 'library'), 'unknown producer kind')
         for key in ('objects', 'modules'):
             paths = producer[key]
-            require(type(paths) is list and bool(paths), 'empty producer ' + key)
+            require(type(paths) is list and bool(paths) == (kind == 'library'), 'producer ' + key + ' inventory')
             resolved = [pins.checked(path) for path in paths]
             require(len(resolved) == len(set(resolved)), 'duplicate producer ' + key)
     for case in cases.values():
@@ -171,13 +194,33 @@ def verify_bindings(profile, capture, commands, cases, pins):
         compile_record = commands[case['compileCommand']]['record']
         require(compile_record['exit'] == 0, 'failed consumer compilation')
         argv = compile_record['argv']
+        compile_flags(argv, case['client'], capture['identity'], profile, pins)
+        extra_objects, extra_modules = [], []
+        if 'witness' in case:
+            witness = case['witness']
+            require(set(witness) == {'command', 'object', 'module'}, 'witness binding fields')
+            obj, module = pins.checked(witness['object']), pins.checked(witness['module'])
+            emitted = commands[witness['command']]['record']
+            require(emitted['exit'] == 0, 'witness compilation failed')
+            compile_flags(emitted['argv'], case['client'], capture['identity'], profile, pins)
+            require(pins.resolve(option(emitted['argv'], '-o')) == obj
+                    and pins.resolve(option(emitted['argv'], '-emit-module-path')) == module,
+                    'witness output differs')
+            require('-emit-object' in emitted['argv'] and '-emit-module' in emitted['argv'], 'witness emission missing')
+            extra_objects.append(obj)
+            extra_modules.append(module)
         objects = [pins.resolve(value) for value in argv if value.endswith('.o')]
-        require(len(objects) == len(set(objects)) and set(objects) == {pins.resolve(v) for v in producer['objects']},
+        require(len(objects) == len(set(objects))
+                and set(objects) == {pins.resolve(v) for v in producer['objects']} | set(extra_objects),
                 'linked producer object inventory differs')
         require(argv.count('-o') == 1 and pins.resolve(argv[argv.index('-o') + 1]) == binary, 'consumer output differs')
         searches = [pins.resolve(argv[i + 1]) for i, value in enumerate(argv[:-1]) if value == '-I']
-        for module in producer['modules']:
+        for module in [*producer['modules'], *map(str, extra_modules)]:
             require(any(pins.resolve(module).is_relative_to(search) for search in searches), 'producer module not selected')
+        if 'modulemap' in producer:
+            modulemap = pins.checked(producer['modulemap'])
+            maps = [pins.resolve(arg.split('=', 1)[1]) for arg in argv if arg.startswith('-fmodule-map-file=')]
+            require(maps == [modulemap], 'producer module map differs')
         run_record = commands[case['command']]['record']
         require(pins.resolve(run_record['executable']) == binary, 'executed consumer differs')
 
@@ -214,8 +257,122 @@ def verify_capture(profile: dict, evidence_root: Path, source_root: Path) -> dic
     wanted = named(profile['cases'], 'profile cases')
     require(set(cases) == set(wanted), 'case inventory differs')
     for name, spec in wanted.items():
-        require(same(cases[name], {k: spec[k] for k in CASE_METADATA}), 'case binding differs: ' + name)
+        fields = (*CASE_METADATA, *(k for k in OPTIONAL_CASE_METADATA if k in spec))
+        require(same(cases[name], {k: spec[k] for k in fields}), 'case binding differs: ' + name)
     verify_bindings(profile, capture, commands, cases, pins)
+    checks = verify_checks(profile, capture, commands, pins)
     pins.recheck()
-    return {'capture': capture, 'commands': commands, 'verifiedFiles': len(pins.pins),
+    return {'capture': capture, 'commands': commands, 'checks': checks, 'verifiedFiles': len(pins.pins),
             'sourceManifestSHA256': profile['sourceManifestSHA256']}
+
+
+def verify_checks(profile, capture, commands, pins):
+    actual, wanted = capture.get('checks', []), profile.get('checks', [])
+    require(type(actual) is list and type(wanted) is list, 'invalid auxiliary checks')
+    if not actual and not wanted:
+        return []
+    captured, reviewed = named(actual, 'captured checks'), named(wanted, 'reviewed checks')
+    require(set(captured) == set(reviewed), 'auxiliary check inventory differs')
+    results = []
+    for name, spec in reviewed.items():
+        require(same(captured[name], {k: v for k, v in spec.items() if k != 'expected'}), 'auxiliary binding differs')
+        kind = spec['format']
+        require(kind in ('native-suite', 'migration-contract', 'c-build-modes'), 'unsupported auxiliary format: ' + str(kind))
+        command = commands[spec['command']]
+        result = {'spec': spec, 'command': command}
+        if kind == 'native-suite':
+            producer = capture['producers'][spec['producer']]
+            require(producer['buildCommand'] == spec['command'] and producer['testBinary'] == spec['binary'],
+                    'native suite producer differs')
+            pins.checked(spec['binary'])
+            argv = command['record']['argv']
+            require('test' in argv and not any(v in argv for v in ('--filter', '--skip', '--specifier', '--skip-build')),
+                    'native suite selection differs')
+            result['xml'] = pins.checked(spec['xunit']).read_text()
+            result['listing'] = commands[spec['listCommand']]['stdout']
+        elif kind == 'migration-contract':
+            compile_flags(command['record']['argv'], spec['client'], capture['identity'], profile, pins)
+        else:
+            require(command['record']['exit'] == 0, 'C matrix driver failed')
+            result['cells'] = verify_c_build_modes(spec, pins, capture['identity'])
+        results.append(result)
+    return results
+
+
+def verify_c_build_modes(spec, pins, identity):
+    from native_qualification import assess_routes, route_link_binding
+    result = pins.json(spec['result'])
+    require(result['schemaVersion'] == 1 and result['marker'] == 'V02_BUILD_MODES_COMPLETE', 'C matrix incomplete')
+    cells = result['cells']
+    require(type(cells) is list and len(cells) == 4, 'C matrix cell inventory differs')
+    require({(row['configuration'], row['cKernels']) for row in cells}
+            == {(m, c) for m in ('debug', 'release') for c in (False, True)}, 'C matrix cell inventory differs')
+    root = Path(spec['result']).parent
+
+    def digest(path, expected):
+        require(sha(pins.checked(path)) == expected, 'C artifact identity differs')
+
+    def receipt(directory, name, code):
+        record = pins.json(str(directory / (name + '.json')))
+        require(record['status'] == 'completed' and record['timeout'] is False
+                and type(record['exit']) is int and record['exit'] == code, 'C command incomplete/failed: ' + name)
+        require(pins.resolve(record['cwd']) == pins.roots['source'], 'C source checkout differs')
+        environment = record['environment']
+        require(pins.resolve(environment['SDKROOT']) == pins.resolve(identity['sdk']), 'C SDK selection differs')
+        executable = record['argv'][0]
+        if not Path(executable).is_absolute():
+            require(executable in ('swift', 'swiftc'), 'unresolved C matrix tool')
+            executable = str(Path(environment['PATH'].split(':')[0]) / executable)
+        pins.checked(executable)
+        text = {}
+        for name in ('stdout', 'stderr'):
+            stream = record[name]
+            path = pins.checked(stream['path'])
+            data = path.read_bytes()
+            require(hashlib.sha256(data).hexdigest() == stream['sha256'] and len(data) == stream['bytes'],
+                    'C command stream differs')
+            text[name] = data.decode('utf-8')
+        return record, text
+
+    for row in cells:
+        mode, enabled = row['configuration'], row['cKernels']
+        require(type(enabled) is bool, 'C flag type differs')
+        name = mode + ('-c-on' if enabled else '-c-off')
+        require(row['name'] == name and row['routeRows'] == 36 and row['directCTails'] == 10, 'C cell scope differs')
+        directory = root / name
+        require(Path(row['artifactManifest']) == directory / 'artifacts.json'
+                and Path(row['linkProvenance']) == directory / 'link-provenance.json', 'C cell artifact binding differs')
+        artifacts = pins.json(row['artifactManifest'])
+        require(bool(artifacts) and len({a['buildPath'] for a in artifacts}) == len(artifacts), 'C artifact inventory differs')
+        for artifact in artifacts:
+            digest(artifact['buildPath'], artifact['sha256'])
+            digest(artifact['retainedPath'], artifact['sha256'])
+        build, _ = receipt(directory, 'build', 0)
+        require(build['argv'][1] == 'build' and option(build['argv'], '-c') == mode
+                and ('-DVC_USE_C_KERNELS' in build['argv']) == enabled, 'C producer configuration differs')
+        provenance = pins.json(row['linkProvenance'])
+        for key in ('originalDispatcher', 'originalSource', 'derivativeSource', 'consumerSource', 'shimSource', 'consumer'):
+            item = provenance[key]
+            digest(item['path'], item['sha256'])
+        for item in provenance['linkedObjects']:
+            digest(item['path'], item['sha256'])
+        require(row['consumerSHA256'] == provenance['consumer']['sha256'], 'C consumer identity differs')
+        link, _ = receipt(directory, 'link-public-routes', 0)
+        executed, streams = receipt(directory, 'public-routes', 0)
+        route_link_binding(link, executed, provenance, mode, enabled)
+        assess_routes(streams['stdout'], enabled)
+        require(streams['stderr'] == '', 'unexpected C route diagnostics')
+        for request in ('absent', 'matching'):
+            receipt(directory, 'benchmark-' + request, 0)
+            benchmark = pins.json(str(directory / (request + '-report.json')))
+            metadata = benchmark['metadata']
+            require(metadata['coreConfiguration'] == mode and metadata['benchmarkConfiguration'] == mode
+                    and metadata['flags']['useCKernels'] is enabled
+                    and metadata['flags'].get('requestedCKernels') is (enabled if request == 'matching' else None),
+                    'C benchmark product/request differs')
+            require(metadata['selectedCaseIDs'] == ['dist.euclidean.512.optimized'] and benchmark['failures'] == []
+                    and len(benchmark['results']) == 1 and benchmark['results'][0]['iterations'] == 2,
+                    'C benchmark correctness/completion differs')
+        _, rejected = receipt(directory, 'benchmark-mismatch', 1)
+        require('does not match compiled' in rejected['stderr'], 'C mismatched request was not rejected')
+    return [{'configuration': row['configuration'], 'cKernels': row['cKernels'], 'routes': 36, 'tails': 10} for row in cells]

@@ -99,8 +99,6 @@ that a future scheduled job retains those binaries.
 
 ## Plan review status
 
-The adopted policy and physical-device requirement are recorded. This plan awaits
-the user's review and execution-method selection before implementation. Native
-execution is recommended because the collector, bindings and validator share
-interfaces that should be developed together; use an independent review before
-accepting their integrated qualification result.
+The user approved this plan and native execution on 2026-11-10. The adopted
+policy and physical-device requirement remain binding. Implement in this
+session, with an independent review before accepting the integrated result.

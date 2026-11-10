@@ -138,6 +138,87 @@ class QualificationRecordTests(unittest.TestCase):
         self.verify()
         self.assertFalse(marker.exists())
 
+    def rewrite_compile(self, argv):
+        f = self.fixture
+        f.commands['compile']['argv'] = argv
+        f.alter_receipt('compile', argv=argv)
+        f.save(repin=True)
+
+    def test_standalone_probe_binds_its_binary_without_library_products(self):
+        f = self.fixture
+        producer = {'kind': 'standalone', 'objects': [], 'modules': []}
+        f.profile['producers']['release'] = producer
+        f.capture['producers']['release'] = producer.copy()
+        argv = list(f.commands['compile']['argv'])
+        argv.remove(str(f.object))
+        index = argv.index('-I')
+        del argv[index:index + 2]
+        self.rewrite_compile(argv)
+        self.verify()
+
+    def test_reviewed_flags_still_must_match_adopted_mode_and_target(self):
+        f = self.fixture
+        original = list(f.commands['compile']['argv'])
+        for flag in ['-Ounchecked', '-Osize', '-Onone']:
+            argv = [flag if v == '-O' else v for v in original]
+            self.rewrite_compile(argv)
+            with self.subTest(flag=flag), self.assertRaises(ValueError):
+                self.verify()
+        argv = list(original)
+        argv[argv.index('-target') + 1] = 'x86_64-apple-macosx14.0'
+        self.rewrite_compile(argv)
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_even_repinned_wrong_object_or_missing_module_search_rejects(self):
+        f = self.fixture
+        argv = list(f.commands['compile']['argv'])
+        argv.remove(str(f.object))
+        self.rewrite_compile(argv)
+        with self.assertRaises(ValueError):
+            self.verify()
+        argv.append(str(f.object))
+        index = argv.index('-I')
+        del argv[index:index + 2]
+        self.rewrite_compile(argv)
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_separate_witness_is_bound_to_its_compile_and_link(self):
+        f = self.fixture
+        obj, module = f.evidence / 'witness.o', f.evidence / 'Witness.swiftmodule'
+        obj.write_bytes(b'witness object')
+        module.write_bytes(b'witness module')
+        f.add_command('witness-compile', [str(f.compiler), '-O', '-swift-version', '6',
+            '-target', f.identity['target'], '-sdk', str(f.sdk.parent), '-emit-object',
+            '-emit-module', '-emit-module-path', str(module), '-o', str(obj)], '', 0,
+            executable=f.compiler)
+        binding = {'command': 'witness-compile', 'object': str(obj), 'module': str(module)}
+        for row in f.case_specs + f.capture_cases:
+            row['witness'] = dict(binding)
+        f.capture['commands']['witness-compile'] = f.commands['witness-compile']['receipt']
+        argv = [*f.commands['compile']['argv'], str(obj)]
+        self.rewrite_compile(argv)
+        self.verify()
+        # Keep the profile and receipt consistent: the independently checked
+        # witness output must still be the very object passed to the link.
+        f.commands['witness-compile']['argv'][-1] = str(f.object)
+        f.alter_receipt('witness-compile', argv=f.commands['witness-compile']['argv'])
+        f.save(repin=True)
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_c_modes_incomplete_or_duplicate_cell_inventory_rejects(self):
+        self.assertTrue(hasattr(self.records, 'verify_c_build_modes'), 'C capture verifier missing')
+        class Data:
+            def __init__(self, result): self.result = result
+            def json(self, path): return self.result
+        cell = {'name': 'debug-c-off', 'configuration': 'debug', 'cKernels': False}
+        for cells in ([], [cell], [cell] * 4):
+            pins = Data({'schemaVersion': 1, 'marker': 'V02_BUILD_MODES_COMPLETE', 'cells': cells})
+            with self.subTest(cells=cells), self.assertRaises(ValueError):
+                self.records.verify_c_build_modes({'result': '/evidence/result.json'}, pins, {})
+
 
 if __name__ == '__main__':
     unittest.main()

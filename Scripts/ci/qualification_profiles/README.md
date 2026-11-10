@@ -1,7 +1,10 @@
 # Reviewed compiler qualification profiles
 
 Profiles for `compiler_qualification.py` are reviewed data, not generated
-acceptance decisions. No live candidate profile has been installed yet.
+acceptance decisions. The first native profile is
+`macos-27.0.1-arm64-alpha-2026-11-10.json`; its exact scope and
+[reviewed result](../../../Docs/reviews/2026-11-10-compiler-acceptance/native-tooling.md)
+cover tooling validation of the current alpha inputs. It does not admit stable 0.4.0.
 
 A profile binds the complete source manifest, compiler/SDK/runtime identity,
 producer modules and objects, command arguments/environment/exits, artifact

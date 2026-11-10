@@ -8,6 +8,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+import struct
 
 from qualification_records import POLICY, named, read_json, require, verify_capture
 
@@ -35,6 +36,15 @@ def observations(case, command):
         require(lines[-1] == f'BUFFER_VALUE_COMPLETE count={len(correct)} failures={len(failures)}',
                 'incomplete numerical output')
         require(code == int(bool(failures)), 'numerical exit differs')
+    elif case['format'] == 'lost-store':
+        require(set(correct) == {'value'} and correct['value'] == '3f800000', 'original probe oracle differs')
+        bits = expected['value']
+        require(bits in ('3f800000', '40000000'), 'unreviewed original probe value')
+        value = struct.unpack('>f', bytes.fromhex(bits))[0]
+        require(text == f'LOST_STORE observed={value:.1f} bits={bits} expected=1.0\n' and code == 0,
+                'original probe observation differs')
+        found = {'value': bits}
+        failures = ['value'] if bits != correct['value'] else []
     else:
         raise ValueError('unsupported observation format: ' + str(case['format']))
     return {'observations': found, 'failures': failures, 'numericalCorrect': not failures,
@@ -49,6 +59,17 @@ def check(profile_path: Path, evidence_root: Path, source_root: Path) -> dict:
     try:
         profile = read_json(profile_path)
         verified = verify_capture(profile, evidence_root, source_root)
+        for item in verified['checks']:
+            spec, command = item['spec'], item['command']
+            if spec['format'] == 'native-suite':
+                from native_qualification import assess_suite, suite_observations
+                actual = suite_observations(command['text'], item['xml'])
+                assess_suite(actual, spec['expected']['outcomes'], command['record']['exit'])
+                require(item['listing'].splitlines() == spec['expected']['testList'], 'native test discovery differs')
+            elif spec['format'] == 'migration-contract':
+                errors = re.findall(r'^.*?\.swift:(\d+):\d+: error: (.+)$', command['text'], re.M)
+                require([list(row) for row in errors] == spec['expected']['errors'], 'migration contract diagnostic differs')
+                require(command['record']['exit'] == spec['expected']['exit'], 'migration contract exit differs')
         cases = named(profile['cases'], 'profile cases')
         outcomes = {}
         supported, controls, compiler_failures = set(), set(), set()
@@ -57,6 +78,11 @@ def check(profile_path: Path, evidence_root: Path, source_root: Path) -> dict:
             require(role in ('supported', 'diagnostic', 'negative-control'), 'unknown observation role')
             require(type(case['compilerProbe']) is bool, 'invalid compiler-probe marker')
             result = observations(case, verified['commands'][case['command']])
+            required = case.get('requiredCorrectRows', [])
+            require(type(required) is list and all(type(v) is str for v in required)
+                    and len(required) == len(set(required)) and set(required) <= set(case['correct']),
+                    'invalid required-correct rows')
+            require(not (set(required) & set(result['failures'])), 'required supported row failed: ' + name)
             outcomes[name] = result
             if role == 'supported':
                 require(not result['failures'], 'supported-route failure: ' + name)
@@ -64,12 +90,13 @@ def check(profile_path: Path, evidence_root: Path, source_root: Path) -> dict:
                 supported.add(name)
             elif role == 'negative-control':
                 positive = case['negativeFor']
-                require(positive in cases and cases[positive]['role'] == 'supported', 'invalid negative control pair')
+                require(positive in cases and cases[positive]['role'] in ('supported', 'diagnostic'), 'invalid negative control pair')
                 require(case['correct'] == cases[positive]['correct'] and bool(result['failures']),
                         'ineffective negative control')
                 require(case['producer'] == cases[positive]['producer'] and case['client'] == cases[positive]['client'],
                         'negative control configuration differs')
-                controls.add(positive)
+                if cases[positive]['role'] == 'supported':
+                    controls.add(positive)
             elif result['failures']:
                 report['diagnosticFailures'][name] = result['failures']
                 if case['compilerProbe']:

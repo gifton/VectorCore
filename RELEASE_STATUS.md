@@ -11,14 +11,15 @@ for exact Xcode 27.2 build 27B52, prioritizing macOS and iOS consumers of the
 shipped implementations and assessed by-value buffer patterns. Additional
 descriptor/view inout handoffs through helper/conformer chains remain excluded
 on affected combinations. Compiler failures stay visible; supported numerical
-routes must pass. The policy is adopted, but fresh qualification and its
-validator/CI integration remain pending.
+routes must pass. [Fresh native tooling validation](Docs/reviews/2026-11-10-compiler-acceptance/native-tooling.md)
+now passes for the current alpha compiled inputs, with `compilerProfile=known-failing`
+and `releaseAdmitted=false`. iOS, hosted integration and final stable qualification remain pending.
 
 Stable iOS acceptance additionally requires at least one app-hosted Release
 consumer run on a physical iPhone or iPad. Minimum-OS, Intel and other declared
 platform coverage remain open; existing deployment declarations and required CI
 are unchanged. The [implementation plan](Docs/superpowers/plans/2026-11-10-compiler-acceptance.md)
-awaits review. No candidate or release is admitted by the policy decision.
+was approved for native execution on 2026-11-10. No candidate or release is admitted by the policy decision.
 
 ## Integration preview: 0.4.0-alpha.1
 

@@ -10,8 +10,17 @@ and build artifacts.
 downstream integration testing. Stable 0.4.0 admission remains open.
 
 The active local checkout is
-`/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`.
+`/Users/goftin/dev/projects/VectorCore-archive/VectorCore-fixes-2026-10-27-84798d3`.
 The earlier `dev/gsuite/VSK/VectorCore` checkout is not the release-preparation copy.
+
+This canonical location was reconciled on 2026-11-10. The local
+[relocation index](/Users/goftin/dev/projects/VectorCore-archive/archive-index.json)
+maps earlier checkout and evidence roots to their present locations; the
+[repair record](/Users/goftin/dev/projects/VectorCore-archive/worktree-path-repair-2026-11-10/README.md)
+records preservation checks. Historical reports, manifests and checker
+`captureRoots` retain their original paths and hashes. Use the relocation map
+and explicit current-root arguments when reading that evidence. This path
+repair does not refresh qualification or admit the alpha or stable release.
 
 The immutable release tag is `v0.4.0-alpha.1`. Pin its exact
 version in the consuming package:

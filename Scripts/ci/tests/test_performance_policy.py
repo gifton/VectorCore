@@ -1,6 +1,7 @@
 """Mutate explicit maintained policy inputs; do not infer arbitrary Swift dataflow."""
 import importlib.util
 import json
+import re
 from pathlib import Path
 import shutil
 import tempfile
@@ -30,6 +31,30 @@ class PerformancePolicyTests(unittest.TestCase):
         result = POLICY.validate(ROOT)
         self.assertEqual(result['assertionSites'], 75)  # 71 existing + two deliberate gate probes + T06 NEON and quantization-overhead.
         self.assertEqual(result['observationSites'], 30)  # 29 existing + one observation probe.
+
+    def test_precision_timer_workloads_are_opt_in_and_correctness_stays_enabled(self):
+        source = (ROOT / 'Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift').read_text()
+        scope = POLICY.validate_precision_benchmark_scope(source)
+        self.assertEqual(set(scope['timing']), {'benchmarkEuclideanLatency512', 'benchmarkCosineLatency512',
+                         'benchmarkEuclideanBatchThroughput', 'benchmarkDimensionScaling'})
+        self.assertTrue({'measureAccuracyLoss', 'representationPayloadConstants', 'representationModelMatchesRealStorage',
+                         'analyzeRepresentationMemoryModel', 'validateHeuristic'} <= set(scope['ordinary']))
+
+    def test_each_precision_timer_gate_and_correctness_reachability_is_checked(self):
+        source = (ROOT / 'Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift').read_text()
+        scope = POLICY.validate_precision_benchmark_scope(source)
+        gate = '.enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1")'
+        for name in scope['timing']:
+            match = re.search(r'(?m)^    @Test\(([^\n]+)\)\n    func ' + name + r'\(', source)
+            for replacement in ('', gate.replace('== "1"', '!= "0"')):
+                altered = source[:match.start(1)] + match.group(1).replace(gate, replacement) + source[match.end(1):]
+                with self.subTest(name=name, replacement=replacement), self.assertRaises(ValueError):
+                    POLICY.validate_precision_benchmark_scope(altered)
+        for name in scope['ordinary']:
+            match = re.search(r'(?m)^    @Test\(([^\n]+)\)\n    func ' + name + r'\(', source)
+            altered = source[:match.end(1)] + ', ' + gate + source[match.end(1):]
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                POLICY.validate_precision_benchmark_scope(altered)
 
     def test_every_inventoried_family_rejects_removed_or_direct_assertion(self):
         for row in self.inventory['assertions']:

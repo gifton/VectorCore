@@ -56,6 +56,17 @@ class QualificationRecordTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.verify()
 
+    def test_captured_root_alias_maps_before_canonical_pin_lookup(self):
+        import shutil
+        f = self.fixture
+        alias = f.root / 'captured-alias'
+        alias.symlink_to(f.evidence, target_is_directory=True)
+        archived = f.root / 'archive'
+        shutil.copytree(f.evidence, archived)
+        f.profile['captureRoots']['evidence'] = str(alias)
+        pins = self.records.Pins(f.profile, archived, f.source)
+        self.assertEqual(pins.resolve(str(f.binary)), archived.resolve() / f.binary.name)
+
     def test_changed_stream_and_matching_receipt_still_reject_old_pins(self):
         self.fixture.alter_stdout('supported', 'forged\n')
         with self.assertRaises(ValueError):

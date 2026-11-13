@@ -77,7 +77,8 @@ def check(profile_path: Path, evidence_root: Path, source_root: Path) -> dict:
             role = case['role']
             require(role in ('supported', 'diagnostic', 'negative-control'), 'unknown observation role')
             require(type(case['compilerProbe']) is bool, 'invalid compiler-probe marker')
-            result = observations(case, verified['commands'][case['command']])
+            numerical = verified['appObservations'].get(name, verified['commands'][case['command']])
+            result = observations(case, numerical)
             required = case.get('requiredCorrectRows', [])
             require(type(required) is list and all(type(v) is str for v in required)
                     and len(required) == len(set(required)) and set(required) <= set(case['correct']),

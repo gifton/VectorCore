@@ -18,7 +18,7 @@
 - Preserve deployment declarations and existing required CI. Minimum-OS, Intel, Catalyst, tvOS/visionOS coverage and broader release gates remain unresolved.
 - Preserve original canaries, numerical expectations, dated evidence and `bounded_native_qualification.py` with its adjacent profile.
 - Do not infer safety from a by-value signature, scanner pass, SDK-only build, simulator run or newer compiler version.
-- Do not change production Swift/C or version constants as part of tooling implementation. Exercise tooling on the current candidate; final stable qualification requires a separately selected, frozen 0.4.0 compiled-input identity.
+- Preserve production numerical Swift/C. On 2026-11-12 the user separately approved the timing-only batch benchmark opt-in and version="0.4.0", prerelease=nil for a frozen qualification candidate. Earlier alpha evidence remains tooling validation only; all final scopes require the new compiled-input manifest.
 - Do not publish, push, dispatch hosted work, install to a device or change signing state merely to prepare the tooling. Prepare those concrete actions and use the session's authorization/permission rules when execution reaches them.
 
 ## Review Focus
@@ -73,7 +73,7 @@
 
 **Files:** Create `.github/workflows/compiler-qualification.yml` and `Scripts/ci/tests/test_compiler_qualification_workflow.py`. Reuse `Scripts/ci/check_required.py`; keep `.github/workflows/ci.yml` and its required jobs unchanged unless a separately reviewed integration requires a change.
 
-**Interfaces:** A manually dispatched workflow receives an immutable candidate commit and reviewed profile paths from that same checkout. Separate macOS and iOS-simulator jobs use Tasks 1–3; `qualification-required` consumes their results through `check_required.py`. Evidence collection without a matching reviewed profile is reported as unqualified and cannot satisfy the aggregate.
+**Interfaces:** The user approved two-stage evidence review. A manual collect dispatch receives a full immutable candidate commit and retains unqualified macOS/iOS-simulator captures. A later verify dispatch receives that candidate, the retained run ID and exact reviewed profiles from the immutable workflow revision. Candidate collection and policy verification use separate checkouts. Profile review pins the retained archive digest and provenance before extraction/verification. `qualification-required` consumes both platform results through `check_required.py`; collect mode cannot satisfy it. No fresh capture is accepted using a profile for another invocation.
 
 - [ ] Add failing workflow-contract tests for exact candidate checkout, explicit Xcode selection/fingerprint verification, profile provenance, always-retained raw diagnostics, missing/failed/skipped jobs, and separation from existing `CI Required`. Ensure artifact-upload success cannot satisfy a missing numerical job.
 - [ ] Run the new workflow test and `test_check_required.py`; require the new test's intended failure.

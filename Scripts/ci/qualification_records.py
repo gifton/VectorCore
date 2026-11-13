@@ -12,7 +12,7 @@ from pathlib import Path
 
 POLICY = 'vc-0.4.0-xcode27.2-bounded-v1'
 CASE_METADATA = ('id', 'format', 'command', 'producer', 'client', 'compileCommand', 'binary')
-OPTIONAL_CASE_METADATA = ('witness',)
+OPTIONAL_CASE_METADATA = ('witness', 'app')
 
 
 def require(condition, message):
@@ -49,7 +49,7 @@ class Pins:
         self.roots = {'evidence': Path(evidence_root).resolve(), 'source': Path(source_root).resolve()}
         self.captures = {}
         for kind, value in captures.items():
-            path = self.absolute(value)
+            path = self.absolute(value).resolve()
             self.captures[kind] = path
         a, b = self.captures.values()
         require(not a.is_relative_to(b) and not b.is_relative_to(a), 'overlapping capture roots')
@@ -71,7 +71,7 @@ class Pins:
         return path
 
     def resolve(self, value):
-        path = self.absolute(value)
+        path = self.absolute(value).resolve()
         for kind, captured in self.captures.items():
             if path.is_relative_to(captured):
                 return (self.roots[kind] / path.relative_to(captured)).resolve()
@@ -176,6 +176,7 @@ def compile_flags(argv, mode, identity, profile, pins):
 
 
 def verify_bindings(profile, capture, commands, cases, pins):
+    app_observations = {}
     producers = capture['producers']
     require(same(producers, profile['producers']) and type(producers) is dict and bool(producers),
             'producer inventory differs')
@@ -193,6 +194,10 @@ def verify_bindings(profile, capture, commands, cases, pins):
         binary = pins.checked(case['binary'])
         compile_record = commands[case['compileCommand']]['record']
         require(compile_record['exit'] == 0, 'failed consumer compilation')
+        if 'app' in case:
+            from qualification_ios import verify_ios_case
+            app_observations[case['id']] = verify_ios_case(case, producer, capture['identity'], profile, commands, pins)
+            continue
         argv = compile_record['argv']
         compile_flags(argv, case['client'], capture['identity'], profile, pins)
         extra_objects, extra_modules = [], []
@@ -223,6 +228,9 @@ def verify_bindings(profile, capture, commands, cases, pins):
             require(maps == [modulemap], 'producer module map differs')
         run_record = commands[case['command']]['record']
         require(pins.resolve(run_record['executable']) == binary, 'executed consumer differs')
+    invocations = [row['app']['invocationId'] for row in cases.values() if 'app' in row]
+    require(len(set(invocations)) == len(invocations), 'reused app invocation')
+    return app_observations
 
 
 def verify_capture(profile: dict, evidence_root: Path, source_root: Path) -> dict:
@@ -259,10 +267,11 @@ def verify_capture(profile: dict, evidence_root: Path, source_root: Path) -> dic
     for name, spec in wanted.items():
         fields = (*CASE_METADATA, *(k for k in OPTIONAL_CASE_METADATA if k in spec))
         require(same(cases[name], {k: spec[k] for k in fields}), 'case binding differs: ' + name)
-    verify_bindings(profile, capture, commands, cases, pins)
+    app_observations = verify_bindings(profile, capture, commands, cases, pins)
     checks = verify_checks(profile, capture, commands, pins)
     pins.recheck()
-    return {'capture': capture, 'commands': commands, 'checks': checks, 'verifiedFiles': len(pins.pins),
+    return {'capture': capture, 'commands': commands, 'checks': checks, 'appObservations': app_observations,
+            'verifiedFiles': len(pins.pins),
             'sourceManifestSHA256': profile['sourceManifestSHA256']}
 
 

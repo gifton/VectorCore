@@ -27,9 +27,10 @@
 public struct VectorCoreVersion {
     /// Current version string of VectorCore.
     ///
-    /// This matches the package's release tag (SwiftPM versions are git tags;
-    /// Package.swift carries no version field).
-    public static let version = "0.4.0-alpha.1"
+    /// Intended release version. Release admission must verify the selected tag
+    /// against this value; SwiftPM versions are git tags, and Package.swift
+    /// carries no version field.
+    public static let version = "0.4.0"
 
     /// Major version number.
     ///
@@ -50,7 +51,7 @@ public struct VectorCoreVersion {
     ///
     /// Examples: "alpha", "beta.1", "rc.2"
     /// nil for stable releases.
-    public static let prerelease: String? = "alpha.1"
+    public static let prerelease: String? = nil
 
     /// Build metadata.
     ///

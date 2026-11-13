@@ -1,0 +1,206 @@
+name: Compiler qualification (reviewed Xcode 27.2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Collect unqualified evidence, or verify a reviewed retained bundle
+        type: choice
+        options: [collect, verify]
+        default: collect
+        required: true
+      candidate_commit:
+        description: Full 40-character immutable candidate commit
+        type: string
+        required: true
+      evidence_run_id:
+        description: Prior collect run ID (verify only)
+        type: string
+      native_profile:
+        description: Tracked reviewed native profile path in the workflow revision (verify only)
+        type: string
+      simulator_profile:
+        description: Tracked reviewed simulator profile path in the workflow revision (verify only)
+        type: string
+      simulator_runtime:
+        description: Explicit installed runtime identifier (collect only; later profile review required)
+        type: string
+        default: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+  VECTORCORE_TEST_EXTENDED: '0'
+  VECTORCORE_STRICT_PERF: '0'
+  CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
+  EVIDENCE_RUN_ID: ${{ inputs.evidence_run_id }}
+  QUALIFICATION_MODE: ${{ inputs.mode }}
+
+jobs:
+  native:
+    name: native reviewed qualification
+    runs-on: xcode-27
+    timeout-minutes: 180
+    env:
+      REVIEWED_PROFILE: ${{ inputs.native_profile }}
+      SIMULATOR_RUNTIME: ${{ inputs.simulator_runtime }}
+    steps:
+      - name: Check out policy and verifier
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: policy
+          persist-credentials: false
+      - name: Validate dispatch mode
+        run: |
+          case "$QUALIFICATION_MODE" in
+            collect|verify) ;;
+            *) exit 1 ;;
+          esac
+      - name: Check out immutable candidate
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          path: candidate
+          persist-credentials: false
+      - name: Collect unqualified evidence
+        if: inputs.mode == 'collect'
+        run: >-
+          python3 -B policy/Scripts/ci/hosted_qualification.py collect
+          --platform native --source-root "$GITHUB_WORKSPACE/candidate" --policy-root "$GITHUB_WORKSPACE/policy" --candidate-commit "$CANDIDATE_COMMIT" --policy-commit "$GITHUB_SHA" --repository "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID"
+          --simulator-runtime "$SIMULATOR_RUNTIME" --output "$RUNNER_TEMP/native-evidence"
+      - name: Archive raw evidence
+        if: always() && inputs.mode == 'collect'
+        run: >-
+          python3 -B policy/Scripts/ci/hosted_qualification.py bundle
+          --output "$RUNNER_TEMP/native-evidence" --upload "$RUNNER_TEMP/native-upload"
+      - name: Retain unqualified evidence
+        if: always() && inputs.mode == 'collect'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: native-evidence
+          path: ${{ runner.temp }}/native-upload/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Download the exact retained run
+        if: inputs.mode == 'verify'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          case "$EVIDENCE_RUN_ID" in
+            ''|*[!0-9]*) exit 1 ;;
+          esac
+          gh run download "$EVIDENCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name native-evidence --dir "$RUNNER_TEMP/native-download"
+      - name: Verify reviewed evidence
+        if: inputs.mode == 'verify'
+        run: >-
+          python3 -B policy/Scripts/ci/hosted_qualification.py verify
+          --platform native --source-root "$GITHUB_WORKSPACE/candidate" --policy-root "$GITHUB_WORKSPACE/policy" --candidate-commit "$CANDIDATE_COMMIT" --policy-commit "$GITHUB_SHA" --repository "$GITHUB_REPOSITORY" --run-id "$EVIDENCE_RUN_ID" --profile "$REVIEWED_PROFILE"
+          --archive "$RUNNER_TEMP/native-download/evidence.tar.gz" --output "$RUNNER_TEMP/native-verified"
+      - name: Retain verification report
+        if: always() && inputs.mode == 'verify'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: native-reviewed-report
+          path: ${{ runner.temp }}/native-verified/verification.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Collection is not qualification
+        if: always() && inputs.mode == 'collect'
+        run: |
+          echo 'Evidence collected for review; qualification=unassessed; releaseAdmitted=false'
+          exit 1
+
+  ios-simulator:
+    name: ios-simulator reviewed qualification
+    runs-on: xcode-27
+    timeout-minutes: 180
+    env:
+      REVIEWED_PROFILE: ${{ inputs.simulator_profile }}
+      SIMULATOR_RUNTIME: ${{ inputs.simulator_runtime }}
+    steps:
+      - name: Check out policy and verifier
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: policy
+          persist-credentials: false
+      - name: Validate dispatch mode
+        run: |
+          case "$QUALIFICATION_MODE" in
+            collect|verify) ;;
+            *) exit 1 ;;
+          esac
+      - name: Check out immutable candidate
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          path: candidate
+          persist-credentials: false
+      - name: Collect unqualified evidence
+        if: inputs.mode == 'collect'
+        run: >-
+          python3 -B policy/Scripts/ci/hosted_qualification.py collect
+          --platform ios-simulator --source-root "$GITHUB_WORKSPACE/candidate" --policy-root "$GITHUB_WORKSPACE/policy" --candidate-commit "$CANDIDATE_COMMIT" --policy-commit "$GITHUB_SHA" --repository "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID"
+          --simulator-runtime "$SIMULATOR_RUNTIME" --output "$RUNNER_TEMP/ios-simulator-evidence"
+      - name: Archive raw evidence
+        if: always() && inputs.mode == 'collect'
+        run: >-
+          python3 -B policy/Scripts/ci/hosted_qualification.py bundle
+          --output "$RUNNER_TEMP/ios-simulator-evidence" --upload "$RUNNER_TEMP/ios-simulator-upload"
+      - name: Retain unqualified evidence
+        if: always() && inputs.mode == 'collect'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ios-simulator-evidence
+          path: ${{ runner.temp }}/ios-simulator-upload/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Download the exact retained run
+        if: inputs.mode == 'verify'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          case "$EVIDENCE_RUN_ID" in
+            ''|*[!0-9]*) exit 1 ;;
+          esac
+          gh run download "$EVIDENCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name ios-simulator-evidence --dir "$RUNNER_TEMP/ios-simulator-download"
+      - name: Verify reviewed evidence
+        if: inputs.mode == 'verify'
+        run: >-
+          python3 -B policy/Scripts/ci/hosted_qualification.py verify
+          --platform ios-simulator --source-root "$GITHUB_WORKSPACE/candidate" --policy-root "$GITHUB_WORKSPACE/policy" --candidate-commit "$CANDIDATE_COMMIT" --policy-commit "$GITHUB_SHA" --repository "$GITHUB_REPOSITORY" --run-id "$EVIDENCE_RUN_ID" --profile "$REVIEWED_PROFILE"
+          --archive "$RUNNER_TEMP/ios-simulator-download/evidence.tar.gz" --output "$RUNNER_TEMP/ios-simulator-verified"
+      - name: Retain verification report
+        if: always() && inputs.mode == 'verify'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ios-simulator-reviewed-report
+          path: ${{ runner.temp }}/ios-simulator-verified/verification.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Collection is not qualification
+        if: always() && inputs.mode == 'collect'
+        run: |
+          echo 'Evidence collected for review; qualification=unassessed; releaseAdmitted=false'
+          exit 1
+
+  qualification-required:
+    name: Compiler qualification required
+    if: always()
+    needs: [native, ios-simulator]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: policy
+          persist-credentials: false
+      - name: Require both reviewed scopes
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 policy/Scripts/ci/check_required.py native ios-simulator

@@ -10,6 +10,7 @@ Scope: Scripts/ and .github/ text files (py, swift, rb, sh, yml, json). This is 
 heuristic. Allowlist entries need a justification; the allowlist is checked for staleness.
 """
 import re
+import json
 import unittest
 from pathlib import Path
 
@@ -27,6 +28,10 @@ PATTERNS = [
 
 # Paths (relative to the repository root, '/' separated) allowed to contain such literals, with the reason.
 ALLOWLIST = {
+    'Scripts/ci/qualification_profiles/macos-27.0.1-arm64-alpha-2026-11-10.json': 'reviewed immutable native receipts, not product discovery',
+    'Scripts/ci/qualification_profiles/ios-simulator-27.0-arm64-alpha-2026-11-11.json': 'reviewed immutable simulator receipts, not product discovery',
+    'Scripts/ci/qualification_profiles/macos-27.0.1-arm64-0.4.0-2026-11-12.json': 'reviewed frozen-candidate native receipts, not product discovery',
+    'Scripts/ci/qualification_profiles/ios-simulator-27.0-arm64-0.4.0-2026-11-12.json': 'reviewed frozen-candidate simulator receipts, not product discovery',
     'Scripts/ci/swiftpm_products.py': 'the single place that knows both layouts',
     'Scripts/ci/bounded_native_qualification.py': 'candidate-pinned retained native evidence validation, not product discovery; '
                                                     'rejects a different layout rather than selecting build products',
@@ -64,6 +69,27 @@ def scan(root, allowlist=ALLOWLIST):
 
 
 class NativeLayoutLiteralTests(unittest.TestCase):
+    def test_reviewed_profile_exemptions_are_exact_data_files(self):
+        profiles = {p.relative_to(ROOT).as_posix() for p in (ROOT/'Scripts/ci/qualification_profiles').glob('*.json')
+                    if hits(p.read_text())}
+        self.assertTrue(profiles)
+        self.assertTrue(profiles <= ALLOWLIST.keys(), 'review exact evidence data paths before exemption')
+        for relative in profiles:
+            profile = json.loads((ROOT/relative).read_text())
+            self.assertEqual(profile['policyId'],'vc-0.4.0-xcode27.2-bounded-v1')
+            self.assertTrue(profile['pins'])
+            self.assertEqual(set(profile['captureRoots']), {'source','evidence'})
+
+    def test_profile_exemptions_do_not_hide_unreviewed_data_or_adjacent_tools(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            directory = root/'Scripts/ci/qualification_profiles'
+            directory.mkdir(parents=True)
+            for filename in ('unreviewed.json','discover.py','helper.sh'):
+                (directory/filename).write_text('"VectorCoreC.build/module.modulemap"\n')
+            self.assertEqual(set(scan(root)), {str((directory/f).relative_to(root)) for f in ('unreviewed.json','discover.py','helper.sh')})
+
     def test_repository_has_no_native_layout_literals_outside_the_allowlist(self):
         self.assertEqual(scan(ROOT), {})
 

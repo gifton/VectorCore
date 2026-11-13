@@ -1,0 +1,20 @@
+{
+  "alphaTagUnchanged": "44c9ffaf145a59688f420023b28cdcf87c158070",
+  "approvedCompiledChanges": [
+    "Sources/VectorCore/Version.swift",
+    "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift"
+  ],
+  "compiledTrackedFiles": 389,
+  "dirtyMainPreserved": {
+    "head": "8b02e75bca7055ae11170873d15c06f1538709b7",
+    "indexSHA256": "089588af1415160306dc0e12410cfb60eaaab0c9c88165b03c0096a0ef7e8fd0",
+    "stagedSHA256": "45167fb8a4c9079da5ff2da3d5ac05ed9d8beeead764be7f5ad29372540228a4",
+    "statusSHA256": "d4daa99077fa1624fe30e19c9e1fe8fc677d5c634ddc50e82f84b42c93df719f",
+    "unstagedSHA256": "1abbc2897d4146389a68b90971dd40d58642e91be4b9fe17347b78abc5062579"
+  },
+  "frozenSourceManifestSHA256": "50d4861428d63368c309f0e86bfbf376f68a79df08db96a5b164aaaf37abe830",
+  "protectedFiles": 25,
+  "simulatorDeclaredPerMode": 1993,
+  "simulatorOnlyAlphaDebugToStableDebugDifference": "approved batch timing benchmark: timed out to opt-in skipped",
+  "simulatorOnlyDebugToReleaseDifference": "unchanged lost-store canary: passed to failed"
+}

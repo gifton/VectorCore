@@ -11,9 +11,12 @@ for exact Xcode 27.2 build 27B52, prioritizing macOS and iOS consumers of the
 shipped implementations and assessed by-value buffer patterns. Additional
 descriptor/view inout handoffs through helper/conformer chains remain excluded
 on affected combinations. Compiler failures stay visible; supported numerical
-routes must pass. [Fresh native tooling validation](Docs/reviews/2026-11-10-compiler-acceptance/native-tooling.md)
-now passes for the current alpha compiled inputs, with `compilerProfile=known-failing`
-and `releaseAdmitted=false`. iOS, hosted integration and final stable qualification remain pending.
+routes must pass. [Fresh frozen-candidate qualification](Docs/reviews/2026-11-10-compiler-acceptance/stable-candidate.md)
+now satisfies the bounded local macOS, iOS simulator and physical-iOS scopes
+for `af315c56c52de737f868fd969e6e1f5ae59eaa48`, with version `0.4.0` and
+`prerelease=nil`. All checkers retain `compilerProfile=known-failing` and
+`releaseAdmitted=false`. Independent integrated review, actual hosted runs and
+remaining release gates are still open.
 
 Stable iOS acceptance additionally requires at least one app-hosted Release
 consumer run on a physical iPhone or iPad. Minimum-OS, Intel and other declared
@@ -21,7 +24,11 @@ platform coverage remain open; existing deployment declarations and required CI
 are unchanged. The [implementation plan](Docs/superpowers/plans/2026-11-10-compiler-acceptance.md)
 was approved for native execution on 2026-11-10. No candidate or release is admitted by the policy decision.
 
-## Integration preview: 0.4.0-alpha.1
+## Historical integration preview: 0.4.0-alpha.1
+
+The following sections describe the evidence recorded when the published alpha
+was prepared. Subsequent qualification of the selected stable candidate is
+linked above; changing its version constants has not created a stable tag.
 
 **Status: experimental integration preview.** This snapshot is for fresh
 downstream integration testing. Stable 0.4.0 admission remains open.
@@ -111,5 +118,5 @@ does not establish integration into that application.
 
 All new local artifacts for this effort are grouped under the existing evidence
 root's `integration-preview/` subdirectory. No additional release worktree is
-needed. Implementing the adopted qualification policy, settling remaining
-coverage, and final release admission remain separate work.
+needed. This alpha record remains separate from the frozen stable candidate, remaining
++coverage decisions and final release admission.

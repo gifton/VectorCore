@@ -1,0 +1,62 @@
+{
+  "ios-device": {
+    "compilerProfile": "known-failing",
+    "evidence": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-device-stable-af315c5-private",
+    "policyId": "vc-0.4.0-xcode27.2-bounded-v1",
+    "profile": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-device-stable-af315c5-profile-private.json",
+    "profileSHA256": "a87cbfc6d40bf6c206d67edc5f04430fabc590c0736557efb51acd3ed07aaf4b",
+    "publicProfile": null,
+    "releaseAdmitted": false,
+    "scope": [
+      "Frozen 0.4.0 candidate af315c56c52de737f868fd969e6e1f5ae59eaa48; app-hosted iOS compositions, arm64, Xcode 27.2 27B52.",
+      "Every producer/client combination explicitly listed below; separate Swift witness target; complete by-value, omitted-write and residual/standalone observations.",
+      "App-hosted diagnostics preserve original helper bodies; they do not replace the separately retained native diagnostics.",
+      "Full package suites are retained separately; this profile does not assess those suites, minimum iOS, Intel, other platforms, performance or stable release admission."
+    ],
+    "source": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/source-stable-af315c5",
+    "sourceCommit": "af315c56c52de737f868fd969e6e1f5ae59eaa48",
+    "sourceManifestSHA256": "50d4861428d63368c309f0e86bfbf376f68a79df08db96a5b164aaaf37abe830",
+    "vectorCoreQualification": "accepted",
+    "verifiedFiles": 3607
+  },
+  "ios-simulator": {
+    "compilerProfile": "known-failing",
+    "evidence": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-simulator-stable-af315c5",
+    "policyId": "vc-0.4.0-xcode27.2-bounded-v1",
+    "profile": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-simulator-stable-af315c5-profile.json",
+    "profileSHA256": "143d730936df6eb18374f2aad69c717a120f2f15c9ef58ab7594117979c374e9",
+    "publicProfile": "ios-simulator-27.0-arm64-0.4.0-2026-11-12.json",
+    "releaseAdmitted": false,
+    "scope": [
+      "Frozen 0.4.0 candidate af315c56c52de737f868fd969e6e1f5ae59eaa48; app-hosted iOS compositions, arm64, Xcode 27.2 27B52.",
+      "Every producer/client combination explicitly listed below; separate Swift witness target; complete by-value, omitted-write and residual/standalone observations.",
+      "App-hosted diagnostics preserve original helper bodies; they do not replace the separately retained native diagnostics.",
+      "Full package suites are retained separately; this profile does not assess those suites, minimum iOS, Intel, other platforms, performance or stable release admission."
+    ],
+    "source": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/source-stable-af315c5",
+    "sourceCommit": "af315c56c52de737f868fd969e6e1f5ae59eaa48",
+    "sourceManifestSHA256": "50d4861428d63368c309f0e86bfbf376f68a79df08db96a5b164aaaf37abe830",
+    "vectorCoreQualification": "accepted",
+    "verifiedFiles": 60195
+  },
+  "native": {
+    "compilerProfile": "known-failing",
+    "evidence": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/native-stable-af315c5",
+    "policyId": "vc-0.4.0-xcode27.2-bounded-v1",
+    "profile": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/native-stable-af315c5-profile.json",
+    "profileSHA256": "14d19cf868b6c6a2c809e511fe2493a0acd487e6d5d442b463970441c9855a7f",
+    "publicProfile": "macos-27.0.1-arm64-0.4.0-2026-11-12.json",
+    "releaseAdmitted": false,
+    "scope": [
+      "Frozen 0.4.0 candidate af315c56c52de737f868fd969e6e1f5ae59eaa48; macOS 27.0.1 (26A434), arm64, Xcode 27.2 27B52.",
+      "Native Debug/Release producers and Debug/Release clients; 24-row by-value consumer, separate witness and omitted-write controls.",
+      "Unfiltered normally enabled native suites, original/residual compiler diagnostics, migration contracts and separately bound C-on/off routes.",
+      "This scope does not assess physical iOS, simulator, minimum-OS, Intel, alternate-architecture, performance or final release admission."
+    ],
+    "source": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/source-stable-af315c5",
+    "sourceCommit": "af315c56c52de737f868fd969e6e1f5ae59eaa48",
+    "sourceManifestSHA256": "50d4861428d63368c309f0e86bfbf376f68a79df08db96a5b164aaaf37abe830",
+    "vectorCoreQualification": "accepted",
+    "verifiedFiles": 2520
+  }
+}

@@ -33191,6 +33191,33 @@
     "originalFingerprint": null,
     "origin": "0.4.0-alpha.1 exact-version integration instructions, 2026-11-07"
    }
+  },
+  {
+   "id": "COMPILER-ACCEPTANCE-C-0001",
+   "path": "README.md",
+   "symbol": "section VectorCore::section Requirements and compatibility",
+   "fingerprint": "e4e2d5ecad0fce86",
+   "statement": "for the selected 0.4.0 candidate, read the [xcode 27.2 build 27b52 support restrictions](docs/reviews/2026-11-10-compiler-acceptance/decision.md). this compiler can silently produce wrong values for valid swift descriptor-inout compositions. additional inout handoffs of borrowed buffer descriptors/views or pointer-bearing wrappers remain excluded, transitively through helper and conformer chains. the restriction is not a complete proof against miscompilation. see the [current release status](release_status.md) for assessed routes/runtimes and the remaining admission gates; the selected candidate is not a published stable release.",
+   "kind": "markdown",
+   "lineHint": 162,
+   "category": "measurement-boundary",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "dated-artifact",
+    "reference": {
+     "path": "Docs/reviews/2026-11-10-compiler-acceptance/decision.md",
+     "sha256": "7fe0964cdc6d425a63a326f68379d26ddd78c2b6732e99bb44143d8f2485580c",
+     "date": "2026-11-10"
+    },
+    "domain": "The adopted exact Xcode 27.2 build 27B52 policy: valid-Swift descriptor-inout miscompilation, transitive borrowed-descriptor/view/pointer-wrapper restriction and explicitly incomplete support boundary.",
+    "limitations": "This paragraph states the support restriction and links current status; it does not claim every route or a released candidate is accepted. The adopted policy preserves release-admission gates. Its evidence references retain the original miscompilations; per-candidate results are recorded separately."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "Compiler acceptance implementation review, 2026-11-12"
+   }
   }
  ],
  "bodyPinDescribers": [

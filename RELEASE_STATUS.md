@@ -15,8 +15,8 @@ routes must pass. [Fresh frozen-candidate qualification](Docs/reviews/2026-11-10
 now satisfies the bounded local macOS, iOS simulator and physical-iOS scopes
 for `af315c56c52de737f868fd969e6e1f5ae59eaa48`, with version `0.4.0` and
 `prerelease=nil`. All checkers retain `compilerProfile=known-failing` and
-`releaseAdmitted=false`. Independent integrated review, actual hosted runs and
-remaining release gates are still open.
+`releaseAdmitted=false`. [Independent review and the tested verifier fixes](Docs/reviews/2026-11-10-compiler-acceptance/implementation-review.md)
+are recorded. Actual hosted runs and remaining release gates are still open.
 
 Stable iOS acceptance additionally requires at least one app-hosted Release
 consumer run on a physical iPhone or iPad. Minimum-OS, Intel and other declared

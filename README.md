@@ -159,6 +159,15 @@ consumer to follow those contracts. See
 The manifest requires Swift tools 6.0 and declares these minimum deployment
 targets: macOS 14, iOS 17, tvOS 17, and visionOS 1. watchOS is not supported.
 
+For the selected 0.4.0 candidate, read the [Xcode 27.2 build 27B52 support
+restrictions](Docs/reviews/2026-11-10-compiler-acceptance/decision.md). This compiler can
+silently produce wrong values for valid Swift descriptor-inout compositions.
+Additional inout handoffs of borrowed buffer descriptors/views or pointer-bearing
+wrappers remain excluded, transitively through helper and conformer chains.
+The restriction is not a complete proof against miscompilation. See the
+[current release status](RELEASE_STATUS.md) for assessed routes/runtimes and the
+remaining admission gates; the selected candidate is not a published stable release.
+
 Deployment targets are distinct from tested configurations. The
 [November 4 qualification record](Docs/reviews/2026-11-04-release-qualification/README.md)
 records full hosted Debug/Release suites with Xcode 16.2 and 26.3, selected

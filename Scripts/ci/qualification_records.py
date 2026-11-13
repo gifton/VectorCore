@@ -118,6 +118,7 @@ def verify_sources(profile, capture, pins):
         require(directory.is_dir(), 'missing compiled input root: ' + folder)
         actual.update(str(p.relative_to(root)) for p in directory.rglob('*') if p.is_file())
     require(actual == set(sources), 'compiled source inventory differs')
+    bindings = {}
     for name, digest in sources.items():
         relative = Path(name)
         require(not relative.is_absolute() and '..' not in relative.parts, 'invalid source path')
@@ -127,6 +128,8 @@ def verify_sources(profile, capture, pins):
         # Source pins join the same first-registration-wins registry.
         require(source not in pins.pins or pins.pins[source] == digest, 'conflicting source digest')
         pins.pins.setdefault(source, digest)
+        bindings[name] = source
+    return bindings
 
 
 def verify_command(expected, receipt, pins):
@@ -160,7 +163,29 @@ def option(argv, flag):
     return argv[argv.index(flag) + 1]
 
 
+def verify_swift_tool(argv, role, profile, pins, environment=None):
+    """Bind a Swift role to the selected frontend's adjacent pinned driver.
+
+    QualificationReviewRegressions exercises repinned mixed-tool receipts for
+    native producers, consumers, witnesses and every C build/link cell.
+    """
+    require(role in ('swift', 'swiftc') and Path(argv[0]).name == role, 'Swift compiler role differs')
+    environment = environment or {}
+    tool = Path(argv[0])
+    if not tool.is_absolute():
+        tool = Path(environment.get('PATH', '').split(':')[0]) / tool
+    require(tool.is_absolute(), 'unresolved Swift compiler path')
+    frontend = profile['identityFiles']['frontendSHA256']
+    expected_driver = str(Path(frontend).with_name(role))
+    require(pins.checked(str(tool)) == pins.checked(expected_driver)
+            and pins.resolve(str(tool.with_name('swift-frontend'))) == pins.resolve(frontend),
+            'Swift driver/frontend binding differs')
+    if role == 'swift' and 'SWIFT_EXEC' in environment:
+        verify_swift_tool([environment['SWIFT_EXEC']], 'swiftc', profile, pins, environment)
+
+
 def compile_flags(argv, mode, identity, profile, pins):
+    verify_swift_tool(argv, 'swiftc', profile, pins)
     require(option(argv, '-swift-version') == identity['swiftVersion'], 'language mode differs')
     require(option(argv, '-target') == identity['target'], 'target differs')
     require(pins.resolve(option(argv, '-sdk')) == pins.resolve(profile['identityFiles']['sdkSettingsSHA256']).parent,
@@ -188,6 +213,9 @@ def verify_bindings(profile, capture, commands, cases, pins):
             require(type(paths) is list and bool(paths) == (kind == 'library'), 'producer ' + key + ' inventory')
             resolved = [pins.checked(path) for path in paths]
             require(len(resolved) == len(set(resolved)), 'duplicate producer ' + key)
+        if 'buildCommand' in producer:
+            build = commands[producer['buildCommand']]['record']
+            verify_swift_tool(build['argv'], 'swift', profile, pins, build['environment'])
     for case in cases.values():
         require(case['producer'] in producers and case['client'] in ('debug', 'release'), 'unknown configuration')
         producer = producers[case['producer']]
@@ -253,7 +281,7 @@ def verify_capture(profile: dict, evidence_root: Path, source_root: Path) -> dic
     require(set(profile['identityFiles']) == {'frontendSHA256', 'sdkSettingsSHA256'}, 'identity file inventory')
     for field, path in profile['identityFiles'].items():
         require(sha(pins.checked(path)) == identity[field], 'identity file differs: ' + field)
-    verify_sources(profile, capture, pins)
+    source_bindings = verify_sources(profile, capture, pins)
     require(type(capture['commands']) is dict and bool(capture['commands'])
             and set(capture['commands']) == set(profile['commands']), 'command inventory differs')
     commands = {}
@@ -270,6 +298,7 @@ def verify_capture(profile: dict, evidence_root: Path, source_root: Path) -> dic
     app_observations = verify_bindings(profile, capture, commands, cases, pins)
     checks = verify_checks(profile, capture, commands, pins)
     pins.recheck()
+    require(verify_sources(profile, capture, pins) == source_bindings, 'logical source bindings changed')
     return {'capture': capture, 'commands': commands, 'checks': checks, 'appObservations': app_observations,
             'verifiedFiles': len(pins.pins),
             'sourceManifestSHA256': profile['sourceManifestSHA256']}
@@ -303,12 +332,12 @@ def verify_checks(profile, capture, commands, pins):
             compile_flags(command['record']['argv'], spec['client'], capture['identity'], profile, pins)
         else:
             require(command['record']['exit'] == 0, 'C matrix driver failed')
-            result['cells'] = verify_c_build_modes(spec, pins, capture['identity'])
+            result['cells'] = verify_c_build_modes(spec, pins, capture['identity'], profile)
         results.append(result)
     return results
 
 
-def verify_c_build_modes(spec, pins, identity):
+def verify_c_build_modes(spec, pins, identity, profile):
     from native_qualification import assess_routes, route_link_binding
     result = pins.json(spec['result'])
     require(result['schemaVersion'] == 1 and result['marker'] == 'V02_BUILD_MODES_COMPLETE', 'C matrix incomplete')
@@ -357,6 +386,7 @@ def verify_c_build_modes(spec, pins, identity):
             digest(artifact['buildPath'], artifact['sha256'])
             digest(artifact['retainedPath'], artifact['sha256'])
         build, _ = receipt(directory, 'build', 0)
+        verify_swift_tool(build['argv'], 'swift', profile, pins, build['environment'])
         require(build['argv'][1] == 'build' and option(build['argv'], '-c') == mode
                 and ('-DVC_USE_C_KERNELS' in build['argv']) == enabled, 'C producer configuration differs')
         provenance = pins.json(row['linkProvenance'])
@@ -367,6 +397,7 @@ def verify_c_build_modes(spec, pins, identity):
             digest(item['path'], item['sha256'])
         require(row['consumerSHA256'] == provenance['consumer']['sha256'], 'C consumer identity differs')
         link, _ = receipt(directory, 'link-public-routes', 0)
+        verify_swift_tool(link['argv'], 'swiftc', profile, pins, link['environment'])
         executed, streams = receipt(directory, 'public-routes', 0)
         route_link_binding(link, executed, provenance, mode, enabled)
         assess_routes(streams['stdout'], enabled)

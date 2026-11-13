@@ -3,8 +3,9 @@
 The retained local native, simulator-app and physical-iOS evidence satisfies
 the adopted bounded compiler policy for candidate `af315c56c52de737f868fd969e6e1f5ae59eaa48`. Every checker
 reports **accepted / known-failing / releaseAdmitted=false**. The full simulator
-package suites were reconciled separately. Independent integrated review and
-actual hosted qualification remain pending; this is not final release admission.
+package suites were reconciled separately. Independent review and the tested fix pass are recorded in
+[implementation-review.md](implementation-review.md). Actual hosted
+qualification remains pending; this is not final release admission.
 
 ## Frozen inputs
 
@@ -98,5 +99,6 @@ The published alpha tag remains at `44c9ffaf145a59688f420023b28cdcf87c158070`.
 - The consumer application's repository has not been supplied. These results
   establish the named independent consumer compositions, not integration into
   an unidentified application or arbitrary external helpers/conformers.
-- Independent integrated review is the next local gate. No `v0.4.0` tag or
+- Independent review findings were addressed in a tested verifier fix pass.
+  The corrected verifier accepts the unchanged archives. No `v0.4.0` tag or
   stable release has been created.

@@ -138,7 +138,7 @@ def verify_ios_case(case, producer, identity, profile, commands, pins):
     IOSBindingTests exercises this through the shared compiler checker with
     repinned SDK/target/mode, object, import, adapter and result substitutions.
     """
-    from qualification_records import option, sha
+    from qualification_records import option, sha, verify_swift_tool
     app = case['app']
     require(app['kind'] == 'xcode-app', 'unknown app binding')
     destination = destination_config(app['destination'])
@@ -162,8 +162,7 @@ def verify_ios_case(case, producer, identity, profile, commands, pins):
             and option(args, '--triple') == identity['target']
             and pins.resolve(option(args, '--sdk')) == pins.resolve(identity['sdk']), 'iOS producer build differs')
     require(not any(arg in args for arg in ('-Xswiftc', '-Xcc', '-Xlinker', '--skip-build')), 'producer flag override')
-    require(pins.resolve(str(Path(args[0]).with_name('swift-frontend')))
-            == pins.resolve(profile['identityFiles']['frontendSHA256']), 'producer compiler differs')
+    verify_swift_tool(args, 'swift', profile, pins, producer_record['environment'])
     build = commands[case['compileCommand']]
     args = build['record']['argv']
     require(option(args, '-configuration') == case['client'].title()
@@ -173,9 +172,7 @@ def verify_ios_case(case, producer, identity, profile, commands, pins):
     built = xcode_commands(build['text'])
     emitted_objects = {}
     for name, argv in built['swift'].items():
-        pins.checked(argv[0])
-        require(pins.resolve(str(Path(argv[0]).with_name('swift-frontend')))
-                == pins.resolve(profile['identityFiles']['frontendSHA256']), 'app compiler differs')
+        verify_swift_tool(argv, 'swiftc', profile, pins)
         verify_xcode_swift_flags(argv, case['client'], identity)
         defines = []
         for index, value in enumerate(argv):

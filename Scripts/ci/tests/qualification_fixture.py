@@ -26,8 +26,12 @@ class CaptureFixture:
             (self.source / name).mkdir()
         (self.source / 'Package.swift').write_text('// fixture package\n')
         (self.source / 'Sources/Library.swift').write_text('let fixture: Int = 1\n')
-        self.compiler = self.evidence / 'compiler'
+        self.compiler = self.evidence / 'swiftc'
         self.compiler.write_text('synthetic compiler identity; never executed\n')
+        self.frontend = self.evidence / 'swift-frontend'
+        self.frontend.write_bytes(self.compiler.read_bytes())
+        self.swift = self.evidence / 'swift'
+        self.swift.write_bytes(self.compiler.read_bytes())
         self.binary = self.evidence / 'consumer'
         self.binary.write_text('synthetic consumer identity; never executed\n')
         self.object = self.evidence / 'Library.o'
@@ -40,7 +44,7 @@ class CaptureFixture:
         write_json(self.manifest, {str(p.relative_to(self.source)): sha(p)
                                   for p in self.source.rglob('*') if p.is_file()})
         self.identity = {'xcodeBuild': '27B52', 'compilerVersion': '6.4.2',
-                         'frontendSHA256': sha(self.compiler), 'sdkSettingsSHA256': sha(self.sdk),
+                         'frontendSHA256': sha(self.frontend), 'sdkSettingsSHA256': sha(self.sdk),
                          'platform': 'macos', 'architecture': 'arm64',
                          'target': 'arm64-apple-macosx14.0', 'swiftVersion': '6',
                          'runtime': {'version': '27.0.1', 'build': '26A434'}}
@@ -71,7 +75,7 @@ class CaptureFixture:
                         'scope': ['synthetic fixture: macos/arm64/release'],
                         'commands': self.commands, 'cases': self.case_specs,
                         'producers': copy.deepcopy(self.capture['producers']),
-                        'identityFiles': {'frontendSHA256': str(self.compiler),
+                        'identityFiles': {'frontendSHA256': str(self.frontend),
                                           'sdkSettingsSHA256': str(self.sdk)},
                         'pins': {}}
         self.save(repin=True)

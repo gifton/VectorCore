@@ -228,7 +228,7 @@ class QualificationRecordTests(unittest.TestCase):
         for cells in ([], [cell], [cell] * 4):
             pins = Data({'schemaVersion': 1, 'marker': 'V02_BUILD_MODES_COMPLETE', 'cells': cells})
             with self.subTest(cells=cells), self.assertRaises(ValueError):
-                self.records.verify_c_build_modes({'result': '/evidence/result.json'}, pins, {})
+                self.records.verify_c_build_modes({'result': '/evidence/result.json'}, pins, {}, {})
 
 
 if __name__ == '__main__':

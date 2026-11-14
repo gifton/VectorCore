@@ -1,0 +1,45 @@
+name: Compiler qualification (reviewed Xcode 27.2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Collect unqualified evidence, or verify a reviewed retained bundle
+        type: choice
+        options: [collect, verify]
+        default: collect
+        required: true
+      candidate_commit:
+        description: Full 40-character immutable candidate commit
+        type: string
+        required: true
+      evidence_run_id:
+        description: Prior collect run ID (verify only)
+        type: string
+      native_profile:
+        description: Tracked reviewed native profile path in the workflow revision (verify only)
+        type: string
+      simulator_profile:
+        description: Tracked reviewed simulator profile path in the workflow revision (verify only)
+        type: string
+      simulator_runtime:
+        description: Explicit installed runtime identifier (collect only; later profile review required)
+        type: string
+        default: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+
+permissions:
+  contents: read
+
+# Register the workflow for manual dispatch from the reviewed policy branch.
+# The default-branch placeholder cannot collect or accept qualification evidence.
+jobs:
+  registration-only:
+    name: Registration only — select the reviewed policy branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Refuse qualification on this placeholder revision
+        run: |
+          echo '::error::This revision only registers the workflow. Dispatch the separately reviewed policy branch for qualification.'
+          echo 'vectorCoreQualification=unassessed; releaseAdmitted=false'
+          exit 1

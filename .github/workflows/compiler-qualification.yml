@@ -1,4 +1,4 @@
-name: Compiler toolchain inventory (unqualified)
+name: Compiler byte inventory (unqualified)
 
 on:
   workflow_dispatch:
@@ -40,7 +40,7 @@ env:
 
 jobs:
   inventory:
-    name: Compiler identity metadata only
+    name: Compiler identity and byte-region metadata only
     runs-on: xcode-27
     timeout-minutes: 10
     steps:
@@ -57,12 +57,17 @@ jobs:
           python3 -B diagnostic/Scripts/ci/inspect_hosted_toolchain.py
           --developer-dir "$DEVELOPER_DIR" --candidate-commit "$CANDIDATE_COMMIT"
           --output "$RUNNER_TEMP/toolchain-inventory"
+      - name: Record compiler byte-region metadata
+        run: >-
+          python3 -B diagnostic/Scripts/ci/inspect_compiler_bytes.py
+          --developer-dir "$DEVELOPER_DIR" --candidate-commit "$CANDIDATE_COMMIT"
+          --output "$RUNNER_TEMP/toolchain-inventory/byte-inventory.json"
       - name: Retain metadata
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: compiler-toolchain-inventory
-          path: ${{ runner.temp }}/toolchain-inventory/inventory.json
+          name: compiler-byte-inventory
+          path: ${{ runner.temp }}/toolchain-inventory/*.json
           if-no-files-found: error
           retention-days: 30
       - name: Inventory cannot qualify a compiler or release

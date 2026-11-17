@@ -19,6 +19,7 @@ class QualificationReviewRegressions(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.f=CaptureFixture(self.tmp.name)
+        self.enterContext(self.f.compiler_policy())
 
     def check(self):
         return checker.check(self.f.profile_path,self.f.evidence,self.f.source)
@@ -98,6 +99,7 @@ class QualificationReviewRegressions(unittest.TestCase):
         for target in ('QualificationHost','BufferValueWitness'):
             with tempfile.TemporaryDirectory() as name, self.subTest(target=target):
                 f=IOSCaptureFixture(name)
+                self.enterContext(f.compiler_policy())
                 check=lambda:checker.check(f.profile_path,f.evidence,f.source)
                 self.assertEqual(check()['vectorCoreQualification'],'accepted')
                 f.swift_commands[target][0]=f.tool['clang']

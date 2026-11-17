@@ -446,6 +446,7 @@ def collect_ios(source_root: Path, developer_dir: Path, destination: str, output
         after = source_manifest(collector.source)
         write_json(output / 'source-inputs-after.json', after)
         require(before == after, 'compiled source inputs changed during collection')
+        collector.recheck_compiler()
         artifacts = {str(p) for p in output.rglob('*') if p.is_file()
                      and 'ModuleCache.noindex' not in p.parts and 'module-cache' not in p.parts}
         for receipt in capture['commands'].values():
@@ -453,7 +454,8 @@ def collect_ios(source_root: Path, developer_dir: Path, destination: str, output
         artifacts.update(str(p) for p in (collector.source / 'Scripts/ci').rglob('*')
                          if p.is_file() and '__pycache__' not in p.parts)
         artifacts.update(str(collector.source / p) for _, p, _, _ in PROBES)
-        artifacts.update((str(swiftc.with_name('swift-frontend')), str(sdk.resolve() / 'SDKSettings.json')))
+        artifacts.update((str(swiftc.with_name('swift-frontend')), str(swiftc.with_name('swift-driver')),
+                          str(sdk.resolve() / 'SDKSettings.json')))
         artifacts.update(build_tools)
         artifacts.discard(str(output / 'capture.json'))
         capture['artifactFiles'] = sorted(artifacts)
@@ -473,10 +475,12 @@ def merge_cells(cells, manifest_digests):
     require(set(cells) == expected and set(manifest_digests) == expected, 'incomplete iOS matrix')
     require(len(set(manifest_digests.values())) == 1, 'matrix compiled source inputs differ')
     first = cells['debug-debug']
-    require(all(c['collectionComplete'] is True and same(c['identity'], first['identity'])
+    require(type(first['schemaVersion']) is int and first['schemaVersion'] in (1, 2), 'unsupported matrix schema')
+    require(all(type(c['schemaVersion']) is int and c['schemaVersion'] == first['schemaVersion']
+                and c['collectionComplete'] is True and same(c['identity'], first['identity'])
                 and c['sourceCommit'] == first['sourceCommit'] for c in cells.values()), 'matrix identities differ')
     require(len({c['invocationId'] for c in cells.values()}) == 4, 'reused matrix capture')
-    merged = {'schemaVersion': 1, 'invocationId': new_invocation(), 'collectionComplete': True,
+    merged = {'schemaVersion': first['schemaVersion'], 'invocationId': new_invocation(), 'collectionComplete': True,
         'identity': copy.deepcopy(first['identity']), 'sourceCommit': first['sourceCommit'],
         'sourceManifest': first['sourceManifest'], 'commands': {}, 'producers': {}, 'cases': [],
         'checks': [], 'artifactFiles': sorted({path for c in cells.values() for path in c['artifactFiles']})}

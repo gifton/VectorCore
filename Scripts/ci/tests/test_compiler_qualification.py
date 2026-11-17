@@ -17,6 +17,7 @@ class CompilerQualificationTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.fixture = CaptureFixture(self.tmp.name)
+        self.enterContext(self.fixture.compiler_policy())
         self.assertIsNotNone(importlib.util.find_spec('compiler_qualification'),
                              'scoped qualification assessment is not implemented')
         self.qualifier = importlib.import_module('compiler_qualification')
@@ -152,7 +153,15 @@ class CompilerQualificationTests(unittest.TestCase):
     def test_cli_output_is_exclusive_and_incomplete_input_returns_nonzero(self):
         f = self.fixture
         output = f.root / 'result.json'
-        command = [sys.executable, '-B', str(Path(self.qualifier.__file__)),
+        # The child interpreter gets the same explicitly reviewed synthetic catalog.
+        script = Path(self.qualifier.__file__)
+        bootstrap = ('import runpy, sys\n'
+                     f'sys.path.insert(0, {str(script.parent)!r})\n'
+                     'import compiler_identity\n'
+                     f'compiler_identity.LEGACY_FRONTEND_SHA256 = {f.reviewed_frontend!r}\n'
+                     f'compiler_identity.REVIEWED_PAIRS = frozenset({[(f.reviewed_frontend,f.reviewed_driver)]!r})\n'
+                     f'runpy.run_path({str(script)!r}, run_name="__main__")\n')
+        command = [sys.executable, '-B', '-c', bootstrap,
                    '--profile', str(f.profile_path), '--evidence-root', str(f.evidence),
                    '--source-root', str(f.source), '--output', str(output)]
         p = subprocess.run(command, capture_output=True, text=True, timeout=15)

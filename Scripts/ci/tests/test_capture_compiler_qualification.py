@@ -29,6 +29,8 @@ class NativeCollectionTests(unittest.TestCase):
         self.swiftc.parent.mkdir()
         self.swiftc.write_text('compiler fixture')
         self.swiftc.with_name('swift-frontend').write_text('frontend fixture')
+        self.swiftc.with_name('swift').write_text('frontend fixture')
+        self.swiftc.with_name('swift-driver').write_text('driver fixture')
         self.sdk = self.root / 'sdk'
         self.sdk.mkdir()
         (self.sdk / 'SDKSettings.json').write_text('{}')

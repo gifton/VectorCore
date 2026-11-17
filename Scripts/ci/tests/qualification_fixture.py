@@ -1,10 +1,13 @@
 """Small synthetic captures; expected observations are literal, not collected."""
 from pathlib import Path
+from contextlib import contextmanager
 import copy
 import hashlib
 import json
+from unittest.mock import patch
 
 POLICY = 'vc-0.4.0-xcode27.2-bounded-v1'
+SYNTHETIC_DRIVER = b'synthetic separate Swift driver; never executed\n'
 
 
 def sha(path):
@@ -30,6 +33,8 @@ class CaptureFixture:
         self.compiler.write_text('synthetic compiler identity; never executed\n')
         self.frontend = self.evidence / 'swift-frontend'
         self.frontend.write_bytes(self.compiler.read_bytes())
+        self.reviewed_frontend = sha(self.frontend)
+        self.reviewed_driver = hashlib.sha256(SYNTHETIC_DRIVER).hexdigest()
         self.swift = self.evidence / 'swift'
         self.swift.write_bytes(self.compiler.read_bytes())
         self.binary = self.evidence / 'consumer'
@@ -78,6 +83,25 @@ class CaptureFixture:
                         'identityFiles': {'frontendSHA256': str(self.frontend),
                                           'sdkSettingsSHA256': str(self.sdk)},
                         'pins': {}}
+        self.save(repin=True)
+
+    @contextmanager
+    def compiler_policy(self):
+        """Scope synthetic reviewed identities to tests, frozen before mutations."""
+        import compiler_identity
+        with patch.object(compiler_identity, 'LEGACY_FRONTEND_SHA256', self.reviewed_frontend), \
+             patch.object(compiler_identity, 'REVIEWED_PAIRS',
+                          frozenset({(self.reviewed_frontend, self.reviewed_driver)})):
+            yield
+
+    def as_paired_capture(self):
+        driver = Path(self.profile['identityFiles']['frontendSHA256']).with_name('swift-driver')
+        driver.write_bytes(SYNTHETIC_DRIVER)
+        self.identity['swiftDriverSHA256'] = self.reviewed_driver
+        self.capture['identity'] = copy.deepcopy(self.identity)
+        self.profile['identity'] = copy.deepcopy(self.identity)
+        self.capture['schemaVersion'] = self.profile['schemaVersion'] = 2
+        self.profile['identityFiles']['swiftDriverSHA256'] = str(driver)
         self.save(repin=True)
 
     def add_command(self, name, argv, text, code, *, executable=None):

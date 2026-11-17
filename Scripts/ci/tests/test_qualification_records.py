@@ -17,6 +17,7 @@ class QualificationRecordTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.fixture = CaptureFixture(self.tmp.name)
+        self.enterContext(self.fixture.compiler_policy())
         self.assertIsNotNone(importlib.util.find_spec('qualification_records'),
                              'candidate-bound record verifier is not implemented')
         self.records = importlib.import_module('qualification_records')

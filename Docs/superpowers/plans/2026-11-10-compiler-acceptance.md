@@ -102,3 +102,34 @@ that a future scheduled job retains those binaries.
 The user approved this plan and native execution on 2026-11-10. The adopted
 policy and physical-device requirement remain binding. Implement in this
 session, with an independent review before accepting the integrated result.
+
+## Exact hosted identity addendum — adopted 2026-11-16
+
+The user adopted the exact hosted frontend/driver pair after the retained byte
+comparison reproduced both hosted full-file hashes using signing-record changes
+only. Numerical qualification, support restrictions and release admission remain
+separate. The initial single-frontend preflight is superseded by the two exact
+pairs recorded in the amended decision.
+
+- Add a shared exact-pair gate and Swift entry-point checks. Test both reviewed
+  pairs, mixed pairs, unknown hashes and changed aliases before any build.
+- Fresh schema-2 native/iOS captures record and retain both executable identities;
+  pass the observed frontend pin to unchanged nested probe/consumer drivers and
+  reject identity drift at completion.
+- Verify schema-2 frontend/driver pins and sibling bindings against the reviewed
+  pair catalog. Keep historical schema-1 profiles unchanged and limited to the
+  original local frontend; hosted verification requires schema 2. Synthetic tests
+  use an explicitly scoped fixture catalog, never production acceptance bypasses.
+- Retain observed hosted preflight metadata before a fingerprint rejection so the
+  failed collection can be inspected. Failed preflights still cannot supply a
+  capture or accepted verification result.
+- Record the adopted decision and canonical byte proof; update its README evidence
+  digest. Do not change public numerical bodies, canaries or historical profiles.
+- Run focused gate/qualification tests, all required Python/GitHub policy checks,
+  and verify retained local profiles and dirty-main preservation. Obtain the
+  agreed independent review of this additional integration scope.
+- Select an immutable tooling candidate with tracked Package.swift, Sources, Tests
+  and Benchmarks bytes identical to af315c56c52de737f868fd969e6e1f5ae59eaa48.
+  Preserve the collector's selected-source-root check. Prepare the exact policy
+  ref and candidate for fresh hosted macOS/iOS-simulator collection. Apply the
+  adopted collect → exact profile review → verify process. No release/tag action.

@@ -31,3 +31,17 @@ relabeling them for another candidate.
 
 The separate `bounded_native_qualification.py` and its adjacent profile retain
 their original historical purpose and have not been changed by this mechanism.
+
+Fresh captures and profiles use schema 2. The identity includes
+`swiftDriverSHA256`; `identityFiles` contains exactly the frontend, Swift driver
+and SDK settings paths. The driver must be the pinned sibling of the selected
+frontend, and both whole-file fingerprints must form one adopted pair. Both
+adjacent `swift` and `swiftc` files must also be pinned and have the frontend's
+fingerprint. Their command roles remain separately bound by paths and prior pins.
+
+Historical schema-1 profiles remain unchanged and are limited to the original
+local frontend fingerprint. They retain their original frontend-bound scope;
+they do not make a retrospective claim about a separately captured Swift driver.
+Hosted verification requires schema 2, so a legacy-profile downgrade cannot
+satisfy the new hosted scope. Numerical expectations and review requirements are
+unchanged.

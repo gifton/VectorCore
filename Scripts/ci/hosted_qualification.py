@@ -16,10 +16,10 @@ import subprocess
 import sys
 import tarfile
 
+import compiler_identity
 from qualification_records import read_json, require, sha
 from v03_process import run, test_environment, write_json
 
-FRONTEND = '448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f'
 DEVELOPER = Path('/Applications/Xcode_27.2.app/Contents/Developer')
 
 
@@ -103,10 +103,18 @@ def collect(args):
     checkout_identity(args.policy_root, args.policy_commit)
     require(Path(os.environ.get('DEVELOPER_DIR','')) == DEVELOPER, 'explicit developer directory differs')
     swiftc = DEVELOPER/'Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc'
-    require(sha(swiftc.with_name('swift-frontend')) == FRONTEND, 'frontend fingerprint differs')
-    require(platform.machine() == 'arm64', 'host architecture differs')
     args.output.mkdir(parents=True, exist_ok=False)
     write_json(args.output/'collection.json', meta)
+    preflight = dict(observed=None, problem=None, vectorCoreQualification='unassessed', releaseAdmitted=False)
+    try:
+        preflight['observed'] = compiler_identity.observe_tools(swiftc)
+        compiler_identity.validate_tools(preflight['observed'])
+        require(platform.machine() == 'arm64', 'host architecture differs')
+    except (OSError, ValueError) as error:
+        preflight['problem'] = str(error)
+        raise
+    finally:
+        write_json(args.output/'compiler-preflight.json', preflight)
     env = test_environment()
     # Collection needs no repository token, including when nested tools inherit env.
     for key in ('GH_TOKEN','GITHUB_TOKEN'):
@@ -120,7 +128,7 @@ def collect(args):
     target = args.output/'evidence'
     if args.platform == 'native':
         argv = [sys.executable,'-B',args.source_root/'Scripts/ci/capture_compiler_qualification.py',
-            '--source-root',args.source_root,'--swiftc',swiftc,'--frontend-sha256',FRONTEND,
+            '--source-root',args.source_root,'--swiftc',swiftc,'--frontend-sha256',preflight['observed']['frontendSHA256'],
             '--sdk',DEVELOPER/'Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk',
             '--output',target,'--jobs','4']
         command('collect',argv,7200)
@@ -144,7 +152,13 @@ def collect(args):
             command('shutdown-simulator',['/usr/bin/xcrun','simctl','shutdown',device])
             command('delete-simulator',['/usr/bin/xcrun','simctl','delete',device])
     checkout_identity(args.source_root,args.candidate_commit)
-    require(read_json(target/'capture.json')['collectionComplete'] is True,'collection incomplete')
+    captured = read_json(target/'capture.json')
+    require(captured['collectionComplete'] is True,'collection incomplete')
+    require(type(captured['schemaVersion']) is int and captured['schemaVersion'] == 2,
+            'hosted collection requires paired compiler evidence')
+    require(captured['sourceCommit'] == args.candidate_commit, 'captured source revision differs')
+    require(all(captured['identity'][field] == preflight['observed'][field]
+                for field in ('frontendSHA256','swiftDriverSHA256')), 'captured compiler pair differs from preflight')
     print('collectionComplete=true; qualification=unassessed; releaseAdmitted=false')
 
 
@@ -166,6 +180,8 @@ def verify(args):
     checkout_identity(args.policy_root,args.policy_commit)
     profile = reviewed_profile(args.policy_root,args.profile,args.policy_commit)
     reviewed = read_json(profile)
+    require(type(reviewed.get('schemaVersion')) is int and reviewed['schemaVersion'] == 2,
+            'hosted verification requires a paired compiler identity profile')
     artifact = reviewed.get('reviewedArtifact',{})
     expected = metadata(args)
     # The trusted profile identifies the earlier collection policy revision;

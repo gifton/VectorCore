@@ -33206,8 +33206,8 @@
     "kind": "dated-artifact",
     "reference": {
      "path": "Docs/reviews/2026-11-10-compiler-acceptance/decision.md",
-     "sha256": "7fe0964cdc6d425a63a326f68379d26ddd78c2b6732e99bb44143d8f2485580c",
-     "date": "2026-11-10"
+     "sha256": "7eefbe6117c49a906cf6e4782a0874011b2bf353b2a76d40bba23f024907f776",
+     "date": "2026-11-16"
     },
     "domain": "The adopted exact Xcode 27.2 build 27B52 policy: valid-Swift descriptor-inout miscompilation, transitive borrowed-descriptor/view/pointer-wrapper restriction and explicitly incomplete support boundary.",
     "limitations": "This paragraph states the support restriction and links current status; it does not claim every route or a released candidate is accepted. The adopted policy preserves release-admission gates. Its evidence references retain the original miscompilations; per-candidate results are recorded separately."

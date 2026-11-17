@@ -184,6 +184,15 @@ class IOSQualificationTests(unittest.TestCase):
         self.assertEqual(len(merged['commands']), 12)
         self.assertEqual(merged['cases'][0]['app']['caseId'], 'by-value')
         self.assertEqual(merged['cases'][0]['id'], 'debug-debug/by-value')
+        paired = copy.deepcopy(cells)
+        for cell in paired.values():
+            cell['schemaVersion'] = 2
+        self.assertEqual(self.mod.merge_cells(paired,dict.fromkeys(paired,'1'*64))['schemaVersion'],2)
+        for schema in (1, True, 3):
+            invalid = copy.deepcopy(paired)
+            invalid['release-debug']['schemaVersion'] = schema
+            with self.subTest(schema=schema), self.assertRaisesRegex(ValueError,'identities'):
+                self.mod.merge_cells(invalid,dict.fromkeys(invalid,'1'*64))
         for invalid in ({k: v for k, v in cells.items() if k != 'debug-debug'}, copy.deepcopy(cells)):
             if len(invalid) == 4:
                 invalid['debug-debug']['identity']['architecture'] = 'x86_64'
@@ -204,6 +213,7 @@ class IOSBindingTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.fixture = IOSCaptureFixture(self.temporary.name)
+        self.enterContext(self.fixture.compiler_policy())
         baseline = self.check()
         self.assertEqual(baseline['vectorCoreQualification'], 'accepted', baseline['problems'])
 

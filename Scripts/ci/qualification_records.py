@@ -10,6 +10,8 @@ import json
 import re
 from pathlib import Path
 
+import compiler_identity
+
 POLICY = 'vc-0.4.0-xcode27.2-bounded-v1'
 CASE_METADATA = ('id', 'format', 'command', 'producer', 'client', 'compileCommand', 'binary')
 OPTIONAL_CASE_METADATA = ('witness', 'app')
@@ -263,13 +265,13 @@ def verify_bindings(profile, capture, commands, cases, pins):
 
 def verify_capture(profile: dict, evidence_root: Path, source_root: Path) -> dict:
     require(type(profile) is dict and type(profile['schemaVersion']) is int
-            and profile['schemaVersion'] == 1 and profile['policyId'] == POLICY, 'unsupported profile')
+            and profile['schemaVersion'] in (1, 2) and profile['policyId'] == POLICY, 'unsupported profile')
     require(type(profile['scope']) is list and bool(profile['scope'])
             and all(type(v) is str and v for v in profile['scope']), 'empty scope')
     pins = Pins(profile, evidence_root, source_root)
     capture_path = str(pins.captures['evidence'] / 'capture.json')
     capture = pins.json(capture_path)
-    require(type(capture['schemaVersion']) is int and capture['schemaVersion'] == 1, 'capture schema')
+    require(type(capture['schemaVersion']) is int and capture['schemaVersion'] == profile['schemaVersion'], 'capture schema')
     require(capture['collectionComplete'] is True and type(capture['invocationId']) is str
             and bool(capture['invocationId']), 'incomplete capture')
     require(same(capture['identity'], profile['identity']), 'compiler/platform identity differs')
@@ -278,9 +280,24 @@ def verify_capture(profile: dict, evidence_root: Path, source_root: Path) -> dic
     require(identity['swiftVersion'] == '6' and identity['architecture'] == 'arm64', 'unreviewed language/architecture')
     for field in ('platform', 'target', 'runtime'):
         require(bool(identity[field]), 'missing identity: ' + field)
-    require(set(profile['identityFiles']) == {'frontendSHA256', 'sdkSettingsSHA256'}, 'identity file inventory')
+    identity_fields = {'frontendSHA256', 'sdkSettingsSHA256'}
+    if profile['schemaVersion'] == 2:
+        identity_fields.add('swiftDriverSHA256')
+        compiler_identity.validate_pair(identity['frontendSHA256'], identity['swiftDriverSHA256'])
+    else:
+        require('swiftDriverSHA256' not in identity, 'paired identity requires schema 2')
+        compiler_identity.validate_legacy_frontend(identity['frontendSHA256'])
+    require(set(profile['identityFiles']) == identity_fields, 'identity file inventory')
     for field, path in profile['identityFiles'].items():
         require(sha(pins.checked(path)) == identity[field], 'identity file differs: ' + field)
+    if profile['schemaVersion'] == 2:
+        frontend = Path(profile['identityFiles']['frontendSHA256'])
+        sibling = frontend.with_name('swift-driver')
+        require(pins.checked(str(sibling)) == pins.checked(profile['identityFiles']['swiftDriverSHA256']),
+                'frontend/Swift-driver sibling binding differs')
+        for role in ('swift', 'swiftc'):
+            require(sha(pins.checked(str(frontend.with_name(role)))) == identity['frontendSHA256'],
+                    'Swift entry-point fingerprint differs from frontend')
     source_bindings = verify_sources(profile, capture, pins)
     require(type(capture['commands']) is dict and bool(capture['commands'])
             and set(capture['commands']) == set(profile['commands']), 'command inventory differs')

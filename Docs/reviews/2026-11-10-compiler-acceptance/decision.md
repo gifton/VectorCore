@@ -63,6 +63,41 @@ accepted combination. Xcode 27.3 beta, other builds, and future releases receive
 no automatic acceptance. Existing older CI tuples are not waived or newly
 certified by this exception.
 
+## Additional exact hosted compiler identity
+
+**Adopted by the user on 2026-11-16 after the byte investigation.** Permit fresh
+bounded qualification on the observed hosted
+Xcode 27.2 build 27B52, Apple Swift 6.4.2 (`swiftlang-6.4.2.1.9`,
+`clang-2100.4.1.1`), arm64 distribution with this exact whole-file SHA-256 pair:
+
+- Frontend, also the resolved swift/swiftc executable: `020a521df9efc127b6817a2ed2f1560155108f0a0ead1ee1fa98147f5944eb4f`.
+- Swift driver: `51e35b74f76fe8df9d2a203a9edddf4b10fbd2e94e3036137babacc390d9901e`.
+
+Retain the separately recorded local pair: frontend
+`448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f`, driver
+`8635f454b0437014e3e03ccbaefb78c312d8d0337302f8a2348c15e59044762d`.
+Historical pins and receipts remain unchanged. Unlisted fingerprints receive no
+automatic acceptance from a matching version, UUID, signature or CodeDirectory.
+Each fresh capture/profile must bind the actual executable roles, SDK, target,
+flags, runtime and source identities.
+
+Diagnostic runs 43992711618 and 43996681385 record both compiler identities and
+valid Apple signatures. The second run's artifact 14290422244 has ZIP SHA-256
+`98278abc6e327d74a8007157f97237cf684c72df1e5c0bc8c7c6303a570e5f25`.
+The byte comparison accounts for all differences through the CMS signingTime
+attribute, RSA signature value and associated length fields. Non-signature file
+regions, CodeDirectory and requirements match. An in-memory reconstruction using
+only those signing changes reproduces both observed hosted whole-file hashes.
+The [retained byte-comparison and adoption record](hosted-compiler-identity.md)
+links the canonical evidence. This establishes the bounded executable comparison,
+not numerical qualification or equality of every toolchain/SDK component.
+
+Fresh native and iOS-simulator evidence must satisfy all supported numerical
+routes and retained diagnostic expectations, then receive exact-profile review
+under the adopted two-stage process. Collection remains unassessed. Support
+restrictions, remaining platform decisions and final release gates are unchanged.
+No release or tag is authorized by this identity decision.
+
 ## Qualification rule
 
 1. Keep compiler correctness, scoped VectorCore qualification and final release

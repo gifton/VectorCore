@@ -126,11 +126,14 @@ class HostedEvidenceTests(unittest.TestCase):
         with self.assertRaises(ValueError): hosted.reviewed_profile(repo,relative,revision)
 
     def test_verify_uses_the_reviewed_policy_revision_and_enforces_capture_and_numerical_results(self):
-        for kind in ('accepted','wrong-candidate','supported-failure'):
+        for kind in ('accepted','wrong-candidate','supported-failure','legacy-profile'):
             with self.subTest(kind=kind):
                 base = self.root/kind
                 base.mkdir()
                 f = CaptureFixture(base)
+                if kind != 'legacy-profile':
+                    f.as_paired_capture()
+                self.enterContext(f.compiler_policy())
                 def commit(repo):
                     for args in [('init','-q'),('add','.'),('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','fixture')]:
                         subprocess.run(['git','-C',str(repo),*args],check=True,capture_output=True,timeout=15)

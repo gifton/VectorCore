@@ -15,12 +15,12 @@ import shutil
 import sys
 import uuid
 
+import compiler_identity
 import swiftpm_products as products
 from qualification_records import require, sha
 from v03_process import run, test_environment, write_json
 
 ROOT = Path(__file__).resolve().parents[2]
-FRONTEND = '448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f'
 TARGET = 'arm64-apple-macosx14.0'
 MODES = ('debug', 'release')
 
@@ -38,15 +38,17 @@ def consumer_cells():
 
 
 class NativeCapture:
-    def __init__(self, source_root, swiftc, sdk, output, jobs):
+    def __init__(self, source_root, swiftc, sdk, output, jobs, *, expected_frontend=None):
         self.source, self.swiftc = Path(source_root).resolve(), Path(swiftc).absolute()
         self.sdk, self.output = Path(sdk).resolve(), Path(output).resolve()
         require(type(jobs) is int and 1 <= jobs <= 6, 'jobs must be in 1...6')
         self.jobs = jobs
+        self.expected_frontend = expected_frontend
+        self.compiler_files = None
         self.env = test_environment()
         self.env.update(SWIFT_EXEC=str(self.swiftc), SDKROOT=str(self.sdk),
                         PATH=str(self.swiftc.parent) + ':' + self.env.get('PATH', ''))
-        self.capture = {'schemaVersion': 1, 'invocationId': str(uuid.uuid4()),
+        self.capture = {'schemaVersion': 2, 'invocationId': str(uuid.uuid4()),
                         'collectionComplete': False, 'commands': {}, 'cases': [],
                         'checks': [], 'producers': {}, 'artifactFiles': []}
 
@@ -58,11 +60,19 @@ class NativeCapture:
         return record, text
 
     def preflight(self):
-        require(sha(self.swiftc.with_name('swift-frontend')) == FRONTEND, 'frontend identity differs')
+        self.compiler_files = compiler_identity.observe_tools(self.swiftc)
+        compiler_identity.validate_tools(self.compiler_files)
+        require(self.expected_frontend is None or self.compiler_files['frontendSHA256'] == self.expected_frontend,
+                'frontend identity differs from requested fingerprint')
         require(self.source == ROOT, 'collector must run from the selected source checkout')
         require(self.sdk.is_relative_to(self.swiftc.parents[4]), 'SDK and compiler developer directories differ')
         require((self.sdk / 'SDKSettings.json').is_file(), 'missing SDK settings')
         self.env['DEVELOPER_DIR'] = str(self.swiftc.parents[4])
+
+    def recheck_compiler(self):
+        require(self.compiler_files is not None
+                and compiler_identity.observe_tools(self.swiftc) == self.compiler_files,
+                'compiler identity changed during collection')
 
     def identity(self):
         _, xcode = self.command('xcode-version', [self.swiftc.parents[4] / 'usr/bin/xcodebuild', '-version'], timeout=30)
@@ -76,7 +86,9 @@ class NativeCapture:
                 'compiler version differs')
         require(platform.machine() == 'arm64', 'native architecture differs')
         self.capture['sourceCommit'] = revision.strip()
-        return {'xcodeBuild': '27B52', 'compilerVersion': '6.4.2', 'frontendSHA256': FRONTEND,
+        return {'xcodeBuild': '27B52', 'compilerVersion': '6.4.2',
+                'frontendSHA256': self.compiler_files['frontendSHA256'],
+                'swiftDriverSHA256': self.compiler_files['swiftDriverSHA256'],
                 'sdkSettingsSHA256': sha(self.sdk / 'SDKSettings.json'), 'sdk': str(self.sdk),
                 'platform': 'macos', 'architecture': 'arm64', 'target': TARGET, 'swiftVersion': '6',
                 'runtime': {'version': version.strip(), 'build': build.strip()}}
@@ -91,7 +103,7 @@ class NativeCapture:
         driver = self.source / 'Docs/reviews/2026-11-04-release-phase-one/compiler/run.py'
         directory = self.output / 'original-probes'
         self.command('original-probe-driver', [sys.executable, '-B', driver, '--swiftc', self.swiftc,
-                     '--sdk', self.sdk, '--frontend-sha256', FRONTEND, '--output', directory],
+                     '--sdk', self.sdk, '--frontend-sha256', self.compiler_files['frontendSHA256'], '--output', directory],
                      timeout=1800, expected=(0, 1))
         summary = json.loads((directory / 'summary.json').read_text())
         require(len(summary['cells']) == 16, 'incomplete original probe collection')
@@ -136,7 +148,7 @@ class NativeCapture:
         driver = self.source / 'Scripts/ci/consumer_buffer_value.py'
         directory = self.output / ('consumers-' + producer)
         self.command('consumer-driver-' + producer, [sys.executable, '-B', driver,
-            '--swiftc', self.swiftc, '--frontend-sha256', FRONTEND, '--sdk', self.sdk,
+            '--swiftc', self.swiftc, '--frontend-sha256', self.compiler_files['frontendSHA256'], '--sdk', self.sdk,
             '--bin-path', build, '--library-configuration', producer, '--output', directory], timeout=1800)
         summary = json.loads((directory / 'summary.json').read_text())
         require(summary['validationPassed'] is True, 'by-value/contract collection failed')
@@ -187,6 +199,7 @@ class NativeCapture:
             'command': 'build-modes-driver', 'result': str(self.output / 'c-modes/result.json')})
 
     def finish_inventory(self):
+        self.recheck_compiler()
         # Retain every v03 receipt, including nested drivers. The C route driver
         # has its own older receipt schema; it is bound and checked separately.
         artifacts = set()
@@ -219,7 +232,8 @@ class NativeCapture:
         for path in (self.source / 'Scripts').rglob('*'):
             if path.is_file() and '__pycache__' not in path.parts:
                 artifacts.add(str(path))
-        artifacts.update((str(self.swiftc.with_name('swift-frontend')), str(self.sdk / 'SDKSettings.json')))
+        artifacts.update((str(self.swiftc.with_name('swift-frontend')),
+                          str(self.swiftc.with_name('swift-driver')), str(self.sdk / 'SDKSettings.json')))
         artifacts.discard(str(self.output / 'capture.json'))
         self.capture['artifactFiles'] = sorted(artifacts)
 
@@ -256,8 +270,10 @@ class NativeCapture:
         return capture_path
 
 
-def collect_native(source_root: Path, swiftc: Path, sdk: Path, output: Path, jobs: int) -> Path:
-    return NativeCapture(source_root, swiftc, sdk, output, jobs).collect()
+def collect_native(source_root: Path, swiftc: Path, sdk: Path, output: Path, jobs: int,
+                   *, expected_frontend=None) -> Path:
+    return NativeCapture(source_root, swiftc, sdk, output, jobs,
+                         expected_frontend=expected_frontend).collect()
 
 
 def main():
@@ -267,9 +283,10 @@ def main():
     parser.add_argument('--frontend-sha256', required=True)
     parser.add_argument('--jobs', type=int, default=4)
     args = parser.parse_args()
-    if args.frontend_sha256 != FRONTEND:
+    if args.frontend_sha256 not in {pair[0] for pair in compiler_identity.REVIEWED_PAIRS}:
         parser.error('frontend identity is not the adopted Xcode 27.2 profile')
-    path = collect_native(args.source_root, args.swiftc, args.sdk, args.output, args.jobs)
+    path = collect_native(args.source_root, args.swiftc, args.sdk, args.output, args.jobs,
+                          expected_frontend=args.frontend_sha256)
     print(str(path) + '; collectionComplete=true; qualification=unassessed; releaseAdmitted=false')
 
 

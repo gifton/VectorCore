@@ -45,3 +45,12 @@ they do not make a retrospective claim about a separately captured Swift driver.
 Hosted verification requires schema 2, so a legacy-profile downgrade cannot
 satisfy the new hosted scope. Numerical expectations and review requirements are
 unchanged.
+
+The two `*-0.4.0-hosted-2026-11-16.json` profiles bind collection run
+`44016980622`, candidate `7c115cd927c76275b73a08b0e6fb178636a3c4b9` and
+collection policy `a4f8bb8c9442b141412d55d1279246b1e25bb68e`. Their reviewed
+archive digests and provenance are in `reviewedArtifact`. Their literal numerical
+expectations are unchanged from the corresponding local stable profiles.
+[Hosted evidence review](../../../Docs/reviews/2026-11-10-compiler-acceptance/hosted-evidence-2026-11-16.md)
+records the observations, artifact binding and pending full verification. These
+profiles do not qualify any other run or broaden the supported compositions.

@@ -3,14 +3,16 @@
 The user selected two-stage evidence review. The new manual
 `compiler-qualification.yml` workflow collects evidence for an immutable
 candidate, then verifies a separately reviewed bundle in a later dispatch.
-Local workflow tests do not establish a successful hosted run.
+Local workflow tests do not establish a successful hosted run. The latest
+[hosted evidence review](hosted-evidence-2026-11-16.md) records completed
+collection and pending verification for the exact hosted compiler pair.
 
 ## Collection and review
 
 `mode=collect` takes the full candidate commit. The policy/helper checkout uses
 the dispatch's `github.sha`; the candidate checkout uses the requested commit.
 The helper verifies clean checkouts, the actual Xcode 27.2 build 27B52,
-frontend hash, and arm64 architecture before running the candidate's collectors.
+adopted frontend/driver pair and Swift entry-point hashes, and arm64 architecture before running the candidate's collectors.
 The explicit developer directory is `/Applications/Xcode_27.2.app/Contents/Developer`.
 The runner label does not grant acceptance. Python 3.12 or later is required.
 
@@ -84,7 +86,7 @@ sanitizer/performance evidence and final release-reference/admission decisions
 remain outside this workflow's acceptance. Existing CI continues to run and
 must be assessed separately.
 
-## Introduction and dispatch prerequisite
+## Original introduction prerequisite — 2026-11-12
 
 The GitHub workflow inventory inspected on 2026-11-12 does not yet contain this
 workflow. GitHub requires a manual workflow to exist on the default branch
@@ -101,3 +103,8 @@ an evidence run ID are supplied only after the collection has been reviewed.
 The exact policy commit/ref and introduction action must be prepared and
 approved after independent implementation review; this document does not
 authorize shared-repository changes.
+
+The user subsequently merged workflow-registration [PR #63](https://github.com/gifton/VectorCore/pull/63)
+on 2026-11-14. The workflow is registered. The dated prerequisite above records
+the original handoff, not the current dispatch state; the latest evidence review
+identifies the actual immutable candidate, collection policy and run.

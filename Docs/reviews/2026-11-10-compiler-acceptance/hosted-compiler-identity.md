@@ -43,8 +43,9 @@ handling and releaseAdmitted=false behavior remain as adopted.
 
 The implementation uses a new tooling revision while preserving all tracked
 Package.swift, Sources, Tests and Benchmarks bytes from the frozen
-`af315c56c52de737f868fd969e6e1f5ae59eaa48` candidate. Fresh hosted collection,
-reviewed profiles and verification remain pending.
+`af315c56c52de737f868fd969e6e1f5ae59eaa48` candidate. Fresh hosted collection
+and [exact profile review](hosted-evidence-2026-11-16.md) are complete; the separate
+hosted verification step remains pending.
 
 The clean candidate contains 389 tracked compiled-input files; its serialized
 manifest SHA-256 is `2191f5d4663a071e9a537be4a525bb353798370d7c7db44980fcd15b0b1f521e`.

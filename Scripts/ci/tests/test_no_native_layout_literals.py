@@ -32,6 +32,8 @@ ALLOWLIST = {
     'Scripts/ci/qualification_profiles/ios-simulator-27.0-arm64-alpha-2026-11-11.json': 'reviewed immutable simulator receipts, not product discovery',
     'Scripts/ci/qualification_profiles/macos-27.0.1-arm64-0.4.0-2026-11-12.json': 'reviewed frozen-candidate native receipts, not product discovery',
     'Scripts/ci/qualification_profiles/ios-simulator-27.0-arm64-0.4.0-2026-11-12.json': 'reviewed frozen-candidate simulator receipts, not product discovery',
+    'Scripts/ci/qualification_profiles/macos-27.0.1-arm64-0.4.0-hosted-2026-11-16.json': 'reviewed exact hosted native archive receipts, not product discovery',
+    'Scripts/ci/qualification_profiles/ios-simulator-27.0-arm64-0.4.0-hosted-2026-11-16.json': 'reviewed exact hosted simulator archive receipts, not product discovery',
     'Scripts/ci/swiftpm_products.py': 'the single place that knows both layouts',
     'Scripts/ci/bounded_native_qualification.py': 'candidate-pinned retained native evidence validation, not product discovery; '
                                                     'rejects a different layout rather than selecting build products',

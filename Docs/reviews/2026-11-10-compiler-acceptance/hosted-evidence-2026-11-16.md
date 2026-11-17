@@ -4,7 +4,10 @@
 completed both macOS and iOS simulator collection, archive and upload steps.
 Each platform then deliberately failed **Collection is not qualification**.
 That red result prevents unreviewed collection from satisfying the qualification
-aggregate. Full hosted verification of the reviewed profiles is pending.
+aggregate. The separate
+[verification run 44030552128](https://github.com/gifton/VectorCore/actions/runs/44030552128)
+then passed both platform jobs and the required aggregate using reviewed policy
+`8316d1a60ef218807cb02558c20d7a2dd03620fa`.
 
 The immutable collector candidate is
 `7c115cd927c76275b73a08b0e6fb178636a3c4b9`; collection policy is
@@ -52,8 +55,8 @@ and binaries were not executed during review.
 The retained artifact inventories are complete: 1,518 native and 59,813
 simulator entries, with no reported omissions. Their capture digests and every
 retained/source file digest were reconciled. External compiler, SDK and system
-tool hashes remain exact pins for the full hosted verifier to check against the
-installed files. Both `swift` and `swiftc` aliases are pinned to the frontend
+tool hashes were checked by the full hosted verifier against the installed
+files. Both `swift` and `swiftc` aliases are pinned to the frontend
 digest from the retained four-tool preflight. Referenced original C products,
 retained copies and source files add explicit pins from their retained bytes.
 
@@ -68,20 +71,39 @@ Each platform directory contains the original ZIP, nested archive, complete job
 log, safely extracted review data and `retention.json`. Separate review reports
 and profile snapshots are retained with the review handoff.
 
-Profile preparation and numerical comparison are not a full qualification
-result. Verification must use the exact candidate, these tracked profiles, the
-reviewed run/archive provenance and the unchanged complete validator. It must
-return `vectorCoreQualification=accepted`, `compilerProfile=known-failing`, an
-empty problem list and `releaseAdmitted=false` before the hosted scope is
-accepted. Broader platform, minimum-OS, Intel, sanitizer, performance and release
-reference/admission decisions remain outside this evidence.
+## Full hosted verification
+
+The unchanged complete validator checked the exact candidate, tracked profiles,
+reviewed archives, source/product/command bindings and external installed files.
+The downloaded reports match GitHub's artifact digests and the reviewed profile
+and collection provenance. Their observations exactly match the preceding
+independent review.
+
+| Scope | Result | Verified canonical files | Retained report SHA-256 |
+| --- | --- | --- | --- |
+| Native macOS | accepted / known-failing / releaseAdmitted=false; no problems | 2,524 | `8c550da36427ca0a4aa808dcef73813e4b8b05d2c3772936d4fac8ed61a83e23` |
+| iOS simulator app matrix | accepted / known-failing / releaseAdmitted=false; no problems | 60,201 | `27372ad5355da0e1f307d56d3fc8f27f35abbd236488ee6e5467c91f4eeeb457` |
+
+Path-pin counts and verified canonical-file counts differ because the checker
+resolves aliases and registers compiled-source manifest entries in one registry.
+The [retained result and artifact identities](hosted-verification-result.json)
+record both successful platform jobs and the aggregate. Original report ZIPs,
+JSON reports, complete workflow logs and dispatch records are retained under
+the canonical root's `verification-44030552128` directory. The preceding
+`profile-review-2026-11-16` snapshots remain unchanged, and `source-7c115cd`
+preserves 562 exact source-closure files, including all 389 compiled inputs.
+
+This completes the bounded compiler qualification work for the reviewed local
+and hosted macOS/iOS scopes. Broader platform, minimum-OS, Intel, sanitizer,
+performance and release-reference/admission decisions remain open. No stable
+tag or release is created by this result.
 
 ## Integration checks
 
 Independent read-only review found no Critical, Important or Minor findings.
 It independently reparsed the observations and checked the retained/source
-pins. Nine native and twelve simulator external pins remain for the actual
-hosted verifier to check. The two new data files receive exact scanner
+pins. It left nine native and twelve simulator external pins to the actual
+hosted verifier, which subsequently checked them. The two new data files receive exact scanner
 exemptions; adjacent unreviewed files remain covered by the existing controls.
 
 All 756 Python policy tests passed in 271.015 seconds, eight focused layout

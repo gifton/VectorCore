@@ -4,8 +4,11 @@ The retained local native, simulator-app and physical-iOS evidence satisfies
 the adopted bounded compiler policy for candidate `af315c56c52de737f868fd969e6e1f5ae59eaa48`. Every checker
 reports **accepted / known-failing / releaseAdmitted=false**. The full simulator
 package suites were reconciled separately. Independent review and the tested fix pass are recorded in
-[implementation-review.md](implementation-review.md). Actual hosted
-qualification remains pending; this is not final release admission.
+[implementation-review.md](implementation-review.md). Subsequent
+[hosted qualification](hosted-evidence-2026-11-16.md) also passed for the same
+tracked compiled inputs under the separately adopted exact hosted compiler pair.
+This is not final release admission; the local results below retain their
+original candidate, identities and profiles.
 
 ## Frozen inputs
 
@@ -88,10 +91,10 @@ The published alpha tag remains at `44c9ffaf145a59688f420023b28cdcf87c158070`.
 
 ## Remaining decisions
 
-- The new [hosted workflow](hosted-qualification.md) implements the adopted
-  two-stage review. Its actual hosted runs are still pending. GitHub requires
-  workflow introduction on the default branch before manual dispatch; no push,
-  merge, dispatch or publication is authorized by these local results.
+- The [hosted workflow](hosted-qualification.md) completed the adopted two-stage
+  review in collection run 44016980622 and successful verification run
+  44030552128. Its separate tooling candidate preserves these 389 tracked
+  compiled inputs; historical local profiles were not rebound to hosted data.
 - Minimum-OS runtime, Intel runtime, Catalyst/tvOS/visionOS scope, current
   sanitizer evidence, controlled performance and final release-reference
   acceptance remain open. Existing deployment declarations and legacy required

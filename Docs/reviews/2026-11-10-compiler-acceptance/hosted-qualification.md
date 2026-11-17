@@ -5,7 +5,7 @@ The user selected two-stage evidence review. The new manual
 candidate, then verifies a separately reviewed bundle in a later dispatch.
 Local workflow tests do not establish a successful hosted run. The latest
 [hosted evidence review](hosted-evidence-2026-11-16.md) records completed
-collection and pending verification for the exact hosted compiler pair.
+collection and successful verification for the exact hosted compiler pair.
 
 ## Collection and review
 

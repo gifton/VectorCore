@@ -1,0 +1,54 @@
+{
+  "aggregate": "success",
+  "candidateCommit": "7c115cd927c76275b73a08b0e6fb178636a3c4b9",
+  "collectionPolicyCommit": "a4f8bb8c9442b141412d55d1279246b1e25bb68e",
+  "collectionRunId": "44016980622",
+  "completedAt": "2026-11-17T06:26:31Z",
+  "files": {
+    "hosted-profile-execution.json": "d5413417855e5f31d164e4f2deae3d54d3655460867733b9d2124f29e962c5d4",
+    "hosted-profile-verify-dispatch-request.json": "c21a56571b6074a1a72395970d192185696d57d5d5cadef5952c174d637b582d",
+    "hosted-profile-verify-dispatch-result.json": "80cf93ae2c8e7707056c7ce034f453f3e9648db1bc46d8c6ed200bc5ebb8ba19",
+    "hosted-profile-verify-preflight.json": "74fba7db0d5c86ca6c0fce2efcc741cca604d23c8d9701f43e32d4cadca8aa88",
+    "hosted-verify-44030552128-github.json": "5478c6556608fc78286f8ad392a3870db82c4fef0821fe95e75b4c87a2164663",
+    "hosted-verify-44030552128-ios.json": "27372ad5355da0e1f307d56d3fc8f27f35abbd236488ee6e5467c91f4eeeb457",
+    "hosted-verify-44030552128-ios.zip": "53f8e0e62929659dd79ddf0c7bc4e4bb1c04a418b03a19647df31864beed7f1f",
+    "hosted-verify-44030552128-logs.zip": "fb7f92f9bf03acb2653f60220c78e1e9aed5092efb7589e3cf676839c7e22aee",
+    "hosted-verify-44030552128-native.json": "8c550da36427ca0a4aa808dcef73813e4b8b05d2c3772936d4fac8ed61a83e23",
+    "hosted-verify-44030552128-native.zip": "e52a459570d0412fe5741b4a1ba0f38022d5e969dc2f86d7c9916e0ee29698c8",
+    "retain_hosted_verification.py": "fceccb45aad841e2e18ce778cc870361bfd1da5adb9def9f6fbfbdacbbbbeffc"
+  },
+  "platforms": {
+    "ios-simulator": {
+      "artifactId": 14304498761,
+      "artifactSHA256": "53f8e0e62929659dd79ddf0c7bc4e4bb1c04a418b03a19647df31864beed7f1f",
+      "compilerProfile": "known-failing",
+      "diagnosticWrongRows": 14,
+      "groups": 52,
+      "problems": [],
+      "profileSHA256": "df7dfa8ac0b396d99432fa84d234ed277bba8768c75a42f2364500d149dec808",
+      "releaseAdmitted": false,
+      "reportSHA256": "27372ad5355da0e1f307d56d3fc8f27f35abbd236488ee6e5467c91f4eeeb457",
+      "supportedRows": 96,
+      "vectorCoreQualification": "accepted",
+      "verifiedFiles": 60201
+    },
+    "native": {
+      "artifactId": 14305276397,
+      "artifactSHA256": "e52a459570d0412fe5741b4a1ba0f38022d5e969dc2f86d7c9916e0ee29698c8",
+      "compilerProfile": "known-failing",
+      "diagnosticWrongRows": 11,
+      "groups": 36,
+      "problems": [],
+      "profileSHA256": "28e9de54450bca008f1bde58b5a5680dc65146751a7193f539126832f41000f4",
+      "releaseAdmitted": false,
+      "reportSHA256": "8c550da36427ca0a4aa808dcef73813e4b8b05d2c3772936d4fac8ed61a83e23",
+      "supportedRows": 96,
+      "vectorCoreQualification": "accepted",
+      "verifiedFiles": 2524
+    }
+  },
+  "releaseAdmitted": false,
+  "reviewedPolicyCommit": "8316d1a60ef218807cb02558c20d7a2dd03620fa",
+  "runId": 44030552128,
+  "url": "https://github.com/gifton/VectorCore/actions/runs/44030552128"
+}

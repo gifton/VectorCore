@@ -52,5 +52,6 @@ collection policy `a4f8bb8c9442b141412d55d1279246b1e25bb68e`. Their reviewed
 archive digests and provenance are in `reviewedArtifact`. Their literal numerical
 expectations are unchanged from the corresponding local stable profiles.
 [Hosted evidence review](../../../Docs/reviews/2026-11-10-compiler-acceptance/hosted-evidence-2026-11-16.md)
-records the observations, artifact binding and pending full verification. These
+records the observations, artifact binding and successful full verification in
+run `44030552128` using policy `8316d1a60ef218807cb02558c20d7a2dd03620fa`. These
 profiles do not qualify any other run or broaden the supported compositions.

@@ -1,0 +1,63 @@
+{
+  "discovery": {
+    "reviewer": "gpt-6-astra",
+    "baseline": "25b1616",
+    "read_only": true,
+    "independent_tests_run": false,
+    "live_repeated_sites": {
+      "BatchKernels_SoATests.swift": [
+        "testDotProduct512",
+        "testDotProduct768",
+        "testDotProduct1536"
+      ],
+      "MatrixDistanceTests.swift": [
+        "euclideanParity512",
+        "otherDims"
+      ]
+    },
+    "dormant_helpers": [
+      "MixedPrecisionKernelTests.verifyFP16Accuracy",
+      "MixedPrecisionKernelTests.compareMixedVsFullPrecision"
+    ],
+    "recommendation": "Preserve current tolerance formulas, add finite checks to repeated live assertions, classify F009 operands before relative arithmetic, add a lexical review inventory with explicit limits. Preserve dormant paired-NaN policy if repairing them.",
+    "f010_inventory": "Ten XCTestNoThrow sites inspected; only testVectorMathSafeDivision has a bare closure-valued argument.",
+    "additional_inventory_review": "25 lexical comparison sites: finite guards, independent bounded reference fixtures, or declaration-only dormant helpers; see repository inventory reasons.",
+    "ruling": "Keep the two unused helper bodies unchanged; inventory requires declaration-only references and unchanged bodies, preventing silent activation until their nonfinite behavior is repaired. Their existing paired-NaN policy is not changed."
+  },
+  "final": {
+    "reviewer": "gpt-6-astra",
+    "reviewer_task": "oracle_final_review",
+    "range": "25b1616..029902c",
+    "read_only": true,
+    "independent_broad_tests_run": false,
+    "result": "No consequential defects found in the Swift repairs; one P3 lexical guard gap.",
+    "finding": {
+      "severity": "P3",
+      "summary": "Dormant-helper reference counting masked executable Swift string interpolation.",
+      "evidence": "Reviewer in-memory insertion containing a function reference in interpolation yielded no policy finding.",
+      "recommendation": "Enable the existing lexer keep_interpolations option for reference counting and add a regression control.",
+      "resolution": "e575729: keep_interpolations=True; both dormant helpers tested in ordinary and raw strings. Four regression subcases failed before the fix; all 7 oracle-policy tests passed after.",
+      "verification_owner": "lead; no second review claimed"
+    },
+    "confirmed": [
+      "Classification matrix and finite tolerance boundaries exercise actual isClose/arraysClose.",
+      "Five repeated live assertions now require finite results.",
+      "F010 directly calls valid safeDivide and checks 32 lanes.",
+      "F010 snapshot hashes match; repaired control passes and four mutants fail in both configurations.",
+      "Sources and Package.swift unchanged."
+    ],
+    "declined_to_judge": [
+      "Arbitrary control-flow/interprocedural correctness",
+      "Transitively unhashed bounded-reference dependencies",
+      "Production numerical correctness",
+      "Platform coverage",
+      "Full-suite integration results still underway at review time"
+    ],
+    "lead_disposition": "Retain explicit lexical and host-validation limits. Lead verifies full integration separately. No unaddressed review finding."
+  },
+  "lead_integration": "Full Debug and Release suites exit 0; final Python suite passes 550 tests. No deferred review findings.",
+  "rulings": [
+    "Leave two unused mixed-precision helper bodies unchanged; quarantine new references until their own NaN/infinity policy is repaired and tested.",
+    "Retain documented lexical/interprocedural and host-validation limits; no universal numerical or platform guarantee."
+  ]
+}

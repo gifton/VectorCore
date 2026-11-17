@@ -1,0 +1,207 @@
+{
+  "scope": "The actual test method was copied into an external XCTest package; corruption is inserted at its success-call/result boundary. VectorCore production sources were never mutated.",
+  "baseline": "25b1616",
+  "repaired": "029902c",
+  "runs": [
+    {
+      "stage": "baseline",
+      "configuration": "debug",
+      "mutation": "control",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-debug-control.json",
+      "log": "logs/f010-baseline-debug-control.log",
+      "test_source": "f010-baseline-debug-control.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "debug",
+      "mutation": "throw",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-debug-throw.json",
+      "log": "logs/f010-baseline-debug-throw.log",
+      "test_source": "f010-baseline-debug-throw.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "debug",
+      "mutation": "lane-0",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-debug-lane-0.json",
+      "log": "logs/f010-baseline-debug-lane-0.log",
+      "test_source": "f010-baseline-debug-lane-0.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "debug",
+      "mutation": "lane-16",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-debug-lane-16.json",
+      "log": "logs/f010-baseline-debug-lane-16.log",
+      "test_source": "f010-baseline-debug-lane-16.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "debug",
+      "mutation": "lane-31",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-debug-lane-31.json",
+      "log": "logs/f010-baseline-debug-lane-31.log",
+      "test_source": "f010-baseline-debug-lane-31.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "release",
+      "mutation": "control",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-release-control.json",
+      "log": "logs/f010-baseline-release-control.log",
+      "test_source": "f010-baseline-release-control.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "release",
+      "mutation": "throw",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-release-throw.json",
+      "log": "logs/f010-baseline-release-throw.log",
+      "test_source": "f010-baseline-release-throw.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "release",
+      "mutation": "lane-0",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-release-lane-0.json",
+      "log": "logs/f010-baseline-release-lane-0.log",
+      "test_source": "f010-baseline-release-lane-0.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "release",
+      "mutation": "lane-16",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-release-lane-16.json",
+      "log": "logs/f010-baseline-release-lane-16.log",
+      "test_source": "f010-baseline-release-lane-16.swift"
+    },
+    {
+      "stage": "baseline",
+      "configuration": "release",
+      "mutation": "lane-31",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-baseline-release-lane-31.json",
+      "log": "logs/f010-baseline-release-lane-31.log",
+      "test_source": "f010-baseline-release-lane-31.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "debug",
+      "mutation": "control",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-debug-control.json",
+      "log": "logs/f010-repaired-debug-control.log",
+      "test_source": "f010-repaired-debug-control.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "debug",
+      "mutation": "throw",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-debug-throw.json",
+      "log": "logs/f010-repaired-debug-throw.log",
+      "test_source": "f010-repaired-debug-throw.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "debug",
+      "mutation": "lane-0",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-debug-lane-0.json",
+      "log": "logs/f010-repaired-debug-lane-0.log",
+      "test_source": "f010-repaired-debug-lane-0.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "debug",
+      "mutation": "lane-16",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-debug-lane-16.json",
+      "log": "logs/f010-repaired-debug-lane-16.log",
+      "test_source": "f010-repaired-debug-lane-16.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "debug",
+      "mutation": "lane-31",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-debug-lane-31.json",
+      "log": "logs/f010-repaired-debug-lane-31.log",
+      "test_source": "f010-repaired-debug-lane-31.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "release",
+      "mutation": "control",
+      "test_exit_code": 0,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-release-control.json",
+      "log": "logs/f010-repaired-release-control.log",
+      "test_source": "f010-repaired-release-control.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "release",
+      "mutation": "throw",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-release-throw.json",
+      "log": "logs/f010-repaired-release-throw.log",
+      "test_source": "f010-repaired-release-throw.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "release",
+      "mutation": "lane-0",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-release-lane-0.json",
+      "log": "logs/f010-repaired-release-lane-0.log",
+      "test_source": "f010-repaired-release-lane-0.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "release",
+      "mutation": "lane-16",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-release-lane-16.json",
+      "log": "logs/f010-repaired-release-lane-16.log",
+      "test_source": "f010-repaired-release-lane-16.swift"
+    },
+    {
+      "stage": "repaired",
+      "configuration": "release",
+      "mutation": "lane-31",
+      "test_exit_code": 1,
+      "matched_expectation": true,
+      "command_record": "logs/f010-repaired-release-lane-31.json",
+      "log": "logs/f010-repaired-release-lane-31.log",
+      "test_source": "f010-repaired-release-lane-31.swift"
+    }
+  ]
+}

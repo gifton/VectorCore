@@ -150,6 +150,25 @@ paths.
 
 ## Releases
 
+Start with the [November 5 remaining-gate investigation](reviews/2026-11-05-release-gates/README.md)
+for current compiler, platform and measurement-host gates. The
+[November 4 qualification record](reviews/2026-11-04-release-qualification/README.md)
+retains its original hosted results. Neither record supplies release sign-off;
+a successful CI aggregate does not resolve an observed numerical failure.
+
+The [2026-11-01 compiler qualification](reviews/2026-11-01-compiler-qualification/README.md)
+records the tested Swift.org toolchain, SDK, commands and limits for the 0.4.0
+candidate. It distinguishes that compiler build from Xcode 27.2's bundled
+compiler, whose default Release canary remains failing.
+
+The [VC-C002 scanner repair](reviews/2026-11-01-lost-store-scanner-repair/README.md)
+closes the reported inside-borrow `inout` detection gap and records its regression
+tests and explicit lexical limits.
+
+The [T19 PCA test repair](reviews/2026-11-01-pca-routing-test-repair/README.md)
+closes the routed exact-PCA regression-test hang and records the bounded
+mutation check and full Debug/Release validation.
+
 Do not move or delete published version tags. For each new release, use a
 SwiftPM-compatible semantic version tag such as `vX.Y.Z`, verify its commit and
 CI, and test resolution/build from a clean downstream consumer. Explain API,

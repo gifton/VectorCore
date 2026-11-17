@@ -111,10 +111,14 @@ public extension VectorProtocol {
         i + 1
     }
 
-    // Default subscript using toArray() - conformers should override for efficiency
+    // Default subscript using toArray() - conformers should override for efficiency.
+    // An explicit read accessor supplies the imported Collection witness entry point;
+    // Scripts/ci/consumer_collection_witness.py checks inherited and explicit witnesses.
     subscript(index: Int) -> Scalar {
-        precondition(index >= 0 && index < scalarCount, "Index \(index) out of bounds")
-        return toArray()[index]
+        _read {
+            precondition(index >= 0 && index < scalarCount, "Index \(index) out of bounds")
+            yield toArray()[index]
+        }
     }
 
     // MARK: Validation

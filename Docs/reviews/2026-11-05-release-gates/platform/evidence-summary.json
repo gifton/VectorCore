@@ -1,0 +1,92 @@
+{
+  "sourceCommit": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+  "catalyst": {
+    "counts": {
+      "declaredCount": 1982,
+      "methodResults": {
+        "Passed": 1818,
+        "Skipped": 163,
+        "Failed": 1
+      },
+      "expandedResults": {
+        "Passed": 3447,
+        "Skipped": 163,
+        "Failed": 1
+      },
+      "parameterizedMethods": 49,
+      "argumentRuns": 1678,
+      "bundleResults": {
+        "MinimalTests": {
+          "Passed": 33,
+          "Skipped": 27
+        },
+        "ComprehensiveTests": {
+          "Skipped": 115,
+          "Passed": 1698,
+          "Failed": 1
+        },
+        "BenchmarkContractTests": {
+          "Passed": 87,
+          "Skipped": 21
+        }
+      },
+      "controls": {
+        "VectorDispatchContractTests/concreteProtocolOnlyMismatchesRejectBeforeBorrow()": "Skipped",
+        "VectorDispatchContractTests/concreteProtocolOnlyOperatorsPreserveCopy()": "Passed",
+        "LostStoreCanaryTests/literalArrayStoreIsObservedAfterOutOfLineClosure()": "Failed",
+        "BenchmarkNumericalObservationTests/testAttachingObservationPreservesRawMeasurementAndIdentity()": "Passed",
+        "BenchmarkNumericalObservationTests/testCopyRejectsTailPermutationULPAndSignedZeroCorruption()": "Passed",
+        "BenchmarkNumericalObservationTests/testDotDoubleReferenceRejectsFloatCancellationAndDroppedTerms()": "Passed",
+        "BenchmarkNumericalObservationTests/testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth()": "Passed",
+        "BenchmarkNumericalObservationTests/testEveryDotRouteRetainsEachSignedCoordinateExactly()": "Passed",
+        "BenchmarkNumericalObservationTests/testEveryRepairedCatalogCaseCarriesStrictObservation()": "Passed",
+        "BenchmarkNumericalObservationTests/testNormalizationReferenceRejectsWrongCoordinatesAndOutcomes()": "Passed"
+      }
+    },
+    "testCommand": {
+      "exit": 65,
+      "timeout": false,
+      "elapsedSeconds": 53.89307954197284
+    },
+    "onlyFailure": {
+      "bundle": "ComprehensiveTests",
+      "name": "literalArrayStoreIsObservedAfterOutOfLineClosure()",
+      "id": "LostStoreCanaryTests/literalArrayStoreIsObservedAfterOutOfLineClosure()",
+      "result": "Failed",
+      "skipReasons": [],
+      "failures": [
+        "Expectation failed: observed == 1\nobserved \u2192 2.0\n1 \u2192 1.0: optimized lost-store canary failed (swiftlang/swift#92562 class; retain full compiler identity): values[0] after the closure: 2.0 (bits 0x40000000), expected 1"
+      ],
+      "arguments": []
+    },
+    "selectedSDK": "MacOSX27.2",
+    "binaryEncodedSDK": "13.1",
+    "compilerSHA256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f"
+  },
+  "physical": {
+    "buildExit": 0,
+    "testActionExit": 70,
+    "testBodiesExecuted": 0,
+    "blocker": "infrastructure-unsupported-tool-hosted-device-tests"
+  },
+  "skipCounts": {
+    "extended-performance": 39,
+    "unavailable-c-kernel": 1,
+    "isolated-probe": 56,
+    "isolated-configuration": 34,
+    "extended-mixed-correctness-and-performance": 6,
+    "process-containment": 6,
+    "benchmark-process": 21
+  },
+  "sanitizerRuntimeWarningLineCountsByEvidenceTree": {
+    "final-thread-producer": 80,
+    "final-v2-thread-producer": 80,
+    "final-v2-thread-full": 16,
+    "final-v2-thread-extended": 8,
+    "final-v2-thread-extended-corrected": 14
+  },
+  "releaseReady": false,
+  "nativeWorkActive": false,
+  "sourceFilesUnchanged": 388,
+  "scope": "Fresh Catalyst runtime observation plus physical build/readiness/unsupported-test-action. Prior sanitizer/iOS evidence is indexed, not rerun. Exact platform/skip ledgers retain remaining limits."
+}

@@ -26,11 +26,30 @@ class CIContractTests(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / relative, path)
+        POLICY.validate(self.root)
 
     def test_actual_target_membership_and_selected_bodies(self):
         result = POLICY.validate(ROOT)
         self.assertEqual(result['sanitizerBodies'], {'address': 77, 'thread': 39})
-        self.assertEqual(len(result['benchmarkTestSources']), 4)
+        self.assertEqual(result['benchmarkTestSources'], ['BenchmarkContractTests.swift', 'BenchmarkModelDomainTests.swift',
+                                                        'BenchmarkNumericalObservationTests.swift', 'BenchmarkSelectionContractTests.swift', 'RunnerContractTests.swift',
+                                                        'SwiftTestingEntryTests.swift'])
+
+    def test_shared_test_support_membership_is_required(self):
+        package = self.root / 'Package.swift'
+        text = package.read_text()
+        self.assertIn('name: "VectorCoreTestSupport"', text)
+        for old, new in [
+            ('dependencies: ["VectorCore", "VectorCoreTestSupport"]', 'dependencies: ["VectorCore"]'),
+            ('"VectorCoreBenchmarking", "VectorCoreTestSupport"]', '"VectorCoreBenchmarking"]'),
+            ('path: "Tests/VectorCoreTestSupport"', 'path: "Sources/VectorCoreTestSupport"'),
+        ]:
+            with self.subTest(mutation=old):
+                self.assertIn(old, text)
+                package.write_text(text.replace(old, new))
+                with self.assertRaises(ValueError):
+                    POLICY.validate(self.root)
+                package.write_text(text)
 
     def test_deleting_each_required_body_cannot_shrink_expectation(self):
         path = self.root / 'Scripts/ci/sanitizer_bodies.json'
@@ -64,15 +83,19 @@ class CIContractTests(unittest.TestCase):
         package = self.root / 'Package.swift'
         original = package.read_text()
         for changed in [original.replace('name: "BenchmarkContractTests"', 'name: "DisabledBenchmarkContractTests"'),
-                        original.replace('dependencies: ["VectorCoreBenchSupport", "VectorCoreBenchmarking"]',
-                                         'dependencies: ["VectorCoreBenchSupport", "VectorCoreBenchmarking"], exclude: ["RunnerContractTests.swift"]')]:
+                        original.replace('dependencies: ["VectorCoreBenchSupport", "VectorCoreBenchmarking", "VectorCoreTestSupport"]',
+                                         'dependencies: ["VectorCoreBenchSupport", "VectorCoreBenchmarking", "VectorCoreTestSupport"], exclude: ["RunnerContractTests.swift"]')]:
             package.write_text(changed)
             with self.assertRaises(ValueError):
                 POLICY.validate(self.root)
         package.write_text(original)
-        (self.root / 'Tests/BenchmarkContractTests/RunnerContractTests.swift').unlink()
-        with self.assertRaises(ValueError):
-            POLICY.validate(self.root)
+        for name in POLICY.BENCHMARK_TEST_SOURCES:
+            path = self.root / 'Tests/BenchmarkContractTests' / name
+            original_source = path.read_bytes()
+            path.unlink()
+            with self.subTest(missing=name), self.assertRaises(ValueError):
+                POLICY.validate(self.root)
+            path.write_bytes(original_source)
 
     def test_lint_roots_and_unexecuted_analysis_mutations(self):
         for relative in ['.swiftlint.yml', 'Sources/.swiftlint.yml']:

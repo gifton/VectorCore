@@ -65,21 +65,44 @@ struct MixedPrecisionAutoTunerTests {
     @Test("Manual override")
     func testManualOverride() async throws {
         let tuner = MixedPrecisionAutoTuner()
-        await tuner.clearCache()
+        let metrics: [StrategyMetrics] = [
+            (.fullFP32, 1.0, 0.0),
+            (.queryFP32Blocked, 0.001, 0.0001)
+        ].map { (strategy: MixedPrecisionStrategy, latency: Double, error: Double) in
+            StrategyMetrics(
+                strategy: strategy, meanLatency: latency, medianLatency: latency,
+                throughput: 1 / latency, maxRelativeError: error, meanRelativeError: error,
+                candidateCount: 100, dimension: 512, measuredSamples: 1, warmupIterations: 0,
+                algorithmVersion: 1, datasetVersion: "gaussian-lcg-boxmuller-v1", seed: 42,
+                conversionBoundary: "fp32-input-conversion-per-reduced-euclidean-invocation-v1",
+                timestamp: Date(timeIntervalSince1970: 1_700_000_000)
+            )
+        }
+        await tuner.setProfilesForTesting(metrics, candidateCount: 100, dimension: 512)
+        let naturalSelection = try await tuner.selectStrategy(
+            candidateCount: 100, maximumSyntheticRelativeError: 0.001, dimension: 512
+        )
+        #expect(naturalSelection == .queryFP32Blocked, "Fixture must establish a reduced-precision winner")
+
+        let override: MixedPrecisionStrategy = .fullFP32
+        #expect(override != naturalSelection, "Ignoring the override must be observable")
         try await tuner.setOverride(
-            .fullFP32,
-            candidateCount: 100,
-            maximumSyntheticRelativeError: 0.001
+            override, candidateCount: 100, maximumSyntheticRelativeError: 0.001, dimension: 512
         )
-
-        let strategy = try await tuner.selectStrategy(
-            candidateCount: 100,
-            maximumSyntheticRelativeError: 0.001
+        let selected = try await tuner.selectStrategy(
+            candidateCount: 100, maximumSyntheticRelativeError: 0.001, dimension: 512
         )
+        #expect(selected == override, "Should use the manual override instead of the profiled winner")
+        #expect(selected != naturalSelection)
 
-        #expect(strategy == .fullFP32, "Should use manual override")
-        print("✓ Manual override verified: \(strategy.description)")
         await tuner.clearCache()
+        // Reload the same profiles because clearCache removes both profiles and overrides.
+        // A retained fullFP32 override would otherwise look like the unprofiled fallback.
+        await tuner.setProfilesForTesting(metrics, candidateCount: 100, dimension: 512)
+        let afterClear = try await tuner.selectStrategy(
+            candidateCount: 100, maximumSyntheticRelativeError: 0.001, dimension: 512
+        )
+        #expect(afterClear == naturalSelection, "Clearing the cache must remove the manual override")
     }
 
     @Test("Strict synthetic-limit cache miss")

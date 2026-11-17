@@ -1,7 +1,7 @@
 # VectorCore
 
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg?style=flat)](https://swift.org)
-[![Platforms](https://img.shields.io/badge/Platforms-macOS%2014%2B%20|%20iOS%2017%2B%20|%20tvOS%2017%2B%20|%20watchOS%2010%2B%20|%20visionOS%201%2B-blue.svg?style=flat)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-macOS%2014%2B%20|%20iOS%2017%2B%20|%20tvOS%2017%2B%20|%20visionOS%201%2B-blue.svg?style=flat)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/)
 [![CI](https://github.com/gifton/VectorCore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/VectorCore/actions/workflows/ci.yml)
@@ -18,6 +18,16 @@ vector index. See [Package Boundaries](Docs/Package_Boundaries.md) for its role
 alongside VectorIndex, VectorAccelerate, EmbedKit, and SwiftTopics.
 
 ## Installation
+
+For the experimental 0.4.0 integration preview, pin the exact prerelease:
+
+```swift
+.package(url: "https://github.com/gifton/VectorCore.git", exact: "0.4.0-alpha.1")
+```
+
+Read [release status](RELEASE_STATUS.md) for its remaining compiler/platform
+limitations and the breaking `SIMDStorage` migration. The installation example
+below selects the stable release line.
 
 Add VectorCore to your Swift Package Manager dependencies:
 
@@ -40,8 +50,8 @@ If this dependency resolves to `0.3.3`, it does **not** include the later
 MemoryPool lifetime/bookkeeping fixes or the Intel macOS/Mac Catalyst FP16
 compile fixes described in this checkout. See [Unreleased changes](CHANGELOG.md#unreleased)
 before relying on those fixes; consult documentation at the resolved tag for
-a released dependency's behavior. This documentation refresh does not publish
-a new package version.
+a released dependency's behavior. The stable installation example does not select
+the alpha preview.
 
 ## Quick Start
 
@@ -147,15 +157,27 @@ consumer to follow those contracts. See
 ## Requirements and compatibility
 
 The manifest requires Swift tools 6.0 and declares these minimum deployment
-targets: macOS 14, iOS 17, tvOS 17, watchOS 10, and visionOS 1.
+targets: macOS 14, iOS 17, tvOS 17, and visionOS 1. watchOS is not supported.
+
+For the selected 0.4.0 candidate, read the [Xcode 27.2 build 27B52 support
+restrictions](Docs/reviews/2026-11-10-compiler-acceptance/decision.md). This compiler can
+silently produce wrong values for valid Swift descriptor-inout compositions.
+Additional inout handoffs of borrowed buffer descriptors/views or pointer-bearing
+wrappers remain excluded, transitively through helper and conformer chains.
+The restriction is not a complete proof against miscompilation. See the
+[current release status](RELEASE_STATUS.md) for assessed routes/runtimes and the
+remaining admission gates; the selected candidate is not a published stable release.
 
 Deployment targets are distinct from tested configurations. The
-[September 6 verification record](Docs/verification-topk-nan-contract-2026-09-05.md)
-records full Debug and Release tests on Apple M3 Max, macOS 26.5.2, Swift 6.3.3.
-The [CI workflow](.github/workflows/ci.yml) defines the current macOS test and
-Apple platform compile matrix; consult its run results for coverage on a given
-commit. Simulator compilation does not establish runtime behavior on devices.
-Linux is not a supported or tested platform for this package.
+[November 4 qualification record](Docs/reviews/2026-11-04-release-qualification/README.md)
+records full hosted Debug/Release suites with Xcode 16.2 and 26.3, selected
+sanitizer workloads, Apple platform compilation and the remaining runtime limits.
+It also records compiler-specific Release numerical failures; a green CI
+aggregate does not resolve those failures. The
+[hosted execution record](Docs/reviews/2026-11-04-release-qualification/hosted-ci.md)
+identifies the exact tested commit and compiler versions. Simulator compilation
+does not establish runtime behavior on devices. Linux is not a supported or
+tested platform for this package.
 
 `VectorCoreBenchmarking` and `vectorcore-bench` are macOS host tooling, not part of
 the library's platform support; see

@@ -1,0 +1,1548 @@
+{
+  "baseline": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+  "implementation_revision": "e575729bdb376fe123e6f5a54c490fabe202458a",
+  "repair_root": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+  "external_evidence_root": "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence",
+  "scope": [
+    "VC-F009",
+    "VC-F010"
+  ],
+  "production_source_changed": false,
+  "environment_record": "environment.json",
+  "summary": {
+    "swift_suites": {
+      "full-debug": {
+        "xctest_reported_cases": 187,
+        "xctest_skipped": 28,
+        "xctest_failures": 0,
+        "swift_testing_reported_tests": 1730,
+        "swift_testing_suites": 261,
+        "swift_testing_skip_events": 18,
+        "known_issue_count": 0,
+        "elapsed_seconds": 319.0478595420136
+      },
+      "full-release": {
+        "xctest_reported_cases": 187,
+        "xctest_skipped": 28,
+        "xctest_failures": 0,
+        "swift_testing_reported_tests": 1730,
+        "swift_testing_suites": 261,
+        "swift_testing_skip_events": 18,
+        "known_issue_count": 1,
+        "elapsed_seconds": 63.88213254197035
+      }
+    },
+    "python_policy_tests": 550,
+    "final_mutation_observations": 20,
+    "final_mutation_observations_matching": 20
+  },
+  "record_provenance": [
+    "run-tests.py records HEAD at completion, which is not a dirty-tree snapshot. Task red/green checks ran with regression edits awaiting their implementation commit.",
+    "run-check.py records HEAD at start and retains a tracked diff when present; untracked files are not represented by that diff.",
+    "F010 mutation records hash each original and mutated test file; exact mutated files are retained.",
+    "Full Swift tests have identical Tests/Sources content at 029902c and e575729; the latter changes only the Python guard and its controls.",
+    "The initial 549-test Python run loaded the pre-interpolation policy. The final 550-test run includes the correction."
+  ],
+  "runs": [
+    {
+      "id": "claim-ledger",
+      "outcome": "pass",
+      "command_record": "logs/claim-ledger.json",
+      "log": "logs/claim-ledger.log",
+      "record": {
+        "command": [
+          "python3",
+          "Scripts/ci/check_claim_ledger.py"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
+        "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
+        "exit_code": 0,
+        "elapsed_seconds": 2.7205560419824906
+      }
+    },
+    {
+      "id": "downstream-appendices",
+      "outcome": "pass",
+      "command_record": "logs/downstream-appendices.json",
+      "log": "logs/downstream-appendices.log",
+      "record": {
+        "command": [
+          "python3",
+          "Scripts/ci/downstream_appendices.py",
+          "--check"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
+        "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
+        "exit_code": 0,
+        "elapsed_seconds": 0.046441666956525296
+      }
+    },
+    {
+      "id": "f009-green-debug",
+      "outcome": "pass",
+      "command_record": "logs/f009-green-debug.json",
+      "log": "logs/f009-green-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "AccelerateArraySIMDProviderParityTests|BatchKernels_SoATests|MatrixDistanceTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 16.0794781249715
+      }
+    },
+    {
+      "id": "f009-green-release",
+      "outcome": "pass",
+      "command_record": "logs/f009-green-release.json",
+      "log": "logs/f009-green-release.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "AccelerateArraySIMDProviderParityTests|BatchKernels_SoATests|MatrixDistanceTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 249.3784504160285
+      }
+    },
+    {
+      "id": "f009-red-build-error",
+      "outcome": "retained regression setup compilation error",
+      "command_record": "logs/f009-red-build-error.json",
+      "log": "logs/f009-red-build-error.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "AccelerateArraySIMDProviderParityTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 1,
+        "elapsed_seconds": 11.858678749995306
+      }
+    },
+    {
+      "id": "f009-red",
+      "outcome": "expected regression failure",
+      "command_record": "logs/f009-red.json",
+      "log": "logs/f009-red.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "AccelerateArraySIMDProviderParityTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 1,
+        "elapsed_seconds": 12.655642832978629
+      }
+    },
+    {
+      "id": "f009-task-complete",
+      "outcome": "pass",
+      "command_record": "logs/f009-task-complete.json",
+      "log": "logs/f009-task-complete.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--skip-build",
+          "--filter",
+          "AccelerateArraySIMDProviderParityTests|BatchKernels_SoATests|MatrixDistanceTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 1.225465916970279
+      }
+    },
+    {
+      "id": "f010-baseline-debug-control",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-debug-control.json",
+      "log": "logs/f010-baseline-debug-control.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "stage": "baseline",
+        "configuration": "debug",
+        "mutation": "control",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 26.24548262503231
+      }
+    },
+    {
+      "id": "f010-baseline-debug-lane-0",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-debug-lane-0.json",
+      "log": "logs/f010-baseline-debug-lane-0.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "720918daa2bf092528f908e8929946e92451e57d35991f34185b1a7433f9975c",
+        "stage": "baseline",
+        "configuration": "debug",
+        "mutation": "lane-0",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.6260572909959592
+      }
+    },
+    {
+      "id": "f010-baseline-debug-lane-16",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-debug-lane-16.json",
+      "log": "logs/f010-baseline-debug-lane-16.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "1a1cb56627209e3cb59632c2239e2acad6c0dc6855a46397adfd3a0be894cabd",
+        "stage": "baseline",
+        "configuration": "debug",
+        "mutation": "lane-16",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.6147467080154456
+      }
+    },
+    {
+      "id": "f010-baseline-debug-lane-31",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-debug-lane-31.json",
+      "log": "logs/f010-baseline-debug-lane-31.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "afa20a26981efad9bfdc2a457f846915395b1fedffcb94bf273097d4f42618c2",
+        "stage": "baseline",
+        "configuration": "debug",
+        "mutation": "lane-31",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.5974037499981932
+      }
+    },
+    {
+      "id": "f010-baseline-debug-throw",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-debug-throw.json",
+      "log": "logs/f010-baseline-debug-throw.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "8c842694269129f39b3c7121d862d8e32f2896265c5fe4308c3882471c51b932",
+        "stage": "baseline",
+        "configuration": "debug",
+        "mutation": "throw",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.6976264590048231
+      }
+    },
+    {
+      "id": "f010-baseline-release-control",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-release-control.json",
+      "log": "logs/f010-baseline-release-control.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "stage": "baseline",
+        "configuration": "release",
+        "mutation": "control",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 54.064531541022006
+      }
+    },
+    {
+      "id": "f010-baseline-release-lane-0",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-release-lane-0.json",
+      "log": "logs/f010-baseline-release-lane-0.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "720918daa2bf092528f908e8929946e92451e57d35991f34185b1a7433f9975c",
+        "stage": "baseline",
+        "configuration": "release",
+        "mutation": "lane-0",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.8544967909692787
+      }
+    },
+    {
+      "id": "f010-baseline-release-lane-16",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-release-lane-16.json",
+      "log": "logs/f010-baseline-release-lane-16.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "1a1cb56627209e3cb59632c2239e2acad6c0dc6855a46397adfd3a0be894cabd",
+        "stage": "baseline",
+        "configuration": "release",
+        "mutation": "lane-16",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.8596389580052346
+      }
+    },
+    {
+      "id": "f010-baseline-release-lane-31",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-release-lane-31.json",
+      "log": "logs/f010-baseline-release-lane-31.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "afa20a26981efad9bfdc2a457f846915395b1fedffcb94bf273097d4f42618c2",
+        "stage": "baseline",
+        "configuration": "release",
+        "mutation": "lane-31",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.8635780419572257
+      }
+    },
+    {
+      "id": "f010-baseline-release-throw",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-baseline-release-throw.json",
+      "log": "logs/f010-baseline-release-throw.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+        "original_test_sha256": "43f99889e96e315856817a8a84ca990c91d27beb52d42a35d9b1abfbfffa8bc7",
+        "mutated_test_sha256": "8c842694269129f39b3c7121d862d8e32f2896265c5fe4308c3882471c51b932",
+        "stage": "baseline",
+        "configuration": "release",
+        "mutation": "throw",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.9699016669765115
+      }
+    },
+    {
+      "id": "f010-green-debug",
+      "outcome": "pass",
+      "command_record": "logs/f010-green-debug.json",
+      "log": "logs/f010-green-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "--filter",
+          "ErrorHandlingValidationTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 3.638111874985043
+      }
+    },
+    {
+      "id": "f010-repaired-debug-control",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-debug-control.json",
+      "log": "logs/f010-repaired-debug-control.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "control",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 2.664364000025671
+      }
+    },
+    {
+      "id": "f010-repaired-debug-lane-0-matcher-error",
+      "outcome": "retained failed diagnostic matcher; superseded by rerun",
+      "command_record": "logs/f010-repaired-debug-lane-0-matcher-error.json",
+      "log": "logs/f010-repaired-debug-lane-0-matcher-error.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "469155d8240be157a26c9910aa64e68d9cf511ad7b1f766a72490a22e26e09a2",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "lane-0",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": false,
+        "elapsed_seconds": 1.6622827500104904
+      }
+    },
+    {
+      "id": "f010-repaired-debug-lane-0",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-debug-lane-0.json",
+      "log": "logs/f010-repaired-debug-lane-0.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "469155d8240be157a26c9910aa64e68d9cf511ad7b1f766a72490a22e26e09a2",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "lane-0",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 2.2185378330177628
+      }
+    },
+    {
+      "id": "f010-repaired-debug-lane-16-matcher-error",
+      "outcome": "retained failed diagnostic matcher; superseded by rerun",
+      "command_record": "logs/f010-repaired-debug-lane-16-matcher-error.json",
+      "log": "logs/f010-repaired-debug-lane-16-matcher-error.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "812b60f85e3316210a6ee583f444d3671d171696d64dbc224a2f32999cb5b49d",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "lane-16",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": false,
+        "elapsed_seconds": 1.6253608340048231
+      }
+    },
+    {
+      "id": "f010-repaired-debug-lane-16",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-debug-lane-16.json",
+      "log": "logs/f010-repaired-debug-lane-16.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "812b60f85e3316210a6ee583f444d3671d171696d64dbc224a2f32999cb5b49d",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "lane-16",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.663073916977737
+      }
+    },
+    {
+      "id": "f010-repaired-debug-lane-31-matcher-error",
+      "outcome": "retained failed diagnostic matcher; superseded by rerun",
+      "command_record": "logs/f010-repaired-debug-lane-31-matcher-error.json",
+      "log": "logs/f010-repaired-debug-lane-31-matcher-error.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "12c51bdf09b90ac9f2f965bef0b63e7148e51711bd05f98317225d9de7c805c1",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "lane-31",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": false,
+        "elapsed_seconds": 1.666389042045921
+      }
+    },
+    {
+      "id": "f010-repaired-debug-lane-31",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-debug-lane-31.json",
+      "log": "logs/f010-repaired-debug-lane-31.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "12c51bdf09b90ac9f2f965bef0b63e7148e51711bd05f98317225d9de7c805c1",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "lane-31",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.62777170795016
+      }
+    },
+    {
+      "id": "f010-repaired-debug-throw",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-debug-throw.json",
+      "log": "logs/f010-repaired-debug-throw.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "debug",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "932dbfe3ae84c6e9af8703e8223636e2c689c51c3cec5edb681c73e26a861a83",
+        "stage": "repaired",
+        "configuration": "debug",
+        "mutation": "throw",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.6856365000130609
+      }
+    },
+    {
+      "id": "f010-repaired-release-control",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-release-control.json",
+      "log": "logs/f010-repaired-release-control.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "control",
+        "expected_test_failure": false,
+        "test_exit_code": 0,
+        "matched_expectation": true,
+        "elapsed_seconds": 2.9060743330046535
+      }
+    },
+    {
+      "id": "f010-repaired-release-lane-0-matcher-error",
+      "outcome": "retained failed diagnostic matcher; superseded by rerun",
+      "command_record": "logs/f010-repaired-release-lane-0-matcher-error.json",
+      "log": "logs/f010-repaired-release-lane-0-matcher-error.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "469155d8240be157a26c9910aa64e68d9cf511ad7b1f766a72490a22e26e09a2",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "lane-0",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": false,
+        "elapsed_seconds": 1.9613308330299333
+      }
+    },
+    {
+      "id": "f010-repaired-release-lane-0",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-release-lane-0.json",
+      "log": "logs/f010-repaired-release-lane-0.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "469155d8240be157a26c9910aa64e68d9cf511ad7b1f766a72490a22e26e09a2",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "lane-0",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 2.4804157079779543
+      }
+    },
+    {
+      "id": "f010-repaired-release-lane-16-matcher-error",
+      "outcome": "retained failed diagnostic matcher; superseded by rerun",
+      "command_record": "logs/f010-repaired-release-lane-16-matcher-error.json",
+      "log": "logs/f010-repaired-release-lane-16-matcher-error.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "812b60f85e3316210a6ee583f444d3671d171696d64dbc224a2f32999cb5b49d",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "lane-16",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": false,
+        "elapsed_seconds": 1.9495260830153711
+      }
+    },
+    {
+      "id": "f010-repaired-release-lane-16",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-release-lane-16.json",
+      "log": "logs/f010-repaired-release-lane-16.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "812b60f85e3316210a6ee583f444d3671d171696d64dbc224a2f32999cb5b49d",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "lane-16",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.9515425830031745
+      }
+    },
+    {
+      "id": "f010-repaired-release-lane-31-matcher-error",
+      "outcome": "retained failed diagnostic matcher; superseded by rerun",
+      "command_record": "logs/f010-repaired-release-lane-31-matcher-error.json",
+      "log": "logs/f010-repaired-release-lane-31-matcher-error.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "12c51bdf09b90ac9f2f965bef0b63e7148e51711bd05f98317225d9de7c805c1",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "lane-31",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": false,
+        "elapsed_seconds": 1.9660149159608409
+      }
+    },
+    {
+      "id": "f010-repaired-release-lane-31",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-release-lane-31.json",
+      "log": "logs/f010-repaired-release-lane-31.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "12c51bdf09b90ac9f2f965bef0b63e7148e51711bd05f98317225d9de7c805c1",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "lane-31",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.9647097499691881
+      }
+    },
+    {
+      "id": "f010-repaired-release-throw",
+      "outcome": "mutation expectation satisfied",
+      "command_record": "logs/f010-repaired-release-throw.json",
+      "log": "logs/f010-repaired-release-throw.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--package-path",
+          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests/testVectorMathSafeDivision"
+        ],
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
+        "original_test_sha256": "2aef67999585ca4dd720c04d22568fb5bc04973ca8239d9f36ba37962b5abdd6",
+        "mutated_test_sha256": "932dbfe3ae84c6e9af8703e8223636e2c689c51c3cec5edb681c73e26a861a83",
+        "stage": "repaired",
+        "configuration": "release",
+        "mutation": "throw",
+        "expected_test_failure": true,
+        "test_exit_code": 1,
+        "matched_expectation": true,
+        "elapsed_seconds": 1.9426251660333946
+      }
+    },
+    {
+      "id": "f010-task-complete",
+      "outcome": "pass",
+      "command_record": "logs/f010-task-complete.json",
+      "log": "logs/f010-task-complete.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release",
+          "--filter",
+          "ErrorHandlingValidationTests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "029902cdb98c7c4401f55eb4de46fd400608714a",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 4.6929007500293665
+      }
+    },
+    {
+      "id": "full-debug",
+      "outcome": "pass",
+      "command_record": "logs/full-debug.json",
+      "log": "logs/full-debug.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "029902cdb98c7c4401f55eb4de46fd400608714a",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 319.0478595420136
+      }
+    },
+    {
+      "id": "full-release",
+      "outcome": "pass",
+      "command_record": "logs/full-release.json",
+      "log": "logs/full-release.log",
+      "record": {
+        "command": [
+          "swift",
+          "test",
+          "--disable-sandbox",
+          "--build-system",
+          "native",
+          "--cache-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "--scratch-path",
+          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "-j",
+          "4",
+          "-c",
+          "release"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head": "e575729bdb376fe123e6f5a54c490fabe202458a",
+        "environment_overrides": {
+          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "VECTORCORE_TEST_EXTENDED": "0"
+        },
+        "exit_code": 0,
+        "elapsed_seconds": 63.88213254197035
+      }
+    },
+    {
+      "id": "production-source-unchanged",
+      "outcome": "pass",
+      "command_record": "logs/production-source-unchanged.json",
+      "log": "logs/production-source-unchanged.log",
+      "record": {
+        "command": [
+          "git",
+          "diff",
+          "--exit-code",
+          "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
+          "--",
+          "Sources",
+          "Package.swift"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
+        "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
+        "exit_code": 0,
+        "elapsed_seconds": 0.0113413329818286
+      }
+    },
+    {
+      "id": "python-policies-final",
+      "outcome": "pass",
+      "command_record": "logs/python-policies-final.json",
+      "log": "logs/python-policies-final.log",
+      "record": {
+        "command": [
+          "python3",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
+        "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
+        "exit_code": 0,
+        "elapsed_seconds": 254.09899954195134
+      }
+    },
+    {
+      "id": "python-policies",
+      "outcome": "pass",
+      "command_record": "logs/python-policies.json",
+      "log": "logs/python-policies.log",
+      "record": {
+        "command": [
+          "python3",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head_at_start": "029902cdb98c7c4401f55eb4de46fd400608714a",
+        "dirty_patch_sha256": null,
+        "exit_code": 0,
+        "elapsed_seconds": 269.2605269170017
+      }
+    },
+    {
+      "id": "review-interpolation-green",
+      "outcome": "pass",
+      "command_record": "logs/review-interpolation-green.json",
+      "log": "logs/review-interpolation-green.log",
+      "record": {
+        "command": [
+          "python3",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_relative_oracle_guards.py"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head_at_start": "029902cdb98c7c4401f55eb4de46fd400608714a",
+        "dirty_patch_sha256": "5ea64626e2cd4c1e563beed5e7d198111a9923c96474e64a53d9398df13cedd9",
+        "exit_code": 0,
+        "elapsed_seconds": 22.54909420799231
+      }
+    },
+    {
+      "id": "review-interpolation-red",
+      "outcome": "expected regression failure",
+      "command_record": "logs/review-interpolation-red.json",
+      "log": "logs/review-interpolation-red.log",
+      "record": {
+        "command": [
+          "python3",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "Scripts/ci/tests",
+          "-p",
+          "test_relative_oracle_guards.py"
+        ],
+        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "source_head_at_start": "029902cdb98c7c4401f55eb4de46fd400608714a",
+        "dirty_patch_sha256": "1e97347e2cfc9ec84f78ea3e2bc2440e50b42135e48ed4850af7d7e4272a99ae",
+        "exit_code": 1,
+        "elapsed_seconds": 22.55867658299394
+      }
+    },
+    {
+      "id": "f009-policy-live-red",
+      "log": "logs/f009-policy-live-red.log",
+      "outcome": "Live inventory failed with six missing finite gates.",
+      "record_provenance": "Original raw unittest output retained; separate command JSON was not captured for this run."
+    },
+    {
+      "id": "f009-policy-red",
+      "log": "logs/f009-policy-red.log",
+      "outcome": "Initial controls failed; diagnostic-matcher failures retained alongside expected missing gates.",
+      "record_provenance": "Original raw unittest output retained; separate command JSON was not captured for this run."
+    },
+    {
+      "id": "f009-policy-green",
+      "log": "logs/f009-policy-green.log",
+      "outcome": "Six policy tests passed before the later interpolation control was added.",
+      "record_provenance": "Original raw unittest output retained; separate command JSON was not captured for this run."
+    }
+  ]
+}

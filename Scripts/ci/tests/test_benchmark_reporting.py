@@ -16,6 +16,11 @@ helper = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(helper)
 
 
+def require(condition, detail):
+    if not condition:
+        raise AssertionError(detail)
+
+
 def metadata():
     return {"schemaVersion": 3, "fixtureVersion": "V02-inputs-1", "measurementBoundaryVersion": "V04-boundaries-1",
             "arch": "arm64", "deviceModel": "fixture-model", "deviceTag": "fixture-device", "os": "fixture-os",
@@ -89,9 +94,9 @@ def check_product_discovery(output):
     product.parent.mkdir(parents=True); product.write_bytes(b"product fixture")
     dwarf = root / "arch/debug/vectorcore-bench.dSYM/Contents/Resources/DWARF/vectorcore-bench"
     dwarf.parent.mkdir(parents=True); dwarf.write_bytes(b"debug symbols fixture")
-    assert helper.find_executable(root, "debug") == product
+    require(helper.find_executable(root, "debug") == product, 'Reporting contract failed')
     # The previous name-only discovery would incorrectly find two regular files.
-    assert len([p for p in root.rglob("vectorcore-bench") if p.is_file()]) == 2
+    require(len([p for p in root.rglob("vectorcore-bench") if p.is_file()]) == 2, 'Reporting contract failed')
     duplicate = root / "other/debug/vectorcore-bench"
     duplicate.parent.mkdir(parents=True); duplicate.write_bytes(b"ambiguous product fixture")
     rejects(root)
@@ -118,7 +123,7 @@ def boundary_table(check):
     check("boundary-scope-mismatch", run_report(), scope_mismatch(), 2, (), ("Boundary mismatch", "timingScope"))
     check("boundary-scope-mismatch-not-waivable", run_report(), scope_mismatch(), 2, ("--allow-incompatible",), ("Boundary mismatch", "timingScope"))
     paths = list(leaf_paths(boundary()))
-    assert len(paths) >= 25, paths
+    require(len(paths) >= 25, paths)
     for path in paths:
         after = run_report(); after["results"][0]["boundary"] = mutate(after["results"][0]["boundary"], path)
         # A present-but-different boundary is never waivable, with or without the explicit override.
@@ -188,7 +193,7 @@ def main():
         a, b = directory/"before.json", directory/"after.json"
         helper.write_json(a,before); helper.write_json(b,after)
         text = helper.run([binary,"--baseline",a,"--current",b,*flags],directory,"compare",expected=expected)
-        for fragment in fragments: assert fragment in text, (name,fragment,text)
+        for fragment in fragments: require(fragment in text, (name,fragment,text))
         rows.append({"name":name,"expectedExit":expected,"actualExit":expected})
     check("median-denominator",run_report([case(median=20)]),run_report([case(median=25)]),1,fragments=("delta=25.0%",))
     check("improvement-denominator",run_report([case(median=25)]),run_report([case(median=20)]),0,("--show-improvements",),("delta=-20.0%",))
@@ -240,40 +245,40 @@ def main():
         with args.csv.open(newline="") as stream: table=list(csv.reader(stream))
         header=next(i for i,row in enumerate(table) if row and row[0]=="name")
         meta={row[0]:row[1] for row in table[:header] if len(row)==2}
-        for key in ["runLabel","deviceTag","deviceModel","swiftVersion","runtimeToolchain.value"]: assert meta[key]==expected,(key,meta)
-        data=dict(zip(table[header],table[header+1]));assert data["name"]==expected
-        assert float(data["ns_per_op"])==25 and float(data["ns_per_unit"])==5
+        for key in ["runLabel","deviceTag","deviceModel","swiftVersion","runtimeToolchain.value"]: require(meta[key]==expected, (key,meta))
+        data=dict(zip(table[header],table[header+1]));require(data["name"]==expected, 'Reporting contract failed')
+        require(float(data["ns_per_op"])==25 and float(data["ns_per_unit"])==5, 'Reporting contract failed')
         columns=table[header]
         v02_prefix=["name","kind","metric","dim","variant","provider","N","iterations","total_ns","ns_per_op","unit_count","ns_per_unit","throughput_per_s",
                     "gflops","samples","mean_ns_per_op","median_ns_per_op","p90_ns_per_op","stddev_ns_per_op","rsd_percent","suspicious"]
-        assert len(v02_prefix)==21 and columns[:21]==v02_prefix,("V02 CSV prefix changed",columns[:21])
+        require(len(v02_prefix)==21 and columns[:21]==v02_prefix, ("V02 CSV prefix changed",columns[:21]))
         for column in ["sample_ns_per_operation","median_ns_per_operation","mean_ns_per_operation","p90_ns_per_operation","stddev_ns_per_operation","rsd_percent_per_operation"]:
-            assert column in columns,column
-        assert data["statistic_unit"]=="per-sample-average-ns-per-operation"
+            require(column in columns, column)
+        require(data["statistic_unit"]=="per-sample-average-ns-per-operation", 'Reporting contract failed')
         # fixture: samples 24 and 26 ns per invocation over 5 units => 4.8 and 5.2 ns per operation
         per_operation=[float(x) for x in data["sample_ns_per_operation"].split(";")]
-        assert abs(per_operation[0]-4.8)<1e-9 and abs(per_operation[1]-5.2)<1e-9,per_operation
-        assert abs(float(data["median_ns_per_operation"])-5.0)<1e-9 and abs(float(data["mean_ns_per_operation"])-5.0)<1e-9
-        assert abs(float(data["p90_ns_per_operation"])-5.2)<1e-9 and abs(float(data["stddev_ns_per_operation"])-0.2*2**0.5)<1e-9
+        require(abs(per_operation[0]-4.8)<1e-9 and abs(per_operation[1]-5.2)<1e-9, per_operation)
+        require(abs(float(data["median_ns_per_operation"])-5.0)<1e-9 and abs(float(data["mean_ns_per_operation"])-5.0)<1e-9, 'Reporting contract failed')
+        require(abs(float(data["p90_ns_per_operation"])-5.2)<1e-9 and abs(float(data["stddev_ns_per_operation"])-0.2*2**0.5)<1e-9, 'Reporting contract failed')
         for column in ["boundary_version","timing_scope","operation","route","provider_mode","work_unit","units_per_invocation","input_representation",
                        "output_representation","fixture_id","fixture_preparation","incl_input_construction","incl_input_preparation","incl_route_internal_packing",
                        "incl_caller_output_allocation","incl_route_internal_allocation","incl_provider_scheduling","incl_provider_observation","incl_kernel_work",
                        "incl_output_consumption","incl_correctness_validation","consumer","comparison_family","comparison_side","statistic_unit",
                        "sample_ns_per_invocation","sample_iterations","warmup_iterations","boundary_json"]:
-            assert column in columns,(column,columns)
-        assert columns.index("suspicious")<columns.index("boundary_version"),"boundary columns are appended after the V02 columns"
-        assert data["timing_scope"]=="fixture-injected" and data["route"]==expected and data["operation"]=="op,"+expected
-        assert data["units_per_invocation"]=="5"
-        assert data["sample_ns_per_invocation"]=="24.0;26.0" and data["sample_iterations"]=="1;1" and data["warmup_iterations"]=="3"
+            require(column in columns, (column,columns))
+        require(columns.index("suspicious")<columns.index("boundary_version"), "boundary columns are appended after the V02 columns")
+        require(data["timing_scope"]=="fixture-injected" and data["route"]==expected and data["operation"]=="op,"+expected, 'Reporting contract failed')
+        require(data["units_per_invocation"]=="5", 'Reporting contract failed')
+        require(data["sample_ns_per_invocation"]=="24.0;26.0" and data["sample_iterations"]=="1;1" and data["warmup_iterations"]=="3", 'Reporting contract failed')
         parsed=json.loads(data["boundary_json"])
-        assert parsed["route"]==expected and parsed["unitsPerInvocation"]==5 and parsed["timingScope"]=="fixture-injected"
+        require(parsed["route"]==expected and parsed["unitsPerInvocation"]==5 and parsed["timingScope"]=="fixture-injected", 'Reporting contract failed')
         unavailable=next(i for i,row in enumerate(table) if row[:2]==["unavailable_name","unavailable_reason"])
-        assert table[unavailable+1][:4]==[expected,expected,"fixture-injected",expected]
-        assert json.loads(table[unavailable+1][4])["route"]==expected
+        require(table[unavailable+1][:4]==[expected,expected,"fixture-injected",expected], 'Reporting contract failed')
+        require(json.loads(table[unavailable+1][4])["route"]==expected, 'Reporting contract failed')
         failure=next(i for i,row in enumerate(table) if row==["failure_name","failure_reason","failure_boundary_json"])
-        assert table[failure+1][:2]==[expected,expected] and table[failure+1][2]==""
+        require(table[failure+1][:2]==[expected,expected] and table[failure+1][2]=="", 'Reporting contract failed')
         # A failure that carries a boundary writes it as canonical JSON in the third column.
-        assert table[failure+2][:2]==[expected,expected] and json.loads(table[failure+2][2])["route"]==expected
+        require(table[failure+2][:2]==[expected,expected] and json.loads(table[failure+2][2])["route"]==expected, 'Reporting contract failed')
         # Sections present: metadata key/values, measurements, unavailable, failures.
         rows.append({"name":"independent-python-csv","sections":4,"passed":True})
     helper.write_json(output/"result.json",{"marker":"V02_REPORTING_COMPLETE","cases":rows,"comparatorSHA256":helper.sha(binary)})

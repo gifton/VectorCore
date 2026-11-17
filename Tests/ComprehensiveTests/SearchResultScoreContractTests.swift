@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -245,7 +246,7 @@ import Testing
         print("R05_REENTRANT_SCORE_COMPLETE")
     }
 
-    @Test func reentrantScoreRunsOutsideLockAndKeepsSelectedSnapshot() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func reentrantScoreRunsOutsideLockAndKeepsSelectedSnapshot() throws {
         let diagnostic = try r05RunScoreChild()
         #expect(diagnostic.contains("R05_REENTRANT_SCORE_COMPLETE"))
     }
@@ -344,7 +345,7 @@ private func r05RunScoreChild() throws -> String {
         }
     }
     let process = try launchChildProbe(.swiftTesting(filter: childFilter), environment: environment, output: output,
-                                       deadline: 15, cleanup: .kill(seconds: 2))
+                                       deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
     record["arguments"] = process.arguments
     record["pid"] = process.processIdentifier
     print("R05_CHILD_CAPTURE \(capture.path)")

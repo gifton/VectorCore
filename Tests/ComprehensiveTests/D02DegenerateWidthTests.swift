@@ -1,4 +1,5 @@
 import Foundation
+import VectorCoreTestSupport
 import Testing
 import VectorCore
 
@@ -15,7 +16,12 @@ import VectorCore
 //
 // Inputs: width 1 uses a = [2.5], b = [-1.5] (safeLog uses [1], squareRoot [6.25]); width 0 uses empty vectors.
 
-enum D02EdgeV0: StaticDimension { static let value = 0 }
+enum D02EdgeV0: StaticDimension {
+    static var value: Int {
+        if ProcessInfo.processInfo.environment["D02_EDGE_PROBE"] != nil { return trapDimensionRead(0) }
+        return 0
+    }
+}
 enum D02EdgeV1: StaticDimension { static let value = 1 }
 
 enum D02EdgeOutcome: Equatable, Sendable, CustomStringConvertible {
@@ -228,11 +234,15 @@ struct D02DegenerateWidthTests {
         guard let specification = ProcessInfo.processInfo.environment["D02_EDGE_PROBE"] else { return }
         let parts = specification.split(separator: "|").map(String.init)
         let rows = parts.last == "0" ? d02EdgeRows(D02EdgeV0.self) : d02EdgeRows(D02EdgeV1.self)
-        if let row = rows[parts[0]] { _ = d02Evaluate(row) }
+        trapStage("TRAP_BEFORE \(specification)")
+        if let row = rows[parts[0]] {
+            _ = Operations.$simdProvider.withValue(D02RecordingSIMDProvider(stageWitness: true)) { d02Evaluate(row) }
+        }
+        trapStage("TRAP_RETURNED \(specification)")
         print("D02_EDGE_NOT_TAKEN \(specification)")
     }
 
-    @Test("Trapping outcomes trap in a child (message checked in Debug builds)")
+    @Test("Trapping outcomes trap in a child (message checked in Debug builds)", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func trappingOutcomes() throws {
         if ProcessInfo.processInfo.environment["D02_SKIP_TRAPS"] == "1" { return }
         var traps: [(String, String, String)] = []
@@ -250,21 +260,23 @@ struct D02DegenerateWidthTests {
             _ = FileManager.default.createFile(atPath: url.path, contents: nil)
             let handle = try FileHandle(forWritingTo: url)
             let process = try launchChildProbe(.swiftTesting(filter: "D02DegenerateWidthTests/edgeChildProbe"),
-                                               environment: environment, output: handle, deadline: 15,
-                                               cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                               environment: environment, output: handle, deadline: ChildProbeBudget.standard.deadline,
+                                               cleanup: ChildProbeBudget.standard.cleanup)
             let timedOut = process.timedOut
             try handle.close()
             let diagnostic = try String(contentsOf: url, encoding: .utf8)
             print("D02_EDGE_CHILD_CAPTURE \(specification) \(url.path)")
+            print("D02_EDGE_CHILD_RESULT \(specification) status=\(process.statusDescription) reason=\(process.reasonDescription)")
             if timedOut {
                 throw NSError(domain: "D02.childTimeout", code: 1,
                               userInfo: [NSLocalizedDescriptionKey: "Child deadline exceeded: \(url.path)"])
             }
-            #expect(process.terminationReason == .uncaughtSignal, "\(specification): \(diagnostic)")
+            let isExtremum = path == "Vector.minElement()" || path == "Vector.maxElement()"
+            let failures = trapObservationFailures(process, output: diagnostic, id: specification,
+                                                   diagnostic: message, dimensionReads: isExtremum ? nil : 1,
+                                                   forbidden: ["TRAP_DOWNSTREAM minIndex", "TRAP_DOWNSTREAM maxIndex"])
+            #expect(failures.isEmpty, "\(specification): \(failures): \(diagnostic)")
             #expect(!diagnostic.contains("D02_EDGE_NOT_TAKEN"), "\(specification)")
-            #if DEBUG
-            #expect(diagnostic.contains(message), "\(specification): expected '\(message)' in \(diagnostic)")
-            #endif
         }
     }
 }

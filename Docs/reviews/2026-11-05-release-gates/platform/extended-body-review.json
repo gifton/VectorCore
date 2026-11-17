@@ -1,0 +1,420 @@
+[
+  {
+    "id": "ComprehensiveTests.BatchKernels_SoATests/BatchProcessingTests/testLargeBatchSize()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+        "line": 784,
+        "endLine": 836,
+        "body": "                }\n            }\n        }\n\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testLargeBatchSize() {\n            let query = Vector512Optimized(repeating: 0.25)\n\n            // Test large batch sizes (100-1000 candidates)\n            let testSizes = [100, 250, 500, 750, 1000]\n\n            for batchSize in testSizes {\n                let candidates = generateTestVectors512(count: batchSize)\n\n                // Test memory management\n                let initialMemory = getMemoryUsage()\n                let batchResults = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: candidates)\n                let finalMemory = getMemoryUsage()\n\n                #expect(batchResults.count == batchSize)\n\n                // Informational only: whole-process RSS, unreliable under parallel tests;\n                // isolated-process measurements are V04's memory probe. Signed, never asserted.\n                let memoryGrowth: Int64 = Int64(finalMemory) - Int64(initialMemory)\n                let label = \"whole-process RSS, unreliable under parallel tests; \"\n                    + \"isolated-process measurements are V04's memory probe\"\n                print(\"  [\\(label)] batch \\(batchSize) RSS delta: \\(memoryGrowth) bytes\")\n\n                // Spot check accuracy (test every 100th element for large batches)\n                let stepSize = max(1, batchSize / 10)\n                for i in stride(from: 0, to: batchSize, by: stepSize) {\n                    let referenceResult = EuclideanKernels.squared512(query, candidates[i])\n                    let error = abs(batchResults[i] - referenceResult)\n                    #expect(error < 1e-3, \"Large batch accuracy check failed at \\(i)\")\n                }\n\n                // Validate that SoA shows benefits for large batches\n                if batchSize >= 500 {\n                    let batchTime = measureTime {\n                        _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: candidates)\n                    }\n\n                    let individualTime = measureTime {\n                        for candidate in candidates {\n                            _ = EuclideanKernels.squared512(query, candidate)\n                        }\n                    }\n\n                    // For large batches, SoA should show performance benefits\n                    // Allow some tolerance for measurement variance\n                    let expectedRatio = 3.0 // Allow SoA to be up to 3x slower in debug mode\n                    if strictPerfGatesEnabled {\n                        expectPerformance(\"BatchKernels_SoATests.testLargeBatchSize.2\", batchTime < individualTime * expectedRatio || batchTime < 0.1,\n                               \"Large batch \\(batchSize): SoA time \\(batchTime)s should be reasonable vs individual \\(individualTime)s\")\n                    }\n                }\n            }\n        }",
+        "assertions": [
+          {
+            "line": 798,
+            "text": "#expect(batchResults.count == batchSize)"
+          },
+          {
+            "line": 812,
+            "text": "#expect(error < 1e-3, \"Large batch accuracy check failed at \\(i)\")"
+          },
+          {
+            "line": 831,
+            "text": "expectPerformance(\"BatchKernels_SoATests.testLargeBatchSize.2\", batchTime < individualTime * expectedRatio || batchTime < 0.1,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.BatchKernels_SoATests/BatchProcessingTests/testMediumBatchSize()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+        "line": 743,
+        "endLine": 781,
+        "body": "                }\n            }\n        }\n\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testMediumBatchSize() {\n            let query = Vector512Optimized(repeating: 0.75)\n\n            // Test medium batch sizes (10-100 candidates)\n            let testSizes = [10, 25, 50, 75, 100]\n\n            for batchSize in testSizes {\n                let candidates = generateTestVectors512(count: batchSize)\n                let batchResults = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: candidates)\n                #expect(batchResults.count == batchSize)\n\n                // Verify result consistency\n                let referenceResults = candidates.map { candidate in\n                    EuclideanKernels.squared512(query, candidate)\n                }\n\n                for i in 0..<batchSize {\n                    let error = abs(batchResults[i] - referenceResults[i])\n                    #expect(error < 1e-3, \"Batch size \\(batchSize), candidate \\(i): error \\(error)\")\n                }\n\n                // Basic performance validation (batch should not be dramatically slower)\n                let batchTime = measureTime {\n                    _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: candidates)\n                }\n\n                let individualTime = measureTime {\n                    for candidate in candidates {\n                        _ = EuclideanKernels.squared512(query, candidate)\n                    }\n                }\n\n                // SoA should not be more than 2x slower (allowing for setup overhead)\n                if strictPerfGatesEnabled {\n                    expectPerformance(\"BatchKernels_SoATests.testMediumBatchSize.1\", batchTime < individualTime * 2.0,\n                        \"Batch processing took \\(batchTime)s vs individual \\(individualTime)s for size \\(batchSize)\")\n                }\n            }\n        }",
+        "assertions": [
+          {
+            "line": 752,
+            "text": "#expect(batchResults.count == batchSize)"
+          },
+          {
+            "line": 761,
+            "text": "#expect(error < 1e-3, \"Batch size \\(batchSize), candidate \\(i): error \\(error)\")"
+          },
+          {
+            "line": 777,
+            "text": "expectPerformance(\"BatchKernels_SoATests.testMediumBatchSize.1\", batchTime < individualTime * 2.0,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.BatchKernels_SoATests/PerformanceComparisonTests/testCacheLocalityImprovements()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+        "line": 1287,
+        "endLine": 1367,
+        "body": "                       \"Performance should scale reasonably: small \\(smallTime)s, medium \\(mediumTime)s, ratio \\(actualRatio)\")\n            }\n        }\n\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testCacheLocalityImprovements() {\n            // Test cache locality improvements with SoA by comparing sequential vs random access patterns\n            let candidateCount = 1000\n            let query = Vector512Optimized(repeating: 0.5)\n            let candidates = generateTestVectors512(count: candidateCount)\n\n            // Test 1: Sequential access (cache-friendly in SoA)\n            let sequentialTime = measureTime {\n                for _ in 0..<10 {\n                    _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: candidates)\n                }\n            }\n\n            // Test 2: Random access pattern simulation\n            var randomCandidates = candidates\n            randomCandidates.shuffle()\n            let randomTime = measureTime {\n                for _ in 0..<10 {\n                    _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: randomCandidates)\n                }\n            }\n\n            // Sequential should be at least as fast as random (cache benefits)\n            if strictPerfGatesEnabled {\n                expectPerformance(\"BatchKernels_SoATests.testCacheLocalityImprovements.7\", sequentialTime <= randomTime * 1.5 || sequentialTime < 0.1,\n                       \"Sequential access should benefit from cache locality: sequential \\(sequentialTime)s vs random \\(randomTime)s\")\n            }\n\n            // Test 3: Verify lane-wise access pattern efficiency\n            let soa = SoA<Vector512Optimized>.build(from: candidates)\n            var laneSum: Float = 0\n\n            let laneAccessTime = measureTime {\n                // Cache-friendly: access all candidates for each lane sequentially\n                for laneIdx in 0..<min(10, soa.lanes) {\n                    let lanePtr = soa.lanePointer(laneIdx)\n                    for candidateIdx in 0..<candidateCount {\n                        let simd4 = lanePtr[candidateIdx]\n                        laneSum += simd4.x + simd4.y + simd4.z + simd4.w\n                    }\n                }\n            }\n\n            var candidateSum: Float = 0\n            let candidateAccessTime = measureTime {\n                // Cache-unfriendly: access all lanes for each candidate\n                for candidateIdx in 0..<candidateCount {\n                    for laneIdx in 0..<min(10, soa.lanes) {\n                        let simd4 = candidates[candidateIdx].storage[laneIdx]\n                        candidateSum += simd4.x + simd4.y + simd4.z + simd4.w\n                    }\n                }\n            }\n\n            // Lane-wise access should be more cache-friendly\n            if strictPerfGatesEnabled {\n                expectPerformance(\"BatchKernels_SoATests.testCacheLocalityImprovements.8\", laneAccessTime <= candidateAccessTime * 2.0 || laneAccessTime < 0.01,\n                       \"Lane-wise access should be cache-friendly: lane \\(laneAccessTime)s vs candidate \\(candidateAccessTime)s\")\n            }\n\n            // Test 4: Memory access pattern validation\n            let accessPatternTest = measureTime {\n                let queryLanes = query.storage\n                var results = Array<Float>(repeating: 0, count: candidateCount)\n\n                // Optimal access pattern: process one lane at a time\n                for laneIdx in 0..<soa.lanes {\n                    let lanePtr = soa.lanePointer(laneIdx)\n                    let queryLane = queryLanes[laneIdx]\n\n                    // Sequential memory access within each lane\n                    for candidateIdx in 0..<candidateCount {\n                        let candidateLane = lanePtr[candidateIdx]\n                        let diff = queryLane - candidateLane\n                        results[candidateIdx] += diff.x * diff.x + diff.y * diff.y + diff.z * diff.z + diff.w * diff.w\n                    }\n                }\n            }\n\n            expectPerformance(\"BatchKernels_SoATests.testCacheLocalityImprovements.9\", accessPatternTest < 1.0, \"Optimal access pattern should be fast\")\n        }",
+        "assertions": [
+          {
+            "line": 1311,
+            "text": "expectPerformance(\"BatchKernels_SoATests.testCacheLocalityImprovements.7\", sequentialTime <= randomTime * 1.5 || sequentialTime < 0.1,"
+          },
+          {
+            "line": 1343,
+            "text": "expectPerformance(\"BatchKernels_SoATests.testCacheLocalityImprovements.8\", laneAccessTime <= candidateAccessTime * 2.0 || laneAccessTime < 0.01,"
+          },
+          {
+            "line": 1366,
+            "text": "expectPerformance(\"BatchKernels_SoATests.testCacheLocalityImprovements.9\", accessPatternTest < 1.0, \"Optimal access pattern should be fast\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.BatchKernels_SoATests/PerformanceComparisonTests/testSoAvsAoSPerformance()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/BatchKernels_SoATests.swift",
+        "line": 1230,
+        "endLine": 1284,
+        "body": "\n    @Suite(\"Performance Comparison\")\n    struct PerformanceComparisonTests {\n\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testSoAvsAoSPerformance() {\n            let query = Vector512Optimized(repeating: 0.5)\n            let largeCandidateCount = 1000\n            let candidates = generateTestVectors512(count: largeCandidateCount)\n\n            // Measure SoA performance\n            let soaTime = measureTime {\n                for _ in 0..<5 {\n                    _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: candidates)\n                }\n            }\n\n            // Measure AoS performance (individual kernel calls)\n            let aosTime = measureTime {\n                for _ in 0..<5 {\n                    for candidate in candidates {\n                        _ = EuclideanKernels.squared512(query, candidate)\n                    }\n                }\n            }\n\n            // For large batches, SoA should be reasonable (debug mode considerations)\n            // Allow tolerance for debug overhead\n            if strictPerfGatesEnabled {\n                expectPerformance(\"BatchKernels_SoATests.testSoAvsAoSPerformance.5\", soaTime < aosTime * 3.0 || soaTime < 0.1,\n                       \"SoA should be reasonable vs AoS: SoA \\(soaTime)s vs AoS \\(aosTime)s\")\n            }\n\n            // Test at the threshold where SoA should be beneficial\n            let shouldUseSoA = BatchKernels_SoA.shouldUseSoA(candidateCount: largeCandidateCount, dimension: 512)\n            #expect(shouldUseSoA, \"Large batch should recommend SoA usage\")\n\n            // Test below threshold\n            let smallBatch = BatchKernels_SoA.shouldUseSoA(candidateCount: 50, dimension: 512)\n            #expect(!smallBatch, \"Small batch should not recommend SoA usage\")\n\n            // Performance should scale reasonably with batch size\n            let mediumCandidates = Array(candidates.prefix(500))\n            let mediumTime = measureTime {\n                _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: mediumCandidates)\n            }\n\n            let smallCandidates = Array(candidates.prefix(100))\n            let smallTime = measureTime {\n                _ = BatchKernels_SoA.batchEuclideanSquared512(query: query, candidates: smallCandidates)\n            }\n\n            // Time should scale roughly linearly (allowing for overhead)\n            let expectedRatio = 500.0 / 100.0 // 5x\n            let actualRatio = mediumTime / max(smallTime, 1e-6)\n            if strictPerfGatesEnabled {\n                expectPerformance(\"BatchKernels_SoATests.testSoAvsAoSPerformance.6\", actualRatio < expectedRatio * 2 || mediumTime < 0.001,\n                       \"Performance should scale reasonably: small \\(smallTime)s, medium \\(mediumTime)s, ratio \\(actualRatio)\")\n            }\n        }",
+        "assertions": [
+          {
+            "line": 1254,
+            "text": "expectPerformance(\"BatchKernels_SoATests.testSoAvsAoSPerformance.5\", soaTime < aosTime * 3.0 || soaTime < 0.1,"
+          },
+          {
+            "line": 1260,
+            "text": "#expect(shouldUseSoA, \"Large batch should recommend SoA usage\")"
+          },
+          {
+            "line": 1264,
+            "text": "#expect(!smallBatch, \"Small batch should not recommend SoA usage\")"
+          },
+          {
+            "line": 1281,
+            "text": "expectPerformance(\"BatchKernels_SoATests.testSoAvsAoSPerformance.6\", actualRatio < expectedRatio * 2 || mediumTime < 0.001,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionComprehensiveTests/BenchmarkTests/testBenchmarkBatchOperations()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionComprehensiveTests.swift",
+        "line": 813,
+        "endLine": 826,
+        "body": "\n        // PERF-GATE: asserts absolute wall-clock timings, invalid under debug/\n        // unoptimized builds. Gated behind VECTORCORE_TEST_EXTENDED.\n        @Test(\"Benchmark batch operations\",\n              .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testBenchmarkBatchOperations() throws {\n            let result = MixedPrecisionBenchmark.benchmarkBatchOperations512(candidateCount: 100, iterations: 50)\n\n            print(\"\\n\" + result.mixed.summary)\n            print(\"\\n\" + result.fp16.summary)\n\n            // Mixed precision should have reasonable performance\n            let speedupVsFP16 = result.fp16.meanTimeNs / result.mixed.meanTimeNs\n            print(\"\\nMixed vs FP16 speedup: \\(String(format: \"%.2f\u00d7\", speedupVsFP16))\")\n\n            // Both should complete in reasonable time\n            expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkBatchOperations.3\", result.mixed.meanTimeNs < 50_000, \"Batch mixed too slow: \\(result.mixed.meanTimeNs)ns\")\n            expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkBatchOperations.4\", result.fp16.meanTimeNs < 50_000, \"Batch FP16 too slow: \\(result.fp16.meanTimeNs)ns\")\n        }",
+        "assertions": [
+          {
+            "line": 824,
+            "text": "expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkBatchOperations.3\", result.mixed.meanTimeNs < 50_000, \"Batch mixed too slow: \\(result.mixed.meanTimeNs)ns\")"
+          },
+          {
+            "line": 825,
+            "text": "expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkBatchOperations.4\", result.fp16.meanTimeNs < 50_000, \"Batch FP16 too slow: \\(result.fp16.meanTimeNs)ns\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionComprehensiveTests/BenchmarkTests/testBenchmarkDotProduct()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionComprehensiveTests.swift",
+        "line": 776,
+        "endLine": 789,
+        "body": "\n        // PERF-GATE: asserts wall-clock timings (speedup, absolute ns), which are\n        // invalid under debug/unoptimized builds. Gated behind VECTORCORE_TEST_EXTENDED.\n        @Test(\"Benchmark dot product performance\",\n              .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testBenchmarkDotProduct() throws {\n            let result = MixedPrecisionBenchmark.benchmarkDotProduct512(iterations: 100, warmupIterations: 20)\n\n            print(\"\\n\" + result.fp32.summary)\n            print(\"\\n\" + result.fp16.summary)\n            print(\"\\nSpeedup: \\(String(format: \"%.2f\u00d7\", result.speedup))\")\n\n            // Speedup should be > 1.0 (FP16 faster than FP32)\n            expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkDotProduct.1\", result.speedup > 1.0, \"FP16 should be faster than FP32\")\n\n            // FP16 should meet performance target (< 120ns on M1)\n            // Note: This is hardware-dependent, so we use a relaxed threshold\n            expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkDotProduct.2\", result.fp16.meanTimeNs < 300, \"FP16 performance target not met: \\(result.fp16.meanTimeNs)ns\")\n        }",
+        "assertions": [
+          {
+            "line": 784,
+            "text": "expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkDotProduct.1\", result.speedup > 1.0, \"FP16 should be faster than FP32\")"
+          },
+          {
+            "line": 788,
+            "text": "expectPerformance(\"MixedPrecisionComprehensiveTests.testBenchmarkDotProduct.2\", result.fp16.meanTimeNs < 300, \"FP16 performance target not met: \\(result.fp16.meanTimeNs)ns\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionKernelTests/PerformanceValidationTests/testLatencyVsThroughput()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift",
+        "line": 2968,
+        "endLine": 3077,
+        "body": "                       \"All parallel chunks should complete\")\n            }\n        }\n\n        @Test(\"Latency vs throughput trade-off\", .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testLatencyVsThroughput() async throws {\n            // Setup test vectors\n            let dimension = 512\n            let query = try Vector512Optimized((0..<dimension).map { Float($0) * 0.01 })\n\n            // Measure single-query latency\n            let singleCandidate = try Vector512Optimized(\n                (0..<dimension).map { Float($0) * 0.01 + 1.0 }\n            )\n            let singleFP16 = MixedPrecisionKernels.convertToFP16_512([singleCandidate])\n            let singleOutput = UnsafeMutableBufferPointer<Float>.allocate(capacity: 1)\n            defer { singleOutput.deallocate() }\n\n            let latencyIterations = 100\n            let latencyStart = CFAbsoluteTimeGetCurrent()\n            for _ in 0..<latencyIterations {\n                MixedPrecisionKernels.range_euclid2_mixed_512(\n                    query: query,\n                    candidatesFP16: singleFP16,\n                    range: 0..<1,\n                    out: singleOutput\n                )\n            }\n            let latencyTotal = CFAbsoluteTimeGetCurrent() - latencyStart\n            let avgLatencyMs = (latencyTotal / Double(latencyIterations)) * 1000.0\n\n            // Measure batch throughput\n            let batchSize = 100\n            var batchCandidates: [Vector512Optimized] = []\n            for i in 0..<batchSize {\n                let values = (0..<dimension).map { Float($0 * (i + 1)) * 0.001 }\n                batchCandidates.append(try Vector512Optimized(values))\n            }\n\n            let batchFP16 = MixedPrecisionKernels.convertToFP16_512(batchCandidates)\n            let batchOutput = UnsafeMutableBufferPointer<Float>.allocate(capacity: batchSize)\n            defer { batchOutput.deallocate() }\n\n            let throughputIterations = 10\n            let throughputStart = CFAbsoluteTimeGetCurrent()\n            for _ in 0..<throughputIterations {\n                MixedPrecisionKernels.range_euclid2_mixed_512(\n                    query: query,\n                    candidatesFP16: batchFP16,\n                    range: 0..<batchSize,\n                    out: batchOutput\n                )\n            }\n            let throughputTotal = CFAbsoluteTimeGetCurrent() - throughputStart\n            let throughputVectorsPerSec = Double(batchSize * throughputIterations) / throughputTotal\n            let avgBatchLatencyMs = (throughputTotal / Double(throughputIterations)) * 1000.0\n\n            // Identify sweet spots\n            let sweetSpotTests = [5, 10, 20, 50]\n            var sweetSpotMetrics: [(size: Int, latency: Double, throughput: Double)] = []\n\n            for testSize in sweetSpotTests {\n                let testCandidates = Array(batchCandidates.prefix(testSize))\n                let testFP16 = MixedPrecisionKernels.convertToFP16_512(testCandidates)\n                let testOutput = UnsafeMutableBufferPointer<Float>.allocate(capacity: testSize)\n                defer { testOutput.deallocate() }\n\n                let testStart = CFAbsoluteTimeGetCurrent()\n                for _ in 0..<10 {\n                    MixedPrecisionKernels.range_euclid2_mixed_512(\n                        query: query,\n                        candidatesFP16: testFP16,\n                        range: 0..<testSize,\n                        out: testOutput\n                    )\n                }\n                let testTime = CFAbsoluteTimeGetCurrent() - testStart\n                let testLatency = (testTime / 10.0) * 1000.0\n                let testThroughput = Double(testSize * 10) / testTime\n\n                sweetSpotMetrics.append((testSize, testLatency, testThroughput))\n            }\n\n            // Verify trade-offs\n            expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.7\", avgLatencyMs > 0, \"Single query latency should be measurable\")\n            expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.8\", throughputVectorsPerSec > 0, \"Batch throughput should be positive\")\n\n            // Larger batches should have higher latency but better throughput\n            expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.9\", avgBatchLatencyMs > avgLatencyMs,\n                   \"Batch latency (\\(avgBatchLatencyMs)ms) should be higher than single (\\(avgLatencyMs)ms)\")\n\n            // Verify sweet spot metrics\n            for i in 1..<sweetSpotMetrics.count {\n                let prev = sweetSpotMetrics[i-1]\n                let curr = sweetSpotMetrics[i]\n\n                // Latency should generally increase with batch size\n                expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.10\", curr.latency >= prev.latency * 0.9,\n                       \"Latency should increase with batch size\")\n\n                // Throughput should improve (up to a point)\n                if curr.size <= 20 {\n                    expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.11\", curr.throughput >= prev.throughput * 0.9,\n                           \"Throughput should improve with reasonable batch size\")\n                }\n            }\n\n            // Find optimal batch size for latency-sensitive applications\n            // (e.g., <10ms latency requirement)\n            let latencyBudgetMs = 10.0\n            let optimalForLatency = sweetSpotMetrics.filter { $0.latency < latencyBudgetMs }\n                .max(by: { $0.throughput < $1.throughput })?.size ?? 1\n\n            expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.12\", optimalForLatency > 0, \"Should find optimal batch size for latency budget\")\n        }",
+        "assertions": [
+          {
+            "line": 3047,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.7\", avgLatencyMs > 0, \"Single query latency should be measurable\")"
+          },
+          {
+            "line": 3048,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.8\", throughputVectorsPerSec > 0, \"Batch throughput should be positive\")"
+          },
+          {
+            "line": 3051,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.9\", avgBatchLatencyMs > avgLatencyMs,"
+          },
+          {
+            "line": 3060,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.10\", curr.latency >= prev.latency * 0.9,"
+          },
+          {
+            "line": 3065,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.11\", curr.throughput >= prev.throughput * 0.9,"
+          },
+          {
+            "line": 3076,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testLatencyVsThroughput.12\", optimalForLatency > 0, \"Should find optimal batch size for latency budget\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionKernelTests/PerformanceValidationTests/testThroughputScaling()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionKernelTests.swift",
+        "line": 2866,
+        "endLine": 2965,
+        "body": "            #expect(output[0] < 0.001, \"Identical vectors should have ~0 distance\")\n            #expect(output[1] > 0, \"Different vectors should have >0 distance\")\n        }\n\n        @Test(\"Throughput scaling with batch size\", .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testThroughputScaling() async throws {\n            // Test performance scaling with different batch sizes\n            let dimension = 768\n            let batchSizes = [1, 10, 50, 100, 200]\n            let query = try Vector768Optimized((0..<dimension).map { Float($0) * 0.001 })\n\n            var throughputs: [Int: Double] = [:]\n\n            for batchSize in batchSizes {\n                // Create batch of candidates\n                var candidates: [Vector768Optimized] = []\n                for i in 0..<batchSize {\n                    let values = (0..<dimension).map { Float($0 + i) * 0.001 }\n                    candidates.append(try Vector768Optimized(values))\n                }\n\n                let candidatesFP16 = MixedPrecisionKernels.convertToFP16_768(candidates)\n                let output = UnsafeMutableBufferPointer<Float>.allocate(capacity: batchSize)\n                defer { output.deallocate() }\n\n                // Measure processing time\n                let iterations = 10\n                let start = CFAbsoluteTimeGetCurrent()\n                for _ in 0..<iterations {\n                    MixedPrecisionKernels.range_euclid2_mixed_768(\n                        query: query,\n                        candidatesFP16: candidatesFP16,\n                        range: 0..<batchSize,\n                        out: output\n                    )\n                }\n                let elapsed = CFAbsoluteTimeGetCurrent() - start\n\n                // Calculate throughput (vectors/second)\n                let throughput = Double(batchSize * iterations) / elapsed\n                throughputs[batchSize] = throughput\n            }\n\n            // Verify throughput increases with batch size (up to a point)\n            var previousThroughput: Double = 0\n            for batchSize in batchSizes {\n                if let throughput = throughputs[batchSize] {\n                    expectPerformance(\"MixedPrecisionKernelTests.testThroughputScaling.4\", throughput > 0, \"Throughput should be positive\")\n\n                    // Larger batches should generally have better throughput\n                    // (amortizing fixed costs)\n                    if strictPerfGatesEnabled && previousThroughput > 0 && batchSize <= 100 {\n                        expectPerformance(\"MixedPrecisionKernelTests.testThroughputScaling.5\", throughput >= previousThroughput * 0.8,\n                               \"Throughput should scale with batch size\")\n                    }\n                    previousThroughput = throughput\n                }\n            }\n\n            // Identify optimal batch size\n            let optimalBatch = throughputs.max(by: { $0.value < $1.value })?.key ?? 0\n            expectPerformance(\"MixedPrecisionKernelTests.testThroughputScaling.6\", optimalBatch >= 10, \"Optimal batch size should be >1\")\n\n            // Test parallelization benefits with concurrent processing\n            let parallelBatchSize = 100\n            var parallelCandidates: [Vector768Optimized] = []\n            for i in 0..<parallelBatchSize {\n                let values = (0..<dimension).map { Float($0 * (i + 1)) * 0.0001 }\n                parallelCandidates.append(try Vector768Optimized(values))\n            }\n\n            // Process in parallel chunks\n            let chunkSize = 25\n            await withTaskGroup(of: [Float].self) { group in\n                for chunkStart in stride(from: 0, to: parallelBatchSize, by: chunkSize) {\n                    let chunkEnd = min(chunkStart + chunkSize, parallelBatchSize)\n                    let chunkCandidates = Array(parallelCandidates[chunkStart..<chunkEnd])\n\n                    group.addTask {\n                        let chunkFP16 = MixedPrecisionKernels.convertToFP16_768(chunkCandidates)\n                        let chunkOutput = UnsafeMutableBufferPointer<Float>.allocate(\n                            capacity: chunkCandidates.count\n                        )\n                        defer { chunkOutput.deallocate() }\n\n                        MixedPrecisionKernels.range_euclid2_mixed_768(\n                            query: query,\n                            candidatesFP16: chunkFP16,\n                            range: 0..<chunkCandidates.count,\n                            out: chunkOutput\n                        )\n\n                        return Array(chunkOutput)\n                    }\n                }\n\n                var allResults: [Float] = []\n                for await chunkResults in group {\n                    allResults.append(contentsOf: chunkResults)\n                }\n\n                #expect(allResults.count == parallelBatchSize,\n                       \"All parallel chunks should complete\")\n            }\n        }",
+        "assertions": [
+          {
+            "line": 2908,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testThroughputScaling.4\", throughput > 0, \"Throughput should be positive\")"
+          },
+          {
+            "line": 2913,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testThroughputScaling.5\", throughput >= previousThroughput * 0.8,"
+          },
+          {
+            "line": 2922,
+            "text": "expectPerformance(\"MixedPrecisionKernelTests.testThroughputScaling.6\", optimalBatch >= 10, \"Optimal batch size should be >1\")"
+          },
+          {
+            "line": 2962,
+            "text": "#expect(allResults.count == parallelBatchSize,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionKernelsTests/MemoryEfficiencyTests/testMemoryBandwidthUtilization()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionKernelsTests.swift",
+        "line": 882,
+        "endLine": 939,
+        "body": "                // due to better cache utilization\n            }\n        }\n\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testMemoryBandwidthUtilization() throws {\n            // Test memory bandwidth utilization with FP16\n            // FP16 stores half the scalar payload of FP32; that is a payload model, not a measured bandwidth\n\n            var rng = SeededGenerator(seed: 0xC4040007)\n            let vectorCount = 10000\n            let iterations = 10\n\n            let fp32Vectors = try (0..<vectorCount).map { _ in\n                try Vector512Optimized((0..<512).map { _ in Float.random(in: -100...100, using: &rng) })\n            }\n            let fp16Vectors = fp32Vectors.map { Vector512FP16(from: $0) }\n\n            // Measure bandwidth for FP32 (streaming read)\n            let fp32Start = Date()\n            for _ in 0..<iterations {\n                var sum: Float = 0\n                for v in fp32Vectors {\n                    // Force memory read by summing first element\n                    sum += v[0]\n                }\n                // Prevent optimization\n                if sum == Float.infinity { print(\"Prevented optimization\") }\n            }\n            let fp32Time = Date().timeIntervalSince(fp32Start)\n\n            // Measure bandwidth for FP16 (streaming read)\n            let fp16Start = Date()\n            for _ in 0..<iterations {\n                var sum: Float = 0\n                for vFP16 in fp16Vectors {\n                    // Force memory read\n                    let v = vFP16.toFP32()\n                    sum += v[0]\n                }\n                if sum == Float.infinity { print(\"Prevented optimization\") }\n            }\n            let fp16Time = Date().timeIntervalSince(fp16Start)\n\n            // Calculate effective bandwidth\n            let fp32Bytes = 4 * 512 * vectorCount * iterations  // 4 bytes per float\n            let fp16Bytes = 2 * 512 * vectorCount * iterations  // 2 bytes per float16\n\n            let fp32Bandwidth = Double(fp32Bytes) / fp32Time / 1e9  // GB/s\n            let fp16Bandwidth = Double(fp16Bytes) / fp16Time / 1e9  // GB/s\n            let effectiveBandwidthRatio = (fp32Time / fp16Time) * 2.0  // Account for half the data\n\n            print(\"Memory Bandwidth Utilization:\")\n            print(\"  FP32: \\(fp32Bandwidth) GB/s\")\n            print(\"  FP16: \\(fp16Bandwidth) GB/s\")\n            print(\"  Effective bandwidth improvement: \\(effectiveBandwidthRatio)x\")\n            print(\"  Time saved: \\((1 - fp16Time/fp32Time) * 100)%\")\n\n            // FP16 should show nearly 2x effective bandwidth improvement\n            if strictPerfGatesEnabled {\n                expectPerformance(\"MixedPrecisionKernelsTests.testMemoryBandwidthUtilization.3\", effectiveBandwidthRatio > 1.5, \"FP16 should provide >1.5x bandwidth improvement\")\n            }\n        }",
+        "assertions": [
+          {
+            "line": 937,
+            "text": "expectPerformance(\"MixedPrecisionKernelsTests.testMemoryBandwidthUtilization.3\", effectiveBandwidthRatio > 1.5, \"FP16 should provide >1.5x bandwidth improvement\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionKernelsTests/PerformanceRegressionTests/testPerformanceConsistency()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionKernelsTests.swift",
+        "line": 1483,
+        "endLine": 1539,
+        "body": "                }\n            }\n        }\n\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testPerformanceConsistency() throws {\n            // Wall-clock run-to-run consistency is inherently noisy in debug/shared CI; gate it.\n            // Test performance consistency across runs\n            // - Variance in execution time\n            // - Thermal throttling effects\n            // - System load sensitivity\n\n            let v1 = try Vector512Optimized((0..<512).map { Float($0) })\n            let v2 = try Vector512Optimized((0..<512).map { Float(511 - $0) })\n\n            let v1FP16 = Vector512FP16(from: v1)\n            let v2FP16 = Vector512FP16(from: v2)\n\n            var timings: [Double] = []\n            let runs = 20\n            let opsPerRun = 1000\n\n            for _ in 0..<runs {\n                let start = Date()\n                var result: Float = 0\n\n                for _ in 0..<opsPerRun {\n                    let fp32_1 = v1FP16.toFP32()\n                    let fp32_2 = v2FP16.toFP32()\n                    result += fp32_1.dotProduct(fp32_2)\n                }\n\n                let elapsed = Date().timeIntervalSince(start)\n                timings.append(elapsed)\n\n                // Force use of result to prevent optimization\n                if result < -1000000 { print(\"Unexpected: \\(result)\") }\n            }\n\n            // Calculate statistics\n            let mean = timings.reduce(0, +) / Double(timings.count)\n            let variance = timings.map { pow($0 - mean, 2) }.reduce(0, +) / Double(timings.count)\n            let stdDev = sqrt(variance)\n            let cv = stdDev / mean  // Coefficient of variation\n\n            let minTime = timings.min()!\n            let maxTime = timings.max()!\n\n            print(\"Performance Consistency:\")\n            print(\"  Mean: \\(mean * 1000)ms\")\n            print(\"  Std Dev: \\(stdDev * 1000)ms\")\n            print(\"  CV: \\(cv * 100)%\")\n            print(\"  Min: \\(minTime * 1000)ms\")\n            print(\"  Max: \\(maxTime * 1000)ms\")\n            print(\"  Range: \\((maxTime - minTime) * 1000)ms\")\n\n            // Performance should be consistent (CV < 10%)\n            if strictPerfGatesEnabled {\n                expectPerformance(\"MixedPrecisionKernelsTests.testPerformanceConsistency.7\", cv < 0.10, \"Coefficient of variation should be < 10%\")\n                expectPerformance(\"MixedPrecisionKernelsTests.testPerformanceConsistency.8\", (maxTime - minTime) / mean < 0.2, \"Range should be < 20% of mean\")\n            }\n        }",
+        "assertions": [
+          {
+            "line": 1536,
+            "text": "expectPerformance(\"MixedPrecisionKernelsTests.testPerformanceConsistency.7\", cv < 0.10, \"Coefficient of variation should be < 10%\")"
+          },
+          {
+            "line": 1537,
+            "text": "expectPerformance(\"MixedPrecisionKernelsTests.testPerformanceConsistency.8\", (maxTime - minTime) / mean < 0.2, \"Range should be < 20% of mean\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionPerformanceBenchmark/benchmarkCosineLatency512()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift",
+        "line": 106,
+        "endLine": 136,
+        "body": "        expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.1\", speedup16x16 > 1.0, \"FP16\u00d7FP16 should be faster than FP32\u00d7FP32\")\n        expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.2\", speedup32x16 > 1.0, \"FP32\u00d7FP16 should show some speedup\")\n    }\n\n    @Test(\"Latency: Cosine 512-dim (all precision combinations)\", .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n    func benchmarkCosineLatency512() throws {\n        let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2, seed: 0xBE070002)\n        let q32 = fp32Vecs[0]\n        let c32 = fp32Vecs[1]\n        let q16 = fp16Vecs[0]\n        let c16 = fp16Vecs[1]\n\n        print(\"\\n=== Cosine Distance Latency (512-dim) ===\")\n\n        // FP32\u00d7FP32 baseline\n        let fp32x32 = PrecisionTimer.measure {\n            _ = CosineKernels.distance512_fused(q32, c32)\n        }\n        print(\"FP32\u00d7FP32:  \\(String(format: \"%.2f\", fp32x32.median)) ns\")\n\n        // FP16\u00d7FP16\n        let fp16x16 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.cosine512(q16, c16)\n        }\n        let speedup16x16 = fp32x32.median / fp16x16.median\n        print(\"FP16\u00d7FP16:  \\(String(format: \"%.2f\", fp16x16.median)) ns (speedup: \\(String(format: \"%.2fx\", speedup16x16)))\")\n\n        // FP32\u00d7FP16\n        let fp32x16 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.cosine512(query: q32, candidate: c16)\n        }\n        let speedup32x16 = fp32x32.median / fp32x16.median\n        print(\"FP32\u00d7FP16:  \\(String(format: \"%.2f\", fp32x16.median)) ns (speedup: \\(String(format: \"%.2fx\", speedup32x16)))\")\n\n        expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkCosineLatency512.3\", speedup16x16 > 1.0, \"FP16\u00d7FP16 should be faster\")\n    }",
+        "assertions": [
+          {
+            "line": 135,
+            "text": "expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkCosineLatency512.3\", speedup16x16 > 1.0, \"FP16\u00d7FP16 should be faster\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionPerformanceBenchmark/benchmarkDimensionScaling()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift",
+        "line": 181,
+        "endLine": 231,
+        "body": "    }\n\n    // MARK: - Dimension Scaling Benchmarks\n\n    @Test(\"Dimension scaling: Euclidean performance across dimensions\", .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n    func benchmarkDimensionScaling() throws {\n        var rng = SeededGenerator(seed: 0xBE070004)\n        print(\"\\n=== Dimension Scaling (Euclidean FP16\u00d7FP16) ===\")\n        print(\"Dimension  | FP32 (ns)       | FP16 (ns)       | Speedup   \")\n        print(String(repeating: \"-\", count: 60))\n\n        // 512-dim\n        let (fp32_512, fp16_512) = generateVectors512(count: 2, seed: 0xBE070005)\n        let fp32Time512 = PrecisionTimer.measure {\n            _ = EuclideanKernels.distance512(fp32_512[0], fp32_512[1])\n        }\n        let fp16Time512 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.euclidean512(fp16_512[0], fp16_512[1])\n        }\n        print(String(format: \"%-10d | %-15.2f | %-15.2f | %-10.2fx\",\n            512, fp32Time512.median, fp16Time512.median, fp32Time512.median / fp16Time512.median))\n\n        // 768-dim\n        let fp32_768 = try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })\n        let cand32_768 = try! Vector768Optimized((0..<768).map { _ in Float.random(in: -1...1, using: &rng) })\n        let fp16_768 = MixedPrecisionKernels.Vector768FP16(from: fp32_768)\n        let cand16_768 = MixedPrecisionKernels.Vector768FP16(from: cand32_768)\n\n        let fp32Time768 = PrecisionTimer.measure {\n            _ = EuclideanKernels.distance768(fp32_768, cand32_768)\n        }\n        let fp16Time768 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.euclidean768(fp16_768, cand16_768)\n        }\n        print(String(format: \"%-10d | %-15.2f | %-15.2f | %-10.2fx\",\n            768, fp32Time768.median, fp16Time768.median, fp32Time768.median / fp16Time768.median))\n\n        // 1536-dim\n        let fp32_1536 = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1, using: &rng) })\n        let cand32_1536 = try! Vector1536Optimized((0..<1536).map { _ in Float.random(in: -1...1, using: &rng) })\n        let fp16_1536 = MixedPrecisionKernels.Vector1536FP16(from: fp32_1536)\n        let cand16_1536 = MixedPrecisionKernels.Vector1536FP16(from: cand32_1536)\n\n        let fp32Time1536 = PrecisionTimer.measure {\n            _ = EuclideanKernels.distance1536(fp32_1536, cand32_1536)\n        }\n        let fp16Time1536 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.euclidean1536(fp16_1536, cand16_1536)\n        }\n        print(String(format: \"%-10d | %-15.2f | %-15.2f | %-10.2fx\",\n            1536, fp32Time1536.median, fp16Time1536.median, fp32Time1536.median / fp16Time1536.median))\n\n        // Higher dimensions should show higher speedup\n        expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkDimensionScaling.4\", fp32Time1536.median / fp16Time1536.median >= fp32Time512.median / fp16Time512.median,\n                \"Higher dimensions should show equal or better FP16 speedup\")\n    }",
+        "assertions": [
+          {
+            "line": 229,
+            "text": "expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkDimensionScaling.4\", fp32Time1536.median / fp16Time1536.median >= fp32Time512.median / fp16Time512.median,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.MixedPrecisionPerformanceBenchmark/benchmarkEuclideanLatency512()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift",
+        "line": 64,
+        "endLine": 103,
+        "body": "    }\n\n    // MARK: - Single-Pair Latency Benchmarks\n\n    @Test(\"Latency: Euclidean 512-dim (all precision combinations)\", .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n    func benchmarkEuclideanLatency512() throws {\n        let (fp32Vecs, fp16Vecs) = generateVectors512(count: 2, seed: 0xBE070001)\n        let q32 = fp32Vecs[0]\n        let c32 = fp32Vecs[1]\n        let q16 = fp16Vecs[0]\n        let c16 = fp16Vecs[1]\n\n        print(\"\\n=== Euclidean Distance Latency (512-dim) ===\")\n\n        // FP32\u00d7FP32 baseline\n        let fp32x32 = PrecisionTimer.measure {\n            _ = EuclideanKernels.distance512(q32, c32)\n        }\n        print(\"FP32\u00d7FP32:  \\(String(format: \"%.2f\", fp32x32.median)) ns (min: \\(String(format: \"%.2f\", fp32x32.min)) ns, max: \\(String(format: \"%.2f\", fp32x32.max)) ns)\")\n\n        // FP16\u00d7FP16\n        let fp16x16 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.euclidean512(q16, c16)\n        }\n        let speedup16x16 = fp32x32.median / fp16x16.median\n        print(\"FP16\u00d7FP16:  \\(String(format: \"%.2f\", fp16x16.median)) ns (speedup: \\(String(format: \"%.2fx\", speedup16x16)))\")\n\n        // FP32\u00d7FP16\n        let fp32x16 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.euclidean512(query: q32, candidate: c16)\n        }\n        let speedup32x16 = fp32x32.median / fp32x16.median\n        print(\"FP32\u00d7FP16:  \\(String(format: \"%.2f\", fp32x16.median)) ns (speedup: \\(String(format: \"%.2fx\", speedup32x16)))\")\n\n        // FP16\u00d7FP32\n        let fp16x32 = PrecisionTimer.measure {\n            _ = MixedPrecisionKernels.euclidean512(query: q16, candidate: c32)\n        }\n        let speedup16x32 = fp32x32.median / fp16x32.median\n        print(\"FP16\u00d7FP32:  \\(String(format: \"%.2f\", fp16x32.median)) ns (speedup: \\(String(format: \"%.2fx\", speedup16x32)))\")\n\n        // Validate speedup expectations\n        expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.1\", speedup16x16 > 1.0, \"FP16\u00d7FP16 should be faster than FP32\u00d7FP32\")\n        expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.2\", speedup32x16 > 1.0, \"FP32\u00d7FP16 should show some speedup\")\n    }",
+        "assertions": [
+          {
+            "line": 101,
+            "text": "expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.1\", speedup16x16 > 1.0, \"FP16\u00d7FP16 should be faster than FP32\u00d7FP32\")"
+          },
+          {
+            "line": 102,
+            "text": "expectPerformance(\"MixedPrecisionPerformanceBenchmark.benchmarkEuclideanLatency512.2\", speedup32x16 > 1.0, \"FP32\u00d7FP16 should show some speedup\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.QuantizedKernelsComprehensiveTests/PerformanceOptimizationTests/testConversionOverhead()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/QuantizedKernelsComprehensiveTests.swift",
+        "line": 948,
+        "endLine": 966,
+        "body": "                expectPerformance(\"QuantizedKernelsComprehensiveTests.testBatchThroughput.1\", quantizationTime < 1.0, \"Batch quantization should be fast\")\n            }\n        }\n\n        @Test(\"Quantization/dequantization overhead\", .enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testConversionOverhead() async throws {\n            let vector = try Vector512Optimized((0..<512).map { Float($0) * 0.01 })\n\n            let iterations = 1000\n            let start = CFAbsoluteTimeGetCurrent()\n\n            for _ in 0..<iterations {\n                let quantized = Vector512INT8(from: vector)\n                _ = quantized.toFP32()\n            }\n\n            let elapsed = CFAbsoluteTimeGetCurrent() - start\n            let timePerConversion = elapsed / Double(iterations)\n\n            print(\"  [perf] INT8 round-trip conversion: \\(timePerConversion)s/op (gate < 0.001)\")\n            if strictPerfGatesEnabled {\n                expectPerformance(\"QuantizedKernelsComprehensiveTests.testConversionOverhead.2\", timePerConversion < 0.001, \"Conversion should be fast\")\n            }\n        }",
+        "assertions": [
+          {
+            "line": 964,
+            "text": "expectPerformance(\"QuantizedKernelsComprehensiveTests.testConversionOverhead.2\", timePerConversion < 0.001, \"Conversion should be fast\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.QuantizedKernelsTests/PerformanceOptimizationTests/testCacheEfficiencyQuantized()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "line": 2179,
+        "endLine": 2298,
+        "body": "        }\n\n        // PERF-GATE: asserts wall-clock cache-efficiency speedups that only hold\n        // in optimized Release builds. Run with VECTORCORE_TEST_EXTENDED=1.\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testCacheEfficiencyQuantized() throws {\n            var rng = SeededGenerator(seed: 0xA001000E)\n            // Test cache efficiency with quantized data\n            // - Cache hit rate improvements\n            // - Memory pressure is not measured\n            // - Cache-friendly access patterns\n\n            print(\"Cache Efficiency with Quantized Data:\")\n\n            // Simulate working set that fits in L2 cache with INT8 but not FP32\n            // Typical L2 cache: 256KB-1MB, let's assume 512KB\n            let l2CacheSize = 512 * 1024  // bytes\n\n            // Calculate how many vectors fit in cache\n            let fp32VectorSize = 512 * 4  // 2KB per vector\n            let int8VectorSize = 512 * 1  // 512B per vector\n\n            let fp32VectorsInCache = l2CacheSize / fp32VectorSize  // ~256 vectors\n            let int8VectorsInCache = l2CacheSize / int8VectorSize  // ~1024 vectors\n\n            print(\"  L2 cache capacity:\")\n            print(\"    FP32 vectors: \\(fp32VectorsInCache)\")\n            print(\"    INT8 vectors: \\(int8VectorsInCache) (\\(int8VectorsInCache/fp32VectorsInCache)x more)\")\n\n            // Test 1: Working set that fits in cache with INT8 but not FP32\n            let workingSetSize = 512  // vectors - fits with INT8, spills with FP32\n\n            let fp32Vectors = (0..<workingSetSize).map { _ in\n                Vector512Optimized { _ in Float.random(in: -1...1, using: &rng) }\n            }\n\n            let params = LinearQuantizationParams(minValue: -1, maxValue: 1, symmetric: true)\n            let int8Vectors = fp32Vectors.map { Vector512INT8(from: $0, params: params) }\n\n            let query = fp32Vectors[0]\n            let qQuery = int8Vectors[0]\n\n            // Warm up cache and measure performance\n            print(\"\\n  Working set test (\\(workingSetSize) vectors):\")\n\n            // FP32: Multiple passes to simulate cache misses\n            let fp32Iterations = 100\n            let fp32Start = Date()\n            for _ in 0..<fp32Iterations {\n                for i in 1..<workingSetSize {\n                    _ = query.euclideanDistanceSquared(to: fp32Vectors[i])\n                }\n            }\n            let fp32Time = Date().timeIntervalSince(fp32Start)\n\n            // INT8: Should mostly hit cache\n            let int8Start = Date()\n            for _ in 0..<fp32Iterations {\n                for i in 1..<workingSetSize {\n                    let d = QuantizedKernels.euclidean512(query: qQuery, candidate: int8Vectors[i])\n                    _ = d * d  // Square for fair comparison\n                }\n            }\n            let int8Time = Date().timeIntervalSince(int8Start)\n\n            let cacheSpeedup = fp32Time / int8Time\n            print(\"    FP32 time: \\(String(format: \"%.2f ms\", fp32Time * 1000))\")\n            print(\"    INT8 time: \\(String(format: \"%.2f ms\", int8Time * 1000))\")\n            print(\"    Cache efficiency gain: \\(String(format: \"%.1fx\", cacheSpeedup))\")\n\n            if strictPerfGatesEnabled {\n                expectPerformance(\"QuantizedKernelsTests.testCacheEfficiencyQuantized.7\", cacheSpeedup > 2.5, \"INT8 should benefit from better cache utilization\")\n            }\n\n            // Test 2: Sequential vs random access patterns\n            print(\"\\n  Access pattern test:\")\n\n            let accessCount = 1000\n            let dataSize = 1000\n\n            let largeDataset = (0..<dataSize).map { _ in\n                Vector512Optimized { _ in Float.random(in: -1...1, using: &rng) }\n            }\n            let quantizedDataset = largeDataset.map { Vector512INT8(from: $0, params: params) }\n\n            // Sequential access\n            let seqStart = Date()\n            for i in 0..<accessCount {\n                let idx = i % dataSize\n                _ = QuantizedKernels.dotProduct512(query: quantizedDataset[idx], candidate: qQuery)\n            }\n            let seqTime = Date().timeIntervalSince(seqStart)\n\n            // Random access\n            let randomIndices = (0..<accessCount).map { _ in Int.random(in: 0..<dataSize, using: &rng) }\n            let randStart = Date()\n            for idx in randomIndices {\n                _ = QuantizedKernels.dotProduct512(query: quantizedDataset[idx], candidate: qQuery)\n            }\n            let randTime = Date().timeIntervalSince(randStart)\n\n            let sequentialAdvantage = randTime / seqTime\n            print(\"    Sequential access: \\(String(format: \"%.2f ms\", seqTime * 1000))\")\n            print(\"    Random access: \\(String(format: \"%.2f ms\", randTime * 1000))\")\n            print(\"    Sequential advantage: \\(String(format: \"%.1fx\", sequentialAdvantage))\")\n\n            // Test 3: stored scalar payload at a larger dataset size (no memory pressure is measured)\n            print(\"\\n  Stored payload at a larger dataset size:\")\n\n            let pressureTestSize = 2000  // Dataset size for the payload arithmetic below\n            // Note: Could iterate for stress testing (currently single-pass validation)\n\n            print(\"    Dataset size: \\(pressureTestSize) vectors\")\n            // The model constants above must equal the stored scalar payload of real vectors.\n            let fp32StoredBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(fp32Vectors[0].storage)\n            let int8StoredBytes = MixedPrecisionPerformanceBenchmark.storedScalarPayloadBytes(int8Vectors[0].storage)\n            #expect(fp32StoredBytes == fp32VectorSize, \"FP32 stored scalar payload per vector\")\n            #expect(int8StoredBytes == int8VectorSize, \"INT8 stored scalar payload per vector\")\n            #expect(int8StoredBytes * 4 == fp32StoredBytes, \"INT8 should store 4x fewer scalar bytes\")\n\n            // Printed after the checks, from the real storage values (not process memory)\n            print(\"    FP32 stored scalar payload: \\(pressureTestSize * fp32StoredBytes / 1_000_000) MB\")\n            print(\"    INT8 stored scalar payload: \\(pressureTestSize * int8StoredBytes / 1_000_000) MB\")\n            print(\"    Stored scalar payload ratio: \\(Float(fp32StoredBytes) / Float(int8StoredBytes))x\")\n        }",
+        "assertions": [
+          {
+            "line": 2245,
+            "text": "expectPerformance(\"QuantizedKernelsTests.testCacheEfficiencyQuantized.7\", cacheSpeedup > 2.5, \"INT8 should benefit from better cache utilization\")"
+          },
+          {
+            "line": 2290,
+            "text": "#expect(fp32StoredBytes == fp32VectorSize, \"FP32 stored scalar payload per vector\")"
+          },
+          {
+            "line": 2291,
+            "text": "#expect(int8StoredBytes == int8VectorSize, \"INT8 stored scalar payload per vector\")"
+          },
+          {
+            "line": 2292,
+            "text": "#expect(int8StoredBytes * 4 == fp32StoredBytes, \"INT8 should store 4x fewer scalar bytes\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.QuantizedKernelsTests/PerformanceOptimizationTests/testParallelQuantizedOperations()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "line": 2425,
+        "endLine": 2550,
+        "body": "\n        // PERF-GATE: asserts wall-clock parallel speedups that only hold in\n        // optimized Release builds on multi-core hardware. Run with\n        // VECTORCORE_TEST_EXTENDED=1.\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testParallelQuantizedOperations() async throws {\n            // Test parallel quantized operations\n            // - Multi-threaded quantization\n            // - Parallel distance computation\n            // - Scalability with core count\n\n            print(\"Parallel Quantized Operations:\")\n\n            // Create large dataset for parallel processing\n            let datasetSize = 10000\n            let vectors = (0..<datasetSize).map { i in\n                Vector512Optimized { j in sin(Float(i + j) * 0.001) }\n            }\n\n            let params = LinearQuantizationParams(minValue: -1, maxValue: 1, symmetric: true)\n\n            // Test 1: Parallel quantization\n            print(\"\\n1. Parallel quantization:\")\n\n            // Serial quantization\n            let serialStart = Date()\n            let serialQuantized = vectors.map { Vector512INT8(from: $0, params: params) }\n            let serialTime = Date().timeIntervalSince(serialStart)\n\n            // Parallel quantization\n            let parallelStart = Date()\n            let parallelQuantized = await withTaskGroup(of: [Vector512INT8].self) { group in\n                let chunkSize = datasetSize / 8  // Assuming 8 cores\n                for i in stride(from: 0, to: datasetSize, by: chunkSize) {\n                    let end = min(i + chunkSize, datasetSize)\n                    group.addTask {\n                        return Array(vectors[i..<end]).map { Vector512INT8(from: $0, params: params) }\n                    }\n                }\n\n                var result: [Vector512INT8] = []\n                for await chunk in group {\n                    result.append(contentsOf: chunk)\n                }\n                return result\n            }\n            let parallelTime = Date().timeIntervalSince(parallelStart)\n\n            let quantSpeedup = serialTime / parallelTime\n            print(\"  Serial time: \\(String(format: \"%.2f ms\", serialTime * 1000))\")\n            print(\"  Parallel time: \\(String(format: \"%.2f ms\", parallelTime * 1000))\")\n            print(\"  Speedup: \\(String(format: \"%.1fx\", quantSpeedup))\")\n\n            if strictPerfGatesEnabled {\n                expectPerformance(\"QuantizedKernelsTests.testParallelQuantizedOperations.8\", quantSpeedup > 2.0, \"Parallel quantization should provide speedup\")\n            }\n            #expect(serialQuantized.count == parallelQuantized.count, \"Should produce same number of vectors\")\n\n            // Test 2: Parallel distance computation\n            print(\"\\n2. Parallel distance computation:\")\n\n            let query = vectors[0]\n            let qQuery = Vector512INT8(from: query, params: params)\n            let candidates = Array(serialQuantized[0..<1000])\n\n            // Serial distance computation\n            let serialDistStart = Date()\n            let serialDistances = candidates.map { candidate in\n                QuantizedKernels.euclidean512(query: qQuery, candidate: candidate)\n            }\n            let serialDistTime = Date().timeIntervalSince(serialDistStart)\n\n            // Parallel distance computation\n            let parallelDistStart = Date()\n            let parallelDistances = await withTaskGroup(of: [Float].self) { group in\n                let chunkSize = candidates.count / 8\n                for i in stride(from: 0, to: candidates.count, by: chunkSize) {\n                    let end = min(i + chunkSize, candidates.count)\n                    group.addTask {\n                        return Array(candidates[i..<end]).map { candidate in\n                            QuantizedKernels.euclidean512(query: qQuery, candidate: candidate)\n                        }\n                    }\n                }\n\n                var result: [Float] = []\n                for await chunk in group {\n                    result.append(contentsOf: chunk)\n                }\n                return result\n            }\n            let parallelDistTime = Date().timeIntervalSince(parallelDistStart)\n\n            let distSpeedup = serialDistTime / parallelDistTime\n            print(\"  Serial time: \\(String(format: \"%.2f ms\", serialDistTime * 1000))\")\n            print(\"  Parallel time: \\(String(format: \"%.2f ms\", parallelDistTime * 1000))\")\n            print(\"  Speedup: \\(String(format: \"%.1fx\", distSpeedup))\")\n\n            if strictPerfGatesEnabled {\n                expectPerformance(\"QuantizedKernelsTests.testParallelQuantizedOperations.9\", distSpeedup > 2.0, \"Parallel distance computation should provide speedup\")\n            }\n            #expect(serialDistances.count == parallelDistances.count, \"Should compute same number of distances\")\n\n            // Test 3: Scalability test\n            print(\"\\n3. Scalability with different thread counts:\")\n\n            for threadCount in [1, 2, 4, 8] {\n                let scalabilityStart = Date()\n                _ = await withTaskGroup(of: [Float].self) { group in\n                    let chunkSize = candidates.count / threadCount\n                    for i in stride(from: 0, to: candidates.count, by: chunkSize) {\n                        let end = min(i + chunkSize, candidates.count)\n                        group.addTask {\n                            return Array(candidates[i..<end]).map { candidate in\n                                QuantizedKernels.dotProduct512(query: qQuery, candidate: candidate)\n                            }\n                        }\n                    }\n\n                    var result: [Float] = []\n                    for await chunk in group {\n                        result.append(contentsOf: chunk)\n                    }\n                    return result\n                }\n                let scalabilityTime = Date().timeIntervalSince(scalabilityStart)\n\n                let speedupVsSerial = serialDistTime / scalabilityTime\n                print(\"  \\(threadCount) threads: \\(String(format: \"%.2f ms\", scalabilityTime * 1000)) (\\(String(format: \"%.1fx\", speedupVsSerial)) speedup)\")\n            }\n        }",
+        "assertions": [
+          {
+            "line": 2474,
+            "text": "expectPerformance(\"QuantizedKernelsTests.testParallelQuantizedOperations.8\", quantSpeedup > 2.0, \"Parallel quantization should provide speedup\")"
+          },
+          {
+            "line": 2476,
+            "text": "#expect(serialQuantized.count == parallelQuantized.count, \"Should produce same number of vectors\")"
+          },
+          {
+            "line": 2519,
+            "text": "expectPerformance(\"QuantizedKernelsTests.testParallelQuantizedOperations.9\", distSpeedup > 2.0, \"Parallel distance computation should provide speedup\")"
+          },
+          {
+            "line": 2521,
+            "text": "#expect(serialDistances.count == parallelDistances.count, \"Should compute same number of distances\")"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.QuantizedKernelsTests/PerformanceOptimizationTests/testQuantizationOverhead()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "line": 2303,
+        "endLine": 2419,
+        "body": "        }\n\n        // PERF-GATE: asserts wall-clock break-even speed ratios that only hold\n        // in optimized Release builds. Run with VECTORCORE_TEST_EXTENDED=1.\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testQuantizationOverhead() throws {\n            var rng = SeededGenerator(seed: 0xA001000F)\n            // Test overhead of quantization/dequantization\n            // - Conversion costs\n            // - Amortization over batch operations\n            // - Break-even analysis\n\n            print(\"Quantization/Dequantization Overhead:\")\n\n            // Create test vectors\n            let testVectors = (0..<100).map { _ in\n                Vector512Optimized { _ in Float.random(in: -1...1, using: &rng) }\n            }\n\n            let params = LinearQuantizationParams(minValue: -1, maxValue: 1, symmetric: true)\n\n            // Test 1: Quantization cost\n            print(\"\\n1. Quantization cost:\")\n\n            let quantIterations = 1000\n            let quantStart = Date()\n            for _ in 0..<quantIterations {\n                for vec in testVectors {\n                    _ = Vector512INT8(from: vec, params: params)\n                }\n            }\n            let quantTime = Date().timeIntervalSince(quantStart)\n            let quantTimePerVector = quantTime / Double(quantIterations * testVectors.count)\n\n            print(\"  Time per vector: \\(String(format: \"%.2f \u03bcs\", quantTimePerVector * 1_000_000))\")\n            print(\"  Throughput: \\(String(format: \"%.0f vectors/sec\", 1.0 / quantTimePerVector))\")\n\n            // Test 2: Dequantization cost\n            print(\"\\n2. Dequantization cost:\")\n\n            let quantizedVectors = testVectors.map { Vector512INT8(from: $0, params: params) }\n\n            let dequantStart = Date()\n            for _ in 0..<quantIterations {\n                for qvec in quantizedVectors {\n                    _ = qvec.toFP32()\n                }\n            }\n            let dequantTime = Date().timeIntervalSince(dequantStart)\n            let dequantTimePerVector = dequantTime / Double(quantIterations * quantizedVectors.count)\n\n            print(\"  Time per vector: \\(String(format: \"%.2f \u03bcs\", dequantTimePerVector * 1_000_000))\")\n            print(\"  Throughput: \\(String(format: \"%.0f vectors/sec\", 1.0 / dequantTimePerVector))\")\n\n            // Test 3: Break-even analysis\n            print(\"\\n3. Break-even analysis:\")\n\n            // Compare: quantize + INT8 ops + dequantize vs FP32 ops\n            let query = testVectors[0]\n            let candidates = Array(testVectors[1..<11])  // 10 candidates\n\n            // Pure FP32 approach\n            let fp32Start = Date()\n            for _ in 0..<100 {\n                for candidate in candidates {\n                    _ = query.euclideanDistance(to: candidate)\n                }\n            }\n            let fp32Time = Date().timeIntervalSince(fp32Start)\n\n            // Quantize-compute-dequantize approach\n            let quantizedApproachStart = Date()\n            for _ in 0..<100 {\n                let qQuery = Vector512INT8(from: query, params: params)\n                for candidate in candidates {\n                    let qCandidate = Vector512INT8(from: candidate, params: params)\n                    _ = QuantizedKernels.euclidean512(query: qQuery, candidate: qCandidate)\n                }\n            }\n            let quantizedApproachTime = Date().timeIntervalSince(quantizedApproachStart)\n\n            let breakEvenRatio = fp32Time / quantizedApproachTime\n            print(\"  FP32 time: \\(String(format: \"%.2f ms\", fp32Time * 1000))\")\n            print(\"  Quantized approach time: \\(String(format: \"%.2f ms\", quantizedApproachTime * 1000))\")\n            print(\"  Break-even at \\(candidates.count) operations: \\(breakEvenRatio > 1 ? \"YES\" : \"NO\")\")\n            print(\"  Speed ratio: \\(String(format: \"%.2fx\", breakEvenRatio))\")\n\n            // Test different batch sizes to find break-even point\n            print(\"\\n4. Batch size break-even:\")\n\n            for batchSize in [1, 5, 10, 20, 50, 100] {\n                let batchCandidates = Array(testVectors[0..<min(batchSize, testVectors.count)])\n\n                // FP32\n                let fp32BatchStart = Date()\n                for _ in 0..<10 {\n                    for candidate in batchCandidates {\n                        _ = query.euclideanDistance(to: candidate)\n                    }\n                }\n                let fp32BatchTime = Date().timeIntervalSince(fp32BatchStart)\n\n                // Quantized (amortize query quantization)\n                let quantBatchStart = Date()\n                for _ in 0..<10 {\n                    let qQuery = Vector512INT8(from: query, params: params)\n                    for candidate in batchCandidates {\n                        let qCandidate = Vector512INT8(from: candidate, params: params)\n                        _ = QuantizedKernels.euclidean512(query: qQuery, candidate: qCandidate)\n                    }\n                }\n                let quantBatchTime = Date().timeIntervalSince(quantBatchStart)\n\n                let ratio = fp32BatchTime / quantBatchTime\n                print(\"  Batch size \\(batchSize): \\(String(format: \"%.2fx\", ratio)) \\(ratio > 1 ? \"\u2713\" : \"\u2717\")\")\n\n                if batchSize >= 10 {\n                    expectPerformance(\"QuantizedKernelsTests.testQuantizationOverhead.11\", ratio > 1.0,\n                                      \"Should be beneficial for batch size >= 10\")\n                }\n            }\n        }",
+        "assertions": [
+          {
+            "line": 2415,
+            "text": "expectPerformance(\"QuantizedKernelsTests.testQuantizationOverhead.11\", ratio > 1.0,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ComprehensiveTests.QuantizedKernelsTests/PerformanceOptimizationTests/testQuantizedComputationPerformance()",
+    "matches": [
+      {
+        "path": "Tests/ComprehensiveTests/QuantizedKernelsTests.swift",
+        "line": 2063,
+        "endLine": 2174,
+        "body": "\n        // PERF-GATE: asserts wall-clock speedups (latency/throughput) that are\n        // only meaningful in optimized Release builds. In debug these fail\n        // spuriously. Run with VECTORCORE_TEST_EXTENDED=1 to enable.\n        @Test(.enabled(if: ProcessInfo.processInfo.environment[\"VECTORCORE_TEST_EXTENDED\"] == \"1\"))\n        func testQuantizedComputationPerformance() throws {\n            var rng = SeededGenerator(seed: 0xA001000D)\n            // Test performance of quantized computations\n            // - Latency improvements vs FP32\n            // - Throughput improvements\n            // - Energy efficiency gains\n\n            print(\"Quantized Computation Performance:\")\n\n            // Create test vectors\n            let vectorCount = 1000\n            let fp32Vectors = (0..<vectorCount).map { i in\n                Vector512Optimized { _ in Float.random(in: -1...1, using: &rng) }\n            }\n\n            // Quantize all vectors\n            let params = LinearQuantizationParams(minValue: -1, maxValue: 1, symmetric: true)\n            let int8Vectors = fp32Vectors.map { Vector512INT8(from: $0, params: params) }\n\n            // Test 1: Latency (single operation)\n            print(\"\\n1. Latency Test (single operation):\")\n\n            let query = fp32Vectors[0]\n            let qQuery = int8Vectors[0]\n\n            // Measure FP32 latency\n            var fp32MinLatency = Double.infinity\n            for _ in 0..<100 {\n                let start = Date()\n                _ = query.euclideanDistance(to: fp32Vectors[1])\n                let elapsed = Date().timeIntervalSince(start)\n                fp32MinLatency = min(fp32MinLatency, elapsed)\n            }\n\n            // Measure INT8 latency\n            var int8MinLatency = Double.infinity\n            for _ in 0..<100 {\n                let start = Date()\n                _ = QuantizedKernels.euclidean512(query: qQuery, candidate: int8Vectors[1])\n                let elapsed = Date().timeIntervalSince(start)\n                int8MinLatency = min(int8MinLatency, elapsed)\n            }\n\n            let latencyImprovement = fp32MinLatency / int8MinLatency\n            print(\"  FP32 latency: \\(fp32MinLatency * 1_000_000) \u03bcs\")\n            print(\"  INT8 latency: \\(int8MinLatency * 1_000_000) \u03bcs\")\n            print(\"  Improvement: \\(String(format: \"%.1fx\", latencyImprovement))\")\n\n            expectPerformance(\"QuantizedKernelsTests.testQuantizedComputationPerformance.5\", latencyImprovement > 1.5, \"INT8 should have lower latency\")\n\n            // Test 2: Throughput (batch operations)\n            print(\"\\n2. Throughput Test (batch operations):\")\n\n            let batchSize = 100\n            let iterations = 10\n\n            // FP32 throughput\n            let fp32Start = Date()\n            for _ in 0..<iterations {\n                for i in 1..<batchSize {\n                    _ = query.euclideanDistance(to: fp32Vectors[i])\n                }\n            }\n            let fp32Time = Date().timeIntervalSince(fp32Start)\n            let fp32Throughput = Double(batchSize * iterations) / fp32Time\n\n            // INT8 throughput\n            let int8Start = Date()\n            for _ in 0..<iterations {\n                for i in 1..<batchSize {\n                    _ = QuantizedKernels.euclidean512(query: qQuery, candidate: int8Vectors[i])\n                }\n            }\n            let int8Time = Date().timeIntervalSince(int8Start)\n            let int8Throughput = Double(batchSize * iterations) / int8Time\n\n            let throughputImprovement = int8Throughput / fp32Throughput\n            print(\"  FP32 throughput: \\(String(format: \"%.0f\", fp32Throughput)) ops/sec\")\n            print(\"  INT8 throughput: \\(String(format: \"%.0f\", int8Throughput)) ops/sec\")\n            print(\"  Improvement: \\(String(format: \"%.1fx\", throughputImprovement))\")\n\n            if strictPerfGatesEnabled {\n                expectPerformance(\"QuantizedKernelsTests.testQuantizedComputationPerformance.6\", throughputImprovement > 2.0, \"INT8 should have higher throughput\")\n            }\n\n            // Test 3: op-count model. It assumes 4x INT8 op efficiency, so it is not a measurement\n            // and nothing is asserted on it.\n            print(\"\\n3. Op-count model (assumes 4x INT8 op efficiency; not measured):\")\n\n            // FP32: 512 multiplies + 512 adds + 1 sqrt\n            let fp32OpsPerDistance = 512 * 2 + 1\n            // INT8: 512 INT8 multiplies + 512 INT8 adds + scale ops\n            let int8OpsPerDistance = 512 * 2 / 4  // Assuming 4x efficiency for INT8 ops\n\n            let opCountModelRatio = Float(fp32OpsPerDistance) / Float(int8OpsPerDistance)\n            print(\"  FP32 ops: \\(fp32OpsPerDistance)\")\n            print(\"  INT8 ops (weighted): \\(int8OpsPerDistance)\")\n            print(\"  Modelled op-count ratio (assumed, not measured): \\(String(format: \"%.1fx\", opCountModelRatio))\")\n\n            // Test 4: modelled payload rate (stored payload bytes / measured time; not a measured bandwidth)\n            print(\"\\n4. Modelled payload rate (not measured bandwidth):\")\n\n            let fp32BytesPerVector = 512 * 4  // 4 bytes per float\n            let int8BytesPerVector = 512 * 1  // 1 byte per int8\n\n            let fp32BandwidthUsed = Float(fp32BytesPerVector * batchSize * iterations) / Float(fp32Time)\n            let int8BandwidthUsed = Float(int8BytesPerVector * batchSize * iterations) / Float(int8Time)\n\n            print(\"  FP32 payload rate: \\(String(format: \"%.1f MB/s\", fp32BandwidthUsed / 1_000_000))\")\n            print(\"  INT8 payload rate: \\(String(format: \"%.1f MB/s\", int8BandwidthUsed / 1_000_000))\")\n            print(\"  Payload rate ratio FP32/INT8: \\(String(format: \"%.1fx\", fp32BandwidthUsed / int8BandwidthUsed))\")\n        }",
+        "assertions": [
+          {
+            "line": 2111,
+            "text": "expectPerformance(\"QuantizedKernelsTests.testQuantizedComputationPerformance.5\", latencyImprovement > 1.5, \"INT8 should have lower latency\")"
+          },
+          {
+            "line": 2145,
+            "text": "expectPerformance(\"QuantizedKernelsTests.testQuantizedComputationPerformance.6\", throughputImprovement > 2.0, \"INT8 should have higher throughput\")"
+          }
+        ]
+      }
+    ]
+  }
+]

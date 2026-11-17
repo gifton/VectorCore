@@ -1,0 +1,23 @@
+{
+  "recordedUTC": "2026-11-05T19:40:01.975244+00:00",
+  "scope": "investigative admission criterion; not existing VectorCore project policy or release performance acceptance",
+  "parentApproved": true,
+  "measurementAuthorized": false,
+  "readiness": {
+    "frames": 5,
+    "frameStartSpacingSeconds": 15,
+    "noCompilerOrTestWork": true,
+    "allThermalStateRawValues": 0,
+    "allLowPowerModeEnabled": false,
+    "allPowerSources": "AC Power",
+    "minimumIntervalHostIdlePercent": 90,
+    "maximumUnrelatedProcessIntervalPercentOfOneCore": 25
+  },
+  "continuation": "A failed admission is retained as no-timing host-not-ready; no opportunistic retries. Any future batch needs separately documented changed host condition and complete predetermined schedule.",
+  "limitations": [
+    "CPU counters are whole-host aggregates, not per-core frequency or placement.",
+    "ps CPU time pairs omit processes that start or exit between snapshots; host aggregate still includes their CPU work.",
+    "A nominal OS thermal pressure value does not establish temperature or invariant clock speed.",
+    "No selected case retries or median/statistic/threshold/identity waivers."
+  ]
+}

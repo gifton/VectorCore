@@ -31,12 +31,30 @@ public struct Tuning: Sendable {
     public let breakEvenN: Int
     public let minChunk: Int
     public let modeBias: ModeBias
+
+    /// Constructs scheduling hints. Requires a nonnegative threshold and a positive chunk size.
+    /// F008TuningConsumer exercises zero and Int.max thresholds through Operations.
+    public init(breakEvenN: Int, minChunk: Int, modeBias: ModeBias) {
+        precondition(breakEvenN >= 0, "breakEvenN must be nonnegative")
+        precondition(minChunk > 0, "minChunk must be positive")
+        self.breakEvenN = breakEvenN
+        self.minChunk = minChunk
+        self.modeBias = modeBias
+    }
 }
 
 public struct CalibrationProbes {
     public let nsPerCandidateSeq: Double
     public let parallelOverheadNs: Double
     public let effectiveParallelFactor: Double
+
+    /// Records raw observations. AutoTuning validates them when calculating its hints;
+    /// invalid observations select its existing fallback (AutoTuningConcurrencyTests.isolatedContractMatrix).
+    public init(nsPerCandidateSeq: Double, parallelOverheadNs: Double, effectiveParallelFactor: Double) {
+        self.nsPerCandidateSeq = nsPerCandidateSeq
+        self.parallelOverheadNs = parallelOverheadNs
+        self.effectiveParallelFactor = effectiveParallelFactor
+    }
 }
 
 // MARK: - AutoTuning Implementation

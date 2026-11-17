@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "status": "MEASURED_ACCEPTANCE_PENDING",
+  "performanceAcceptance": false,
+  "productCommit": "6d574f3ff122554ae8bec18f039ffa4a6981920e",
+  "testCandidateCommit": "e7482a962c67dd0b806059b651c9f59eb678a632",
+  "shippingReuseInputs": 182,
+  "globallyIdenticalCommits": false,
+  "binarySHA256": "b9d356a1a2217cfa85d0228ad4f267eec4aed0ed7d0e429665784a69dd7a4fd6",
+  "comparatorSHA256": "4961004c80cf6b336256fc62b69e5a4ae08549ba11af66e31370c1810f72e94a",
+  "frontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+  "sdkSettingsSHA256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+  "preparedRecordSHA256": "373c7e19ef15eaadc1af2b91599678c4b9a41c941ef9a1a5e44c89283702f594",
+  "comparisonMetric": "median",
+  "perUnit": true,
+  "thresholdPercent": 5,
+  "seed": 0,
+  "samplesPerCase": 15,
+  "minTimeSeconds": 0.25,
+  "measurementMode": "estimated-duration",
+  "fixedRepeatOverride": null,
+  "repeatMeasureExits": [
+    0,
+    0,
+    0
+  ],
+  "correctCaseExecutions": 63,
+  "rawSampleAverages": 945,
+  "observerFramesPerRepeat": [
+    7,
+    7,
+    7
+  ],
+  "maxWithinRunRSDPercent": [
+    1.4186481185129893,
+    1.8269721109459558,
+    1.0609717744501919
+  ],
+  "comparisonExits": [
+    0,
+    1
+  ],
+  "regressions": [
+    {
+      "case": "dot.512.generic",
+      "percent": 5.738072617090366
+    },
+    {
+      "case": "dot.768.generic",
+      "percent": 5.6352039468119575
+    },
+    {
+      "case": "normalize.success.768.optimized",
+      "percent": 5.218603983379102
+    }
+  ],
+  "missingCases": 0,
+  "invalidComparisons": 0,
+  "selectedRetries": 0,
+  "identityMissingStatisticWaivers": false,
+  "unrelatedProcessesStopped": false,
+  "oneMinuteLoadRange": [
+    4.85,
+    7.0
+  ],
+  "peakObservedNonBenchmarkCPUPercent": 197.3,
+  "thermalPowerTelemetry": "pmset reported no recorded thermal/performance warning or CPU power status; no no-throttling proof",
+  "supplementaryProbeFailure": "quiet-postconditions/processes.json exit 1 for unsupported post-window comm width format; all 63 primary observer commands exited 0",
+  "metadataCommitRemains": "6d574f3ff122554ae8bec18f039ffa4a6981920e",
+  "sourceIdentityDuringAllRuns": "clean 6d; every before/after verification passed",
+  "reuseProof": "reviewed-input-reuse/result.json",
+  "rawReports": [
+    "repeat-0/report.json",
+    "repeat-1/report.json",
+    "repeat-2/report.json"
+  ],
+  "comparisons": [
+    {
+      "repeat": 1,
+      "exit": 0,
+      "stdout": "comparisons/repeat-1.stdout",
+      "stderr": "comparisons/repeat-1.stderr"
+    },
+    {
+      "repeat": 2,
+      "exit": 1,
+      "stdout": "comparisons/repeat-2.stdout",
+      "stderr": "comparisons/repeat-2.stderr"
+    }
+  ]
+}

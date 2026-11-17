@@ -1,0 +1,49 @@
+{
+  "canonicalEvidenceRoot": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/native-tooling",
+  "capturedSourceCommit": "e4c711d7beccfe99f3f2a20997d0ec117be00bb8",
+  "compilerProfile": "known-failing",
+  "diagnosticFailures": {
+    "consumers-debug/release-legacy-exposure": [
+      "concrete-inout"
+    ],
+    "consumers-release/release-legacy-exposure": [
+      "concrete-inout"
+    ],
+    "original/CopyInoutReturnInside-release": [
+      "value"
+    ],
+    "original/LostStoreObserved-release": [
+      "value"
+    ],
+    "original/ReturnInsideInout-release": [
+      "value"
+    ],
+    "residual-debug-release-positive": [
+      "new.aggregate.inout",
+      "new.concrete.copied-inout",
+      "new.inside.copied-inout"
+    ],
+    "residual-release-release-positive": [
+      "new.aggregate.inout",
+      "new.concrete.copied-inout",
+      "new.inside.copied-inout"
+    ]
+  },
+  "invocationId": "71ca0f26-2fd0-4491-a9c7-2dc1e78ed516",
+  "policyId": "vc-0.4.0-xcode27.2-bounded-v1",
+  "problems": [],
+  "profileSHA256": "e9e4db9da52d032b819f4d7009e57bb66e5670e28d2a724b3441191952c40570",
+  "qualificationStage": "tooling validation; final integrated review and stable source selection pending",
+  "releaseAdmitted": false,
+  "schemaVersion": 1,
+  "scope": [
+    "Tooling validation on the alpha compiled inputs only; macOS 27.0.1 (26A434), arm64, Xcode 27.2 27B52.",
+    "Native Debug/Release producers and Debug/Release clients; 24-row by-value consumer, separate witness and omitted-write controls.",
+    "Unfiltered normally enabled native suites, original/residual compiler diagnostics, migration contracts and separately bound C-on/off routes.",
+    "No physical iOS, simulator, minimum-OS, Intel, alternate-architecture, performance or final stable release acceptance."
+  ],
+  "sourceManifestSHA256": "d6a5711b1571cc853c571a4312a619d512b12459bb8e644d3bb78fdfcdc291db",
+  "supportPolicyAdopted": true,
+  "vectorCoreQualification": "accepted",
+  "verifiedFiles": 2508
+}

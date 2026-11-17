@@ -1,0 +1,393 @@
+{
+  "archive": {
+    "coordinatorPrivacyReview": "pass",
+    "durableCopy": {
+      "allCopiedHashesMatch": true,
+      "copiedMetadataFiles": 2,
+      "destination": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence",
+      "exactCopiedInventoryBeforeReceipt": true,
+      "payloadManifestSHA256": "d8d0e6709a78f4f0832cbae7dc653d94f006a3ef2b493c7ca8bdcfed58584875",
+      "releaseAcceptance": false,
+      "source": "/private/tmp/vectorcore-release-gates-2026-11-05/archive-stage",
+      "verifiedPayloadBytes": 123894870,
+      "verifiedPayloadFiles": 1458
+    },
+    "metadataOutsidePayload": [
+      "payload-manifest.json",
+      "archive-verification.json",
+      "durable-copy-verification.json"
+    ],
+    "payload": {
+      "allPayloadHashesMatch": true,
+      "exactPayloadInventory": true,
+      "payloadManifestSHA256": "d8d0e6709a78f4f0832cbae7dc653d94f006a3ef2b493c7ca8bdcfed58584875",
+      "releaseAcceptance": false,
+      "verifiedBytes": 123894870,
+      "verifiedFiles": 1458
+    },
+    "payloadManifestPath": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/payload-manifest.json"
+  },
+  "baselineChecks": {
+    "checks": [
+      {
+        "exit": 0,
+        "name": "claims",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "ci-contracts",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "github",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "whitespace",
+        "timeout": false
+      }
+    ],
+    "source": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb"
+  },
+  "compiler": {
+    "allCompiledProgramsExitedZero": true,
+    "distributionCompatibleCorrectedXcodeQualified": false,
+    "independentVerification": "compiler/summary.json",
+    "nativeMatrixCells": 64,
+    "negativeControlsCorrectlyRejected": 8,
+    "positiveCellsFailed": 6,
+    "positiveCellsPassed": 50
+  },
+  "finalIntegrationChecks": {
+    "allChecksPass": true,
+    "canaryExecutableLinesUnchanged": true,
+    "changedTrackedPaths": [
+      "Docs/Maintaining.md",
+      "Docs/README.md",
+      "Tests/ComprehensiveTests/LostStoreCanaryTests.swift"
+    ],
+    "checks": [
+      {
+        "exit": 0,
+        "name": "claims",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "ci-contracts",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "github",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "lost-store-scanner",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "whitespace",
+        "timeout": false
+      }
+    ],
+    "installedFilesVerified": 27,
+    "nativeRerun": false,
+    "productionPackageBenchmarkWorkflowChanges": [],
+    "scope": "Reports, documentation index/maintenance entry and canary line comments only; no numerical qualification of a new compiled candidate.",
+    "sourceCommit": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+    "trackedInputsCompared": 886
+  },
+  "integrationLimit": "Focused checks ran after the initial 27-file report/comment install. Later edits only finalize report/plan/archive receipts; final Git inventory and link checks cover those additions.",
+  "integrationScope": "Repository reports, documentation index/maintenance entry and canary line-comment clarification; executable source and predicates unchanged.",
+  "investigationSource": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+  "performance": {
+    "coordinatorRawReconciliation": {
+      "active_rule_path": "/private/tmp/vectorcore-release-gates-2026-11-05/performance/readiness-rule-refined.json",
+      "actual_starts_within_declared_tolerance": true,
+      "all_ac_nominal_low_power_off": true,
+      "frame_sha256": "c9b827ee20759cc53660b1d64797c1f4231a1b581897b9e0f88151d93f381340",
+      "frames": 5,
+      "initial_verifier_attempt": "Rejected identity because coordinator selected preserved original readiness-rule.json instead of active readiness-rule-refined.json; checked observer import/source identity and corrected the verifier path. No live rerun or producer-file change.",
+      "intervals": [
+        {
+          "host_idle_percent": 78.2739337284033,
+          "interval": 0,
+          "observed_service_cpu_upper_percent_one_core": 174.1984990756542
+        },
+        {
+          "host_idle_percent": 78.61496076139589,
+          "interval": 1,
+          "observed_service_cpu_upper_percent_one_core": 175.10086840866492
+        },
+        {
+          "host_idle_percent": 79.14230833472524,
+          "interval": 2,
+          "observed_service_cpu_upper_percent_one_core": 178.82976706050545
+        },
+        {
+          "host_idle_percent": 79.16353618832957,
+          "interval": 3,
+          "observed_service_cpu_upper_percent_one_core": 179.60834579936304
+        }
+      ],
+      "measurement_invoked": false,
+      "ready": false,
+      "result_sha256": "c22bb1302f956cf9a06728eebace9ffc59b9f727286f909c16b4263d52fb53c0",
+      "rule_sha256": "56fb9a40494081f72e03579be4b36f0c2c89dd7154a17577bbc7b2ae221d80bd",
+      "scope": "Independent arithmetic and condition reconciliation of retained five-frame observation, not a new live capture"
+    },
+    "formalReadinessAccepted": false,
+    "formalReadinessCaptures": 1,
+    "historicalRawSamples": 945,
+    "newTimingRuns": 0,
+    "pythonModes": [
+      "normal",
+      "-O",
+      "-OO"
+    ],
+    "readinessControls": 20
+  },
+  "platform": {
+    "capturePlanProvenance": {
+      "claimBoundary": "Per-call reserved-output validation ran before readiness/test commands. Final repaired cross-invocation audit verifies completed actual output namespace, but is posthoc and does not reconstruct prelaunch plan bytes.",
+      "exactPrelaunchPlanBytesRetained": false,
+      "historicalOriginalCollisionPreserved": true,
+      "nativeRerunAfterPlanRepairs": false,
+      "prelaunchPlanSHA256": "a3dc2b364406609fe58767c4ff4cf2ded157db4b607dc0c8f6a60634a42cfbee",
+      "reason": "Mutable capture-plan.json was regenerated after later captures and reviewer-driven plan repairs; only hash was recorded at readiness time."
+    },
+    "catalyst": {
+      "buildExit": 0,
+      "declared": 1982,
+      "expandedFailed": 1,
+      "expandedPassed": 3447,
+      "expandedSkipped": 163,
+      "failed": 1,
+      "failure": "Unchanged lost-store canary: 2.0 observed, 1.0 expected",
+      "passed": 1818,
+      "skipped": 163,
+      "testExit": 65
+    },
+    "coveragePolicy": "Existing required CI combinations remain distinct from recommended additional runtime evidence; no support withdrawal adopted.",
+    "physicalDevice": {
+      "applicationBundlesGenerated": 0,
+      "buildArchitecture": "arm64",
+      "buildTarget": "arm64-apple-ios17.0",
+      "cachedAutomaticBuild": {
+        "elapsedSeconds": 273.8241761249956,
+        "exit": 0,
+        "timeout": false
+      },
+      "diagnostics": [
+        "xcodebuild: error: Failed to build workspace VectorCore with scheme VectorCore-Package.: Cannot test target \u201cMinimalTests\u201d on \u201c<physical device>\u201d: Tool-hosted testing is unavailable on device destinations. Select a host application for the test target, or use a simulator destination instead.",
+        "Cannot test target \u201cComprehensiveTests\u201d on \u201c<physical device>\u201d: Tool-hosted testing is unavailable on device destinations. Select a host application for the test target, or use a simulator destination instead.",
+        "Cannot test target \u201cBenchmarkContractTests\u201d on \u201c<physical device>\u201d: Tool-hosted testing is unavailable on device destinations. Select a host application for the test target, or use a simulator destination instead."
+      ],
+      "hardwareArchitecture": "arm64e",
+      "initialManualBuild": {
+        "exit": 65,
+        "reason": "Cached profile is Xcode-managed; manual/global profile selection was incompatible and also applied to unsupported benchmark executable"
+      },
+      "limitations": [
+        "No physical-device method passed or failed because Xcode rejected before execution.",
+        "Build/signature/readiness successes do not establish physical runtime correctness.",
+        "Standalone .xctest bundles had no embedded provisioning profiles; actual signatures matched selected development team, no profile-use claim."
+      ],
+      "manualAppInstallations": 0,
+      "nextRequirement": "A dedicated app-hosted test harness or bounded signed public-consumer application is required; not new provisioning or device security changes. Not built in this task.",
+      "platform": "physical iPhone, iOS 27.2 (24B119)",
+      "provisioningUpdatesAllowed": false,
+      "rawCommandRecordSHA256": "9fc4e3cb60cd140c7bb15f0dd0027f0e612f0719820e2841cdb50432a38a1a3f",
+      "rawStderrSHA256": "cdca0a042cfadce41ee2f87b9dfe8084650223f86411a6caa6b58dd4be8011fb",
+      "rawStdoutSHA256": "2eed38cfdba6c1e7eaf29cdc09d90675e36ae0bfdb7008863cb93151453684ae",
+      "readiness": {
+        "ddiServicesAvailable": true,
+        "developerMode": "enabled",
+        "guardPlanSHA256": "a3dc2b364406609fe58767c4ff4cf2ded157db4b607dc0c8f6a60634a42cfbee",
+        "paired": true,
+        "payloadSHA256": "8e5384bf782e45a358d6a77864b3577db2e752f723137fd544424096f58d38cb",
+        "ready": true,
+        "tunnelState": "connected"
+      },
+      "result": "infrastructure-unsupported-tool-hosted-device-tests",
+      "selectedSDK": "iPhoneOS27.2",
+      "signing": {
+        "generatedApplicationCount": 0,
+        "host": "Xcode iPhoneOS platform xctest agent",
+        "products": [
+          {
+            "appleDevelopmentSignature": true,
+            "bundle": "MinimalTests",
+            "bundleIdentifier": "vectorcore-fixes-2026-10-27-84798d3.MinimalTests",
+            "embeddedProvisioningProfilePresent": false,
+            "executableSHA256": "7c0d0c884951026833a5721d23901cb9550180f0dad83b9a8c29be92b6e3d7ea",
+            "profileScope": "Standalone .xctest bundle has no embedded profile; no profile-use claim. Standard platform test agent launch decides device admissibility.",
+            "signatureVerificationExit": 0,
+            "signingTeamMatchesSelectedBuildTeam": true
+          },
+          {
+            "appleDevelopmentSignature": true,
+            "bundle": "ComprehensiveTests",
+            "bundleIdentifier": "vectorcore-fixes-2026-10-27-84798d3.ComprehensiveTests",
+            "embeddedProvisioningProfilePresent": false,
+            "executableSHA256": "fdbfa47addfbceeb36ac7604be68ec3abfee23e2693b403d080c802498e682e1",
+            "profileScope": "Standalone .xctest bundle has no embedded profile; no profile-use claim. Standard platform test agent launch decides device admissibility.",
+            "signatureVerificationExit": 0,
+            "signingTeamMatchesSelectedBuildTeam": true
+          },
+          {
+            "appleDevelopmentSignature": true,
+            "bundle": "BenchmarkContractTests",
+            "bundleIdentifier": "vectorcore-fixes-2026-10-27-84798d3.BenchmarkContractTests",
+            "embeddedProvisioningProfilePresent": false,
+            "executableSHA256": "c2537f389b42519bdffd464ec04381a244012e30101d2336deb337704dc592ae",
+            "profileScope": "Standalone .xctest bundle has no embedded profile; no profile-use claim. Standard platform test agent launch decides device admissibility.",
+            "signatureVerificationExit": 0,
+            "signingTeamMatchesSelectedBuildTeam": true
+          }
+        ],
+        "unrelatedApplicationReplacement": "No .app product or app-hosted test bundle is in this xctestrun; no manual installation performed."
+      },
+      "sourceCommit": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+      "sourceFilesUnchanged": 388,
+      "sourceWorktreeCleanAfterExecution": true,
+      "testAction": {
+        "deadlineSeconds": 900,
+        "elapsedSeconds": 1.5898713340284303,
+        "exit": 70,
+        "timeout": false
+      },
+      "testBodiesExecuted": 0,
+      "testStartRecordsObserved": 0
+    },
+    "remainingRuntimeCoverage": [
+      "minimum-OS combinations",
+      "Intel runtime",
+      "tvOS runtime",
+      "visionOS runtime",
+      "app-hosted physical iOS execution"
+    ]
+  },
+  "preparedMeasurementAfterIntegration": "Retained preparation is bound to clean27a045d; the later report/comment commit changes HEAD and a tracked input. Its guard must remain intact. A future batch requires fresh preparation for the chosen exact candidate/compiler.",
+  "releaseAcceptance": false,
+  "scopeLimits": [
+    "No physical test body executed.",
+    "No new sanitizer or hosted CI run.",
+    "No new performance comparison.",
+    "No release branch, tag, version or publication.",
+    "The original failed commands and timing comparisons remain retained."
+  ],
+  "selectedEvidenceVerification": {
+    "compiler": {
+      "bytes_verified": 7924935,
+      "files_verified": 854,
+      "manifest_sha256": "9bc61188fe2fab3ab8cfe0f4dc0307687cc27825ee5d9bf2396f3b5dd4c74806",
+      "scope": "Independent verification of selected regular files only, before archive copy",
+      "source": "/private/tmp/vectorcore-release-gates-2026-11-05/compiler"
+    },
+    "performance": {
+      "bytes_verified": 26147144,
+      "files_verified": 216,
+      "manifest_sha256": "0627324bdde2b752ea40b4b6841f29f0399aab4d98f98024b4f953ef3f8e554d",
+      "scope": "Independent rehash of exact selected performance evidence before persistence"
+    },
+    "platform": {
+      "allHashesMatch": true,
+      "finalRedactedSelectionBytes": 88743275,
+      "manifestSHA256": "08a7aa23b35b864ab7e3be00a83a7178d51aa5a72fdc57526d5bdd06d66f7a65",
+      "previousReviewerCheckpointBytes": 88749937,
+      "scope": "Independent coordinator rehash of final explicitly selected public platform payload; no read of excluded private device/signing/result files.",
+      "selectionBoundaryVerified": true,
+      "verifiedBytes": 88743275,
+      "verifiedFiles": 233
+    }
+  },
+  "sourceAssociation": {
+    "candidate": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+    "changed_since": {
+      "e7482a962c67dd0b806059b651c9f59eb678a632": [],
+      "f779d92d8945edd46fe0807607d487ee42c711a3": [
+        "Benchmarks/VectorCoreBench/Core/Boundaries.swift",
+        "Benchmarks/VectorCoreBench/Suites/DotProductBench.swift",
+        "Benchmarks/VectorCoreBench/Suites/MemoryBench.swift",
+        "Benchmarks/VectorCoreBench/Suites/NormalizationBench.swift",
+        "Benchmarks/VectorCoreBench/Utils/Correctness.swift",
+        "Benchmarks/VectorCoreBench/Utils/CorrectnessPolicy.swift",
+        "Scripts/ci/check_ci_contracts.py",
+        "Scripts/ci/check_sanitizers.py",
+        "Scripts/ci/claim_ledger.json",
+        "Scripts/ci/tests/test_benchmark_contracts.py",
+        "Scripts/ci/tests/test_benchmark_gate_durability.py",
+        "Scripts/ci/tests/test_benchmark_reporting.py",
+        "Scripts/ci/tests/test_child_probe_launch_policy.py",
+        "Scripts/ci/tests/test_ci_contracts.py",
+        "Scripts/ci/tests/test_claim_ledger.py",
+        "Scripts/ci/tests/test_sanitizer_log.py",
+        "Tests/BenchmarkContractTests/BenchmarkContractTests.swift",
+        "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift",
+        "Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift",
+        "Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift",
+        "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+        "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift",
+        "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift",
+        "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+        "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+        "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift",
+        "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+        "Tests/ComprehensiveTests/D02DegenerateWidthTests.swift",
+        "Tests/ComprehensiveTests/D02DimensionReachabilityTests.swift",
+        "Tests/ComprehensiveTests/D02FactoryContractTests.swift",
+        "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift",
+        "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+        "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift",
+        "Tests/ComprehensiveTests/HeapMembershipContractTests.swift",
+        "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift",
+        "Tests/ComprehensiveTests/LoggingContractTests.swift",
+        "Tests/ComprehensiveTests/LoggingPublicConsumerTests.swift",
+        "Tests/ComprehensiveTests/MatrixMetricContractTests.swift",
+        "Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift",
+        "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift",
+        "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift",
+        "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+        "Tests/ComprehensiveTests/P01OperationsRedTests.swift",
+        "Tests/ComprehensiveTests/P01OperationsRouteTests.swift",
+        "Tests/ComprehensiveTests/P01OperationsSelectionTests.swift",
+        "Tests/ComprehensiveTests/P01TopKBufferRedTests.swift",
+        "Tests/ComprehensiveTests/P02GramRouteTests.swift",
+        "Tests/ComprehensiveTests/P02PairwiseRowTests.swift",
+        "Tests/ComprehensiveTests/PCACenteringContractTests.swift",
+        "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift",
+        "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift",
+        "Tests/ComprehensiveTests/SearchResultScoreContractTests.swift",
+        "Tests/ComprehensiveTests/SoAFP16CacheIdentityTests.swift",
+        "Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift",
+        "Tests/ComprehensiveTests/TopKBufferContractTests.swift",
+        "Tests/ComprehensiveTests/TrapObservation.swift",
+        "Tests/ComprehensiveTests/TuningInputBoundaryTests.swift",
+        "Tests/ComprehensiveTests/UMAPRangeContractTests.swift",
+        "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift",
+        "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift",
+        "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+        "Tests/ComprehensiveTests/VectorMathNearestContractTests.swift",
+        "Tests/ComprehensiveTests/VectorShapeContractTests.swift",
+        "Tests/VectorCoreTestSupport/ChildProbeLauncher.swift"
+      ]
+    },
+    "file_count": 509,
+    "paths": [
+      "Package.swift",
+      "Sources",
+      "Tests",
+      "Benchmarks",
+      "Scripts/ci",
+      ".github/workflows"
+    ],
+    "scope": "Tracked-input comparison only. Prior results retain their original compiler/build/runtime identities and are not current reruns."
+  }
+}

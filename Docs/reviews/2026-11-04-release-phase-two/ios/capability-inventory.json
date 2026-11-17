@@ -1,0 +1,1440 @@
+[
+  {
+    "path": "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift",
+    "method": "namedRejectionMatrix",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "namedRejectionMatrix",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift",
+    "method": "testHintValidationBeforeEmptySequentialParallelAndNestedRouting",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "testHintValidationBeforeEmptySequentialParallelAndNestedRouting",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift",
+    "method": "testLargeRepresentableReductionLengthsInChild",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "testLargeRepresentableReductionLengthsInChild",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift",
+    "method": "testDangerousBoundariesInChildren",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "testDangerousBoundariesInChildren",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift",
+    "method": "testLoopGuardWitnesses",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "testLoopGuardWitnesses",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "optimizedEuclid512",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "optimizedEuclid512",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "optimizedCosine512",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "optimizedCosine512",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "optimizedEuclid768",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "optimizedEuclid768",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "optimizedCosine768",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "optimizedCosine768",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "optimizedEuclid1536",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "optimizedEuclid1536",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "optimizedCosine1536",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "optimizedCosine1536",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "rootTieAdmission",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "rootTieAdmission",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "genericPartitions",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "genericPartitions",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "genericWitnessesAndThresholds",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "genericWitnessesAndThresholds",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "cancelledAndNested",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "cancelledAndNested",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "entrySnapshot",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "entrySnapshot",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "strategyNeighbors",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "strategyNeighbors",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01BatchRouteTests.swift",
+    "method": "q17PremiseTwins",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "q17PremiseTwins",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift",
+    "method": "configurationScenarioInBoundedChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "configurationScenarioInBoundedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift",
+    "method": "profilerRowsRunInAnIsolatedChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "profilerRowsRunInAnIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift",
+    "method": "namedGuardsRejectBeforeBodyOrInvalidAllocation",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "namedGuardsRejectBeforeBodyOrInvalidAllocation",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorMathNearestContractTests.swift",
+    "method": "negativeKReturnsEmptyWithoutMetricInChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "negativeKReturnsEmptyWithoutMetricInChild",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift",
+    "method": "destructionCanReenter",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "destructionCanReenter",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01OperationsSelectionTests.swift",
+    "method": "cosine768And1536StayOnTheFusedFullScoreRoute",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "cosine768And1536StayOnTheFusedFullScoreRoute",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "mutationBoundaryMatrix",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "mutationBoundaryMatrix",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "aggregateMetadataPreflight",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "aggregateMetadataPreflight",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "genericFactoryFailuresPropagate",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "genericFactoryFailuresPropagate",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "invalidBatchDimensions",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "invalidBatchDimensions",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "negativeNonthrowingConstructors",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "negativeNonthrowingConstructors",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "extremeLookupSeparateProbe",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "extremeLookupSeparateProbe",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "concreteShortRHSRejection",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "concreteShortRHSRejection",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "arrayBoundaryAndZeroCentroidProbes",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "arrayBoundaryAndZeroCentroidProbes",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "boundsErrorExtremeProbe",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "boundsErrorExtremeProbe",
+      "child",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift",
+    "method": "concreteProtocolOnlyMismatchesRejectBeforeBorrow",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Mismatched +=/-= dimensions must trap before borrowing; each rejection runs in a bounded subprocess. Valid arithmetic and copy preservation run separately without this capability gate.",
+    "category": "isolated-probe",
+    "callChain": [
+      "concreteProtocolOnlyMismatchesRejectBeforeBorrow",
+      "child",
+      "launchChildProbe"
+    ],
+    "portableCompanion": "concreteProtocolOnlyOperatorsPreserveCopy"
+  },
+  {
+    "path": "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift",
+    "method": "invalidInputsRejectInBoundedChildren",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "invalidInputsRejectInBoundedChildren",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+    "method": "boundedRegressionChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "boundedRegressionChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+    "method": "watchdogRejectsTimedOutChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "watchdogRejectsTimedOutChild",
+      "boundedRegressionChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift",
+    "method": "publicGenericNearestBoundaryWorkerObservation",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "publicGenericNearestBoundaryWorkerObservation",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift",
+    "method": "finiteOutlierSaturates",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "finiteOutlierSaturates",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift",
+    "method": "namedRejectionMatrix",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "namedRejectionMatrix",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift",
+    "method": "isolatedBoundaryRecords",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "isolatedBoundaryRecords",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift",
+    "method": "isolatedConstructors",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "isolatedConstructors",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift",
+    "method": "isolatedConcurrency",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "isolatedConcurrency",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/PCACenteringContractTests.swift",
+    "method": "oversamplingInBoundedChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "oversamplingInBoundedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/LoggingPublicConsumerTests.swift",
+    "method": "publicConsumerChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "publicConsumerChild",
+      "d03RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+    "method": "concurrentBatchIncrementsPreserveAllUpdates",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "concurrentBatchIncrementsPreserveAllUpdates",
+      "runGlobalChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+    "method": "concurrentIndependentFieldsPreserveBothTotals",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "concurrentIndependentFieldsPreserveBothTotals",
+      "runGlobalChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+    "method": "batchRollbackPreservesEveryFieldAndErrorIdentity",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "batchRollbackPreservesEveryFieldAndErrorIdentity",
+      "runGlobalChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift",
+    "method": "concurrentSnapshotsObserveCompleteTuples",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "concurrentSnapshotsObserveCompleteTuples",
+      "runGlobalChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/LoggingContractTests.swift",
+    "method": "reentrantMessageDoesNotDeadlock",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "reentrantMessageDoesNotDeadlock",
+      "d03RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/HeapMembershipContractTests.swift",
+    "method": "negativeCapacity",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "negativeCapacity",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/SoAFP16CacheIdentityTests.swift",
+    "method": "negativeLimitsRejectAtInitialization",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "negativeLimitsRejectAtInitialization",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorShapeContractTests.swift",
+    "method": "fixedStorageBoundaryMatrix",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "fixedStorageBoundaryMatrix",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01TopKBufferRedTests.swift",
+    "method": "zeroCapacityTopKBufferIgnoresPushInChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "zeroCapacityTopKBufferIgnoresPushInChild",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01TopKBufferRedTests.swift",
+    "method": "negativeCapacityTopKBufferTrapsControl",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "negativeCapacityTopKBufferTrapsControl",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/TrapObservation.swift",
+    "method": "unrelatedSignalsCannotSatisfyObservation",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "unrelatedSignalsCannotSatisfyObservation",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift",
+    "method": "invalidInputsRejectInChildren",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "invalidInputsRejectInChildren",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P02PairwiseRowTests.swift",
+    "method": "rowsEqualPreparedIntoPerRow",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "rowsEqualPreparedIntoPerRow",
+      "withMatrixRouting",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P02PairwiseRowTests.swift",
+    "method": "nanRowsAtAnEligibleN",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "nanRowsAtAnEligibleN",
+      "withMatrixRouting",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P02PairwiseRowTests.swift",
+    "method": "ineligibleTypesOpenNoGemmPhase",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "ineligibleTypesOpenNoGemmPhase",
+      "withMatrixRouting",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P02PairwiseRowTests.swift",
+    "method": "completeResultUnderCancellation",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "completeResultUnderCancellation",
+      "withMatrixRouting",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01OperationsRouteTests.swift",
+    "method": "providerPrecedence",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "providerPrecedence",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01OperationsRouteTests.swift",
+    "method": "serialParallelNestedAndCancelled",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "serialParallelNestedAndCancelled",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01OperationsRouteTests.swift",
+    "method": "extremePartitions",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "extremePartitions",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01OperationsRouteTests.swift",
+    "method": "customAndParameterizedWitnesses",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "customAndParameterizedWitnesses",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P02GramRouteTests.swift",
+    "method": "matrixRoutingFlagDoesNotAffectBatchSearch",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "matrixRoutingFlagDoesNotAffectBatchSearch",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/TopKBufferContractTests.swift",
+    "method": "directionMismatchTraps",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "directionMismatchTraps",
+      "expectTrap",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/TopKBufferContractTests.swift",
+    "method": "tiePolicyMismatchTraps",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "tiePolicyMismatchTraps",
+      "expectTrap",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/TopKBufferContractTests.swift",
+    "method": "smallerDestinationCapacityTraps",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "smallerDestinationCapacityTraps",
+      "expectTrap",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/D02DimensionReachabilityTests.swift",
+    "method": "trappingFormsTrap",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "trappingFormsTrap",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "method": "childProbeCannotLaunchAProbe",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Launches real descendants or verifies process-group containment; portable argv/result/capability tests remain ungated.",
+    "category": "process-containment",
+    "callChain": [
+      "childProbeCannotLaunchAProbe",
+      "launchSelfTest",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "method": "exitedChildLeavesNoGroupMember",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Launches real descendants or verifies process-group containment; portable argv/result/capability tests remain ungated.",
+    "category": "process-containment",
+    "callChain": [
+      "exitedChildLeavesNoGroupMember",
+      "launchSelfTest",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "method": "deadlineKillsTheWholeGroup",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Launches real descendants or verifies process-group containment; portable argv/result/capability tests remain ungated.",
+    "category": "process-containment",
+    "callChain": [
+      "deadlineKillsTheWholeGroup",
+      "launchSelfTest",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "method": "deadlineTerminatesTheWholeGroup",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Launches real descendants or verifies process-group containment; portable argv/result/capability tests remain ungated.",
+    "category": "process-containment",
+    "callChain": [
+      "deadlineTerminatesTheWholeGroup",
+      "launchSelfTest",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "method": "launcherSelfTestChild",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Launches real descendants or verifies process-group containment; portable argv/result/capability tests remain ungated.",
+    "category": "process-containment",
+    "callChain": [
+      "launcherSelfTestChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/UMAPRangeContractTests.swift",
+    "method": "boundedPublicRejections",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "boundedPublicRejections",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/TuningInputBoundaryTests.swift",
+    "method": "invalidTuningRejectsAtConstruction",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "invalidTuningRejectsAtConstruction",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/SearchResultScoreContractTests.swift",
+    "method": "reentrantScoreRunsOutsideLockAndKeepsSelectedSnapshot",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "reentrantScoreRunsOutsideLockAndKeepsSelectedSnapshot",
+      "r05RunScoreChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+    "method": "euclideanRoutedMatchesKernel",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "euclideanRoutedMatchesKernel",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+    "method": "cosineRoutedMatchesReference",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "cosineRoutedMatchesReference",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+    "method": "manhattanFallsBack",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "manhattanFallsBack",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+    "method": "dynamicDoesNotRoute",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "dynamicDoesNotRoute",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/BatchGEMMRoutingTests.swift",
+    "method": "routingToggleConsistent",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "routingToggleConsistent",
+      "e06IsolatedScenario",
+      "e06RunIsolatedChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift",
+    "method": "boundedDomain",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "boundedDomain",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift",
+    "method": "reentrantMetricMutatesOutsideLockAndKeepsCapturedCandidates",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "reentrantMetricMutatesOutsideLockAndKeepsCapturedCandidates",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/D02FactoryContractTests.swift",
+    "method": "createVectorTrapsOnMalformedInput",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "createVectorTrapsOnMalformedInput",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/MatrixMetricContractTests.swift",
+    "method": "configurationScenarioRunsInFreshProcess",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Fresh-process isolation for process-global configuration; parent suite serialization does not isolate other suites. Numerical/global-configuration scenario unavailable on iOS.",
+    "category": "isolated-configuration",
+    "callChain": [
+      "configurationScenarioRunsInFreshProcess",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01OperationsRedTests.swift",
+    "method": "operationsColdKeySmallKEvaluatesEachCandidateOnce",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "operationsColdKeySmallKEvaluatesEachCandidateOnce",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/P01OperationsRedTests.swift",
+    "method": "operationsColdKeyLargeKKeepsCalibrationControl",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "operationsColdKeyLargeKKeepsCalibrationControl",
+      "p01RunChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/D02DegenerateWidthTests.swift",
+    "method": "trappingOutcomes",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "trappingOutcomes",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift",
+    "method": "directReentrantCallback",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "directReentrantCallback",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift",
+    "method": "actualOperationsReentrantMetric",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "actualOperationsReentrantMetric",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift",
+    "method": "isolatedContractMatrix",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "isolatedContractMatrix",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift",
+    "method": "kernelTrapsBeforeWriting",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "kernelTrapsBeforeWriting",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift",
+    "method": "matrixRowsOfUnequalLengthTrap",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Runs a named fresh-process probe for a trapping, bounded-watchdog, reentrancy, or process-global-state contract; ordinary in-process tests in this suite remain enabled.",
+    "category": "isolated-probe",
+    "callChain": [
+      "matrixRowsOfUnequalLengthTrap",
+      "runChild",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift",
+    "method": "testUnsupportedModelsRejectedBeforeExecution",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testUnsupportedModelsRejectedBeforeExecution",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift",
+    "method": "testBoundaryBelowReachesExecutionWithoutAllocatingFixture",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testBoundaryBelowReachesExecutionWithoutAllocatingFixture",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift",
+    "method": "testSelectedValidRoutesReachExecutionDespiteExcludedInvalidRoutes",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testSelectedValidRoutesReachExecutionDespiteExcludedInvalidRoutes",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift",
+    "method": "testUnsupportedInjectedResultsAreReportedWithoutTrapping",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testUnsupportedInjectedResultsAreReportedWithoutTrapping",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift",
+    "method": "testUnavailableUnsupportedModelDoesNotRejectExecutableSelection",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testUnavailableUnsupportedModelDoesNotRejectExecutableSelection",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testFixturePreservesEnvironmentAndMarksChild",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testFixturePreservesEnvironmentAndMarksChild",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testProcessTable",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testProcessTable",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testFixtureOrdinaryExitAndFailure",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testFixtureOrdinaryExitAndFailure",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testFixtureHangHasBoundedGroupCleanup",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testFixtureHangHasBoundedGroupCleanup",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testEnvCaptureDescendantEnvironmentAndGroupsAreObserved",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testEnvCaptureDescendantEnvironmentAndGroupsAreObserved",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataLifetimeNormalExitAndTimeout",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataLifetimeNormalExitAndTimeout",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataTimerSurvivesObserverAndGuardianDeath",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataTimerSurvivesObserverAndGuardianDeath",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataEscapedOutputHandleDoesNotBlockObservation",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataEscapedOutputHandleDoesNotBlockObservation",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataEnvironmentReaderRejectsFailedBuild",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataEnvironmentReaderRejectsFailedBuild",
+      "makeMetadataEnvironmentReader",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataDirectExecRejectsInvalidRequests",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataDirectExecRejectsInvalidRequests",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataEnvironmentDeterministicPolicyControls",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataEnvironmentDeterministicPolicyControls",
+      "metadataDirectBaseline",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation",
+      "metadataDirectBaseline",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testMetadataOutputAndArgumentBoundaries",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataOutputAndArgumentBoundaries",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testActualBatchProviderReturnFamily",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testActualBatchProviderReturnFamily",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "method": "testBadObservationSurvivesLaterGoodResultsAndReference",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Runs benchmark CLI/metadata/exit fixture in a child process; shared runFixture throws XCTSkip on platforms without macOS subprocess support.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testBadObservationSurvivesLaterGoodResultsAndReference",
+      "launch",
+      "launchFixture",
+      "runFixture",
+      "launchChildProbe/replaceMarkedChildProbe"
+    ]
+  },
+  {
+    "path": "Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift",
+    "method": "testMetadataBoundedCommands",
+    "contract": "XCTest subprocess boundary",
+    "reason": "Invokes host metadata commands through EnvCapture; iOS reports this subprocess capability unavailable.",
+    "category": "benchmark-process",
+    "callChain": [
+      "testMetadataBoundedCommands",
+      "EnvCapture.observe",
+      "MetadataProcess.observe"
+    ]
+  },
+  {
+    "path": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "method": "sanitizerChildImagesMatchParent",
+    "contract": "Swift Testing subprocess isolation",
+    "reason": "Launches a real child and observes its loaded sanitizer image and inherited runtime options.",
+    "category": "process-containment",
+    "callChain": [
+      "sanitizerChildImagesMatchParent",
+      "launchSelfTest",
+      "launchChildProbe"
+    ]
+  }
+]

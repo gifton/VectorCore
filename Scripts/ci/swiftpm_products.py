@@ -125,7 +125,8 @@ def in_log(path, log):
 #   Swift 6.2+ (Xcode 26.3, 27): `Test run with 1 test in 1 suite passed after 0.1 seconds.`
 # A substring check written against one rendering misread the other on PR #56 (T20 round 3).
 _SWIFT_TESTING_RUN = re.compile(r'Test run with (\d+) tests?(?: in (\d+) suites?)? (passed|failed)\b')
-_XCTEST_EXECUTED = re.compile(r'Executed (\d+) tests?, with ')
+_XCTEST_EXECUTED = re.compile(
+    r'^\s*Executed (\d+) tests?, with (?:(\d+) tests? skipped and )?\d+ failures?\b', re.M)
 
 
 def swift_testing_runs(log):
@@ -134,8 +135,12 @@ def swift_testing_runs(log):
 
 
 def xctest_executed(log):
-    """Largest XCTest `Executed N test(s)` count in the log; 0 when XCTest ran nothing or did not report."""
-    return max((int(n) for n in _XCTEST_EXECUTED.findall(log)), default=0)
+    """Largest non-skipped XCTest count; repeated suite summaries are not added.
+
+    test_test_output_counts.XCTestExecuted pins skipped, partial, malformed and absent summaries.
+    """
+    return max((int(total) - int(skipped or 0) for total, skipped in _XCTEST_EXECUTED.findall(log)
+                if int(skipped or 0) <= int(total)), default=0)
 
 
 def detect_layout(bin_path):

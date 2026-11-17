@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -231,7 +232,7 @@ struct P01OperationsSelectionTests {
     /// fresh child with a cold key sees calibration published, no generic stream, and complete scores (finite
     /// and exceptional) equal to `BatchKernels.range_cosine_fused_*` over the ranges the route actually used.
     /// Dot product on Vector768Optimized is the contrast: it streams and publishes nothing.
-    @Test func cosine768And1536StayOnTheFusedFullScoreRoute() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func cosine768And1536StayOnTheFusedFullScoreRoute() throws {
         let child = try p01RunChild("operations-cosine-fused", filter: Self.childFilter, removing: ["VC_AUTOTUNE"])
         #expect(child.run.terminationStatus == 0, "status=\(child.run.statusDescription): \(child.tail)")
         #expect(child.output.contains("P01_CHILD_COMPLETE operations-cosine-fused"), "\(child.tail)")

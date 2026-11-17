@@ -1,0 +1,176 @@
+{
+  "baselineRevision": "314c722ff50b5367c069eb09ffbc1866764cd2c3",
+  "changedExecutableInputs": [
+    "Scripts/ci/tests/test_child_probe_launch_policy.py",
+    "Scripts/ci/tests/test_child_process_bounds.py",
+    "Sources/VectorCoreBenchmarking/MetadataProcess.swift",
+    "Tests/BenchmarkContractTests/RunnerContractTests.swift",
+    "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift",
+    "Tests/VectorCoreTestSupport/ChildProbeLauncher.swift"
+  ],
+  "checks": {
+    "check_ci_contracts-final": {
+      "elapsedSeconds": 0.07806200010236353,
+      "exit": 0,
+      "timeout": false
+    },
+    "check_claim_ledger-final": {
+      "elapsedSeconds": 2.9488709160359576,
+      "exit": 0,
+      "timeout": false
+    },
+    "compatibility-asan": {
+      "counts": {
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 30,
+        "result": "Passed",
+        "skippedTests": 0,
+        "totalTestCount": 30
+      },
+      "elapsedSeconds": 123.6430107500637,
+      "exit": 0,
+      "requestedTestEnvironment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1"
+      },
+      "runtimeWarningCount": 0,
+      "sanitizerChildWitnessObserved": true,
+      "sourcePatchSHA256": "553c921c4cb1913ed25f8c694837ffb0db11ff1210cf03364d16f7ae8e293f3e",
+      "sourceUnchangedDuringRun": true,
+      "threadPerformanceCheckerOccurrences": 0,
+      "timeout": false
+    },
+    "compatibility-swiftpm": {
+      "elapsedSeconds": 108.04969458305277,
+      "exit": 0,
+      "observedSummaryCounts": {
+        "basis": "8 ExecutionBoundary XCTest + 3 benchmark XCTest; final Swift Testing summary25. Child captures excluded from these totals.",
+        "swiftTesting": 25,
+        "xctest": 11
+      },
+      "requestedTestEnvironment": {},
+      "sourcePatchSHA256": "553c921c4cb1913ed25f8c694837ffb0db11ff1210cf03364d16f7ae8e293f3e",
+      "sourceUnchangedDuringRun": true,
+      "timeout": false
+    },
+    "compatibility-tsan": {
+      "counts": {
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 30,
+        "result": "Passed",
+        "skippedTests": 0,
+        "totalTestCount": 30
+      },
+      "elapsedSeconds": 139.22834720800165,
+      "exit": 0,
+      "requestedTestEnvironment": {
+        "TSAN_OPTIONS": "halt_on_error=1"
+      },
+      "runtimeWarningCount": 0,
+      "sanitizerChildWitnessObserved": true,
+      "sourcePatchSHA256": "553c921c4cb1913ed25f8c694837ffb0db11ff1210cf03364d16f7ae8e293f3e",
+      "sourceUnchangedDuringRun": true,
+      "threadPerformanceCheckerOccurrences": 0,
+      "timeout": false
+    },
+    "green-focused": {
+      "counts": {
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 36,
+        "result": "Passed",
+        "skippedTests": 0,
+        "totalTestCount": 36
+      },
+      "elapsedSeconds": 52.938744249986485,
+      "exit": 0,
+      "revision": "314c722ff50b5367c069eb09ffbc1866764cd2c3",
+      "sourcePatchSHA256": "957c76e4848469cc8b7d45ec6596529b6922f4de91b0f18da1ecafc06ce85d37",
+      "sourceUnchangedDuringRun": true,
+      "timeout": false
+    },
+    "green-full-debug": {
+      "counts": {
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1940,
+        "result": "Passed",
+        "skippedTests": 46,
+        "totalTestCount": 1986
+      },
+      "elapsedSeconds": 802.9664924580138,
+      "exit": 0,
+      "revision": "314c722ff50b5367c069eb09ffbc1866764cd2c3",
+      "runtimeWarningCount": 98,
+      "sourcePatchSHA256": "957c76e4848469cc8b7d45ec6596529b6922f4de91b0f18da1ecafc06ce85d37",
+      "sourceUnchangedDuringRun": true,
+      "timeout": false
+    },
+    "green-process-policies": {
+      "elapsedSeconds": 5.76090362505056,
+      "exit": 0,
+      "passedTests": 32,
+      "timeout": false
+    },
+    "green-qos-focused": {
+      "counts": {
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 62,
+        "result": "Passed",
+        "skippedTests": 0,
+        "totalTestCount": 62
+      },
+      "elapsedSeconds": 72.75123783294111,
+      "exit": 0,
+      "revision": "314c722ff50b5367c069eb09ffbc1866764cd2c3",
+      "runtimeWarningCount": 0,
+      "sourcePatchSHA256": "553c921c4cb1913ed25f8c694837ffb0db11ff1210cf03364d16f7ae8e293f3e",
+      "sourceUnchangedDuringRun": true,
+      "threadPerformanceCheckerOccurrences": 0,
+      "timeout": false
+    }
+  },
+  "compiler": {
+    "frontendSHA256": "93a7373a7f558b211b9820797d40d7554a0fef2c917d039fa0fa894b60fd55eb",
+    "sdk": "/Users/goftin/Downloads/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.3.sdk",
+    "sdkSettingsSHA256": "b57cfc491bdb4fd38c1c044fa558b2578fb560d630219a82f76b9b181f45789c",
+    "swiftVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0",
+    "xcodeVersion": "Xcode 27.3\nBuild version 27C5020n"
+  },
+  "date": "2026-11-05",
+  "evidenceArchive": "/Users/goftin/dev/projects/VectorCore-xcode-27.3-beta-2026-11-05-evidence",
+  "evidenceManifest": "final-manifest.json",
+  "finalInputCount": 509,
+  "finalInputManifestSHA256": "1cc6a54775c3d544155218cb74ef5c186351c029a24ba14b859a353e0ea0b6b4",
+  "finalSourcePatchSHA256": "553c921c4cb1913ed25f8c694837ffb0db11ff1210cf03364d16f7ae8e293f3e",
+  "hostRuntime": {
+    "architecture": "arm64",
+    "hardwareModel": "Mac15,9",
+    "osBuild": "26A434",
+    "osVersion": "27.0.1"
+  },
+  "numericalGate": {
+    "cells": 16,
+    "failedReleaseProbes": [
+      "CopyInoutReturnInside.swift",
+      "LostStoreObserved.swift",
+      "ReturnInsideInout.swift"
+    ],
+    "negativeControlsCorrectlyRejected": 2,
+    "observation": "stale2.0 bits40000000 instead1.0 bits3f800000; all compile/run exits0",
+    "positiveFailed": 3,
+    "positivePassed": 11,
+    "sourceAndPredicateUnchanged": true
+  },
+  "releaseAcceptance": false,
+  "repository": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+  "scopeNotes": [
+    "The full unfiltered Debug run used patch957c76e4 before the two reaper QoS changes. Finalpatch553c921c received the62-test Xcode follow-up, SwiftPM and both sanitizer selections. No full-suite rerun after the QoS-only code follow-up is claimed.",
+    "Original Debug baseline was intentionally cancelled after repeated launch failures; its observed counts are not a full-suite result.",
+    "No numerical VectorCore kernel, compiler reproducer, assertion threshold, ordinary child deadline, platform capability gate or distribution policy changed.",
+    "Address Sanitizer used detect_leaks=0:halt_on_error=1. These scoped sanitizer executions do not establish project-wide leak or race freedom.",
+    "The beta remains rejected for Release numerical acceptance. No performance timings accepted and no hostedCI/downstream/finalrelease qualification performed."
+  ]
+}

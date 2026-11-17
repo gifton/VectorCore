@@ -103,7 +103,7 @@ class PlatformCICoverageTests(unittest.TestCase):
         self.assertEqual(divergences(self.package, self.ci), [])
         # Guard against a vacuous pass: the real inputs must really enumerate the expected sets.
         self.assertIn('VectorCoreBenchmarking', pkg.library_products(self.package))
-        self.assertEqual(len(expected_destinations(pkg.declared_platforms(self.package))), 5)
+        self.assertEqual(len(expected_destinations(pkg.declared_platforms(self.package))), 4)
 
     def test_executable_products_are_not_library_products(self):
         self.assertNotIn('vectorcore-bench', pkg.library_products(self.package))
@@ -133,7 +133,7 @@ class PlatformCICoverageTests(unittest.TestCase):
             divergences(unmapped, self.ci)
 
     def test_dropping_each_ci_platform_is_rejected(self):
-        for name in list(SIMULATOR.values()) + [CATALYST]:
+        for name in expected_destinations(pkg.declared_platforms(self.package)):
             mutated = self.ci.replace(f"'{name}' ", '').replace(f" '{name}';", ';')
             self.assertNotEqual(mutated, self.ci, name)
             problems = divergences(self.package, mutated)
@@ -142,15 +142,15 @@ class PlatformCICoverageTests(unittest.TestCase):
                 self.assertGreaterEqual(len(problems), 2)  # both products lose it
 
     def test_removing_a_platform_from_package_while_ci_keeps_it_is_rejected(self):
-        mutated = self.package.replace('        .visionOS(.v1)\n', '').replace('.watchOS(.v10),', '.watchOS(.v10)')
+        mutated = self.package.replace('        .visionOS(.v1)\n', '')
         self.assertNotEqual(mutated, self.package)
         problems = divergences(mutated, self.ci)
         self.assertTrue(any('visionOS Simulator' in p and 'does not declare' in p for p in problems), problems)
 
     def test_consistent_platform_removal_and_product_addition_is_accepted(self):
         pkg_mut = self.package.replace('        .executable(', '        .library(name: "VectorCoreExtra", targets: ["VectorCore"]),\n        .executable(', 1)
-        pkg_mut = pkg_mut.replace('        .watchOS(.v10),\n', '')
-        ci_mut = self.ci.replace("'watchOS Simulator' ", '')
+        pkg_mut = pkg_mut.replace('        .tvOS(.v17),\n', '')
+        ci_mut = self.ci.replace("'tvOS Simulator' ", '')
         self.assertNotEqual(pkg_mut, self.package)
         self.assertNotEqual(ci_mut, self.ci)
         self.assertEqual(divergences(pkg_mut, ci_mut), [])  # positive control
@@ -197,7 +197,7 @@ class PlatformCICoverageTests(unittest.TestCase):
         start = self.ci.index('      - name: Build every other library product')
         end = self.ci.index('      - name: Compile library and tests for Intel macOS')
         problems = divergences(self.package, self.ci[:start] + self.ci[end:])
-        self.assertEqual(len(problems), 5)
+        self.assertEqual(len(problems), 4)
         self.assertTrue(all('VectorCoreBenchmarking' in p for p in problems))
 
     def test_parser_fails_closed(self):

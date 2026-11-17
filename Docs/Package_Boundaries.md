@@ -99,7 +99,7 @@ library's platform support and are not a mobile product. The deployment targets 
 [Package.swift](../Package.swift) apply to the whole package, so they say where the package resolves, not where
 the tooling is supported.
 
-| Product | macOS | iOS, tvOS, watchOS and visionOS simulators; Mac Catalyst | Linux and other hosts |
+| Product | macOS | iOS, tvOS and visionOS simulators; Mac Catalyst | Linux and other hosts |
 |---|---|---|---|
 | `VectorCore` | supported; its tests run in CI | compiled in CI; runtime not verified | not supported or tested |
 | `VectorCoreBenchmarking` | the supported tooling host; built and run in CI through `vectorcore-bench` | compiles in CI; runtime not verified; not a supported tooling host | not verified |
@@ -127,3 +127,5 @@ Keep new Core work tied to a concrete numerical need or shared contract.
 Index traversal, GPU scheduling, model inference, durable application storage,
 and topic interpretation require their own packages and tests. Proposed work
 is listed separately in the [roadmap](ROADMAP.md).
+
+watchOS is outside the supported platform contract as of 0.4.0.

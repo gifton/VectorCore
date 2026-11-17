@@ -1,0 +1,233 @@
+{
+  "compiledRevision": "bdf990847babf567be1cbce22d2606e7102b1a47",
+  "compilerPolicyChanged": false,
+  "consumerPositiveObservations": 288,
+  "finalPolicyInputsUnchanged": true,
+  "limits": [
+    "Native macOS arm64 only; deployment floor is not runtime coverage.",
+    "No new performance, sanitizer, leak, device or hosted-CI acceptance.",
+    "Legacy SIMDStorage descriptor-inout exposure remains.",
+    "Initial incomplete Swift.org payload attempt preserved separately."
+  ],
+  "omittedWriteExecutions": 12,
+  "producerBindingsVerified": 6,
+  "productionCodeChanged": false,
+  "pythonPolicyTests": 624,
+  "releaseAdmitted": false,
+  "sourceInputCount": 388,
+  "toolchains": [
+    {
+      "compilerVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0\nswift-driver version: 1.168.6",
+      "consumers": [
+        {
+          "clientModes": [
+            "debug",
+            "release"
+          ],
+          "legacyExposurePassed": false,
+          "libraryMode": "release",
+          "omittedWriteControlsPassed": 2,
+          "positiveCasesPerClientMode": 24,
+          "summary": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.2/final-consumers-release/summary.json",
+          "summarySHA256": "9090adfb0476cb114c22d1d3756998eb0495cc95e7557253c3edf4fbb30153be"
+        },
+        {
+          "clientModes": [
+            "debug",
+            "release"
+          ],
+          "legacyExposurePassed": false,
+          "libraryMode": "debug",
+          "omittedWriteControlsPassed": 2,
+          "positiveCasesPerClientMode": 24,
+          "summary": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.2/final-consumers-debug/summary.json",
+          "summarySHA256": "ffad19ec5694a8989d4bb65a6adf9c2f37feb49b21ef420103f37990deb4da4a"
+        }
+      ],
+      "frontendSHA256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "negativeCompilerControlsPassed": 2,
+      "positiveCompilerFailures": [
+        "CopyInoutReturnInside.swift:release",
+        "LostStoreObserved.swift:release",
+        "ReturnInsideInout.swift:release"
+      ],
+      "positiveCompilerPasses": 11,
+      "sdkSettingsSHA256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+      "suites": [
+        {
+          "executed": 1940,
+          "exit": 1,
+          "issues": [
+            "\udbc2\udc84  Test literalArrayStoreIsObservedAfterOutOfLineClosure() recorded an issue at LostStoreCanaryTests.swift:47:9: Expectation failed: observed == 1"
+          ],
+          "mode": "release",
+          "receipt": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.2/release-full-suite.json",
+          "receiptSHA256": "2bc9194519547c8c6732b0ea8d60875ab4a31013136753b3fc42f67dcce5310d",
+          "swiftTestingDisabled": 18,
+          "swiftTestingOutcome": "failed",
+          "swiftTestingReported": 1768,
+          "xctestFailures": 0,
+          "xctestReported": 218,
+          "xctestSkipped": 28
+        },
+        {
+          "executed": 1940,
+          "exit": 0,
+          "issues": [],
+          "mode": "debug",
+          "receipt": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.2/debug-full-suite.json",
+          "receiptSHA256": "b5fe848f90ea49c25097e5821a5391a4fa745d1dfbeec4c9db3b50fc150c2bf8",
+          "swiftTestingDisabled": 18,
+          "swiftTestingOutcome": "passed",
+          "swiftTestingReported": 1768,
+          "xctestFailures": 0,
+          "xctestReported": 218,
+          "xctestSkipped": 28
+        }
+      ],
+      "target": "arm64-apple-macosx14.0",
+      "toolchain": "xcode-27.2"
+    },
+    {
+      "compilerVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0\nswift-driver version: 1.168.6",
+      "consumers": [
+        {
+          "clientModes": [
+            "debug",
+            "release"
+          ],
+          "legacyExposurePassed": false,
+          "libraryMode": "release",
+          "omittedWriteControlsPassed": 2,
+          "positiveCasesPerClientMode": 24,
+          "summary": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.3-beta/final-consumers-release/summary.json",
+          "summarySHA256": "2715cea26168526b5f7f174d723a61e5ddb09d230f8c77b309a06b6ed5fe3a81"
+        },
+        {
+          "clientModes": [
+            "debug",
+            "release"
+          ],
+          "legacyExposurePassed": false,
+          "libraryMode": "debug",
+          "omittedWriteControlsPassed": 2,
+          "positiveCasesPerClientMode": 24,
+          "summary": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.3-beta/final-consumers-debug/summary.json",
+          "summarySHA256": "eb834d1e3d01b74e5119e8b13f71537705fb5d728cd6635a593fd497ea0b4b5e"
+        }
+      ],
+      "frontendSHA256": "93a7373a7f558b211b9820797d40d7554a0fef2c917d039fa0fa894b60fd55eb",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "negativeCompilerControlsPassed": 2,
+      "positiveCompilerFailures": [
+        "CopyInoutReturnInside.swift:release",
+        "LostStoreObserved.swift:release",
+        "ReturnInsideInout.swift:release"
+      ],
+      "positiveCompilerPasses": 11,
+      "sdkSettingsSHA256": "b57cfc491bdb4fd38c1c044fa558b2578fb560d630219a82f76b9b181f45789c",
+      "suites": [
+        {
+          "executed": 1940,
+          "exit": 1,
+          "issues": [
+            "\udbc2\udc84  Test literalArrayStoreIsObservedAfterOutOfLineClosure() recorded an issue at LostStoreCanaryTests.swift:47:9: Expectation failed: observed == 1"
+          ],
+          "mode": "release",
+          "receipt": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.3-beta/release-full-suite.json",
+          "receiptSHA256": "cb2e8a4ee7fa88caffae92292be5c558e2deb703998bbfceb59f65cf1f882752",
+          "swiftTestingDisabled": 18,
+          "swiftTestingOutcome": "failed",
+          "swiftTestingReported": 1768,
+          "xctestFailures": 0,
+          "xctestReported": 218,
+          "xctestSkipped": 28
+        },
+        {
+          "executed": 1940,
+          "exit": 0,
+          "issues": [],
+          "mode": "debug",
+          "receipt": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/xcode-27.3-beta/debug-full-suite.json",
+          "receiptSHA256": "9b0d0a4de8e8bd1e032dbb1a852738edf7e8e2e4e644fb03f863095e881db062",
+          "swiftTestingDisabled": 18,
+          "swiftTestingOutcome": "passed",
+          "swiftTestingReported": 1768,
+          "xctestFailures": 0,
+          "xctestReported": 218,
+          "xctestSkipped": 28
+        }
+      ],
+      "target": "arm64-apple-macosx14.0",
+      "toolchain": "xcode-27.3-beta"
+    },
+    {
+      "compilerVersion": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0",
+      "consumers": [
+        {
+          "clientModes": [
+            "debug",
+            "release"
+          ],
+          "legacyExposurePassed": true,
+          "libraryMode": "release",
+          "omittedWriteControlsPassed": 2,
+          "positiveCasesPerClientMode": 24,
+          "summary": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/swiftorg-6.4.2-restored/final-consumers-release/summary.json",
+          "summarySHA256": "fc4b078d280f10866ff0312406b86dc8fd911ce6feb3115568b39998b458975f"
+        },
+        {
+          "clientModes": [
+            "debug",
+            "release"
+          ],
+          "legacyExposurePassed": true,
+          "libraryMode": "debug",
+          "omittedWriteControlsPassed": 2,
+          "positiveCasesPerClientMode": 24,
+          "summary": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/swiftorg-6.4.2-restored/final-consumers-debug/summary.json",
+          "summarySHA256": "d716d54e1eab06c02f736e5161a8895eff2a787a1a4942613aefefa796802259"
+        }
+      ],
+      "frontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+      "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+      "negativeCompilerControlsPassed": 2,
+      "positiveCompilerFailures": [],
+      "positiveCompilerPasses": 14,
+      "sdkSettingsSHA256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+      "suites": [
+        {
+          "executed": 1940,
+          "exit": 0,
+          "issues": [],
+          "mode": "release",
+          "receipt": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/swiftorg-6.4.2-restored/release-full-suite.json",
+          "receiptSHA256": "71d27423344abbe4a802cebd76653697298ba4861eb46f1f77715f57c4c4e1a9",
+          "swiftTestingDisabled": 18,
+          "swiftTestingOutcome": "passed",
+          "swiftTestingReported": 1768,
+          "xctestFailures": 0,
+          "xctestReported": 218,
+          "xctestSkipped": 28
+        },
+        {
+          "executed": 1940,
+          "exit": 0,
+          "issues": [],
+          "mode": "debug",
+          "receipt": "/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/swiftorg-6.4.2-restored/debug-full-suite.json",
+          "receiptSHA256": "b158863cb2f3b2b893cb3e6529e3879bc4e14c5608cc0aac02f323c9971f21af",
+          "swiftTestingDisabled": 18,
+          "swiftTestingOutcome": "passed",
+          "swiftTestingReported": 1768,
+          "xctestFailures": 0,
+          "xctestReported": 218,
+          "xctestSkipped": 28
+        }
+      ],
+      "target": "arm64-apple-macosx14.0",
+      "toolchain": "swiftorg-6.4.2-restored"
+    }
+  ]
+}

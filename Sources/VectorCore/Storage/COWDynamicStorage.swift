@@ -1,40 +1,12 @@
 // VectorCore: Copy-on-Write Dynamic Storage
-//
-// Value-semantics wrapper around the reference-type AlignedDynamicArrayStorage.
-//
-// This type stores an AlignedDynamicArrayStorage (`storage`) and copies it on the first mutation through the
-// wrapper while it is shared (copy-on-write).
-//
 
 import Foundation
 
-/// Copy-on-write wrapper for AlignedDynamicArrayStorage providing value semantics.
-///
-/// `COWDynamicStorage` wraps the reference-type `AlignedDynamicArrayStorage` in a value type with
-/// copy-on-write: copies share one storage object until a mutation through the wrapper finds it shared.
-///
-/// ## Purpose
-/// - Provides value semantics for dynamically-sized storage
-/// - Defers the element copy until the first mutation while shared
-///
-/// ## Complexity
-/// - O(1) copy operations (until mutation)
-/// - O(n) copy on first mutation after sharing
-/// - Every mutation through the wrapper first runs the `isKnownUniquelyReferenced` check
-///
-/// ## Implementation Details
-/// The type wraps AlignedDynamicArrayStorage and uses `isKnownUniquelyReferenced` to
-/// detect when a copy is needed (`makeUnique`).
-///
-/// ## Example
-/// ```swift
-/// var storage1 = COWDynamicStorage(dimension: 1000)
-/// let storage2 = storage1  // shares the storage object; no element copy (allocation behaviour not verified)
-/// storage1[0] = 42.0       // shared, so makeUnique copies the elements first (allocation not verified by a test)
-/// ```
+/// Compatibility wrapper delegating value semantics to AlignedDynamicArrayStorage.
+/// Copies isolate mutations; see ReferenceStorageValueTests.wrapperCopies.
+/// Copying is O(1); the first mutation of shared backing storage copies O(n) elements.
 public struct COWDynamicStorage: VectorStorage, VectorStorageOperations {
-    /// The underlying reference-type storage.
-    /// Marked as var to allow COW reassignment when copying is needed.
+    /// The underlying copy-on-write value.
     @usableFromInline
     internal var storage: AlignedDynamicArrayStorage
 
@@ -79,20 +51,6 @@ public struct COWDynamicStorage: VectorStorage, VectorStorageOperations {
         self.storage = AlignedDynamicArrayStorage(from: values)
     }
 
-    /// Ensure storage is uniquely referenced for COW.
-    ///
-    /// This method implements the Copy-on-Write mechanism. It checks if
-    /// the underlying storage is shared and creates a copy if needed.
-    ///
-    /// - Complexity: O(1) if unique, O(n) if copy needed
-    @inlinable
-    mutating func makeUnique() {
-        if !isKnownUniquelyReferenced(&storage) {
-            // Storage is shared, create a deep copy
-            storage = AlignedDynamicArrayStorage(from: storage.toArray())
-        }
-    }
-
     // MARK: - VectorStorage Conformance
 
     /// Default initializer - not supported.
@@ -124,7 +82,6 @@ public struct COWDynamicStorage: VectorStorage, VectorStorageOperations {
             storage[index]
         }
         set {
-            makeUnique()  // Ensure exclusive ownership before mutation
             storage[index] = newValue
         }
     }
@@ -156,7 +113,6 @@ public struct COWDynamicStorage: VectorStorage, VectorStorageOperations {
     /// - Complexity: O(1) if unique, O(n) if COW triggered
     @inlinable
     public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
-        makeUnique()  // Ensure exclusive ownership before providing mutable access
         return try storage.withUnsafeMutableBufferPointer(body)
     }
 

@@ -1,0 +1,33 @@
+{
+  "actualCLIInvocations": 17,
+  "baseCommit": "2dcb24091c6dc21be4db409ecdd0756220e93b8c",
+  "benchmark": {
+    "configuration": "release",
+    "path": "/private/tmp/vectorcore-release-phase-one-2026-11-04/benchmarks/build/out/Products/Release/vectorcore-bench",
+    "sha256": "cea1d28a310fee4dbdbbf3c620c0ae85594f612c1e33befba6245cff208420fb"
+  },
+  "compilerFrontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+  "durabilityTests": 3,
+  "evidenceRoot": "/private/tmp/vectorcore-release-phase-one-2026-11-04/benchmarks",
+  "limitations": [
+    "No new hosted CI execution",
+    "Optional adversarial CSV parser branch not run here",
+    "Runtime metadata alone is not build provenance",
+    "No numerical qualification of dot/normalize/mem.copy without independent observations",
+    "No thermal/power compatibility repair",
+    "No quiet-host controlled timing acceptance",
+    "No full baseline suite repeated by this worker"
+  ],
+  "negativeModeProbes": 36,
+  "performanceAccepted": false,
+  "productCrossRunComparatorExit": 1,
+  "reportingComparatorInvocations": 301,
+  "reportingRecords": 302,
+  "requiredComparatorInvocations": 19,
+  "scope": "release-phase-one benchmark comparator execution; no performance acceptance",
+  "sourceStability": {
+    "pathsChecked": 250,
+    "unchanged": true
+  },
+  "validModeProbes": 6
+}

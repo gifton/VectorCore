@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -15,14 +16,14 @@ struct P01OperationsRedTests {
 
     // MARK: Operations generic small-k callbacks and calibration (phase E)
 
-    @Test func operationsColdKeySmallKEvaluatesEachCandidateOnce() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func operationsColdKeySmallKEvaluatesEachCandidateOnce() throws {
         let child = try p01RunChild("operations-cold-small-k", filter: Self.childFilter, removing: ["VC_AUTOTUNE"])
         #expect(child.run.terminationStatus == 0, "status=\(child.run.statusDescription): \(child.tail)")
         #expect(child.output.contains("P01_CHILD_COMPLETE operations-cold-small-k"), "\(child.tail)")
     }
 
     /// Control (green before and after P01): large k keeps computeDistances calibration on a cold key.
-    @Test func operationsColdKeyLargeKKeepsCalibrationControl() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func operationsColdKeyLargeKKeepsCalibrationControl() throws {
         let child = try p01RunChild("operations-cold-large-k", filter: Self.childFilter, removing: ["VC_AUTOTUNE"])
         #expect(child.run.terminationStatus == 0, "status=\(child.run.statusDescription): \(child.tail)")
         #expect(child.output.contains("P01_CHILD_COMPLETE operations-cold-large-k"), "\(child.tail)")

@@ -3,6 +3,7 @@
 The references below describe the code in this checkout. For an installed
 release, read the files at its tag and consult the [changelog](../CHANGELOG.md).
 A feature on `main` is not necessarily in the latest published release.
+For the active 0.4.0 integration preview, start with [release status](../RELEASE_STATUS.md).
 In particular, `v0.3.3` does not include the subsequent MemoryPool and Intel
 macOS/Mac Catalyst FP16 fixes listed under [Unreleased](../CHANGELOG.md#unreleased).
 The installation example's version requirement does not itself include
@@ -17,11 +18,14 @@ unreleased commits.
 | [Package boundaries](Package_Boundaries.md) | What Core owns and where the surrounding libraries fit |
 | [Numerical behavior](Numerical_Behavior.md) | Score conventions, Top-K ordering, precision, and validation boundaries |
 | [Memory alignment](Memory_Alignment.md) | Contiguity, allocation, borrowing, transfer, and caller obligations |
+| [SIMDStorage migration](SIMDStorage_Migration.md) | The 0.4.0 by-value mutable-borrow requirement and conformer/caller changes |
 | [SoA layout contract](SoA_Layout_Contract.md) | Frozen FP32 lane layout and logical versus allocated bytes |
 | [Linear algebra and projection](Linear_Algebra_and_Projection.md) | Factorization shapes, PCA, KNNGraph, UMAP, and scale limits |
 | [Roadmap](ROADMAP.md) | Current documentation priority and explicitly proposed future directions |
 | [Contributing](../CONTRIBUTING.md) | Development, verification, performance evidence, and support policy |
 | [Maintaining and forks](Maintaining.md) | Review, release, and repository-policy maintenance |
+| [Configured CI contracts](executed-ci-contracts.md) | Required commands, selected workloads, and execution limits |
+| [Benchmark measurement boundaries](Benchmark_Measurement_Boundaries.md) | Report identity, timed work, comparison rules, and provenance limits |
 | [Security reporting](../SECURITY.md) / [Code of Conduct](../CODE_OF_CONDUCT.md) | Private reporting and community expectations |
 
 The [source](../Sources/VectorCore/) defines exact signatures.
@@ -50,6 +54,10 @@ the [contribution benchmark instructions](../CONTRIBUTING.md#performance-changes
 
 These are dated evidence, not rolling promises of support or performance:
 
+- [0.4.0 remaining release gates, November 5, 2026](reviews/2026-11-05-release-gates/README.md) — compiler acceptance, platform coverage and host readiness
+- [0.4.0 second-phase remediation, November 4, 2026](reviews/2026-11-04-release-phase-two/README.md) — iOS portability, broader sanitizer evidence, independent benchmark validation and remaining gates
+- [0.4.0 first-phase remediation, November 4, 2026](reviews/2026-11-04-release-phase-one/README.md) — compiler investigation, Release sanitizer execution, comparator repairs and remaining gates
+- [0.4.0 qualification, November 4, 2026](reviews/2026-11-04-release-qualification/README.md) — exact-source hosted results and remaining release limits
 - [0.3.1 verification baseline](verification-baseline-0.3.1.md)
 - [Top-K contract and 0.3.3 verification](verification-topk-nan-contract-2026-09-05.md)
 - [Public-readiness acceptance, September 7, 2026](verification-public-readiness-2026-09-07.md)

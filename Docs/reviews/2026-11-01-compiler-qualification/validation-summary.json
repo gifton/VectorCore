@@ -1,0 +1,134 @@
+{
+  "candidate": "379e610f4365e820454c8c5328c4f87dfaa2031b",
+  "branch": "codex/audit-top-six-2026-10-27",
+  "toolchain": {
+    "package_url": "https://download.swift.org/swift-6.4.2-release/xcode/swift-6.4.2-RELEASE/swift-6.4.2-RELEASE-osx.pkg",
+    "package_sha256": "0a7d8489900d21dbf5f0187cb570e646a4c0226d0ddef2cbde8c7f54dfe79736",
+    "bundle_identifier": "org.swift.642202610261a",
+    "bundle_version": "6.4.2.20261026101",
+    "display_name": "Swift 6.4.2 Release 2026-10-26 (a)",
+    "compiler_version": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0\n",
+    "xcode": "Xcode 27.2\nBuild version 27B52\n",
+    "os": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+    "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+    "hardware_observation": {
+      "model": "Mac15,9",
+      "memory_bytes": 51539607552,
+      "logical_cpus": 16,
+      "cpu": "Apple M3 Max",
+      "command": [
+        "sysctl",
+        "-n",
+        "hw.model",
+        "hw.memsize",
+        "hw.logicalcpu",
+        "machdep.cpu.brand_string"
+      ]
+    },
+    "files": {
+      "Info.plist": {
+        "sha256": "9db4410b00668b3241c5bf68bb4184ce30ecc69939cc6944c11ad38420a21ec3",
+        "size": 1021
+      },
+      "usr/bin/swift-driver": {
+        "sha256": "f7568137b08b3bab761278758312ded00c2327935364612fcce4e9672edb9161",
+        "size": 230720
+      },
+      "usr/bin/swift-frontend": {
+        "sha256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+        "size": 346015904
+      },
+      "usr/bin/clang": {
+        "sha256": "1fa37802426fca4e4ee314501a106a397f4fbcbf21844e1f3cdb3aa1c0bca115",
+        "size": 272940848
+      }
+    },
+    "scope": "macOS arm64 runtime on macOS 27.0.1; deployment target macOS 14, not a macOS 14 runtime test"
+  },
+  "raw_evidence": "/Users/goftin/dev/projects/VectorCore-compiler-qualification-2026-11-01-evidence",
+  "runs": {
+    "official642-full-release": {
+      "exit_code": 0,
+      "xctest_reported": 196,
+      "xctest_skipped": 28,
+      "xctest_failures": 0,
+      "swift_testing_reported": 1742,
+      "swift_testing_suites": 262,
+      "swift_testing_skip_events": 18,
+      "hard_canary_passed": true,
+      "raw_record": "official642-full-release-result.json",
+      "log_sha256": "5aefc48948da4d55ebd1ff050177577a7499731ef05d838966604499cb572ef1",
+      "command": [
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "test",
+        "--disable-sandbox",
+        "--build-system",
+        "native",
+        "--jobs",
+        "3",
+        "-c",
+        "release",
+        "--scratch-path",
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-release",
+        "--sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+        "-v"
+      ],
+      "build_system": "native",
+      "extended_tests": false,
+      "strict_performance": false
+    },
+    "debug": {
+      "exit_code": 0,
+      "xctest_reported": 196,
+      "xctest_skipped": 28,
+      "xctest_failures": 0,
+      "swift_testing_reported": 1742,
+      "swift_testing_suites": 262,
+      "swift_testing_skip_events": 18,
+      "hard_canary_passed": true,
+      "raw_record": "debug-result.json",
+      "log_sha256": "ae12c49f93187f2c8aeb73013dfbdc22137763d51c4a358b04037b393888ad46",
+      "command": [
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "test",
+        "--build-system",
+        "native",
+        "--jobs",
+        "3",
+        "-c",
+        "debug",
+        "--scratch-path",
+        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-debug",
+        "--sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+        "-v"
+      ],
+      "build_system": "native",
+      "extended_tests": false,
+      "strict_performance": false
+    },
+    "client": {
+      "build_exit": 0,
+      "run_exit": 0,
+      "checks": "DETAIL adaptive actual=1102382323 reduced=1102382323 reference=1102383510\nDETAIL soa bits=[1123450881, 1065353216, 1123450881, 1123450881]\nDETAIL canary=1.0 fixed=1.0 dynamic=1.0\nCHECK pure_swift_canary PASS\nCHECK fixed_vector_borrow PASS\nCHECK dynamic_vector_borrow PASS\nCHECK adaptive_reduced_result PASS\nCHECK public_soa_suffix PASS\n",
+      "log_sha256": "0cabfb48611c15da31e7536039ca031b8e38a9439a9a80520a55095d8daa9b40",
+      "binary_sha256": "f6589fe3ef89c0c1892545b513c96a62ecf736fc3352428ebe77499b69f2206d",
+      "raw_record": "client-v2-result.json",
+      "driver_revision": "run-check-v1.py"
+    }
+  },
+  "standalone_records": [
+    "baseline.json",
+    "official642-results.json",
+    "official642-optimization-results.json"
+  ],
+  "review": {
+    "configured_model": "gpt-6-astra",
+    "configured_reasoning": "high",
+    "independent_source_and_evidence_review": true,
+    "reviewer_reran_tests": false,
+    "debug_final_reconciled_by_lead": true,
+    "result": "No issue invalidating the bounded released-toolchain macOS arm64 qualification method; scope/provenance suggestions incorporated."
+  }
+}

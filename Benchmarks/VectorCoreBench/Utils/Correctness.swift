@@ -131,3 +131,57 @@ enum DoubleRef {
     }
 }
 
+
+// These observations run after Harness.measure returns, outside its timed body.
+// BenchmarkNumericalObservationTests exercises wrong arithmetic, outcomes and copy bits.
+extension Correctness {
+    static func dot(current: Float, a: [Float], b: [Float]) -> CorrectnessStats {
+        guard !a.isEmpty, a.count == b.count else { return CorrectnessStats(invalidReason: "Invalid dot fixture shape") }
+        let reference = a.withUnsafeBufferPointer { aa in b.withUnsafeBufferPointer { DoubleRef.dot(aa, $0) } }
+        return scalar(current: current, reference: reference)
+    }
+
+    /// Reference for the finite, bounded benchmark fixtures: sqrt(Σ Double(x_i)²), then Double(x_i) / norm.
+    /// O(D) time and space; rejects empty, nonfinite and unrepresentable reference norms.
+    static func normalization(current: Result<[Float], VectorError>, input: [Float]) -> CorrectnessStats {
+        guard !input.isEmpty, input.allSatisfy({ $0.isFinite }) else {
+            return CorrectnessStats(invalidReason: "Invalid normalization fixture")
+        }
+        if input.allSatisfy({ $0.isZero }) {
+            guard case .failure(let error) = current, error.kind == .invalidOperation else {
+                return CorrectnessStats(invalidReason: "Zero normalization must fail with invalidOperation")
+            }
+            return scalar(current: 0, reference: 0)
+        }
+        guard case .success(let output) = current else {
+            return CorrectnessStats(invalidReason: "Nonzero normalization unexpectedly failed")
+        }
+        var squaredNorm: Double = 0
+        for value in input { squaredNorm += Double(value) * Double(value) }
+        let norm: Double = sqrt(squaredNorm)
+        guard norm.isFinite, norm > 0 else { return CorrectnessStats(invalidReason: "Invalid normalization reference norm") }
+        return vector(currents: output, references: input.map { Double($0) / norm })
+    }
+
+    /// Every source/destination bit pattern must match; mismatch is invalid evidence even under numeric overrides.
+    /// O(N) time and O(1) extra storage. Tested by testCopyRejectsTailPermutationULPAndSignedZeroCorruption.
+    static func exactCopy(source: UnsafeBufferPointer<Float>, destination: UnsafeBufferPointer<Float>) -> CorrectnessStats {
+        guard !source.isEmpty, source.count == destination.count else {
+            return CorrectnessStats(invalidReason: "Invalid copy comparison shape")
+        }
+        for index in source.indices where source[index].bitPattern != destination[index].bitPattern {
+            return CorrectnessStats(invalidReason: "Copy bit mismatch at element \(index)")
+        }
+        return CorrectnessStats(samples: source.count, maxAbsError: 0, meanAbsError: 0, maxRelError: 0, meanRelError: 0)
+    }
+}
+
+extension BenchResult {
+    func validated(_ stats: CorrectnessStats) -> BenchResult {
+        BenchResult(name: name, iterations: iterations, totalNanoseconds: totalNanoseconds, unitCount: unitCount,
+            samples: samples, meanNsPerOp: meanNsPerOp, medianNsPerOp: medianNsPerOp, p90NsPerOp: p90NsPerOp,
+            stddevNsPerOp: stddevNsPerOp, rsdPercent: rsdPercent, correctness: stats, executionFailure: executionFailure,
+            boundary: boundary, sampleNsPerInvocation: sampleNsPerInvocation, sampleIterations: sampleIterations,
+            warmupIterations: warmupIterations)
+    }
+}

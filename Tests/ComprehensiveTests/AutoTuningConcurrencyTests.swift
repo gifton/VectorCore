@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import os
@@ -39,7 +40,7 @@ private struct E05ReentrantMetric: DistanceMetric {
         _ = FileManager.default.createFile(atPath: output.path, contents: nil)
         let file = try FileHandle(forWritingTo: output)
         let process = try launchChildProbe(.swiftTesting(filter: "AutoTuningConcurrencyTests/childProbe"),
-                                           environment: environment, output: file, deadline: 15, cleanup: .kill(seconds: 2))
+                                           environment: environment, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let arguments = process.arguments, timedOut = process.timedOut, cleaned = process.cleaned
         try file.close()
         let log = try String(contentsOf: output, encoding: .utf8)
@@ -56,10 +57,10 @@ private struct E05ReentrantMetric: DistanceMetric {
         #expect(log.contains("E05_RESULT \(scenario)"), "\(log)")
         #expect(log.contains("E05_BODY_END \(scenario)"), "\(log)")
     }
-    @Test func directReentrantCallback() throws { try runChild("direct") }
-    @Test func actualOperationsReentrantMetric() throws { try runChild("operations") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func directReentrantCallback() throws { try runChild("direct") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func actualOperationsReentrantMetric() throws { try runChild("operations") }
 
-    @Test func isolatedContractMatrix() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func isolatedContractMatrix() throws {
         for scenario in ["cached", "disabled", "cycle", "recursive-set", "paused", "manual-success", "manual-invalid", "manual-throw", "unrelated", "throw-retry",
             "time-overlap", "time-failure", "time-nested", "time-slow", "parameters", "probes", "bias-seq", "bias-parallel", "printing"] {
             try runChild(scenario)

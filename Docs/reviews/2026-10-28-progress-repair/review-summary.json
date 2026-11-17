@@ -1,0 +1,66 @@
+{
+  "design": {
+    "reviewer": "gpt-6-astra",
+    "reviewer_task": "oracle_final_review",
+    "scope": "F007 design and source challenge",
+    "baseline": "6e7a136",
+    "read_only": true,
+    "swift_execution": false,
+    "reasoning": "Saturate scaled percentage when >= Double(Int.max); equality must be caught because the 64-bit upper bound rounds to 2^63. Immutable clamped inputs make the percentage nonnegative and finite.",
+    "boundaries": {
+      "below_64bit": {
+        "current": "Int.max/100 - 16",
+        "total": 1,
+        "expected": "Int.max - 1023"
+      },
+      "equality_64bit": {
+        "current": "Int.max/100",
+        "total": 1,
+        "expected": "Int.max"
+      },
+      "far_overflow": {
+        "current": "Int.max",
+        "total": 1,
+        "expected": "Int.max"
+      }
+    },
+    "class_inventory": "No second reachable occurrence of this unbounded-percentage conversion. Related percentile casts are bounded by allocated collection counts; one other percentage conversion uses fixed test ratios.",
+    "limits": [
+      "Read-only source and Python binary64 arithmetic; no Swift runs by reviewer.",
+      "External consumers were not inspected."
+    ]
+  },
+  "final": {
+    "reviewer": "gpt-6-astra",
+    "reviewer_task": "progress_final_review",
+    "fresh_context": true,
+    "range": "6e7a136..4fbfaa0",
+    "read_only": true,
+    "independent_broad_tests_run": false,
+    "result": "No actionable findings; source and regression design approved, pending full validation.",
+    "verified_by_source": [
+      "The >= guard catches 64-bit equality rounded to 2^63.",
+      "Clamped immutable inputs and the zero-total guard make scaled finite and nonnegative.",
+      "The below-boundary integer expectation catches premature saturation; equality cases catch an unsafe > guard.",
+      "13 input-range rows and 4 conversion-boundary rows cover negative clamping, zero totals and extremes; ordinary expectations preserve 150,33,66.",
+      "Ordinary import VectorCore covers public access.",
+      "Changelog, BH-67, CL-77 and VC-AUDIT-F007 agree with implementation.",
+      "No FP16 changes."
+    ],
+    "supplied_evidence_inspected": [
+      "logs/red-range-debug.log",
+      "logs/red-boundary-debug.log",
+      "logs/focused-debug.log",
+      "logs/claim-ledger-green.log"
+    ],
+    "reviewer_check": "git diff --check 6e7a136..4fbfaa0 passed",
+    "limits": [
+      "Reviewer did not rerun Swift tests.",
+      "Release and full validation were pending at review time.",
+      "No assertion of runtime validation on 32-bit or every supported Apple platform."
+    ]
+  },
+  "lead_completion": "Full Debug, Release and final Python policies passed; existing skips and Release compiler canary retained.",
+  "ruling": "Saturate only the unrepresentable floating percentage; retain overshoot and Double rounding. Consumers needing exact huge integer-rational percentages need a different representation.",
+  "deferred_review_findings": []
+}

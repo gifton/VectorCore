@@ -1,0 +1,86 @@
+{
+  "finding": "I1",
+  "fixtureSHA256": "b52d1c9cf18d0ea915c7befcb020674baee8884cc40feb71521b82d51931ce25",
+  "productionChanges": false,
+  "scope": "Qualified compiler; reused hash-verified task-1 Debug/Release modules; compile/link/runtime",
+  "cases": [
+    {
+      "moduleConfiguration": "debug",
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/debug-module-clients/summary.json",
+      "summarySHA256": "a0a1589adda2612ba22e2cf1a3b7409ce4f650616f36e9ab2c4deb8246f9f517",
+      "results": [
+        {
+          "binarySHA256": "e7a8e2332e8954f6c72019cee2d92b90e490c9ac8d18febfaca566bbf5a21949",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "14f7f63f1c49df511a58b089e6d28d016e41498191bbe4b81021faabd2bf600c",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "binarySHA256": "0a13a384a13a46f34b8cc02b8909746d684bf41a16a11a6a2e0ebb01f98a63f9",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "ca48bf019b2296a7e7620ce1ee5109d34e204fba2b300f156afa470418aa47d1",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    },
+    {
+      "moduleConfiguration": "release",
+      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/release-module-clients/summary.json",
+      "summarySHA256": "a4cee00757f9f6bc889933696a699c6947c75ce1c1921ec2387581c4785d4042",
+      "results": [
+        {
+          "binarySHA256": "1e5af740ea30c6c4695750b5f9fae9409a79124222cc5a5ce5e3b7fa196db3a9",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "37de8ded2981d0dfdd0db6fddf6e5f915cef55125b0b01f4accdf0249293d177",
+          "compileExit": 0,
+          "mode": "debug",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        },
+        {
+          "binarySHA256": "6a16d038e9718c4de62bdebee6efc94d4534a3eafc9144bf5a153dc4b70935de",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "inherited"
+        },
+        {
+          "binarySHA256": "b0ebd9a4f6b018f4f46df96ced7bc50a4b1c70076f5bf174f29a4e8e08cb59dd",
+          "compileExit": 0,
+          "mode": "release",
+          "passed": true,
+          "runExit": 0,
+          "witness": "explicit"
+        }
+      ]
+    }
+  ]
+}

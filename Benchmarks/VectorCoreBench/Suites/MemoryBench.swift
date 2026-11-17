@@ -44,7 +44,7 @@ struct MemoryBench: BenchmarkSuite {
             let copyName = "mem.copy.\(dim)"
             cases.append(BenchmarkCase(copyName, boundary: Boundaries.record(copyName, options)) {
                 let source = try allocator.allocate(count, alignment)
-                source.initialize(repeating: 0.5, count: count)
+                for index in 0..<count { source.advanced(by: index).initialize(to: Float(index % 257 - 128) / 256) }
                 defer { allocator.release(source, count) }
                 let destination = try allocator.allocate(count, alignment)
                 destination.initialize(repeating: 0, count: count)
@@ -54,8 +54,10 @@ struct MemoryBench: BenchmarkSuite {
                     blackHole(destination[1])
                 }
                 try Harness.warmup(copy)
-                return [try Harness.measure(name: copyName, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
-                                            unitCount: count, samples: options.samples, copy)]
+                let result = try Harness.measure(name: copyName, minTimeSeconds: options.minTimeSeconds, repeats: options.repeats,
+                                            unitCount: count, samples: options.samples, copy)
+                return [result.validated(Correctness.exactCopy(source: UnsafeBufferPointer(start: source, count: count),
+                    destination: UnsafeBufferPointer(start: destination, count: count)))]
             })
             let fillName = "mem.fill.\(dim)"
             cases.append(BenchmarkCase(fillName, boundary: Boundaries.record(fillName, options)) {

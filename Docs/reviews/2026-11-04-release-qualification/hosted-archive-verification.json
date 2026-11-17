@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "verifiedAtUTC": "2026-11-05T02:08:14.140844+00:00",
+  "elapsedSeconds": 1.029949542018585,
+  "archive": "/Users/goftin/dev/projects/VectorCore-hosted-qualification-2026-11-04-evidence",
+  "manifestSHA256": "dd2a449f29ae3583ea4a39ad788ae97203a96d7e81576f3358b1dac4644251dd",
+  "carriedManifest": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3/Docs/reviews/2026-11-04-release-qualification/hosted-evidence-manifest.json",
+  "manifestsByteIdentical": true,
+  "logicalFilesRehashed": 3386,
+  "logicalBytesRehashed": 1181491353,
+  "uniquePayloads": 2106,
+  "uniquePayloadBytes": 1165132112,
+  "aliasesValidated": 1280,
+  "symlinksValidated": 6,
+  "priorFrozenReferencesRehashed": 6,
+  "failures": [],
+  "scope": "Independent read-only integrity verification; no binaries executed and no qualification/source review performed."
+}

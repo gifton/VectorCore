@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import Testing
@@ -17,7 +18,9 @@ private final class E06Values<T: Sendable>: @unchecked Sendable {
          c.enableMatrixRouting ? 1 : 0, UInt64(bitPattern: Int64(c.matrixRoutingMinN))]
     }
 
-    @Test(.serialized, arguments: ["defaultBatch", "threshold", "chunks", "invalid", "domains", "linear", "partitions", "snapshot", "routes512", "routes768", "routes1536", "pairwise", "nested"])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized,
+          arguments: ["defaultBatch", "threshold", "chunks", "invalid", "domains", "linear",
+                      "partitions", "snapshot", "routes512", "routes768", "routes1536", "pairwise", "nested"])
     func configurationScenarioInBoundedChild(_ scenario: String) throws {
         var environment = ProcessInfo.processInfo.environment
         environment["E06_SCENARIO"] = scenario
@@ -26,8 +29,7 @@ private final class E06Values<T: Sendable>: @unchecked Sendable {
         FileManager.default.createFile(atPath: path.path, contents: nil)
         let file = try FileHandle(forWritingTo: path)
         let process = try launchChildProbe(.swiftTesting(filter: "BatchConfigurationContractTests/configurationChild"),
-                                           environment: environment, output: file, deadline: 15,
-                                           cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                           environment: environment, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if process.timedOut {
             try file.close()
             print("E06_CHILD_CAPTURE \(scenario) \(path.path)")

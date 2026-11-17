@@ -1,0 +1,38 @@
+{
+  "device": {
+    "compilerProfile": "known-failing",
+    "evidence": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-device-tooling-private",
+    "policyId": "vc-0.4.0-xcode27.2-bounded-v1",
+    "profile": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-device-tooling-profile-private.json",
+    "profileSHA256": "873299cd74fab1fe6de82f7a51d782b1220663d9a029ec738ddb63a5a98b72e3",
+    "releaseAdmitted": false,
+    "scope": [
+      "Tooling validation on alpha compiled inputs only; app-hosted iOS compositions, arm64, Xcode 27.2 27B52.",
+      "Every producer/client combination explicitly listed below; separate Swift witness target; complete by-value, omitted-write and residual/standalone observations.",
+      "App-hosted diagnostics preserve original helper bodies; they do not replace the separately retained native diagnostics.",
+      "Full package suites are retained separately; this profile does not assess those suites, minimum iOS, Intel, other platforms, performance or stable release admission."
+    ],
+    "source": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/source-alpha-ios-tooling",
+    "sourceManifestSHA256": "d6a5711b1571cc853c571a4312a619d512b12459bb8e644d3bb78fdfcdc291db",
+    "vectorCoreQualification": "accepted",
+    "verifiedFiles": 3538
+  },
+  "simulator": {
+    "compilerProfile": "known-failing",
+    "evidence": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-simulator-tooling",
+    "policyId": "vc-0.4.0-xcode27.2-bounded-v1",
+    "profile": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-simulator-tooling-profile.json",
+    "profileSHA256": "219117df0d12e4efb7a2e8f1020d568d0d18f738553462d3f41904c88b332c4e",
+    "releaseAdmitted": false,
+    "scope": [
+      "Tooling validation on alpha compiled inputs only; app-hosted iOS compositions, arm64, Xcode 27.2 27B52.",
+      "Every producer/client combination explicitly listed below; separate Swift witness target; complete by-value, omitted-write and residual/standalone observations.",
+      "App-hosted diagnostics preserve original helper bodies; they do not replace the separately retained native diagnostics.",
+      "Full package suites are retained separately; this profile does not assess those suites, minimum iOS, Intel, other platforms, performance or stable release admission."
+    ],
+    "source": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/source-alpha-ios-tooling",
+    "sourceManifestSHA256": "d6a5711b1571cc853c571a4312a619d512b12459bb8e644d3bb78fdfcdc291db",
+    "vectorCoreQualification": "accepted",
+    "verifiedFiles": 60129
+  }
+}

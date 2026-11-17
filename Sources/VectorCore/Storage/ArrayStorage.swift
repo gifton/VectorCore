@@ -92,7 +92,7 @@ public struct ArrayStorage<D>: VectorStorage, VectorStorageOperations {
 // MARK: - Specialized Array Storage for Dynamic Dimensions
 
 /// Specialized storage for runtime-determined dimensions
-public final class DynamicArrayStorage: @unchecked Sendable, VectorStorage, VectorStorageOperations {
+public struct DynamicArrayStorage: VectorStorage, VectorStorageOperations {
     @usableFromInline
     internal var data: ContiguousArray<Float>
 
@@ -102,7 +102,7 @@ public final class DynamicArrayStorage: @unchecked Sendable, VectorStorage, Vect
         self.data = ContiguousArray(repeating: 0, count: dimension)
     }
 
-    public required init() {
+    public init() {
         fatalError("Dynamic storage requires explicit dimension")
     }
 
@@ -128,7 +128,7 @@ public final class DynamicArrayStorage: @unchecked Sendable, VectorStorage, Vect
         try data.withUnsafeBufferPointer(body)
     }
 
-    public func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
+    public mutating func withUnsafeMutableBufferPointer<R>(_ body: (UnsafeMutableBufferPointer<Float>) throws -> R) rethrows -> R {
         try data.withUnsafeMutableBufferPointer { buffer in
             try body(buffer)
         }

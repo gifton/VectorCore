@@ -137,7 +137,7 @@ struct MixedPrecisionPerformanceBenchmark {
 
     // MARK: - Batch Throughput Benchmarks
 
-    @Test("Throughput: Euclidean batch scaling (N = 10, 100, 1000)")
+    @Test("Throughput: Euclidean batch scaling (N = 10, 100, 1000)", .enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1"))
     func benchmarkEuclideanBatchThroughput() throws {
         let batchSizes = [10, 100, 1000]
 

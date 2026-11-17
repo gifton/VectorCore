@@ -1,0 +1,8 @@
+{
+  "allChecksPass": true,
+  "jsonRecordsParsed": 14,
+  "localLinksChecked": 36,
+  "missingLocalLinks": [],
+  "phase": "After durable archive copy; desired report staging before final install",
+  "scope": "Local targets and JSON syntax only; external web facts were checked separately during compiler investigation."
+}

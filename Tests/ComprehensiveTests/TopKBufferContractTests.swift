@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -302,9 +303,9 @@ struct TopKBufferMergeInTrapTests {
         #expect(!child.output.contains("P01_OBSERVED \(scenario) after-merge"), "\(child.tail)")
     }
 
-    @Test func directionMismatchTraps() throws { try expectTrap("mergein-direction") }
-    @Test func tiePolicyMismatchTraps() throws { try expectTrap("mergein-policy") }
-    @Test func smallerDestinationCapacityTraps() throws { try expectTrap("mergein-capacity") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func directionMismatchTraps() throws { try expectTrap("mergein-direction") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func tiePolicyMismatchTraps() throws { try expectTrap("mergein-policy") }
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func smallerDestinationCapacityTraps() throws { try expectTrap("mergein-capacity") }
 
     @Test func child() {
         guard let scenario = ProcessInfo.processInfo.environment["P01_SCENARIO"], scenario.hasPrefix("mergein-") else { return }

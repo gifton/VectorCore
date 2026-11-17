@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -16,37 +17,37 @@ struct P01BatchRouteTests {
 
     // MARK: Six optimized public routes (B1, B3-B8, B10-B16, B18)
 
-    @Test func optimizedEuclid512() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func optimizedEuclid512() async throws {
         try await e06IsolatedScenario("p01-batch-euclid512", filter: "P01BatchRouteTests/optimizedEuclid512") {
             try await optimizedRoute(P01BatchCase(dim: 512, kind: .euclid))
         }
     }
 
-    @Test func optimizedCosine512() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func optimizedCosine512() async throws {
         try await e06IsolatedScenario("p01-batch-cosine512", filter: "P01BatchRouteTests/optimizedCosine512") {
             try await optimizedRoute(P01BatchCase(dim: 512, kind: .cosine))
         }
     }
 
-    @Test func optimizedEuclid768() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func optimizedEuclid768() async throws {
         try await e06IsolatedScenario("p01-batch-euclid768", filter: "P01BatchRouteTests/optimizedEuclid768") {
             try await optimizedRoute(P01BatchCase(dim: 768, kind: .euclid))
         }
     }
 
-    @Test func optimizedCosine768() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func optimizedCosine768() async throws {
         try await e06IsolatedScenario("p01-batch-cosine768", filter: "P01BatchRouteTests/optimizedCosine768") {
             try await optimizedRoute(P01BatchCase(dim: 768, kind: .cosine))
         }
     }
 
-    @Test func optimizedEuclid1536() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func optimizedEuclid1536() async throws {
         try await e06IsolatedScenario("p01-batch-euclid1536", filter: "P01BatchRouteTests/optimizedEuclid1536") {
             try await optimizedRoute(P01BatchCase(dim: 1536, kind: .euclid))
         }
     }
 
-    @Test func optimizedCosine1536() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func optimizedCosine1536() async throws {
         try await e06IsolatedScenario("p01-batch-cosine1536", filter: "P01BatchRouteTests/optimizedCosine1536") {
             try await optimizedRoute(P01BatchCase(dim: 1536, kind: .cosine))
         }
@@ -131,7 +132,7 @@ struct P01BatchRouteTests {
 
     // MARK: Root-score admission (B3)
 
-    @Test func rootTieAdmission() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func rootTieAdmission() async throws {
         try await e06IsolatedScenario("p01-batch-root-tie", filter: "P01BatchRouteTests/rootTieAdmission") {
             for dim in [512, 768, 1536] {
                 let c = P01BatchCase(dim: dim, kind: .euclid)
@@ -175,7 +176,7 @@ struct P01BatchRouteTests {
 
     // MARK: Generic partitions (E5 small-k twin; B11-B16)
 
-    @Test func genericPartitions() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func genericPartitions() async throws {
         try await e06IsolatedScenario("p01-batch-generic-partitions", filter: "P01BatchRouteTests/genericPartitions") {
             let rows = p01TaggedRows((0..<41).map { Float(($0 * 7) % 11) })
             let query = p01TaggedQuery()
@@ -209,7 +210,7 @@ struct P01BatchRouteTests {
 
     // MARK: Witnesses and threshold neighbors (E6, E7 gaps)
 
-    @Test func genericWitnessesAndThresholds() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func genericWitnessesAndThresholds() async throws {
         try await e06IsolatedScenario("p01-batch-witnesses", filter: "P01BatchRouteTests/genericWitnessesAndThresholds") {
             // E7: a custom witness is called exactly once per candidate, in index order within each original range.
             let rows = p01TaggedRows((0..<30).map { Float(($0 * 5) % 7) })
@@ -292,7 +293,7 @@ struct P01BatchRouteTests {
 
     // MARK: Cancellation and nesting (B2, B14)
 
-    @Test func cancelledAndNested() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func cancelledAndNested() async throws {
         try await e06IsolatedScenario("p01-batch-cancel-nested", filter: "P01BatchRouteTests/cancelledAndNested") {
             for setting in [(1, 7), (Int.max, 256)] {
                 try await BatchOperations.updateConfiguration { $0.parallelThreshold = setting.0; $0.minimumChunkSize = setting.1 }
@@ -340,7 +341,7 @@ struct P01BatchRouteTests {
 
     // MARK: Entry snapshot (B1)
 
-    @Test func entrySnapshot() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func entrySnapshot() async throws {
         try await e06IsolatedScenario("p01-batch-snapshot", filter: "P01BatchRouteTests/entrySnapshot") {
             try await BatchOperations.updateConfiguration { $0.parallelThreshold = 1; $0.minimumChunkSize = 5; $0.oversubscription = 4 }
             let rows = p01TaggedRows((0..<60).map { Float(($0 * 7) % 9) })
@@ -371,7 +372,7 @@ struct P01BatchRouteTests {
 
     // MARK: Strategy neighbors (B18, CS1)
 
-    @Test func strategyNeighbors() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func strategyNeighbors() async throws {
         try await e06IsolatedScenario("p01-batch-strategy", filter: "P01BatchRouteTests/strategyNeighbors") {
             let c = P01BatchCase(dim: 512, kind: .euclid)
             let cases: [(Int, [Int])] = [(20, [1, 2]), (100, [9, 10, 99, 100, 101, Int.max]), (109, [9, 10]), (110, [10, 11])]
@@ -412,7 +413,7 @@ struct P01BatchRouteTests {
     /// serial or parallel by `parallelThreshold`, heap (small-k trace) for k = 3 and sort (no trace) for the large k.
     /// No `Operations.computeProvider` is installed: BatchOperations does not read it (a premise pinned by
     /// `Scripts/ci/tests/test_inert_provider_wrappers.py`).
-    @Test func q17PremiseTwins() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func q17PremiseTwins() async throws {
         try await e06IsolatedScenario("p01-batch-q17", filter: "P01BatchRouteTests/q17PremiseTwins") {
             try await BatchOperations.updateConfiguration { $0 = BatchOperations.Configuration() }
             try await q17SerialTwin()

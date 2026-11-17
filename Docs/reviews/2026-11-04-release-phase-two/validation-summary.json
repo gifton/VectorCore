@@ -1,0 +1,621 @@
+{
+  "status": "LOCAL_EXECUTION_COMPLETE_WITH_RELEASE_GATES",
+  "date": "2026-11-04",
+  "phase": "second-phase remediation",
+  "base": "c6124accca922f6ff65c569f3f7b42502eae17ac",
+  "planWorkerBase": "04b64694297ae5c32c4936c5367b144c674d705e",
+  "testedExecutableSource": "e7482a962c67dd0b806059b651c9f59eb678a632",
+  "releaseSignoff": false,
+  "combinedChecks": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Scripts/ci/tests",
+        "-v"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 900,
+      "elapsedSeconds": 279.5428176249843,
+      "name": "python-suite",
+      "archiveRecord": "coordinator/combined-checks-v2/python-suite.json",
+      "sha256": "326099d126e3684aab05bac6a94d0b3f9224d8e6bdcf5fb9191d24d87c0e316d",
+      "testsPassed": 603
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Docs/reviews/2026-11-04-release-phase-two/sanitizers",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 120,
+      "elapsedSeconds": 1.8477943330071867,
+      "name": "sanitizer-qualification",
+      "archiveRecord": "coordinator/combined-checks-v2/sanitizer-qualification.json",
+      "sha256": "6228c3026853ef7a14177aea58c0d165776a218c7534b73a3a5ca31879fa39af",
+      "testsPassed": 23
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "Docs/reviews/2026-11-04-release-phase-one/compiler/test_run.py"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 60,
+      "elapsedSeconds": 0.0811092909425497,
+      "name": "compiler-driver",
+      "archiveRecord": "coordinator/combined-checks-v2/compiler-driver.json",
+      "sha256": "7136e0fa786b483c31854e0a6fa56b4f010a35472107a7333e02ecffa4e52cba",
+      "testsPassed": 2
+    },
+    {
+      "argv": [
+        "python3",
+        "Scripts/ci/check_claim_ledger.py"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 180,
+      "elapsedSeconds": 2.76225016603712,
+      "name": "claims",
+      "archiveRecord": "coordinator/combined-checks-v2/claims.json",
+      "sha256": "61fa3063ca1cc4a68aa0146b76e13e53c9d9aba008176c3101ef62237eb5e4b2"
+    },
+    {
+      "argv": [
+        "python3",
+        "Scripts/ci/check_ci_contracts.py"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 30,
+      "elapsedSeconds": 0.048605000018142164,
+      "name": "ci-contracts",
+      "archiveRecord": "coordinator/combined-checks-v2/ci-contracts.json",
+      "sha256": "ec29a37885436ad8f93f8bf916632ca9037c9766156e86fc8dd67e2e506eac62"
+    },
+    {
+      "argv": [
+        "ruby",
+        "Scripts/ci/validate_github.rb"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 120,
+      "elapsedSeconds": 0.08568208396900445,
+      "name": "github",
+      "archiveRecord": "coordinator/combined-checks-v2/github.json",
+      "sha256": "14195c70438616033350a7b43d0d91a946ffdca9d4d49c3805ca507c48082628"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "c6124accca922f6ff65c569f3f7b42502eae17ac"
+      ],
+      "exit": 0,
+      "timeout": false,
+      "deadlineSeconds": 30,
+      "elapsedSeconds": 0.04623737500514835,
+      "name": "whitespace",
+      "archiveRecord": "coordinator/combined-checks-v2/whitespace.json",
+      "sha256": "bdbca849db420f2337bab6ed5ff8075ca8ea627ac284e0240bfec8856d5f2109"
+    }
+  ],
+  "combinedInputIdentity": {
+    "trackedFiles": 878,
+    "changed": [],
+    "archiveRecord": "coordinator/combined-checks-v2/result.json",
+    "sha256": "8c1fa09c99417c4014aedb1cd1336835e4f986acaff1292fab29e7fe7caa80e0"
+  },
+  "lint": {
+    "argv": [
+      "/private/tmp/vectorcore-release-phase-two-2026-11-04/coordinator/lint-preparation/tool/swiftlint",
+      "lint",
+      "--config",
+      ".swiftlint.yml",
+      "--reporter",
+      "json",
+      "--quiet",
+      "--no-cache"
+    ],
+    "cleanAfter": true,
+    "counts": {
+      "error": 0,
+      "warning": 5547
+    },
+    "diagnostics": 5547,
+    "exit": 0,
+    "gitSHA": "e7482a962c67dd0b806059b651c9f59eb678a632",
+    "scope": "Exact prior coordinator explicit root-config command; default nested-config discovery retained separately",
+    "suppressionsAdded": false,
+    "toolSHA256": "52112ece2dfa99c2442a1367f9a365d43784714cf224c3675bf8bc2f18ebd7c8"
+  },
+  "ios": {
+    "counts": {
+      "declaredCount": 1982,
+      "methodResults": {
+        "Passed": 1818,
+        "Skipped": 163,
+        "Failed": 1
+      },
+      "expandedResults": {
+        "Passed": 3447,
+        "Skipped": 163,
+        "Failed": 1
+      },
+      "parameterizedMethods": 49,
+      "argumentRuns": 1678,
+      "bundleResults": {
+        "MinimalTests": {
+          "Passed": 33,
+          "Skipped": 27
+        },
+        "ComprehensiveTests": {
+          "Skipped": 115,
+          "Passed": 1698,
+          "Failed": 1
+        },
+        "BenchmarkContractTests": {
+          "Passed": 87,
+          "Skipped": 21
+        }
+      },
+      "controls": {
+        "LostStoreCanaryTests/literalArrayStoreIsObservedAfterOutOfLineClosure()": "Failed",
+        "VectorDispatchContractTests/concreteProtocolOnlyMismatchesRejectBeforeBorrow()": "Skipped",
+        "VectorDispatchContractTests/concreteProtocolOnlyOperatorsPreserveCopy()": "Passed",
+        "BenchmarkNumericalObservationTests/testAttachingObservationPreservesRawMeasurementAndIdentity()": "Passed",
+        "BenchmarkNumericalObservationTests/testCopyRejectsTailPermutationULPAndSignedZeroCorruption()": "Passed",
+        "BenchmarkNumericalObservationTests/testDotDoubleReferenceRejectsFloatCancellationAndDroppedTerms()": "Passed",
+        "BenchmarkNumericalObservationTests/testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth()": "Passed",
+        "BenchmarkNumericalObservationTests/testEveryDotRouteRetainsEachSignedCoordinateExactly()": "Passed",
+        "BenchmarkNumericalObservationTests/testEveryRepairedCatalogCaseCarriesStrictObservation()": "Passed",
+        "BenchmarkNumericalObservationTests/testNormalizationReferenceRejectsWrongCoordinatesAndOutcomes()": "Passed"
+      }
+    },
+    "exit": 65,
+    "timeout": false,
+    "onlyFailure": "LostStoreCanaryTests/literalArrayStoreIsObservedAfterOutOfLineClosure()",
+    "observed": 2.0,
+    "expected": 1.0,
+    "sourceTreeFiles": 388,
+    "compilerInputFiles": 376,
+    "archiveRecord": "ios/combined-candidate-v2/counts.json",
+    "sha256": "fafe9847d796a365fee6b76280c98f1f78e9a135019e91eafea4a802e9e5f36d"
+  },
+  "sanitizers": {
+    "configuration": "Release/native",
+    "compiler": "verified Swift.org 6.4.2",
+    "mandatory": {
+      "address": {
+        "passed": 77,
+        "bundleSHA256": "e7aea05e062738dc75b839f3df80e60ca80fb9ab666453d38f64350b5efc719d",
+        "archiveRecord": "final-v2-address-producer/mandatory/result.json",
+        "sha256": "a63e76a4491d705fc101c3fd786032fa1530e85c1d8ca85acbec7d6dd91b2f44"
+      },
+      "thread": {
+        "passed": 39,
+        "bundleSHA256": "27c8350c895416102be22f5d80f85c066a2105bd6482764df643300f2d546c59",
+        "archiveRecord": "final-v2-thread-producer/mandatory/result.json",
+        "sha256": "fa62188e7b7aba05fa0af8d73b95f0ad48ea86e0e34e22f0c98a3d32e8a8feef"
+      }
+    },
+    "addressFull": {
+      "note": "Complete nonempty XCTest discovery is selected explicitly; bounded single/comma probes exclude the automatic Swift Testing overlap. Exact executed coverage is still checked.",
+      "results": {
+        "testing": {
+          "counts": {
+            "discovered": 1764,
+            "failed": 0,
+            "passed": 1746,
+            "pending": 0,
+            "skipped": 18,
+            "started": 1746,
+            "unknown": 0
+          },
+          "exit": 0,
+          "imagesVerified": true,
+          "qualified": false,
+          "timeout": false
+        },
+        "xctest": {
+          "counts": {
+            "discovered": 218,
+            "failed": 0,
+            "passed": 190,
+            "pending": 0,
+            "skipped": 28,
+            "started": 218,
+            "unknown": 0
+          },
+          "exit": 0,
+          "imagesVerified": true,
+          "qualified": false,
+          "timeout": false
+        }
+      },
+      "sanitizer": "address",
+      "scope": "Combined phase-two candidate e7482a962c67dd0b806059b651c9f59eb678a632"
+    },
+    "threadInitialRaw": {
+      "note": "Complete nonempty XCTest discovery is selected explicitly; bounded single/comma probes exclude the automatic Swift Testing overlap. Exact executed coverage is still checked.",
+      "results": {
+        "testing": {
+          "counts": {
+            "discovered": 1764,
+            "failed": 0,
+            "passed": 1608,
+            "pending": 138,
+            "skipped": 18,
+            "started": 1609,
+            "unknown": 0
+          },
+          "exit": null,
+          "imagesVerified": true,
+          "qualified": false,
+          "timeout": true
+        },
+        "xctest": {
+          "counts": {
+            "discovered": 220,
+            "failed": 0,
+            "passed": 190,
+            "pending": 2,
+            "skipped": 28,
+            "started": 218,
+            "unknown": 0
+          },
+          "exit": 0,
+          "imagesVerified": true,
+          "qualified": false,
+          "timeout": false
+        }
+      },
+      "sanitizer": "thread",
+      "scope": "Combined phase-two candidate e7482a962c67dd0b806059b651c9f59eb678a632"
+    },
+    "threadCompleteSerialRepeat": {
+      "commandExit": 0,
+      "elapsedSeconds": 1372.0332388750976,
+      "imagesVerified": true,
+      "original1200SecondTimeout": "retained unchanged; this independent complete sweep does not relabel or merge that attempt",
+      "sanitizer": "thread",
+      "scope": {
+        "discovered": 1764,
+        "failed": 0,
+        "passed": 1746,
+        "pending": 0,
+        "skipped": 18,
+        "started": 1746,
+        "unknown": 0
+      },
+      "sourceAndToolsUnchanged": true,
+      "sourceCommit": "e7482a962c67dd0b806059b651c9f59eb678a632",
+      "strictNoSkipsQualified": false,
+      "timeout": false,
+      "wholeHostDeadlineSeconds": 2400
+    },
+    "threadXCTestIndependentReconciliation": {
+      "realDiscovered": 218,
+      "started": 218,
+      "passed": 190,
+      "skipped": 28,
+      "failed": 0,
+      "pending": 0,
+      "rawDiagnosticEntries": 2,
+      "strictNoSkipsQualified": false,
+      "parserRepair": "5a3301055f38d4fbf506985e3feedf3da154c7b4"
+    },
+    "warnings": "TSan invalid dyld module map / unreliable backtraces retained across selected and broader experiments. Warning-free diagnostic reliability is not established.",
+    "scope": "Function execution and actual instrumented images; skipped bodies, production binary equivalence and project-wide leak freedom are not qualified.",
+    "interruptedWrongEnvironmentExecution": {
+      "archiveRecord": "final-v2-thread-preparation/extended-interruption-reconciliation.json",
+      "nativeExitRecorded": false,
+      "supervisorExit": -2,
+      "mergedIntoCompleteSweep": false,
+      "knownOwnedPIDsAbsentAtLaterCheck": true
+    },
+    "finalRecord": "sanitizers/final-outcomes.md",
+    "finalEvidence": {
+      "archiveRecord": "sanitizers-final/final-results.json",
+      "sha256": "bb1b70d99ad54dcf420abff02f8b2375a50b032b1d43378ed17b1ae729b74b02",
+      "selectedFiles": 1260,
+      "selectedBytes": 703318090,
+      "manifestSHA256": "6d01c2d5f5e644f6b45eaa36fb40f7dd849dda61996282472017b942c2a52b20"
+    }
+  },
+  "leakConsumer": {
+    "iterations": 64,
+    "cleanExit": 0,
+    "cleanReportedRoots": 0,
+    "intentionalExit": 1,
+    "intentionalReportedRoots": 8,
+    "intentionalAllocatorBytes": 40960,
+    "scope": "Same small consumer binary with reused verified unchanged library inputs. Not whole-project leak freedom; ASan detect_leaks remains zero."
+  },
+  "benchmarkPreparedProductReuse": {
+    "productCommit": "6d574f3ff122554ae8bec18f039ffa4a6981920e",
+    "testCandidateCommit": "e7482a962c67dd0b806059b651c9f59eb678a632",
+    "shippingInputs": 182,
+    "rawGitBlobHashesVerified": true,
+    "exactOrderedFlagVectorsMatched": true,
+    "changedExcludedTestInputs": 4,
+    "globallyIdentical": false,
+    "preparedRecordSHA256": "373c7e19ef15eaadc1af2b91599678c4b9a41c941ef9a1a5e44c89283702f594",
+    "binarySHA256": "b9d356a1a2217cfa85d0228ad4f267eec4aed0ed7d0e429665784a69dd7a4fd6",
+    "comparatorSHA256": "4961004c80cf6b336256fc62b69e5a4ae08549ba11af66e31370c1810f72e94a"
+  },
+  "controlledMeasurements": {
+    "schemaVersion": 1,
+    "status": "MEASURED_ACCEPTANCE_PENDING",
+    "performanceAcceptance": false,
+    "productCommit": "6d574f3ff122554ae8bec18f039ffa4a6981920e",
+    "testCandidateCommit": "e7482a962c67dd0b806059b651c9f59eb678a632",
+    "shippingReuseInputs": 182,
+    "globallyIdenticalCommits": false,
+    "binarySHA256": "b9d356a1a2217cfa85d0228ad4f267eec4aed0ed7d0e429665784a69dd7a4fd6",
+    "comparatorSHA256": "4961004c80cf6b336256fc62b69e5a4ae08549ba11af66e31370c1810f72e94a",
+    "frontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+    "sdkSettingsSHA256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+    "preparedRecordSHA256": "373c7e19ef15eaadc1af2b91599678c4b9a41c941ef9a1a5e44c89283702f594",
+    "comparisonMetric": "median",
+    "perUnit": true,
+    "thresholdPercent": 5,
+    "seed": 0,
+    "samplesPerCase": 15,
+    "minTimeSeconds": 0.25,
+    "measurementMode": "estimated-duration",
+    "fixedRepeatOverride": null,
+    "repeatMeasureExits": [
+      0,
+      0,
+      0
+    ],
+    "correctCaseExecutions": 63,
+    "rawSampleAverages": 945,
+    "observerFramesPerRepeat": [
+      7,
+      7,
+      7
+    ],
+    "maxWithinRunRSDPercent": [
+      1.4186481185129893,
+      1.8269721109459558,
+      1.0609717744501919
+    ],
+    "comparisonExits": [
+      0,
+      1
+    ],
+    "regressions": [
+      {
+        "case": "dot.512.generic",
+        "percent": 5.738072617090366
+      },
+      {
+        "case": "dot.768.generic",
+        "percent": 5.6352039468119575
+      },
+      {
+        "case": "normalize.success.768.optimized",
+        "percent": 5.218603983379102
+      }
+    ],
+    "missingCases": 0,
+    "invalidComparisons": 0,
+    "selectedRetries": 0,
+    "identityMissingStatisticWaivers": false,
+    "unrelatedProcessesStopped": false,
+    "oneMinuteLoadRange": [
+      4.85,
+      7.0
+    ],
+    "peakObservedNonBenchmarkCPUPercent": 197.3,
+    "thermalPowerTelemetry": "pmset reported no recorded thermal/performance warning or CPU power status; no no-throttling proof",
+    "supplementaryProbeFailure": "quiet-postconditions/processes.json exit 1 for unsupported post-window comm width format; all 63 primary observer commands exited 0",
+    "metadataCommitRemains": "6d574f3ff122554ae8bec18f039ffa4a6981920e",
+    "sourceIdentityDuringAllRuns": "clean 6d; every before/after verification passed",
+    "reuseProof": "reviewed-input-reuse/result.json",
+    "rawReports": [
+      "repeat-0/report.json",
+      "repeat-1/report.json",
+      "repeat-2/report.json"
+    ],
+    "comparisons": [
+      {
+        "repeat": 1,
+        "exit": 0,
+        "stdout": "comparisons/repeat-1.stdout",
+        "stderr": "comparisons/repeat-1.stderr"
+      },
+      {
+        "repeat": 2,
+        "exit": 1,
+        "stdout": "comparisons/repeat-2.stdout",
+        "stderr": "comparisons/repeat-2.stderr"
+      }
+    ],
+    "archiveRecord": "benchmarks-quiet/result-summary.json"
+  },
+  "protectedPathsUnchangedFromPhaseBase": [
+    "Sources/",
+    "Package.swift",
+    ".github/workflows/"
+  ],
+  "review": {
+    "sourceReview": "review/final-source-review.md",
+    "sourceFixReview": "review/final-source-fix-review.md",
+    "iosReview": "review/ios-v2-evidence-review.md",
+    "asanReview": "review/asan-v2-evidence-review.md",
+    "toolingReuseReview": "review/tooling-and-product-reuse-review.md",
+    "discoveryFinding": "review/tsan-discovery-warning-review.md",
+    "finalClosure": "archive-verification.json",
+    "tsanReview": "review/tsan-v2-evidence-review.md",
+    "discoveryFix": "review/discovery-fix-review.md",
+    "timing": "review/quiet-timing-review.md",
+    "discoveryPayloadRepair": "review/discovery-payload-fix-review.md",
+    "aggregateRecord": "review/aggregate-record-review.md",
+    "finalNativeSelection": "review/final-native-selection-review.md"
+  },
+  "limitations": [
+    "Installed Xcode compiler still fails the ordinary Release lost-store canary on the actual iOS run; no support policy change adopted.",
+    "Native broad suites contain 46 skips; iOS contains 163 skips.",
+    "TSan reports a dyld map/backtrace warning; its original 1,200-second incomplete sweep remains retained.",
+    "Minimum-OS, physical-device, Intel, tvOS/visionOS and broader Catalyst coverage remain open.",
+    "Controlled timing comparison failed in three cases; background CPU activity and missing current thermal telemetry prevent accepted performance evidence.",
+    "Final hosted candidate acceptance and release integration/publication have not been performed.",
+    "Conservative dot bounds have quantified small-error blind spots; exact per-coordinate tests provide separate coverage."
+  ],
+  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence",
+  "archiveReceipt": "archive-verification.json",
+  "association": "Native/iOS executable source is e748. Benchmark product metadata remains 6d with separately reviewed 182-shipping-input equality only. Later qualification-tool repairs and documentation commits retain their distinct source scopes.",
+  "historicalBenchmarkImplementationEvidence": {
+    "status": "DONE_WITH_CONCERNS",
+    "base": "04b64694297ae5c32c4936c5367b144c674d705e",
+    "implementationCommit": "73b7e7d0638dd0335dae963613a5a6ee1d090ec6",
+    "documentationCommit": "ba2d616bda1a6dcac0c16ddd2b690626b7b4008a",
+    "finalProductSHA256": "f37238e062be8e54c5dff1f026e7dd7d13d159b7de65d085ed58f1e501397dfe",
+    "performanceAcceptance": false,
+    "releaseReadiness": false,
+    "finalFocusedTests": 27,
+    "finalXCTest": [
+      {
+        "target": "MinimalTests",
+        "executed": 60,
+        "skipped": 27,
+        "failures": 0
+      },
+      {
+        "target": "ComprehensiveTests",
+        "executed": 52,
+        "skipped": 1,
+        "failures": 0
+      },
+      {
+        "target": "BenchmarkContractTests",
+        "executed": 106,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "finalSwiftTesting": [
+      {
+        "target": "ComprehensiveTests",
+        "reportedTests": 1755,
+        "failures": 0
+      },
+      {
+        "target": "BenchmarkContractTests",
+        "reportedTests": 2,
+        "failures": 0
+      }
+    ],
+    "repairedStrictCases": 21,
+    "requiredDriverComparatorInvocations": 19,
+    "requiredReportingComparatorInvocations": 301,
+    "optionalCSVReportingCases": 303,
+    "pythonDurabilityTests": 3,
+    "durabilityOptimizationModes": [
+      "normal",
+      "-O",
+      "-OO"
+    ],
+    "newStageNegativeFixturesPerMode": 8,
+    "repairedSelfCompareExit": 0,
+    "repairedRepeatCompareExit": 1,
+    "repairedRepeatTimingRegressions": 3,
+    "limitations": [
+      "Conservative dot bounds miss small random-fixture omissions/sign errors; full table retained.",
+      "Fixed-repeat two-sample contended runs are not timing acceptance.",
+      "pmset provided no current warning/power observation; no thermal-stability proof.",
+      "Worker source only; final combined candidate/iOS/sanitizer/hosted/compiler support gates remain coordinator-owned.",
+      "Initial RED and final tested products retained; intermediate logs/input manifests retained."
+    ]
+  },
+  "discoveryToolRepair": {
+    "commit": "5a3301055f38d4fbf506985e3feedf3da154c7b4",
+    "fixtureTestsPassed": 31,
+    "nativeRerun": false,
+    "payloadControl": {
+      "aliasedDestinationsRejected": [
+        ".json",
+        ".stdout",
+        ".stderr"
+      ],
+      "capture": "/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-capture.json",
+      "captureSHA256": "b9271d3e5e4c97d8e2c1dd27b0a422045a7fa07883aa6a185e3f1f1f7c702df8",
+      "expectedSchemaAndCommittedParserProvenanceSurvived": true,
+      "nativeExecution": false,
+      "originalCollisionPreserved": true,
+      "payload": "/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-payload.json",
+      "payloadSHA256": "d5ec852366169e2d66e85599888a8839a003579f6f14a731b4b4124c6c4795cd",
+      "rawInputsHashVerified": true,
+      "schema": "payload-capture-separation-control-v1"
+    },
+    "reconciliationRecord": "sanitizers-discovery-fix/reconciliation-payload.json",
+    "review": "review/discovery-payload-fix-review.md"
+  },
+  "finalIntegrationChecks": {
+    "allExitZero": true,
+    "checks": [
+      {
+        "exit": 0,
+        "name": "claims",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "ci-contracts",
+        "timeout": false
+      },
+      {
+        "exit": 0,
+        "name": "whitespace",
+        "timeout": false
+      }
+    ],
+    "nativeRerunClaimed": false,
+    "scope": "Final integration changes are qualification tooling and documentation. Existing 603+23+2 checks remain exact-e748 evidence; the discovery fix has separate focused controls.",
+    "sourceAssociation": {
+      "integrationHeadBeforeFinalRecordCommit": "1dee8d108eecbaaafe5e5d6d3bc138ae8d0fd765",
+      "nativeInputPaths": [
+        "Package.swift",
+        "Sources",
+        "Tests",
+        "Benchmarks",
+        "Scripts/ci"
+      ],
+      "nativeInputsChangedSinceTestedCandidate": [],
+      "protectedPaths": [
+        "Package.swift",
+        "Sources",
+        ".github/workflows"
+      ],
+      "protectedPathsChangedSincePhaseBase": [],
+      "qualificationToolingChangesRetainSeparatePosthocEvidence": true,
+      "regularNativeInputDifferencesIncludingUntracked": [],
+      "regularNativeInputFiles": 505,
+      "testedExecutableSource": "e7482a962c67dd0b806059b651c9f59eb678a632"
+    },
+    "archiveRecord": "coordinator/closure-checks/result.json",
+    "sha256": "080b83d5968822faf465f7b178c4f1ae0471d1808f899407a214df51c8eb8bae"
+  }
+}

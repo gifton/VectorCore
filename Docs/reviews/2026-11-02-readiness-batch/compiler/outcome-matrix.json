@@ -1,0 +1,535 @@
+{
+  "committedFixtures": {
+    "MinimalImporter.swift": "4c3cc72e71f40aa00b2d9b51e99c63baf41c14058067e06ae515a04c9ea639e1",
+    "MinimalLibrary.swift": "367f09dfa104b4986db138ca02a02b249da5ac5c9858b3a6e24f02ccc482a393",
+    "PublicImport.swift": "62844e55c95d11f51ad126c0f947f488ad3ee1fa64887710fcc05c5eeeeb103e",
+    "run.py": "cd0ffa535cdfcc29bb5d58fc7cfe277243b0fef6ea69a8caaca79a2532c616ea"
+  },
+  "date": "2026-11-02",
+  "evidenceRoot": "/private/tmp/vectorcore-readiness-2026-11-02/compiler-evidence",
+  "experiments": [
+    {
+      "experiment": "archived-Original",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.3234729579417035,
+          "exit": 0,
+          "metadataSHA256": "ee219b2b76e6ca7d60801d4b8d8d54a5a3123c5c28e46cf35057bbe66f7eb268",
+          "path": "archived-Original/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 15.93836662499234,
+          "exit": -6,
+          "metadataSHA256": "e20be148bb012e58a095307b6a0a280c6f97937edfcb0ee9e798dd37580fdabf",
+          "path": "archived-Original/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "archived-NoCounter",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.3228143750457093,
+          "exit": 0,
+          "metadataSHA256": "4ad79acb14890120ba521fc6a4f8d111c23c90a7b60dc2d772e3044ca28bcae6",
+          "path": "archived-NoCounter/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 16.291163749992847,
+          "exit": -6,
+          "metadataSHA256": "ca26d50f417be7cd09a5e2ffe25820e138638b88838f4c86ad68ee5c56921572",
+          "path": "archived-NoCounter/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "archived-NoFoundation",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.28769637492951006,
+          "exit": 0,
+          "metadataSHA256": "5714f1586edafea3463bc325ebc48506a4b239a5d8f5c3026fef137b8d6e72bf",
+          "path": "archived-NoFoundation/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 17.36127429199405,
+          "exit": -6,
+          "metadataSHA256": "234965d3534f29e563922f8870d1f4b48a0101e4233b599cb5711ffefac36f70",
+          "path": "archived-NoFoundation/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "archived-PublicImport",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.28680245799478143,
+          "exit": 0,
+          "metadataSHA256": "198719d98317e18fd13a6f4ccbdbf84252ac8b03963e1e8605a1aa79f00f8c3a",
+          "path": "archived-PublicImport/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 16.526660707895644,
+          "exit": -6,
+          "metadataSHA256": "070b2834acb95216e4fcc97d9531028f395325e0157c59b324f0b7ea26eaffe2",
+          "path": "archived-PublicImport/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "current-PublicImport",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.2963120409986004,
+          "exit": 0,
+          "metadataSHA256": "5dd58503da75bfaeeae6c15b8449dbe45e048394858ac12aeabd5b569a9eecec",
+          "path": "current-PublicImport/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 16.871743499999866,
+          "exit": -6,
+          "metadataSHA256": "153f544e05f443d31c5a49edf7465129d468b227e80b3e5aa9df832c9a33a56f",
+          "path": "current-PublicImport/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "earlier-PublicImport",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.2984812919748947,
+          "exit": 0,
+          "metadataSHA256": "8c0a529e61d24b20bae894d54e8f254aa9e2a40e335f3737ba05c1733cb0fa5f",
+          "path": "earlier-PublicImport/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 16.62547441595234,
+          "exit": -6,
+          "metadataSHA256": "7d908218e9b5b06f365a27e1a05eebcb379aa82ae08242b800e61945473b8568",
+          "path": "earlier-PublicImport/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "current-basic",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.24260645802132785,
+          "exit": 0,
+          "metadataSHA256": "e6c624799dcc8fa0e82786df359e6a8a76cbbb87739f75c49c6f710144a1248f",
+          "path": "current-basic/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 15.834484082995914,
+          "exit": -6,
+          "metadataSHA256": "50bf3e923ee22561f67589d7e77ce6b5b377178c4ec252ea7877fc48f8bc9d76",
+          "path": "current-basic/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "current-optimized",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.24386124999728054,
+          "exit": 0,
+          "metadataSHA256": "3bcc819f0c6c8e5d7aa8ccdf881b46eda1bbee40f4df858ec3d62a8ab5bd06ac",
+          "path": "current-optimized/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 15.457756084040739,
+          "exit": -6,
+          "metadataSHA256": "8c56caeb36e9f5d691a4e0a7b1e4993e8eb8b27204ec59519f9e7a16989eabfc",
+          "path": "current-optimized/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "object-MinimalLibrary",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.18571787502150983,
+          "exit": 0,
+          "metadataSHA256": "8b5bfa3f7c0ba69ab56fa495bcb8a5565353ce6a5d6bf96516b8bd36878e19bd",
+          "path": "object-MinimalLibrary/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 0.184139542048797,
+          "exit": 0,
+          "metadataSHA256": "597a2f8d6438eda6b1af75da33cd3ed523f96a81eb8b255c776610dd0f67154f",
+          "path": "object-MinimalLibrary/inherited.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "library": {
+          "elapsedSeconds": 0.18720629205927253,
+          "exit": 0,
+          "metadataSHA256": "46081ed02d918ed265c17d389e01d3a6954e552f1bfade9d455ec74fe82d7248",
+          "path": "object-MinimalLibrary/library.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "object-CheckedLibrary",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.1869880830636248,
+          "exit": 0,
+          "metadataSHA256": "0335321c50e26841164c90993e560f226a30f8c8df325aba16c7eed81e960be6",
+          "path": "object-CheckedLibrary/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 0.18388304207473993,
+          "exit": 0,
+          "metadataSHA256": "7db29707db2e598a0f86621de5176b8ac266574692d1cd9086812f9390787eb2",
+          "path": "object-CheckedLibrary/inherited.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "library": {
+          "elapsedSeconds": 0.18499354203231633,
+          "exit": 0,
+          "metadataSHA256": "95b0ca5e2e845f17a3f2556ae37e8ce429a75342b8686a6076e61c97ae03c42c",
+          "path": "object-CheckedLibrary/library.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "object-VectorShapeLibrary",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.2405532079283148,
+          "exit": 0,
+          "metadataSHA256": "e57c5e902c31d6ec54f3ae93b67d3e87c9e4a19d8e2c38ba42031bc257267a8d",
+          "path": "object-VectorShapeLibrary/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 0.2413381669903174,
+          "exit": 0,
+          "metadataSHA256": "3821206e04d457e0256ea12114d15e1360ef08ec777240c24f908bd8e12a81ef",
+          "path": "object-VectorShapeLibrary/inherited.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "library": {
+          "elapsedSeconds": 0.18766758299898356,
+          "exit": 0,
+          "metadataSHA256": "709a15034c99109d3ac1dd6eadd968bb83b3c6f89ce557c7cecffc1a9d021da2",
+          "path": "object-VectorShapeLibrary/library.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "minimal-typed-basic",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.13316254201345146,
+          "exit": 0,
+          "metadataSHA256": "44271e92e98219199a391f61a91354bd86ea2cbc13e275c76430e86a2de9a108",
+          "path": "minimal-typed-basic/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 0.12926962494384497,
+          "exit": 0,
+          "metadataSHA256": "9ade6e59d09359659f3bd065b01829e6f12d49fd431ca61f347accc3fb9158e1",
+          "path": "minimal-typed-basic/inherited.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "library": {
+          "elapsedSeconds": 0.18050437502097338,
+          "exit": 0,
+          "metadataSHA256": "313cec40a1f40d0c616ccc9008b45ebbe745578813c92692352478ee44e827f3",
+          "path": "minimal-typed-basic/library.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "minimal-typed-optimized",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.18907141592353582,
+          "exit": 0,
+          "metadataSHA256": "c3f5e4fe62290fbe1c4fb7e9481c5f64edd106fab6a0f98b2a9a664f1f6a6607",
+          "path": "minimal-typed-optimized/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 0.1888775419211015,
+          "exit": 0,
+          "metadataSHA256": "fba60de095c50543d04c279b9d20c24387deca0650ea454d6b1aa5d744eabc38",
+          "path": "minimal-typed-optimized/inherited.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "library": {
+          "elapsedSeconds": 0.1882646249141544,
+          "exit": 0,
+          "metadataSHA256": "e6a8c0f5f0dc33cb9d4c16312c774dc9e2b45e973fbf82e0f8375cb13381e10f",
+          "path": "minimal-typed-optimized/library.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "qualified-comparison-importer",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.2958771249977872,
+          "exit": 0,
+          "metadataSHA256": "9a650add1939d7d0ccf9386d86cf843689463a690435a6f0a2d66ba9a4e360d5",
+          "path": "qualified-comparison-importer/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 16.241449207998812,
+          "exit": -6,
+          "metadataSHA256": "0b5b365f43b2a6a05a7067d5315ca38c8deccb6f1f2d08e5602a00bcf32cd355",
+          "path": "qualified-comparison-importer/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "xcode-comparison-importer",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.29306349996477365,
+          "exit": 0,
+          "metadataSHA256": "678406d220fd741656e2e37f7fa5d550e42849d6a5c86a1b9efdee6d97acc528",
+          "path": "xcode-comparison-importer/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 2.4258466659812257,
+          "exit": -6,
+          "metadataSHA256": "4588d56444b9fe5a38e2d696a59237637a43d1c4072647ae1c4ac27f3cfb698c",
+          "path": "xcode-comparison-importer/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "current-silgen",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.18522225006017834,
+          "exit": 0,
+          "metadataSHA256": "fd6b92ddb9edbf83f5156d267c36c6da7e5c05e59609790191bc21f96041e80a",
+          "path": "current-silgen/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 16.406703333952464,
+          "exit": 0,
+          "metadataSHA256": "68d9959cc9bc307b37a5e32057a7372a47f3a05957d0fe333927360a0c136e47",
+          "path": "current-silgen/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "shape-silgen",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.13027587498072535,
+          "exit": 0,
+          "metadataSHA256": "6d97f868cca82568dbc4af4a9ec86d734769ec60fecde9fd8c3b58932c9a2773",
+          "path": "shape-silgen/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 0.12968991603702307,
+          "exit": 0,
+          "metadataSHA256": "8bd4217199027b9eb18d02420ddf2fbc996c9662ab0420f3149eb743218c44d3",
+          "path": "shape-silgen/inherited.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "library": {
+          "elapsedSeconds": 0.18899950000923127,
+          "exit": 0,
+          "metadataSHA256": "fc12d2acfc83c82661d06225ef4963e391b03a34bcee88aa4f59d1e5baa237b8",
+          "path": "shape-silgen/library.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "final-minimal",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.1895218329736963,
+          "exit": 0,
+          "metadataSHA256": "2bec8af5651988493fe02a60fde05a06b8570cc75e95ebe52cad1d05375eef67",
+          "path": "final-minimal/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 0.1842117910273373,
+          "exit": 0,
+          "metadataSHA256": "f14b7fb5e76a69b27b9411d9e388c8c49ffcf9054e2b575b28ba6e6ddddb088b",
+          "path": "final-minimal/inherited.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "library": {
+          "elapsedSeconds": 0.1808960409834981,
+          "exit": 0,
+          "metadataSHA256": "14a7de536865aed24a99c6950fe7dc5b74ac8865e87610356e74c18d8668c495",
+          "path": "final-minimal/library.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    },
+    {
+      "experiment": "final-current",
+      "records": {
+        "explicit": {
+          "elapsedSeconds": 0.2881191250635311,
+          "exit": 0,
+          "metadataSHA256": "ceeeb0889907bc9fb3d443174ebcd4c05e89980d856af62b9401e8c538c13766",
+          "path": "final-current/explicit.json",
+          "status": "completed",
+          "timeout": false
+        },
+        "inherited": {
+          "elapsedSeconds": 16.60022983304225,
+          "exit": -6,
+          "metadataSHA256": "ff5de11d1288cca2bf4d61afcb165f97a22693fcc74e30d0b89387f31420cab6",
+          "path": "final-current/inherited.json",
+          "status": "completed",
+          "timeout": false
+        }
+      }
+    }
+  ],
+  "limits": [
+    "No actual Swift 6.0 compiler validation",
+    "No other platforms/architectures/compiler releases or Debug-built library modules tested",
+    "Compile-only importer evidence; no link/runtime claims",
+    "Exact function triggering linker assertion unresolved",
+    "Small standalone protocol fixtures pass; full library module still required"
+  ],
+  "qualificationToolchain": "qualified",
+  "schema": 1,
+  "sdk": {
+    "SDKSettingsSHA256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+    "path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk"
+  },
+  "sourceRevisionBuilds": [
+    {
+      "buildElapsedSeconds": 56.31568887492176,
+      "buildMetadata": "current-build.json",
+      "label": "current",
+      "module": {
+        "files": {
+          "VectorCore.abi.json": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+          "VectorCore.swiftdoc": "ea0d61dbc6909af8d187babc514b243a9bcbaba9ce97f70faf2149c003e6c954",
+          "VectorCore.swiftmodule": "fcb7cc5fe3f93b1e59cc39fca95c165660fa6d9c84e047a278e34de992fcb25b",
+          "VectorCore.swiftsourceinfo": "c72307dc8f638e66d03e3bca0c10dac00d6e9c1a744b5f43ba71dcc156ad755e",
+          "module.modulemap": "587759d0526378942d437b78a11ec0fbc2c8227cfe8355130a9c1a05149af741"
+        },
+        "revision": "24c4e57c50b83517f620bb39bc5c8561343ee1a6"
+      },
+      "revision": "24c4e57c50b83517f620bb39bc5c8561343ee1a6",
+      "sourceArchiveSHA256": "41805a088ef7c4be192062b02a20b8149f6382f78c09f26e86490116ce962f44",
+      "sourceHashes": "current-source.json"
+    },
+    {
+      "buildElapsedSeconds": 55.09446829103399,
+      "buildMetadata": "earlier-build.json",
+      "label": "earlier",
+      "module": {
+        "files": {
+          "VectorCore.abi.json": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+          "VectorCore.swiftdoc": "cdf538bd01b1b5f632aeaefc12cfff2e3cbd0f1ec9416755cf8313067961c49e",
+          "VectorCore.swiftmodule": "21620ceca41ed146fd6eebd88ac73e116e4dd0bee05d5148c1346956b723d152",
+          "VectorCore.swiftsourceinfo": "fb1548deac6d68d0f18428727eb5dc706330bb5ffff2d0a3dd8794f56aa4921d",
+          "module.modulemap": "c343e326460e84a742b395d3f09b0150f236d148750f916ce11e8d7068b305db"
+        },
+        "revision": "ec7f3323529ce3df6c126e8b6416f6e4f67d16ba"
+      },
+      "revision": "ec7f3323529ce3df6c126e8b6416f6e4f67d16ba",
+      "sourceArchiveSHA256": "9d376e9b6de12ca8552f1d470212087300ae4c95fb258f4eeedead958068efa7",
+      "sourceHashes": "earlier-source.json"
+    }
+  ],
+  "supportDecision": "Explicit scalar subscript is the narrow compile-tested accommodation; the inherited public default remains a demonstrated limitation on both tested compiler builds. No compiler fix is demonstrated.",
+  "toolchains": [
+    {
+      "bin": "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin",
+      "label": "qualified",
+      "swiftDriverSHA256": "f7568137b08b3bab761278758312ded00c2327935364612fcce4e9672edb9161",
+      "swiftFrontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+      "version": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0"
+    },
+    {
+      "bin": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "label": "xcode",
+      "swiftDriverSHA256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f",
+      "swiftFrontendSHA256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f",
+      "version": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0"
+    }
+  ]
+}

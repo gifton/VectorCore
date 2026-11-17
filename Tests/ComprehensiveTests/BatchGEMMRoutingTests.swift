@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 //
 //  BatchGEMMRoutingTests.swift
 //  VectorCore
@@ -33,7 +34,7 @@ struct BatchGEMMRoutingTests {
     // N ≥ matrixRoutingMinN (256) so the GEMM path is taken once routing is enabled.
     private let N = 300
 
-    @Test("Routed Euclidean pairwise matches the direct kernel")
+    @Test("Routed Euclidean pairwise matches the direct kernel", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func euclideanRoutedMatchesKernel() async throws {
         try await e06IsolatedScenario("gemm-euclideanRoutedMatchesKernel", filter: "BatchGEMMRoutingTests/euclideanRoutedMatchesKernel") {
         try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
@@ -57,7 +58,7 @@ struct BatchGEMMRoutingTests {
             }
     }
 
-    @Test("Routed Cosine pairwise matches double-precision reference")
+    @Test("Routed Cosine pairwise matches double-precision reference", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func cosineRoutedMatchesReference() async throws {
         try await e06IsolatedScenario("gemm-cosineRoutedMatchesReference", filter: "BatchGEMMRoutingTests/cosineRoutedMatchesReference") {
         try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
@@ -76,7 +77,7 @@ struct BatchGEMMRoutingTests {
             }
     }
 
-    @Test("Non-routable metric (Manhattan) falls back to the per-pair path")
+    @Test("Non-routable metric (Manhattan) falls back to the per-pair path", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func manhattanFallsBack() async throws {
         try await e06IsolatedScenario("gemm-manhattanFallsBack", filter: "BatchGEMMRoutingTests/manhattanFallsBack") {
         try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
@@ -92,7 +93,7 @@ struct BatchGEMMRoutingTests {
             }
     }
 
-    @Test("DynamicVector does not route (concrete-type gate) and stays correct")
+    @Test("DynamicVector does not route (concrete-type gate) and stays correct", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func dynamicDoesNotRoute() async throws {
         try await e06IsolatedScenario("gemm-dynamicDoesNotRoute", filter: "BatchGEMMRoutingTests/dynamicDoesNotRoute") {
         try await BatchOperations.updateConfiguration { $0.enableMatrixRouting = true }
@@ -111,7 +112,7 @@ struct BatchGEMMRoutingTests {
             }
     }
 
-    @Test("Routing ON and OFF agree within tolerance")
+    @Test("Routing ON and OFF agree within tolerance", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func routingToggleConsistent() async throws {
         try await e06IsolatedScenario("gemm-routingToggleConsistent", filter: "BatchGEMMRoutingTests/routingToggleConsistent") {
         let vs = vecs512(N, seed: 0x7B)

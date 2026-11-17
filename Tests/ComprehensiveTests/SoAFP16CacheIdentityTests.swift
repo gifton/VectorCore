@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -193,7 +194,7 @@ import Testing
         print("I02_INVALID_LIMIT_ACCEPTED")
     }
 
-    @Test func negativeLimitsRejectAtInitialization() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func negativeLimitsRejectAtInitialization() throws {
         for limit in ["maxSize", "maxBytes"] {
             var environment = ProcessInfo.processInfo.environment
             environment["I02_NEGATIVE_LIMIT"] = limit
@@ -210,7 +211,7 @@ import Testing
             // The launcher signals only the child's own process group; no process-wide name
             // matching is used.
             let process = try launchChildProbe(.swiftTesting(filter: "SoAFP16CacheIdentityTests/negativeLimitChild"),
-                                               environment: environment, output: output, deadline: 15, cleanup: .kill(seconds: 2))
+                                               environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
             let timedOut = process.timedOut
             let diagnostic = String(decoding: try Data(contentsOf: outputURL), as: UTF8.self)
             if timedOut {

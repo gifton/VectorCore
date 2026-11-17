@@ -1,0 +1,25 @@
+# Numerical XCTest isolation follow-up
+
+The combined tooling guard found that `BenchmarkNumericalObservationTests.testEveryRepairedCatalogCaseCarriesStrictObservation` was a nonisolated async XCTest method with assertions around real awaited work. The repair adds `@MainActor` to that method only. The XCTest class, six synchronous methods, benchmark operations, numerical policy and guard remain unchanged.
+
+This is the repository's empirical XCTest assertion-recording contract, not UI isolation. `Scripts/ci/tests/test_async_xctest_isolation.py` documents the T08 observation: nonisolated async XCTest methods sometimes lost recorded failures on the investigated Swift/Xcode configuration; synchronous and main-actor methods retained them in those observations. The mechanism remains unproven, and a small standalone package does not reproduce it. This follow-up establishes compliance with that observed-safe shape and executes the numerical fixture; it does not prove a general XCTest implementation fix.
+
+The original `Package.swift` keeps Swift tools 6.0 and declared platform floors, with no default main-actor isolation or new default-isolation features. The actual test compile command confirms Swift language mode 6 and Release `-O`. `BenchmarkCase.operation` is `@Sendable () async throws -> [BenchResult]`, and `BenchmarkCase`, `ValidatedOptions`, `BenchmarkProgressReporter`, `BenchResult` and `CorrectnessStats` are Sendable values. The method awaits the operation and resumes assertions on the main actor. No unsafe sendability annotation, language-mode relaxation, compiler suppression or blanket actor annotation was introduced.
+
+Work occurred only in the transferred `/Users/goftin/.codex/worktrees/4e37/VectorCore` worktree. Its clean docs commit `8070c086864daa12ef0bcf6155ffd5a364bff51a` was preserved, and candidate `6d574f3ff122554ae8bec18f039ffa4a6981920e` was merged first, producing source base `9d7099e329b54c5548bbac048f1eba0d046e9d5a`. The prepared benchmark worktree at `5ce0`, root's frozen sanitizer input and all prior evidence were left untouched. The separate capability line-wrapping repair was not included.
+
+| Bounded check | Observed result |
+|---|---|
+| Unchanged-method isolation guard RED | 14 tests; exactly one failure: R1 at numerical test line 9 |
+| Narrow-method annotation guard GREEN | All 14 tests passed, including class-wide discovery and existing positive/negative/mutation controls |
+| Actual copied-source numerical Release fixture | Seven numerical tests executed, zero failures, no skips reported |
+| Claim ledger check | Zero problems |
+| CI contract check | Six required benchmark files and unchanged 77 address/39 thread body expectations |
+
+The native fixture copied 197 files byte-for-byte: production Sources, Benchmarks, shared test support and the exact repaired seven-method test file. Its copied package removes only the unrelated `MinimalTests` and `ComprehensiveTests` test-target declarations; every remaining package setting, dependency, platform floor, feature, define, C/linker setting and benchmark test registration is preserved. The repository package was not edited. Before/after hash checks confirm the copies and package transformation. No other numerical test file, unrelated native suite, sanitizer workload or iOS suite was run by this follow-up.
+
+The actual compiler commands used verified Swift.org 6.4.2 frontend SHA-256 `956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301` and SDKSettings SHA-256 `82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6`, with two SwiftPM jobs. The test target compiled with `-swift-version 6`, `-O` and no default `MainActor` isolation; no compile/sendability errors occurred. The retained executed `VectorCorePackageTests.xctest` executable has SHA-256 `3133cc996f3a3614b48c3961d609fdef2264270776a0cf6ef8b2568a2ca5754c`. Verbose output, including the native-backend deprecation warning and other existing warnings, is retained without suppression.
+
+Fresh evidence is under `/private/tmp/vectorcore-release-phase-two-2026-11-04/benchmarks-actor-fix/`: bounded command argv/environment/deadline/exit/output hashes, RED/GREEN logs, original/transformed package, copied-source hashes, compiler command identities, actual seven-test output and retained test bundle. The separate inclusion manifest excludes bulk build/cache/toolchain/SDK payloads. The copied fixture is a scoped compile/execution check, not replacement qualification for the complete integrated package.
+
+Self-review confirmed the source repair is exactly one method attribute; it preserves the reviewed async operation and Sendable value boundary, all assertions and numerical checks, existing guard/mutation coverage and package settings. Independent scoped review and a new combined candidate qualification remain required. Existing ASan/TSan/iOS reports continue to identify their original pre-isolation inputs. Quiet timing remains held; this follow-up makes no performance, thermal, sanitizer, compiler-support or release-readiness claim.

@@ -1,0 +1,42 @@
+{
+  "focusedQualificationTests": 111,
+  "fullPolicySeconds": 277.064,
+  "fullPolicyTests": 743,
+  "githubPolicies": 10,
+  "independentReview": true,
+  "postReviewRevalidation": {
+    "ios-device": {
+      "compilerProfile": "known-failing",
+      "releaseAdmitted": false,
+      "report": "/private/tmp/vectorcore-compiler-policy-2026-11-10-32X76u/ios-device-postreview-check.json",
+      "sha256": "499e6639e35a5638a2320d7ec43cb07d2ec1f30ed8bbbdae7d68ae445893dc59",
+      "vectorCoreQualification": "accepted",
+      "verifiedFiles": 3607
+    },
+    "ios-simulator": {
+      "compilerProfile": "known-failing",
+      "releaseAdmitted": false,
+      "report": "/private/tmp/vectorcore-compiler-policy-2026-11-10-32X76u/ios-simulator-postreview-check.json",
+      "sha256": "955d1c599bcdff19a393cc0bda5aac26c3fbb06f7ed2b5090a8777bd75a7bf1b",
+      "vectorCoreQualification": "accepted",
+      "verifiedFiles": 60195
+    },
+    "native": {
+      "compilerProfile": "known-failing",
+      "releaseAdmitted": false,
+      "report": "/private/tmp/vectorcore-compiler-policy-2026-11-10-32X76u/native-postreview-check.json",
+      "sha256": "a5fa24e2e80778cea111b2883ba76e484e51a86489dc6521d00939c34e98e178",
+      "vectorCoreQualification": "accepted",
+      "verifiedFiles": 2520
+    }
+  },
+  "releaseAdmitted": false,
+  "reviewedBase": "6683ff4ea3098cd277372463c0f7d4c8bdb3d222",
+  "reviewedHead": "dca55fb782fa31aa83fb6dc5cd2b1226bba2fd7b",
+  "verifierCodeSHA256": {
+    "Scripts/ci/compiler_qualification.py": "19f877c8da4824c81e07fad9128b15e021a75fb23b0f53685f0c5a53078c2de4",
+    "Scripts/ci/native_qualification.py": "0ad615ca36b0e9213a591a66378fcce500b4613b3b4afbfd2fa0fe1ac15a93cf",
+    "Scripts/ci/qualification_ios.py": "a0cd77df610e3a5261bffd880e8a45c82468011fc914348139a34149a6f681e2",
+    "Scripts/ci/qualification_records.py": "4140c0cd31732c9840095c5b33f0da7ac09d52b114fefbe0f48f9763636435df"
+  }
+}

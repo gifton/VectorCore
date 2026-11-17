@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Testing
 import Foundation
 @testable import VectorCore
@@ -172,7 +173,7 @@ private func emit(_ logger: Logger, _ level: LogLevel, _ message: @autoclosure (
 
     // MARK: Reentrancy (bounded child)
 
-    @Test func reentrantMessageDoesNotDeadlock() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func reentrantMessageDoesNotDeadlock() throws {
         let result = try d03RunChild(scenario: "reentrancy",
                                      filter: "LoggingContractTests/childReentrancy")
         #expect(result.status == 0, "reentrancy child failed: \(result.output.prefix(4000))")

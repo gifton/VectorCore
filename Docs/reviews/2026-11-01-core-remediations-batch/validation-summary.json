@@ -1,0 +1,78 @@
+{
+  "batch": "AP7 / LC5 / CI2 / CI3 / DP3",
+  "base": "ec7f3323529ce3df6c126e8b6416f6e4f67d16ba",
+  "validated_head": "f5a63053fd246e4b9b3a8f14c005889280d6d725",
+  "branch": "codex/audit-top-six-2026-10-27",
+  "ancestor_preserved": true,
+  "compiler_identity": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0\n",
+  "swift_frontend_sha256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+  "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+  "debug": {
+    "swift_testing_tests": 1750,
+    "swift_testing_suites": 263,
+    "swift_testing_skip_events": 18,
+    "xctest_reported": 196,
+    "xctest_skipped": 28,
+    "xctest_failures": 0,
+    "elapsed_seconds": 284.1597255000379,
+    "head": "f5a63053fd246e4b9b3a8f14c005889280d6d725"
+  },
+  "release": {
+    "swift_testing_tests": 1750,
+    "swift_testing_suites": 263,
+    "swift_testing_skip_events": 18,
+    "xctest_reported": 196,
+    "xctest_skipped": 28,
+    "xctest_failures": 0,
+    "elapsed_seconds": 375.55358237505425,
+    "head": "f5a63053fd246e4b9b3a8f14c005889280d6d725"
+  },
+  "python": {
+    "tests": 576,
+    "seconds": 282.238,
+    "head": "f5a63053fd246e4b9b3a8f14c005889280d6d725"
+  },
+  "lint": {
+    "version": "0.65.1",
+    "warnings": 5458,
+    "errors": 0
+  },
+  "claim_ledger_problems": 0,
+  "github_policy_check": "passed",
+  "review": {
+    "task_reports": [
+      "task-1-review.md",
+      "task-2-review.md",
+      "task-3-review.md"
+    ],
+    "final_report": "final-review.md",
+    "format_followup": "format-review.md",
+    "fixture_witness_followup": "witness-review.md"
+  },
+  "raw_evidence": "/Users/goftin/dev/projects/VectorCore-remediations-2026-11-01-evidence",
+  "changed_path_sha256": {
+    "CHANGELOG.md": "1b89380bb1c0dde83cffc05396666b6479ff19ee83d201ffaf28de5075284d85",
+    "Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/DOWNSTREAM_UPGRADES.md": "e899e0f717ff42494f9e0865cc14e9bf4ed3b25ab7b9b7bfa81abaeb78139a9c",
+    "Scripts/ci/check_benchmark_build_modes.py": "73a7bb3a9735590d17a5f6b4f5f2d200ecbcb54a809cefe098631a9613c93f5e",
+    "Scripts/ci/check_claim_ledger.py": "8c27ebbb40590fee2d65b45cb16d839e480179f7a7d7fcac89897e54ed85c1a3",
+    "Scripts/ci/claim_ledger.json": "dceb172e3201e6073b5568fb42f5c6ad7e9c42da2a6e75f380ec1789bd035192",
+    "Scripts/ci/swiftpm_products.py": "6e5810876e5f056a2ee786bd18722dc742d256073916d5d792cfe565ebc5f42f",
+    "Scripts/ci/tests/test_benchmark_contracts.py": "ae9135e6b41645797ec284f3115a4e938d98db9fb2550b510f4eab29fa760bc5",
+    "Scripts/ci/tests/test_benchmark_gate_durability.py": "95076cd65b51262097e44b084593aca4148cbff815c1430f2a2eb4b007d4149f",
+    "Scripts/ci/tests/test_claim_ledger.py": "9d3d485a6a15ea5f4010f0e2e797c32aca472210bdb545635b278b189977fc5b",
+    "Scripts/ci/tests/test_test_output_counts.py": "194c562b51e15fa9b05a1813fca32a01811b16e2f30528fd83897cb8589b2929",
+    "Scripts/ci/validate_github.rb": "e389de1080dc98d5622fa2118332b23a061e734fac136c5cbacda2e7ae47f14c",
+    "Sources/VectorCore/ManifoldLearning/UMAP.swift": "556d83c5cd6243d43d1a16cf6e23993f2eef47a1247dbf48256785aa3055b15c",
+    "Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift": "9b262b98844f64d893530f05d4c41c9af3bb275eef54392698ef011ee5739be3",
+    "Tests/ComprehensiveTests/PrecisionStatisticsRangeTests.swift": "736cbac3f0484bfff4f2c2686cc7853f84ea775222309cf2882427e0227dcd37",
+    "Tests/ComprehensiveTests/UMAPPreflightTests.swift": "8e72a4c3621c50e3a01638dc0a0b75450edfc6659e2cef165b1e6b751c018769"
+  },
+  "limits": [
+    "macOS arm64 local runtime only",
+    "qualified Swift.org 6.4.2, not bundled Xcode compiler",
+    "existing skips/warnings remain; extended and strict performance gates off",
+    "no hosted CI, devices, Intel, downstream, sanitizer or performance qualification",
+    "optimized benchmark probes use synthetic launches, not a fresh real four-build matrix",
+    "observed compiler failure importing a custom default-subscript Collection witness remains unfixed; test fixture defines its own subscript"
+  ]
+}

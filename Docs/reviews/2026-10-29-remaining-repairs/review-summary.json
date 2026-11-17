@@ -1,0 +1,95 @@
+{
+  "configured_reviewer_model": "gpt-6-astra",
+  "configured_reasoning_effort": "max",
+  "identity_limit": "Configuration verified from explicit spawn arguments; independent runtime introspection unavailable.",
+  "discovery": [
+    {
+      "task": "f012_discovery",
+      "source_baseline": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+      "record": "reviewers/f012-discovery.md"
+    },
+    {
+      "task": "f011_discovery",
+      "source_baseline": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+      "record": "reviewers/f011-discovery.md"
+    },
+    {
+      "task": "fp16_helpers_discovery",
+      "source_baseline": "db9329540890f71b53e28f9eb591c1fb51ccf943",
+      "record": "reviewers/fp16-helpers-discovery.md"
+    }
+  ],
+  "final": {
+    "task": "remaining_final_review",
+    "fresh_context": true,
+    "blind": false,
+    "read_only_source": true,
+    "reviewer_executed_tests": false,
+    "source_revision": "73d6a5bcd4fa1063e39d467284638b2812a84e7d",
+    "review_input": "reviewers/final-input-v2.json",
+    "changed_path_digests_verified": 18,
+    "record": "reviewers/final-review.md",
+    "record_sha256": "d5341ae48568f07884378e3aa836752858bf5fe6d6af027ccf534d2d40cf372f",
+    "verdict": "Ready from substantive source review; final Release/evidence reconciliation were pending at reviewer cutoff.",
+    "resolved_findings": [
+      {
+        "id": "FR-01",
+        "severity": "medium",
+        "problem": "New benchmark test source missing from exact CI membership",
+        "resolution": "Fifth source and generated documentation registered; exact-name and all-five removal controls pass."
+      },
+      {
+        "id": "FR-02",
+        "severity": "medium",
+        "problem": "Duplicate test process launcher and unregistered selector literals fail existing policy",
+        "resolution": "Shared existing fixed single-selector leaf launcher; eight benchmark-CLI filter literals pinned; no new Process allowance."
+      }
+    ]
+  },
+  "lead_completion": {
+    "final_debug": "pass:196 XCTest/28 skipped/zero failures;1742 Swift Testing/262 suites/18 skip events",
+    "final_release": "pass:same counts;existing lost-store compiler canary recorded as one known issue",
+    "final_python": "558 tests pass",
+    "claim_ledger": "zero problems",
+    "source_bytes": "Same reviewed implementation at73d6a5b; later edits are report/plan only."
+  },
+  "exclusion_rulings": [
+    {
+      "reviewer_item": 1,
+      "ruling": "Final Release and evidence reconciliation completed by lead. Hosted CI, sanitizer, alternate C modes and performance studies were not rerun and are not required for the scoped changes."
+    },
+    {
+      "reviewer_item": 2,
+      "ruling": "Accept current-source final-mode D02 validation plus policy checks for both modes; historical pre-D02 replay is not needed or claimed."
+    },
+    {
+      "reviewer_item": 3,
+      "ruling": "Accept allocation-free admission/model boundary evidence. No huge workload, feasible-memory or near-limit sensitivity claim."
+    },
+    {
+      "reviewer_item": 4,
+      "ruling": "Keep internal raw model preconditions and prior malformed/empirical classification; all real production rule callers are guarded."
+    },
+    {
+      "reviewer_item": 5,
+      "ruling": "Keep existing invalid-tolerance behavior outside scope; finite relative overflow with absolute success is intentional and tested."
+    },
+    {
+      "reviewer_item": 6,
+      "ruling": "Keep native Float16 architecture exclusions; no Intel native-Float16 or Swift6.0 runtime claim."
+    },
+    {
+      "reviewer_item": 7,
+      "ruling": "No expanded FP16 kernels or broad arithmetic/storage review. Existing distance-test buffer convention was already reachable and unchanged; new standalone output is initialized. No newly identified repair defect is deferred by this boundary."
+    },
+    {
+      "reviewer_item": 8,
+      "ruling": "Record fixture/oracle/subprocess inventory lexical limits; combine them with source-traced paths and actual behavioral tests, without claiming general dataflow coverage."
+    },
+    {
+      "reviewer_item": 9,
+      "ruling": "Preserve historical records. Lead verifies final report/source identities and evidence hashes. Unrelated style/performance refactoring remains outside scope."
+    }
+  ],
+  "unresolved_in_scope_review_findings": []
+}

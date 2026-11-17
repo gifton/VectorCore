@@ -27,9 +27,10 @@
 public struct VectorCoreVersion {
     /// Current version string of VectorCore.
     ///
-    /// This matches the package's release tag (SwiftPM versions are git tags;
-    /// Package.swift carries no version field).
-    public static let version = "0.3.3"
+    /// Intended release version. Release admission must verify the selected tag
+    /// against this value; SwiftPM versions are git tags, and Package.swift
+    /// carries no version field.
+    public static let version = "0.4.0"
 
     /// Major version number.
     ///
@@ -39,12 +40,12 @@ public struct VectorCoreVersion {
     /// Minor version number.
     ///
     /// Incremented when adding functionality in a backwards-compatible manner.
-    public static let minor = 3
+    public static let minor = 4
 
     /// Patch version number.
     ///
     /// Incremented when making backwards-compatible bug fixes.
-    public static let patch = 3
+    public static let patch = 0
 
     /// Pre-release version identifier.
     ///

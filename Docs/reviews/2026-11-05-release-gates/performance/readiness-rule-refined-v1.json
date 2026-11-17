@@ -1,0 +1,27 @@
+{
+  "recordedUTC": "2026-11-05T19:40:01.975244+00:00",
+  "scope": "investigative admission criterion; not existing VectorCore project policy or release performance acceptance",
+  "parentApproved": true,
+  "measurementAuthorized": false,
+  "readiness": {
+    "frames": 5,
+    "frameStartSpacingSeconds": 15,
+    "noCompilerOrTestWork": true,
+    "allThermalStateRawValues": 0,
+    "allLowPowerModeEnabled": false,
+    "allPowerSources": "AC Power",
+    "minimumIntervalHostIdlePercent": 90,
+    "maximumUnrelatedProcessIntervalPercentOfOneCore": 25,
+    "maximumStartLatenessSeconds": 1,
+    "processRateScope": "comparable observed PID/executable pairs; identity changes reject; births/exits explicitly retained as unknown per-process work"
+  },
+  "continuation": "A failed admission is retained as no-timing host-not-ready; no opportunistic retries. Any future batch needs separately documented changed host condition and complete predetermined schedule. Nominal schedule steps must be exactly15 s; actual starts are no earlier than target and at most1 s late; captures must not overlap; unchanged counter intervals reject.",
+  "limitations": [
+    "CPU counters are whole-host aggregates, not per-core frequency or placement.",
+    "ps CPU time pairs omit processes that start or exit between snapshots; host aggregate still includes their CPU work.",
+    "A nominal OS thermal pressure value does not establish temperature or invariant clock speed.",
+    "No selected case retries or median/statistic/threshold/identity waivers."
+  ],
+  "refinedUTC": "2026-11-05T19:49:52.838608+00:00",
+  "originalRuleSHA256": "dc936cba117a46931e3591c809f4956255ed15ef92d9a00acdd3723efbcc01b6"
+}

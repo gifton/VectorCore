@@ -1,0 +1,1031 @@
+{
+  "allPositiveShapesCorrect": false,
+  "byValueControlsPassed": true,
+  "caseCount": 17,
+  "collectionComplete": true,
+  "compiledSourcesUnchanged": true,
+  "compilerGateChanged": false,
+  "expected": {
+    "custom.inout-bridge": "3f800000",
+    "custom.value-bridge": "3f800000",
+    "dynamic.copied-inout": "3f800000",
+    "dynamic.value": "3f800000",
+    "fixed.copied-inout": "3f800000",
+    "fixed.value": "3f800000",
+    "new.aggregate.inout": "3f800000",
+    "new.concrete.copied-inout": "3f800000",
+    "new.concrete.value": "3f800000",
+    "new.generic.copied-inout": "3f800000",
+    "new.generic.value": "3f800000",
+    "new.inside.copied-inout": "3f800000",
+    "optimized.float.copied-inout": "3f800000",
+    "optimized.float.value": "3f800000",
+    "optimized.storage.copied-inout": "3f800000",
+    "optimized.storage.stdlib-inout": "3f800000",
+    "optimized.storage.value": "3f800000"
+  },
+  "limits": [
+    "Native macOS arm64, matching Release producer products only.",
+    "Client-local custom conformer and generic helpers; no new separate witness module.",
+    "First-lane observation only; no new tail/COW/empty/throw/descriptor-replacement coverage.",
+    "No arbitrary pointer-bearing state, external generated source, physical-device or performance qualification."
+  ],
+  "omittedWriteExpected": {
+    "custom.inout-bridge": "40000000",
+    "custom.value-bridge": "40000000",
+    "dynamic.copied-inout": "40000000",
+    "dynamic.value": "40000000",
+    "fixed.copied-inout": "40000000",
+    "fixed.value": "40000000",
+    "new.aggregate.inout": "40000000",
+    "new.concrete.copied-inout": "40000000",
+    "new.concrete.value": "40000000",
+    "new.generic.copied-inout": "40000000",
+    "new.generic.value": "40000000",
+    "new.inside.copied-inout": "40000000",
+    "optimized.float.copied-inout": "40000000",
+    "optimized.float.value": "40000000",
+    "optimized.storage.copied-inout": "40000000",
+    "optimized.storage.stdlib-inout": "40000000",
+    "optimized.storage.value": "40000000"
+  },
+  "productReuse": "Matching retained Release products from the completed by-value migration; no new library build.",
+  "releaseAdmitted": false,
+  "sourceBase": "bdf990847babf567be1cbce22d2606e7102b1a47",
+  "toolchains": [
+    {
+      "artifacts": {
+        "compiler-version.json": "8a4250a0141404ef155578df068ca324f4d21b387c732992fe3257df1c6a0fd5",
+        "compiler-version.stderr": "bbc8b176d3c74d4c5a7fd00b40280f98168e116d5272273bfe8e71407625540e",
+        "compiler-version.stdout": "4b59da256292ae42e3f04ef6d06ea3e139678613a3cd3d0dc37a6757c0bd290a",
+        "debug-omitted-write/compile.json": "0436b4ed7bc28ca03c14cd2537511255ef3009f59e275d303d950a64e7764986",
+        "debug-omitted-write/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/consumer": "3b9161a7847897d7e1e419103267d4cad45e5fa9f2975166a9e844e09bd9eb15",
+        "debug-omitted-write/run.json": "ce5a595d3ee045afd72b1ff162e8ce48a3c214d73751d798fbfc54aa06320e9e",
+        "debug-omitted-write/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/run.stdout": "a1284bd38daacd9d64cc798b9c175861446ec849ff411327bd8c66db70fce347",
+        "debug-positive/compile.json": "f2341f83cdd6367c8feacd31baee54112726b7cc3978b96a2774f78fd218bcd4",
+        "debug-positive/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/consumer": "92c5e5b45fb7929124f47445fd37394dcd82228823accfdfb4416ae4518dd384",
+        "debug-positive/run.json": "d8155f5709eddf259949a4c0f8777e17fab5f64324240c71270bf9a9d362d03f",
+        "debug-positive/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/run.stdout": "8d3fc3e67eb1ab87ceea1cd93e1a7543055af62ffe87868b49a21cc31d94d5eb",
+        "debug-sil.json": "4d9e7c0d3e44b3a81fdeab905c80b1010abc5085c7b41546e8a41a677ad242c8",
+        "debug-sil.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-sil.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug.sil": "405eb6da8cc79377cdd26692726fefe35f8dde054243c985bad6898e785da3ad",
+        "inputs.json": "a204e1adda25bb77a35697f7f7813eaf4e3b3ba1a98f870ab1aaf832d4e5014f",
+        "producer-binding.json": "38af1ff7e175f7b466f602fe33b2b7e314079d7533df65914c55f472134e05b3",
+        "release-omitted-write/compile.json": "59063da1f11a37c7afa5af1805a5d5ca764891e60705444c14220a92d36bfcdb",
+        "release-omitted-write/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/consumer": "efcc6e9b6e60169bac632e84113ca92e946e047dc74f1b6c39f15a1b3e25c5d9",
+        "release-omitted-write/run.json": "e07d18702c7f28ed8d2c716e8112f98ee37a24e036c04d1bb757e504b4aa06b9",
+        "release-omitted-write/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/run.stdout": "a1284bd38daacd9d64cc798b9c175861446ec849ff411327bd8c66db70fce347",
+        "release-positive/compile.json": "574a7bfcc54b1415d54b3c7a3909da092fbd0f95b23d32f3c42881736d4ab60f",
+        "release-positive/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/consumer": "24858f9f02c0214d039e3d65a9cece5415b299aa8baba34ce02eea158465f8e2",
+        "release-positive/run.json": "52ca92ca838e02d194332dfa4d784f7fc75760ebae47b62997e5d3b8af75ba41",
+        "release-positive/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/run.stdout": "7ce8fc285a669829b349b154a8b8f801668719679959089f05a4d311e82080f4",
+        "release-sil.json": "146ef3d7e83d92cd94beeb48cf2dafbadee0c7869b554c6dfd98f03b6d718a7b",
+        "release-sil.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-sil.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release.sil": "a3a4ef55daa1f613c56cc2083a0f293bb784b9797da2dedcdb25d425d5209b74"
+      },
+      "cases": [
+        {
+          "binarySHA256": "92c5e5b45fb7929124f47445fd37394dcd82228823accfdfb4416ae4518dd384",
+          "byValueControlsPassed": true,
+          "clientMode": "debug",
+          "compileExit": 0,
+          "failures": {},
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "3f800000",
+            "custom.value-bridge": "3f800000",
+            "dynamic.copied-inout": "3f800000",
+            "dynamic.value": "3f800000",
+            "fixed.copied-inout": "3f800000",
+            "fixed.value": "3f800000",
+            "new.aggregate.inout": "3f800000",
+            "new.concrete.copied-inout": "3f800000",
+            "new.concrete.value": "3f800000",
+            "new.generic.copied-inout": "3f800000",
+            "new.generic.value": "3f800000",
+            "new.inside.copied-inout": "3f800000",
+            "optimized.float.copied-inout": "3f800000",
+            "optimized.float.value": "3f800000",
+            "optimized.storage.copied-inout": "3f800000",
+            "optimized.storage.stdlib-inout": "3f800000",
+            "optimized.storage.value": "3f800000"
+          },
+          "omittedWrite": false,
+          "passed": true,
+          "problems": [],
+          "runExit": 0
+        },
+        {
+          "binarySHA256": "3b9161a7847897d7e1e419103267d4cad45e5fa9f2975166a9e844e09bd9eb15",
+          "byValueControlsPassed": null,
+          "clientMode": "debug",
+          "compileExit": 0,
+          "failures": {
+            "custom.inout-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "custom.value-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.stdlib-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "40000000",
+            "custom.value-bridge": "40000000",
+            "dynamic.copied-inout": "40000000",
+            "dynamic.value": "40000000",
+            "fixed.copied-inout": "40000000",
+            "fixed.value": "40000000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "40000000",
+            "new.generic.copied-inout": "40000000",
+            "new.generic.value": "40000000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "40000000",
+            "optimized.float.value": "40000000",
+            "optimized.storage.copied-inout": "40000000",
+            "optimized.storage.stdlib-inout": "40000000",
+            "optimized.storage.value": "40000000"
+          },
+          "omittedWrite": true,
+          "passed": true,
+          "problems": [],
+          "runExit": 1
+        },
+        {
+          "binarySHA256": "24858f9f02c0214d039e3d65a9cece5415b299aa8baba34ce02eea158465f8e2",
+          "byValueControlsPassed": true,
+          "clientMode": "release",
+          "compileExit": 0,
+          "failures": {
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "3f800000",
+            "custom.value-bridge": "3f800000",
+            "dynamic.copied-inout": "3f800000",
+            "dynamic.value": "3f800000",
+            "fixed.copied-inout": "3f800000",
+            "fixed.value": "3f800000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "3f800000",
+            "new.generic.copied-inout": "3f800000",
+            "new.generic.value": "3f800000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "3f800000",
+            "optimized.float.value": "3f800000",
+            "optimized.storage.copied-inout": "3f800000",
+            "optimized.storage.stdlib-inout": "3f800000",
+            "optimized.storage.value": "3f800000"
+          },
+          "omittedWrite": false,
+          "passed": false,
+          "problems": [],
+          "runExit": 1
+        },
+        {
+          "binarySHA256": "efcc6e9b6e60169bac632e84113ca92e946e047dc74f1b6c39f15a1b3e25c5d9",
+          "byValueControlsPassed": null,
+          "clientMode": "release",
+          "compileExit": 0,
+          "failures": {
+            "custom.inout-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "custom.value-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.stdlib-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "40000000",
+            "custom.value-bridge": "40000000",
+            "dynamic.copied-inout": "40000000",
+            "dynamic.value": "40000000",
+            "fixed.copied-inout": "40000000",
+            "fixed.value": "40000000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "40000000",
+            "new.generic.copied-inout": "40000000",
+            "new.generic.value": "40000000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "40000000",
+            "optimized.float.value": "40000000",
+            "optimized.storage.copied-inout": "40000000",
+            "optimized.storage.stdlib-inout": "40000000",
+            "optimized.storage.value": "40000000"
+          },
+          "omittedWrite": true,
+          "passed": true,
+          "problems": [],
+          "runExit": 1
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0\nswift-driver version: 1.168.6",
+      "frontendSHA256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f",
+      "inputsUnchanged": true,
+      "producerConfiguration": "release",
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "target": "arm64-apple-macosx14.0",
+      "toolchain": "xcode-27.2"
+    },
+    {
+      "artifacts": {
+        "compiler-version.json": "af06af5cd3a976b46eceee51a54192fa349ba1b84ad2bd7d1257b2741770104b",
+        "compiler-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "compiler-version.stdout": "6dd4fcae59f9e2bc161400fa796da8faebb41c4c16ee36b49368e47bda489a82",
+        "debug-omitted-write/compile.json": "d7a198868ac264f1c5d9adc2405de7a88d3561a94f647874720240631a80e765",
+        "debug-omitted-write/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/consumer": "e6677cebff6cdc85558cd783fc981925fa8a6c9b05a20bd54213306daa089b18",
+        "debug-omitted-write/run.json": "1b51f0f74b662576b160a595cdfa4298de85677b9ccf9f731ec822ef3e1da5db",
+        "debug-omitted-write/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/run.stdout": "a1284bd38daacd9d64cc798b9c175861446ec849ff411327bd8c66db70fce347",
+        "debug-positive/compile.json": "b383ae64877c42f4f52cf3c29687d13547793b187358a802a7afe74ded82d511",
+        "debug-positive/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/consumer": "c01e1cf7ea1710d2b45dd6a240896f3b6df86a3dbf7d4bcdb77c160e658c92d0",
+        "debug-positive/run.json": "d6417ca2cdfb425f198166898a8edbaaacdcd1aa704ea2a7dde84a27eeaffc92",
+        "debug-positive/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/run.stdout": "8d3fc3e67eb1ab87ceea1cd93e1a7543055af62ffe87868b49a21cc31d94d5eb",
+        "debug-sil.json": "aeab8737b5aa0ce46da60e0466417312f21c505b1ff4229a080747577481ddc1",
+        "debug-sil.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-sil.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug.sil": "44cfc58b65f7eb1eae0de3da0864e2d31a2301087805d6fa1ec46f036eff877b",
+        "inputs.json": "130a25aa0cc2e1cfb6a4bcad7cb161a559868ff5c7ef0cf57e52f4d1c986d676",
+        "producer-binding.json": "01c8d6cff43d0caa9b16b024ec6cd84b4dd810db9b3f3cff02aa7d9294ff53db",
+        "release-omitted-write/compile.json": "bfb521a18b1747d8a8a88ff889e213c7fd653a33ed405900593b0f78a8f64248",
+        "release-omitted-write/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/consumer": "cf12b0777c1ea05d9f77bfcbf3b3df594129a98b8fb24e93ee06af5e1dff6633",
+        "release-omitted-write/run.json": "7b6962c57184bd7896d708ecb7a7c791d10c2ede061be6617c3a9983e5ee04de",
+        "release-omitted-write/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/run.stdout": "a1284bd38daacd9d64cc798b9c175861446ec849ff411327bd8c66db70fce347",
+        "release-positive/compile.json": "9fdb4c130fc2144c2235987a472498c7f3a997d3a52538890033e076fcc5fb0f",
+        "release-positive/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/consumer": "04745e48b4f4cb515370bb5d2c7a66424e363305cb34d33eff1ce3a4c18ccadf",
+        "release-positive/run.json": "5754a1ec6259cc3082bcd1fbdaa20bdf9bdae570bb4a0c636f92a9db1d13af4b",
+        "release-positive/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/run.stdout": "8d3fc3e67eb1ab87ceea1cd93e1a7543055af62ffe87868b49a21cc31d94d5eb",
+        "release-sil.json": "256229ff82b5efb73acc7c2e6897b164ef36a33a7f19726163f8721958075f3a",
+        "release-sil.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-sil.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release.sil": "167a34e8fd383e83d546d4db95849e6514a8b084657bf0b8b7f2d76b414740d0"
+      },
+      "cases": [
+        {
+          "binarySHA256": "c01e1cf7ea1710d2b45dd6a240896f3b6df86a3dbf7d4bcdb77c160e658c92d0",
+          "byValueControlsPassed": true,
+          "clientMode": "debug",
+          "compileExit": 0,
+          "failures": {},
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "3f800000",
+            "custom.value-bridge": "3f800000",
+            "dynamic.copied-inout": "3f800000",
+            "dynamic.value": "3f800000",
+            "fixed.copied-inout": "3f800000",
+            "fixed.value": "3f800000",
+            "new.aggregate.inout": "3f800000",
+            "new.concrete.copied-inout": "3f800000",
+            "new.concrete.value": "3f800000",
+            "new.generic.copied-inout": "3f800000",
+            "new.generic.value": "3f800000",
+            "new.inside.copied-inout": "3f800000",
+            "optimized.float.copied-inout": "3f800000",
+            "optimized.float.value": "3f800000",
+            "optimized.storage.copied-inout": "3f800000",
+            "optimized.storage.stdlib-inout": "3f800000",
+            "optimized.storage.value": "3f800000"
+          },
+          "omittedWrite": false,
+          "passed": true,
+          "problems": [],
+          "runExit": 0
+        },
+        {
+          "binarySHA256": "e6677cebff6cdc85558cd783fc981925fa8a6c9b05a20bd54213306daa089b18",
+          "byValueControlsPassed": null,
+          "clientMode": "debug",
+          "compileExit": 0,
+          "failures": {
+            "custom.inout-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "custom.value-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.stdlib-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "40000000",
+            "custom.value-bridge": "40000000",
+            "dynamic.copied-inout": "40000000",
+            "dynamic.value": "40000000",
+            "fixed.copied-inout": "40000000",
+            "fixed.value": "40000000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "40000000",
+            "new.generic.copied-inout": "40000000",
+            "new.generic.value": "40000000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "40000000",
+            "optimized.float.value": "40000000",
+            "optimized.storage.copied-inout": "40000000",
+            "optimized.storage.stdlib-inout": "40000000",
+            "optimized.storage.value": "40000000"
+          },
+          "omittedWrite": true,
+          "passed": true,
+          "problems": [],
+          "runExit": 1
+        },
+        {
+          "binarySHA256": "04745e48b4f4cb515370bb5d2c7a66424e363305cb34d33eff1ce3a4c18ccadf",
+          "byValueControlsPassed": true,
+          "clientMode": "release",
+          "compileExit": 0,
+          "failures": {},
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "3f800000",
+            "custom.value-bridge": "3f800000",
+            "dynamic.copied-inout": "3f800000",
+            "dynamic.value": "3f800000",
+            "fixed.copied-inout": "3f800000",
+            "fixed.value": "3f800000",
+            "new.aggregate.inout": "3f800000",
+            "new.concrete.copied-inout": "3f800000",
+            "new.concrete.value": "3f800000",
+            "new.generic.copied-inout": "3f800000",
+            "new.generic.value": "3f800000",
+            "new.inside.copied-inout": "3f800000",
+            "optimized.float.copied-inout": "3f800000",
+            "optimized.float.value": "3f800000",
+            "optimized.storage.copied-inout": "3f800000",
+            "optimized.storage.stdlib-inout": "3f800000",
+            "optimized.storage.value": "3f800000"
+          },
+          "omittedWrite": false,
+          "passed": true,
+          "problems": [],
+          "runExit": 0
+        },
+        {
+          "binarySHA256": "cf12b0777c1ea05d9f77bfcbf3b3df594129a98b8fb24e93ee06af5e1dff6633",
+          "byValueControlsPassed": null,
+          "clientMode": "release",
+          "compileExit": 0,
+          "failures": {
+            "custom.inout-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "custom.value-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.stdlib-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "40000000",
+            "custom.value-bridge": "40000000",
+            "dynamic.copied-inout": "40000000",
+            "dynamic.value": "40000000",
+            "fixed.copied-inout": "40000000",
+            "fixed.value": "40000000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "40000000",
+            "new.generic.copied-inout": "40000000",
+            "new.generic.value": "40000000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "40000000",
+            "optimized.float.value": "40000000",
+            "optimized.storage.copied-inout": "40000000",
+            "optimized.storage.stdlib-inout": "40000000",
+            "optimized.storage.value": "40000000"
+          },
+          "omittedWrite": true,
+          "passed": true,
+          "problems": [],
+          "runExit": 1
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0",
+      "frontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+      "inputsUnchanged": true,
+      "producerConfiguration": "release",
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "target": "arm64-apple-macosx14.0",
+      "toolchain": "swiftorg-6.4.2"
+    },
+    {
+      "artifacts": {
+        "compiler-version.json": "dc7b8f367abbb8a1b2c6124b160d8ac05da506d82b22178a367e6a6d5fe08176",
+        "compiler-version.stderr": "bbc8b176d3c74d4c5a7fd00b40280f98168e116d5272273bfe8e71407625540e",
+        "compiler-version.stdout": "4b59da256292ae42e3f04ef6d06ea3e139678613a3cd3d0dc37a6757c0bd290a",
+        "debug-omitted-write/compile.json": "84b599b979413657b61fe689b47d1a9f39c3b1e9cf5be019e861356a12f6b4f8",
+        "debug-omitted-write/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/consumer": "1902de57b4e4587d08e7ef66ffc02f57818a1f562a19fb1c3757cf9375429c15",
+        "debug-omitted-write/run.json": "971121a76ae3351e547d571150b66b4eae1c8e38d129b9db04998764e7c71e9e",
+        "debug-omitted-write/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-omitted-write/run.stdout": "a1284bd38daacd9d64cc798b9c175861446ec849ff411327bd8c66db70fce347",
+        "debug-positive/compile.json": "ef7e34482fc5c1dabbd4ea2ac6f43406c8be2b2ee32fc70efa9ea5a0f4fc65c3",
+        "debug-positive/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/consumer": "cf12490982f9e46c43fae8251789f7114605e8fb78dd1586930aa50809b9d455",
+        "debug-positive/run.json": "45a9e0d81a586c9ead25db7afd9b08f92195600149a05071f5067b491fcf5e34",
+        "debug-positive/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-positive/run.stdout": "8d3fc3e67eb1ab87ceea1cd93e1a7543055af62ffe87868b49a21cc31d94d5eb",
+        "debug-sil.json": "a47adc30c3bd262fce4c1bd296ba3ea75e0f09ad106b0350e0cbec36a844c7ac",
+        "debug-sil.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug-sil.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "debug.sil": "405eb6da8cc79377cdd26692726fefe35f8dde054243c985bad6898e785da3ad",
+        "inputs.json": "a7572be2a35a30a9702ecf99dfd6a0e0855c541c1121ae13649bcfd519e19fea",
+        "producer-binding.json": "bfa92b415c61fc05c68e629812b8e4836618df5a4eb628caa9a7eab8a767c786",
+        "release-omitted-write/compile.json": "8dc6a049e609df9a8b6fd455cefa21964f8c1f2eb4a8d3c50958a91b823621c4",
+        "release-omitted-write/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/consumer": "48ec39ef84b51de4319bdfd7ca6a197f60c1764621cc02c576e9efb15eadefdd",
+        "release-omitted-write/run.json": "a7ffb00d5cdafc752e8320c835b39c4ea42c781de361678f82b52eb76b99bb16",
+        "release-omitted-write/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-omitted-write/run.stdout": "a1284bd38daacd9d64cc798b9c175861446ec849ff411327bd8c66db70fce347",
+        "release-positive/compile.json": "71e18d8c9a724763e102d8543fe20cfd36ea0bd782b5cc86e74c27a91a898cd3",
+        "release-positive/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/consumer": "66608b6b6bc4a79733be153a89ac881081d2acb38c32786838e657ed95f85d5d",
+        "release-positive/run.json": "c4b0a963675ae149bbe285968fdeaf2f988ee616d5ce1bcf68e3f8d2836af70f",
+        "release-positive/run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-positive/run.stdout": "7ce8fc285a669829b349b154a8b8f801668719679959089f05a4d311e82080f4",
+        "release-sil.json": "df9161547b45171916d913815c2c481b089c842919014ec5d1fa0f5a4d1997cc",
+        "release-sil.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release-sil.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "release.sil": "647c9ad187fe59ee3897ca90424c4901bd7cf50cc98de11d7631f6db083bd907"
+      },
+      "cases": [
+        {
+          "binarySHA256": "cf12490982f9e46c43fae8251789f7114605e8fb78dd1586930aa50809b9d455",
+          "byValueControlsPassed": true,
+          "clientMode": "debug",
+          "compileExit": 0,
+          "failures": {},
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "3f800000",
+            "custom.value-bridge": "3f800000",
+            "dynamic.copied-inout": "3f800000",
+            "dynamic.value": "3f800000",
+            "fixed.copied-inout": "3f800000",
+            "fixed.value": "3f800000",
+            "new.aggregate.inout": "3f800000",
+            "new.concrete.copied-inout": "3f800000",
+            "new.concrete.value": "3f800000",
+            "new.generic.copied-inout": "3f800000",
+            "new.generic.value": "3f800000",
+            "new.inside.copied-inout": "3f800000",
+            "optimized.float.copied-inout": "3f800000",
+            "optimized.float.value": "3f800000",
+            "optimized.storage.copied-inout": "3f800000",
+            "optimized.storage.stdlib-inout": "3f800000",
+            "optimized.storage.value": "3f800000"
+          },
+          "omittedWrite": false,
+          "passed": true,
+          "problems": [],
+          "runExit": 0
+        },
+        {
+          "binarySHA256": "1902de57b4e4587d08e7ef66ffc02f57818a1f562a19fb1c3757cf9375429c15",
+          "byValueControlsPassed": null,
+          "clientMode": "debug",
+          "compileExit": 0,
+          "failures": {
+            "custom.inout-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "custom.value-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.stdlib-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "40000000",
+            "custom.value-bridge": "40000000",
+            "dynamic.copied-inout": "40000000",
+            "dynamic.value": "40000000",
+            "fixed.copied-inout": "40000000",
+            "fixed.value": "40000000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "40000000",
+            "new.generic.copied-inout": "40000000",
+            "new.generic.value": "40000000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "40000000",
+            "optimized.float.value": "40000000",
+            "optimized.storage.copied-inout": "40000000",
+            "optimized.storage.stdlib-inout": "40000000",
+            "optimized.storage.value": "40000000"
+          },
+          "omittedWrite": true,
+          "passed": true,
+          "problems": [],
+          "runExit": 1
+        },
+        {
+          "binarySHA256": "66608b6b6bc4a79733be153a89ac881081d2acb38c32786838e657ed95f85d5d",
+          "byValueControlsPassed": true,
+          "clientMode": "release",
+          "compileExit": 0,
+          "failures": {
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "3f800000",
+            "custom.value-bridge": "3f800000",
+            "dynamic.copied-inout": "3f800000",
+            "dynamic.value": "3f800000",
+            "fixed.copied-inout": "3f800000",
+            "fixed.value": "3f800000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "3f800000",
+            "new.generic.copied-inout": "3f800000",
+            "new.generic.value": "3f800000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "3f800000",
+            "optimized.float.value": "3f800000",
+            "optimized.storage.copied-inout": "3f800000",
+            "optimized.storage.stdlib-inout": "3f800000",
+            "optimized.storage.value": "3f800000"
+          },
+          "omittedWrite": false,
+          "passed": false,
+          "problems": [],
+          "runExit": 1
+        },
+        {
+          "binarySHA256": "48ec39ef84b51de4319bdfd7ca6a197f60c1764621cc02c576e9efb15eadefdd",
+          "byValueControlsPassed": null,
+          "clientMode": "release",
+          "compileExit": 0,
+          "failures": {
+            "custom.inout-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "custom.value-bridge": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "dynamic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "fixed.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.aggregate.inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.concrete.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.generic.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "new.inside.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.float.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.copied-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.stdlib-inout": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            },
+            "optimized.storage.value": {
+              "expected": "3f800000",
+              "observed": "40000000"
+            }
+          },
+          "observationComplete": true,
+          "observations": {
+            "custom.inout-bridge": "40000000",
+            "custom.value-bridge": "40000000",
+            "dynamic.copied-inout": "40000000",
+            "dynamic.value": "40000000",
+            "fixed.copied-inout": "40000000",
+            "fixed.value": "40000000",
+            "new.aggregate.inout": "40000000",
+            "new.concrete.copied-inout": "40000000",
+            "new.concrete.value": "40000000",
+            "new.generic.copied-inout": "40000000",
+            "new.generic.value": "40000000",
+            "new.inside.copied-inout": "40000000",
+            "optimized.float.copied-inout": "40000000",
+            "optimized.float.value": "40000000",
+            "optimized.storage.copied-inout": "40000000",
+            "optimized.storage.stdlib-inout": "40000000",
+            "optimized.storage.value": "40000000"
+          },
+          "omittedWrite": true,
+          "passed": true,
+          "problems": [],
+          "runExit": 1
+        }
+      ],
+      "compilerVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0\nswift-driver version: 1.168.6",
+      "frontendSHA256": "93a7373a7f558b211b9820797d40d7554a0fef2c917d039fa0fa894b60fd55eb",
+      "inputsUnchanged": true,
+      "producerConfiguration": "release",
+      "sdk": "/Users/goftin/Downloads/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "target": "arm64-apple-macosx14.0",
+      "toolchain": "xcode-27.3-beta"
+    }
+  ]
+}

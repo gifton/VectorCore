@@ -1,0 +1,150 @@
+{
+  "canary_changed": false,
+  "compiler_gate": "OPEN",
+  "excluded_data": "No inherited-environment raw diagnostic read, hashed, or included; no recursive scan of prior evidence root",
+  "full_library_qualification_performed_this_run": false,
+  "global_toolchain_selection_changed": false,
+  "limitations": [
+    "Native macOS arm64 standalone probes only; no library or client requalification in this run.",
+    "Runtime UUIDs and log hashes retained; system shared-cache runtime bytes are not independently rehashed.",
+    "Xcode27.3 beta absent locally and unexecuted; neither fix nor App Store eligibility established.",
+    "Xcode16.2 hosted prior source and Swift.org6.0.3 local source/runtime evidence remain separate.",
+    "No broad platform, minimum-OS, physical-device, Intel, GPU, sanitizer or performance acceptance from this investigation."
+  ],
+  "matrix": [
+    {
+      "all_compile_and_run_exits_zero": true,
+      "cells": 16,
+      "command_record_sha256": "1c4bf5827f8e13a2cc98c2345a9a86f7f991b1e18ea79fde47af168ae24143bb",
+      "compiler_version": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0\nswift-driver version: 1.168.6",
+      "driver_exit": 1,
+      "failures": [
+        {
+          "configuration": "release",
+          "probe": "CopyInoutReturnInside.swift"
+        },
+        {
+          "configuration": "release",
+          "probe": "LostStoreObserved.swift"
+        },
+        {
+          "configuration": "release",
+          "probe": "ReturnInsideInout.swift"
+        }
+      ],
+      "flags": "Debug: -Onone -D DEBUG; Release: -O; Swift 6 language; explicit arm64-apple-macosx14.0 target; no suppressed optimizer passes",
+      "frontend_sha256": "448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f",
+      "label": "xcode-control",
+      "negative_controls_passed": 2,
+      "positive_failures": 3,
+      "positive_passes": 11,
+      "runtime_images_record": {
+        "path": "runtime/xcode-control-images.json",
+        "sha256": "167000e1f645e9d9981e9708285abc2f1657737b9e2f2bdcd08f184303142642"
+      },
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "sdk_settings_sha256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+      "summary_sha256": "f85f7800d6419a3ca98d541bb93cfb7fec36abeae4547020accf10a10807bb27",
+      "target": "arm64-apple-macosx14.0"
+    },
+    {
+      "all_compile_and_run_exits_zero": true,
+      "cells": 16,
+      "command_record_sha256": "dcd1f29f1ccd6165785eda2aa0505102150e531348f53fb095132ad0c610c3fd",
+      "compiler_version": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: arm64-apple-macosx27.0.0",
+      "driver_exit": 0,
+      "failures": [],
+      "flags": "Debug: -Onone -D DEBUG; Release: -O; Swift 6 language; explicit arm64-apple-macosx14.0 target; no suppressed optimizer passes",
+      "frontend_sha256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",
+      "label": "swiftorg-control",
+      "negative_controls_passed": 2,
+      "positive_failures": 0,
+      "positive_passes": 14,
+      "runtime_images_record": {
+        "path": "runtime/swiftorg-control-images.json",
+        "sha256": "70c2c635d712a16e0830363df93819dd7d731535443842371dae0d9e55545654"
+      },
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "sdk_settings_sha256": "82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6",
+      "summary_sha256": "5983655fd453331524a275ab6f516f420de6ec5e1259327689e1f1483cf2b259",
+      "target": "arm64-apple-macosx14.0"
+    },
+    {
+      "all_compile_and_run_exits_zero": true,
+      "cells": 16,
+      "command_record_sha256": "8761d9772211350a1a8f456bf78a6f31cc32bca3ad4226c5f42c2e66ee7bdc00",
+      "compiler_version": "Apple Swift version 6.2 (swiftlang-6.2.0.19.9 clang-1700.3.19.1)\nTarget: arm64-apple-macosx28.0\nswift-driver version: 1.127.14.1",
+      "driver_exit": 1,
+      "failures": [
+        {
+          "configuration": "release",
+          "probe": "CopyInoutReturnInside.swift"
+        },
+        {
+          "configuration": "release",
+          "probe": "LostStoreObserved.swift"
+        },
+        {
+          "configuration": "release",
+          "probe": "ReturnInsideInout.swift"
+        }
+      ],
+      "flags": "Debug: -Onone -D DEBUG; Release: -O; Swift 6 language; explicit arm64-apple-macosx14.0 target; no suppressed optimizer passes",
+      "frontend_sha256": "720112638833dcb8e8190859cde6b9657ec88c720b7b2e4fc419764f7f9ca47b",
+      "label": "clt-candidate",
+      "negative_controls_passed": 2,
+      "positive_failures": 3,
+      "positive_passes": 11,
+      "runtime_images_record": {
+        "path": "runtime/clt-candidate-images.json",
+        "sha256": "455b80dd2b92accb7b6abc5a8f3691c4054b208e615dd1f39b04a8b79d7c9d24"
+      },
+      "sdk": "/Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk",
+      "sdk_settings_sha256": "7a2223423d955944a74542b8a72fda83cf970fa30749ba305fa904451f3a16c1",
+      "summary_sha256": "fdba64e7d834a1f1f55011770b9c0f55772a908871d766b114e79aa432622a98",
+      "target": "arm64-apple-macosx14.0"
+    },
+    {
+      "all_compile_and_run_exits_zero": true,
+      "cells": 16,
+      "command_record_sha256": "80d6b3a2e42a807c4b3a2e4073907d887f6102f45fbbabc93519fcdcc23a6dc4",
+      "compiler_version": "Apple Swift version 6.0.3 (swift-6.0.3-RELEASE)\nTarget: arm64-apple-macosx18.0",
+      "driver_exit": 0,
+      "failures": [],
+      "flags": "Debug: -Onone -D DEBUG; Release: -O; Swift 6 language; explicit arm64-apple-macosx14.0 target; no suppressed optimizer passes",
+      "frontend_sha256": "ed347b34041039d1ec6c4f0f387d5df668222d44c9a40d344905bfa311609b41",
+      "label": "swiftorg603-control",
+      "negative_controls_passed": 2,
+      "positive_failures": 0,
+      "positive_passes": 14,
+      "runtime_images_record": {
+        "path": "runtime/swiftorg603-control-images.json",
+        "sha256": "9cf83ff9fc7f72f6e08bb8ebfbc6be8aedbd032a27efe517353e687cf01a7aca"
+      },
+      "sdk": "/Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk",
+      "sdk_settings_sha256": "2fa5c0ce1bbcd261b132b572b1a9eece3b5905b04640a44deae1a6a8812928fb",
+      "summary_sha256": "ba392a62158f8847d169462745cef4de33c7fba8840018559713c8008c62135b",
+      "target": "arm64-apple-macosx14.0"
+    }
+  ],
+  "official_source_manifest": "official-sources-retry.json",
+  "policy_changed": false,
+  "production_changed": false,
+  "remaining_requirements": [
+    "Explicit support/distribution policy decision or qualified corrected Xcode binary.",
+    "Unchanged numerical canary plus all required positive shapes and negative acceptance control on every accepted exact compiler/SDK/target tuple.",
+    "Current final-source full library Debug/Release and ordinary optimized downstream client on accepted toolchains.",
+    "Separate source-client compiler and artifact-client specialization/interface qualification.",
+    "Advertised platform/runtime matrix and applicable store eligibility.",
+    "Hosted candidate acceptance plus final release documentation and separately authorized publication."
+  ],
+  "reproducer_changed": false,
+  "source_clean_before_after": true,
+  "source_drift": [],
+  "source_input_count": 523,
+  "source_input_manifest_sha256": "8c732018ca48ae8eab9ebafdfa49f95ea66a5efc0ecb5f8426bba20aa9b75035",
+  "source_revision": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+  "source_worktree": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+  "toolchain_installation_performed": false,
+  "verified_command_records": 218
+}

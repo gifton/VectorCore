@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -98,7 +99,7 @@ struct P02PairwiseRowTests {
     /// prepared/into entry run on that query row (`p02PreparedRows`), and each diagonal entry equals
     /// `metric.distance(v, v)` bit for bit. The number of off-diagonal entries where a single N×N multiply (the former
     /// route) gives other bits is printed as a `P02_PAIRWISE_GEOMETRY` line: a one-host record, not an assertion.
-    @Test func rowsEqualPreparedIntoPerRow() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func rowsEqualPreparedIntoPerRow() async throws {
         try await Self.withMatrixRouting("rowsEqualPreparedIntoPerRow") {
             try await p02ForEachWidth { type in try await perRow(type) }
         }
@@ -141,7 +142,7 @@ struct P02PairwiseRowTests {
     /// and `.perQuery` do; PR #56 review AL2a), in their rows and columns; the diagonal stays `metric.distance(v, v)`
     /// (NaN). Cosine: no formatting, so those off-diagonal entries stay NaN. Every entry still equals the per-row
     /// prepared/into reference bits.
-    @Test func nanRowsAtAnEligibleN() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func nanRowsAtAnEligibleN() async throws {
         try await Self.withMatrixRouting("nanRowsAtAnEligibleN") {
             try await p02ForEachWidth { type in try await nanRows(type) }
         }
@@ -183,7 +184,7 @@ struct P02PairwiseRowTests {
     /// take (`DynamicVector`, `Vector384Optimized`, `Vector<Dim512>`) open no `batch.pairwise.gemm` phase: the
     /// element-type identity checks (`exactArray(...) != nil`) run before that observation begins. Each diagonal is
     /// still the metric's own self-distance. Control: `Vector512Optimized` at the same size opens the phase.
-    @Test func ineligibleTypesOpenNoGemmPhase() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func ineligibleTypesOpenNoGemmPhase() async throws {
         try await Self.withMatrixRouting("ineligibleTypesOpenNoGemmPhase") {
         let values = Self.rows(count: 256, width: 512)
         func check<V: VectorProtocol & Sendable>(_ rows: [V], expectGemm: Bool) async where V.Scalar == Float {
@@ -208,7 +209,7 @@ struct P02PairwiseRowTests {
     /// `pairwiseDistances` is nonthrowing and returns its complete result when the calling task is already cancelled:
     /// at N = 256, Vector512Optimized, Euclidean and cosine, the cancelled call takes the GEMM route and returns the
     /// same N×N bits as an uncancelled call (the ExecutionScheduling/P01 cancelled-matrix law at a GEMM-eligible size).
-    @Test func completeResultUnderCancellation() async throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func completeResultUnderCancellation() async throws {
         try await Self.withMatrixRouting("completeResultUnderCancellation") {
         let rows = try p02Vectors(Self.rows(count: 256, width: 512), as: Vector512Optimized.self)
         for euclidean in [true, false] {

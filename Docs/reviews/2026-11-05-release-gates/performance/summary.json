@@ -1,0 +1,34 @@
+{
+  "utc": "2026-11-05T20:09:53.504923+00:00",
+  "source": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
+  "scope": "native-only diagnostic preparation",
+  "newBenchmarkMeasurements": 0,
+  "performanceAcceptance": false,
+  "formalReadinessRun": true,
+  "prepared": "/private/tmp/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/prepared.json",
+  "preparedSHA256": "17ebeceb8a52c71aa64cacc145d1b8f2858f095eeb1cdb75183d19cb5da41168",
+  "originalReadinessRuleSHA256": "dc936cba117a46931e3591c809f4956255ed15ef92d9a00acdd3723efbcc01b6",
+  "refinedReadinessRuleSHA256": "56fb9a40494081f72e03579be4b36f0c2c89dd7154a17577bbc7b2ae221d80bd",
+  "latestPreflight": "observer-preflight-refined/frame-0/frame.json",
+  "reviewStatus": "independently approved; single reviewed admission completed and failed CPU readiness",
+  "tests": {
+    "normal": 20,
+    "optimized": 20,
+    "doubleOptimized": 20
+  },
+  "historicalComparatorExits": [
+    0,
+    1
+  ],
+  "rootCause": "not uniquely identified; contended historical host and heterogeneous between-process shifts retained",
+  "remainingMeasurementHarness": "Parent-reviewed direct thermal/power boundary observations and product/source/rule binding before any eventual complete batch; not implemented or claimed.",
+  "reviewAssociation": "review-association.json",
+  "formalReadinessAttempts": 1,
+  "observerExit": 0,
+  "hostReady": false,
+  "diagnosticPerformanceAcceptance": false,
+  "timingRetries": 0,
+  "formalReadinessSummary": "formal-readiness-summary.json",
+  "readinessResultSHA256": "c22bb1302f956cf9a06728eebace9ffc59b9f727286f909c16b4263d52fb53c0",
+  "nextRequirement": "Changed host condition, fresh named complete predetermined batch, renewed authorization, complementary direct thermal/power and source/rule/product telemetry; no current timing authorization."
+}

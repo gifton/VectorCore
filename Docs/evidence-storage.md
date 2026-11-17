@@ -1,7 +1,8 @@
 # Evidence publication and recovery
 
-Current documentation uses portable paths. Large qualification profiles and
-evidence manifests are represented by small references to their original bytes.
+Current documentation uses portable paths. Large qualification profiles,
+evidence manifests and historical JSON reports are represented by small
+references to their exact published bytes.
 This keeps workstation paths and generated inventories out of the current source
 tree while retaining the exact inputs to earlier reviews.
 
@@ -10,7 +11,7 @@ been rewritten. Historical copies can still contain machine-specific paths, and
 the Git repository's historical storage has not been reduced. A private snapshot
 of the original tree is also retained by the maintainer.
 
-## Exact profiles and manifests
+## Exact archived JSON
 
 An archive reference contains `artifactReference=1`, an immutable `gitCommit`, a
 repository-relative `gitPath`, the original `bytes` count and its `sha256`.
@@ -41,6 +42,18 @@ verification workflow explicitly enables this fetch for shallow policy
 checkouts. Missing objects, incorrect hashes or unavailable archives fail
 verification; a summary or a green workflow cannot substitute for the data.
 
+The same command reads historical JSON reports and the publication catalog.
+For example, recover the complete platform skip ledger with:
+
+```sh
+python3 -B Scripts/ci/archived_evidence.py \
+  Docs/reviews/2026-11-05-release-gates/platform/coverage-skip-ledger.json \
+  --output "$EVIDENCE_ROOT/coverage-skip-ledger.json"
+```
+
+Add `--fetch` only when the pinned commit is absent and fetching is intended.
+The reference's checksum describes the recovered bytes, not the reference file.
+
 For a source export without Git history, provide the retained original profile
 directly to `compiler_qualification.py --profile`. The historical
 `bounded_native_qualification.py` also accepts `--profile`; its default remains
@@ -56,11 +69,14 @@ private backups; a future history purge requires a separate storage migration.
 
 ## Portable presentation records
 
-[The publication catalog](evidence-publication.json) lists the original files
-whose paths or bulky inventories were replaced, their Git locations, byte counts,
-checksums and whether
-the current copy is a reference or a portable presentation. This catalog records
-the originals; it is not a fresh qualification result.
+[The publication catalog](evidence-publication.json) is itself an archive
+reference. Recover it with the command above, substituting its path and a new
+output filename. Its complete payload lists the original files from the first
+path cleanup, their Git locations, byte counts, checksums and the publication
+form used at that time. Some portable presentations were subsequently archived
+too. Their new references preserve the published presentation bytes; the catalog
+still locates their unchanged raw originals. Neither record is a fresh
+qualification result.
 
 Paths in presentation JSON, Markdown and replay examples use these placeholders:
 
@@ -81,11 +97,23 @@ original paths and hashes; their existing explicit root remapping remains the
 verification mechanism. Replay helpers under `Docs` use
 `VECTORCORE_EVIDENCE_ROOT` for their output location.
 
-To retrieve a presentation file's original, read its commit/path from the catalog
+To retrieve a presentation file's original, read its commit/path from the recovered catalog
 and use `git show COMMIT:PATH`, then compare its size and SHA-256 with that record.
 No new compiler, platform, candidate or release admission follows from this
 cleanup. Existing scoped results retain `compilerProfile=known-failing` and
 `releaseAdmitted=false`.
+
+## Historical prose and coverage
+
+The [release evidence index](release-evidence.md) links current policy/results
+and earlier investigations. Longer historical write-ups and completed plans
+retain short pages at their existing paths, with original section headings and
+links to the full records at immutable commits. The unused historical coverage
+CSV has a [recovery page](reviews/2026-10-29-remaining-repairs/COVERAGE.md) with its
+original location and checksum. These links do not require the JSON reader.
+
+This cleanup reduces the current tree and review diff, not the published
+repository history or its historical storage size.
 
 `PublicPathTests` scans current tracked contents in the normal repository-checks
 job. It rejects developer home paths and captured temporary roots. Standard

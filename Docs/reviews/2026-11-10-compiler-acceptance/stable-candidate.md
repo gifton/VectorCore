@@ -19,7 +19,7 @@ alpha baseline. Production numerical bodies, compiler canaries and assertions
 are unchanged. There are 389 tracked compiled inputs; the conservative local
 source-tree manifest also includes three existing `.DS_Store` files.
 
-[Full source manifest](stable-candidate-source-inputs.json), SHA-256:
+[Archived source manifest](stable-candidate-source-inputs.json), SHA-256 of the recovered JSON:
 `50d4861428d63368c309f0e86bfbf376f68a79df08db96a5b164aaaf37abe830`.
 Every fresh capture records the selected commit and matching before/after
 source manifests. Later tooling/documentation commits do not change that

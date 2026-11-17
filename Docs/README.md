@@ -52,8 +52,10 @@ the [contribution benchmark instructions](../CONTRIBUTING.md#performance-changes
 
 ## Verification and measurements
 
-See [evidence publication and recovery](evidence-storage.md) for portable paths,
-archived profile references, and recovery of unchanged original records.
+Start with the [0.4.0 evidence index](release-evidence.md) for current policy,
+qualification results and historical investigations. See
+[evidence publication and recovery](evidence-storage.md) for portable paths,
+archived records, and recovery of unchanged originals.
 
 These are dated evidence, not rolling promises of support or performance:
 

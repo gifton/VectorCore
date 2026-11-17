@@ -8,12 +8,12 @@
 
 **Tech Stack:** Swift 6, Swift Testing, XCTest, Python unittest, existing SwiftPM native build and evidence tooling.
 
-**Spec:** The user's authorized repair request; frozen VC-F011 and VC-F012 in `/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`; the F009 dormant-helper disposition in `Docs/reviews/2026-10-28-oracle-repairs/README.md`.
+**Spec:** The user's authorized repair request; frozen VC-F011 and VC-F012 in `${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`; the F009 dormant-helper disposition in `Docs/reviews/2026-10-28-oracle-repairs/README.md`.
 
 ## Global Constraints
 
 - Begin at `db9329540890f71b53e28f9eb591c1fb51ccf943` in the existing `codex/audit-top-six-2026-10-27` isolated worktree. Preserve the original checkout, frozen audit, and previous evidence.
-- New raw evidence belongs in `/Users/goftin/dev/projects/VectorCore-remaining-repairs-2026-10-29-evidence`; report and registries belong in `Docs/reviews/2026-10-29-remaining-repairs/`.
+- New raw evidence belongs in `${EVIDENCE_ROOT}/VectorCore-remaining-repairs-2026-10-29-evidence`; report and registries belong in `Docs/reviews/2026-10-29-remaining-repairs/`.
 - Astra max performs substantive source discovery and a fresh final review. Distinguish source inspection from executed checks.
 - Preserve the gamma formula, finite comparison tolerances, paired NaN/equal-sign infinity policy, and the conversion helper's strict subnormal flush allowance.
 - Reject selected unsupported derived-bound routes even with threshold overrides; overrides adjust thresholds within an admitted model domain. Filtered-out and unavailable routes must not cause rejection.

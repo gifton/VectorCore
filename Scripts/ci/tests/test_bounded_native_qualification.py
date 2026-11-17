@@ -13,6 +13,7 @@ import tempfile
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'bounded_native_qualification.py'
+sys.path.insert(0, str(SCRIPT.parent))
 
 
 def digest(data):
@@ -47,6 +48,28 @@ class NativeEvidenceTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
+        self.profile_path = self.root / 'synthetic-profile.json'
+        positive = {'concrete.float.singleton': '3f800000',
+                    **{f'fixture.{i}': '3f800000' for i in range(23)}}
+        omitted = dict(positive, **{'concrete.float.singleton': '40000000',
+                                   **{f'fixture.{i}': '40000000' for i in range(18)}})
+        self.profile_path.write_text(json.dumps(dict(
+            captureRoots={kind: '/captured/' + kind for kind in ('migration', 'residual', 'source')},
+            consumerObservations=dict(positive=positive, omitted=omitted))))
+
+    def evidence(self):
+        return self.q.Evidence(self.root, self.root, self.root, profile_path=self.profile_path)
+
+    def test_explicit_retained_profile_can_be_inline_or_an_exact_archive_reference(self):
+        from qualification_fixture import archive_profile
+        expected = self.evidence().profile
+        archive_profile(self.root, self.profile_path)
+        self.assertEqual(self.evidence().profile, expected)
+        reference = json.loads(self.profile_path.read_text())
+        reference['sha256'] = '0' * 64
+        self.profile_path.write_text(json.dumps(reference))
+        with self.assertRaisesRegex(ValueError, 'digest'):
+            self.evidence()
 
     def test_complete_raw_rows_accept_known_failure_without_relabeling_values(self):
         expected = {'good': '3f800000', 'known': '40000000'}
@@ -107,7 +130,7 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_command_cannot_replace_an_earlier_pinned_receipt(self):
         path, record = self.command()
-        evidence = self.q.Evidence(self.root, self.root, self.root)
+        evidence = self.evidence()
         first = digest(path.read_bytes())
         evidence.hash(path, first)
         # The new record is internally valid: only an otherwise unused field changes.
@@ -121,7 +144,7 @@ class NativeEvidenceTests(unittest.TestCase):
         for kind in ('stdout', 'stderr', 'executable'):
             with self.subTest(kind=kind):
                 path, record = self.command()
-                evidence = self.q.Evidence(self.root, self.root, self.root)
+                evidence = self.evidence()
                 file = Path(record['executable'] if kind == 'executable' else record[kind]['path'])
                 first = digest(file.read_bytes())
                 evidence.hash(file, first)
@@ -141,7 +164,7 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_hash_registration_uses_first_canonical_path_expectation(self):
         path, _ = self.command()
-        evidence = self.q.Evidence(self.root, self.root, self.root)
+        evidence = self.evidence()
         first = digest(path.read_bytes())
         evidence.hash(path, first)
         alias = self.root / 'receipt-alias'
@@ -155,7 +178,7 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_final_recheck_preserves_command_pins_after_successful_read(self):
         path, record = self.command()
-        evidence = self.q.Evidence(self.root, self.root, self.root)
+        evidence = self.evidence()
         evidence.hash(path, digest(path.read_bytes()))
         self.assertEqual(evidence.cmd(path, 0)[1], 'hello\n')
         self.assertTrue(callable(getattr(evidence, 'recheck', None)), 'final immutable-pin recheck missing')
@@ -210,7 +233,7 @@ class NativeEvidenceTests(unittest.TestCase):
         marker = self.root / 'executed'
         helper = self.root / 'consumer_buffer_value.py'
         helper.write_text('from pathlib import Path\nPath(' + repr(str(marker)) + ').write_text("executed")\nraise RuntimeError("source helper executed")\n')
-        profile = json.loads(SCRIPT.with_name('bounded_native_qualification_profile.json').read_text())
+        profile = self.evidence().profile
         import types
         preloaded = types.ModuleType('consumer_buffer_value')
         def sentinel_oracle(**kwargs):
@@ -240,7 +263,7 @@ class NativeEvidenceTests(unittest.TestCase):
         helper.write_text('pass\n')
         original = digest(helper.read_bytes())
         helper.write_text('from pathlib import Path\nPath(' + repr(str(marker)) + ').write_text("executed")\n')
-        evidence = self.q.Evidence(self.root, self.root, self.root)
+        evidence = self.evidence()
         with self.assertRaisesRegex(ValueError, 'hash mismatch'):
             evidence.mapping({str(helper): original})
         self.assertFalse(marker.exists())
@@ -249,7 +272,7 @@ class NativeEvidenceTests(unittest.TestCase):
         output=self.root/'result.json'
         p=subprocess.run([sys.executable,str(SCRIPT),'--migration-root',str(self.root/'missing'),
                           '--residual-root',str(self.root/'missing2'),'--source-root',str(self.root),
-                          '--output',str(output)],capture_output=True,text=True,timeout=15)
+                          '--profile',str(self.profile_path),'--output',str(output)],capture_output=True,text=True,timeout=15)
         self.assertEqual(p.returncode,1,p.stderr)
         result=json.loads(output.read_text())
         self.assertEqual(result['nativeEvidence'],'rejected')

@@ -6,9 +6,9 @@ F007 is repaired on `codex/audit-top-six-2026-10-27`. `OperationProgress.percent
 
 - Baseline: `6e7a136aa7723007b3155caade0c656438a29197`, following the [F009/F010 repairs](../2026-10-28-oracle-repairs/README.md).
 - Implementation: `ac1897e`; named-test claim registration: `4fbfaa0`.
-- Repair checkout: `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`.
-- Raw evidence: `/Users/goftin/dev/projects/VectorCore-progress-fix-2026-10-28-evidence`.
-- [Frozen F007 finding](/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md#vc-f007), [plan](../../superpowers/plans/2026-10-28-progress-overflow.md), [validation registry](validation-registry.json), [review summary](review-summary.json), [evidence hashes](evidence-manifest.json).
+- Repair checkout: `${SOURCE_ROOT}`.
+- Raw evidence: `${EVIDENCE_ROOT}/VectorCore-progress-fix-2026-10-28-evidence`.
+- Frozen F007 finding (`${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md#vc-f007`), [plan](../../superpowers/plans/2026-10-28-progress-overflow.md), [validation registry](validation-registry.json), [review summary](review-summary.json), [evidence hashes](evidence-manifest.json).
 
 Only `Sources/VectorCore/Progress/OperationProgress.swift` changes in production. The public property remains a nonthrowing `Int`. Input clamping, stored state, `fraction`, `isComplete`, factories and stream behavior are unchanged. FP16 code is unchanged; consumer discussion is separate from this repair.
 

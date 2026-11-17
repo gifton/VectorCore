@@ -45,7 +45,7 @@
     },
     "scope": "macOS arm64 runtime on macOS 27.0.1; deployment target macOS 14, not a macOS 14 runtime test"
   },
-  "raw_evidence": "/Users/goftin/dev/projects/VectorCore-compiler-qualification-2026-11-01-evidence",
+  "raw_evidence": "${EVIDENCE_ROOT}/VectorCore-compiler-qualification-2026-11-01-evidence",
   "runs": {
     "official642-full-release": {
       "exit_code": 0,
@@ -59,7 +59,7 @@
       "raw_record": "official642-full-release-result.json",
       "log_sha256": "5aefc48948da4d55ebd1ff050177577a7499731ef05d838966604499cb572ef1",
       "command": [
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
         "test",
         "--disable-sandbox",
         "--build-system",
@@ -69,7 +69,7 @@
         "-c",
         "release",
         "--scratch-path",
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-release",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/build-release",
         "--sdk",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
         "-v"
@@ -90,7 +90,7 @@
       "raw_record": "debug-result.json",
       "log_sha256": "ae12c49f93187f2c8aeb73013dfbdc22137763d51c4a358b04037b393888ad46",
       "command": [
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
         "test",
         "--build-system",
         "native",
@@ -99,7 +99,7 @@
         "-c",
         "debug",
         "--scratch-path",
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-debug",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/build-debug",
         "--sdk",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
         "-v"

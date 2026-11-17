@@ -4,7 +4,7 @@ The existing required `test_benchmark_contracts.py BINARY` command now executes 
 
 ## Reconciliation
 
-The original record is **I:D-089**, in `/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/reviewers/tooling-known-issues-ownership-supplement.json` (retained extraction: `original-D-089.json` under the evidence root below). Its disposition already distinguished existing tests from partial required execution. The broader categorical claim that no comparator tests exist was superseded before this change: required CI already compiled and invoked the comparator for the legacy README examples and configuration/refusal controls. The comprehensive `test_benchmark_reporting.py` table existed, but its main-only entry point was not reached by unittest discovery or the required driver.
+The original record is **I:D-089**, in `${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/reviewers/tooling-known-issues-ownership-supplement.json` (retained extraction: `original-D-089.json` under the evidence root below). Its disposition already distinguished existing tests from partial required execution. The broader categorical claim that no comparator tests exist was superseded before this change: required CI already compiled and invoked the comparator for the legacy README examples and configuration/refusal controls. The comprehensive `test_benchmark_reporting.py` table existed, but its main-only entry point was not reached by unittest discovery or the required driver.
 
 This change closes that local execution/wiring gap. It does not claim that the changed required command has run on hosted CI. Related **G:A-027** retains its quiet-host timing limitation. **H:B-130** already describes repaired identity/boundary validation and CSV quoting; those repairs are not redispatched here. Historical baseline files remain historical records. Report p90 remains a percentile of per-sample averages.
 
@@ -25,7 +25,7 @@ The reporting table covers hand-derived regression/improvement deltas, per-unit 
 
 ## Reproduction and evidence
 
-Evidence root: `/private/tmp/vectorcore-release-phase-one-2026-11-04/benchmarks`.
+Evidence root: `${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/benchmarks`.
 
 `result-summary.json` records counts, product hash and limitations. Every executed child in the real contract run has exact argv, selected environment, deadline, exit and stdout/stderr hashes in its adjacent command JSON. Top-level commands use `run.py` and the existing `v03_process.run`; nested contract commands use the existing bounded benchmark helper. `source-inputs.json`, `source-stability.json`, `input-identities.json` and retained `swiftbuild-metadata/` describe the built inputs. The source baseline is `2dcb24091c6dc21be4db409ecdd0756220e93b8c`; production sources were unchanged. The worktree had only this track's test edits while building.
 
@@ -33,16 +33,16 @@ With the qualified toolchain directory first in `PATH`, `SWIFT_EXEC` set to that
 
 ```sh
 python3 -B Scripts/ci/tests/test_benchmark_contracts.py \
-  /private/tmp/vectorcore-release-phase-one-2026-11-04/benchmarks/build/out/Products/Release/vectorcore-bench \
-  --output /private/tmp/vectorcore-release-phase-one-2026-11-04/benchmarks/actual-cli
+  ${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/benchmarks/build/out/Products/Release/vectorcore-bench \
+  --output ${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/benchmarks/actual-cli
 ```
 
 The actual-product comparison can be repeated without synthesizing reports:
 
 ```sh
 swift Scripts/compare_benchmarks.swift \
-  --baseline /private/tmp/vectorcore-release-phase-one-2026-11-04/benchmarks/actual-cli/product-before.json \
-  --current /private/tmp/vectorcore-release-phase-one-2026-11-04/benchmarks/actual-cli/product-after.json \
+  --baseline ${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/benchmarks/actual-cli/product-before.json \
+  --current ${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/benchmarks/actual-cli/product-after.json \
   --metric median --per-unit --threshold 10
 ```
 

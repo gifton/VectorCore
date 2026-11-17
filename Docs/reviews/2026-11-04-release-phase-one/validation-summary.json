@@ -154,7 +154,7 @@
     "Initial benchmark RED/GREEN top-level environment/deadline capture is incomplete; final covering and actual-product runs are captured.",
     "Existing compiler warnings and native-build-system deprecation diagnostics remain."
   ],
-  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-one-2026-11-04-evidence",
+  "archive": "${EVIDENCE_ROOT}/VectorCore-release-phase-one-2026-11-04-evidence",
   "archiveReceipt": "archive-verification.json",
   "association": "Combined checks ran at testedImplementation. Final report/index/plan and archive receipts are later documentation-only records. Native task executions retain their own exact input manifests."
 }

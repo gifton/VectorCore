@@ -1,5 +1,5 @@
 {
-  "canonicalEvidenceRoot": "/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/native-tooling",
+  "canonicalEvidenceRoot": "${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/native-tooling",
   "capturedSourceCommit": "e4c711d7beccfe99f3f2a20997d0ec117be00bb8",
   "compilerProfile": "known-failing",
   "diagnosticFailures": {

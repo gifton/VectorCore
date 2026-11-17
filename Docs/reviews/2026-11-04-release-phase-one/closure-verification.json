@@ -4,7 +4,7 @@
   "scope": "Three final-review completion conditions only; no suites/builds rerun. Hash reads use the explicit selection and bounded archive, not build caches.",
   "passed": true,
   "errors": [],
-  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-one-2026-11-04-evidence",
+  "archive": "${EVIDENCE_ROOT}/VectorCore-release-phase-one-2026-11-04-evidence",
   "manifestSHA256": "2b1f8d8356c5bde2595fdc087e2fb3eeef3769d4bd546810c9175bf8a1947c71",
   "selectionSHA256": "c1972de8d86c581959909570f29216f1f9bd2955370b47b3a59266857c286e25",
   "freezeReceiptSHA256": "19c1a457ba5be29e8a2e2b44211e05925364ae4cfc34b11a1f0dd360b04f0b07",
@@ -103,7 +103,7 @@
   "remainingCondition": "Coordinator must record this closure result/hash, finalize plan/ledger completion and receipt, check final documentation identities/links, and commit the final documentation package. No implementation change or native rerun requested.",
   "payloadBoundary": "Pre-final-commit checkpoint; generated manifest/receipts and subsequent closure/plan/final receipt intentionally outside immutable payload.",
   "finalReceiptLinkCheck": {
-    "record": "/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/final-record-links.json",
+    "record": "${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/finalization/final-record-links.json",
     "recordSHA256": "0ed8d30cc6fcd579e554f35b92022557874467d369210a429cc53af2a1614fc8",
     "passed": true,
     "output": {

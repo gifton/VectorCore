@@ -71,18 +71,18 @@ Build VectorCore separately in both configurations with the intended compiler,
 without changing Package.swift optimization settings. On the qualification host:
 
 ```sh
-VC_BIN=/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin
+VC_BIN=${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin
 VC_SDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk
 export SWIFT_EXEC="$VC_BIN/swiftc"
 export PATH="$VC_BIN:$PATH"
 export VECTORCORE_TEST_EXTENDED=0 VECTORCORE_STRICT_PERF=0
 # Use a new task-owned scratch path and supervise each build with a finite deadline.
 "$VC_BIN/swift" build --build-system native --jobs 2 --sdk "$VC_SDK" \
-  -c release --scratch-path /tmp/vectorcore-witness-build --target VectorCore
+  -c release --scratch-path ${CAPTURE_ROOT}/vectorcore-witness-build --target VectorCore
 python3 Scripts/ci/consumer_collection_witness.py \
   --swiftc "$VC_BIN/swiftc" --sdk "$VC_SDK" \
-  --bin-path /tmp/vectorcore-witness-build/arm64-apple-macosx/release \
-  --output /tmp/vectorcore-witness-clients
+  --bin-path ${CAPTURE_ROOT}/vectorcore-witness-build/arm64-apple-macosx/release \
+  --output ${CAPTURE_ROOT}/vectorcore-witness-clients
 ```
 
 Repeat with a separate Debug build and output. Each output directory must be new.
@@ -104,7 +104,7 @@ uses `Scripts/ci/v03_process.py` with a 900-second build/test deadline.
 - No performance result is claimed; the default still materializes `toArray()`.
 
 `outcome-matrix.json` identifies the retained evidence for individual runs.
-Raw evidence: `/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence`.
+Raw evidence: `${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence`.
 Its `archive-inclusion.txt` selects sources, modules/objects, logs and command
 records while excluding build caches. The task report records focused tests,
 warnings, failed attempts and integration checks owned by the coordinator.

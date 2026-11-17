@@ -45,6 +45,6 @@ These are focused local Debug/Release validations on macOS 27.0.1 arm64 with the
 
 ## Evidence
 
-Evidence root: `/private/tmp/vectorcore-qualification-2026-11-04/hosted-fix-3`. Earlier wave evidence and builds are unchanged.
+Evidence root: `${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/hosted-fix-3`. Earlier wave evidence and builds are unchanged.
 
 `before-identity.json`, source snapshots, per-command JSON records, pre-edit independent native reader source/binary and compiler output, independent baseline records, `metadata-red.*`, `metadata-green.*`, `metadata-release.*`, direct Python test records, and final built-product/source hashes provide source-bound local evidence. The archive inclusion manifest excludes build caches while retaining their product identities. Full hosted logs remain under the parent's `hosted-run-2` evidence as well as the copied metadata failure input here.

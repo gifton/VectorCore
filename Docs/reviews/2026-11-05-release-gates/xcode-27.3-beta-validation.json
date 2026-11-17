@@ -134,13 +134,13 @@
   },
   "compiler": {
     "frontendSHA256": "93a7373a7f558b211b9820797d40d7554a0fef2c917d039fa0fa894b60fd55eb",
-    "sdk": "/Users/goftin/Downloads/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.3.sdk",
+    "sdk": "${BETA_DEVELOPER_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.3.sdk",
     "sdkSettingsSHA256": "b57cfc491bdb4fd38c1c044fa558b2578fb560d630219a82f76b9b181f45789c",
     "swiftVersion": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0",
     "xcodeVersion": "Xcode 27.3\nBuild version 27C5020n"
   },
   "date": "2026-11-05",
-  "evidenceArchive": "/Users/goftin/dev/projects/VectorCore-xcode-27.3-beta-2026-11-05-evidence",
+  "evidenceArchive": "${EVIDENCE_ROOT}/VectorCore-xcode-27.3-beta-2026-11-05-evidence",
   "evidenceManifest": "final-manifest.json",
   "finalInputCount": 509,
   "finalInputManifestSHA256": "1cc6a54775c3d544155218cb74ef5c186351c029a24ba14b859a353e0ea0b6b4",
@@ -165,7 +165,7 @@
     "sourceAndPredicateUnchanged": true
   },
   "releaseAcceptance": false,
-  "repository": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+  "repository": "${SOURCE_ROOT}",
   "scopeNotes": [
     "The full unfiltered Debug run used patch957c76e4 before the two reaper QoS changes. Finalpatch553c921c received the62-test Xcode follow-up, SwiftPM and both sanitizer selections. No full-suite rerun after the QoS-only code follow-up is claimed.",
     "Original Debug baseline was intentionally cancelled after repeated launch failures; its observed counts are not a full-suite result.",

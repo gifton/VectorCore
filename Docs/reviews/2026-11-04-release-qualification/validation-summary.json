@@ -73,7 +73,7 @@
   "platforms": {
     "sourceBase": "77defdf6161ab7600309d3432691fa9d388d088e",
     "implementationBase": "d628a2c419300d37c8462d24b2b1069f71867f79",
-    "evidenceRoot": "/private/tmp/vectorcore-qualification-2026-11-04/task-3-evidence",
+    "evidenceRoot": "${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/task-3-evidence",
     "platformCompile": {
       "VectorCore-ios": {
         "exit": 0,

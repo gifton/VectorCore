@@ -99,6 +99,7 @@ jobs:
         run: >-
           python3 -B policy/Scripts/ci/hosted_qualification.py verify
           --platform native --source-root "$GITHUB_WORKSPACE/candidate" --policy-root "$GITHUB_WORKSPACE/policy" --candidate-commit "$CANDIDATE_COMMIT" --policy-commit "$GITHUB_SHA" --repository "$GITHUB_REPOSITORY" --run-id "$EVIDENCE_RUN_ID" --profile "$REVIEWED_PROFILE"
+          --fetch-profile
           --archive "$RUNNER_TEMP/native-download/evidence.tar.gz" --output "$RUNNER_TEMP/native-verified"
       - name: Retain verification report
         if: always() && inputs.mode == 'verify'
@@ -173,6 +174,7 @@ jobs:
         run: >-
           python3 -B policy/Scripts/ci/hosted_qualification.py verify
           --platform ios-simulator --source-root "$GITHUB_WORKSPACE/candidate" --policy-root "$GITHUB_WORKSPACE/policy" --candidate-commit "$CANDIDATE_COMMIT" --policy-commit "$GITHUB_SHA" --repository "$GITHUB_REPOSITORY" --run-id "$EVIDENCE_RUN_ID" --profile "$REVIEWED_PROFILE"
+          --fetch-profile
           --archive "$RUNNER_TEMP/ios-simulator-download/evidence.tar.gz" --output "$RUNNER_TEMP/ios-simulator-verified"
       - name: Retain verification report
         if: always() && inputs.mode == 'verify'

@@ -178,5 +178,5 @@ release admission remain open.
 - [Migration validation](../2026-11-06-buffer-api-migration/README.md)
 - [Bounded native assessment](../2026-11-06-bounded-native-qualification/README.md)
 - [Current release status](../../../RELEASE_STATUS.md)
-- [Retained alpha summary](/Users/goftin/dev/projects/VectorCore-archive/VectorCore-bounded-native-qualification-2026-11-06-evidence/integration-preview/final-summary.json)
+- Retained alpha summary (`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/integration-preview/final-summary.json`)
 - [Existing release-admission policy](../2026-11-05-release-gates/release-admission.md)

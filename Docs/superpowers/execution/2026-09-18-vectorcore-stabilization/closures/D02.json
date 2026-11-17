@@ -22,7 +22,7 @@
   "policy": "Merged tree: claim ledger 0 problems; unittest 523 OK git-less (D02/merge/gitless-gate.log).",
   "reviews": "Phase 1 rulings -> phases 2-4 reviews A1/A2/B -> fix 1 -> re-review -> fix 2 -> re-review APPROVED -> phase 5 (two watchdog stalls, then a continuation agent) -> reviews A/B -> fix 1 -> scoped re-review APPROVED (no findings)."
  },
- "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/D02",
+ "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/D02",
  "reviewed_tree": "manifest D02/phase5/fix1/freeze-sha256.txt (6326 files; plain-copy workspace, not staged)",
  "limitations": [
   "The x86_64 AVX2 INT8 path and the FP16 runtime are not executed (Rosetta set aside).",

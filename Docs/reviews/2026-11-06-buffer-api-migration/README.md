@@ -129,7 +129,7 @@ the actual compiled candidate. The previous workaround-audit archive and its
 repository snapshot remain unchanged.
 
 New retained evidence is at
-`/Users/goftin/dev/projects/VectorCore-buffer-api-migration-2026-11-06-evidence`.
+`${EVIDENCE_ROOT}/VectorCore-buffer-api-migration-2026-11-06-evidence`.
 It includes pre-migration compile outcomes, guard RED/GREEN logs, fresh build and
 consumer records, exact toolchain/SDK/source identities and producer bindings.
 The [validation summary](validation-summary.json) records the checked totals,

@@ -440,7 +440,7 @@
     "source_head": "84798d3fe3548ea78d4ed5da5dba4d723a85bf32",
     "started_at_utc": "2026-10-28T07:07:32.858848+00:00",
     "command": [
-      "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/benchmark-baseline/.build/arm64-apple-macosx/release/StorageBenchmark"
+      "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/benchmark-baseline/.build/arm64-apple-macosx/release/StorageBenchmark"
     ],
     "warmup_iterations": 2,
     "sample_count": 9,
@@ -887,7 +887,7 @@
     "source_head": "f6bb24e69bcce999298e7f9dd9065e311e3f8f68",
     "started_at_utc": "2026-10-28T07:07:33.197853+00:00",
     "command": [
-      "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/benchmark-repaired/.build/arm64-apple-macosx/release/StorageBenchmark"
+      "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/benchmark-repaired/.build/arm64-apple-macosx/release/StorageBenchmark"
     ],
     "warmup_iterations": 2,
     "sample_count": 9,

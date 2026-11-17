@@ -12,7 +12,7 @@
 
 ## Constraints
 
-- Worktree: `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`; base HEAD `bdf990847babf567be1cbce22d2606e7102b1a47` plus the preserved migration delta.
+- Worktree: `${SOURCE_ROOT}`; base HEAD `bdf990847babf567be1cbce22d2606e7102b1a47` plus the preserved migration delta.
 - Keep Sources, Tests, Package.swift, CI, canary predicates and existing qualification policies unchanged.
 - Retain the prior migration evidence; verify actual inputs before reusing its Release products. These are reused products, not a new build.
 - No performance acceptance, installations, device queries, external messages, commits, publication, or access to excluded inherited-environment diagnostics.

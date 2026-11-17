@@ -32,7 +32,7 @@
   },
   "review": "reports/T03-review.md; scoped re-reviews summarized in progress.md",
   "evidence": "reports/T03-implementation.md",
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T03",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T03",
   "patch_sha256": "cc958e9d774b747228322b5dfa99ef94df228ce59b38f317a7cf1ba11ae9da36",
   "frozen_sha256": {
     ".github/workflows/ci.yml": "7161637fbbc73c9bca081b41d7bb4df2573c54c751e1a8e6a42d0d82666e4c2b",

@@ -4,11 +4,11 @@
     "durableCopy": {
       "allCopiedHashesMatch": true,
       "copiedMetadataFiles": 2,
-      "destination": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence",
+      "destination": "${EVIDENCE_ROOT}/VectorCore-release-gates-2026-11-05-evidence",
       "exactCopiedInventoryBeforeReceipt": true,
       "payloadManifestSHA256": "d8d0e6709a78f4f0832cbae7dc653d94f006a3ef2b493c7ca8bdcfed58584875",
       "releaseAcceptance": false,
-      "source": "/private/tmp/vectorcore-release-gates-2026-11-05/archive-stage",
+      "source": "${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/archive-stage",
       "verifiedPayloadBytes": 123894870,
       "verifiedPayloadFiles": 1458
     },
@@ -25,7 +25,7 @@
       "verifiedBytes": 123894870,
       "verifiedFiles": 1458
     },
-    "payloadManifestPath": "/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/payload-manifest.json"
+    "payloadManifestPath": "${EVIDENCE_ROOT}/VectorCore-release-gates-2026-11-05-evidence/payload-manifest.json"
   },
   "baselineChecks": {
     "checks": [
@@ -108,7 +108,7 @@
   "investigationSource": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
   "performance": {
     "coordinatorRawReconciliation": {
-      "active_rule_path": "/private/tmp/vectorcore-release-gates-2026-11-05/performance/readiness-rule-refined.json",
+      "active_rule_path": "${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/readiness-rule-refined.json",
       "actual_starts_within_declared_tolerance": true,
       "all_ac_nominal_low_power_off": true,
       "frame_sha256": "c9b827ee20759cc53660b1d64797c1f4231a1b581897b9e0f88151d93f381340",
@@ -289,7 +289,7 @@
       "files_verified": 854,
       "manifest_sha256": "9bc61188fe2fab3ab8cfe0f4dc0307687cc27825ee5d9bf2396f3b5dd4c74806",
       "scope": "Independent verification of selected regular files only, before archive copy",
-      "source": "/private/tmp/vectorcore-release-gates-2026-11-05/compiler"
+      "source": "${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/compiler"
     },
     "performance": {
       "bytes_verified": 26147144,

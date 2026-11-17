@@ -1,11 +1,11 @@
 {
   "base": "d448a3e694ea85ba3e6b7ac6a2f3d28cdaedcafc",
-  "evidenceRoot": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence",
+  "evidenceRoot": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence",
   "qualifiedCompiler": "Apple Swift version 6.4.2 (swift-6.4.2-RELEASE)",
   "comparisonCompiler": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)",
   "cases": [
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/baseline-debug-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/baseline-debug-clients/summary.json",
       "summarySHA256": "568181ead24d8a98cb2f5a90b48b87d1a28db921683f68738d93c97b628c68d1",
       "scope": "compile/link/runtime",
       "results": [
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/baseline-release-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/baseline-release-clients/summary.json",
       "summarySHA256": "ae1bbe52a77bcee03f820f2749c097d421d054186bc632b1b05aad3e99d4157a",
       "scope": "compile/link/runtime",
       "results": [
@@ -79,7 +79,7 @@
       ]
     },
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/explicit-read-debug-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/explicit-read-debug-clients/summary.json",
       "summarySHA256": "bd431d539f7fbd01336249fd0ca94dcbd6beb07101a487d7e096c9ac7585efab",
       "scope": "compile/link/runtime",
       "results": [
@@ -118,7 +118,7 @@
       ]
     },
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/explicit-read-release-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/explicit-read-release-clients/summary.json",
       "summarySHA256": "ce4dffc2290f9d021a586251e26f61c3205012cd35346be2e50f2c1f065b2d65",
       "scope": "compile/link/runtime",
       "results": [
@@ -157,7 +157,7 @@
       ]
     },
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-debug-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/final-debug-clients/summary.json",
       "summarySHA256": "fef9cb9824758e70a680b2acf7b84116f754874da67cc45feb292010c772ff40",
       "scope": "compile/link/runtime",
       "results": [
@@ -196,7 +196,7 @@
       ]
     },
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-release-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/final-release-clients/summary.json",
       "summarySHA256": "a4bdcbb6c16056f8416e0409d60b9295814574520661560e62ee9a475d73b979",
       "scope": "compile/link/runtime",
       "results": [
@@ -235,7 +235,7 @@
       ]
     },
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/summary.json",
       "summarySHA256": "7d521cf0d202df2b161bf6abf2034816e9459ee5091f469cfdf2e6c307cd67ff",
       "scope": "compile only",
       "results": [
@@ -259,21 +259,21 @@
             "-sdk",
             "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
             "-module-cache-path",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/module-cache",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/module-cache",
             "-Onone",
             "-Xcc",
-            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-fmodule-map-file=${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
             "-Xcc",
-            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I${SOURCE_ROOT}/Sources/VectorCoreC/include",
             "-I",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
             "-parse-as-library",
             "-module-name",
             "WitnessProbe",
             "-c",
-            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "${SOURCE_ROOT}/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
             "-o",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/inherited.o"
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/inherited.o"
           ],
           "elapsedSeconds": 2.408962417044677,
           "exit": 0,
@@ -290,23 +290,23 @@
             "-sdk",
             "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
             "-module-cache-path",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/module-cache",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/module-cache",
             "-Onone",
             "-Xcc",
-            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-fmodule-map-file=${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
             "-Xcc",
-            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I${SOURCE_ROOT}/Sources/VectorCoreC/include",
             "-I",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
             "-parse-as-library",
             "-module-name",
             "WitnessProbe",
             "-D",
             "EXPLICIT_WITNESS",
             "-c",
-            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "${SOURCE_ROOT}/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
             "-o",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/explicit.o"
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-debug-clients/explicit.o"
           ],
           "elapsedSeconds": 0.2957497499883175,
           "exit": 0,
@@ -316,7 +316,7 @@
       ]
     },
     {
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/summary.json",
       "summarySHA256": "0e4635bdd30b3ab34797d9efa7375dc6982c379c5bba75c6a74ccde7f055846c",
       "scope": "compile only",
       "results": [
@@ -340,21 +340,21 @@
             "-sdk",
             "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
             "-module-cache-path",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/module-cache",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/module-cache",
             "-O",
             "-Xcc",
-            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-fmodule-map-file=${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
             "-Xcc",
-            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I${SOURCE_ROOT}/Sources/VectorCoreC/include",
             "-I",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
             "-parse-as-library",
             "-module-name",
             "WitnessProbe",
             "-c",
-            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "${SOURCE_ROOT}/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
             "-o",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/inherited.o"
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/inherited.o"
           ],
           "elapsedSeconds": 2.5485292080556974,
           "exit": 0,
@@ -371,23 +371,23 @@
             "-sdk",
             "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
             "-module-cache-path",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/module-cache",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/module-cache",
             "-O",
             "-Xcc",
-            "-fmodule-map-file=/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
+            "-fmodule-map-file=${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/VectorCoreC.build/module.modulemap",
             "-Xcc",
-            "-I/Users/goftin/.codex/worktrees/d235/VectorCore/Sources/VectorCoreC/include",
+            "-I${SOURCE_ROOT}/Sources/VectorCoreC/include",
             "-I",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-explicit-read-build-release/arm64-apple-macosx/release/Modules",
             "-parse-as-library",
             "-module-name",
             "WitnessProbe",
             "-D",
             "EXPLICIT_WITNESS",
             "-c",
-            "/Users/goftin/.codex/worktrees/d235/VectorCore/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+            "${SOURCE_ROOT}/Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
             "-o",
-            "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/explicit.o"
+            "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/xcode-release-clients/explicit.o"
           ],
           "elapsedSeconds": 0.3514150839764625,
           "exit": 0,

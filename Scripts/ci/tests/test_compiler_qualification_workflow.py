@@ -15,7 +15,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'Scripts/ci'))
 import hosted_qualification as hosted
-from qualification_fixture import CaptureFixture, write_json
+from qualification_fixture import CaptureFixture, write_json, archive_profile
 
 
 class HostedEvidenceTests(unittest.TestCase):
@@ -170,7 +170,8 @@ class HostedEvidenceTests(unittest.TestCase):
         with self.assertRaises(ValueError): hosted.reviewed_profile(repo,relative,revision)
 
     def test_verify_uses_the_reviewed_policy_revision_and_enforces_capture_and_numerical_results(self):
-        for kind in ('accepted','wrong-candidate','supported-failure','legacy-profile'):
+        for kind in ('accepted','wrong-candidate','supported-failure','legacy-profile',
+                     'archived-accepted','archived-supported-failure','archived-tampered','archived-missing'):
             with self.subTest(kind=kind):
                 base = self.root/kind
                 base.mkdir()
@@ -184,7 +185,7 @@ class HostedEvidenceTests(unittest.TestCase):
                     return subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True,timeout=15).strip()
                 candidate = commit(f.source)
                 f.capture['sourceCommit'] = 'c'*40 if kind=='wrong-candidate' else candidate
-                if kind=='supported-failure':
+                if kind.endswith('supported-failure'):
                     f.alter_stdout('supported','BUFFER_VALUE first observed=2\nBUFFER_VALUE_COMPLETE count=1 failures=1\n',code=1)
                     f.commands['supported']['exit'] = 1
                     f.case_specs[0]['observed'] = {'first':'2'}
@@ -199,19 +200,30 @@ class HostedEvidenceTests(unittest.TestCase):
                 profile = policy/'Scripts/ci/qualification_profiles/review.json'
                 profile.parent.mkdir(parents=True)
                 write_json(profile,dict(f.profile,reviewedArtifact=dict(meta,sha256=hosted.file_sha(archive))))
+                original_digest = hosted.file_sha(profile)
+                if kind.startswith('archived-'):
+                    reference = archive_profile(policy, profile)
+                    if kind == 'archived-tampered':
+                        write_json(profile, dict(reference, sha256='0' * 64))
+                    elif kind == 'archived-missing':
+                        write_json(profile, dict(reference, gitCommit='0' * 40))
                 policy_commit = commit(policy)
                 args = SimpleNamespace(source_root=f.source,policy_root=policy,profile=str(profile.relative_to(policy)),
                     candidate_commit=candidate,policy_commit=policy_commit,run_id='123',repository=meta['repository'],
                     platform='native',archive=archive,output=base/'verified')
-                if kind=='accepted':
+                if kind in ('accepted', 'archived-accepted'):
                     hosted.verify(args)
                     report=json.loads((args.output/'verification.json').read_text())
                     self.assertEqual(report['hostedProvenance']['reviewedPolicyCommit'],policy_commit)
                     self.assertEqual(report['hostedProvenance']['policyCommit'],'b'*40)
                     self.assertIs(report['releaseAdmitted'],False)
+                    self.assertEqual(report['hostedProvenance']['reviewedProfileSHA256'], original_digest)
+                    if kind == 'archived-accepted':
+                        self.assertEqual(report['hostedProvenance']['reviewedProfileReferenceSHA256'],
+                                         hosted.file_sha(profile))
                 else:
                     with self.assertRaises(ValueError): hosted.verify(args)
-                    if kind=='supported-failure':
+                    if kind.endswith('supported-failure'):
                         report=json.loads((args.output/'verification.json').read_text())
                         self.assertEqual(report['vectorCoreQualification'],'rejected')
 

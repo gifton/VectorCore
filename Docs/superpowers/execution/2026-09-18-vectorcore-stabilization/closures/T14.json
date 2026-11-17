@@ -26,7 +26,7 @@
     "phase3": "RED 77 cosine issues → GREEN 0 with the overloads present and after removal; full Debug 1,588 plus 75 XCTest; Release targeted; Intel compile; mutations (pair loop → B; slot-1-only; witness → vDSP; re-added overload) caught; 419 OK in-repo and git-less on the merged tree; ledger 0 problems.",
     "reviews": "phase 2: Opus review → fix 1 → scoped Sonnet re-review APPROVED. Phase 3: 3a proposal → root rulings → 3b → split reviews A (Opus, Spec 9/9) and B (Sonnet) APPROVED with wording → ONE final fix (root verified the only non-comment Sources change is the ruled attribute removal)."
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T14",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T14",
   "reviewed_tree": {
     "phase2": "4971cbfbbea397a0846e79775e1199d21062234d",
     "phase3": "1b12b4dc67f6246f7f6ff289c7fbb11b1bf950e4"

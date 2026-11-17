@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Verify one retained native evidence selection; never admit a compiler or release.
 
-No subprocesses, builds or historical Python imports are performed. The adjacent
-profile pins receipt identities, not mutable summary success flags. Paths recorded
+No builds or historical Python imports are performed. An archived profile is read
+with Git and checked against its SHA-256; no network fetch is implicit. The profile
+pins receipt identities, not mutable summary success flags. Paths recorded
 under the three capture roots are remapped to the supplied roots; external paths
 are limited to files explicitly named in pinned input/command records. New runs
 or candidates require review of a new profile. Hashes establish integrity, not
@@ -13,6 +14,8 @@ import hashlib
 import json
 import re
 from pathlib import Path
+
+from archived_evidence import read_json as read_profile
 
 FRONTEND = '448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f'
 SDK_HASH = '82165b15ee21419d4cffaba8895797391b908ac9499ba70f561f3e1bd16758d6'
@@ -157,9 +160,9 @@ def inventory(rows, keys, expected):
 
 
 class Evidence:
-    def __init__(self, migration, residual, source):
+    def __init__(self, migration, residual, source, *, profile_path=None):
         self.roots = {'migration': Path(migration).resolve(), 'residual': Path(residual).resolve(), 'source': Path(source).resolve()}
-        self.profile = read_json(Path(__file__).with_name('bounded_native_qualification_profile.json'))
+        self.profile = read_profile(profile_path or Path(__file__).with_name('bounded_native_qualification_profile.json'))
         self.verified = {}
 
     def resolve(self, value):
@@ -366,11 +369,11 @@ class Evidence:
                 'omittedWriteControls':2,'producerConfiguration':'release'}
 
 
-def check(migration_root,residual_root,source_root):
+def check(migration_root,residual_root,source_root,*,profile_path=None):
     report={'schemaVersion':1,'draft':True,'compilerProfile':'unverified','nativeEvidence':'rejected',
             'supportPolicyAdopted':False,'releaseAdmitted':False,'remainingGates':REMAINING,'problems':[]}
     try:
-        evidence=Evidence(migration_root,residual_root,source_root)
+        evidence=Evidence(migration_root,residual_root,source_root,profile_path=profile_path)
         evidence.anchors();evidence.sources()
         report['compilerObservations']=evidence.compiler()
         report['compilerProfile']='known-failing'
@@ -391,11 +394,12 @@ def check(migration_root,residual_root,source_root):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('migration-root','residual-root','source-root','output'):parser.add_argument('--'+name,required=True,type=Path)
+    parser.add_argument('--profile',type=Path,help='retained reviewed JSON or archive reference; defaults to the adjacent profile')
     args=parser.parse_args()
     # Reserve before doing any reads: existing output, including a symlink, is never overwritten.
     try:
         with args.output.open('x') as out:
-            result=check(args.migration_root,args.residual_root,args.source_root)
+            result=check(args.migration_root,args.residual_root,args.source_root,profile_path=args.profile)
             json.dump(result,out,indent=2,sort_keys=True);out.write('\n')
     except OSError as error:
         parser.exit(2,str(error)+'\n')

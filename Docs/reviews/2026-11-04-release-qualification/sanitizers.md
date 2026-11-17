@@ -59,7 +59,7 @@ Metadata ownership limitations remain those of the [accepted lifetime implementa
 
 ## Retained evidence
 
-Raw root: `/private/tmp/vectorcore-qualification-2026-11-04/task-2-evidence`.
+Raw root: `${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/task-2-evidence`.
 
 - `address-qualified/result.json`, `thread/result.json`, per-body records/logs, retained loaded bundles and helper copies: mandatory results and identities.
 - `thread/Q03-child-concurrency-*.json` and `.log`: actual child identity, runtime image, workload markers and deadlines.

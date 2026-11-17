@@ -127,8 +127,8 @@ SwiftLint installation verifies a fixed archive SHA-256. Under the new allowlist
 successfully completed checkout, initialization, and analysis on PR #45.
 
 Snapshots and enforcement precondition proof are stored locally under
-`/private/tmp/vectorcore-github-hardening-20260907/`; downloaded hosted job logs
-are under `/private/tmp/vectorcore-hosted-hardening/`. Temporary local evidence
+`${CAPTURE_ROOT}/vectorcore-github-hardening-20260907/`; downloaded hosted job logs
+are under `${CAPTURE_ROOT}/vectorcore-hosted-hardening/`. Temporary local evidence
 is not a durable public artifact; linked GitHub runs and repository fixtures
 provide the public record, subject to GitHub retention settings.
 

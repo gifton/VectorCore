@@ -24,7 +24,7 @@
   "review": "reports/T01-review.md",
   "rereview": "reports/T01-rereview-1.md",
   "evidence": "reports/T01-implementation.md",
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T01",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T01",
   "patch_sha256": "c3a7f38b05b5e012bbd07eaafe6981d305849e34d0ebab2b0f3aa4c29a8b511a",
   "frozen_sha256": {
     "Benchmarks/VectorCoreBench/AppMain.swift": "9f5064835e4c37b6f87739d2a6d3aa5fcc9440c8df4905630fa61acfe4789c85",

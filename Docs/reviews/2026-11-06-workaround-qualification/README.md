@@ -68,7 +68,7 @@ claimed. Emitted SIL is a separate compiler emission, not a trace of the execute
 binary's individual optimization passes.
 
 Raw records, binaries, SIL and input identities are retained at
-`/Users/goftin/dev/projects/VectorCore-workaround-qualification-2026-11-06-evidence`.
+`${EVIDENCE_ROOT}/VectorCore-workaround-qualification-2026-11-06-evidence`.
 The [result summary](summary.json) preserves incorrect positive observations as
 failures and records `releaseAdmitted: false`. Driver completion is evidence
 collection success, not numerical acceptance of every source shape.

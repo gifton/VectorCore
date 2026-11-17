@@ -40,7 +40,7 @@ identifiers. Signing, installation and provisioning were explicitly approved.
 
 The archive contains all captured products and receipts. Original temporary
 paths remain in receipts; the validator maps them to the archive and to
-`/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/source-alpha-ios-tooling`.
+`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/source-alpha-ios-tooling`.
 Use that preserved source root when revalidating alpha evidence. Revalidation
 against the changed live candidate correctly rejects the benchmark-source
 hash mismatch. Never replace the old manifest with the new one.

@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Work in `/Users/goftin/dev/projects/VectorCore-archive/VectorCore-fixes-2026-10-27-84798d3`; preserve the dirty main checkout.
+- Work in `${SOURCE_ROOT}`; preserve the dirty main checkout.
 - Xcode 27.2 build 27B52; frontend SHA-256 `448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f`; record and verify every additional SDK/runtime/target identity.
 - Prioritize macOS and iOS. Require at least one app-hosted Release consumer execution on a physical iPhone or iPad before stable iOS acceptance, as explicitly selected by the user.
 - Preserve deployment declarations and existing required CI. Minimum-OS, Intel, Catalyst, tvOS/visionOS coverage and broader release gates remain unresolved.

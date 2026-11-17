@@ -83,7 +83,7 @@
     "integrated-debug": {
       "source": "60a87a11b58c28064626fc48023855c4b9042945",
       "command": [
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
         "test",
         "--build-system",
         "native",
@@ -92,7 +92,7 @@
         "-c",
         "debug",
         "--scratch-path",
-        "/private/tmp/vectorcore-release-prep-2026-11-04/build-debug",
+        "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/build-debug",
         "--sdk",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
         "-v"
@@ -105,7 +105,7 @@
     "integrated-release": {
       "source": "60a87a11b58c28064626fc48023855c4b9042945",
       "command": [
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
         "test",
         "--build-system",
         "native",
@@ -114,7 +114,7 @@
         "-c",
         "release",
         "--scratch-path",
-        "/private/tmp/vectorcore-release-prep-2026-11-04/build-release",
+        "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/build-release",
         "--sdk",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
         "-v"
@@ -130,8 +130,8 @@
         "/opt/homebrew/opt/python@3.14/bin/python3.14",
         "-B",
         "Scripts/ci/tests/D02RunConsumers.py",
-        "/private/tmp/vectorcore-release-prep-2026-11-04/build-debug/arm64-apple-macosx/debug",
-        "/private/tmp/vectorcore-release-prep-2026-11-04/integration-evidence/integrated-d02-debug-consumers",
+        "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/build-debug/arm64-apple-macosx/debug",
+        "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/integration-evidence/integrated-d02-debug-consumers",
         "final"
       ],
       "exit": 0,
@@ -145,8 +145,8 @@
         "/opt/homebrew/opt/python@3.14/bin/python3.14",
         "-B",
         "Scripts/ci/tests/D02RunConsumers.py",
-        "/private/tmp/vectorcore-release-prep-2026-11-04/build-release/arm64-apple-macosx/release",
-        "/private/tmp/vectorcore-release-prep-2026-11-04/integration-evidence/integrated-d02-release-consumers",
+        "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/build-release/arm64-apple-macosx/release",
+        "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/integration-evidence/integrated-d02-release-consumers",
         "final"
       ],
       "exit": 0,
@@ -209,7 +209,7 @@
     "final-lint": {
       "source": "62780666be88554ca2859e2e92cd5d3ad6666dba",
       "command": [
-        "/private/tmp/vectorcore-swiftlint-0.65.1/swiftlint",
+        "${CAPTURE_ROOT}/vectorcore-swiftlint-0.65.1/swiftlint",
         "lint",
         "--no-cache",
         "--config",

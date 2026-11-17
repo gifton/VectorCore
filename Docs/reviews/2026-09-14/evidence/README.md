@@ -18,11 +18,11 @@ build. From the repository root:
 ```sh
 python3 Docs/reviews/2026-09-14/evidence/build_probe.py \
   Docs/reviews/2026-09-14/evidence/ownership_format_probe.swift
-/private/tmp/vectorcore-review-replay/ownership_format_probe
+${CAPTURE_ROOT}/vectorcore-review-replay/ownership_format_probe
 ```
 
 The helper links existing objects without modifying the package or rebuilding it.
-It writes the executable under `/private/tmp/vectorcore-review-replay`. Use another
+It writes the executable under `${CAPTURE_ROOT}/vectorcore-review-replay`. Use another
 source from this directory for vector, search, batch, quantization, factorization
 or interface observations. Input files must be trusted Swift source.
 

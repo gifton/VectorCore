@@ -2,7 +2,7 @@
 
 **Release acceptance remains blocked.** Fresh native-arm64 Mac Catalyst Release execution reaches all three bundles and reproduces the unchanged installed-Xcode lost-store canary: observed `2.0`, expected `1.0`. The other declared results are 1,818 passed and 163 skipped. This closes an unexecuted runtime observation, not the compiler gate or the advertised minimum-OS/device matrix.
 
-Authoritative source is clean carried commit `27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb` at `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`. This task changed no production source, package, workflow, support policy, test body or gate. Optional timing workloads stayed disabled. No Xcode/runtime installation, global Xcode selection, provisioning update, device trust/security change or publication occurred. [platform-matrix.json](platform-matrix.json) and [coverage-skip-ledger.json](coverage-skip-ledger.json) retain the detailed dispositions.
+Authoritative source is clean carried commit `27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb` at `${SOURCE_ROOT}`. This task changed no production source, package, workflow, support policy, test body or gate. Optional timing workloads stayed disabled. No Xcode/runtime installation, global Xcode selection, provisioning update, device trust/security change or publication occurred. [platform-matrix.json](platform-matrix.json) and [coverage-skip-ledger.json](coverage-skip-ledger.json) retain the detailed dispositions.
 
 ## What is required, and what remains a recommendation
 
@@ -88,4 +88,4 @@ The first physical readiness JSON payload used the command record's filename and
 
 `manifest.json` enumerates explicit shareable files and separately excludes local-only raw inventories, signing material, device logs/results and build caches. `archive-verification.json` checks every selected size/hash and the exact selection. `shareable/` contains redacted command/log derivatives and safe copied results/artifacts; their provenance records keep original and derivative hashes distinct. Original `.xcresult` and signing/device material remain local only. The prohibited inherited-environment diagnostic named by the prior phase was never opened, hashed or archived. Only explicitly selected prior public/derived records were read. No environment dump was taken. Local raw result identities are retained without treating redacted derivatives as identical bytes.
 
-Selected artifacts are retained in the [durable platform evidence](/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/platform). The captured executions use the investigation source stated above, before the later report/comment integration.
+Selected artifacts are retained in the durable platform evidence (`${EVIDENCE_ROOT}/VectorCore-release-gates-2026-11-05-evidence/platform`). The captured executions use the investigation source stated above, before the later report/comment integration.

@@ -225,7 +225,7 @@ The Nov 1 ordinary downstream client checked the pure-Swift canary, fixed-vector
 
 Two recent Xcode problems are separate from the silent wrong-result issue:
 
-1. IDE compile errors involving `ProgressReporter`, `VCProgressReporter`, and `BenchmarkSuite` came from a partial rename in the older checkout at `/Users/goftin/dev/gsuite/VSK/VectorCore`. The reviewed worktree consistently uses `BenchmarkProgressReporter` and builds with the beta. The older checkout's edits were preserved.
+1. IDE compile errors involving `ProgressReporter`, `VCProgressReporter`, and `BenchmarkSuite` came from a partial rename in the older checkout at `${SOURCE_ROOT}`. The reviewed worktree consistently uses `BenchmarkProgressReporter` and builds with the beta. The older checkout's edits were preserved.
 2. Running the reviewed tests in Xcode exposed child-test launcher compatibility and reaper-priority problems. Those were repaired. The full Xcode Debug run reported **1,940 passed / 46 skipped / zero failed**, before the final QoS adjustment, with 98 warning records. The final adjustment received focused Xcode/SwiftPM checks and scoped ASan/TSan checks. It was not followed by a claimed full-suite rerun. Debug success does not override the separately failing optimized reproducer.
 
 Those fixes changed test/benchmark-support infrastructure, not the numerical compiler predicate. No full native Release beta suite was repeated after its standalone compiler gate failed. Benchmark timing instability and missing platform coverage remain separate release gates; no performance result from an uncontrolled test run is used here to assess the compiler.
@@ -239,7 +239,7 @@ The commands below describe a rerun; they were not executed while writing this d
 From the repository root, or the companion bundle's `repository/` directory:
 
 ```sh
-VC_DEVELOPER="/Users/goftin/Downloads/Xcode-beta.app/Contents/Developer"
+VC_DEVELOPER="${BETA_DEVELOPER_DIR}"
 VC_SWIFTC="$VC_DEVELOPER/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
 VC_FRONTEND="$VC_DEVELOPER/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend"
 VC_SDK="$VC_DEVELOPER/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.3.sdk"
@@ -338,6 +338,6 @@ The companion `VectorCore-compiler-research-handoff-2026-11-06.zip` contains:
 
 Compiler/SDK payloads, executable binaries, module caches, full build trees, raw device records, and inherited-environment diagnostics are not included in this research bundle. Historical summaries may name such files or hashes because those summaries are preserved unchanged; not every historically referenced artifact is packaged here. The source archives remain the authority for the broader evidence selection.
 
-The original durable compiler evidence is under `/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/compiler/`. The beta evidence is under `/Users/goftin/dev/projects/VectorCore-xcode-27.3-beta-2026-11-05-evidence/`, principally `compiler-probes/`. Its final archive manifest SHA-256 is `f152f207c7777268ff1fbf083ce6508b356bd333898201b9295ac25c3ba804a1`. The bundle supplies the selected files needed to investigate the compiler issue without access to those local directories.
+The original durable compiler evidence is under `${EVIDENCE_ROOT}/VectorCore-release-gates-2026-11-05-evidence/compiler/`. The beta evidence is under `${EVIDENCE_ROOT}/VectorCore-xcode-27.3-beta-2026-11-05-evidence/`, principally `compiler-probes/`. Its final archive manifest SHA-256 is `f152f207c7777268ff1fbf083ce6508b356bd333898201b9295ac25c3ba804a1`. The bundle supplies the selected files needed to investigate the compiler issue without access to those local directories.
 
 While preparing the handoff, all 80 cell observations, all 160 compile/run command records and their 320 stdout/stderr stream hashes, and all eight source identities across the five matrices were rechecked. Native compiler execution was not repeated. Older full-library passes, the beta matrix, and the later test-harness fixes retain their own revision/configuration scope throughout this document.

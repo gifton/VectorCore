@@ -32,7 +32,7 @@ Local environment: macOS 27.0.1 arm64, qualified Swift.org 6.4.2 payload and ins
 
 ## Evidence and remaining qualification
 
-Evidence root: `/private/tmp/vectorcore-qualification-2026-11-04/hosted-fix-2`.
+Evidence root: `${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/hosted-fix-2`.
 
 - `input-provenance.json` binds the retained hosted JSON/raw stdout/stderr/build records to their original artifact paths and SHA-256 hashes. `inputs/*/framework-build-lines.txt` extracts the successful build's public/private framework search entries.
 - `native-fixture-identity.json`, `compile-*`, `dependencies-*`, `before-native-*`, and `after-native-*` retain the native control and observed loader results.

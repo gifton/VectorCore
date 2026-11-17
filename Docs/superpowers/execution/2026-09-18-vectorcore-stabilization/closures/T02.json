@@ -21,7 +21,7 @@
   },
   "review": "reports/T02-review.md; T02 fix round 1 scoped re-review: all 4 addressed, no new breakage",
   "evidence": "reports/T02-implementation.md",
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T02",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T02",
   "patch_sha256": "1b45551621383a6cc945a2d3b4f6e3a4a8bc78fa67adc15c9faafc73fe205dec",
   "frozen_sha256": {
     "Tests/ComprehensiveTests/ArbitraryDimensionTests.swift": "11727d78e6191ef1211211243c4258df04dd42f7987be26ed52fb753f8ada6f1",

@@ -19,7 +19,7 @@ Future timing needs a documented changed host condition, a newly authorized comp
 
 ## Retained measurements: what the data establishes
 
-`analyze_retained.py` reads only the three explicitly named prior reports under `/private/tmp/vectorcore-release-phase-two-2026-11-04/benchmarks-quiet/repeat-{0,1,2}/report.json`. `retained-analysis.json` records their SHA-256 hashes; `retained-case-analysis.csv` preserves all 21 cases and per-repeat descriptive statistics. No excluded private environment diagnostic was read or selected.
+`analyze_retained.py` reads only the three explicitly named prior reports under `${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/benchmarks-quiet/repeat-{0,1,2}/report.json`. `retained-analysis.json` records their SHA-256 hashes; `retained-case-analysis.csv` preserves all 21 cases and per-repeat descriptive statistics. No excluded private environment diagnostic was read or selected.
 
 All 63 strict correctness records were valid, with 945 raw sample averages. The same case order appears in all three reports. Maximum within-case RSD is 1.419%, 1.827%, 1.061%. The independently recomputed medians exactly equal the reported medians. The original strict comparator outcomes remain repeat1=0 and repeat2=1, with these repeat2 changes versus repeat0:
 
@@ -35,7 +35,7 @@ Therefore the three failing cases cannot be dismissed as an isolated long-tail s
 
 ## Harness and acceptance-design limitations
 
-Read source is the carried checkout `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`:
+Read source is the carried checkout `${SOURCE_ROOT}`:
 
 - `Benchmarks/VectorCoreBench/AppMain.swift:314` builds plans in supplied suite order; `:335` executes suites serially. Dot and normalization catalogs have a fixed internal case order. Reordering `--dims` does not randomize their order; catalog membership uses `contains`.
 - `Benchmarks/VectorCoreBench/Core/BenchmarkHarness.swift:32` computes sample standard deviation. `HarnessConfig.defaultWarmupNs` is 200 ms. The multi-sample loop runs all fifteen samples consecutively for one case after normal warm-up. Each adaptive sample calibrates an invocation count and measures a loop, optionally topping it up. A raw sample is an average over many invocations, not an independently sampled single invocation.
@@ -79,24 +79,24 @@ The task-local observer's five initial controls failed before implementation, an
 Descriptive analysis (never executes a benchmark):
 
 ```sh
-python3 /private/tmp/vectorcore-release-gates-2026-11-05/performance/analyze_retained.py
+python3 ${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/analyze_retained.py
 ```
 
 The single formal readiness command executed after the explicit parent grant (its output directory now exists and must never be overwritten):
 
 ```sh
-python3 -B /private/tmp/vectorcore-release-gates-2026-11-05/performance/host_observe.py readiness /private/tmp/vectorcore-release-gates-2026-11-05/performance/readiness-1
+python3 -B ${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/host_observe.py readiness ${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/readiness-1
 ```
 
 Readiness failed and no timing command below was executed. These are retained procedure examples only. A future changed-host investigation needs a new named output location and explicit complete-batch authorization after admission and complementary telemetry preparation:
 
 ```sh
-python3 /private/tmp/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py repeat 0
+python3 ${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py repeat 0
 # Record 30 s cooling and a lightweight boundary observation; no concurrent agent work.
-python3 /private/tmp/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py repeat 1
+python3 ${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py repeat 1
 # Record 30 s cooling and a lightweight boundary observation; no concurrent agent work.
-python3 /private/tmp/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py repeat 2
-python3 /private/tmp/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py compare
+python3 ${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py repeat 2
+python3 ${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/resume.py compare
 ```
 
 These commands retain every full outcome and prohibit overwrites. Parent authorization is an explicit operator boundary: the old runner does not consume the new readiness result or mechanically check a permission token. It must not be described as an automatic admission guard. Do not run the inherited `observe` subcommand: its older ps/pmset snapshots lack the new live thermal/interval evidence. Before accepting any batch, the coordinator must finalize a sparse live-thermal observation schedule and account for its overhead; a nominal preflight alone does not prove runtime thermal stability. No automatic timing is built into the readiness tool.
@@ -110,6 +110,6 @@ If the current machine cannot admit a quiet window, practical next steps are a d
 
 `final-identity-verification.json` rechecks all 506 prepared source inputs, clean carried HEAD, both built and retained executable/comparator hashes, and all 11 independently reviewed readiness inputs after the observation. No new repeat-result directory exists.
 
-This repository copy is accompanied by the [summary](summary.json) and [formal observation summary](formal-readiness-summary.json). Raw artifacts and the reviewed observer scripts are in the [durable evidence directory](/Users/goftin/dev/projects/VectorCore-release-gates-2026-11-05-evidence/performance). Commands above retain the original capture roots; future execution requires fresh paths and verified candidate identities.
+This repository copy is accompanied by the [summary](summary.json) and [formal observation summary](formal-readiness-summary.json). Raw artifacts and the reviewed observer scripts are in the durable evidence directory (`${EVIDENCE_ROOT}/VectorCore-release-gates-2026-11-05-evidence/performance`). Commands above retain the original capture roots; future execution requires fresh paths and verified candidate identities.
 
 **Integration note:** this preparation is bound to clean source `27a045d`. The later report/comment commit changes the carried branch identity, so the retained resume guard must not be bypassed to run against that changed checkout. Prepare a fresh complete batch for the chosen compiler and exact final candidate. The archive preserves evidence and original paths; it is not a relocatable execution package. Historical commands above do not authorize a new timing run or replacement of the rejected readiness record.

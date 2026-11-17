@@ -147,7 +147,7 @@ The other interpretation—destination is initially uninitialized—makes the as
 
 ## Validation and limitations
 
-No repository edits or shared `swift test`/`swift build` runs. Orchestrator owns full tests. All isolated fixtures are under `/private/tmp/vectorcore-review-2026-09-14/memory-probes/`:
+No repository edits or shared `swift test`/`swift build` runs. Orchestrator owns full tests. All isolated fixtures are under `${CAPTURE_ROOT}/vectorcore-review-2026-09-14/memory-probes/`:
 
 - `TieredProbe.swift` / `tiered-probe`: concatenated original TieredStorage, TriangularMatrix, MemoryUtilities and AlignedMemory (excluding its unrelated AlignedValueStorage conformance), minimal VectorError stub; one optional aligned-copy call counter. Compiled using `swiftc -O -parse-as-library`.
 - `COWProbe.swift` / `cow-probe`: original storage source, minimal protocol/error/SIMD provider stubs, integer allocation/copy counters added at constructors. Compiled `-O`; no ownership behavior altered. SIMD stubs are irrelevant to the pointer/copy observations and were not used to establish numerical behavior.

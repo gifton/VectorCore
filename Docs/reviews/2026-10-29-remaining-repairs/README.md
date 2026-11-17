@@ -2,16 +2,16 @@
 
 F011, F012 and the two previously dormant FP16 comparison helpers are repaired and validated. This closes the remaining active repairs from the twelve-finding audit on retained platforms. F003 remains a historical defect on the retired watchOS target; it is not represented as fixed.
 
-The changes remain on `codex/audit-top-six-2026-10-27` in `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`, unmerged and unpushed. This work changes benchmark tooling, consumer evidence tooling and tests. `Sources/` and `Package.swift` have no diff from this turn's baseline; no FP16 kernels or dimensions were added.
+The changes remain on `codex/audit-top-six-2026-10-27` in `${SOURCE_ROOT}`, unmerged and unpushed. This work changes benchmark tooling, consumer evidence tooling and tests. `Sources/` and `Package.swift` have no diff from this turn's baseline; no FP16 kernels or dimensions were added.
 
 ## Source and evidence
 
 - Starting revision: `db9329540890f71b53e28f9eb591c1fb51ccf943`, following the [F007 repair](../2026-10-28-progress-repair/README.md).
 - Implementation: `c69ce8f` (F012), `0110a53` (F011), `b2968f4` (FP16 helpers), `73d6a5b` (test-policy integration).
 - Final tested source: `73d6a5bcd4fa1063e39d467284638b2812a84e7d`. Later changes only complete the plan and this report.
-- Raw evidence: `/Users/goftin/dev/projects/VectorCore-remaining-repairs-2026-10-29-evidence`. The stable run label uses the October 29 local start date; execution and completion continued on October 30.
+- Raw evidence: `${EVIDENCE_ROOT}/VectorCore-remaining-repairs-2026-10-29-evidence`. The stable run label uses the October 29 local start date; execution and completion continued on October 30.
 - [Plan](../../superpowers/plans/2026-10-29-remaining-repairs.md), [contracts and traced paths](ARCHITECTURE.md), [coverage ledger](COVERAGE.csv), [validation registry](validation-registry.json), [review record](review-summary.json), [evidence hashes](evidence-manifest.json).
-- The [original audit findings](/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md) remain frozen at `84798d3`.
+- The original audit findings (`${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`) remain frozen at `84798d3`.
 
 ## Repairs
 

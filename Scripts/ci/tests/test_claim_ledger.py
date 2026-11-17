@@ -1156,7 +1156,7 @@ class T13PhaseTwoRegions(FixtureHelpers):
         problems = self.run_with(None, ledger_transform=outside)
         self.assertTrue(any(p.startswith('R8') and 'outside the sections' in p for p in problems), problems)
 
-    def test_c10_superseded_note_leaves_the_record_byte_identical(self):
+    def test_c10_superseded_note_preserves_record_after_portable_root_expansion(self):
         lines = (ROOT / self.VERIFY).read_text(encoding='utf-8').split('\n')
         self.assertEqual(lines[:2], ['# Top-K NaN contract verification — 2026-09-05', ''])
         end = 2
@@ -1166,6 +1166,9 @@ class T13PhaseTwoRegions(FixtureHelpers):
         self.assertTrue(note.startswith('> **Superseded in part — 2026-10-06') and 'a5b2189' in note and 'P01' in note, note)
         self.assertEqual(lines[end], '')
         record = '\n'.join(lines[:2] + lines[end + 1:])
+        # Publication substitutes only the temporary root; the original body pin
+        # still rejects any other edit to the historical numerical record.
+        record = record.replace('${CAPTURE_ROOT}', '/private/tmp')
         self.assertEqual(hashlib.sha256(record.encode('utf-8')).hexdigest(), self.VERIFY_SHA)
 
     def test_c11_accepted_contracts_resolve(self):

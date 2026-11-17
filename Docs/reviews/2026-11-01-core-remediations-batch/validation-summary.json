@@ -49,7 +49,7 @@
     "format_followup": "format-review.md",
     "fixture_witness_followup": "witness-review.md"
   },
-  "raw_evidence": "/Users/goftin/dev/projects/VectorCore-remediations-2026-11-01-evidence",
+  "raw_evidence": "${EVIDENCE_ROOT}/VectorCore-remediations-2026-11-01-evidence",
   "changed_path_sha256": {
     "CHANGELOG.md": "1b89380bb1c0dde83cffc05396666b6479ff19ee83d201ffaf28de5075284d85",
     "Docs/superpowers/execution/2026-09-18-vectorcore-stabilization/DOWNSTREAM_UPGRADES.md": "e899e0f717ff42494f9e0865cc14e9bf4ed3b25ab7b9b7bfa81abaeb78139a9c",

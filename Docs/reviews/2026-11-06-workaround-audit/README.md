@@ -84,13 +84,13 @@ The declaration guard is intentionally narrower than Swift type checking: import
 
 ## Evidence
 
-Durable execution root: `/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence`.
+Durable execution root: `${EVIDENCE_ROOT}/VectorCore-workaround-audit-2026-11-06-evidence`.
 
 The root contains fresh compiler matrices, complete native logs and command records, input identities, consumer binaries and SIL, omitted-write controls, reduced compatibility experiments, the preserved failed control setup, and the verified recovery package. Build trees and caches are retained locally; the final review manifest identifies the selected report/command/observation evidence separately.
 
 - [Consolidated machine-readable results](validation-summary.json) record the six native suites, consumer matrices and final policy outcome. The consolidation checks current compiled-source and policy-input hashes, consumer artifacts, command streams and producer bindings.
-- [Selected evidence manifest](/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/selected-evidence-manifest.json) inventories retained review files by SHA256; its [verification receipt](/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/selected-evidence-verification.json) records the final rehash.
-- [Final policy execution receipt](/Users/goftin/dev/projects/VectorCore-workaround-audit-2026-11-06-evidence/policy-tests/final-validation/final-discovery.json) retains exact command, executable identity, elapsed time and stream hashes. Native and consumer command records likewise retain exact arguments for replay into fresh output locations.
+- Selected evidence manifest (`${EVIDENCE_ROOT}/VectorCore-workaround-audit-2026-11-06-evidence/selected-evidence-manifest.json`) inventories retained review files by SHA256; its verification receipt (`${EVIDENCE_ROOT}/VectorCore-workaround-audit-2026-11-06-evidence/selected-evidence-verification.json`) records the final rehash.
+- Final policy execution receipt (`${EVIDENCE_ROOT}/VectorCore-workaround-audit-2026-11-06-evidence/policy-tests/final-validation/final-discovery.json`) retains exact command, executable identity, elapsed time and stream hashes. Native and consumer command records likewise retain exact arguments for replay into fresh output locations.
 
 The selected manifest excludes build/cache trees, the expanded toolchain and binary/package payloads; their retained identities remain in the detailed native, consumer and recovery records. `repository/` is a selected snapshot of audit changes and helper files, not a complete source export. No source outside the explicitly selected audit evidence was added to this manifest.
 

@@ -66,7 +66,7 @@ The reviewed profiles contain 2,140 native and 60,748 simulator path pins:
 - [Simulator profile](../../../Scripts/ci/qualification_profiles/ios-simulator-27.0-arm64-0.4.0-hosted-2026-11-16.json)
 
 Canonical evidence is retained under
-`/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-qualification-44016980622/`.
+`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-qualification-44016980622/`.
 Each platform directory contains the original ZIP, nested archive, complete job
 log, safely extracted review data and `retention.json`. Separate review reports
 and profile snapshots are retained with the review handoff.

@@ -49,6 +49,6 @@ Exact argv, selected environment, bounds, process exits, output hashes, source s
 
 ## Evidence and history
 
-Frozen archive: `/Users/goftin/dev/projects/VectorCore-readiness-2026-11-02-evidence`. `evidence-manifest.json` lists every retained file's SHA256 and byte count. It contains reports/reviews, baseline/red/green/control runs, source archives and fixture snapshots, compiler modules/probes, mutation child captures/restorations and final validation records. Bulk build/module caches and installed compiler/SDK payloads are excluded. Previous frozen archives remain untouched.
+Frozen archive: `${EVIDENCE_ROOT}/VectorCore-readiness-2026-11-02-evidence`. `evidence-manifest.json` lists every retained file's SHA256 and byte count. It contains reports/reviews, baseline/red/green/control runs, source archives and fixture snapshots, compiler modules/probes, mutation child captures/restorations and final validation records. Bulk build/module caches and installed compiler/SDK payloads are excluded. Previous frozen archives remain untouched.
 
 The original plan and progress rulings are preserved in the archive; the completed repository plan is [2026-11-02 readiness plan](../../superpowers/plans/2026-11-02-readiness-batch.md). No completed earlier task was redispatched. Native worker trees and the carried local branch remain available.

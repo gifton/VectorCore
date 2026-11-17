@@ -108,13 +108,13 @@
     {
       "filesVerified": 1578,
       "manifest": "selected-evidence-manifest.json",
-      "root": "/Users/goftin/dev/projects/VectorCore-buffer-api-migration-2026-11-06-evidence",
+      "root": "${EVIDENCE_ROOT}/VectorCore-buffer-api-migration-2026-11-06-evidence",
       "sha256": "02e3aead78e1f4f4e5dcd4648ef1fcecf392dfdf735c5138d156f600e6b08b4d"
     },
     {
       "filesVerified": 143,
       "manifest": "manifest.json",
-      "root": "/Users/goftin/dev/projects/VectorCore-workaround-qualification-2026-11-06-evidence",
+      "root": "${EVIDENCE_ROOT}/VectorCore-workaround-qualification-2026-11-06-evidence",
       "sha256": "8dcc77adb7a1185faf7316ce82fc2b9d9ca82d68c7a710794fe5b5a7400cdfa9"
     }
   ],
@@ -134,17 +134,17 @@
     "commands": {
       "diff-check": {
         "exit": 0,
-        "record": "/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/diff-check.json",
+        "record": "${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/diff-check.json",
         "sha256": "02ca6a7898110d008098df9e5890c015503576762f27f475202f715420171cff"
       },
       "discovery": {
         "exit": 0,
-        "record": "/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/discovery.json",
+        "record": "${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/discovery.json",
         "sha256": "20576c2121830f5a4721fb0179eede905e31128ba8b0cfa63bcedd4ce02d4c3c"
       },
       "workflows": {
         "exit": 0,
-        "record": "/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/workflows.json",
+        "record": "${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/workflows.json",
         "sha256": "89efa6d954e82ffc5a463ea093a1032ed9e3996a4e2d5030878c839b00b07747"
       }
     },

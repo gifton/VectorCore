@@ -64,7 +64,7 @@ Each dimension returns from its whole function when the generic case does not ma
 ```sh
 .build/release/vectorcore-bench --suites dot --dims 512,768,1536 \
   --filter '*.optimized' --repeats 1 --strict-correctness --format json \
-  --out /private/tmp/vectorcore-review-2026-09-14/tooling-probe/filter.json
+  --out ${CAPTURE_ROOT}/vectorcore-review-2026-09-14/tooling-probe/filter.json
 ```
 
 Exit status is zero; JSON contains zero results and the console reports zero correctness violations. This breaks targeted optimized regressions. `Scripts/compare_benchmarks.swift` ignores missing cases unless `--strict` is given, and its documented baseline command omits that flag, compounding silent coverage loss.

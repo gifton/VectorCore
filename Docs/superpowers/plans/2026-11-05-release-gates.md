@@ -13,8 +13,8 @@
 ## Constraints and ownership
 
 - Preserve all previous evidence, commits, worktrees and failed outcomes. Do not merge main, publish, tag, bump versions or narrow support implicitly.
-- Use the clean managed worktree `/Users/goftin/.codex/worktrees/0bd4/VectorCore` for integration; the carried branch remains untouched while investigations run.
-- Compiler agent owns `compiler/`; platform agent owns `platform/`; performance agent owns `performance/` under `/private/tmp/vectorcore-release-gates-2026-11-05`. Coordinator owns `coordinator/` and consolidated records.
+- Use the clean managed worktree `${SOURCE_ROOT}` for integration; the carried branch remains untouched while investigations run.
+- Compiler agent owns `compiler/`; platform agent owns `platform/`; performance agent owns `performance/` under `${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05`. Coordinator owns `coordinator/` and consolidated records.
 - Preserve the unchanged numerical reproducer, Release optimization, all correctness/comparison thresholds and compatibility requirements.
 - No toolchain/runtime installation, global Xcode selection, device provisioning or termination of user processes. Cap compiler jobs at two per worker.
 - Never read, hash or archive the earlier excluded raw environment diagnostic. Capture only selected relevant environment values.

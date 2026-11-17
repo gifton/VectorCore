@@ -8,12 +8,12 @@
 
 **Tech Stack:** Swift Testing, XCTest, Python unittest and existing Swift lexical helpers.
 
-**Spec:** User-approved F009/F010 scope and the frozen findings at `/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`.
+**Spec:** User-approved F009/F010 scope and the frozen findings at `${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`.
 
 ## Global Constraints
 
 - Start at `25b1616198fecac5e4f1f7ae4c7a5e347673876d` on the existing isolated repair branch; no production API or implementation changes.
-- Preserve the original audit and first repair evidence; new raw evidence goes in `/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence`.
+- Preserve the original audit and first repair evidence; new raw evidence goes in `${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence`.
 - Preserve matching-infinity equality and signed-zero equality in F009; reject all NaN comparisons there. Finite tolerances stay unchanged.
 - Preserve F010's invalid-denominator check; valid division must execute and validate all 32 lanes.
 - No routine phase approvals; implement here, use fresh Astra review at integration, preserve branch unmerged.

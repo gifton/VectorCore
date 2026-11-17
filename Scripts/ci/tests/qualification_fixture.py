@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import copy
 import hashlib
 import json
+import subprocess
 from unittest.mock import patch
 
 POLICY = 'vc-0.4.0-xcode27.2-bounded-v1'
@@ -16,6 +17,23 @@ def sha(path):
 
 def write_json(path, value):
     Path(path).write_text(json.dumps(value, indent=2, sort_keys=True) + '\n')
+
+
+def archive_profile(repository, path):
+    """Commit a synthetic profile, then replace its current file with a reference."""
+    data = path.read_bytes()
+    def git(*args):
+        return subprocess.check_output(['git', '-C', str(repository), *args],
+                                       stderr=subprocess.PIPE, timeout=20)
+    git('init', '-q')
+    git('add', str(path.relative_to(repository)))
+    git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+        'commit', '-qm', 'retained synthetic profile')
+    reference = dict(artifactReference=1, gitCommit=git('rev-parse', 'HEAD').decode().strip(),
+                     gitPath=path.relative_to(repository).as_posix(), bytes=len(data),
+                     sha256=hashlib.sha256(data).hexdigest())
+    write_json(path, reference)
+    return reference
 
 
 class CaptureFixture:

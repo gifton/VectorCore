@@ -25,9 +25,9 @@ process or compare every SDK/toolchain component.
 
 Canonical retained evidence:
 
-- [Initial metadata inventory](/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-toolchain-inventory-43992711618/README.md)
-- [Byte comparison and exact reconstruction](/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-compiler-byte-comparison-43996681385/compiler-byte-comparison-report.md)
-- [Adoption receipt](/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-compiler-byte-comparison-43996681385/hosted-compiler-identity-adoption.json)
+- Initial metadata inventory (`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-toolchain-inventory-43992711618/README.md`)
+- Byte comparison and exact reconstruction (`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-compiler-byte-comparison-43996681385/compiler-byte-comparison-report.md`)
+- Adoption receipt (`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-compiler-byte-comparison-43996681385/hosted-compiler-identity-adoption.json`)
 
 Both inventory jobs completed their metadata steps and uploads, then deliberately
 failed their final non-qualification step. They executed no VectorCore numerical
@@ -68,7 +68,7 @@ original scoped acceptance, `compilerProfile=known-failing` and
 `releaseAdmitted=false`. Preservation checks confirm the dirty-main baseline,
 25 protected historical files, four historical profiles and the alpha tag are
 unchanged. Detailed records are retained in the canonical
-[integration evidence archive](/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-identity-integration-2026-11-16/README.md).
+integration evidence archive (`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-identity-integration-2026-11-16/README.md`).
 
 Fresh collection [run 44015059588](https://github.com/gifton/VectorCore/actions/runs/44015059588)
 used candidate and policy `7c115cd927c76275b73a08b0e6fb178636a3c4b9`.

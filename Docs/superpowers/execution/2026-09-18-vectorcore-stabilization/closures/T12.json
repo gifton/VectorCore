@@ -32,7 +32,7 @@
     "reviews": "Phase 1 rulings → phase 2 (Opus review: PASS/APPROVED, 4 minors folded into phase 3) → phase 3 plus FINAL whole-task review (Opus: PASS/APPROVED, 5 minors) → ONE final fix → scoped Sonnet re-review APPROVED (all 8 ADDRESSED, no new issues).",
     "merge": "Byte-identical import of 9 files; all preimages equal 6e69662; merged tree = reviewed 816a71b apart from the ledger docs."
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T12",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T12",
   "patch_sha256": "0cdb385520807a1bb3e567853554ec534e65362e414a70242ca5cb445ab8d8b1",
   "reviewed_tree": "816a71b6d8ef97a3ded8fcb4fc0ce42b35f837fa",
   "limitations": [

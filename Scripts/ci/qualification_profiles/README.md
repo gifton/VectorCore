@@ -29,8 +29,8 @@ the observation inventory changes. An unexpectedly corrected diagnostic also
 requires review. Preserve historical profiles and raw outputs rather than
 relabeling them for another candidate.
 
-The separate `bounded_native_qualification.py` and its adjacent profile retain
-their original historical purpose and have not been changed by this mechanism.
+The separate `bounded_native_qualification.py` retains its original historical
+purpose. Its adjacent profile now references the unchanged original JSON.
 
 Fresh captures and profiles use schema 2. The identity includes
 `swiftDriverSHA256`; `identityFiles` contains exactly the frontend, Swift driver
@@ -55,3 +55,15 @@ expectations are unchanged from the corresponding local stable profiles.
 records the observations, artifact binding and successful full verification in
 run `44030552128` using policy `8316d1a60ef218807cb02558c20d7a2dd03620fa`. These
 profiles do not qualify any other run or broaden the supported compositions.
+
+## Current file representation
+
+The six profiles in this directory are now compact archive references. Their
+original bytes, literal oracles, command records and pins are unchanged. The
+reference's immutable Git commit/path, byte count and SHA-256 bind that original
+data; the checkers resolve it before applying the existing qualification rules.
+No profile is inferred from observed output or a summary.
+
+See [evidence publication and recovery](../../../Docs/evidence-storage.md) for
+offline verification, explicit fetching from a shallow clone, original-byte
+recovery, and the distinction between portable documentation and raw receipts.

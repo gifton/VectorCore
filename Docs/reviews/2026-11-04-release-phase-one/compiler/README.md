@@ -153,7 +153,7 @@ limitations still apply to the copied-buffer probe. This experiment does not
 expand or weaken scanner policy.
 
 Raw evidence is retained at
-`/private/tmp/vectorcore-release-phase-one-2026-11-04/compiler/`:
+`${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/compiler/`:
 `xcode-02/`, `swiftorg-02/` (final driver), `driver-tests/` (RED/GREEN),
 and `verification/`. The first matrices (`xcode-01/`, `swiftorg-01/`) are also
 retained unchanged and produced the same numerical outcomes; the final rerun

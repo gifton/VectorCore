@@ -127,7 +127,7 @@
   },
   "lint": {
     "argv": [
-      "/private/tmp/vectorcore-release-phase-two-2026-11-04/coordinator/lint-preparation/tool/swiftlint",
+      "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/coordinator/lint-preparation/tool/swiftlint",
       "lint",
       "--config",
       ".swiftlint.yml",
@@ -484,7 +484,7 @@
     "Final hosted candidate acceptance and release integration/publication have not been performed.",
     "Conservative dot bounds have quantified small-error blind spots; exact per-coordinate tests provide separate coverage."
   ],
-  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence",
+  "archive": "${EVIDENCE_ROOT}/VectorCore-release-phase-two-2026-11-04-evidence",
   "archiveReceipt": "archive-verification.json",
   "association": "Native/iOS executable source is e748. Benchmark product metadata remains 6d with separately reviewed 182-shipping-input equality only. Later qualification-tool repairs and documentation commits retain their distinct source scopes.",
   "historicalBenchmarkImplementationEvidence": {
@@ -560,12 +560,12 @@
         ".stdout",
         ".stderr"
       ],
-      "capture": "/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-capture.json",
+      "capture": "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-capture.json",
       "captureSHA256": "b9271d3e5e4c97d8e2c1dd27b0a422045a7fa07883aa6a185e3f1f1f7c702df8",
       "expectedSchemaAndCommittedParserProvenanceSurvived": true,
       "nativeExecution": false,
       "originalCollisionPreserved": true,
-      "payload": "/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-payload.json",
+      "payload": "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-payload.json",
       "payloadSHA256": "d5ec852366169e2d66e85599888a8839a003579f6f14a731b4b4124c6c4795cd",
       "rawInputsHashVerified": true,
       "schema": "payload-capture-separation-control-v1"

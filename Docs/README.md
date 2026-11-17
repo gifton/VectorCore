@@ -52,6 +52,9 @@ the [contribution benchmark instructions](../CONTRIBUTING.md#performance-changes
 
 ## Verification and measurements
 
+See [evidence publication and recovery](evidence-storage.md) for portable paths,
+archived profile references, and recovery of unchanged original records.
+
 These are dated evidence, not rolling promises of support or performance:
 
 - [0.4.0 remaining release gates, November 5, 2026](reviews/2026-11-05-release-gates/README.md) — compiler acceptance, platform coverage and host readiness

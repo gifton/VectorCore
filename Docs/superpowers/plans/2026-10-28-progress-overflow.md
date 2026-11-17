@@ -8,12 +8,12 @@
 
 **Tech Stack:** Swift, Swift Testing, existing package and Python CI checks.
 
-**Spec:** User-authorized F007 repair and frozen `VC-F007` in `/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`.
+**Spec:** User-authorized F007 repair and frozen `VC-F007` in `${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`.
 
 ## Global Constraints
 
 - Start at `6e7a136aa7723007b3155caade0c656438a29197` in the existing isolated `codex/audit-top-six-2026-10-27` worktree.
-- Preserve original/audit checkouts and previous raw evidence. New evidence: `/Users/goftin/dev/projects/VectorCore-progress-fix-2026-10-28-evidence`.
+- Preserve original/audit checkouts and previous raw evidence. New evidence: `${EVIDENCE_ROOT}/VectorCore-progress-fix-2026-10-28-evidence`.
 - `percentage` stays a nonthrowing `Int`; `current`, `total`, `fraction`, `isComplete` and factory behavior remain unchanged.
 - Do not change FP16 code. Discuss consumer needs with the user after this repair.
 - Use Astra for substantive source review. Keep the branch unmerged.

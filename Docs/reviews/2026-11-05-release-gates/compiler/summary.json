@@ -144,7 +144,7 @@
   "source_input_count": 523,
   "source_input_manifest_sha256": "8c732018ca48ae8eab9ebafdfa49f95ea66a5efc0ecb5f8426bba20aa9b75035",
   "source_revision": "27a045dd648c01a4ef9c5d8d36c5afc92f36f6fb",
-  "source_worktree": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+  "source_worktree": "${SOURCE_ROOT}",
   "toolchain_installation_performed": false,
   "verified_command_records": 218
 }

@@ -6,7 +6,7 @@
   "cases": [
     {
       "moduleConfiguration": "debug",
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/debug-module-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/debug-module-clients/summary.json",
       "summarySHA256": "a0a1589adda2612ba22e2cf1a3b7409ce4f650616f36e9ab2c4deb8246f9f517",
       "results": [
         {
@@ -45,7 +45,7 @@
     },
     {
       "moduleConfiguration": "release",
-      "evidence": "/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/release-module-clients/summary.json",
+      "evidence": "${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/release-module-clients/summary.json",
       "summarySHA256": "a4cee00757f9f6bc889933696a699c6947c75ce1c1921ec2387581c4785d4042",
       "results": [
         {

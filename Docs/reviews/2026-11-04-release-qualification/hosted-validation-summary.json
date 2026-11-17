@@ -1571,7 +1571,7 @@
           "--jobs",
           "3",
           "--scratch-path",
-          "/Users/runner/work/_temp/sanitizers/address",
+          "${CI_HOME}/work/_temp/sanitizers/address",
           "--sanitize",
           "address",
           "--verbose"
@@ -1580,7 +1580,7 @@
         "bundles": {
           "ComprehensiveTests": {
             "bytes": 153103368,
-            "path": "/Users/runner/work/_temp/sanitizers/address/arm64-apple-macosx/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
+            "path": "${CI_HOME}/work/_temp/sanitizers/address/arm64-apple-macosx/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
             "sha256": "e5abe9090b685429ea3f71c276e0c8e52edb781e3626087b685d82a47de24618"
           }
         },
@@ -1591,7 +1591,7 @@
         "compilerVersions": [
           "Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)"
         ],
-        "directory": "/private/tmp/vectorcore-qualification-2026-11-04/hosted-run-4/artifacts/required-sanitizer-address/address",
+        "directory": "${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/hosted-run-4/artifacts/required-sanitizer-address/address",
         "helperSHA256": "aa8d055de95502ff22ef0a6d547e6cf245e2c814db976846cf737cc7537cffb3",
         "job": {
           "conclusion": "success",
@@ -2816,7 +2816,7 @@
             }
           ],
           "sha256": "c1ec4da335f7ff1f21a6682950a0c7f21ed54ef32d22a24d0dca31f94e57b3a7",
-          "zip": "/private/tmp/vectorcore-qualification-2026-11-04/hosted-run-4/downloads/required-sanitizer-address-zip.stdout"
+          "zip": "${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/hosted-run-4/downloads/required-sanitizer-address-zip.stdout"
         }
       },
       {
@@ -3161,7 +3161,7 @@
           "--jobs",
           "3",
           "--scratch-path",
-          "/Users/runner/work/_temp/sanitizers/thread",
+          "${CI_HOME}/work/_temp/sanitizers/thread",
           "--sanitize",
           "thread",
           "--verbose"
@@ -3170,7 +3170,7 @@
         "bundles": {
           "ComprehensiveTests": {
             "bytes": 99523224,
-            "path": "/Users/runner/work/_temp/sanitizers/thread/arm64-apple-macosx/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
+            "path": "${CI_HOME}/work/_temp/sanitizers/thread/arm64-apple-macosx/debug/VectorCorePackageTests.xctest/Contents/MacOS/VectorCorePackageTests",
             "sha256": "d314f845e411e66949ee381057fa1a69a0c3190caa62c930590ddce8f847386e"
           }
         },
@@ -3181,7 +3181,7 @@
         "compilerVersions": [
           "Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)"
         ],
-        "directory": "/private/tmp/vectorcore-qualification-2026-11-04/hosted-run-4/artifacts/required-sanitizer-thread/thread",
+        "directory": "${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/hosted-run-4/artifacts/required-sanitizer-thread/thread",
         "helperSHA256": "aa8d055de95502ff22ef0a6d547e6cf245e2c814db976846cf737cc7537cffb3",
         "job": {
           "conclusion": "success",
@@ -3860,7 +3860,7 @@
             }
           ],
           "sha256": "eb4f940ef26292fe78eb029ddf2efff2f7506d2cd161a1e0af5c194300c2643e",
-          "zip": "/private/tmp/vectorcore-qualification-2026-11-04/hosted-run-4/downloads/required-sanitizer-thread-zip.stdout"
+          "zip": "${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/hosted-run-4/downloads/required-sanitizer-thread-zip.stdout"
         }
       }
     ],
@@ -4035,7 +4035,7 @@
       "disposition": "Six pass; lint and aggregate fail; six intentionally cancelled for formatting-only successor."
     }
   ],
-  "evidence_archive": "/Users/goftin/dev/projects/VectorCore-hosted-qualification-2026-11-04-evidence",
+  "evidence_archive": "${EVIDENCE_ROOT}/VectorCore-hosted-qualification-2026-11-04-evidence",
   "archive_manifest": "hosted-evidence-manifest.json",
   "remaining": [
     "Resolve or explicitly scope compiler combinations with observed Release numerical failures.",

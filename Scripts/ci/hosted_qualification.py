@@ -17,6 +17,7 @@ import sys
 import tarfile
 
 import compiler_identity
+import archived_evidence
 from qualification_records import read_json, require, sha
 from v03_process import run, test_environment, write_json
 
@@ -218,7 +219,10 @@ def verify(args):
     checkout_identity(args.source_root,args.candidate_commit)
     checkout_identity(args.policy_root,args.policy_commit)
     profile = reviewed_profile(args.policy_root,args.profile,args.policy_commit)
-    reviewed = read_json(profile)
+    reference_digest = sha(profile)
+    profile_bytes = archived_evidence.read_bytes(profile, fetch=getattr(args, 'fetch_profile', False))
+    profile_digest = hashlib.sha256(profile_bytes).hexdigest()
+    reviewed = archived_evidence.parse(profile_bytes)
     require(type(reviewed.get('schemaVersion')) is int and reviewed['schemaVersion'] == 2,
             'hosted verification requires a paired compiler identity profile')
     artifact = reviewed.get('reviewedArtifact',{})
@@ -229,8 +233,11 @@ def verify(args):
     evidence = extract_reviewed_bundle(args.archive,args.output,artifact,expected)
     require(read_json(evidence/'capture.json').get('sourceCommit') == args.candidate_commit,'captured candidate differs')
     report = check(profile,evidence,args.source_root)
+    require(sha(profile) == reference_digest, 'reviewed profile reference changed during verification')
     report['hostedProvenance'] = dict(expected,reviewedPolicyCommit=args.policy_commit,
-        reviewedProfileSHA256=sha(profile),archiveSHA256=artifact['sha256'])
+        reviewedProfileSHA256=profile_digest,archiveSHA256=artifact['sha256'])
+    if reference_digest != profile_digest:
+        report['hostedProvenance']['reviewedProfileReferenceSHA256'] = reference_digest
     write_json(args.output/'verification.json',report)
     require_accepted(report)
     print('vectorCoreQualification=accepted; compilerProfile=known-failing; releaseAdmitted=false')
@@ -251,6 +258,8 @@ def main():
         if name == 'collect': p.add_argument('--simulator-runtime')
         else:
             p.add_argument('--profile',required=True)
+            p.add_argument('--fetch-profile',action='store_true',
+                           help='allow fetching an archived profile by its pinned Git commit')
             p.add_argument('--archive',type=Path,required=True)
     p = sub.add_parser('bundle')
     p.add_argument('--output',type=Path,required=True)

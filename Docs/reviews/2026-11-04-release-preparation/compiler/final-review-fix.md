@@ -20,7 +20,7 @@ subprocess-bound Python checks pass 31 tests. The existing consumer-smoke rows
 execute the enhanced fixture; the coordinator reruns that route after integration.
 
 New records are under
-`/private/tmp/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/`.
+`${CAPTURE_ROOT}/vectorcore-release-prep-2026-11-04/task-1-evidence/final-fix/`.
 `existential-outcome-matrix.json` records the enhanced fixture's hashes and
 outcomes. The original `outcome-matrix.json` and archived fixture snapshots retain
 their original scope; they are not retroactively credited with existential checks.

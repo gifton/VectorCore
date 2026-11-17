@@ -70,12 +70,12 @@ digest published in the summary. Its raw signing/device identifiers are not
 included in public reports or the hosted workflow.
 
 Revalidate using `compiler_qualification.py`, the selected profile, its archived
-evidence root and `/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/source-stable-af315c5` as `--source-root`.
+evidence root and `${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/source-stable-af315c5` as `--source-root`.
 Create a new output file. Original receipt paths are preserved and explicitly
 remapped. All three archived scopes were revalidated; the full simulator suite
 has separate raw streams, `.xcresult`, individual outcomes, product/source
 before/after manifests and a complete file inventory under
-`/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-full-suites-stable-af315c5`.
+`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/ios-full-suites-stable-af315c5`.
 
 The preserved source view includes every profile-bound source file, checked
 against the original profile digest. Its first copy omitted older probe-source

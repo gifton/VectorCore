@@ -6,9 +6,9 @@ F009 and F010 are repaired on `codex/audit-top-six-2026-10-27`. These changes ma
 
 - Starting revision: `25b1616198fecac5e4f1f7ae4c7a5e347673876d`.
 - Implementation commits: `1f2c723` (F009), `029902c` (F010), `e575729` (review correction to the F009 policy).
-- Repair checkout: `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`.
-- Raw evidence: `/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence`.
-- Frozen audit: [findings](/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md), still describing source `84798d3`.
+- Repair checkout: `${SOURCE_ROOT}`.
+- Raw evidence: `${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence`.
+- Frozen audit: findings (`${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`), still describing source `84798d3`.
 - [Implementation plan](../../superpowers/plans/2026-10-28-oracle-repairs.md), [validation registry](validation-registry.json), [mutation results](division-mutation-results.json), [review record](review-summary.json), and [evidence hashes](evidence-manifest.json).
 
 `Sources/` and `Package.swift` have no diff from the starting revision. The original checkout remains on `main` at `8b02e75` with its existing untracked files; the frozen audit source remains clean and detached at `84798d3`. All 211 files in the prior repair evidence manifest still match their recorded hashes. Build caches were reused, while new logs and harnesses were stored separately. No merge, push, tag or release was performed.

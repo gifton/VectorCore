@@ -6,7 +6,7 @@
     "run.py": "cd0ffa535cdfcc29bb5d58fc7cfe277243b0fef6ea69a8caaca79a2532c616ea"
   },
   "date": "2026-11-02",
-  "evidenceRoot": "/private/tmp/vectorcore-readiness-2026-11-02/compiler-evidence",
+  "evidenceRoot": "${CAPTURE_ROOT}/vectorcore-readiness-2026-11-02/compiler-evidence",
   "experiments": [
     {
       "experiment": "archived-Original",
@@ -518,7 +518,7 @@
   "supportDecision": "Explicit scalar subscript is the narrow compile-tested accommodation; the inherited public default remains a demonstrated limitation on both tested compiler builds. No compiler fix is demonstrated.",
   "toolchains": [
     {
-      "bin": "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin",
+      "bin": "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin",
       "label": "qualified",
       "swiftDriverSHA256": "f7568137b08b3bab761278758312ded00c2327935364612fcce4e9672edb9161",
       "swiftFrontendSHA256": "956438a61893525d7ce28c21b6634093f15b0c4bae7fe6eb7d98fba0c1c5e301",

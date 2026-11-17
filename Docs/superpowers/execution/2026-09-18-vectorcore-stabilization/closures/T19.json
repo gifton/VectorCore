@@ -14,7 +14,7 @@
   "policy": "Merged tree: ledger 0 problems; unittest 523 git-less (T19/merge/gitless-gate.log).",
   "reviews": "L04 STOP S1 -> T19 implementer -> Opus review (Quality APPROVED; I1 + m1-m3) -> fix round -> Sonnet scoped re-review APPROVED (one-index-shift mutant fails)."
  },
- "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T19",
+ "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T19",
  "reviewed_tree": "manifest T19/freeze-sha256.txt (6329 files)",
  "limitations": [
   "Eigen/QR never went RED through Swift (Accelerate's answers were not below floors); the C fixtures supply that RED.",

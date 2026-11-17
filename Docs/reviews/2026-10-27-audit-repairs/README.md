@@ -6,10 +6,10 @@ Session started 2026-10-27; handoff prepared 2026-10-28. The six selected produc
 
 - Starting source: `84798d3fe3548ea78d4ed5da5dba4d723a85bf32`.
 - Reviewed implementation and policy revision: `f6bb24e69bcce999298e7f9dd9065e311e3f8f68`; final test fixture: `982c605`. The handoff is recorded in the subsequent documentation commit.
-- Repair checkout: `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`.
-- Frozen audit: [report](/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/REPORT.md), [findings](/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md), [validation](/Users/goftin/dev/projects/VectorCore-audit-2026-10-27-84798d3/evidence/VALIDATION.md). Its source checkout remains detached at the starting revision.
-- Raw repair evidence: `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence`. Logs, command records, bounded child output, external consumer packages and measurement harnesses are kept separately from production source.
-- Original checkout: `/Users/goftin/dev/gsuite/VSK/VectorCore`, still on `main` at `8b02e75bca7055ae11170873d15c06f1538709b7`; existing untracked recovery/documentation directories were retained.
+- Repair checkout: `${SOURCE_ROOT}`.
+- Frozen audit: report (`${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/REPORT.md`), findings (`${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/FINDINGS.md`), validation (`${WORKSPACE_ROOT}/VectorCore-audit-2026-10-27-84798d3/evidence/VALIDATION.md`). Its source checkout remains detached at the starting revision.
+- Raw repair evidence: `${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence`. Logs, command records, bounded child output, external consumer packages and measurement harnesses are kept separately from production source.
+- Original checkout: `${SOURCE_ROOT}`, still on `main` at `8b02e75bca7055ae11170873d15c06f1538709b7`; existing untracked recovery/documentation directories were retained.
 
 The user authorized the six fixes, removal of watchOS support, and conversion of the two public storage classes to copy-on-write values. No merge, push, tag, dependency update or release was performed. The [design](../../superpowers/specs/2026-10-27-audit-repairs-design.md) and [implementation plan](../../superpowers/plans/2026-10-27-audit-repairs.md) record the contracts and sequence.
 

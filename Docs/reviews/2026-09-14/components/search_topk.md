@@ -8,8 +8,8 @@ Read all five assigned files: `Operations/{Operations,TopKSelection,MinHeap}.swi
 
 No repository edits, tests or shared builds. Standalone public-API probe linked stable Debug object files using the orchestrator's `build_probe.py`:
 
-- `/private/tmp/vectorcore-review-2026-09-14/search_probe.swift`
-- `/private/tmp/vectorcore-review-2026-09-14/search_probe.log`
+- `${CAPTURE_ROOT}/vectorcore-review-2026-09-14/search_probe.swift`
+- `${CAPTURE_ROOT}/vectorcore-review-2026-09-14/search_probe.log`
 
 Probe compiled and ran successfully. The findings below distinguish executed reproductions from source deductions. No performance measurements were taken.
 

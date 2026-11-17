@@ -1,8 +1,8 @@
 {
   "baseline": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
   "implementation_revision": "e575729bdb376fe123e6f5a54c490fabe202458a",
-  "repair_root": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
-  "external_evidence_root": "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence",
+  "repair_root": "${SOURCE_ROOT}",
+  "external_evidence_root": "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence",
   "scope": [
     "VC-F009",
     "VC-F010"
@@ -54,7 +54,7 @@
           "python3",
           "Scripts/ci/check_claim_ledger.py"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
         "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
         "exit_code": 0,
@@ -72,7 +72,7 @@
           "Scripts/ci/downstream_appendices.py",
           "--check"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
         "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
         "exit_code": 0,
@@ -92,19 +92,19 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "--filter",
           "AccelerateArraySIMDProviderParityTests|BatchKernels_SoATests|MatrixDistanceTests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 0,
@@ -124,9 +124,9 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "-c",
@@ -134,11 +134,11 @@
           "--filter",
           "AccelerateArraySIMDProviderParityTests|BatchKernels_SoATests|MatrixDistanceTests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 0,
@@ -158,19 +158,19 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "--filter",
           "AccelerateArraySIMDProviderParityTests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 1,
@@ -190,19 +190,19 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "--filter",
           "AccelerateArraySIMDProviderParityTests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 1,
@@ -222,9 +222,9 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "-c",
@@ -233,11 +233,11 @@
           "--filter",
           "AccelerateArraySIMDProviderParityTests|BatchKernels_SoATests|MatrixDistanceTests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 0,
@@ -257,9 +257,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -268,8 +268,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -297,9 +297,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -308,8 +308,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -337,9 +337,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -348,8 +348,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -377,9 +377,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -388,8 +388,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -417,9 +417,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -428,8 +428,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -457,9 +457,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -468,8 +468,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -497,9 +497,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -508,8 +508,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -537,9 +537,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -548,8 +548,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -577,9 +577,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -588,8 +588,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -617,9 +617,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -628,8 +628,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "25b1616198fecac5e4f1f7ae4c7a5e347673876d",
@@ -657,19 +657,19 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "--filter",
           "ErrorHandlingValidationTests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 0,
@@ -689,9 +689,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -700,8 +700,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -729,9 +729,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -740,8 +740,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -769,9 +769,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -780,8 +780,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -809,9 +809,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -820,8 +820,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -849,9 +849,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -860,8 +860,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -889,9 +889,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -900,8 +900,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -929,9 +929,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -940,8 +940,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -969,9 +969,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -980,8 +980,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1009,9 +1009,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1020,8 +1020,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1049,9 +1049,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1060,8 +1060,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1089,9 +1089,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1100,8 +1100,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1129,9 +1129,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1140,8 +1140,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1169,9 +1169,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1180,8 +1180,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1209,9 +1209,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1220,8 +1220,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1249,9 +1249,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1260,8 +1260,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1289,9 +1289,9 @@
           "--build-system",
           "native",
           "--package-path",
-          "/Users/goftin/dev/projects/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
+          "${EVIDENCE_ROOT}/VectorCore-oracle-fixes-2026-10-28-evidence/division-consumer",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "-j",
           "4",
           "-c",
@@ -1300,8 +1300,8 @@
           "ErrorHandlingValidationTests/testVectorMathSafeDivision"
         ],
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "source_head": "1f2c723293cb9bba355229827a96120ea8712d47",
@@ -1329,9 +1329,9 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "-c",
@@ -1339,11 +1339,11 @@
           "--filter",
           "ErrorHandlingValidationTests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "029902cdb98c7c4401f55eb4de46fd400608714a",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 0,
@@ -1363,17 +1363,17 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "029902cdb98c7c4401f55eb4de46fd400608714a",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 0,
@@ -1393,19 +1393,19 @@
           "--build-system",
           "native",
           "--cache-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/swiftpm",
           "--scratch-path",
-          "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/build",
+          "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/build",
           "-j",
           "4",
           "-c",
           "release"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head": "e575729bdb376fe123e6f5a54c490fabe202458a",
         "environment_overrides": {
-          "CLANG_MODULE_CACHE_PATH": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
-          "SWIFTPM_MODULECACHE_OVERRIDE": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "CLANG_MODULE_CACHE_PATH": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
+          "SWIFTPM_MODULECACHE_OVERRIDE": "${EVIDENCE_ROOT}/VectorCore-fixes-2026-10-27-evidence/cache/clang",
           "VECTORCORE_TEST_EXTENDED": "0"
         },
         "exit_code": 0,
@@ -1427,7 +1427,7 @@
           "Sources",
           "Package.swift"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
         "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
         "exit_code": 0,
@@ -1449,7 +1449,7 @@
           "-s",
           "Scripts/ci/tests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head_at_start": "e575729bdb376fe123e6f5a54c490fabe202458a",
         "dirty_patch_sha256": "281034a9551462607f94fc1820209a83c00f12cf064aa8a72cd7b655218f278f",
         "exit_code": 0,
@@ -1471,7 +1471,7 @@
           "-s",
           "Scripts/ci/tests"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head_at_start": "029902cdb98c7c4401f55eb4de46fd400608714a",
         "dirty_patch_sha256": null,
         "exit_code": 0,
@@ -1495,7 +1495,7 @@
           "-p",
           "test_relative_oracle_guards.py"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head_at_start": "029902cdb98c7c4401f55eb4de46fd400608714a",
         "dirty_patch_sha256": "5ea64626e2cd4c1e563beed5e7d198111a9923c96474e64a53d9398df13cedd9",
         "exit_code": 0,
@@ -1519,7 +1519,7 @@
           "-p",
           "test_relative_oracle_guards.py"
         ],
-        "cwd": "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3",
+        "cwd": "${SOURCE_ROOT}",
         "source_head_at_start": "029902cdb98c7c4401f55eb4de46fd400608714a",
         "dirty_patch_sha256": "1e97347e2cfc9ec84f78ea3e2bc2440e50b42135e48ed4850af7d7e4272a99ae",
         "exit_code": 1,

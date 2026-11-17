@@ -5,7 +5,7 @@
   "newBenchmarkMeasurements": 0,
   "performanceAcceptance": false,
   "formalReadinessRun": true,
-  "prepared": "/private/tmp/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/prepared.json",
+  "prepared": "${CAPTURE_ROOT}/vectorcore-release-gates-2026-11-05/performance/prepared-native-unsandboxed/prepared.json",
   "preparedSHA256": "17ebeceb8a52c71aa64cacc145d1b8f2858f095eeb1cdb75183d19cb5da41168",
   "originalReadinessRuleSHA256": "dc936cba117a46931e3591c809f4956255ed15ef92d9a00acdd3723efbcc01b6",
   "refinedReadinessRuleSHA256": "56fb9a40494081f72e03579be4b36f0c2c89dd7154a17577bbc7b2ae221d80bd",

@@ -17,7 +17,7 @@
     "policy": "unittest 268 OK in-repo (2 skips) and git-less (6 skips) on the merged integration tree",
     "matrix": "10/10; fix-1 spot check iOS and Catalyst"
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T09",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T09",
   "patch_sha256": "9ba835fc0a9aba84c203bb059e8b2c9f656bd5dec35d518c0d1e5f9b1b8fb699",
   "frozen_sha256": {
     "Scripts/ci/tests/test_float16_availability_guard.py": "89760705e8af178054d12c31d4f2170f4a3f9ad41ffb94075f2f35f268a92ce9",

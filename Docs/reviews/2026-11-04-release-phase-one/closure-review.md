@@ -12,15 +12,15 @@ This closes only the three completion conditions in `final-review.md`. It does n
 
 ## Archive identities and retained bytes
 
-Archive: `/Users/goftin/dev/projects/VectorCore-release-phase-one-2026-11-04-evidence`.
+Archive: `${EVIDENCE_ROOT}/VectorCore-release-phase-one-2026-11-04-evidence`.
 
 - Manifest SHA256: `2b1f8d8356c5bde2595fdc087e2fb3eeef3769d4bd546810c9175bf8a1947c71`.
-- Selection SHA256: `c1972de8d86c581959909570f29216f1f9bd2955370b47b3a59266857c286e25`; matches the actual `/private/tmp/vectorcore-release-phase-one-2026-11-04/archive-selection.json` bytes and manifest reference.
+- Selection SHA256: `c1972de8d86c581959909570f29216f1f9bd2955370b47b3a59266857c286e25`; matches the actual `${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/archive-selection.json` bytes and manifest reference.
 - Freeze receipt SHA256: `19c1a457ba5be29e8a2e2b44211e05925364ae4cfc34b11a1f0dd360b04f0b07`; its manifest identity and counts agree with this independent reading.
 - Independently matched the expected hashes of all eight required native payloads: selected SwiftPM helper; ASan and TSan dylibs; both executed sanitizer test bundles; actual Release benchmark product; and both compiled comparators. Exact paths/hashes are in the machine-readable result. Tiny product-discovery fixtures were not substituted for the actual benchmark product.
 - Explicit selection and archive membership exclude compiler/SDK distributions and bulk module/build caches. Compiler/SDK identity records and the intentionally retained selected executables are evidence, not excluded distributions. Verification used the explicit list and bounded archive; no raw build-cache inventory was traversed.
 
-Machine-readable independent result: `/private/tmp/vectorcore-release-phase-one-2026-11-04/finalization/independent-archive-verification.json`.
+Machine-readable independent result: `${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/finalization/independent-archive-verification.json`.
 
 Result SHA256: `d4e20373bba02afc12033016cfb4324d8bb07145f1dc4c4b7be1dcf5950e2601`. It records `passed: true`, an empty error list, all counts/identities, retained native hashes, terminal command results and `finalCommitVerified: false`.
 

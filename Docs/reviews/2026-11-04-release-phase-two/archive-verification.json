@@ -7,8 +7,8 @@
   "symlinkCount": 0,
   "uniquePayloadBytes": 2626025065,
   "uniquePayloads": 16306,
-  "archive": "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence",
-  "manifest": "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence/manifest.json",
+  "archive": "${EVIDENCE_ROOT}/VectorCore-release-phase-two-2026-11-04-evidence",
+  "manifest": "${EVIDENCE_ROOT}/VectorCore-release-phase-two-2026-11-04-evidence/manifest.json",
   "selectionSHA256": "79647705242d595702dea03b699b2b109b354feba724898f0fa056162d952588",
   "freezeReceiptSHA256": "de043f0d06538354e4ad379e55fef3eed0d7dec2a65c2da8e12884a0715cc6cf",
   "testedNativeSource": "e7482a962c67dd0b806059b651c9f59eb678a632",
@@ -36,8 +36,8 @@
       "argv": [
         "python3",
         "-B",
-        "/private/tmp/vectorcore-release-phase-two-2026-11-04/select-evidence.py",
-        "/private/tmp/vectorcore-release-phase-two-2026-11-04/selection-catalog.json"
+        "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/select-evidence.py",
+        "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/selection-catalog.json"
       ],
       "exit": 0,
       "timeout": false,
@@ -45,12 +45,12 @@
       "elapsedSeconds": 6.311493291985244,
       "stdout": {
         "bytes": 182,
-        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/selection.stdout",
+        "path": "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/finalization/selection.stdout",
         "sha256": "3616378f38ee1da404c76273565cc9af3711383d2592671bcb9c073198081cf9"
       },
       "stderr": {
         "bytes": 0,
-        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/selection.stderr",
+        "path": "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/finalization/selection.stderr",
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     },
@@ -60,9 +60,9 @@
       "argv": [
         "python3",
         "-B",
-        "/private/tmp/vectorcore-release-phase-two-2026-11-04/freeze-evidence.py",
-        "/private/tmp/vectorcore-release-phase-two-2026-11-04/archive-selection.json",
-        "/Users/goftin/dev/projects/VectorCore-release-phase-two-2026-11-04-evidence"
+        "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/freeze-evidence.py",
+        "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/archive-selection.json",
+        "${EVIDENCE_ROOT}/VectorCore-release-phase-two-2026-11-04-evidence"
       ],
       "exit": 0,
       "timeout": false,
@@ -70,12 +70,12 @@
       "elapsedSeconds": 17.196321250055917,
       "stdout": {
         "bytes": 320,
-        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/freeze.stdout",
+        "path": "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/finalization/freeze.stdout",
         "sha256": "68aa7e10aed30413bdecaee806f860179e3051076ce2bad6f8606d4c50365af9"
       },
       "stderr": {
         "bytes": 0,
-        "path": "/private/tmp/vectorcore-release-phase-two-2026-11-04/finalization/freeze.stderr",
+        "path": "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/finalization/freeze.stderr",
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     }

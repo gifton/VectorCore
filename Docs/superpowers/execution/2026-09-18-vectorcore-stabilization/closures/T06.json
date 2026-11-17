@@ -16,7 +16,7 @@
     "suite": "Debug EXTENDED=1 and EXTENDED=0 exit 0 at T06 (696dc9f, includes V04 A+B)",
     "reviews": "independent review + 3 scoped re-reviews; final round root-verified (old detector flags 3 control-flow FPs, new flags only the true trailing closure)"
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T06",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T06",
   "patch_sha256": "071a05cdeb6a8e0e7a78afb61140359a3ed265531c584025361fe477d3a0a41a",
   "frozen_sha256": {
     "Scripts/ci/performance_sites.json": "a7893c8d570f79edc0a9453c99b8ffd0a27bfaeec3b8472aaf62015112dba027",

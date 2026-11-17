@@ -19,7 +19,7 @@
 - Focused regression tests must fail against baseline behavior and pass after the repair. Do not run full Swift or Python suites as workers; root runs combined checks once. Preserve exact command/log/result evidence.
 - No nested agents. Commit task files on the assigned isolated branch, leave the tree clean, and report commit IDs, checks, shared-data changes needed, and residual limitations.
 - Use the task's own build scratch. Never write the shared root build-debug/build-release caches. Do not run Release builds as workers.
-- Toolchain/environment and report locations are in /private/tmp/vectorcore-remediations-2026-11-01/worker-context.md; read it before execution.
+- Toolchain/environment and report locations are in ${CAPTURE_ROOT}/vectorcore-remediations-2026-11-01/worker-context.md; read it before execution.
 
 ## Review Focus
 
@@ -31,7 +31,7 @@
 
 ### Task 1: AP7 no-finite precision observations
 
-**Worktree:** /private/tmp/vectorcore-remediations-2026-11-01/ap7
+**Worktree:** ${CAPTURE_ROOT}/vectorcore-remediations-2026-11-01/ap7
 **Files:** Sources/VectorCore/Operations/Kernels/MixedPrecisionKernels.swift; Tests/ComprehensiveTests/PrecisionStatisticsRangeTests.swift.
 **Interfaces:** analyzePrecision<V: AnalyzableVector>(_ vectors: [V]) -> PrecisionProfile and selectOptimalPrecision(for:errorTolerance:) remain public and unchanged.
 **Contract:** Empty input retains its existing all-zero FP32 sentinel with dimension 0. Nonempty input with no finite observations returns the same finite zero statistics, expectedError 0, outlierCount 0, .fp32 recommendation, but preserves the first vector's scalarCount. Zero expected error is a sentinel, not an accuracy measurement. Finite filtering, existing statistics, and heuristic policies remain unchanged.
@@ -44,7 +44,7 @@
 
 ### Task 2: LC5 early UMAP curve preflight
 
-**Worktree:** /private/tmp/vectorcore-remediations-2026-11-01/lc5
+**Worktree:** ${CAPTURE_ROOT}/vectorcore-remediations-2026-11-01/lc5
 **Files:** Sources/VectorCore/ManifoldLearning/UMAP.swift; Tests/ComprehensiveTests/UMAPRangeContractTests.swift and/or a focused new UMAPPreflightTests.swift. Existing UMAPTests.swift may be edited only if required for a focused regression.
 **Interfaces:** Both public umap overloads retain their signatures. Compute (a: Float, b: Float) once per public call, then pass coefficients to the private layout tail.
 **Contract:** After cheap config/count/schedule/graph-count or supplied-coordinate validation, reject unpublishable curve coefficients before constructing graph, invoking PCA, allocating random coordinates, or building fuzzy edges. Preserve existing cheap structural/finite-validation precedence. Do not change curve-fitting math, accepted domain, .operationFailed for coefficient publication failure, graph/optimizer math, or seed behavior.
@@ -57,7 +57,7 @@
 
 ### Task 3: First CI-hardening batch
 
-**Worktree:** /private/tmp/vectorcore-remediations-2026-11-01/ci
+**Worktree:** ${CAPTURE_ROOT}/vectorcore-remediations-2026-11-01/ci
 **Files:** Scripts/ci/check_performance_gates.py; its existing test-output parser helper (locate import); Scripts/ci/tests/test_test_output_counts.py; Scripts/ci/check_benchmark_build_modes.py; Scripts/ci/tests/test_benchmark_contracts.py; Scripts/ci/check_claim_ledger.py; Scripts/ci/tests/test_claim_ledger.py; new focused policy tests if justified.
 **Interfaces:** Existing CLI contracts and check return conventions stay intact. Shared claim-ledger data and byte pins are coordinator-owned.
 **Contracts:** A skipped-only XCTest summary cannot prove representative execution. Any actually executed XCTest or Swift Testing representative can satisfy the existing gate. Every load-bearing runtime assert in both benchmark gate drivers becomes an explicit failure that survives Python optimization. Claim-ledger JSON rejects duplicate object keys recursively, including escaped-equivalent names, via normal diagnostic handling.

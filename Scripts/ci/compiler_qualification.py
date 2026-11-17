@@ -10,7 +10,8 @@ from pathlib import Path
 import re
 import struct
 
-from qualification_records import POLICY, named, read_json, require, verify_capture
+from archived_evidence import read_json as read_profile
+from qualification_records import POLICY, named, require, verify_capture
 
 
 def observations(case, command):
@@ -57,7 +58,7 @@ def check(profile_path: Path, evidence_root: Path, source_root: Path) -> dict:
               'sourceManifestSHA256': None, 'scope': [], 'problems': [],
               'diagnosticFailures': {}, 'releaseAdmitted': False}
     try:
-        profile = read_json(profile_path)
+        profile = read_profile(profile_path)
         verified = verify_capture(profile, evidence_root, source_root)
         for item in verified['checks']:
             spec, command = item['spec'], item['command']

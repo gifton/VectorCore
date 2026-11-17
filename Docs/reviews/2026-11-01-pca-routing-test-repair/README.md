@@ -41,4 +41,4 @@ python3 -B -m unittest discover -s Scripts/ci/tests -v
 python3 -B Scripts/ci/check_claim_ledger.py
 ```
 
-The retained `check.py` contains the exact full-suite and bounded mutation commands, including SDK, scratch paths, compiler identity, environment and automatic source restoration. Do not execute the old unbounded mutation test without a watchdog. [Validation summary](validation-summary.json) records source hashes and counts. Raw logs, source patches, runner versions and review are retained at `/Users/goftin/dev/projects/VectorCore-pca-routing-repair-2026-11-01-evidence`; [evidence manifest](evidence-manifest.json) hashes that archive.
+The retained `check.py` contains the exact full-suite and bounded mutation commands, including SDK, scratch paths, compiler identity, environment and automatic source restoration. Do not execute the old unbounded mutation test without a watchdog. [Validation summary](validation-summary.json) records source hashes and counts. Raw logs, source patches, runner versions and review are retained at `${EVIDENCE_ROOT}/VectorCore-pca-routing-repair-2026-11-01-evidence`; [evidence manifest](evidence-manifest.json) hashes that archive.

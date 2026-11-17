@@ -56,7 +56,7 @@
 
 ### Task 3: Compiler limitation reduction and support decision
 
-**Files owned:** new `Docs/reviews/2026-11-02-readiness-batch/compiler/` reproducer/report files and optional standalone runner within that directory. All probes/build caches go in new assigned scratch; do not mutate production or existing evidence. Prior evidence is read-only at `/private/tmp/vectorcore-remediations-2026-11-01/compiler-evidence` and `/Users/goftin/dev/projects/VectorCore-remediations-2026-11-01-evidence`.
+**Files owned:** new `Docs/reviews/2026-11-02-readiness-batch/compiler/` reproducer/report files and optional standalone runner within that directory. All probes/build caches go in new assigned scratch; do not mutate production or existing evidence. Prior evidence is read-only at `${CAPTURE_ROOT}/vectorcore-remediations-2026-11-01/compiler-evidence` and `${EVIDENCE_ROOT}/VectorCore-remediations-2026-11-01-evidence`.
 
 **Interfaces:** A reproducible command accepting compiler/SDK paths, source fixture(s), explicit-vs-inherited witness controls, and machine-readable exit/hash metadata. No public library API change expected.
 

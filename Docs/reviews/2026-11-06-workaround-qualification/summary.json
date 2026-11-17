@@ -1023,7 +1023,7 @@
       "frontendSHA256": "93a7373a7f558b211b9820797d40d7554a0fef2c917d039fa0fa894b60fd55eb",
       "inputsUnchanged": true,
       "producerConfiguration": "release",
-      "sdk": "/Users/goftin/Downloads/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "sdk": "${BETA_DEVELOPER_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
       "target": "arm64-apple-macosx14.0",
       "toolchain": "xcode-27.3-beta"
     }

@@ -4,7 +4,7 @@ The selected **optimized, testable Release sanitizer workloads pass: 77/77 ASan 
 
 ## Changes and source identity
 
-Driver/direct-test commit: `e48ee0b` (`Add explicit Release configuration to sanitizer driver`). Assigned tree `/Users/goftin/.codex/worktrees/c0ea/VectorCore` began clean at `2dcb24091c6dc21be4db409ecdd0756220e93b8c`. `Package.swift` and all tracked Sources/Tests/Benchmarks inputs remain unchanged. The independent final source-hash cross-check is `source-identity-check.json`.
+Driver/direct-test commit: `e48ee0b` (`Add explicit Release configuration to sanitizer driver`). Assigned tree `${SOURCE_ROOT}` began clean at `2dcb24091c6dc21be4db409ecdd0756220e93b8c`. `Package.swift` and all tracked Sources/Tests/Benchmarks inputs remain unchanged. The independent final source-hash cross-check is `source-identity-check.json`.
 
 `Scripts/ci/check_sanitizers.py` adds `--configuration {debug,release}`, keeping Debug as default. One flag array feeds compilation and SwiftPM product-path discovery; execution uses only the bundles discovered beneath that reported path. `result.json` records the configuration. Release-only `-Xswiftc -enable-testing` permits existing `@testable` imports without replacing `-O`. This is an instrumented, optimized, testable build, not a production-binary-equivalence claim. No manifest body/filter, deadline, assertion setting, sanitizer diagnostic option, production source, package setting or workflow is changed.
 
@@ -16,7 +16,7 @@ The frozen final Python CI tooling suite passes **598 tests** (`python-ci-tests-
 
 ## Release execution and identities
 
-Raw evidence: `/private/tmp/vectorcore-release-phase-one-2026-11-04/runtime-sanitizers`.
+Raw evidence: `${CAPTURE_ROOT}/vectorcore-release-phase-one-2026-11-04/runtime-sanitizers`.
 
 | Cell | Fresh build | Complete driver | Executed |
 | --- | ---: | ---: | --- |

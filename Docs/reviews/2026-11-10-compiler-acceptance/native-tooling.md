@@ -8,7 +8,7 @@ hosted qualification and stable compiled-candidate selection remain pending.
 
 ## Identity and preservation
 
-- Source checkout: `/Users/goftin/dev/projects/VectorCore-archive/VectorCore-fixes-2026-10-27-84798d3`.
+- Source checkout: `${SOURCE_ROOT}`.
 - Captured source HEAD: `e4c711d7beccfe99f3f2a20997d0ec117be00bb8`; tooling edits were present and recorded in `source-state.json`.
 - All 389 tracked compiled inputs match the adopted alpha baseline. No production Swift/C or version constants changed.
 - Capture source-tree manifest: `d6a5711b1571cc853c571a4312a619d512b12459bb8e644d3bb78fdfcdc291db`. It conservatively includes three existing `.DS_Store` files in addition to those 389 inputs, so its digest differs from the alpha's 389-file manifest. Before/after manifests match.
@@ -45,19 +45,19 @@ any supported group or required-correct row.
 ## Evidence and repeatable assessment
 
 Canonical local evidence:
-`/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/native-tooling`.
+`${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/native-tooling`.
 The 2.7 GB archive retains build products, receipts, streams, XML, sources, SIL/IR,
 consumer objects/modules, controls and C-route records. It was copied without
 rewriting receipts and revalidated through explicit root remapping. Original
-captured paths under `/private/tmp/vectorcore-native-qualification-2026-11-10-02`
+captured paths under `${CAPTURE_ROOT}/vectorcore-native-qualification-2026-11-10-02`
 remain in the profile and receipts as historical provenance.
 
 ```sh
 python3 -B Scripts/ci/compiler_qualification.py \
   --profile Scripts/ci/qualification_profiles/macos-27.0.1-arm64-alpha-2026-11-10.json \
-  --evidence-root /Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/native-tooling \
-  --source-root /Users/goftin/dev/projects/VectorCore-archive/VectorCore-fixes-2026-10-27-84798d3 \
-  --output /private/tmp/vectorcore-native-assessment-new.json
+  --evidence-root ${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/native-tooling \
+  --source-root ${SOURCE_ROOT} \
+  --output ${CAPTURE_ROOT}/vectorcore-native-assessment-new.json
 ```
 
 The output path must not already exist. The reviewed profile pins required data
@@ -66,7 +66,7 @@ Changes to a pinned helper require a reviewed evidence/profile refresh and must
 not be hidden by replacing a digest during verification. The checker assesses
 retained evidence, not hostile-host authenticity.
 
-The first attempted capture at `/private/tmp/vectorcore-native-qualification-2026-11-10-01`
+The first attempted capture at `${CAPTURE_ROOT}/vectorcore-native-qualification-2026-11-10-01`
 remains incomplete. Its Debug suite passed, but a collector product-discovery bug
 mistook a deprecation warning on stderr for part of the stdout path. A regression
 test reproduced this, the collector was corrected, and capture 02 rebuilt and

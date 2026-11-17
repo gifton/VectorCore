@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from qualification_fixture import CaptureFixture, write_json
+from qualification_fixture import CaptureFixture, write_json, archive_profile
 
 
 class CompilerQualificationTests(unittest.TestCase):
@@ -40,6 +40,27 @@ class CompilerQualificationTests(unittest.TestCase):
         self.assertIs(result['releaseAdmitted'], False)
         self.assertIs(result['supportPolicyAdopted'], True)
         self.assertEqual(result['diagnosticFailures'], {'compiler': ['first']})
+
+    def test_archived_profile_preserves_every_numerical_result_and_rejects_corruption(self):
+        baseline = self.check()
+        self.assertEqual(baseline['vectorCoreQualification'], 'accepted')
+        f = self.fixture
+        reference = archive_profile(f.root, f.profile_path)
+        self.assertEqual(self.check(), baseline)
+        write_json(f.profile_path, dict(reference, sha256='0' * 64))
+        self.assertRejected()
+        write_json(f.profile_path, dict(reference, gitCommit='0' * 40))
+        self.assertRejected()
+
+    def test_archiving_a_supported_failure_does_not_make_it_acceptable(self):
+        f = self.fixture
+        f.alter_stdout('supported', 'BUFFER_VALUE first observed=2\nBUFFER_VALUE_COMPLETE count=1 failures=1\n', code=1)
+        f.commands['supported']['exit'] = 1
+        f.case_specs[0]['observed'] = {'first': '2'}
+        f.save(repin=True)
+        archive_profile(f.root, f.profile_path)
+        report = self.assertRejected()
+        self.assertTrue(any('supported-route failure' in p for p in report['problems']), report)
 
     def test_supported_failure_is_not_a_diagnostic_exception(self):
         f = self.fixture

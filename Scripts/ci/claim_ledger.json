@@ -22898,11 +22898,11 @@
     "kind": "dated-artifact",
     "reference": {
      "path": "Docs/reviews/2026-11-04-release-phase-one/benchmarks/result-summary.json",
-     "sha256": "15e0c4f16d5c090343a9f98d3c207a311805563504f57c48ea17d726756236da",
+     "sha256": "150cdb97fed6d2c89aea59f3fc408f66c61ee174c687bfd24615b619db847dea",
      "date": "2026-11-04"
     },
     "domain": "The local required benchmark-contract driver execution and its current-schema/actual-product comparator controls",
-    "limitations": "The linked phase report and retained command artifacts record 301 reporting-table comparator invocations plus 19 required-driver invocations. Gate behavior is checked for those fixtures, not arbitrary malformed inputs. The actual cross-run exit 1 is retained without performance acceptance. Optional adversarial CSV parsing and a new hosted run remain unexecuted; initial RED/GREEN environment provenance is limited and unchanged build warnings remain. Runtime report metadata alone is not build provenance."
+    "limitations": "The linked phase report and retained command artifacts record 301 reporting-table comparator invocations plus 19 required-driver invocations. Gate behavior is checked for those fixtures, not arbitrary malformed inputs. The actual cross-run exit 1 is retained without performance acceptance. Optional adversarial CSV parsing and a new hosted run remain unexecuted; initial RED/GREEN environment provenance is limited and unchanged build warnings remain. Runtime report metadata alone is not build provenance. Current linked file uses portable presentation paths; its unchanged original bytes and original SHA-256 are recorded in Docs/evidence-publication.json. Numerical results and support restrictions are unchanged."
    },
    "acceptedContract": null,
    "history": {
@@ -33206,11 +33206,11 @@
     "kind": "dated-artifact",
     "reference": {
      "path": "Docs/reviews/2026-11-10-compiler-acceptance/decision.md",
-     "sha256": "7eefbe6117c49a906cf6e4782a0874011b2bf353b2a76d40bba23f024907f776",
+     "sha256": "8719959d14bee304f1318e2890b281b182deb51b416f735e8e358b0d9a85beaf",
      "date": "2026-11-16"
     },
     "domain": "The adopted exact Xcode 27.2 build 27B52 policy: valid-Swift descriptor-inout miscompilation, transitive borrowed-descriptor/view/pointer-wrapper restriction and explicitly incomplete support boundary.",
-    "limitations": "This paragraph states the support restriction and links current status; it does not claim every route or a released candidate is accepted. The adopted policy preserves release-admission gates. Its evidence references retain the original miscompilations; per-candidate results are recorded separately."
+    "limitations": "This paragraph states the support restriction and links current status; it does not claim every route or a released candidate is accepted. The adopted policy preserves release-admission gates. Its evidence references retain the original miscompilations; per-candidate results are recorded separately. Current linked file uses portable presentation paths; its unchanged original bytes and original SHA-256 are recorded in Docs/evidence-publication.json. Numerical results and support restrictions are unchanged."
    },
    "acceptedContract": null,
    "history": {

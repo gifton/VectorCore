@@ -24,7 +24,7 @@
     "sources": "All Sources changes comment-only (implementer masked-source proof plus reviewer B's independent lexer: identical masked source and string literals for all 52 files, then 2 more in the final fix); Debug build-tests compile rc 0.",
     "reviews": "Phase 1 rulings → phase 2 (stalled once, resumed) → root-approved count-pin patch (applied and verified by root) → split reviews A (Opus) and B (Sonnet) APPROVED → ONE final fix (hyphen folding, sentence boundary, hedge tightening, R8 fixtures, comments) → ROOT end-to-end check (U+2011 'zero‑copy' and the '**Not verified.**' bypass both caught)."
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T13",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T13",
   "reviewed_tree": "ef0d7588d0ba8b2e32091ff86a46e5af28385b12",
   "limitations": [
     "The rules are lexical; LIMITS list the uncaught forms (noun forms efficiency/robustness/reliability; inline hardware-claim comments; non-folded look-alike hyphens U+FE63/U+FF0D; branch-name exemption breadth).",

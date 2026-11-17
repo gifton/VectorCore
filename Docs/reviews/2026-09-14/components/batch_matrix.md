@@ -6,7 +6,7 @@ Revision: 8b02e75bca7055ae11170873d15c06f1538709b7. Read-only production review.
 
 Read all of `Operations/{BatchOperations,SyncBatchOperations,ExecutionOperations,TransformOperations,MatrixDistance,VectorEntropy}.swift`, `Operations/Kernels/{BatchKernels,BatchKernels_SoA}.swift`, `Utilities/TriangularMatrix.swift`, and `Operations.swift:773–883`. Traced `DistanceMetric`, `VectorMath` entropy facade, `VectorCore` public wrappers, and downstream `VectorIndex/Kernels/CentroidBatchScore.swift`. Read numerical/boundaries/API-map docs; reviewed MatrixDistanceTests, BatchGEMMRoutingTests, VectorEntropyTests, ExecutionOperationsTests, and searched batch/SoA tests for relevant boundaries. Did not read every 2700-line SoA test case; checked relevant coverage by search and selected source.
 
-Executable evidence: `/private/tmp/vectorcore-review-2026-09-14/batch_probe.swift` linked against existing Debug library objects with root's `build_probe.py`. Output: `batch_probe.log`. Separate crash cases: `batch_singleton.log`, `batch_zero_size.log`, both exit 133. No shared build invocation. Release was not independently repeated.
+Executable evidence: `${CAPTURE_ROOT}/vectorcore-review-2026-09-14/batch_probe.swift` linked against existing Debug library objects with root's `build_probe.py`. Output: `batch_probe.log`. Separate crash cases: `batch_singleton.log`, `batch_zero_size.log`, both exit 133. No shared build invocation. Release was not independently repeated.
 
 ## Prioritized verified candidates
 

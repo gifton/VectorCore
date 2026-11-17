@@ -119,7 +119,7 @@ cells. No old remote result is substituted for this candidate.
 
 ## Evidence and verification
 
-Raw task evidence: `/private/tmp/vectorcore-qualification-2026-11-04/task-1-evidence`.
+Raw task evidence: `${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/task-1-evidence`.
 `archive-inclusion.txt` selects existing relative paths; `archive-manifest.json`
 hashes that selection. Bulk SDKs, compiler packages/payloads and build/module
 caches are excluded from the archive selection and remain on disk. The signed

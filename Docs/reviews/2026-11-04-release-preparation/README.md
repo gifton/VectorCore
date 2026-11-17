@@ -63,6 +63,6 @@ Small cases did not uniformly improve: 1000×4 normalization measured 0.2853ms b
 
 ## Evidence and history
 
-Frozen archive: `/Users/goftin/dev/projects/VectorCore-release-prep-2026-11-04-evidence`. `evidence-manifest.json` lists retained payload hashes and sizes, including task/review reports, original failures and controls, source snapshots, compiler/importer artifacts, lifecycle captures, final gates and paired measurement. Bulk build/module caches and compiler/SDK payloads are excluded. Previous frozen archives remain untouched.
+Frozen archive: `${EVIDENCE_ROOT}/VectorCore-release-prep-2026-11-04-evidence`. `evidence-manifest.json` lists retained payload hashes and sizes, including task/review reports, original failures and controls, source snapshots, compiler/importer artifacts, lifecycle captures, final gates and paired measurement. Bulk build/module caches and compiler/SDK payloads are excluded. Previous frozen archives remain untouched.
 
 The [completed plan](../../superpowers/plans/2026-11-04-release-preparation.md) and [validation summary](validation-summary.json) identify the exact source/check mapping. The frozen progress ledger records review rulings and completion conditions. No previously completed repair batch was redispatched.

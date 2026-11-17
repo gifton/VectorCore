@@ -2,7 +2,7 @@
 
 Local repairs are ready for candidate-specific hosted verification. This report does **not** claim that the repaired candidate has passed hosted CI.
 
-Base: `b6604fceb4d912b92ace63773a5601af8b280d91`. Worktree: `/Users/goftin/.codex/worktrees/d23a/VectorCore`. Original failure: GitHub Actions run `41934186109`, macOS 15.8.2 arm64. Evidence root: `/private/tmp/vectorcore-qualification-2026-11-04/hosted-fix-1`.
+Base: `b6604fceb4d912b92ace63773a5601af8b280d91`. Worktree: `${SOURCE_ROOT}`. Original failure: GitHub Actions run `41934186109`, macOS 15.8.2 arm64. Evidence root: `${CAPTURE_ROOT}/vectorcore-qualification-2026-11-04/hosted-fix-1`.
 
 ## Sanitizer runtime identity
 

@@ -16,7 +16,7 @@ CI admission workflows were not changed in this phase.
 
 | Identity | Pinned value |
 | --- | --- |
-| Reviewed worktree | `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3` |
+| Reviewed worktree | `${SOURCE_ROOT}` |
 | Base HEAD | `bdf990847babf567be1cbce22d2606e7102b1a47`, plus retained uncommitted migration |
 | Compiled inputs | 389 files: `Package.swift`, `Sources`, `Tests`, `Benchmarks` |
 | Compiled-input manifest SHA-256 | `f2869bf68bb9286d33f2107566a2fb53d6913f95c76dced68d9affde448bd6eb` |
@@ -161,15 +161,15 @@ results are recorded in [validation-summary.json](validation-summary.json).
 ## Evidence
 
 Evidence root:
-`/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence`.
+`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence`.
 The directory date reflects the start of this phase; closure continued November 7.
 
-- [Fresh native assessment](/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/native-assessment/assessment.json)
-- [Parent build verification](/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/parent-build-verification.json)
-- [C-mode verification](/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/c-kernels/verification.json)
-- [Platform summary](/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/platform-builds/summary.json)
-- [Nonquiet discriminator](/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/platform-builds/diagnostic-investigation/nonquiet/comparison.json)
-- [Final policy command](/Users/goftin/dev/projects/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/discovery.json)
+- Fresh native assessment (`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/native-assessment/assessment.json`)
+- Parent build verification (`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/parent-build-verification.json`)
+- C-mode verification (`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/c-kernels/verification.json`)
+- Platform summary (`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/platform-builds/summary.json`)
+- Nonquiet discriminator (`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/platform-builds/diagnostic-investigation/nonquiet/comparison.json`)
+- Final policy command (`${EVIDENCE_ROOT}/VectorCore-bounded-native-qualification-2026-11-06-evidence/policy-tests-final/discovery.json`)
 
 Earlier migration and residual manifests remain immutable. The final selected
 manifest and verification receipt accompany this phase; build caches, raw device

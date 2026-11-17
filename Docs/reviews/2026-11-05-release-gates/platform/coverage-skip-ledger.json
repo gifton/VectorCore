@@ -5928,59 +5928,59 @@
     }
   ],
   "evidence": {
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/method-results.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/method-results.json": {
       "sha256": "c0399c5cb2a71c235be8b99aa7de0f74c920bd13181a88189dd0619e96f856db",
       "bytes": 1203787
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/failed-skipped-results.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/failed-skipped-results.json": {
       "sha256": "26f71aa13550ec1c8c952518117ebd773c2f4511778178179a5cf3b5eef699d6",
       "bytes": 54423
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/counts.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/counts.json": {
       "sha256": "fafe9847d796a365fee6b76280c98f1f78e9a135019e91eafea4a802e9e5f36d",
       "bytes": 1587
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/compiler-sdk-identities.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/compiler-sdk-identities.json": {
       "sha256": "b4d1bdaa879a170d55aa9d0bb71b0154d5e66b9d65bab84b9fd73d47ebfd7d56",
       "bytes": 385
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/retained-products.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/retained-products.json": {
       "sha256": "ea0b9dae82a465bae8a276fa4be54695dbdf5bd7873c7eb9be13758014fb9c75",
       "bytes": 1159
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/full-suite.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/ios/combined-candidate-v2/full-suite.json": {
       "sha256": "5b6d29faa24cb5b8a1900d4e97d6d29bba07115fd52afa09dd28fe1942fa6833",
       "bytes": 3925
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-final/final-results.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/sanitizers-final/final-results.json": {
       "sha256": "bb1b70d99ad54dcf420abff02f8b2375a50b032b1d43378ed17b1ae729b74b02",
       "bytes": 10365
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-final/runtime-warning-scan-final.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/sanitizers-final/runtime-warning-scan-final.json": {
       "sha256": "6ac335ea68ddd20d69f1e5beed34fe4f7197ea0538b633a6b5e002bc7551bf35",
       "bytes": 56297
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-payload.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/sanitizers-discovery-fix/reconciliation-payload.json": {
       "sha256": "d5ec852366169e2d66e85599888a8839a003579f6f14a731b4b4124c6c4795cd",
       "bytes": 60183
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/final-v2-address-full/testing-scope.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/final-v2-address-full/testing-scope.json": {
       "sha256": "ac5a30c28adf1b10f7d88cf19f0672462fffde710cdbb8a95a261e1016f10de2",
       "bytes": 1521360
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/final-v2-address-full/xctest-scope.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/final-v2-address-full/xctest-scope.json": {
       "sha256": "8be06b7b24210aca865899ee8d8f681c0056f09c1de552876abd104bbd08f595",
       "bytes": 60293
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/final-v2-thread-extended-corrected/testing-scope.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/final-v2-thread-extended-corrected/testing-scope.json": {
       "sha256": "ac5a30c28adf1b10f7d88cf19f0672462fffde710cdbb8a95a261e1016f10de2",
       "bytes": 1521360
     },
-    "/private/tmp/vectorcore-release-phase-two-2026-11-04/final-v2-thread-full/xctest-scope.json": {
+    "${CAPTURE_ROOT}/vectorcore-release-phase-two-2026-11-04/final-v2-thread-full/xctest-scope.json": {
       "sha256": "debff51524b1d6733c5d71f7446d3b8fa10884c80529189acc00b2433e058c86",
       "bytes": 60599
     },
-    "/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3/Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json": {
+    "${SOURCE_ROOT}/Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json": {
       "sha256": "5ae7e1186aab3b13ee5f0f738763d305ebe4dc1ff0c5d39f2eeddf7613d26188",
       "bytes": 63855
     }

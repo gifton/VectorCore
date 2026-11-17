@@ -160,7 +160,7 @@
     "Tests/VectorCoreTestSupport/ChildProbeLauncher.swift": "e7c3b9d72e18425f4d2d860aa5a70ab249e2a27be58d85681b6430342cdee73d"
   },
   "production_sources_and_benchmarks_unchanged": true,
-  "archive_root": "/Users/goftin/dev/projects/VectorCore-readiness-2026-11-02-evidence",
+  "archive_root": "${EVIDENCE_ROOT}/VectorCore-readiness-2026-11-02-evidence",
   "limits": [
     "Compiler inherited-default witness crash remains; explicit witness compile accommodation only.",
     "EnvCapture leaves escape the fixture process group on this host.",

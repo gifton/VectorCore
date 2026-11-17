@@ -88,7 +88,7 @@ O01, O02, O04, R01, V01, S01 and E01 are accepted locally. I01 is accepted as a 
 
 - Q01 revision4 independently ACCEPTED and exact7files imported after root verified completepatch,270/274codefileinventory,all845workerartifacthashes,unchangedsharedbase. FinalDebug/Release each17XCTest+50SwiftTesting;ASan10+7 pass. NUM-03/04/05 andEX-01/04 closed;SER-08 remains stagedS03. Measured allocation regressions resolved with0events/bytes inall22v4probe rows,identicalv2resultbits; no latencyclaim. N01 full22filediff nowunderindependentreview whilefinalchecksrun.
 
-- Q01 integrated locally at8f7b828. E03 atomicconfiguration transaction implementation dispatched to reused <agents>/q01_implementation in isolatedbase8f7b828 archive/private/tmp/vectorcore-stabilization-E03-implementation, disjointfromN01. Reviewer/root continueN01verification.
+- Q01 integrated locally at8f7b828. E03 atomicconfiguration transaction implementation dispatched to reused <agents>/q01_implementation in isolatedbase8f7b828 archive${CAPTURE_ROOT}/vectorcore-stabilization-E03-implementation, disjointfromN01. Reviewer/root continueN01verification.
 
 - N01 independently ACCEPTED asCorestagedrepair and exact22filesimported afterrootcompletepatch/hash/271-to276codeinventory verification. FinalDebug/Release each100functions10suites incl24diagnosticchildren;ASan33exercised+2explicitnoops pass. NUM-01/02closed;API-39 remainsdownstreamstaged. Noexistingtestexpectationschanged. Rootwillcheckcombined N01/Q01integration beforeclaimingcombinedsuccess.
 

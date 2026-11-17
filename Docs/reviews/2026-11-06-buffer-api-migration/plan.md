@@ -12,7 +12,7 @@
 
 ## Constraints and review focus
 
-- Continue at `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`; preserve the earlier uncommitted audit work and all archived evidence.
+- Continue at `${SOURCE_ROOT}`; preserve the earlier uncommitted audit work and all archived evidence.
 - Keep the unchanged compiler reproducer, negative controls, known-issue handling and release-admission policy.
 - Preserve generic witness dispatch, `rethrows`, callback return values, empty-buffer invocation, element type, count, COW isolation and mutations before a thrown error.
 - Do not add a same-name by-value overload, which the compatibility audit showed can cause ambiguity.

@@ -53,7 +53,7 @@
       "command": [
         "/usr/bin/caffeinate",
         "-i",
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
         "test",
         "--build-system",
         "native",
@@ -62,7 +62,7 @@
         "-c",
         "debug",
         "--scratch-path",
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-debug",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/build-debug",
         "--sdk",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
         "--filter",
@@ -78,7 +78,7 @@
       "command": [
         "/usr/bin/caffeinate",
         "-i",
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/swift-6.4.2-expanded/swift-6.4.2-RELEASE-osx-package.pkg/Payload/usr/bin/swift",
         "test",
         "--build-system",
         "native",
@@ -87,7 +87,7 @@
         "-c",
         "release",
         "--scratch-path",
-        "/private/tmp/vectorcore-compiler-qualification-t78w2p5_/build-release",
+        "${CAPTURE_ROOT}/vectorcore-compiler-qualification-t78w2p5_/build-release",
         "--sdk",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
         "--filter",
@@ -113,5 +113,5 @@
   "full_policy_source_stable_during_run": true,
   "swift_canary_diff_stable_during_both_runs": true,
   "scope": "Targeted Swift validation only for this repair; previous full-suite qualification remains a separate historical record.",
-  "raw_archive": "/Users/goftin/dev/projects/VectorCore-scanner-repair-2026-11-01-evidence"
+  "raw_archive": "${EVIDENCE_ROOT}/VectorCore-scanner-repair-2026-11-01-evidence"
 }

@@ -47,7 +47,7 @@ python3 "$VC_PROBE/run.py" \
   --extra-flag="-fmodule-map-file=$VC_BUILD/VectorCoreC.build/module.modulemap" \
   --extra-flag=-Xcc --extra-flag=-I --extra-flag=-Xcc \
   --extra-flag="$VC_SOURCE/Sources/VectorCoreC/include" \
-  --output /tmp/vectorcore-witness-new-run --allow-failure
+  --output ${CAPTURE_ROOT}/vectorcore-witness-new-run --allow-failure
 ```
 
 The recorded baseline uses `-O -whole-module-optimization -enable-testing
@@ -62,7 +62,7 @@ directory. With `SWIFT_EXEC` set to `VC_COMPILER_BIN/swiftc`, prepend that bin t
 
 ```sh
 "$VC_COMPILER_BIN/swift" build --build-system native --jobs 2 \
-  --sdk "$VC_SDK" -c release --scratch-path /tmp/vectorcore-new-build \
+  --sdk "$VC_SDK" -c release --scratch-path ${CAPTURE_ROOT}/vectorcore-new-build \
   --target VectorCore -v
 ```
 
@@ -85,7 +85,7 @@ python3 "$VC_PROBE/run.py" \
   --swiftc "$VC_COMPILER_BIN/swiftc" --sdk "$VC_SDK" \
   --library-source "$VC_PROBE/MinimalLibrary.swift" \
   --importer "$VC_PROBE/MinimalImporter.swift" \
-  --output /tmp/vectorcore-minimal-new-run
+  --output ${CAPTURE_ROOT}/vectorcore-minimal-new-run
 ```
 
 Both witnesses **pass** in this control. It is not a source-only reproducer of the
@@ -133,9 +133,9 @@ failing fixture still requires the full library module.
 
 ## Evidence retention
 
-Raw evidence root: `/private/tmp/vectorcore-readiness-2026-11-02/compiler-evidence`.
+Raw evidence root: `${CAPTURE_ROOT}/vectorcore-readiness-2026-11-02/compiler-evidence`.
 Prior archives were read-only throughout. The full investigation report is
-`/private/tmp/vectorcore-readiness-2026-11-02/task-3-report.md`.
+`${CAPTURE_ROOT}/vectorcore-readiness-2026-11-02/task-3-report.md`.
 
 `archive-inclusion.txt` under the raw evidence root lists the portable evidence
 subset: source exports and source hashes, current/earlier module exports, both

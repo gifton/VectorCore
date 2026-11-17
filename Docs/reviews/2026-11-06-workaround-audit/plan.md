@@ -12,7 +12,7 @@
 
 ## Constraints
 
-- Worktree: `/Users/goftin/dev/projects/VectorCore-fixes-2026-10-27-84798d3`, starting at `bdf990847babf567be1cbce22d2606e7102b1a47`.
+- Worktree: `${SOURCE_ROOT}`, starting at `bdf990847babf567be1cbce22d2606e7102b1a47`.
 - Preserve the unchanged standalone compiler probes, their numerical predicates and ordinary compiler flags.
 - Preserve compiler known-issue handling, release admission, public support promises and the existing research handoff.
 - Record exact compiler, SDK, source and artifact identities. Keep compiler-control results separate from library workaround results.

@@ -22,7 +22,7 @@
   "review": "reports/R05-review-2026-10-03.md",
   "rereview": "reports/R05-rereview-1-2026-10-03.md",
   "evidence": "reports/R05-implementation-2026-10-03.md",
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/R05",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/R05",
   "patch_sha256": "2fac71da5caaea570dfa9080d3c7a8ac19f8f3d8d1ba82dac4503bab94ac4de8",
   "frozen_sha256": {
     "CHANGELOG.md": "e5d26b7530bc5396333f8f4948de59aae56c3b687c532ae69a9b58a23e3f3a8f",

@@ -162,9 +162,48 @@ def collect(args):
     print('collectionComplete=true; qualification=unassessed; releaseAdmitted=false')
 
 
+def record_artifact_inventory(output):
+    """Retain reviewable hashes, including tools outside the uploaded tree.
+
+    HostedEvidenceTests checks external tool/source retention and missing-file
+    reporting. This inventory is observation data, not an acceptance profile.
+    """
+    capture = output/'evidence/capture.json'
+    if not capture.is_file():
+        return
+    inventory = dict(captureSHA256=None, files={}, problems=[], inventoryComplete=False,
+                     vectorCoreQualification='unassessed', releaseAdmitted=False)
+    try:
+        inventory['captureSHA256'] = file_sha(capture)
+        captured = read_json(capture)
+        require(captured.get('collectionComplete') is True, 'capture is incomplete')
+        paths = captured['artifactFiles']
+        require(type(paths) is list and all(type(p) is str and Path(p).is_absolute()
+                and '..' not in Path(p).parts for p in paths), 'invalid artifact inventory')
+        for value in sorted(set(paths + [str(capture.absolute())])):
+            try:
+                path = Path(value)
+                before = path.stat()
+                digest = file_sha(path)
+                after = path.stat()
+                require(all(getattr(after, field) == getattr(before, field) for field in
+                            ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_ctime_ns')),
+                        'artifact changed while hashing: ' + value)
+                inventory['files'][value] = dict(sha256=digest, bytes=before.st_size,
+                                                 resolvedPath=str(path.resolve(strict=True)))
+            except (OSError, ValueError) as error:
+                inventory['problems'].append(value + ': ' + str(error))
+        require(file_sha(capture) == inventory['captureSHA256'], 'capture changed while inventorying')
+        inventory['inventoryComplete'] = not inventory['problems']
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        inventory['problems'].append(str(error))
+    write_json(output/'artifact-inventory.json', inventory)
+
+
 def bundle(args):
     require(args.output.is_dir(), 'no collected evidence to retain')
     args.upload.mkdir(parents=True, exist_ok=False)
+    record_artifact_inventory(args.output)
     archive = args.upload/'evidence.tar.gz'
     # Dereference build-product aliases so extraction never creates links.
     with tarfile.open(archive, 'w:gz', dereference=True) as tar:

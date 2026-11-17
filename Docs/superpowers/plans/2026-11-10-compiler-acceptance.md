@@ -133,3 +133,11 @@ pairs recorded in the amended decision.
   Preserve the collector's selected-source-root check. Prepare the exact policy
   ref and candidate for fresh hosted macOS/iOS-simulator collection. Apply the
   adopted collect → exact profile review → verify process. No release/tag action.
+
+Hosted artifact-retention correction: retain a post-collection hash/size/path
+inventory for all declared artifacts, including external tools that are listed
+but not copied into the bundle. Review must require completeness and reconcile
+the inventory with the capture and profile pins. Missing files retain raw
+evidence with an explicit incomplete inventory; no observed inventory becomes
+an acceptance profile automatically. The corrected policy may collect the same
+immutable candidate without changing compiled inputs or numerical expectations.

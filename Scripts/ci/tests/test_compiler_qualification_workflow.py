@@ -77,6 +77,50 @@ class HostedEvidenceTests(unittest.TestCase):
         archive, review = self.archive(extra=(info, io.BytesIO(data)))
         hosted.extract_reviewed_bundle(archive, self.root/'out', review, self.expected)
 
+    def test_bundle_retains_original_hashes_of_external_build_tools_and_source(self):
+        output = self.root/'capture'
+        evidence = output/'evidence'
+        evidence.mkdir(parents=True)
+        paths = []
+        for relative in ('external/clang', 'external/libtool', 'source/helper.py', 'capture/evidence/result.txt'):
+            path = self.root/relative
+            path.parent.mkdir(exist_ok=True)
+            path.write_text('not executable; retained identity: '+relative)
+            paths.append(path)
+        capture = evidence/'capture.json'
+        write_json(capture, dict(collectionComplete=True, artifactFiles=list(map(str,paths))))
+        write_json(output/'collection.json', self.expected)
+        upload = self.root/'upload'
+        hosted.bundle(SimpleNamespace(output=output, upload=upload))
+        with tarfile.open(upload/'evidence.tar.gz', 'r:gz') as archive:
+            self.assertIn('artifact-inventory.json', archive.getnames())
+            inventory = json.load(archive.extractfile('artifact-inventory.json'))
+            self.assertFalse(any(p.startswith(('external/', 'source/')) for p in archive.getnames()))
+        self.assertIs(inventory['inventoryComplete'], True)
+        self.assertEqual(inventory['problems'], [])
+        self.assertEqual(inventory['captureSHA256'], hashlib.sha256(capture.read_bytes()).hexdigest())
+        self.assertEqual(set(inventory['files']), set(map(str,[*paths,capture])))
+        for path in [*paths,capture]:
+            self.assertEqual(inventory['files'][str(path)],dict(sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                              bytes=path.stat().st_size, resolvedPath=str(path.resolve())))
+        self.assertIs(inventory['releaseAdmitted'], False)
+
+    def test_missing_artifact_retains_raw_bundle_and_explicit_incomplete_inventory(self):
+        output = self.root/'capture'
+        evidence = output/'evidence'
+        evidence.mkdir(parents=True)
+        missing = self.root/'missing-tool'
+        write_json(evidence/'capture.json', dict(collectionComplete=True, artifactFiles=[str(missing)]))
+        write_json(output/'collection.json', self.expected)
+        upload = self.root/'upload'
+        hosted.bundle(SimpleNamespace(output=output, upload=upload))
+        self.assertTrue((upload/'evidence.tar.gz').is_file())
+        inventory = json.loads((output/'artifact-inventory.json').read_text())
+        self.assertIs(inventory['inventoryComplete'], False)
+        self.assertEqual(len(inventory['problems']),1)
+        self.assertIn(str(missing),inventory['problems'][0])
+        self.assertIs(inventory['releaseAdmitted'], False)
+
     def test_fresh_destination_required(self):
         archive, review = self.archive()
         destination = self.root/'out'

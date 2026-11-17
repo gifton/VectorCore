@@ -66,3 +66,28 @@ original scoped acceptance, `compilerProfile=known-failing` and
 25 protected historical files, four historical profiles and the alpha tag are
 unchanged. Detailed records are retained in the canonical
 [integration evidence archive](/Users/goftin/dev/projects/VectorCore-archive/VectorCore-compiler-acceptance-2026-11-10-evidence/hosted-identity-integration-2026-11-16/README.md).
+
+Fresh collection [run 44015059588](https://github.com/gifton/VectorCore/actions/runs/44015059588)
+used candidate and policy `7c115cd927c76275b73a08b0e6fb178636a3c4b9`.
+While preparing review, a pre-existing hosted bundle omission became apparent:
+external iOS `clang` and `libtool` paths were listed, but their hashes were not
+recorded in command receipts or retained file data. Local profile review had
+access to the original tools; hosted review needs those digests in the archive.
+The owned attempt was stopped before treating it as qualification evidence.
+
+The corrected policy bundler records a post-collection `artifact-inventory.json`
+with every declared artifact's digest, size and resolved path, plus the capture
+digest. It includes external tools and source files without uploading those
+external binaries. Missing files leave an explicitly incomplete inventory while
+raw evidence is still retained. The inventory supplies observed hashes for
+separate profile review; it does not generate or approve numerical expectations.
+The corrected policy collects the same immutable `7c115cd` candidate. Review
+must require a complete inventory and reconcile its digests with the capture,
+retained data and independently reviewed profile pins before verification.
+
+Retention correction validation: both new transport regressions failed before
+the fix; all 124 focused qualification tests and 756 Python policy tests then
+passed, along with ten GitHub policies and whitespace checks. The correction
+changes policy bundling and its tests/documentation only. The original
+`7c115cd` collector candidate, paired-identity verifier, numerical oracles and
+historical profiles are unchanged.

@@ -18,7 +18,7 @@
     "policy": "unittest 264 OK in-repo and out-of-repo on the merged integration tree; validate_github.rb passes",
     "tests": "BenchmarkContractTests 63/0 Debug"
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T07",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T07",
   "patch_sha256": "50d01263ac504a5cdcefcdd6e9afcf66600fd6a86222e5467772dca302d1538d",
   "frozen_sha256": {
     ".github/workflows/ci.yml": "23a20d9d267f4c7941a2165f4aa4b427b8a17e249dec6e0c209b531b11e3e502",

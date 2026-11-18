@@ -385,8 +385,7 @@ def scan(tests_dir, root):
 # Reviewed non-performance hits: (file, test, normalized expression) -> reason. Every Tests/ hit
 # was classified before it was listed. Performance claims are NOT allowlisted: they are gated with
 # expectPerformance and inventoried (the two found by milestone 12 were migrated by T06).
-# Category prefixes: DEADLINE (a bound whose failure means a hang or leak, a correctness check; none
-# remain after `.now` was narrowed, because bare `.now()` timeout arguments are not clock reads),
+# Category prefixes: DEADLINE (a bound checking deadline/cleanup liveness rather than performance),
 # INJECTED-CLOCK (a deterministic fake clock, no wall time), TIMESTAMP (a stored Date compared as
 # an ordered value, not a duration), FIXTURE (name-based over-approximation: a literal-valued
 # fixture that merely carries `timestamp: Date()` metadata).
@@ -399,6 +398,14 @@ _V04_CALIBRATION = ('INJECTED-CLOCK: asserts harness calibration against a deter
                     'ScriptedClock passed as now:; no wall-clock value is compared (V04 phase C)')
 _OP = 'Tests/ComprehensiveTests/OperationProgressTests.swift'
 _ENTRIES = {
+    ('Tests/BenchmarkContractTests/RunnerContractTests.swift', 'testMetadataOutputAndArgumentBoundaries',
+     'start.duration(to:.now)'): (
+        'DEADLINE: metadata fixtures include a 30-second sleeper with a 0.5-second observation timeout; '
+        'the always-active 5-second assertion checks bounded completion, not throughput'),
+    ('Tests/BenchmarkContractTests/RunnerContractTests.swift', 'testFixtureHangHasBoundedGroupCleanup',
+     'start.duration(to:.now)'): (
+        'DEADLINE: deliberate hanging fixture uses a 3-second deadline and 2-second kill cleanup; '
+        'the always-active 6-second assertion checks bounded launcher cleanup, not throughput'),
     **{('Tests/ComprehensiveTests/LoggingContractTests.swift', test, 'clock.readCount==' + count): _INJECTED
        for test, count in [('timerBoundaryReadings', '5'), ('timerReportsCumulativeNotLapElapsed', '4'),
                            ('timerInvalidThresholdSuppressesButStillReadsClock', '3'),
@@ -659,6 +666,22 @@ class ClockDerivedAssertionTests(unittest.TestCase):
             with self.subTest(expression=expression):
                 source = 'func t() {\n let v = %s\n #expect(v > x)\n}\n' % expression
                 self.assertEqual(self.hits(source), [])
+
+    def test_metadata_deadline_allowance_is_exact_and_single(self):
+        path = 'Tests/BenchmarkContractTests/RunnerContractTests.swift'
+        key = (path, 'testMetadataOutputAndArgumentBoundaries', 'start.duration(to:.now)')
+        allowed = {key: DEADLINE_ALLOWLIST[key]}
+        source = ('func testMetadataOutputAndArgumentBoundaries() {\n'
+                  ' let start = ContinuousClock.now\n'
+                  ' XCTAssertLessThan(start.duration(to: .now), .seconds(5))\n}\n')
+        hits = clock_hits(source)
+        self.assertEqual(unreviewed({path: hits}, allowed), ([], [], []))
+        self.assertEqual(unreviewed({path: hits + hits}, allowed)[2], [(key, 2, 1)])
+        self.assertEqual(unreviewed({}, allowed)[1], [key])
+        other = source.replace('testMetadataOutputAndArgumentBoundaries', 'testUnreviewedTiming')
+        self.assertNotEqual(unreviewed({path: clock_hits(other)}, allowed)[0], [])
+        changed = source.replace('start.duration(to: .now)', 'start.duration(to: end)')
+        self.assertNotEqual(unreviewed({path: clock_hits(changed)}, allowed)[0], [])
 
     def test_allowlist_count_is_pinned(self):
         found = {'Tests/X.swift': [(3, 't', 'a<1'), (4, 't', 'a<1')]}

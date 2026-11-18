@@ -16,19 +16,10 @@ except where a rule reads string literals on purpose):
                function reference (`let f = posix_spawn`) all count: `posix_spawn`, `posix_spawnp`, `fork`,
                `vfork`, `execv`, `execve`, `execvp`, `execvP`, `execl`, `execle`, `execlp`, `popen`; `system`
                only as a call (`system(`; it is unavailable in Swift on Darwin, and the bare word is too
-               common). SPAWN_ALLOWANCES pins the two exceptions by exact count and shape:
+               common). SPAWN_ALLOWANCES pins the sole exception by exact count and shape:
                  - ChildProbeLauncherTests.swift: one posix_spawn of "/bin/sleep" (a group member that the
-                   launcher's group cleanup must remove; never the test binary);
-                 - BenchmarkContractTests/RunnerContractTests.swift: one Process whose argument list is the
-                   literal `["-XCTest", "<one selector>", Bundle(for: Self.self).bundlePath]`, assigned exactly
-                   once: the file may not read the parent argv beyond `CommandLine.arguments[0]` (no copy,
-                   append or reassignment; no `ProcessInfo.processInfo.arguments`, no `unsafeArgv`), so
-                   nothing of the parent's argv is inherited and no selector survives. Its child, testProcessFixture,
-                   runs the benchmark runner in-process and launches no probe (the runner's production
-                   EnvCapture may run `git rev-parse` / `swiftc -version`, each under its own 2 s deadline).
-                   It predates T10 and lives in another test target, which cannot use the launcher without
-                   changing the reviewed BenchmarkContractTests source membership
-                   (Scripts/ci/check_ci_contracts.py). Its deadline still signals only the direct child.
+                   launcher's group cleanup must remove; never the test binary).
+               Benchmark fixtures use the same package-scoped VectorCoreTestSupport launcher.
   R2 selector  In Tests/**/*.swift outside the launcher, no test-runner selector string literal: "--filter",
                "--skip", "--specifier", "-XCTest" and their "=" forms (literal text read from the source; a
                literal inside a comment does not count). SELECTOR_ALLOWANCES pins the exact count per
@@ -36,13 +27,20 @@ except where a rule reads string literals on purpose):
   R3 launcher  The launcher keeps its load-bearing tokens: the process-group spawn flag and pgroup call,
                POSIX_SPAWN_CLOEXEC_DEFAULT, WNOWAIT, a negative-PID kill, the selection flags in the dropped
                set (`--filter`, `--skip`, `--specifier`, `-s`, `--xunit-output`) and the refused set
-               (`--configuration-path`), the selector shape check; three ORDERS, checked inside the
+               (`--configuration-path`), the selector shape check; four ORDERS, checked inside the
                function bodies: in `launchChildProbe` the nested-launch refusal and the child-marker
-               assignment both come before the spawn call; in the reaper's `run` the group sweep
+               assignment both come before the spawn call, and `var childEnvironment = try
+               childProbeEnvironment(...)` precedes that spawn using `environment: childEnvironment`;
+               in the reaper's `run` the group sweep
                (`sendToGroup(SIGKILL)`) comes before the reap (`waitpid`); and ONE caller: the spawn
                helper `spawnChildProbeGroupLeader(` is called exactly once in the file, inside
                `launchChildProbe`, so no second entry point can spawn without the refusal and marker.
-  R4 floor     The scan must see the launcher in use: at least MIN_CALL_FILES files with a
+  R4 import    Every launcher caller explicitly imports VectorCoreTestSupport.
+  R5 budget    Ordinary call sites use ChildProbeBudget.standard.deadline/.cleanup. Named exceptions
+               preserve deliberate self-test deadlines, Q03 sanitizer timing and T16 profiler calibration;
+               each nonstandard call is pinned by budget shape, enclosing function and count.
+               RunnerContractTests pins its wrapper's ordinary defaults separately.
+  R6 floor     The scan must see the launcher in use: at least MIN_CALL_FILES files with a
                `launchChildProbe(` call, and the launcher itself.
 
 LIMITS (lexical heuristic, not a parser), each NOT detected:
@@ -63,6 +61,7 @@ control. No git history is used, so the test passes in a git-less export.
 """
 
 import importlib.util
+import json
 import re
 import unittest
 from pathlib import Path
@@ -73,7 +72,7 @@ lexing = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(lexing)
 _mask = lexing._mask
 
-LAUNCHER = 'Tests/ComprehensiveTests/ChildProbeLauncher.swift'
+LAUNCHER = 'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift'
 SPAWN = re.compile(r'\bProcess\b(?!\s*\.\s*TerminationReason\b)|\bNSTask\b|\bNSWorkspace\b'
                    r'|\b(?:posix_spawnp?|v?fork|exec(?:v|ve|vp|vP|l|le|lp)|popen)\b|\bsystem\s*\(')
 SELECTOR_LITERAL = re.compile(r'"(?:--filter|--skip|--specifier|-XCTest)(?:=[^"\\\n]*)?"')
@@ -84,21 +83,15 @@ SPAWN_ALLOWANCES = {
     'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
         'posix_spawn', 1, '"/bin/sleep"', None, None,
         'the launcher self-test spawns /bin/sleep as a member of the child\'s group, never the test binary'),
-    'Tests/BenchmarkContractTests/RunnerContractTests.swift': (
-        'Process', 1, None,
-        r'\.arguments\s*=\s*\[\s*"-XCTest"\s*,\s*"[^",\s]+"\s*,\s*Bundle\(for:\s*Self\.self\)\.bundlePath\s*\]',
-        lambda source, masked: _argv_not_inherited(masked),
-        'pre-T10 leaf launch in another test target: fixed one-selector XCTest argv; its child launches no '
-        'probe (production EnvCapture may run git/swiftc leaves, each under its own 2 s deadline)'),
 }
 # path -> (exact selector-literal count, reason)
 SELECTOR_ALLOWANCES = {
     'Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift': (
         9, 'the vectorcore-bench CLI\'s own --filter option, parsed in-process by CLIOptions; no process launch'),
+    'Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift': (
+        8, 'the vectorcore-bench CLI\'s own --filter option; child scenarios use RunnerContractTests\' shared group launcher'),
     'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
-        36, 'argument-filter fixtures passed to childProbeArguments; its only launches go through launchChildProbe'),
-    'Tests/BenchmarkContractTests/RunnerContractTests.swift': (
-        1, 'the "-XCTest" of its fixed one-selector argument list (see SPAWN_ALLOWANCES)'),
+        40, 'argument-filter fixtures passed to childProbeArguments; its only launches go through launchChildProbe'),
 }
 LAUNCHER_INVARIANTS = (
     ('setpgroup_flag', r'\bPOSIX_SPAWN_SETPGROUP\b', 'code'),
@@ -110,6 +103,10 @@ LAUNCHER_INVARIANTS = (
                               r'\bspawnChildProbeGroupLeader\s*\('), 'order'),
     ('marker_before_spawn', ('launchChildProbe', r'\bchildEnvironment\s*\[\s*childProbeMarkerKey\s*\]\s*=(?!=)',
                              r'\bspawnChildProbeGroupLeader\s*\('), 'order'),
+    ('environment_before_spawn', ('launchChildProbe',
+                                  r'\bvar\s+childEnvironment\s*=\s*try\s+childProbeEnvironment\s*\(',
+                                  r'\bspawnChildProbeGroupLeader\s*\(\s*executable:\s*executable\s*,\s*'
+                                  r'arguments:\s*arguments\s*,\s*environment:\s*childEnvironment\s*,'), 'order'),
     ('sweep_before_reap', ('run', r'\bsendToGroup\s*\(\s*SIGKILL\s*\)', r'\bwaitpid\s*\('), 'order'),
     ('single_test_selector', r'\bfunc\s+childProbeArguments\b[^{]*\{\s*try\s+validateSingleTestSelection\s*\(', 'code'),
     ('single_spawn_caller', ('launchChildProbe', r'\bspawnChildProbeGroupLeader\s*\('), 'sole_caller'),
@@ -117,7 +114,7 @@ LAUNCHER_INVARIANTS = (
                         r'(?=[^\]]*"--specifier")(?=[^\]]*"-s")(?=[^\]]*"--xunit-output")', 'raw'),
     ('refuses_configuration', r'childProbeRefusedFlags[^=]*=\s*\[[^\]]*"--configuration-path"', 'raw'),
 )
-RULES = ('spawn', 'selector', 'launcher', 'floor')
+RULES = ('spawn', 'selector', 'launcher', 'import', 'budget', 'floor')
 MIN_CALL_FILES = 24
 
 
@@ -210,19 +207,6 @@ def _sole_caller(masked, function, call):
     return body is not None and len(calls) == 1 and body[0] < calls[0] < body[1]
 
 
-def _argv_not_inherited(masked):
-    """RunnerContractTests: no parent argv beyond argv[0], and exactly one `.arguments` assignment."""
-    problems = []
-    if re.search(r'\bCommandLine\s*\.\s*arguments\b(?!\s*\[\s*0\s*\])', masked):
-        problems.append('reads CommandLine.arguments beyond [0]')
-    if re.search(r'\bProcessInfo\s*\.\s*processInfo\s*\.\s*arguments\b|\bunsafeArgv\b|\bCommandLine\s*\.\s*argc\b', masked):
-        problems.append('reads the parent argv')
-    members = len(re.findall(r'\.\s*arguments\b', masked)) - len(re.findall(r'\bCommandLine\s*\.\s*arguments\b', masked))
-    if members != 1:
-        problems.append(f'expected exactly one `.arguments` use (the pinned assignment), found {members}')
-    return problems
-
-
 def launcher_findings(source):
     masked = _mask(source)
     missing = []
@@ -238,6 +222,45 @@ def launcher_findings(source):
     return missing
 
 
+# Exact nonstandard call shapes, each allowed once inside the named function. Other calls in
+# these files use the ordinary rule; the counters reject duplicate or missing exception calls.
+BUDGET_EXCEPTIONS = {
+    'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': (
+        ('launcherSelfTestChild', r'deadline:\s*1,\s*cleanup:\s*\.kill\(seconds:\s*1\)\s*\)$'),
+        ('launchSelfTest', r'deadline:\s*deadline,\s*cleanup:\s*cleanup\s*\)$')),
+    'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift': (
+        ('runChild', r'deadline:\s*Double\(deadline\),\s*cleanup:\s*\.kill\(seconds:\s*2\)\s*\)$'),),
+    'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift': (
+        ('profilerRowsRunInAnIsolatedChild', r'deadline:\s*120,\s*cleanup:\s*\.terminateThenKill\(grace:\s*1,\s*seconds:\s*1\)\s*\)$'),),
+    'Tests/BenchmarkContractTests/RunnerContractTests.swift': (
+        ('runFixture', r'deadline:\s*deadline,\s*cleanup:\s*cleanup\s*\)$'),),
+}
+STANDARD_BUDGET = r'deadline:\s*ChildProbeBudget\.standard\.deadline\s*,\s*cleanup:\s*ChildProbeBudget\.standard\.cleanup\s*\)$'
+
+
+def budget_findings(source, path=''):
+    masked = _mask(source)
+    findings = []
+    exceptions = BUDGET_EXCEPTIONS.get(path, ())
+    counts = [0] * len(exceptions)
+    bodies = [_function_body(masked, function) for function, _ in exceptions]
+    for match in re.finditer(r'\blaunchChildProbe\s*\(', masked):
+        # Match the masked slice too: raw comment/string text must never supply real budget arguments.
+        call = _call_text(masked, masked, match.start())
+        if re.search(STANDARD_BUDGET, call):
+            continue
+        for index, ((_, pattern), body) in enumerate(zip(exceptions, bodies)):
+            if body and body[0] < match.start() < body[1] and re.search(pattern, call):
+                counts[index] += 1
+                break
+        else:
+            findings.append((_line(source, match.start()), 'ordinary child must use ChildProbeBudget.standard'))
+    for (function, _), count in zip(exceptions, counts):
+        if count != 1:
+            findings.append((0, f'expected exactly 1 budget exception in {function}, found {count}'))
+    return findings
+
+
 def scan_tree(root, rules=RULES):
     """Findings for the tree under `root` (a repository checkout or export)."""
     findings, call_files, launcher_seen = [], set(), False
@@ -251,6 +274,10 @@ def scan_tree(root, rules=RULES):
             continue
         if re.search(r'\blaunchChildProbe\s*\(', _mask(source)):
             call_files.add(relative)
+            if 'import' in rules and not re.search(r'(?m)^import\s+VectorCoreTestSupport\s*$', _mask(source)):
+                findings.append(f'{relative}: child launcher consumer must import VectorCoreTestSupport')
+        if 'budget' in rules:
+            findings += [f'{relative}:{line}: {problem}' for line, problem in budget_findings(source, relative)]
         if 'spawn' in rules:
             findings += [f'{relative}:{line}: process creation outside the launcher: {text}'
                          for line, text in spawn_findings(source, relative)]
@@ -281,9 +308,10 @@ PRE_FIX_XCTEST = '''
         process.arguments = ["-XCTest", "ComprehensiveTests.ExecutionBoundaryTests/testChildProbe", Bundle(for: Self.self).bundlePath]
 '''
 POST_FIX_SITE = '''
+import VectorCoreTestSupport
     private func runChild(_ scenario: String) throws {
         let child = try launchChildProbe(.swiftTesting(filter: "FP16DiagnosticsBoundaryTests/childProbe"),
-                                         environment: environment, output: file, deadline: 15, cleanup: .kill(seconds: 2))
+                                         environment: environment, output: file, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         print(child.terminationReason == Process.TerminationReason.uncaughtSignal, ProcessInfo.processInfo.processIdentifier)
     }
 '''
@@ -336,6 +364,8 @@ MUTATION_CONTROLS = {
     'selector': ('selector', 'pre_fix_site'),
     'launcher': ('tree', 'launcher_without_group'),
     'floor': ('tree', 'no_callers'),
+    'budget': ('tree', 'ordinary_budget'),
+    'import': ('tree', 'missing_import'),
 }
 
 
@@ -345,10 +375,208 @@ def _write_tree(base, launcher_text, callers=MIN_CALL_FILES):
     path.write_text(launcher_text)
     for index in range(callers):
         path = base / 'Tests' / 'ComprehensiveTests' / f'Caller{index}.swift'
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(POST_FIX_SITE)
 
 
+def host_operations_outside_macos(source):
+    """Conservative source gate: native test-process operations require an enclosing macOS branch.
+
+    This follows nested #if/#else/#endif structure, not arbitrary Swift conditions.
+    Compiler typechecking and simulator execution establish the actual SDK boundary.
+    """
+    stack, violations = [], []
+    for line, text in enumerate(_mask(source).splitlines(), 1):
+        stripped = text.strip()
+        if stripped.startswith('#if '):
+            stack.append(stripped == '#if os(macOS)')
+        elif stripped.startswith(('#else', '#elseif')):
+            if stack:
+                stack[-1] = False
+        elif stripped == '#endif':
+            if stack:
+                stack.pop()
+        elif re.search(r'\b(?:posix_spawn|posix_spawnp|execve|fork|vfork)\s*\(', text):
+            if not any(stack):
+                violations.append(line)
+    return violations
+
+
+def portable_test_findings(source, name):
+    """Conservatively reject capability traits/compile gates/child calls in a positive control."""
+    masked = _mask(source)
+    match = re.search(r'@Test(?P<attributes>[^{}]*?)\bfunc\s+' + re.escape(name) + r'\s*\(', masked)
+    if match is None:
+        return ['missing test']
+    findings = []
+    if re.search(r'\.\s*(?:enabled|disabled)\b', match['attributes']):
+        findings.append('conditional test trait')
+    depth = 0
+    for line in masked[:match.start()].splitlines():
+        if line.strip().startswith('#if '):
+            depth += 1
+        elif line.strip() == '#endif':
+            depth -= 1
+    if depth:
+        findings.append('conditional compilation')
+    body = _function_body(masked, name)
+    if body is None or re.search(r'#if\b|\b(?:childProbeProcessesSupported|launchChildProbe)\b|\bchild\s*\(',
+                                 masked[body[0]:body[1]]):
+        findings.append('conditional or subprocess body')
+    return findings
+
+
 class ChildProbeLaunchPolicyTests(unittest.TestCase):
+    def test_ordinary_budget_controls(self):
+        self.assertEqual(budget_findings(POST_FIX_SITE), [])
+        for replacement in ['5', '10', '15', '30', '120']:
+            source = POST_FIX_SITE.replace('ChildProbeBudget.standard.deadline', replacement)
+            self.assertNotEqual(budget_findings(source), [])
+        for cleanup in ['.kill(seconds: 2)', '.terminateThenKill(grace: 1, seconds: 1)']:
+            self.assertNotEqual(budget_findings(POST_FIX_SITE.replace('ChildProbeBudget.standard.cleanup', cleanup)), [])
+        runner = (ROOT / 'Tests/BenchmarkContractTests/RunnerContractTests.swift').read_text()
+        self.assertRegex(_mask(runner), r'deadline: Double = ChildProbeBudget\.standard\.deadline,\s*cleanup: ChildProbeCleanup = ChildProbeBudget\.standard\.cleanup')
+        self.assertEqual(set(BUDGET_EXCEPTIONS), {
+            'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
+            'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift',
+            'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift',
+            'Tests/BenchmarkContractTests/RunnerContractTests.swift'})
+
+    def test_budget_comment_and_string_decoys_do_not_allow_inflation(self):
+        pair = 'deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup'
+        nonstandard = POST_FIX_SITE.replace(pair, 'deadline: 120, cleanup: .kill(seconds: 2)')
+        self.assertNotEqual(nonstandard, POST_FIX_SITE)
+        decoys = {
+            'block_comment': nonstandard.replace('deadline: 120', '/* ' + pair + ' */ deadline: 120'),
+            'line_comment': nonstandard.replace('deadline: 120', '// ' + pair + '\n deadline: 120'),
+            'string': nonstandard.replace('environment: environment', 'environment: ["note": "' + pair + '"]'),
+            'raw_string': nonstandard.replace('environment: environment', 'environment: ["note": #"' + pair + ')"#]'),
+            'multiline_string': nonstandard.replace('environment: environment', 'environment: ["note": """\n' + pair + ')\n"""]'),
+        }
+        for name, source in decoys.items():
+            with self.subTest(decoy=name):
+                self.assertNotEqual(budget_findings(source), [])
+        # Comments between real arguments remain whitespace, rather than hiding a valid call.
+        standard = POST_FIX_SITE.replace(', cleanup: ChildProbeBudget.standard.cleanup',
+                                         ', /* diagnostic ) */ cleanup: ChildProbeBudget.standard.cleanup')
+        self.assertEqual(budget_findings(standard), [])
+
+    def test_exception_files_reject_additional_nonstandard_calls(self):
+        nonstandard = POST_FIX_SITE.replace('ChildProbeBudget.standard.deadline', '120')
+        for path in BUDGET_EXCEPTIONS:
+            source = (ROOT / path).read_text()
+            with self.subTest(path=path):
+                self.assertEqual(budget_findings(source, path), [])
+                self.assertEqual(budget_findings(source + POST_FIX_SITE, path), [])
+                self.assertNotEqual(budget_findings(source + nonstandard, path), [])
+
+    def test_exception_calls_have_pinned_budget_shapes_and_counts(self):
+        mutations = {
+            'Tests/ComprehensiveTests/ChildProbeLauncherTests.swift': ('deadline: 1, cleanup: .kill(seconds: 1)', 'deadline: 120, cleanup: .kill(seconds: 1)'),
+            'Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift': ('deadline: Double(deadline)', 'deadline: 120'),
+            'Tests/ComprehensiveTests/T16ReductionExceptionalTableTests.swift': ('deadline: 120', 'deadline: 121'),
+            'Tests/BenchmarkContractTests/RunnerContractTests.swift': ('deadline: deadline, cleanup: cleanup', 'deadline: 120, cleanup: cleanup'),
+        }
+        for path, (old, new) in mutations.items():
+            source = (ROOT / path).read_text()
+            with self.subTest(path=path):
+                self.assertEqual(source.count(old), 1)
+                self.assertNotEqual(budget_findings(source.replace(old, new), path), [])
+                # A duplicate file is rejected too; the scoped copies below exercise exact counters.
+                self.assertNotEqual(budget_findings(source + source, path), [])
+                masked = _mask(source)
+                for function, _ in BUDGET_EXCEPTIONS[path]:
+                    body = _function_body(masked, function)
+                    self.assertIsNotNone(body)
+                    match = next(m for m in re.finditer(r'\blaunchChildProbe\s*\(', masked)
+                                 if body[0] < m.start() < body[1])
+                    call = _call_text(source, masked, match.start())
+                    duplicated = source[:body[1]] + call + '\n' + source[body[1]:]
+                    self.assertIn((0, f'expected exactly 1 budget exception in {function}, found 2'),
+                                  budget_findings(duplicated, path))
+
+    def test_capability_inventory_matches_individual_swift_testing_gates(self):
+        inventory = json.loads((ROOT / 'Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json').read_text())
+        expected = {(row['path'], row['method']) for row in inventory
+                    if row['contract'] == 'Swift Testing subprocess isolation'}
+        observed = set()
+        for path in (ROOT / 'Tests/ComprehensiveTests').glob('*.swift'):
+            source = _mask(path.read_text())
+            # Test attributes precede their function declaration. Reject a suite-level gate:
+            # adding one would silently disable otherwise portable numerical tests.
+            self.assertNotRegex(source, r'@Suite[^{}]*childProbeProcessesSupported')
+            for match in re.finditer(r'@Test(?P<attributes>[^{}]*?)\bfunc\s+(?P<name>\w+)\s*\(', source):
+                if 'childProbeProcessesSupported' in match['attributes']:
+                    observed.add((str(path.relative_to(ROOT)), match['name']))
+        self.assertEqual(observed, expected)
+        self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
+                          'portableTerminationPreservesExitAndSignalDiagnostics'), observed)
+        self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
+                          'unreapedChildReadsFailWithoutTrapping'), observed)
+
+    def test_portable_arithmetic_positive_control_is_independently_reachable(self):
+        source = (ROOT / 'Tests/ComprehensiveTests/VectorDispatchContractTests.swift').read_text()
+        self.assertEqual(portable_test_findings(source, 'concreteProtocolOnlyOperatorsPreserveCopy'), [])
+        positive = '@Suite struct S { @Test func positive() { let value = 1 } }'
+        self.assertEqual(portable_test_findings(positive, 'positive'), [])
+        mutations = [positive.replace('@Test', '@Test(.enabled(if: false))'),
+                     '#if os(macOS)\n' + positive + '\n#endif',
+                     positive.replace('let value = 1', 'if childProbeProcessesSupported { let value = 1 }'),
+                     positive.replace('let value = 1', 'try child("mismatch")'),
+                     positive.replace('@Test', '')]
+        for mutated in mutations:
+            with self.subTest(source=mutated):
+                self.assertNotEqual(portable_test_findings(mutated, 'positive'), [])
+
+    def test_xctest_capability_skip_precedes_assertions_and_error_catches(self):
+        inventory = json.loads((ROOT / 'Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json').read_text())
+        violations = []
+        for row in inventory:
+            if row['contract'] != 'XCTest subprocess boundary':
+                continue
+            source = _mask((ROOT / row['path']).read_text())
+            body = _function_body(source, row['method'])
+            self.assertIsNotNone(body, row)
+            if not re.match(r'\s*try XCTSkipIf\(!childProbeProcessesSupported,', source[body[0] + 1:body[1]]):
+                violations.append(row['path'] + '/' + row['method'])
+        self.assertEqual(violations, [])
+
+    def test_native_process_operations_require_macos_compile_boundary(self):
+        for path in (ROOT / 'Tests').rglob('*.swift'):
+            self.assertEqual(host_operations_outside_macos(path.read_text()), [], str(path))
+        operation = 'posix_spawn(&pid, path, nil, nil, argv, env)'
+        self.assertEqual(host_operations_outside_macos('#if os(macOS)\n' + operation + '\n#endif'), [])
+        for source in [operation, '#if os(iOS)\n' + operation + '\n#endif',
+                       '#if os(macOS)\n#else\n' + operation + '\n#endif']:
+            self.assertNotEqual(host_operations_outside_macos(source), [])
+        self.assertEqual(host_operations_outside_macos('// ' + operation), [])
+        self.assertEqual(host_operations_outside_macos('#if os(macOS)\n#if DEBUG\n' + operation + '\n#endif\n#endif'), [])
+
+    def test_portable_result_types_do_not_reference_foundation_process(self):
+        # The iOS SDK has no Process type, including its nested TerminationReason.
+        paths = [ROOT / LAUNCHER, *sorted((ROOT / 'Tests/ComprehensiveTests').glob('*.swift')),
+                 *sorted((ROOT / 'Tests/BenchmarkContractTests').glob('*.swift'))]
+        violations = [str(path.relative_to(ROOT)) for path in paths
+                      if re.search(r'\bProcess\s*\.', _mask(path.read_text()))]
+        self.assertEqual(violations, [])
+
+    def test_shared_launcher_is_in_test_support(self):
+        self.assertEqual(LAUNCHER, 'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift')
+        self.assertTrue((ROOT / LAUNCHER).is_file())
+        self.assertFalse((ROOT / 'Tests/ComprehensiveTests/ChildProbeLauncher.swift').exists())
+
+    def test_benchmark_leaf_cannot_bypass_shared_launcher(self):
+        runner = 'Tests/BenchmarkContractTests/RunnerContractTests.swift'
+        old = ('let process = Process()\n'
+               'process.arguments = ["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", '
+               'Bundle(for: Self.self).bundlePath]\n')
+        self.assertNotEqual(spawn_findings(old, runner), [])
+        self.assertNotEqual(selector_findings(old, runner), [])
+        text = (ROOT / runner).read_text()
+        self.assertIn('import VectorCoreTestSupport', text)
+        self.assertIn('try launchChildProbe(', text)
+
+
     def _launcher_text(self):
         return (ROOT / LAUNCHER).read_text(encoding='utf-8')
 
@@ -380,41 +608,25 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
         pinned = ('let process = Process()\n'
                   'process.arguments = ["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", '
                   'Bundle(for: Self.self).bundlePath]\n')
-        self.assertEqual(spawn_findings(pinned, runner), [])
-        self.assertEqual(selector_findings(pinned, runner), [])
-        # Inheriting the parent's argv, a second selector, or a second launch breaks the pinned shape.
-        inherited = pinned.replace('["-XCTest", "BenchmarkContractTests.BenchmarkRunnerContractTests/testProcessFixture", '
-                                   'Bundle(for: Self.self).bundlePath]', 'Array(CommandLine.arguments.dropFirst())')
-        self.assertNotEqual(spawn_findings(inherited, runner), [])
-        self.assertNotEqual(spawn_findings(pinned.replace('/testProcessFixture"', '/testProcessFixture,X/y"'), runner), [])
+        self.assertNotEqual(spawn_findings(pinned, runner), [])
+        self.assertNotEqual(selector_findings(pinned, runner), [])
         self.assertNotEqual(spawn_findings(pinned + 'let other = Process()\n', runner), [])
-        self.assertNotEqual(selector_findings(pinned + 'args += ["--filter", "x"]\n', runner), [])
-        # The pinned literal must be the ONLY argv: appends, reassignments and copies of the parent argv fail.
-        for addition in ('process.arguments! += Array(CommandLine.arguments.dropFirst())\n',
-                         'process.arguments?.append(contentsOf: CommandLine.arguments)\n',
-                         'process.arguments = ["-XCTest", "BenchmarkContractTests.X/testY", Bundle(for: Self.self).bundlePath]\n',
-                         'var argv = CommandLine.arguments\n',
-                         'let argv = ProcessInfo.processInfo.arguments\n',
-                         'let argv = CommandLine.unsafeArgv\n'):
-            with self.subTest(addition=addition):
-                self.assertNotEqual(spawn_findings(pinned + addition, runner), [])
-        # argv[0] (the runner executable) stays allowed.
-        self.assertEqual(spawn_findings('process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])\n' + pinned,
-                                        runner), [])
-        bench = 'Tests/BenchmarkContractTests/BenchmarkSelectionContractTests.swift'
-        self.assertEqual(selector_findings('options(["--filter", "a"])\n' * 9, bench), [])
-        self.assertNotEqual(selector_findings('options(["--filter", "a"])\n' * 10, bench), [])
+        for name, count in [('BenchmarkSelectionContractTests.swift', 9), ('BenchmarkModelDomainTests.swift', 8)]:
+            bench = 'Tests/BenchmarkContractTests/' + name
+            self.assertEqual(selector_findings('options(["--filter", "a"])\n' * count, bench), [])
+            self.assertNotEqual(selector_findings('options(["--filter", "a"])\n' * (count + 1), bench), [])
 
     def test_launcher_invariants_and_mutations(self):
         text = self._launcher_text()
         self.assertEqual(launcher_findings(text), [])
         refusal = '    try refuseNestedChildProbeLaunch(selector, environment: ProcessInfo.processInfo.environment)\n'
         marker = '    childEnvironment[childProbeMarkerKey] = selector.description\n'
+        preparation = '    var childEnvironment = try childProbeEnvironment(environment, loadedImages: loadedImages)\n'
         spawn = ('    let pid = try spawnChildProbeGroupLeader(executable: executable, arguments: arguments,\n'
                  '                                             environment: childEnvironment, output: output.fileDescriptor)\n')
         sweep = '            sendToGroup(SIGKILL)\n'
         reap = '            repeat { waited = waitpid(pid, &status, 0) } while waited == -1 && errno == EINTR\n'
-        for piece in (refusal, marker, spawn, sweep, reap):
+        for piece in (refusal, marker, preparation, spawn, sweep, reap):
             self.assertEqual(text.count(piece), 1, piece)
         mutations = {
             'setpgroup_flag': [lambda s: s.replace('POSIX_SPAWN_SETPGROUP | ', '')],
@@ -427,6 +639,12 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
                                      lambda s: s.replace(refusal, '').replace(spawn, spawn + refusal)],
             'marker_before_spawn': [lambda s: s.replace(marker, ''),
                                     lambda s: s.replace(marker, '').replace(spawn, spawn + marker)],
+            # Preparation must produce the environment actually passed to the sole spawn.
+            'environment_before_spawn': [lambda s: s.replace(preparation, ''),
+                                         lambda s: s.replace(preparation, '    var childEnvironment = environment\n'),
+                                         lambda s: s.replace(preparation, '').replace(spawn, spawn + preparation),
+                                         lambda s: s.replace(spawn, spawn.replace('environment: childEnvironment',
+                                                                                 'environment: environment'))],
             # Removed, and moved after the reap (the group ID could then be recycled before the sweep).
             'sweep_before_reap': [lambda s: s.replace(sweep, ''),
                                   lambda s: s.replace(sweep, '').replace(reap, reap + sweep)],
@@ -454,16 +672,23 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
             'clean': dict(launcher_text=text),
             'launcher_without_group': dict(launcher_text=text.replace('kill(-pid, signal)', 'kill(pid, signal)')),
             'no_callers': dict(launcher_text=text, callers=0),
+            'ordinary_budget': dict(launcher_text=text),
+            'missing_import': dict(launcher_text=text),
         }
         results = {}
         for name, kwargs in cases.items():
             with tempfile.TemporaryDirectory() as directory:
                 base = Path(directory)
                 _write_tree(base, **kwargs)
+                if name in ('ordinary_budget', 'missing_import'):
+                    path = base / 'Tests/ComprehensiveTests/Caller0.swift'
+                    change = (('ChildProbeBudget.standard.deadline', '5') if name == 'ordinary_budget'
+                              else ('import VectorCoreTestSupport', 'import Foundation'))
+                    path.write_text(path.read_text().replace(*change))
                 results[name] = {rules: scan_tree(base, rules)[0]
                                  for rules in [RULES] + [tuple(r for r in RULES if r != rule) for rule in RULES]}
         self.assertEqual(results['clean'][RULES], [])
-        for name in ('launcher_without_group', 'no_callers'):
+        for name in ('launcher_without_group', 'no_callers', 'ordinary_budget', 'missing_import'):
             self.assertNotEqual(results[name][RULES], [], name)
         self.assertEqual(set(MUTATION_CONTROLS), set(RULES))
         for rule, (kind, control) in MUTATION_CONTROLS.items():

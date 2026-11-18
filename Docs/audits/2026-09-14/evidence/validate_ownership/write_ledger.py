@@ -1,6 +1,7 @@
 from pathlib import Path
 import json
-base=Path('/private/tmp/vectorcore-validated-audit-2026-09-14')
+import os
+base=Path(os.environ['VECTORCORE_EVIDENCE_ROOT'])
 rows=[]
 def add(refs,claim,verdict,priority,category,exposure,sources,evidence,correction,improvement,acceptance,deps=[]):
  rows.append(dict(id=f'OWN-{len(rows)+1:02}',original_refs=refs,claim=claim,verdict=verdict,priority=priority,category=category,exposure=exposure,sources=sources,evidence=evidence,correction=correction,improvement=improvement,acceptance=acceptance,dependencies=deps))

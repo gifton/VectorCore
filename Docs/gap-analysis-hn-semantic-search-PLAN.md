@@ -24,7 +24,7 @@ This plan specifies the report's full substance (so writing it is mechanical) an
 
 A single Markdown report:
 
-- **Path:** `/Users/goftin/dev/gsuite/VSK/VectorCore/Docs/gap-analysis-hn-semantic-search.md`
+- **Path:** `${SOURCE_ROOT}/Docs/gap-analysis-hn-semantic-search.md`
 - Covers **both** packages; the cwd repo (VectorCore) is the natural home. (Adjust path if the user prefers a shared/VectorIndex location.)
 
 ## Verified ground truth (basis for the report — already confirmed by code read)

@@ -1,4 +1,5 @@
 import Foundation
+import VectorCoreTestSupport
 import Testing
 @testable import VectorCore
 
@@ -49,8 +50,7 @@ struct P01ChildResult {
     var tail: String { String(output.suffix(4000)) }
 }
 
-/// Runs one P01 child scenario through the T10 launcher: 15 s execution deadline, SIGTERM then SIGKILL of the
-/// child's own process group with at most 2 s of cleanup, file capture, and `timedOut` read before any
+/// Runs one P01 child scenario with `ChildProbeBudget.standard`, file capture, and `timedOut` read before any
 /// termination property. `removing` drops environment keys with those prefixes (for example VC_AUTOTUNE).
 func p01RunChild(_ scenario: String, filter: String, removing prefixes: [String] = []) throws -> P01ChildResult {
     var environment = ProcessInfo.processInfo.environment
@@ -75,7 +75,7 @@ func p01RunChild(_ scenario: String, filter: String, removing prefixes: [String]
     var closed = false
     defer { if !closed { try? file.close() } }
     let run = try launchChildProbe(.swiftTesting(filter: filter), environment: environment, output: file,
-                                   deadline: 15, cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                   deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
     let timedOut = run.timedOut
     closed = true
     try file.close()

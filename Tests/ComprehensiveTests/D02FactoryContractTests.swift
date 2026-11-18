@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 import VectorCore
@@ -78,7 +79,7 @@ struct D02FactoryContractTests {
         print("D02_CREATE_VECTOR_RETURNED \(specification)")
     }
 
-    @Test("createVector traps on malformed dimension or data (its documented preconditions; child-isolated)")
+    @Test("createVector traps on malformed dimension or data (its documented preconditions; child-isolated)", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
     func createVectorTrapsOnMalformedInput() throws {
         if ProcessInfo.processInfo.environment["D02_SKIP_TRAPS"] == "1" { return }
         for specification in ["count-mismatch", "negative-with-data", "negative-without-data"] {
@@ -90,8 +91,7 @@ struct D02FactoryContractTests {
             _ = FileManager.default.createFile(atPath: url.path, contents: nil)
             let handle = try FileHandle(forWritingTo: url)
             let process = try launchChildProbe(.swiftTesting(filter: "D02FactoryContractTests/createVectorChildProbe"),
-                                               environment: environment, output: handle, deadline: 15,
-                                               cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                               environment: environment, output: handle, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
             let timedOut = process.timedOut
             try handle.close()
             let diagnostic = try String(contentsOf: url, encoding: .utf8)

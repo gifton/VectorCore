@@ -122,7 +122,7 @@ jobs:
           xcode-version: '26.3'
       - name: Build library for simulator and Catalyst destinations
         run: |
-          for platform in 'iOS Simulator' 'tvOS Simulator' 'watchOS Simulator' 'visionOS Simulator' 'macOS,variant=Mac Catalyst'; do
+          for platform in 'iOS Simulator' 'tvOS Simulator' 'visionOS Simulator' 'macOS,variant=Mac Catalyst'; do
             xcodebuild -scheme VectorCore -configuration Release \
               -destination "generic/platform=$platform" \
               -derivedDataPath "$RUNNER_TEMP/platform-builds/$platform" \
@@ -135,7 +135,7 @@ jobs:
           products="$(python3 Scripts/ci/package_products.py --exclude VectorCore)"
           test -n "$products"
           for product in $products; do
-            for platform in 'iOS Simulator' 'tvOS Simulator' 'watchOS Simulator' 'visionOS Simulator' 'macOS,variant=Mac Catalyst'; do
+            for platform in 'iOS Simulator' 'tvOS Simulator' 'visionOS Simulator' 'macOS,variant=Mac Catalyst'; do
               xcodebuild -scheme "$product" -configuration Release \
                 -destination "generic/platform=$platform" \
                 -derivedDataPath "$RUNNER_TEMP/platform-builds/$platform" \

@@ -1,0 +1,7 @@
+{
+  "artifactReference": 1,
+  "bytes": 46726,
+  "gitCommit": "cd7c3c1579c19f6ac8ab9784057b40d7f762cbcf",
+  "gitPath": "Scripts/ci/bounded_native_qualification_profile.json",
+  "sha256": "4f6f4cff9ca4439be660ed9bb9c27cebf18d08a2071a6a4eaea1b9c1a3e3216e"
+}

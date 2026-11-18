@@ -34,6 +34,22 @@ _R01 = "Scripts/ci/fixtures/compile-contracts/R01MetricScalarContract.swift"
 _R02 = "Scripts/ci/fixtures/compile-contracts/R02CollectionUpdateConsumer.swift"
 _B01 = "Scripts/ci/fixtures/B01BareConformanceNegative.swift"
 CONTRACTS = (
+    {"id": "SIMDStorage-new-conformer", "path": "Scripts/ci/fixtures/compile-contracts/SIMDStorageValueConformerPositive.swift",
+     "expect": "compile"},
+    {"id": "SIMDStorage-legacy-call", "path": "Scripts/ci/fixtures/compile-contracts/SIMDStorageLegacyCallNegative.swift",
+     "expect": "fail", "errorLines": [6], "diagnostics": ["has no member 'withUnsafeMutableBufferPointer'"]},
+    {"id": "SIMDStorage-legacy-conformer", "path": "Scripts/ci/fixtures/compile-contracts/SIMDStorageLegacyConformerNegative.swift",
+     "expect": "fail", "errorLines": [5], "diagnostics": ["does not conform to protocol 'SIMDStorage'"]},
+    {"id": "Collection-inherited-witness", "path": "Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+     "expect": "run", "marker": "COLLECTION_WITNESS_OK"},
+    {"id": "Collection-explicit-witness", "path": "Scripts/ci/fixtures/compile-contracts/CollectionWitnessConsumer.swift",
+     "define": "EXPLICIT_WITNESS", "expect": "run", "marker": "COLLECTION_WITNESS_OK"},
+    {"id": "F008-public-tuning-consumer", "path": "Scripts/ci/fixtures/compile-contracts/F008TuningConsumer.swift",
+     "expect": "run", "marker": "F008_PUBLIC_TUNING_OK"},
+    {"id": "F001-storage-let-negative", "path": "Scripts/ci/fixtures/compile-contracts/F001StorageLetNegative.swift",
+     "expect": "fail", "errorLines": [7, 8, 9, 10], "diagnostics": ["is a 'let' constant"]},
+    {"id": "F001-storage-value-consumer", "path": "Scripts/ci/fixtures/compile-contracts/F001StorageValueConsumer.swift",
+     "expect": "run", "marker": "F001_VALUE_STORAGE_OK"},
     # R01: a DistanceMetric whose Scalar is Double is rejected by every public search entry; Float compiles.
     {"id": "R01-reject-double", "path": _R01, "define": "REJECT_DOUBLE", "expect": "fail", "errorLines": [5, 8, 11]},
     {"id": "R01-float-control", "path": _R01, "expect": "compile"},

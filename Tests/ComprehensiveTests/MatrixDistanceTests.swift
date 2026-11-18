@@ -53,6 +53,7 @@ struct MatrixDistanceTests {
             for j in 0..<10 {
                 let ref = EuclideanKernels.squared512(qs[i], cs[j])
                 let got = out[i * 10 + j]
+                #expect(got.isFinite && ref.isFinite)
                 // Generous absolute + relative band; GEMM vs direct agree to ~1e-4 rel here.
                 #expect(abs(got - ref) <= 1e-2 + 1e-3 * abs(ref),
                         "euclid mismatch i=\(i) j=\(j) got=\(got) ref=\(ref)")
@@ -101,6 +102,7 @@ struct MatrixDistanceTests {
         for i in 0..<2 {
             for j in 0..<3 {
                 let ref = EuclideanKernels.squared768(q7[i], c7[j])
+                #expect(o7[i * 3 + j].isFinite && ref.isFinite)
                 #expect(abs(o7[i * 3 + j] - ref) <= 1e-1 + 1e-3 * abs(ref))
             }
         }

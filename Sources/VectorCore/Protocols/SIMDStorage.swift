@@ -26,10 +26,21 @@ public protocol SIMDStorage {
     /// - Returns: Result of the closure
     func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R
 
-    /// Provides mutable unsafe buffer pointer access to the storage
-    /// - Parameter body: Closure that receives an inout mutable unsafe buffer pointer to the storage
-    /// - Returns: Result of the closure
-    mutating func withUnsafeMutableBufferPointer<R>(_ body: (inout UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R
+    /// Borrows the elements for mutation, passing the buffer descriptor by value.
+    ///
+    /// Conformer contract: invoke `body` exactly once, including for empty storage,
+    /// and propagate its result or error. Element writes before an error remain
+    /// mutations; this operation does not promise rollback. The buffer is valid
+    /// only during `body`: do not escape its pointers or access this storage through
+    /// another route during the borrow. Passing the descriptor by value permits
+    /// element writes without permitting replacement of the owner's buffer.
+    ///
+    /// ContiguousArray behavior is exercised by `SIMDStorageMutationTests`, including
+    /// `callbackRunsOnceIncludingEmptyStorage`, `cowCopyAndUntouchedTailArePreserved`
+    /// and `throwingBorrowKeepsMutationAndOriginalError`.
+    /// - Parameter body: A closure receiving a mutable view of the elements.
+    /// - Returns: The result returned by `body`.
+    mutating func withUnsafeMutableElements<R>(_ body: (UnsafeMutableBufferPointer<Element>) throws -> R) rethrows -> R
 
     /// Subscript access for individual SIMD elements
     subscript(index: Int) -> Element { get set }
@@ -37,10 +48,19 @@ public protocol SIMDStorage {
 
 // MARK: - ContiguousArray Extensions
 
-/// Make ContiguousArray conform to SIMDStorage for any SIMD4 element type
+/// ContiguousArray's SIMDStorage conformance is not restricted to SIMD elements.
 extension ContiguousArray: SIMDStorage {
-    // All required methods are already provided by ContiguousArray
-    // This works for any Element type, including SIMD4<Float>, SIMD4<Int8>, etc.
+    /// Uses ContiguousArray's mutable borrow and passes its descriptor by value.
+    /// Shared storage may be copied by the underlying borrow; the callback's work
+    /// is additional. See `SIMDStorageMutationTests` for the tested mutation contract.
+    @inlinable
+    public mutating func withUnsafeMutableElements<R>(
+        _ body: (UnsafeMutableBufferPointer<Element>) throws -> R
+    ) rethrows -> R {
+        try withUnsafeMutableBufferPointer { buffer in
+            try body(buffer)
+        }
+    }
 }
 
 // MARK: - Protocol Extensions for Common Operations

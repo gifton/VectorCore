@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -159,18 +160,38 @@ extension UnsafeMemoryContractTests {
 }
 
 extension UnsafeMemoryContractTests {
+    @Test func alignedCopiesReleaseBothAllocations() {
+        weak var originalAllocation: AlignedDynamicAllocation?
+        weak var copiedAllocation: AlignedDynamicAllocation?
+        do {
+            let original = AlignedDynamicArrayStorage(from: [1, 2, 3])
+            originalAllocation = original.allocation
+            do {
+                var copy = original
+                copy[0] = 9
+                copiedAllocation = copy.allocation
+                #expect(originalAllocation !== copiedAllocation)
+                #expect(original[0] == 1 && copy[0] == 9)
+            }
+            #expect(copiedAllocation == nil)
+            #expect(originalAllocation != nil)
+            withExtendedLifetime(original) {}
+        }
+        #expect(originalAllocation == nil)
+    }
+
     @Test func forcedPrimaryFailurePreservesAlignment() {
         for count in [0, 1, 3, 17, 257] {
             for alignment in [16, 32, 64, 256, 4096] {
                 var calls = 0
-                weak var released: AlignedDynamicArrayStorage?
+                weak var released: AlignedDynamicAllocation?
                 do {
-                    let storage = AlignedDynamicArrayStorage(dimension: count, repeating: 9, alignment: alignment, primaryAllocator: { n, a in
+                    var storage = AlignedDynamicArrayStorage(dimension: count, repeating: 9, alignment: alignment, primaryAllocator: { n, a in
                         calls += 1
                         #expect(n == count && a == alignment)
                         throw VectorError.allocationFailed(size: 0, reason: "O04 injected primary failure")
                     })
-                    released = storage
+                    released = storage.allocation
                     #expect(calls == 1)
                     #expect(!storage.usedPosixAlignedAlloc)
                     #expect(storage.guaranteedAlignment == alignment && storage.verifyAlignment())
@@ -221,7 +242,7 @@ extension UnsafeMemoryContractTests {
         print("O04_INVALID_ACCEPTED")
     }
 
-    @Test func invalidInputsRejectInBoundedChildren() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func invalidInputsRejectInBoundedChildren() throws {
         for spec in ["normalize", "copy-count", "copy-zero-hint", "copy-negative-hint", "alloc-zero", "alloc-small", "alloc-odd", "storage-negative", "storage-overflow",
             "storage-zero-alignment", "storage-odd-alignment"] {
             let environment = ProcessInfo.processInfo.environment
@@ -231,7 +252,7 @@ extension UnsafeMemoryContractTests {
             let output = try FileHandle(forWritingTo: url)
             defer { try? output.close() }
             let process = try launchChildProbe(.swiftTesting(filter: "UnsafeMemoryContractTests/invalidChildProbe"),
-                                               environment: environment, output: output, deadline: 15, cleanup: .kill(seconds: 2))
+                                               environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
             if process.timedOut {
                 throw NSError(domain: "UnsafeMemoryContractTests.childTimeout", code: 1,
                               userInfo: [NSLocalizedDescriptionKey: "\(spec): child deadline; cleanup=\(process.cleanup); log=\(url.path)"])

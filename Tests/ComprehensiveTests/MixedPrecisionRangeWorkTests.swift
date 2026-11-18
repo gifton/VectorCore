@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Darwin
 import CryptoKit
@@ -180,7 +181,7 @@ private func q04HalfValue(bits: UInt16) -> Double {
         }
     }
 
-    @Test(arguments: [512, 768, 1536], [0, 1, 2])
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: [512, 768, 1536], [0, 1, 2])
     func namedRejectionMatrix(width: Int, metric: Int) throws {
         for invalid in ["negative", "upper", "empty", "extreme", "capacity"] { try runChild(width: width, metric: metric, invalid: invalid) }
     }
@@ -195,7 +196,7 @@ private func q04HalfValue(bits: UInt16) -> Double {
         _ = FileManager.default.createFile(atPath: stem + ".log", contents: nil)
         let output = try FileHandle(forWritingTo: URL(fileURLWithPath: stem + ".log"))
         let process = try launchChildProbe(.swiftTesting(filter: "MixedPrecisionRangeWorkTests/childProbe"),
-                                           environment: env, output: output, deadline: 15, cleanup: .kill(seconds: 2))
+                                           environment: env, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let args = process.arguments, timedOut = process.timedOut, cleaned = process.cleaned
         try output.close()
         func hash(_ path: String) -> String {

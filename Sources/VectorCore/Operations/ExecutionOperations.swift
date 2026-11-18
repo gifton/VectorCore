@@ -3,6 +3,25 @@ import Foundation
 
 internal enum ExecutionOperations {
     internal static let parallelThreshold = 1000
+
+    /// Convert the Float-element hint to row items using the smallest clamped row width.
+    /// Empty input retains the validated hint; zero-width rows count as one element of
+    /// scheduling work. Ragged transforms use the smallest width rather than assuming
+    /// uniform rows. AutomaticRowSchedulingTests covers these cases and Int.max hints.
+    /// Complexity: O(rows.count); ceilingDivide avoids an overflowing numerator sum.
+    internal static func minimumRows<V: VectorProtocol>(
+        _ vectors: [V], preferredElements: Int
+    ) throws -> Int {
+        try ComputeRangeBoundary.validate(minChunk: preferredElements)
+        try Task.checkCancellation()
+        guard let first = vectors.first else { return preferredElements }
+        var width: Int = max(1, first.scalarCount)
+        for vector in vectors.dropFirst() {
+            if width == 1 { break }
+            width = min(width, max(1, vector.scalarCount))
+        }
+        return ComputeRangeBoundary.ceilingDivide(preferredElements, by: width)
+    }
 }
 
 extension ExecutionOperations {
@@ -12,8 +31,11 @@ extension ExecutionOperations {
         _ vectors: [V], transform: @Sendable @escaping (Float) -> Float,
         context: any ExecutionContext = CPUContext.automatic
     ) async throws -> [V] where V.Scalar == Float {
-        try await BoundedExecution.map(0..<vectors.count, limit: context.maxThreadCount,
-            parallel: vectors.count >= parallelThreshold, minimum: context.preferredChunkSize,
+        let limit = context.maxThreadCount
+        try BoundedExecution.validate(limit: limit)
+        let minimum = try minimumRows(vectors, preferredElements: context.preferredChunkSize)
+        return try await BoundedExecution.map(0..<vectors.count, limit: limit,
+            parallel: vectors.count >= parallelThreshold, minimum: minimum,
             phase: "transform.map") { index in
             let vector = vectors[index]
             var result = Array(repeating: Float(0), count: vector.scalarCount)
@@ -34,8 +56,13 @@ extension ExecutionOperations {
         let n = vectors.count
         // n*n >= threshold, without forming an unrepresentable square.
         let parallel = n > 0 && n > (parallelThreshold - 1) / n
-        let rows = try await BoundedExecution.map(0..<n, limit: context.maxThreadCount,
-            parallel: parallel, minimum: context.preferredChunkSize, phase: "matrix.distance") { i in
+        // Width accounts for at least one vector per row; triangular rows still have
+        // unequal comparison counts. This unit conversion does not balance those costs.
+        let limit = context.maxThreadCount
+        try BoundedExecution.validate(limit: limit)
+        let minimum = try minimumRows(vectors, preferredElements: context.preferredChunkSize)
+        let rows = try await BoundedExecution.map(0..<n, limit: limit,
+            parallel: parallel, minimum: minimum, phase: "matrix.distance") { i in
             var row: [Float] = []
             row.reserveCapacity(n - i)
             for j in i..<n { row.append(metric.distance(vectors[i], vectors[j])) }

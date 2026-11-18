@@ -3420,6 +3420,11 @@ public enum MixedPrecisionKernels {
     ///
     /// The expected-error figures are a fixed heuristic model (0.05% × D^(1/4) for FP16, 0.5% for INT8),
     /// not verified against measured error for any dataset.
+    ///
+    /// With no finite observations, returns an FP32 sentinel with zero statistics and expected error;
+    /// that zero error is not an accuracy measurement. Empty input has dimension zero; otherwise the
+    /// first vector's dimension is retained (PrecisionStatisticsRangeTests.noFiniteObservationsAcrossSupportedWidths,
+    /// PrecisionStatisticsRangeTests.sentinelControlsAcrossSupportedWidths).
     public static func analyzePrecision<V: AnalyzableVector>(
         _ vectors: [V]
     ) -> PrecisionProfile {
@@ -3453,7 +3458,16 @@ public enum MixedPrecisionKernels {
             }
         }
 
-        let meanValue = Float(sum / Double(valueCount))
+        guard valueCount > 0 else {
+            return PrecisionProfile(
+                minValue: 0, maxValue: 0, meanValue: 0, stdDev: 0,
+                dynamicRange: 0, recommendedPrecision: .fp32, expectedError: 0,
+                outlierCount: 0, dimension: dimension
+            )
+        }
+
+        let mean = sum / Double(valueCount)
+        let meanValue = Float(mean)
 
         // Second pass: compute variance for standard deviation
         var sumSquaredDiff: Double = 0
@@ -3462,7 +3476,7 @@ public enum MixedPrecisionKernels {
                 for i in 0..<4 {
                     let v = simd4[i]
                     if v.isFinite {
-                        let diff = Double(v - meanValue)
+                        let diff = Double(v) - mean
                         sumSquaredDiff += diff * diff
                     }
                 }
@@ -3470,16 +3484,17 @@ public enum MixedPrecisionKernels {
         }
 
         let variance = sumSquaredDiff / Double(valueCount)
-        let stdDev = Float(sqrt(variance))
+        let standardDeviation = sqrt(variance)
+        let stdDev = Float(standardDeviation)
 
         // Third pass: count outliers (values beyond 3 standard deviations)
         var outlierCount = 0
-        let outlierThreshold = 3.0 * stdDev
+        let outlierThreshold = 3.0 * standardDeviation
         for vector in vectors {
             for simd4 in vector.storage {
                 for i in 0..<4 {
                     let v = simd4[i]
-                    if v.isFinite && abs(v - meanValue) > outlierThreshold {
+                    if v.isFinite && abs(Double(v) - mean) > outlierThreshold {
                         outlierCount += 1
                     }
                 }

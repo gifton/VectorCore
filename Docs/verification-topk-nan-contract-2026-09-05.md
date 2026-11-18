@@ -98,10 +98,10 @@ finite-tie permutations such as `[2,1,0]`; the GEMM matrix contained NaNs before
 formatting converted the selected NaNs to zero.
 
 Initial two-test failures were recorded in the tool output; the expanded run
-reused `/private/tmp/vectorcore-topk-core-red.log`. Other diagnostic logs are
-`/private/tmp/vectorcore-topk-ties-baseline.log`,
-`/private/tmp/vectorcore-topk-wrapper-red.log`, and
-`/private/tmp/vectorcore-topk-combined-green.log`.
+reused `${CAPTURE_ROOT}/vectorcore-topk-core-red.log`. Other diagnostic logs are
+`${CAPTURE_ROOT}/vectorcore-topk-ties-baseline.log`,
+`${CAPTURE_ROOT}/vectorcore-topk-wrapper-red.log`, and
+`${CAPTURE_ROOT}/vectorcore-topk-combined-green.log`.
 
 ## Final verification
 
@@ -116,12 +116,12 @@ under these filters; these counts come from Swift Testing, not that empty runner
 Swift Testing reports 1,138 tests including disabled tests; 1,120 ran. XCTest's
 91 also includes its skips; 64 ran. The Swift Testing run took 387.480 seconds,
 dominated by existing auto-tuner calibration tests. Raw log:
-`/private/tmp/vectorcore-topk-debug.log`.
+`${CAPTURE_ROOT}/vectorcore-topk-debug.log`.
 
 `swift test -c release` also completed successfully: the same 1,138 Swift Testing
 tests in 167 suites (1,120 run, 18 skipped), and 91 XCTest cases (64 run,
 27 skipped), zero failures. Release compilation took 147.98 seconds; Swift
-Testing took 22.728 seconds. Raw log: `/private/tmp/vectorcore-topk-release.log`.
+Testing took 22.728 seconds. Raw log: `${CAPTURE_ROOT}/vectorcore-topk-release.log`.
 Skipped tests are the existing opt-in performance/extended cases. No pre-existing
 test failures or new failures were observed in either final full run. Existing
 deprecation and test-source compiler warnings remain outside this change.
@@ -133,8 +133,8 @@ all baseline/final and array/pointer checksums.
 After the requested 0.3.3 patch bump, the combined Top-K/core/wrapper filter passed
 49 tests in 4 suites. A fresh full Release run passed with the same 1,138 Swift
 Testing and 91 XCTest totals and skip counts above; Swift Testing took 22.417
-seconds. Logs: `/private/tmp/vectorcore-033-targeted.log` and
-`/private/tmp/vectorcore-033-release.log`. A source consistency check confirmed
+seconds. Logs: `${CAPTURE_ROOT}/vectorcore-033-targeted.log` and
+`${CAPTURE_ROOT}/vectorcore-033-release.log`. A source consistency check confirmed
 the version string and major/minor/patch components all resolve to `0.3.3`.
 
 ## Finite-input release measurements

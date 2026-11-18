@@ -24,7 +24,7 @@
   "policy": "Merged tree: claim ledger 0 problems; unittest 493 OK in-repo and git-less (P02/merge/gitless-gate.log); SwiftLint 0 new; H2 symbol diff: only BatchSearchCPUStrategy plus cpuStrategy.",
   "reviews": "Phase 1 rulings (RD1-RD16) -> A+B review -> C reviews A/B -> D-F (+step 0) reviews A/B -> phase G (+step 0) -> final reviews A (step 0), B (evidence), C (holistic) -> ONE final fix -> scoped re-review APPROVED -> root residuals F1/F2/N1-N4 applied and verified by ROOT directly."
  },
- "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/P02",
+ "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/P02",
  "reviewed_tree": "manifest P02/root-residuals/freeze-sha256.txt (6297 files; worktree frozen by sha256, not staged: the staging permission was denied 2026-10-06)",
  "limitations": [
   "Performance: one quiet host. .perQuery is up to 22.6x slower than the deleted gate at Q64/N4096; pairwise per-row is 1.6-8.7x slower. Accepted under POLICY (performance targets deferred) and added to the D01/L04 user packet.",

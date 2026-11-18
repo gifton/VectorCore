@@ -18,7 +18,7 @@
     "policy": "Merged tree: ledger 0 problems; unittest 438 OK in-repo and git-less.",
     "reviews": "Phase 1 rulings → phase 2 → Opus review (Spec 9/9; I-1 guard gaps) → fix round 1 → scoped re-review (a guard regression found) → narrow residual fix verified by ROOT directly (all 5 reviewer shapes flag; control does not; 19/19)."
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T16",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T16",
   "reviewed_tree": "15ce794a80b0b6c6abb369d2208efcb3e698cb85",
   "limitations": [
     "Performance (one loaded host, disclosed): the Swift reductions +6-10%, Accelerate 2.1-2.7× for n≥1536, element-wise min 1.4×.",

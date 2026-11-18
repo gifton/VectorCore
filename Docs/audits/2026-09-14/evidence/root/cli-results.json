@@ -15,7 +15,7 @@
       "--format",
       "json",
       "--out",
-      "/private/tmp/vectorcore-validated-audit-2026-09-14/root/filter.json"
+      "${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/root/filter.json"
     ],
     "exit": 0,
     "results": 0,
@@ -79,7 +79,7 @@
       "--use-ckernels",
       "--release-size",
       "--out",
-      "/private/tmp/vectorcore-validated-audit-2026-09-14/root/debug-meta.json"
+      "${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/root/debug-meta.json"
     ],
     "exit": 0,
     "results": 0,
@@ -141,7 +141,7 @@
       "--format",
       "json",
       "--out",
-      "/private/tmp/vectorcore-validated-audit-2026-09-14/root"
+      "${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/root"
     ],
     "exit": 0
   }

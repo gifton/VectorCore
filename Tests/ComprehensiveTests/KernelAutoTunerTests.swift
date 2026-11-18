@@ -228,10 +228,54 @@ final class KernelAutoTunerTests: XCTestCase {
 
     // MARK: - Accuracy Measurement
 
+    func testAccuracyBaseline() throws {
+        for dimension: Int in [512, 768, 1536] {
+            let query: [Float] = (0..<dimension).map { Float(($0 * 17) % 47 - 23) / 23 }
+            let candidates: [[Float]] = [
+                query,
+                query.map { -$0 },
+                (0..<dimension).map { Float(($0 * 11 + 7) % 53 - 26) / 29 },
+                (0..<dimension).map { $0.isMultiple(of: 2) ? 1 : -1 },
+                [Float](repeating: 0, count: dimension)
+            ]
+
+            for (index, candidate) in candidates.enumerated() {
+                // Scalar widening is independent of DotKernels' SIMD accumulation.
+                var reference: Double = 0
+                var absoluteProductSum: Double = 0
+                for coordinate in 0..<dimension {
+                    let product: Double = Double(query[coordinate]) * Double(candidate[coordinate])
+                    reference += product
+                    absoluteProductSum += abs(product)
+                }
+                // Absolute-product scaling keeps cancellation cases meaningful. This is
+                // a tolerance for these bounded fixtures, not an arbitrary-data guarantee.
+                let tolerance: Double = 1e-5 * max(1, absoluteProductSum)
+                let actual: Float
+                switch dimension {
+                case 512:
+                    actual = DotKernels.dot512(try Vector512Optimized(query), try Vector512Optimized(candidate))
+                case 768:
+                    actual = DotKernels.dot768(try Vector768Optimized(query), try Vector768Optimized(candidate))
+                default:
+                    actual = DotKernels.dot1536(try Vector1536Optimized(query), try Vector1536Optimized(candidate))
+                }
+                let agreesWithReference: (Float) -> Bool = { result in
+                    result.isFinite && abs(Double(result) - reference) <= tolerance
+                }
+                XCTAssertTrue(agreesWithReference(actual),
+                    "AoS dot disagrees with scalar Double reference: D=\(dimension), candidate=\(index), actual=\(actual), reference=\(reference), tolerance=\(tolerance)")
+                XCTAssertFalse(agreesWithReference(actual + 0.25),
+                    "The independent accuracy check must reject a perturbed result: D=\(dimension), candidate=\(index)")
+            }
+        }
+    }
+
     @MainActor
-    func testAccuracyBaseline() async throws {
+    func testAccuracyBaselineCalibrationSelfConsistency() async throws {
         let tuner = KernelAutoTuner()
-        // cpuAoS should have perfect accuracy (1.0) against itself
+        // Calibration compares cpuAoS with itself; independent numeric coverage is
+        // provided by testAccuracyBaseline, not this synthetic self-score.
         let workload = WorkloadCharacteristics(
             dimension: 512,
             batchSize: 50,
@@ -246,7 +290,7 @@ final class KernelAutoTunerTests: XCTestCase {
 
         let aosProfile = profiles.first { $0.strategy == .cpuAoS }
         XCTAssertNotNil(aosProfile, "cpuAoS should be profiled")
-        XCTAssertEqual(Double(aosProfile?.syntheticAccuracyScore ?? 0), 1.0, accuracy: 0.01, "cpuAoS should have perfect accuracy")
+        XCTAssertEqual(Double(aosProfile?.syntheticAccuracyScore ?? 0), 1.0, accuracy: 0.01, "cpuAoS calibration should be self-consistent")
     }
 
     @MainActor

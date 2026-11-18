@@ -25,7 +25,7 @@
     "ci_error_extraction": "Root's first run-2 summary grepped only `<file>.swift:L:C: error:` lines and missed the D02 error, which swift reports as `macro expansion #expect:1:1: error:` with the source location only in a later 'expanded code originates here' note. Closed with R/pr/ci_errors.py: it resolves both forms, reports unpaired macro errors and any other `error:` line as UNRESOLVED (rc 1), and was negative-control tested. On run 2 it finds exactly 11 sites, 0 unresolved.",
     "round3": "Workspace T20c: the new and extended policy tests GREEN (12) and RED against the base scripts (sanitizer 6.0 case ValueError; output-counts import error); git-less unittest 531 OK (skipped 6) on the final state; check_claim_ledger 0 problems; check_performance_gates.py debug on Swift 6.4: V03_PERFORMANCE_GATES_COMPLETE debug 22; check_sanitizers.py address on Swift 6.4: V03_SANITIZERS_COMPLETE address 77. Independent Sonnet review: APPROVE; two comment-wording nits applied."
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T20",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T20",
   "reviewed_tree": "manifests T20/freeze-sha256.txt (6333 files), T20b/freeze-sha256.txt (6334) and T20c/freeze-sha256.txt (6335)",
   "limitations": [
     "Swift 6.0 and 6.2 are not installed locally (only Xcode 27 / Swift 6.4). Compatibility is proven only by CI on the PR; CI run 4 is the check for round 3."

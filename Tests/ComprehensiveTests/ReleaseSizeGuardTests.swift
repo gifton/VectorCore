@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -42,10 +43,10 @@ import Testing
         return "MatrixDistance rows must share a dimension"
     }
 
-    @Test(arguments: kernelScenarios)
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: kernelScenarios)
     func kernelTrapsBeforeWriting(scenario: String) throws { try runChild(scenario, checksSentinel: true) }
 
-    @Test(arguments: matrixScenarios)
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), arguments: matrixScenarios)
     func matrixRowsOfUnequalLengthTrap(scenario: String) throws { try runChild(scenario, checksSentinel: false) }
 
     private func runChild(_ scenario: String, checksSentinel: Bool) throws {
@@ -62,7 +63,7 @@ import Testing
         _ = FileManager.default.createFile(atPath: stem + ".log", contents: nil)
         let output = try FileHandle(forWritingTo: URL(fileURLWithPath: stem + ".log"))
         let process = try launchChildProbe(.swiftTesting(filter: "ReleaseSizeGuardTests/childProbe"),
-                                           environment: env, output: output, deadline: 30, cleanup: .kill(seconds: 2))
+                                           environment: env, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         try output.close()
         let log = try String(contentsOfFile: stem + ".log", encoding: .utf8)
         try #require(!process.timedOut, "\(scenario): child deadline\n\(log.suffix(1500))")

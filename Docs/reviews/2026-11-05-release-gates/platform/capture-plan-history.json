@@ -1,0 +1,8 @@
+{
+  "prelaunchPlanSHA256": "a3dc2b364406609fe58767c4ff4cf2ded157db4b607dc0c8f6a60634a42cfbee",
+  "exactPrelaunchPlanBytesRetained": false,
+  "reason": "Mutable capture-plan.json was regenerated after later captures and reviewer-driven plan repairs; only hash was recorded at readiness time.",
+  "claimBoundary": "Per-call reserved-output validation ran before readiness/test commands. Final repaired cross-invocation audit verifies completed actual output namespace, but is posthoc and does not reconstruct prelaunch plan bytes.",
+  "historicalOriginalCollisionPreserved": true,
+  "nativeRerunAfterPlanRepairs": false
+}

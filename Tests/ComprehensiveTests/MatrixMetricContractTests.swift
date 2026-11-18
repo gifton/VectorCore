@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -353,7 +354,7 @@ extension MatrixMetricContractTests {
         print("R03_CONFIGURATION_COMPLETE \(scenario)")
     }
 
-    @Test(.serialized, arguments: configurationScenarios)
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized, arguments: configurationScenarios)
     func configurationScenarioRunsInFreshProcess(scenario: String) throws {
         var environment = ProcessInfo.processInfo.environment
         environment["R03_CONFIGURATION_SCENARIO"] = scenario
@@ -362,8 +363,7 @@ extension MatrixMetricContractTests {
         _ = FileManager.default.createFile(atPath: log.path, contents: nil)
         let output = try FileHandle(forWritingTo: log)
         let process = try launchChildProbe(.swiftTesting(filter: "MatrixMetricContractTests/isolatedConfigurationChild"),
-                                           environment: environment, output: output, deadline: 15,
-                                           cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                           environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         let timedOut = process.timedOut
         try output.close()
         let text = try String(contentsOf: log, encoding: .utf8)

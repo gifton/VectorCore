@@ -28,6 +28,10 @@ PATTERNS = [
 # Paths (relative to the repository root, '/' separated) allowed to contain such literals, with the reason.
 ALLOWLIST = {
     'Scripts/ci/swiftpm_products.py': 'the single place that knows both layouts',
+    'Scripts/ci/bounded_native_qualification.py': 'candidate-pinned retained native evidence validation, not product discovery; '
+                                                    'rejects a different layout rather than selecting build products',
+    'Scripts/ci/tests/test_bounded_native_qualification.py': 'synthetic native receipt/modulemap fixtures exercising '
+                                                          'the candidate-pinned validator; never discover or build products',
     'Scripts/ci/tests/test_no_native_layout_literals.py': 'defines the patterns and their negative controls',
     'Scripts/ci/claim_ledger.json': 'claim-ledger data that quotes Docs/Performance_Guide.md command lines verbatim (live '
                                     'and tombstoned statements); never resolved as a path',
@@ -60,6 +64,16 @@ def scan(root, allowlist=ALLOWLIST):
 
 
 class NativeLayoutLiteralTests(unittest.TestCase):
+    def test_profile_exemptions_do_not_hide_unreviewed_data_or_adjacent_tools(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            directory = root/'Scripts/ci/qualification_profiles'
+            directory.mkdir(parents=True)
+            for filename in ('unreviewed.json','discover.py','helper.sh'):
+                (directory/filename).write_text('"VectorCoreC.build/module.modulemap"\n')
+            self.assertEqual(set(scan(root)), {str((directory/f).relative_to(root)) for f in ('unreviewed.json','discover.py','helper.sh')})
+
     def test_repository_has_no_native_layout_literals_outside_the_allowlist(self):
         self.assertEqual(scan(ROOT), {})
 

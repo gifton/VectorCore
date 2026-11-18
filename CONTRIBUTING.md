@@ -39,8 +39,10 @@ help during development but do not replace full Debug and Release checks.
 
 `CI Required` is the stable merge gate. It aggregates the required jobs,
 including tests, lint, repository checks, consumer examples, and platform
-compilation. Timing benchmarks, sanitizers, and CodeQL are separate advisory
-signals; inspect relevant failures even when they do not block the gate.
+compilation, benchmark contracts, and the selected ASan/TSan workloads.
+Timing benchmarks and CodeQL are separate advisory signals; inspect relevant
+failures even when they do not block the gate. The
+[configured CI contracts](Docs/executed-ci-contracts.md) describe each lane's scope.
 
 Local hooks are optional:
 

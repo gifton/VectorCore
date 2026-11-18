@@ -19,7 +19,7 @@ Read every line of:
 
 Traced PCA's UMAP initialization caller (`UMAP.swift:266–273`) and the shared flattening call from `KNNGraph.bruteForce`. Searched sibling VectorIndex/VectorAccelerate Swift sources for these model/provider names; no direct usages found. This is a name search, not a complete downstream compatibility review.
 
-Checked column-major indexing, all GEMM transpose modes, thin factor dimensions, lower-triangle symmetrization, permutation/sign rules, rank bounds, scalar precision, task-local propagation, buffer lifetimes, model construction, iteration bounds, workspace allocation, and in-memory complexity. A standalone executable links existing Debug objects through the root-provided `build_probe.py`; its source is `/private/tmp/vectorcore-review-2026-09-14/la_probe.swift`. No external numerical/API uncertainty needed web research: the findings below follow from local arithmetic and independent closed-form answers. The root owns full Debug/Release test results.
+Checked column-major indexing, all GEMM transpose modes, thin factor dimensions, lower-triangle symmetrization, permutation/sign rules, rank bounds, scalar precision, task-local propagation, buffer lifetimes, model construction, iteration bounds, workspace allocation, and in-memory complexity. A standalone executable links existing Debug objects through the root-provided `build_probe.py`; its source is `${CAPTURE_ROOT}/vectorcore-review-2026-09-14/la_probe.swift`. No external numerical/API uncertainty needed web research: the findings below follow from local arithmetic and independent closed-form answers. The root owns full Debug/Release test results.
 
 ## Prioritized verified candidate findings
 
@@ -83,7 +83,7 @@ try PCAModel.fit(
 
 **Mechanism:** `k + config.oversampling` overflows before the enclosing `min` can limit it to `min(n,d)`. The input is two ordinary 1D vectors; no large matrix allocation is needed to trigger the failure. The accepted oversampling setting can arrive from an application's user/config input.
 
-**Observed Debug probe:** `/private/tmp/vectorcore-review-2026-09-14/la_probe overflow` exits with signal-trap status 133. Static derivation identifies the exact addition; normal mode uses valid vectors of the same type successfully.
+**Observed Debug probe:** `${CAPTURE_ROOT}/vectorcore-review-2026-09-14/la_probe overflow` exits with signal-trap status 133. Static derivation identifies the exact addition; normal mode uses valid vectors of the same type successfully.
 
 **Impact:** The throwing fit API terminates the process for an oversized configuration value. This is distinct from the docs' warning that representable matrix shapes may not be practical allocations.
 

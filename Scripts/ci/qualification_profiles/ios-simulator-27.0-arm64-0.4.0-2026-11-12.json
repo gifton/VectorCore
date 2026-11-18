@@ -1,0 +1,7 @@
+{
+  "artifactReference": 1,
+  "bytes": 17946591,
+  "gitCommit": "cd7c3c1579c19f6ac8ab9784057b40d7f762cbcf",
+  "gitPath": "Scripts/ci/qualification_profiles/ios-simulator-27.0-arm64-0.4.0-2026-11-12.json",
+  "sha256": "143d730936df6eb18374f2aad69c717a120f2f15c9ef58ab7594117979c374e9"
+}

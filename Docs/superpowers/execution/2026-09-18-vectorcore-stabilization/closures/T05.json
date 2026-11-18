@@ -14,7 +14,7 @@
     "reviews": "independent review (found a root-brief-caused false-negative class) + 2 scoped adversarial re-reviews; final: no new breakage"
   },
   "root_error_acknowledged": "Root's T05 brief rule ('foo.path is not a mention unless foo is tainted') opened a false-negative class for type-member taint; caught by review and fixed in round 1.",
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T05",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T05",
   "patch_sha256": "859db60486661cb0600826b655099299cc6bfc60094b7473d959b592ee6e0838",
   "frozen_sha256": {
     "Scripts/ci/tests/test_swift_test_output_paths.py": "efa809db8543b4247ebd0c3e4916d161aa9d040abc3aa926975e966c399bad49"

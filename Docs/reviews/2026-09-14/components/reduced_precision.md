@@ -22,7 +22,7 @@ Read the relevant generic/dispatch/array-wrapper paths in `BatchKernels_SoA.swif
 
 ## Validation artifacts
 
-`reduced-probes/Probe.swift` is a standalone `@testable import VectorCore` executable linked against the orchestrator's completed Debug object files. The probe itself was compiled with `swiftc -O`; no package rebuild was started. Supporting files: `objects.rsp`, `probe`, `normal.log`, `quantize-trap.log`, `asymmetric-trap.log`, and `zero-cache.log` in `/private/tmp/vectorcore-review-2026-09-14/reduced-probes/`.
+`reduced-probes/Probe.swift` is a standalone `@testable import VectorCore` executable linked against the orchestrator's completed Debug object files. The probe itself was compiled with `swiftc -O`; no package rebuild was started. Supporting files: `objects.rsp`, `probe`, `normal.log`, `quantize-trap.log`, `asymmetric-trap.log`, and `zero-cache.log` in `${CAPTURE_ROOT}/vectorcore-review-2026-09-14/reduced-probes/`.
 
 Executable normal-mode results:
 

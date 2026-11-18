@@ -1,0 +1,7 @@
+{
+  "artifactReference": 1,
+  "bytes": 2560429,
+  "gitCommit": "cd7c3c1579c19f6ac8ab9784057b40d7f762cbcf",
+  "gitPath": "Scripts/ci/qualification_profiles/macos-27.0.1-arm64-0.4.0-hosted-2026-11-16.json",
+  "sha256": "28e9de54450bca008f1bde58b5a5680dc65146751a7193f539126832f41000f4"
+}

@@ -18,7 +18,7 @@
     "policy": "unittest OK in-repo and out-of-repo on the merged tree; claim ledger 0 problems",
     "reviews": "independent Opus (Spec PASS / CHANGES REQUESTED) → fix 1 → scoped Opus re-review (all ADDRESSED) → fix 2 (comment-claim and argv minors), root-verified"
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T10",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T10",
   "patch_sha256": "c0d6996b2c80ccfcaabd79fb9d7f014dca420f6e7f2265c0b2c0035f78dcebd4",
   "frozen_sha256": {
     "Scripts/ci/tests/test_child_probe_launch_policy.py": "8cd481c199fce3177905ab1be8b91245d7b17adb17bdc06553b498c5e899ea84",

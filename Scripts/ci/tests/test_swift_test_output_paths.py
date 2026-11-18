@@ -73,8 +73,13 @@ This is a lexical heuristic, not a proof. Scope and known limits:
       label; member-like taint is by name, so an unrelated same-named member also fires.
 * Write operations recognised: see WRITE_OPERATION. Anything else (for example a
   write through a third-party wrapper) is not seen.
+* The two reviewed XCTest executable-identity comparisons in ChildProbeLauncher
+  are exempt only while their complete top-level functions match pinned hashes.
+  This exempts no other rule or path. Changes require renewed review; the named
+  runner-exception tests exercise changed bodies, owners, paths and other rules.
 """
 
+import hashlib
 import importlib.util
 import re
 import subprocess
@@ -110,13 +115,46 @@ CLOSURE_OPENER = re.compile(r'\{\s*(?:(?:\[[^\]]*\]\s*)?(?:\([^)]*\)\s*(?:->\s*[
 CONTROL_FLOW = re.compile(r'\b(?:if|guard|while|for|switch|case)\b')
 
 
-def violations(source):
+RUNNER_PATH = 'Tests/VectorCoreTestSupport/ChildProbeLauncher.swift'
+RUNNER_FUNCTIONS = {
+    'childProbeArguments': '3f20b736abc0093735646acb25f1a266bd815616fdc6f7ccffc9e9f99ff9b505',
+    'launchChildProbe': 'd335c96efb851e3d7989140a4051c95dbddb93d990952ec840dd59b3b9596ab2',
+}
+
+
+def runner_identity_lines(source, path):
+    """Line numbers of the two exact reviewed runner-identity comparisons."""
+    if path != RUNNER_PATH:
+        return set()
+    scopes = _Scopes(source)
+    masked = _mask(source)
+    allowed = set()
+    comparison = 'URL(fileURLWithPath: executable).lastPathComponent == "xctest"'
+    for name, digest in RUNNER_FUNCTIONS.items():
+        owners = [scope for scope, found in enumerate(scopes.name) if found == name]
+        headers = list(re.finditer(r'(?m)^package func ' + re.escape(name) + r'\(', masked))
+        if len(owners) != 1 or len(headers) != 1:
+            continue
+        owner, start = owners[0], headers[0].start()
+        if scopes.parent[owner] != 0 or scopes.at[start] != 0 or start >= scopes.opens[owner]:
+            continue
+        fragment = source[start:scopes.closes[owner] + 1]
+        if hashlib.sha256(fragment.encode('utf-8')).hexdigest() != digest:
+            continue
+        if fragment.count(comparison) != 1:
+            continue
+        allowed.add(source.count('\n', 0, start + fragment.index(comparison)) + 1)
+    return allowed
+
+
+def violations(source, path=None):
     """Return (line, rule) pairs for forbidden path heuristics in Swift source."""
     found = []
     source = source.replace('\r\n', '\n').replace('\r', '\n')
+    identity_lines = runner_identity_lines(source, path)
     statements = _statements(source)
     for number, text in statements:
-        if LAST_COMPONENT_COMPARISON.search(text):
+        if LAST_COMPONENT_COMPARISON.search(text) and number not in identity_lines:
             found.append((number, 'lastPathComponent comparison'))
         if WORKSPACES_LITERAL.search(text):
             found.append((number, '"workspaces" literal'))
@@ -213,13 +251,43 @@ def violations(source):
 def scan(tests_dir):
     result = {}
     for path in sorted(Path(tests_dir).rglob('*.swift')):
-        hits = violations(path.read_text(encoding='utf-8'))
+        relative = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else None
+        hits = violations(path.read_text(encoding='utf-8'), relative)
         if hits:
             result[str(path)] = hits
     return result
 
 
 class SwiftTestOutputPathTests(unittest.TestCase):
+    def test_reviewed_xctest_executable_identity_is_not_output_path_inference(self):
+        source = (ROOT / RUNNER_PATH).read_text()
+        self.assertEqual(len(runner_identity_lines(source, RUNNER_PATH)), 2)
+        self.assertEqual(violations(source, RUNNER_PATH), [])
+        self.assertEqual(len(violations(source)), 2)
+
+    def test_runner_exception_rejects_changed_names_owners_bodies_and_other_path_rules(self):
+        source = (ROOT / RUNNER_PATH).read_text()
+        for changed in [source.replace('== "xctest"', '== "debug"'),
+                        source.replace('== "xctest"', '== "release"'),
+                        source.replace('== "xctest"', '== "workspaces"'),
+                        source.replace('let executable = CommandLine.arguments[0]',
+                                       'let executable = FileManager.default.currentDirectoryPath'),
+                        source.replace('func launchChildProbe(', 'func decoyProbe('),
+                        source + source, 'struct Decoy {\n' + source + '\n}']:
+            with self.subTest(changed=changed[-80:]):
+                self.assertTrue(violations(changed, RUNNER_PATH))
+        self.assertTrue(violations(source, 'Tests/Decoy.swift'))
+        for extra, rule in [('let p = "workspaces"', '"workspaces" literal'),
+                            ('let p = ".build/cache"', '.build path literal'),
+                            ('let p = #filePath\ntry text.write(toFile: p)', 'write location derived from #filePath')]:
+            with self.subTest(extra=extra):
+                # Existing reviewed comparisons cannot suppress another rule,
+                # whether the violation is inside or outside their functions.
+                for changed in [source + '\nfunc bad() {\n' + extra + '\n}',
+                                source.replace('    try validateSingleTestSelection(selector.description)',
+                                               '    ' + extra + '\n    try validateSingleTestSelection(selector.description)', 1)]:
+                    self.assertIn(rule, [kind for _, kind in violations(changed, RUNNER_PATH)])
+
     def test_repository_tests_do_not_infer_paths_from_directory_names(self):
         self.assertEqual(scan(ROOT / 'Tests'), {})
 

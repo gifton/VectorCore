@@ -116,16 +116,16 @@ Use the JSON register's per-record acceptance requirements as the implementation
 Run from the repository root (compiler cache permission was used when required):
 
 ```sh
-python3 /private/tmp/vectorcore-review-2026-09-14/build_probe.py /private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership.swift release
-/private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership
-python3 /private/tmp/vectorcore-review-2026-09-14/build_probe.py /private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/ShapeRoutes.swift release
-/private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/ShapeRoutes
-python3 /private/tmp/vectorcore-review-2026-09-14/build_probe.py /private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/AlignmentDebug.swift debug
-/private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/AlignmentDebug 4
-/private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership 4
-/private/tmp/vectorcore-review-2026-09-14/memory-probes/cow-probe
-/private/tmp/vectorcore-review-2026-09-14/memory-probes/tiered-probe
-otool -tvV /private/tmp/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership
+python3 ${CAPTURE_ROOT}/vectorcore-review-2026-09-14/build_probe.py ${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership.swift release
+${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership
+python3 ${CAPTURE_ROOT}/vectorcore-review-2026-09-14/build_probe.py ${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/ShapeRoutes.swift release
+${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/ShapeRoutes
+python3 ${CAPTURE_ROOT}/vectorcore-review-2026-09-14/build_probe.py ${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/AlignmentDebug.swift debug
+${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/AlignmentDebug 4
+${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership 4
+${CAPTURE_ROOT}/vectorcore-review-2026-09-14/memory-probes/cow-probe
+${CAPTURE_ROOT}/vectorcore-review-2026-09-14/memory-probes/tiered-probe
+otool -tvV ${CAPTURE_ROOT}/vectorcore-validated-audit-2026-09-14/validate_ownership/Ownership
 ```
 
 Logs: `ownership-release.log`, `shape-routes-release.log`, `alignment-results.json`, per-dimension alignment logs, `cow-probe-replay.log`, `tiered-probe-replay.log`, `counter-source-audit.json`, `hybrid-release-excerpts.txt`. `build.log` preserves an initial sandbox/compiler-cache failure; subsequent approved compiler commands succeeded. Initial client syntax errors were corrected before any successful execution and do not establish library behavior.

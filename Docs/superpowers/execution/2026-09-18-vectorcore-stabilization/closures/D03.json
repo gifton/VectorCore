@@ -20,7 +20,7 @@
   "review": "reports/D03-review.md",
   "rereview": "reports/D03-rereview-1.md",
   "evidence": "reports/D03-implementation.md",
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/D03",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/D03",
   "patch_sha256": "f6a1a3f30f2480c519becddf2051e0011f87b41ae44546963ed40e84f1145381",
   "frozen_sha256": {
     "Sources/VectorCore/Errors/VectorError.swift": "708c2b3a368503cf05829b0251bc749b3605276f4d0b574c2a18cb151ef73664",

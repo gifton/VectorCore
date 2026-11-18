@@ -9,7 +9,8 @@ usage: D02RunConsumers.py BIN_PATH OUTPUT baseline|final
 
 Each fixture in Scripts/ci/tests/D02/ has one expectation per mode:
   positive  typecheck rc 0, link against the snapshot objects, run rc 0 and print its marker;
-  negative  typecheck rc 1 with exactly one `error:` on every code line of the file (one per removed entry);
+  negative  typecheck rc 1 with exactly one `error:` on every code line of the file (one per removed entry), except
+            LoggerNegative, which shares consumer_smoke's required/optional-line contract;
   fails     typecheck rc 1 containing a named diagnostic (a positive fixture that cannot compile at the base).
 The count guard checks that Reachability.swift calls every symbol of D02/gated-public-base.tsv in code (comments and
 strings masked). In final mode the binding check proves, from the SILGen `function_ref` targets, that each of those
@@ -33,6 +34,7 @@ import sys
 root = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(root / 'Scripts/ci'))
 import swiftpm_products as products  # noqa: E402
+import consumer_smoke  # noqa: E402
 from swift_lexing import _mask  # noqa: E402  (comments and string literals blanked, same length)
 
 FIXTURES = Path(__file__).resolve().parent / 'D02'
@@ -229,17 +231,22 @@ def code_lines(text):
 def main():
     build, output, mode = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
     assert mode in ('baseline', 'final')
+    fixtures = sorted(p for p in FIXTURES.glob('*.swift') if p.is_file())
+    names = {p.name for p in fixtures}
+    tables = [FIXTURES / 'gated-public-base.tsv', FIXTURES / 'protocol-members-base.tsv']
+    missing = sorted(set(TABLE) - names) + [p.name for p in tables if not p.is_file()]
+    extra = sorted(names - set(TABLE))
+    if missing or extra:
+        raise SystemExit(f'D02 fixture manifest differs: missing={missing}, unlisted={extra}')
     output.mkdir(parents=True, exist_ok=False)
     signal.signal(signal.SIGTERM, terminate)
     signal.signal(signal.SIGINT, terminate)
     snap = products.snapshot_consumer_inputs(build, output)
-    fixtures = sorted(FIXTURES.glob('*.swift'))
-    assert sorted(p.name for p in fixtures) == sorted(TABLE), 'fixture table and directory differ'
-    for source in fixtures + [Path(__file__), FIXTURES / 'gated-public-base.tsv']:
+    for source in fixtures + [Path(__file__), *tables]:
         (output / source.name).write_bytes(source.read_bytes())
     record = {'mode': mode, 'bin': str(build),
               'sourceHashes': {str(p.relative_to(root)): sha(p) for p in sorted(root.glob('Sources/**/*.swift'))},
-              'fixtureHashes': {p.name: sha(p) for p in fixtures + [Path(__file__)]},
+              'fixtureHashes': {p.name: sha(p) for p in fixtures + [Path(__file__), *tables]},
               'artifacts': {str(dst.relative_to(output)): sha(dst) for _, dst in snap['records']}, 'runs': [],
               'problems': []}
     # The toolchain's swiftc (A2-M8: not whatever `swiftc` is first on PATH) and the macOS SDK it needs.
@@ -297,10 +304,17 @@ def main():
                     record.setdefault('executables', {})[exe.name] = sha(exe)
                 ok = outcome.get('runExit') == 0 and outcome.get('marker', False)
         elif kind == 'negative':
-            expected = code_lines(fixture.read_text())
-            lines = sorted({int(n) for n, _ in errors})
-            outcome['expectedErrorLines'] = expected
-            ok = status == 1 and lines == expected and len(errors) == len(expected)
+            if fixture.name == 'LoggerNegative.swift':
+                contract = next(row for row in consumer_smoke.CONTRACTS if row['id'] == 'D02-logger-negative')
+                accepted, judgment = consumer_smoke.judge_contract(contract, status, text, fixture.read_text())
+                outcome.update({'expectedErrorLines': contract['errorLines'],
+                                'optionalErrorLines': contract['optionalErrorLines'], 'judgment': judgment})
+                ok = status == 1 and accepted
+            else:
+                expected = code_lines(fixture.read_text())
+                lines = sorted({int(n) for n, _ in errors})
+                outcome['expectedErrorLines'] = expected
+                ok = status == 1 and lines == expected and len(errors) == len(expected)
         elif kind == 'fails':
             ok = status == 1 and detail in text
             outcome['requiredDiagnostic'] = detail
@@ -380,7 +394,7 @@ def main():
         else:
             record['problems'].append('member backstop: swift-symbolgraph-extract failed')
         record['memberBackstop'] = backstop
-        print('binding check', 'passed' if status == 0 and not binding.get('unbound') and
+        print('binding check', 'passed' if binding['silgenExit'] == 0 and not binding.get('unbound') and
               not binding.get('fallbackReferences') else 'FAILED', flush=True)
     (output / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     for problem in record['problems']:

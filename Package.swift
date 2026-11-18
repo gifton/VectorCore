@@ -7,7 +7,6 @@ let package = Package(
         .macOS(.v14),
         .iOS(.v17),
         .tvOS(.v17),
-        .watchOS(.v10),
         .visionOS(.v1)
     ],
     products: [
@@ -86,13 +85,16 @@ let package = Package(
             swiftSettings: [ .enableExperimentalFeature("StrictConcurrency") ]
         ),
 
+        // Shared subprocess support is built only as a dependency of test targets.
+        .target(name: "VectorCoreTestSupport", path: "Tests/VectorCoreTestSupport"),
+
         // New comprehensive test suite (skeleton only)
         .testTarget(
             name: "ComprehensiveTests",
-            dependencies: ["VectorCore"],
+            dependencies: ["VectorCore", "VectorCoreTestSupport"],
             swiftSettings: [ .enableExperimentalFeature("StrictConcurrency") ]
         ),
-        .testTarget(name: "BenchmarkContractTests", dependencies: ["VectorCoreBenchSupport", "VectorCoreBenchmarking"]),
+        .testTarget(name: "BenchmarkContractTests", dependencies: ["VectorCoreBenchSupport", "VectorCoreBenchmarking", "VectorCoreTestSupport"]),
         // Benchmark executable target (Phase 1 scaffold)
         .target(
             name: "VectorCoreBenchSupport",

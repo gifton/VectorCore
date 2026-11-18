@@ -14,7 +14,7 @@
   "policy": "Ledger 0; Python 523 git-less; SwiftLint 0 new.",
   "reviews": "Sonnet review (742/742 numbers match; wording CHANGES REQUESTED) -> fix round root-verified directly."
  },
- "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/L04",
+ "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/L04",
  "reviewed_tree": "manifest L04/freeze-sha256.txt (6331 files)",
  "limitations": [
   "Synthetic 50-cluster data; real chunk embeddings may differ in kNN graph shape and UMAP time.",

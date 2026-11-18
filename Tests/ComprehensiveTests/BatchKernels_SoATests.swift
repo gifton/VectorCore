@@ -360,6 +360,7 @@ struct BatchKernels_SoATests {
             // Verify results match reference implementation
             for (i, soaResult) in soaResults.enumerated() {
                 let refResult = DotKernels.dot512(query, candidates[i])
+                #expect(soaResult.isFinite && refResult.isFinite)
                 // FP32 dot products differ in the last ULPs between the blocked SoA kernel and
                 // the naive reference due to summation order; scale tolerance to the magnitude.
                 #expect(abs(soaResult - refResult) <= 1e-5 * max(1.0, abs(refResult)), "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
@@ -387,6 +388,7 @@ struct BatchKernels_SoATests {
             // Verify results match reference implementation
             for (i, soaResult) in soaResults.enumerated() {
                 let refResult = DotKernels.dot768(query, candidates[i])
+                #expect(soaResult.isFinite && refResult.isFinite)
                 // FP32 dot products differ in the last ULPs between the blocked SoA kernel and
                 // the naive reference due to summation order; scale tolerance to the magnitude.
                 #expect(abs(soaResult - refResult) <= 1e-5 * max(1.0, abs(refResult)), "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")
@@ -414,6 +416,7 @@ struct BatchKernels_SoATests {
             // Verify results match reference implementation
             for (i, soaResult) in soaResults.enumerated() {
                 let refResult = DotKernels.dot1536(query, candidates[i])
+                #expect(soaResult.isFinite && refResult.isFinite)
                 // FP32 dot products differ in the last ULPs between the blocked SoA kernel and
                 // the naive reference due to summation order; scale tolerance to the magnitude.
                 #expect(abs(soaResult - refResult) <= 1e-5 * max(1.0, abs(refResult)), "SoA result mismatch at index \(i): SoA=\(soaResult), Ref=\(refResult)")

@@ -465,7 +465,7 @@ final class BenchmarkBoundaryDriftContractTests: XCTestCase {
         XCTAssertEqual(try boundary("mem.fill.512").inclusions.callerOutputAllocation, .excluded)
         XCTAssertEqual(try boundary("mem.alloc.aligned.512").inclusions.callerOutputAllocation, .included)
         // Absent validation is notApplicable with a note, uniformly.
-        for name in ["dot.512.generic", "normalize.success.512.generic", "mem.copy.512", "noop.scalar-add"] {
+        for name in ["mem.alloc.aligned.512", "mem.fill.512", "mem.pool.acquire.512", "noop.scalar-add"] {
             let b = try boundary(name)
             XCTAssertEqual(b.inclusions.correctnessValidation, .notApplicable, name)
             XCTAssertTrue(b.notes.contains { $0.contains("correctnessValidation is notApplicable") }, name)
@@ -1186,14 +1186,13 @@ final class BenchmarkCorrectnessPolicyTests: XCTestCase {
         }
         XCTAssertEqual(notApplicable, ["noop.scalar-add", "mem.alloc", "mem.pool", "mem.fill"])
         XCTAssertTrue(notApplicable.isDisjoint(with: required))
-        // The suites whose sources record no comparison are exactly dot, normalize, memory and noop; their routes with a
-        // VectorCore output stay required, so they still fail "Missing validation" (a gap, not a declaration).
+        // Only the noop suite records no comparison; MemoryBench has both validated copy and nonnumerical routes.
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("Benchmarks/VectorCoreBench/Suites")
         for file in try FileManager.default.contentsOfDirectory(atPath: root.path) where file.hasSuffix(".swift") {
             let text = try String(contentsOf: root.appendingPathComponent(file), encoding: .utf8)
             let records = Self.recordsComparison(text)
-            let withoutComparison = ["DotProductBench.swift", "NormalizationBench.swift", "MemoryBench.swift", "NoopBench.swift"]
+            let withoutComparison = ["NoopBench.swift"]
             XCTAssertEqual(records, !withoutComparison.contains(file), file)
         }
         XCTAssertTrue(required.isSuperset(of: ["dot.generic", "dot.optimized", "normalize.success.generic", "normalize.success.optimized",
@@ -1219,16 +1218,23 @@ final class BenchmarkCorrectnessPolicyTests: XCTestCase {
         return regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
     }
 
-    /// Fail-closed check for the routes listed as unvalidated: the suite file that catalogs such a route must record no
-    /// comparison. Adding validation to one of those suites therefore fails this until its routes are moved to a derived
-    /// model or to `empiricalRoutes`. The check is per suite file (lexical): a suite that validates only some of its cases
-    /// must split its entries here.
+    /// Lexical ratchet for unvalidated routes. Mixed MemoryBench is checked per catalog case; other wholly
+    /// unvalidated suites are checked as a file. Missing or duplicate memory case segments also fail closed.
     static func unvalidatedRouteProblems(routesBySuiteFile: [String: Set<String>], sources: [String: String]) -> [String] {
         var problems: [String] = []
         for (file, routes) in routesBySuiteFile.sorted(by: { $0.key < $1.key }) {
             let listed = routes.intersection(unvalidatedRoutes)
             guard !listed.isEmpty else { continue }
-            if recordsComparison(sources[file] ?? "") {
+            if file == "MemoryBench.swift" {
+                let tokens = ["mem.alloc": "allocName", "mem.copy": "copyName", "mem.fill": "fillName", "mem.pool": "poolName"]
+                let segments = BodySource.caseSegments(in: sources[file] ?? "")
+                for route in listed.sorted() {
+                    let matches = segments.filter { $0.token == tokens[route] }
+                    if matches.count != 1 || matches.contains(where: { recordsComparison($0.text) }) {
+                        problems.append("\(file) missing or validated case listed as unvalidated: \(route)")
+                    }
+                }
+            } else if recordsComparison(sources[file] ?? "") {
                 problems.append("\(file) records a comparison but catalogs routes listed as unvalidated: \(listed.sorted())")
             }
         }
@@ -1259,17 +1265,18 @@ final class BenchmarkCorrectnessPolicyTests: XCTestCase {
         }
         print("T11 derived routes: \(derived.sorted())")
         print("T11 empirical routes: \(empirical.sorted())")
-        // Every route of every kind is classified; the unvalidated ones are pinned and their suites record no comparison.
+        // Every route is classified; unvalidated routes are pinned and checked in their own suite/case scopes.
         XCTAssertEqual(unvalidated, Self.unvalidatedRoutes)
         XCTAssertEqual(Self.unvalidatedRouteProblems(routesBySuiteFile: routesBySuiteFile, sources: sources), [])
-        // Negative control: the dot suite gaining a comparison fails the check until its routes are reclassified.
-        var validatedDot = sources
-        validatedDot["DotProductBench.swift", default: ""] += "\nlet c = Correctness.scalar(current: a.dotProduct(b), reference: r)\n"
-        XCTAssertEqual(Self.unvalidatedRouteProblems(routesBySuiteFile: routesBySuiteFile, sources: validatedDot).count, 1)
+        // Negative control: an allocation case gaining a comparison is caught even in the mixed memory suite.
+        var validatedMemory = sources
+        validatedMemory["MemoryBench.swift"] = sources["MemoryBench.swift"]!.replacingOccurrences(of: "blackHole(pointer[0])",
+            with: "blackHole(pointer[0]); let c = Correctness.scalar(current: 0, reference: 0)")
+        XCTAssertEqual(Self.unvalidatedRouteProblems(routesBySuiteFile: routesBySuiteFile, sources: validatedMemory).count, 1)
         var spaced = sources
         spaced["NoopBench.swift", default: ""] += "\n    correctness :stats\n"
         XCTAssertEqual(Self.unvalidatedRouteProblems(routesBySuiteFile: routesBySuiteFile, sources: spaced).count, 1)
-        XCTAssertEqual(derived, ["batch.euclidean2.generic", "batch.euclidean.generic", "batch.euclidean2.optimized",
+        XCTAssertEqual(derived, ["dot.generic", "dot.optimized", "batch.euclidean2.generic", "batch.euclidean.generic", "batch.euclidean2.optimized",
                                  "batch.euclidean.optimized", "batch.euclidean2.aos-fp32-reused", "batch.euclidean2.aos-fp32-setup",
                                  "batch.euclidean2.consumer-only", "batch.euclidean2.optimized-soa", "batch.euclidean2.soa-fp32-reused",
                                  "batch.euclidean2.soa-fp32-setup", "matrix.euclidean2.optimized", "matrix.euclidean2.consumer-only"])
@@ -1278,15 +1285,15 @@ final class BenchmarkCorrectnessPolicyTests: XCTestCase {
         XCTAssertTrue(derived.isDisjoint(with: empirical))
     }
 
-    /// The routes whose suites record no comparison today (each still declared per case by
-    /// `CorrectnessPolicy.validation`: required ones fail "Missing validation").
+    /// Routes without numerical observations; mixed-suite memory cases are checked individually above.
     private static let unvalidatedRoutes: Set<String> = [
-        "dot.generic", "dot.optimized", "normalize.success.generic", "normalize.success.optimized", "normalize.zeroFail.generic",
-        "normalize.zeroFail.optimized", "mem.alloc", "mem.copy", "mem.fill", "mem.pool", "noop.scalar-add"
+        "mem.alloc", "mem.fill", "mem.pool", "noop.scalar-add"
     ]
 
     /// The validated routes that keep the pre-T11 fixed thresholds (no derived model yet; see `CorrectnessPolicy`).
     private static let empiricalRoutes: Set<String> = [
+        "normalize.success.generic", "normalize.success.optimized", "normalize.zeroFail.generic",
+        "normalize.zeroFail.optimized", "mem.copy",
         "batch.cosine.optimized-fused", "batch.cosine.optimized-preNorm", "batch.cosine.optimized-fp16", "batch.euclidean2.optimized-fp16",
         "batch.euclidean2.aos-fp16-reused", "batch.euclidean2.aos-fp16-setup",
         "dist.euclidean.generic", "dist.euclidean.optimized", "dist.cosine.generic", "dist.cosine.optimized", "dist.manhattan.generic",

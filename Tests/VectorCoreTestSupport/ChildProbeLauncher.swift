@@ -1,8 +1,7 @@
-// T10: the only way a ComprehensiveTests test re-runs this test binary as a child probe.
+// Shared test-only launcher for ComprehensiveTests and BenchmarkContractTests.
 //
 // Scripts/ci/tests/test_child_probe_launch_policy.py rejects process creation and test-runner selector
-// literals in Tests/ outside this file, except the exceptions it pins by exact count (one of them is
-// BenchmarkContractTests' RunnerContractTests leaf launch with a fixed one-selector XCTest argument list).
+// literals in Tests/ outside this file, except the /bin/sleep descendant self-test pinned by exact count.
 //
 // Before T10, 22 call sites copied `CommandLine.arguments`, replaced only the FIRST `--filter` value
 // and launched the copy with Foundation `Process`. With several `--filter` arguments the child also
@@ -20,7 +19,7 @@
 //    passes the check yet selects a whole nested suite. Over-match is bounded by the marker (clause 2):
 //    an over-selected test that launches a probe fails loudly instead of recursing. Anchoring the
 //    filter is a routed follow-up (unverified on Swift 6.0).
-//    - `.swiftTesting(filter:)`: the parent's runner arguments minus every value-taking selection flag
+//    - `.swiftTesting(filter:)` with a SwiftPM runner: the parent's arguments minus every value-taking selection flag
 //      (`--filter`, `--skip`, SwiftPM's `--specifier` / `-s`, separate-value and `=` forms) and every
 //      report sink (`--xunit-output`, the event-stream path and version flags), then one
 //      `--filter <probe>`. A token that is the value of a `-X…` pass-through flag (`-Xlinker -s`) is
@@ -31,7 +30,8 @@
 //      `--configuration-path` (a JSON file that can carry selection) is refused.
 //      Pinned by `selectionIsReplacedNotEdited`, `onlySelectionAndSinksAreRemoved`,
 //      `configurationFileIsRefused`.
-//    - Runner shapes (`childProbeRunnerShape`, pinned by `runnerShapesAreRecognizedOrRefused`):
+//    - SwiftPM runner shapes use `childProbeRunnerShape` (`runnerShapesAreRecognizedOrRefused`);
+//      the Xcode route additionally requires bundle evidence:
 //      * SwiftPM helper: `swiftpm-testing-helper --test-bundle-path <bin> <raw swift test argv> <bin>
 //        --testing-library swift-testing`. Observed with Xcode 27 / Swift 6.4 (Testing 2084, this
 //        suite) and with the Command Line Tools 6.2.0 toolchain (swiftlang-6.2.0.19.9, Testing 1085,
@@ -41,11 +41,19 @@
 //        `--test-bundle-path <value>`; it does not check argv[0] or `--testing-library`.
 //      * Direct test executable: argv[0] is the test binary itself and the arguments contain
 //        `--testing-library swift-testing`. Accepted, but NOT observed on any toolchain here.
-//      * Anything else (for example swift-testing hosted by `xctest`): the launch fails with
-//        `CHILD_PROBE_UNRECOGNIZED_RUNNER` on stderr and in the thrown error, both naming the observed
-//        argv, so a CI failure is diagnosable; it never silently skips.
-//    - `.xctest(selector:bundlePath:)`: a fresh `-XCTest <selector> <bundle>`; nothing is inherited.
-//      Pinned by `xctestSelectionIsFresh`.
+//      * Xcode's macOS `xctest` agent: resolve the caller's module from the default #fileID and require
+//        one loaded <Module>.xctest/Contents/MacOS/<Module> image. Use a fresh
+//        `-XCTest Module.Suite/test() <bundle>` and enable Swift Testing. No parent argv is retained.
+//        Pinned by `xcodeHostedSelectionUsesTheLoadedCallersBundle`,
+//        `xcodeBundleResolutionRefusesMissingAmbiguousAndMismatchedImages`, and the real-child
+//        self-tests (including `unrelatedSelectionSentinel`). This route supports top-level suites
+//        and parameterless probe methods; other shapes require separate verification.
+//      * Other argv shapes emit `CHILD_PROBE_UNRECOGNIZED_RUNNER` on stderr and in the thrown error,
+//        naming the observed argv. Missing/ambiguous Xcode bundle evidence throws the same error
+//        prefix with the caller's file ID. Neither path silently skips.
+//    - `.xctest(selector:bundlePath:)`: a fresh `-XCTest <selector> <bundle>`; no parent argv is inherited.
+//      Swift Testing is disabled for this child. Pinned by `xctestSelectionIsFresh` and the
+//      XCTest child body checks in BenchmarkRunnerContractTests.
 // 2. Marker. The child's environment carries `VECTORCORE_CHILD_PROBE=<selector>`. A process that
 //    has the marker refuses to launch a probe, before anything is spawned: a diagnostic line on
 //    stderr, then `ChildProbeLaunchError.nestedLaunch`. Pinned by `nestedLaunchIsRefused` (unit),
@@ -66,8 +74,7 @@
 //    `sendToGroup` sends nothing at all for a pid <= 1 or equal to getpgrp(), so the caller's own
 //    group, kill(0, …) and kill(-1, …) are unreachable. Pinned by `exitedChildLeavesNoGroupMember`,
 //    `deadlineKillsTheWholeGroup`, `deadlineTerminatesTheWholeGroup`.
-// 4. Bounds. The caller supplies the deadline and cleanup budget (each call site keeps its previous
-//    values). The caller never waits without a deadline; only the reaper thread blocks (in waitid,
+// 4. Bounds. The caller supplies the deadline and cleanup budget (ordinary callers use ChildProbeBudget.standard). The caller never waits without a deadline; only the reaper thread blocks (in waitid,
 //    then waitpid), and it ends when the leader exits.
 // 5. Results never crash the caller. `terminationStatus` / `terminationReason` are nil for a child
 //    that was not reaped (deadline expired and cleanup failed), so an assertion on them FAILS instead
@@ -77,34 +84,37 @@
 //    descriptor is closed (POSIX_SPAWN_CLOEXEC_DEFAULT), the signal mask is empty and every
 //    signal disposition is reset to its default (so SIGTERM is not inherited as ignored).
 //    Unverified beyond the SIGTERM path of `deadlineTerminatesTheWholeGroup`.
+//    XCTestConfigurationFilePath, XCTestSessionIdentifier and XCTestBundlePath are removed so a
+//    standalone child does not join the parent's IDE session. Other caller settings are retained;
+//    `childEnvironmentDetachesXcodeSessionWithoutDiscardingCallerSettings` pins all sanitizer paths.
 
 import Foundation
 import Darwin
 
 /// Environment key that marks a child probe. Its value is the selector the child was launched for.
-let childProbeMarkerKey = "VECTORCORE_CHILD_PROBE"
+package let childProbeMarkerKey = "VECTORCORE_CHILD_PROBE"
 
 /// Value-taking flags removed from a swift-testing child, in both `flag value` and `flag=value` forms.
-let childProbeDroppedFlags: Set<String> = [
+package let childProbeDroppedFlags: Set<String> = [
     "--filter", "--skip", "--specifier", "-s",
     "--xunit-output", "--event-stream-output-path", "--experimental-event-stream-output",
     "--event-stream-version", "--experimental-event-stream-version"
 ]
 
 /// Flags whose presence makes the child's selection unknowable; a launch with them is refused.
-let childProbeRefusedFlags: Set<String> = ["--configuration-path", "--experimental-configuration-path"]
+package let childProbeRefusedFlags: Set<String> = ["--configuration-path", "--experimental-configuration-path"]
 
 /// The dropped and refused flags that swift-testing itself parses (not SwiftPM's `--specifier` / `-s`).
 /// As the value of a `-X…` pass-through flag one of these is refused, never kept.
-let childProbeTestingParsedFlags = childProbeDroppedFlags.subtracting(["--specifier", "-s"]).union(childProbeRefusedFlags)
+package let childProbeTestingParsedFlags = childProbeDroppedFlags.subtracting(["--specifier", "-s"]).union(childProbeRefusedFlags)
 
-enum ChildProbeSelector: Sendable, CustomStringConvertible {
+package enum ChildProbeSelector: Sendable, CustomStringConvertible {
     /// A swift-testing probe, re-run through the parent's swift-testing runner.
     case swiftTesting(filter: String)
     /// An XCTest probe, re-run through `xctest`.
     case xctest(selector: String, bundlePath: String)
 
-    var description: String {
+    package var description: String {
         switch self {
         case .swiftTesting(let filter): return filter
         case .xctest(let selector, _): return selector
@@ -112,7 +122,7 @@ enum ChildProbeSelector: Sendable, CustomStringConvertible {
     }
 }
 
-enum ChildProbeCleanup: Sendable {
+package enum ChildProbeCleanup: Sendable {
     /// At the deadline: SIGKILL the group, then wait up to `seconds` for the child to be reaped.
     case kill(seconds: Double)
     /// At the deadline: SIGTERM the group and wait `grace`; if the child is still unreaped,
@@ -121,19 +131,23 @@ enum ChildProbeCleanup: Sendable {
 }
 
 /// Runner argv shapes the launcher can re-select a single test from (contract clause 1).
-enum ChildProbeRunnerShape: Sendable, Equatable {
+package enum ChildProbeRunnerShape: Sendable, Equatable {
     case swiftPMTestingHelper
     case directTestExecutable
 }
 
-enum ChildProbeLaunchError: Error, CustomStringConvertible {
+package enum ChildProbeLaunchError: Error, CustomStringConvertible {
     /// A child probe tried to launch a probe.
     case nestedLaunch(String)
+    /// This platform does not support relaunching a test runner.
+    case unsupportedPlatform(String)
+    /// Loaded or explicitly requested sanitizer images conflict.
+    case sanitizerRuntime(String)
     /// The parent's runner argv has a shape the launcher cannot re-select from.
     case unrecognizedRunner(String)
     /// The parent's runner argv carries a selection source that cannot be removed safely.
     case refusedRunnerArgument(String)
-    /// The selector does not name exactly one test.
+    /// The selector does not have the required single-test selection shape.
     case invalidSelection(String)
     /// posix_spawn or its attribute setup failed.
     case spawnFailed(String)
@@ -142,47 +156,80 @@ enum ChildProbeLaunchError: Error, CustomStringConvertible {
     /// `reaped()` was called for a child that was not reaped within the cleanup budget.
     case unreaped(String)
 
-    var description: String {
+    package var description: String {
         switch self {
         case .nestedLaunch(let message), .unrecognizedRunner(let message), .refusedRunnerArgument(let message),
              .invalidSelection(let message), .spawnFailed(let message), .waitStatusUnavailable(let message),
-             .unreaped(let message):
+             .unreaped(let message), .unsupportedPlatform(let message), .sanitizerRuntime(let message):
             return message
         }
     }
 }
 
-struct ChildProbeTermination: Sendable, Equatable {
-    /// Exit code for `.exit`, signal number for `.uncaughtSignal` (as Foundation `Process` reports).
-    let status: Int32
-    let reason: Process.TerminationReason
+/// Portable result labels; raw values preserve existing capture diagnostics.
+/// `portableTerminationPreservesExitAndSignalDiagnostics` pins both labels and values.
+package enum ChildProbeTerminationReason: Int, Sendable {
+    case exit = 1
+    case uncaughtSignal = 2
 }
 
-struct ChildProbeRun: Sendable {
-    let executable: String
+/// Subprocess probes require macOS process creation and test-runner relaunch support.
+/// Pure selector/result helpers do not depend on this capability.
+package var childProbeProcessesSupported: Bool {
+    #if os(macOS)
+    true
+    #else
+    false
+    #endif
+}
+
+package struct ChildProbeTermination: Sendable, Equatable {
+    /// Exit code for `.exit`, signal number for `.uncaughtSignal` (as Foundation `Process` reports).
+    package let status: Int32
+    package let reason: ChildProbeTerminationReason
+
+    package init(status: Int32, reason: ChildProbeTerminationReason) {
+        self.status = status
+        self.reason = reason
+    }
+}
+
+package struct ChildProbeRun: Sendable {
+    package let executable: String
     /// The child's arguments without argv[0].
-    let arguments: [String]
-    let processIdentifier: Int32
+    package let arguments: [String]
+    package let processIdentifier: Int32
     /// Equal to `processIdentifier`: the child leads its own process group.
-    let processGroup: Int32
-    let timedOut: Bool
+    package let processGroup: Int32
+    package let timedOut: Bool
     /// False only when the deadline expired and the child was not reaped within the cleanup budget.
-    let cleaned: Bool
+    package let cleaned: Bool
     /// Nil only when `cleaned` is false.
-    let termination: ChildProbeTermination?
+    package let termination: ChildProbeTermination?
+
+    package init(executable: String, arguments: [String], processIdentifier: Int32, processGroup: Int32,
+                 timedOut: Bool, cleaned: Bool, termination: ChildProbeTermination?) {
+        self.executable = executable
+        self.arguments = arguments
+        self.processIdentifier = processIdentifier
+        self.processGroup = processGroup
+        self.timedOut = timedOut
+        self.cleaned = cleaned
+        self.termination = termination
+    }
 
     /// `.success` when the child was reaped within the budget, as the call sites reported it before.
-    var cleanup: DispatchTimeoutResult { cleaned ? .success : .timedOut }
-    var isRunning: Bool { termination == nil }
+    package var cleanup: DispatchTimeoutResult { cleaned ? .success : .timedOut }
+    package var isRunning: Bool { termination == nil }
     /// Nil for an unreaped child, so `== 0` / `== .uncaughtSignal` assertions fail rather than trap.
-    var terminationStatus: Int32? { termination?.status }
-    var terminationReason: Process.TerminationReason? { termination?.reason }
+    package var terminationStatus: Int32? { termination?.status }
+    package var terminationReason: ChildProbeTerminationReason? { termination?.reason }
     /// For diagnostics: the value as before, or "unreaped".
-    var statusDescription: String { termination.map { String($0.status) } ?? "unreaped" }
-    var reasonDescription: String { termination.map { String($0.reason.rawValue) } ?? "unreaped" }
+    package var statusDescription: String { termination.map { String($0.status) } ?? "unreaped" }
+    package var reasonDescription: String { termination.map { String($0.reason.rawValue) } ?? "unreaped" }
 
     /// The termination, or a thrown `ChildProbeLaunchError.unreaped` (a test failure, not a trap).
-    func reaped() throws -> ChildProbeTermination {
+    package func reaped() throws -> ChildProbeTermination {
         guard let termination else {
             throw ChildProbeLaunchError.unreaped(
                 "child probe pid \(processIdentifier) was not reaped within its cleanup budget (timedOut=\(timedOut))")
@@ -193,7 +240,7 @@ struct ChildProbeRun: Sendable {
 
 /// Throws when `environment` is a child probe's environment; writes the reason to stderr first so it
 /// lands in the child's capture.
-func refuseNestedChildProbeLaunch(_ selector: ChildProbeSelector, environment: [String: String]) throws {
+package func refuseNestedChildProbeLaunch(_ selector: ChildProbeSelector, environment: [String: String]) throws {
     guard let outer = environment[childProbeMarkerKey] else { return }
     let message = "CHILD_PROBE_NESTED_LAUNCH_REFUSED: child probe '\(outer)' tried to launch probe "
         + "'\(selector)'; a child probe must not launch probes"
@@ -205,7 +252,7 @@ func refuseNestedChildProbeLaunch(_ selector: ChildProbeSelector, environment: [
 /// ASCII identifiers joined by `.`, name one ASCII identifier. Rejects comma lists (XCTest `-XCTest`
 /// accepts `A/b,C/d`) and every regex metacharacter except `.` (a `--filter` wildcard, needed for
 /// `Module.Suite`). It does not prove that the selector matches exactly one test.
-func validateSingleTestSelection(_ selection: String) throws {
+package func validateSingleTestSelection(_ selection: String) throws {
     func isIdentifier(_ part: Substring) -> Bool {
         guard let first = part.unicodeScalars.first, first.isASCII,
               first == "_" || CharacterSet.letters.contains(first) else { return false }
@@ -220,7 +267,7 @@ func validateSingleTestSelection(_ selection: String) throws {
 }
 
 /// The runner shape of the parent (`executable` is argv[0], `arguments` the rest), or nil.
-func childProbeRunnerShape(executable: String, arguments: [String]) -> ChildProbeRunnerShape? {
+package func childProbeRunnerShape(executable: String, arguments: [String]) -> ChildProbeRunnerShape? {
     if let index = arguments.firstIndex(of: "--test-bundle-path"), index + 1 < arguments.count {
         return .swiftPMTestingHelper
     }
@@ -230,14 +277,55 @@ func childProbeRunnerShape(executable: String, arguments: [String]) -> ChildProb
     return !hosts.contains(name) && selectsSwiftTesting ? .directTestExecutable : nil
 }
 
+/// Resolves the Xcode test bundle containing the caller's module from loaded image evidence.
+/// `xcodeBundleResolutionRefusesMissingAmbiguousAndMismatchedImages` exercises the refusal cases.
+/// This deliberately does not infer a bundle from an IDE environment variable or a shared-support class.
+package func childProbeXCTestBundlePath(callerFileID: String, loadedImages: [String]) throws -> String {
+    func refused() -> ChildProbeLaunchError {
+        .unrecognizedRunner("CHILD_PROBE_UNRECOGNIZED_RUNNER: cannot identify one loaded Xcode test bundle for \(callerFileID)")
+    }
+    let parts = callerFileID.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false)
+    guard parts.count == 2, !parts[1].isEmpty, !parts[0].contains(".") else { throw refused() }
+    let module = String(parts[0])
+    do { try validateSingleTestSelection(module + "/probe") } catch { throw refused() }
+    let suffix = "/\(module).xctest/Contents/MacOS/\(module)"
+    let matches = Set(loadedImages.filter { $0.hasPrefix("/") }.map {
+        URL(fileURLWithPath: $0).resolvingSymlinksInPath().path
+    }.filter { $0.hasSuffix(suffix) })
+    guard matches.count == 1, let image = matches.first else { throw refused() }
+    return URL(fileURLWithPath: image).deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent().path
+}
+
 /// The child's arguments (without argv[0]) for `selector`, given the parent's argv[0] and arguments.
-func childProbeArguments(for selector: ChildProbeSelector, executable: String,
-                         parentArguments: [String]) throws -> [String] {
+package func childProbeArguments(for selector: ChildProbeSelector, executable: String,
+                         parentArguments: [String], testBundlePath: String? = nil) throws -> [String] {
     try validateSingleTestSelection(selector.description)
     switch selector {
     case .xctest(let selection, let bundlePath):
         return ["-XCTest", selection, bundlePath]
     case .swiftTesting(let filter):
+        if URL(fileURLWithPath: executable).lastPathComponent == "xctest", let testBundlePath {
+            let bundle = URL(fileURLWithPath: testBundlePath)
+            guard testBundlePath.hasPrefix("/"), bundle.pathExtension == "xctest" else {
+                throw ChildProbeLaunchError.invalidSelection("Xcode child requires an absolute .xctest bundle path")
+            }
+            let module = bundle.deletingPathExtension().lastPathComponent
+            try validateSingleTestSelection(module + "/probe")
+            guard !module.contains(".") else {
+                throw ChildProbeLaunchError.invalidSelection("Xcode child bundle must name one Swift module")
+            }
+            let owner = filter.split(separator: "/")[0].split(separator: ".")
+            let qualified: String
+            if owner.count == 1 {
+                qualified = module + "." + filter
+            } else if owner.count == 2, owner[0] == module {
+                qualified = filter
+            } else {
+                throw ChildProbeLaunchError.invalidSelection("Xcode child selector must name a top-level suite in \(module): \(filter)")
+            }
+            return ["-XCTest", qualified + "()", testBundlePath]
+        }
         guard childProbeRunnerShape(executable: executable, arguments: parentArguments) != nil else {
             let message = "CHILD_PROBE_UNRECOGNIZED_RUNNER: child probe '\(filter)' cannot derive a one-test argv "
                 + "from executable=\(executable) arguments=\(parentArguments)"
@@ -286,19 +374,36 @@ func childProbeArguments(for selector: ChildProbeSelector, executable: String,
 /// Launches the probe selected by `selector` in a new process group, waits at most `deadline`
 /// seconds, applies `cleanup` to the whole group on expiry, and always removes group members the
 /// child leaves behind. See the file header for the contract.
-func launchChildProbe(_ selector: ChildProbeSelector, environment: [String: String], output: FileHandle,
-                      deadline: Double, cleanup: ChildProbeCleanup) throws -> ChildProbeRun {
+package func launchChildProbe(_ selector: ChildProbeSelector, environment: [String: String], output: FileHandle,
+                      deadline: Double, cleanup: ChildProbeCleanup, callerFileID: String = #fileID) throws -> ChildProbeRun {
+    #if os(macOS)
     try refuseNestedChildProbeLaunch(selector, environment: ProcessInfo.processInfo.environment)
     let executable = CommandLine.arguments[0]
+    let loadedImages = (0..<_dyld_image_count()).compactMap { index -> String? in
+        guard let name = _dyld_get_image_name(index) else { return nil }
+        return String(cString: name)
+    }
+    let testBundlePath: String?
+    if case .swiftTesting = selector, URL(fileURLWithPath: executable).lastPathComponent == "xctest" {
+        testBundlePath = try childProbeXCTestBundlePath(callerFileID: callerFileID, loadedImages: loadedImages)
+    } else {
+        testBundlePath = nil
+    }
     let arguments = try childProbeArguments(for: selector, executable: executable,
-                                            parentArguments: Array(CommandLine.arguments.dropFirst()))
-    var childEnvironment = environment
+                                            parentArguments: Array(CommandLine.arguments.dropFirst()),
+                                            testBundlePath: testBundlePath)
+    var childEnvironment = try childProbeEnvironment(environment, loadedImages: loadedImages)
+    switch selector {
+    case .swiftTesting: childEnvironment["SWIFT_TESTING_ENABLED"] = "1"
+    case .xctest: childEnvironment["SWIFT_TESTING_ENABLED"] = "0"
+    }
     childEnvironment[childProbeMarkerKey] = selector.description
     let pid = try spawnChildProbeGroupLeader(executable: executable, arguments: arguments,
                                              environment: childEnvironment, output: output.fileDescriptor)
     let reaper = ChildProbeReaper(pid: pid)
     let thread = Thread { reaper.run() }
     thread.name = "child-probe-reaper-\(pid)"
+    thread.qualityOfService = Thread.current.qualityOfService
     thread.start()
 
     var timedOut = false
@@ -324,8 +429,48 @@ func launchChildProbe(_ selector: ChildProbeSelector, environment: [String: Stri
     }
     return ChildProbeRun(executable: executable, arguments: arguments, processIdentifier: pid, processGroup: pid,
                          timedOut: timedOut, cleaned: cleaned, termination: termination)
+    #else
+    throw ChildProbeLaunchError.unsupportedPlatform("Child-process probes require macOS")
+    #endif
 }
 
+/// Replaces an already marked child without spawning another process.
+/// `testMetadataDirectExecRejectsInvalidRequests` exercises refusal/error paths;
+/// `testMetadataPreservesLoaderEnvironmentWithoutShellEvaluation` verifies native PID/group continuity.
+package func replaceMarkedChildProbe(command: [String], environment: [String: String]) throws -> Never {
+    #if os(macOS)
+    func failure(_ detail: String, code: Int32 = EINVAL) -> NSError {
+        NSError(domain: "ChildProbeReplacement." + detail, code: Int(code))
+    }
+    guard let marker = ProcessInfo.processInfo.environment[childProbeMarkerKey], !marker.isEmpty else {
+        throw failure("unmarked")
+    }
+    guard let executable = command.first, executable.hasPrefix("/"),
+          command.allSatisfy({ !$0.contains("\0") }) else {
+        throw failure("command")
+    }
+    guard environment[childProbeMarkerKey] == marker,
+          environment.allSatisfy({ !$0.key.isEmpty && !$0.key.contains("=") && !$0.key.contains("\0")
+                                   && !$0.value.contains("\0") }) else {
+        throw failure("environment")
+    }
+    let argv: [UnsafeMutablePointer<CChar>?] = command.map { strdup($0) } + [nil]
+    let envp: [UnsafeMutablePointer<CChar>?] = environment.map { strdup("\($0.key)=\($0.value)") } + [nil]
+    defer {
+        argv.forEach { free($0) }
+        envp.forEach { free($0) }
+    }
+    guard argv.dropLast().allSatisfy({ $0 != nil }), envp.dropLast().allSatisfy({ $0 != nil }) else {
+        throw failure("allocation", code: ENOMEM)
+    }
+    execve(executable, argv, envp)
+    throw failure("exec", code: errno)
+    #else
+    throw ChildProbeLaunchError.unsupportedPlatform("Child-process probes require macOS")
+    #endif
+}
+
+#if os(macOS)
 /// Owns the child's PID and process group from spawn to reap.
 private final class ChildProbeReaper: @unchecked Sendable {
     let pid: pid_t
@@ -429,4 +574,40 @@ private func spawnChildProbeGroupLeader(executable: String, arguments: [String],
     var pid: pid_t = 0
     try check(posix_spawn(&pid, executable, &actions, &attributes, argv, envp), "posix_spawn \(executable)")
     return pid
+}
+
+#endif
+
+/// Preserves caller settings and preloads the single sanitizer already instrumenting this host.
+/// A test runner can lose DYLD_INSERT_LIBRARIES from its environment after dyld used it; loading
+/// its instrumented child bundle without preloading that runtime aborts before the probe runs.
+/// `childSanitizerEnvironmentRetainsExplicitSettingsAndRepairsMissingPreload` and
+/// `childSanitizerEnvironmentRejectsConflictsAndAmbiguousImages` pin the merge/refusal rules.
+package func childProbeEnvironment(_ environment: [String: String], loadedImages: [String]) throws -> [String: String] {
+    var result = environment
+    for key in ["XCTestConfigurationFilePath", "XCTestSessionIdentifier", "XCTestBundlePath"] {
+        result[key] = nil
+    }
+    func canonical(_ path: String) -> String {
+        URL(fileURLWithPath: path).resolvingSymlinksInPath().path
+    }
+    func isSanitizer(_ path: String) -> Bool {
+        ["libclang_rt.asan_osx_dynamic.dylib", "libclang_rt.tsan_osx_dynamic.dylib"]
+            .contains(URL(fileURLWithPath: path).lastPathComponent)
+    }
+    let runtimes = Set(loadedImages.map(canonical).filter(isSanitizer))
+    guard runtimes.count <= 1 else {
+        throw ChildProbeLaunchError.sanitizerRuntime("Ambiguous loaded child-probe sanitizer runtimes: \(runtimes.sorted())")
+    }
+    guard let runtime = runtimes.first else { return result }
+    let supplied = environment["DYLD_INSERT_LIBRARIES"] ?? ""
+    let libraries = supplied.split(separator: ":").map { canonical(String($0)) }
+    let requestedRuntimes = Set(libraries.filter(isSanitizer))
+    guard requestedRuntimes.isSubset(of: runtimes) else {
+        throw ChildProbeLaunchError.sanitizerRuntime(
+            "Caller sanitizer preload \(requestedRuntimes.sorted()) conflicts with loaded runtime \(runtime)")
+    }
+    guard !libraries.contains(runtime) else { return result }
+    result["DYLD_INSERT_LIBRARIES"] = supplied.isEmpty ? runtime : supplied + ":" + runtime
+    return result
 }

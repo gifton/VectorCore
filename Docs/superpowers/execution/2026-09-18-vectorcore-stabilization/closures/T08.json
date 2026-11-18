@@ -16,7 +16,7 @@
     "suite": "Converted files: Debug ×4 and Release ×2, 31/31. The whole-suite milestone gate follows V04.",
     "reviews": "independent Opus review (Spec FAIL / Quality CHANGES REQUESTED: C1 CI error, I1 six false negatives, I2 evidence-list errors) → fix round 1 → scoped Sonnet re-review: all ADDRESSED; N1-N3 low"
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T08",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T08",
   "patch_sha256": "d2add331fc9971823778f4e163ce91c22678daec4bd8523a59aca5b20198068d",
   "frozen_sha256": {
     "Scripts/ci/tests/test_async_xctest_isolation.py": "f4e7133595ad3a42936c3a5314c4e9bca11c639bde1af0bb4f55b98927689a18",

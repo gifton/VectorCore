@@ -19,7 +19,7 @@
   "review": "reports/N04-review.md",
   "rereview": "reports/N04-rereview-1.md; round 2 comment-only, verified mechanically by root",
   "evidence": "reports/N04-implementation.md",
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/N04",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/N04",
   "patch_sha256": "9497a21bcf98ec59668fc40c0dd1b862553758cfeffaa1a8862c8c781a052f8d",
   "frozen_sha256": {
     "Sources/VectorCore/Operations/VectorEntropy.swift": "f2760ed73558ce48da56004705574f9c61548a950638ed6bec2773c0a7e08c22",

@@ -211,35 +211,10 @@ public enum EnvCapture {
     static func observe(command: [String], timeout: TimeInterval = 2) -> RuntimeObservation {
         guard let executable = command.first, timeout > 0, timeout <= 15 else { return .unavailable("Invalid observation command/deadline") }
         #if os(macOS)
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("V02-metadata-" + UUID().uuidString)
-        do {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            defer { try? FileManager.default.removeItem(at: directory) }
-            let output = directory.appendingPathComponent("stdout")
-            let errors = directory.appendingPathComponent("stderr")
-            FileManager.default.createFile(atPath: output.path, contents: nil)
-            FileManager.default.createFile(atPath: errors.path, contents: nil)
-            let stdout = try FileHandle(forWritingTo: output), stderr = try FileHandle(forWritingTo: errors)
-            defer { try? stdout.close(); try? stderr.close() }
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: executable)
-            process.arguments = Array(command.dropFirst())
-            process.standardOutput = stdout; process.standardError = stderr
-            let finished = DispatchSemaphore(value: 0)
-            process.terminationHandler = { _ in finished.signal() }
-            try process.run()
-            if finished.wait(timeout: .now() + timeout) == .timedOut {
-                kill(process.processIdentifier, SIGKILL)
-                let cleaned = finished.wait(timeout: .now() + 2) == .success
-                // Never inspect termination properties after an execution timeout.
-                return .unavailable("Observation timeout; cleanup completed: \(cleaned)")
-            }
-            guard process.terminationReason == .exit, process.terminationStatus == 0 else {
-                return .unavailable("Observation command failed: \(process.terminationStatus)")
-            }
-            let text = try String(contentsOf: output, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
-            return text.isEmpty ? .unavailable("Observation returned empty output") : RuntimeObservation(value: text)
-        } catch { return .unavailable("Observation setup/read failed: \(error)") }
+        guard command.allSatisfy({ !$0.contains("\0") }) else {
+            return .unavailable("Invalid observation argument: embedded NUL")
+        }
+        return MetadataProcess.observe(command: [URL(fileURLWithPath: executable).path] + command.dropFirst(), timeout: timeout)
         #else
         // Foundation's `Process` is unavailable on this platform, so the observation is recorded as unavailable.
         _ = executable

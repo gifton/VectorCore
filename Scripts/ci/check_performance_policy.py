@@ -37,7 +37,38 @@ def argument(text):
     raise ValueError('Unclosed inventoried argument')
 
 
+def validate_precision_benchmark_scope(text):
+    """Check this suite's one-line Test declarations, not arbitrary Swift flow.
+
+    PerformancePolicyTests mutates every PrecisionTimer workload's entry gate
+    and each ordinary numerical/representation test's reachability.
+    """
+    pattern = r'(?ms)^    @Test\(([^\n]+)\)\n    func (\w+)\(\)[^\n]*\{(.*?)(?=^    @Test\(|\Z)'
+    timing, ordinary, seen = [], [], set()
+    gate = '.enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_TEST_EXTENDED"] == "1")'
+    for attributes, name, body in re.findall(pattern, text):
+        if name in seen:
+            raise ValueError('duplicate precision benchmark declaration')
+        seen.add(name)
+        title = argument(attributes + ')')
+        if not (title.startswith('"') and title.endswith('"')):
+            raise ValueError('unsupported precision benchmark declaration')
+        timer = 'PrecisionTimer.measure' in body
+        expected = title + ', ' + gate if timer else title
+        if compact(attributes) != compact(expected):
+            raise ValueError('precision benchmark entry scope differs: ' + name)
+        (timing if timer else ordinary).append(name)
+    required_timing = {'benchmarkEuclideanLatency512', 'benchmarkCosineLatency512',
+                       'benchmarkEuclideanBatchThroughput', 'benchmarkDimensionScaling'}
+    required_ordinary = {'measureAccuracyLoss', 'representationPayloadConstants', 'analyzeRepresentationMemoryModel',
+                         'representationModelMatchesRealStorage', 'validateHeuristic'}
+    if not required_timing <= set(timing) or not required_ordinary <= set(ordinary):
+        raise ValueError('precision benchmark scope inventory differs')
+    return {'timing': timing, 'ordinary': ordinary}
+
+
 def validate(root=ROOT):
+    validate_precision_benchmark_scope((root / 'Tests/ComprehensiveTests/MixedPrecisionPerformanceBenchmark.swift').read_text())
     data = json.loads((root / 'Scripts/ci/performance_sites.json').read_text())
     expected = {row['id']: row for row in data['assertions']}
     if len(expected) != len(data['assertions']):

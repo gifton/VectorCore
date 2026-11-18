@@ -287,8 +287,8 @@ is needed for this first pass.
 ## Audit artifacts and unperformed actions
 
 The downloaded job log is at
-`/private/tmp/vectorcore-ci-comprehensive-audit.log`. The local SwiftPM fixture
-is at `/private/tmp/vectorcore-tag-audit-h6_h4sx9`; it contains only throwaway
+`${CAPTURE_ROOT}/vectorcore-ci-comprehensive-audit.log`. The local SwiftPM fixture
+is at `${CAPTURE_ROOT}/vectorcore-tag-audit-h6_h4sx9`; it contains only throwaway
 packages and locally created tags. These temporary artifacts are not committed.
 
 Only this review document was added to the project. No GitHub setting, remote

@@ -40,7 +40,8 @@ def write_json(path, value):
 def run(argv, directory, name, timeout=15, expected=0):
     directory.mkdir(parents=True, exist_ok=True)
     record = directory / (name + ".json")
-    assert not record.exists(), record
+    if record.exists():
+        raise AssertionError(record)
     stdout, stderr = directory / (name + ".stdout"), directory / (name + ".stderr")
     env = {key: value for key, value in os.environ.items() if not key.startswith("VC_")}
     provenance = {"argv": list(map(str, argv)), "cwd": str(ROOT), "deadlineSeconds": timeout,
@@ -105,7 +106,8 @@ def artifacts(build, output):
             copy.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, copy)
             rows.append({"buildPath": str(path), "retainedPath": str(copy), "sha256": sha(copy), "bytes": copy.stat().st_size})
-    assert rows
+    if not rows:
+        raise AssertionError
     return rows
 
 
@@ -116,7 +118,8 @@ def clang_command(log, source):
         except ValueError: continue
         if parts and Path(parts[0]).name in ("clang", "clang++") and "-c" in parts and parts[parts.index("-c") + 1] == str(source):
             found.append(parts)
-    assert len(found) == 1, f"Expected one actual dispatcher compiler command, found {len(found)}"
+    if not (len(found) == 1):
+        raise AssertionError(f"Expected one actual dispatcher compiler command, found {len(found)}")
     return found[0]
 
 
@@ -155,14 +158,16 @@ def assert_isolated(command, roots, label):
         for candidate in [argument] + argument.split("=", 1)[1:]:
             if candidate.startswith("/"):
                 path = Path(candidate).resolve()
-                assert not any(path == r or r in path.parents for r in resolved_roots), f"{label}: argument {argument} resolves under the real build"
+                if any(path == r or r in path.parents for r in resolved_roots):
+                    raise AssertionError(f"{label}: argument {argument} resolves under the real build")
 
 
 def find_executable(scratch, configuration):
     # native: <arch>/debug/vectorcore-bench; swiftbuild: out/Products/Debug/vectorcore-bench.
     executables = [p for p in scratch.rglob("vectorcore-bench")
                    if p.is_file() and not p.is_symlink() and p.parent.name.lower() == configuration.lower()]
-    assert len(executables) == 1, executables
+    if not (len(executables) == 1):
+        raise AssertionError(executables)
     return executables[0]
 
 
@@ -177,7 +182,8 @@ def cell(configuration, enabled, scratch_root, output, jobs):
     run(argv, directory, "build", timeout=1200)
     executable = find_executable(scratch, configuration)
     build = executable.parent
-    assert products.find_executable(build, "vectorcore-bench") == executable
+    if not (products.find_executable(build, "vectorcore-bench") == executable):
+        raise AssertionError
     layout = products.detect_layout(build)
     retained = artifacts(build, directory / "artifacts")
     write_json(directory / "artifacts.json", retained)
@@ -187,32 +193,44 @@ def cell(configuration, enabled, scratch_root, output, jobs):
         report = directory / (mode + "-report.json")
         text = run(command + flags + ["--out", report], directory, "benchmark-" + mode)
         # PR #56 review BM5: the pretty banner names this product's configuration; only release is unflagged.
-        assert f"configuration: {configuration}" in text, text
-        assert (f"[WARN {configuration} build" in text) == (configuration != "release"), text
+        if not (f"configuration: {configuration}" in text):
+            raise AssertionError(text)
+        if not ((f"[WARN {configuration} build" in text) == (configuration != "release")):
+            raise AssertionError(text)
         result = json.loads(report.read_text())
         metadata = result["metadata"]
-        assert metadata["coreConfiguration"] == configuration and metadata["benchmarkConfiguration"] == configuration
-        assert metadata["flags"]["useCKernels"] is enabled
-        assert metadata["flags"].get("requestedCKernels") == (enabled if mode == "matching" else None)
-        assert metadata["selectedCaseIDs"] == ["dist.euclidean.512.optimized"]
-        assert len(result["results"]) == 1 and not result["failures"]
-        assert result["results"][0]["iterations"] == 2
+        if not (metadata["coreConfiguration"] == configuration and metadata["benchmarkConfiguration"] == configuration):
+            raise AssertionError
+        if not (metadata["flags"]["useCKernels"] is enabled):
+            raise AssertionError
+        if not (metadata["flags"].get("requestedCKernels") == (enabled if mode == "matching" else None)):
+            raise AssertionError
+        if not (metadata["selectedCaseIDs"] == ["dist.euclidean.512.optimized"]):
+            raise AssertionError
+        if not (len(result["results"]) == 1 and not result["failures"]):
+            raise AssertionError
+        if not (result["results"][0]["iterations"] == 2):
+            raise AssertionError
     opposite = "--no-use-ckernels" if enabled else "--use-ckernels"
     run(command + [opposite, "--out", directory / "must-not-exist.json"], directory, "benchmark-mismatch", expected=1)
-    assert not (directory / "must-not-exist.json").exists()
-    assert "does not match compiled" in (directory / "benchmark-mismatch.stderr").read_text()
+    if (directory / "must-not-exist.json").exists():
+        raise AssertionError
+    if not ("does not match compiled" in (directory / "benchmark-mismatch.stderr").read_text()):
+        raise AssertionError
 
     # Recompile the one real dispatcher source, changing only the entry symbol.
     original_source = ROOT / "Sources/VectorCoreC/common/vc_dispatch.c"
     text = original_source.read_text()
-    assert len(re.findall(r"\bvc_dot_int8\b", text)) == 1
+    if not (len(re.findall(r"\bvc_dot_int8\b", text)) == 1):
+        raise AssertionError
     derivative = directory / "dispatcher-renamed.c"
     derivative.write_text(re.sub(r"\bvc_dot_int8\b", "v02_real_vc_dot_int8", text))
     original_command = clang_command((directory / "build.stdout").read_text() + (directory / "build.stderr").read_text(), original_source)
     dispatcher = directory / "dispatcher-renamed.o"
     roots = object_roots(build)
     real_before = snapshot(roots)
-    assert real_before
+    if not real_before:
+        raise AssertionError
     dispatcher_command = replacement_command(original_command, derivative, dispatcher)
     assert_isolated(dispatcher_command, roots, "compile-real-dispatcher")
     run(dispatcher_command, directory, "compile-real-dispatcher", timeout=120)
@@ -224,23 +242,30 @@ def cell(configuration, enabled, scratch_root, output, jobs):
     c_objects = products.source_objects(build, "VectorCoreC")
     dispatch_name = "vc_dispatch.c.o" if layout == "native" else "vc_dispatch.o"
     replaced = [p for p in c_objects if p.name == dispatch_name]
-    assert len(replaced) == 1 and library_objects
+    if not (len(replaced) == 1 and library_objects):
+        raise AssertionError
     linked = library_objects + [p for p in c_objects if p not in replaced] + [dispatcher, shim]
     consumer = directory / "public-routes"
     link = ["swiftc", "-swift-version", "6", "-parse-as-library", "-O" if configuration == "release" else "-Onone", "-I", products.module_search_path(build), "-Xcc", "-fmodule-map-file=" + str(products.module_map(build, "VectorCoreC")), "-Xcc", "-I" + str(ROOT / "Sources/VectorCoreC/include"), FIXTURES / "public_routes.swift", *linked, "-framework", "Accelerate", "-o", consumer]
     run(link, directory, "link-public-routes", timeout=120)
     route_output = run([consumer, "1" if enabled else "0"], directory, "public-routes")
     route_rows = [json.loads(line[len("V02_ROUTE "):]) for line in route_output.splitlines() if line.startswith("V02_ROUTE ")]
-    assert len(route_rows) == 36 and {r["dimension"] for r in route_rows} == {512,768,1536}
-    assert len([line for line in route_output.splitlines() if line.startswith("V02_C_TAIL ")]) == 10
-    assert "V02_ROUTE_ENTER" in route_output and "V02_ROUTE_COMPLETE widths=3 routes=36 tails=10" in route_output
+    if not (len(route_rows) == 36 and {r["dimension"] for r in route_rows} == {512,768,1536}):
+        raise AssertionError
+    if not (len([line for line in route_output.splitlines() if line.startswith("V02_C_TAIL ")]) == 10):
+        raise AssertionError
+    if not ("V02_ROUTE_ENTER" in route_output and "V02_ROUTE_COMPLETE widths=3 routes=36 tails=10" in route_output):
+        raise AssertionError
     for row in route_rows:
         expected = 3 if enabled and (row["mode"] == "equal" or (row["mode"] == "unequal" and row["metric"] != "euclidean")) else 0
-        assert row["calls"] == expected and row["expectedCalls"] == expected
+        if not (row["calls"] == expected and row["expectedCalls"] == expected):
+            raise AssertionError
     # Verify all ordinary retained compiled bytes stayed untouched during replacement/link.
-    assert all(sha(row["buildPath"]) == row["sha256"] for row in retained)
+    if not (all(sha(row["buildPath"]) == row["sha256"] for row in retained)):
+        raise AssertionError
     # Also the per-source objects and side files (.d, .dia, index units) the rewritten commands could have hit.
-    assert snapshot(roots) == real_before, "real build object directory changed during replacement compile/link"
+    if not (snapshot(roots) == real_before):
+        raise AssertionError("real build object directory changed during replacement compile/link")
     write_json(directory / "real-build-snapshot.json", {"files": len(real_before), "unchanged": True})
     mapping = {"layout": layout, "originalDispatcher": {"path": str(replaced[0]), "sha256": sha(replaced[0])},
                "originalSource": {"path": str(original_source), "sha256": sha(original_source)},
@@ -280,8 +305,10 @@ def main():
             for enabled in [False, True]:
                 cells.append(cell(configuration, enabled, scratch, output, args.jobs))
                 write_json(output / "progress.json", {"cells": cells})
-        assert len(cells) == 4
-        assert all(sha(ROOT / row["path"]) == row["sha256"] for row in sources)
+        if not (len(cells) == 4):
+            raise AssertionError
+        if not (all(sha(ROOT / row["path"]) == row["sha256"] for row in sources)):
+            raise AssertionError
         write_json(output / "result.json", {"schemaVersion": 1, "marker": "V02_BUILD_MODES_COMPLETE", "cells": cells})
         print("V02_BUILD_MODES_COMPLETE")
     except BaseException as error:

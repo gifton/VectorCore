@@ -49,7 +49,7 @@ def main():
                 continue
             path, _, fragment = target.partition("#")
             # Historical absolute /private/tmp paths in notes are provenance only.
-            if path.startswith("/private/tmp/"):
+            if path.startswith("${CAPTURE_ROOT}/"):
                 continue
             source_match = re.search(r":([0-9]+)$", path)
             if source_match:

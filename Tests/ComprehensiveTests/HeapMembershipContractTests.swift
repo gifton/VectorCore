@@ -1,4 +1,5 @@
 import Foundation
+import VectorCoreTestSupport
 import Testing
 #if canImport(Darwin)
 import Darwin
@@ -23,7 +24,10 @@ import Glibc
         let result=heap.getSorted()
         #expect(result.count == 1 && result[0].index == 1 && result[0].distance.isFinite)
     }
-    @Test(.serialized,arguments:["empty","bulk","nearest"])
+    // Exercises capacity rejection at the public initializer boundary. For "nearest", the own k
+    // precondition and MinHeap's delegated precondition have no observable boundary between them;
+    // the mutation runner records that redundant-placement survivor explicitly.
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"), .serialized,arguments:["empty","bulk","nearest"])
     func negativeCapacity(_ scenario:String) throws {
         var env=ProcessInfo.processInfo.environment;env["R04_SCENARIO"]=scenario
         // Never write into the package tree: default to a unique temporary directory.
@@ -34,14 +38,16 @@ import Glibc
         FileManager.default.createFile(atPath:path.path,contents:nil)
         let file=try FileHandle(forWritingTo:path)
         let child = try launchChildProbe(.swiftTesting(filter: "HeapMembershipContractTests/childProbe"), environment: env, output: file,
-                                         deadline: 15, cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                         deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
         if child.timedOut {
             try file.close();print("R04_CHILD_TIMEOUT \(scenario) capture=\(path.path)")
             throw NSError(domain:"R04.timeout",code:1)
         }
         try file.close();let output=try String(contentsOf:path,encoding:.utf8)
         print("R04_CHILD_RESULT \(scenario) status=\(child.statusDescription) reason=\(child.reasonDescription) capture=\(path.path)")
-        #expect(child.terminationReason == .uncaughtSignal)
+        let failures = trapObservationFailures(child, output: output, id: "heap-\(scenario)",
+                                               diagnostic: "Heap capacity must be nonnegative")
+        #expect(failures.isEmpty, "\(scenario): \(failures): \(output)")
         #expect(output.contains("R04_STARTED \(scenario)"))
         #expect(!output.contains("R04_ACCEPTED"))
         #if DEBUG
@@ -52,12 +58,14 @@ import Glibc
         guard let scenario=ProcessInfo.processInfo.environment["R04_SCENARIO"] else { return }
         print("R04_INVOCATION "+String(decoding:try JSONSerialization.data(withJSONObject:["argv":CommandLine.arguments,"scenario":scenario],options:[.sortedKeys]),as:UTF8.self))
         print("R04_STARTED \(scenario)");fflush(stdout)
+        trapStage("TRAP_BEFORE heap-\(scenario)")
         switch scenario {
         case "empty": _ = MinHeap<Int>(capacity:-1,compare:<)
         case "bulk": _ = MinHeap<Int>(from:[],capacity:-1,compare:<)
         case "nearest": _ = KNearestHeap(k:-1)
         default:throw NSError(domain:"R04.scenario",code:1)
         }
+        trapStage("TRAP_RETURNED heap-\(scenario)")
         print("R04_ACCEPTED")
     }
 }

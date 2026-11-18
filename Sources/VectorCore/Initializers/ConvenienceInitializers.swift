@@ -74,11 +74,14 @@ public extension Vector {
             return Vector(repeating: from)
         }
 
-        let step = (to - from) / Float(n - 1)
         var result = Vector()
-
-        for i in 0..<n {
-            result[i] = from + Float(i) * step
+        if from.isFinite && to.isFinite {
+            for i in 0..<n {
+                result[i] = VectorInterpolation.scalar(from: from, to: to, t: Double(i) / Double(n - 1))
+            }
+        } else {
+            let step = (to - from) / Float(n - 1)
+            for i in 0..<n { result[i] = from + Float(i) * step }
         }
 
         return result
@@ -275,11 +278,13 @@ public extension DynamicVector {
             return DynamicVector(dimension: dimension, repeating: from)
         }
 
-        let step = (to - from) / Float(dimension - 1)
-        let values = (0..<dimension).map { i in
-            from + Float(i) * step
+        if from.isFinite && to.isFinite {
+            return DynamicVector((0..<dimension).map { i in
+                VectorInterpolation.scalar(from: from, to: to, t: Double(i) / Double(dimension - 1))
+            })
         }
-
+        let step = (to - from) / Float(dimension - 1)
+        let values = (0..<dimension).map { from + Float($0) * step }
         return DynamicVector(values)
     }
 

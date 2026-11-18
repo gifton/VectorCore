@@ -23,7 +23,7 @@
     "reviews": "Phases A–F each independently reviewed with fix rounds (D, E, F); phase G measurement plus root comparison; FINAL whole-task Opus review (Spec FAIL on T8 sub-item; I1/I2) → ONE final fix → scoped re-review APPROVED (seed change judged fixture-only).",
     "merge": "26 files imported byte-identically (preimages = 2240d2e); CHANGELOG.md and claim_ledger.json 3-way merged with identical results in both merge directions; merged tree differs from integration exactly in P01's 28 files and from P01's tree only in T11/T12 files."
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/P01",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/P01",
   "patch_sha256": "4ee702695cb1273fe03d5b25328fb4d4468d17fb960d8274516523255ac2366d",
   "reviewed_tree": "2d4f1cf3a9a520583e4b5f2e68010472f63de686",
   "limitations": [

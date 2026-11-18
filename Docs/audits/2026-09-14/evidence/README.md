@@ -49,10 +49,10 @@ The historical reviewer notes retain absolute temporary commands from the sessio
 `root/source-paths.txt` identifies the five source files concatenated into `root/main.swift`. The only transformation is removing now-redundant `import VectorCore` / `import VectorCoreBenchmarking`; the footer contains the printed fixtures.
 
 ```sh
-swiftc -O -module-cache-path /private/tmp/vectorcore-audit-module-cache \
+swiftc -O -module-cache-path ${CAPTURE_ROOT}/vectorcore-audit-module-cache \
   Docs/audits/2026-09-14/evidence/root/main.swift \
-  -o /private/tmp/vectorcore-audit-tooling-probe
-/private/tmp/vectorcore-audit-tooling-probe
+  -o ${CAPTURE_ROOT}/vectorcore-audit-tooling-probe
+${CAPTURE_ROOT}/vectorcore-audit-tooling-probe
 ```
 
 For the pool probe, compile the current `SwiftBufferPool.swift`, `BufferProvider.swift` and preserved `ExecutionPoolProbe.swift` together with `-O -swift-version 6 -parse-as-library`. Its source supplies a counted `AlignedMemory.deallocate` dependency while preserving real allocation/free. See [execution probe provenance](validate_execution_api/commands.md) for the exact original command and cleanup behavior.

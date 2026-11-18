@@ -12,7 +12,7 @@
  "validation": {
   "policy": "Ledger 0; coverage 91/91; CHANGELOG diff = pure insertion plus the two ruled replacements (root-verified on the real tree)."
  },
- "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/T18",
+ "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/T18",
  "reviewed_tree": "staged scripts R/T18/deliverables.sha256",
  "limitations": [
   "Contradiction check vs existing entries was targeted, not exhaustive."

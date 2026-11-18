@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -346,7 +347,7 @@ import Testing
         print("N01_GUARD_ACCEPTED")
     }
 
-    @Test func invalidInputsRejectInChildren() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func invalidInputsRejectInChildren() throws {
         if ProcessInfo.processInfo.environment["N01_SKIP_GUARDS"] == "1" { return }
         let cases = ["empty","zero","nan","infinity","double","optimized384","optimized512","optimized768","optimized1536","pointerZero","pointerNaN","pointerInfinity",
             "negativeDimension","toleranceNegative","toleranceNaN","toleranceInfinity","toleranceNegativeInfinity","divideZero","divideNegativeZero","divideAssignZero",
@@ -359,8 +360,7 @@ import Testing
             _ = FileManager.default.createFile(atPath:url.path,contents:nil)
             let handle = try FileHandle(forWritingTo:url)
             let process = try launchChildProbe(.swiftTesting(filter: "NormalizationRangeContractTests/guardChildProbe"),
-                                               environment: environment, output: handle, deadline: 15,
-                                               cleanup: .terminateThenKill(grace: 1, seconds: 1))
+                                               environment: environment, output: handle, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
             let timedOut = process.timedOut
             try handle.close()
             let diagnostic = try String(contentsOf:url,encoding:.utf8)

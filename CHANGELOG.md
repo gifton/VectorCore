@@ -5,12 +5,24 @@ All notable changes to VectorCore will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+`0.4.0-alpha.1` is an experimental integration preview of the changes collected
+under **Unreleased** below. It includes the breaking by-value `SIMDStorage`
+migration and retains the known Xcode optimizer limitations. See
+[release status](RELEASE_STATUS.md) for the exact dependency and validation scope.
+Stable 0.4.0 admission remains pending; the Unreleased ledger is retained until
+that release is finalized.
+
 ## [Unreleased]
 
 The changes below are present after `v0.3.3`; they are not included in that
 published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Added
+
+- Public initializers for `Tuning` and `CalibrationProbes` (VC-F008).
+  `Tuning` requires `breakEvenN >= 0` and `minChunk > 0`; raw calibration
+  observations retain the existing fallback policy. The ordinary-import
+  `F008TuningConsumer.swift` exercises overrides, calibration and scheduling boundaries.
 
 - **`VectorCoreCompiledFeatures` (V02).** `VectorCoreCompiledFeatures.useCKernels` reports whether the
   linked VectorCore was compiled with `VC_USE_C_KERNELS`, and `VectorCoreCompiledFeatures.configuration`
@@ -55,6 +67,28 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   See [Benchmark measurement boundaries](Docs/Benchmark_Measurement_Boundaries.md#the-opt-in-boundary-suite).
 
 ### Changed
+
+- **Breaking: `SIMDStorage` uses `withUnsafeMutableElements`.** The new mutable-borrow
+  requirement takes `(UnsafeMutableBufferPointer<Element>) throws -> R` by value and
+  remains `rethrows`; the old descriptor-inout requirement is removed, with no default
+  fallback. Custom conformers must implement the new requirement, and generic callers
+  must use the new name. Rebuild the library and consumers together. ContiguousArray
+  has an explicit adapter; its standard-library method remains available. This changes
+  the API boundary and does not qualify an affected compiler. See the
+  [migration guide](Docs/SIMDStorage_Migration.md), `SIMDStorageMutationTests`
+  (`concreteAndGenericReadAfterMutation`, `newOnlyConformerUsesTheRequirement`) and
+  the external `SIMDStorage*` compile contracts.
+
+- **Breaking: dynamic storage uses value semantics (VC-F001).**
+  `AlignedDynamicArrayStorage` and `DynamicArrayStorage` are now structs.
+  Mutations require `var`; copying a value isolates subsequent writes, including
+  mutable buffer borrows (`ReferenceStorageValueTests.dynamicCopies`, `alignedCopies`, `concurrentIndependentCopies`). Clients needing shared
+  mutations must provide synchronized ownership. `COWDynamicStorage` delegates
+  to the aligned value. See [migration details](Docs/Memory_Alignment.md#pools-copying-and-concurrency).
+
+- **watchOS support retired.** The supported deployment floors are macOS 14,
+  iOS 17, tvOS 17 and visionOS 1, with Mac Catalyst retained. Historical watchOS
+  findings describe the earlier baseline and are not marked repaired by this scope change.
 
 - **Breaking: fixed-size vector storage must have the type's lane count (S01).** On the optimized FP32
   types and the INT8 types, a raw, replacement, nested or `inout` storage write with the wrong lane count
@@ -108,9 +142,9 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   `any DistanceMetric<Float>`, are requirements with default implementations, so conformers still
   compile. A conforming type that already declares a method with the same signature now implements that
   requirement: calls through the protocol (generic or existential) reach that method instead of the
-  default. Rename such a method if it was not meant to implement the requirement. A comparison of the
-  public symbol graphs of 0.3.3 and this release found no other requirement added to a public protocol
-  that existed in 0.3.3.
+  default. Rename such a method if it was not meant to implement the requirement. The separate
+  `SIMDStorage.withUnsafeMutableElements` migration has no default implementation and requires
+  conformers to update explicitly.
 
 - **Breaking: `MutableVectorCollection.update(id:vector:)` has no default implementation, and collection
   IDs are not reused (R02).** The requirement stays, but its protocol-extension default is removed: a
@@ -430,7 +464,7 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   which cannot waive report integrity.
 
 - **Breaking: `StaticDimension` requires only `value`.** Source that names `D.Storage` or a
-  `DimN.Storage` alias no longer compiles; other source compiles unchanged. The `Storage`
+  `DimN.Storage` alias no longer compiles; for this dimension change, other source compiles unchanged. The `Storage`
   associated-type requirement is removed, and every `Vector<D>` member that is not specific to `Dim2`,
   `Dim3` or `Dim4` is now available for every static dimension. The convenience initializers, the NaN and infinity handling
   members, `VectorCoreOperations` (and `Vector`'s conformance to it), the `VectorMath` members,
@@ -1107,6 +1141,37 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Fixed
 
+- Precision analysis returns an FP32 sentinel with zero statistics for samples
+  containing no finite observations (A:AP7), retaining the first vector's dimension.
+  Zero expected error is a sentinel, not an accuracy measurement
+  (`PrecisionStatisticsRangeTests.noFiniteObservationsAcrossSupportedWidths`,
+  `sentinelControlsAcrossSupportedWidths`).
+- UMAP preflights curve coefficient publication after cheap input validation and
+  before graph construction, PCA, coordinate allocation, or fuzzy-edge processing
+  (A:LC5); rejected curves still throw `.operationFailed`
+  (`UMAPPreflightTests.rejectedCurvePrecedesGraphConstructionForBothInitializers`,
+  `rejectedCurvePrecedesPCAWithSuppliedGraph`, `rejectedCurvePrecedesFuzzyEdgesOnGraphRoutes`,
+  `cheapValidationPrecedesRejectedCurve`).
+
+- **`OperationProgress.percentage` saturates at `Int.max` (VC-F007).** Extreme
+  overcomplete progress no longer traps during integer conversion. Percentages
+  above 100 and ordinary fractional truncation are preserved
+  (`OperationProgressSuite.testOperationProgress_PercentageRange`,
+  `testOperationProgress_PercentageConversionBoundary`,
+  `testOperationProgress_PercentagePreservesOvershootAndTruncation`).
+
+- Collection replacement and clearing release displaced values after unlocking
+  (VC-F002); destructor callbacks can re-enter the completed collection state
+  (`CollectionDestructionContractTests.destructionCanReenter`).
+- Finite-endpoint interpolation widens before subtraction (VC-F004), preserving
+  endpoint bits and degenerate widths (`InterpolationRangeContractTests.oppositeFiniteExtrema`,
+  `endpointBitsAndDegenerateWidths`).
+- Batch squared-distance shortcuts require coordinate zero (VC-F005); tiny
+  nonzero queries retain their identity (`BatchZeroQueryContractTests.tinySelfDistanceDoesNotDependOnBatchSize`).
+- Precision diagnostics retain a Double mean, residuals and outlier threshold
+  (VC-F006), correcting variance and outlier counts for the large finite inputs
+  in `PrecisionStatisticsRangeTests.statisticsAcrossSupportedWidths`.
+
 - **`vectorcore-bench --ab-only` with an explicit suite list.** `--ab-only` runs only the
   `batch` suite. Before, an explicit `--suites` naming any other suite was replaced by
   `batch` with no message, and `--dims` was then checked against the batch suite, so
@@ -1161,7 +1226,7 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   `swiftPoolDestructionLeaksActiveLease`); the lease contract is unchanged:
   release every handle before dropping the pool. `MemoryPool` compared the
   cleanup interval against `Double(Int.max) / 1e9`, which is 2.147 s on a 32-bit
-  `Int` (arm64_32 watchOS devices, inside the declared floor), so the default
+  `Int` (arm64_32 watchOS devices, supported before the 0.4.0 scope change), so the default
   30 s interval silently disabled automatic cleanup there; the bound is now the
   64-bit nanosecond horizon on every platform
   (`MemoryPoolBoundaryTests.timerHorizonIsIndependentOfIntWidth`).
@@ -1182,14 +1247,15 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   `Scripts/ci/tests` and `Scripts/ci/fixtures` were executed by nothing: not a
   SwiftPM test target, not collected by unittest, not called by any workflow.
   They are removed; what remains in those directories is read or executed by a
-  live test or regenerates a committed table. The nine must-not-compile fixtures
+  live test or regenerates a committed table. The twelve must-not-compile fixtures
   (`R01MetricScalarContract`, `R02CollectionUpdateConsumer`, the five D02
-  negatives, `B01BareConformanceNegative`, `R05OldPropertyNegative`) and their
+  negatives, `B01BareConformanceNegative`, `R05OldPropertyNegative` and
+  `F001StorageLetNegative`, plus the two SIMDStorage migration negatives) and their
   positive controls are compiled by `consumer_smoke.py` in the consumer job, from
   the documentation examples' scratch package: a negative must fail with one
   error on each expected line and the named diagnostic, a control must build or
   run and print its marker. The table is checked without a compiler by
-  `test_consumer_smoke.CompileContractTests.test_table_names_the_nine_negatives_and_their_controls`
+  `test_consumer_smoke.CompileContractTests.test_table_names_the_negatives_and_their_controls`
   and the judgement by `ContractJudgementTests.test_negative_with_every_code_line_erroring`.
   The stale paragraph in
   `Docs/README.md` that called the Performance Guide and the how-to "retained
@@ -1204,20 +1270,35 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   build failure introduced by N01 (never released); arm64 behavior is unchanged. The off-macOS fallbacks
   are compile-verified only, and the simulator and Catalyst destinations are not supported tooling hosts.
 
-- **`vectorcore-bench` correctness gate.** The generic `batch.euclidean2` cases
-  no longer record correctness failures on correct output, so the guide's CI
-  comparison runs without `--exclude`. The Euclidean and squared-Euclidean
-  batch routes, their `boundary` companions and the `matrix` routes are held to
-  thresholds derived from each route's worst-case rounding bound for the case's
-  dimension and candidate count, replacing a fixed relative `1e-6` that the
-  generic route's long FP32 sums legitimately exceed. A relative error now
-  divides by `max(|ref|, 1)`, and the `matrix` routes, whose diagonal
-  references are zero, are gated on absolute error. `noop.scalar-add` and the
-  `mem.alloc`, `mem.pool` and `mem.fill` cases declare that they have no output
-  to validate instead of recording "Missing validation"; `dot`, `normalize` and
-  `mem.copy` still record it. Other validated routes keep the fixed
-  thresholds. Regression coverage: `BenchmarkCorrectnessPolicyTests` in
-  [BenchmarkContractTests](Tests/BenchmarkContractTests/BenchmarkContractTests.swift).
+- **`vectorcore-bench` correctness gate.** Dot, normalization success/zero-failure and
+  `mem.copy` now record independent observations outside timing instead of "Missing validation":
+  Double arithmetic references for dot and normalized coordinates, `invalidOperation` for zero
+  normalization, and exact source/destination bits for copy. Copy setup now uses
+  `Float(i % 257 - 128)/256`; old fixture/boundary identities need fresh compatible reports.
+  The six dot routes use reviewed absolute forward-error bounds for the bounded LCG fixtures
+  at D = 512, 768 and 1536 (`k32=D` generic, `k32=D/16+5` optimized, `k64=D`, scale `D·B²`,
+  `B=1`, existing margin), replacing the empirical relative limit that falsely rejected three
+  seed-0 results. These conservative bounds can miss small defects and do not cover arbitrary
+  vector magnitudes; source/model limits and sensitivity are in
+  [the dot analysis](Docs/reviews/2026-11-04-release-phase-two/benchmarks/dot-bound-analysis.md).
+  Exact signed one-hot tests cover every index of all six actual dot routes independently
+  of those bounds. The existing Euclidean/squared-Euclidean batch, boundary and matrix
+  derived rules, relative denominator `max(|ref|, 1)`, other fixed arithmetic thresholds and
+  strict/override behavior are preserved. `noop.scalar-add`, `mem.alloc`, `mem.pool` and
+  `mem.fill` remain explicitly nonnumerical. Regression coverage includes
+  `testEveryRepairedCatalogCaseCarriesStrictObservation`,
+  `testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth`,
+  `testEveryDotRouteRetainsEachSignedCoordinateExactly`,
+  `testNormalizationReferenceRejectsWrongCoordinatesAndOutcomes` and
+  `testCopyRejectsTailPermutationULPAndSignedZeroCorruption` in
+  [BenchmarkNumericalObservationTests](Tests/BenchmarkContractTests/BenchmarkNumericalObservationTests.swift),
+  plus `testValidationRequirementIsDeclaredPerCase`,
+  `testDerivedThresholdsFollowTheRoundingCounts` and
+  `testRelativeErrorNeverDividesByReferenceBelowFloor` in the existing
+  [BenchmarkCorrectnessPolicyTests](Tests/BenchmarkContractTests/BenchmarkContractTests.swift).
+  The original T11 Euclidean/matrix policy repair remains part of this Unreleased change;
+  the [phase-two execution record](Docs/reviews/2026-11-04-release-phase-two/benchmarks/README.md)
+  reports the added validation without claiming timing or release acceptance.
 
 - **Benchmark metadata `binarySizes.vectorCoreLibraryBytes`.** A loaded image is
   now matched by file name (`libVectorCore.dylib`, or the binary inside

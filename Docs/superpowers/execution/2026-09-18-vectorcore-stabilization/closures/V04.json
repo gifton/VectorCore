@@ -63,7 +63,7 @@
       "README relies on the lexical Rule 6 only (F-2, routed to P01)."
     ]
   },
-  "evidence_root": "/Users/goftin/dev/gsuite/VSK/VectorCore/.stabilization-recovery/2026-10-03/V04",
+  "evidence_root": "${SOURCE_ROOT}/.stabilization-recovery/2026-10-03/V04",
   "evidence_sha256": {
     "phase1-inventory.md": "357769dbe5e999babb13aa63c4ae73cfc6af76f4c59bf169782c18a6887f6b02",
     "rulings.md": "82d9d2a372a318d812057b9721c6ae890239152574d1de75a8ccd56942908965",

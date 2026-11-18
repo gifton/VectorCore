@@ -146,6 +146,20 @@ struct CorrectnessRule: Equatable {
 /// The bounds are worst cases, linear in the summation length; that typical rounding errors grow only like its square
 /// root is a heuristic (not verified here), which is why measured errors sit far below them.
 ///
+/// - Dot (`dot.D.generic`, `dot.D.optimized`): signed terms `t_i=a_i*b_i` can cancel, so their error scales with
+///   `A=Σ|t_i| <= D*B²`, not the dot result. `VectorProtocol.dotProduct` uses one product and at most D-1 additions:
+///   `k32=D`. `DotKernels.dot` sums D/16 products per scalar accumulator, combines four accumulators with two
+///   additions, then reduces four lanes with at most three additions: `k32=1+(D/16-1)+2+3=D/16+5`. The Double
+///   product-and-sum reference has conservative `k64=D` (Float products are exact in Double on these fixtures).
+///   Thus `|current-reference| <= (gamma32(k32)+gamma64(D))*D*B²`, using the existing absolute model/margin.
+///   The LCG coordinates are multiples of 2^-23 in [-1,1), so nonzero products/intermediate results are multiples
+///   of 2^-46 and cannot underflow; magnitudes are bounded by D <= 1536. The bounds assume round-to-nearest;
+///   fused operations reduce rounding factors. `testEveryRepairedCatalogCaseCarriesStrictObservation` checks seed 0;
+///   `testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth` pins the bounds and rejects a largest-product omission
+///   and above-bound errors. These conservative random-fixture bounds miss small defects (documented in
+///   Docs/reviews/2026-11-04-release-phase-two/benchmarks/dot-bound-analysis.md); exact signed one-coordinate
+///   checks at every index in all six actual routes are in `testEveryDotRouteRetainsEachSignedCoordinateExactly`.
+///
 /// **Empirical thresholds.** Every other validated route keeps the pre-T11 fixed thresholds (FP32 relative `1e-6`, FP16
 /// relative `2e-3`, FP16 cosine `3e-3`). They are not derived from those routes' summations and are not verified to
 /// bound their rounding error; `testEveryValidatedCatalogRouteIsDerivedOrListedEmpirical` pins the exact list.
@@ -170,15 +184,35 @@ enum CorrectnessPolicy {
         case notApplicable(reason: String)
     }
 
-    /// The derived model of a case, or nil when its route has none (its rule is then empirical).
-    static func errorModel(forCaseName name: String) -> ErrorModel? {
+    private struct ModelDescriptor {
+        let base: ErrorModel
+        let observation: Int
+
+        var model: ErrorModel? {
+            let k32 = base.k32.addingReportingOverflow(observation)
+            let k64 = base.k64.addingReportingOverflow(observation)
+            guard !k32.overflow, !k64.overflow else { return nil }
+            return ErrorModel(route: base.route, kind: base.kind, k32: k32.partialValue, k64: k64.partialValue)
+        }
+    }
+
+    private static func modelDescriptor(forCaseName name: String) -> ModelDescriptor? {
         let p = CaseParsing.parse(name: name)
+        // Only the six canonical dot routes use this bounded-fixture model.
+        // testDotModelsUseSignedSumAbsoluteBoundsAtEveryWidth pins counts and rejects other names.
+        if p.kind == "dot", let dim = p.dim, modeledDimensions.contains(dim), let variant = p.variant,
+           ["generic", "optimized"].contains(variant), name == "dot.\(dim).\(variant)" {
+            let generic = variant == "generic"
+            return ModelDescriptor(base: ErrorModel(route: generic ? "generic-dot" : "optimized-dot",
+                kind: .absolute(scale: Double(dim) * fixtureCoordinateBound * fixtureCoordinateBound),
+                k32: generic ? dim : dim / 16 + 5, k64: dim), observation: 0)
+        }
         guard let kind = p.kind, let metric = p.metric, let variant = p.variant, let dim = p.dim, let n = p.n, n > 0,
               modeledDimensions.contains(dim) else { return nil }
         let observed = p.provider != nil
         let observation = observed ? n - 1 : 0
-        func relative(_ route: String, _ k32: Int, _ k64: Int) -> ErrorModel {
-            ErrorModel(route: route, kind: .relative, k32: k32 + observation, k64: k64 + observation)
+        func relative(_ route: String, _ k32: Int, _ k64: Int) -> ModelDescriptor {
+            ModelDescriptor(base: ErrorModel(route: route, kind: .relative, k32: k32, k64: k64), observation: observation)
         }
         switch (kind, metric, variant, observed) {
         case ("batch", "euclidean2", "generic", true): return relative("generic-euclid2", dim + 9, dim + 2)
@@ -193,10 +227,43 @@ enum CorrectnessPolicy {
             return relative("soa-euclid2", dim / 4 + 5, dim + 2)
         case ("matrix", "euclidean2", "optimized", false), ("matrix", "euclidean2", "consumer-only", false):
             let scale = 4 * Double(dim) * fixtureCoordinateBound * fixtureCoordinateBound
-            return ErrorModel(route: "matrix-norm-identity", kind: .absolute(scale: scale), k32: dim + 2, k64: dim + 2)
+            return ModelDescriptor(base: ErrorModel(route: "matrix-norm-identity", kind: .absolute(scale: scale),
+                                                   k32: dim + 2, k64: dim + 2), observation: 0)
         default:
             return nil
         }
+    }
+
+    /// The derived model, or nil for an empirical route. Counts must fit Int; call `domainProblem` before
+    /// constructing a rule from an untrusted case name. The raw model may describe an unsupported gamma domain.
+    static func errorModel(forCaseName name: String) -> ErrorModel? {
+        guard let descriptor = modelDescriptor(forCaseName: name) else { return nil }
+        guard let model = descriptor.model else { preconditionFailure("Correctness model rounding count overflows Int") }
+        return model
+    }
+
+    /// Classifies a route without adding counts or evaluating its threshold.
+    static func hasDerivedModel(forCaseName name: String) -> Bool {
+        modelDescriptor(forCaseName: name) != nil
+    }
+
+    /// Admission requires a supported derived domain even with explicit threshold overrides.
+    /// `testProviderModelDomainBoundaries` and `testUnsupportedModelsRejectedBeforeExecution` cover these boundaries.
+    static func domainProblem(forCaseName name: String) -> String? {
+        guard let descriptor = modelDescriptor(forCaseName: name) else { return nil }
+        let prefix = "Unsupported correctness model \(descriptor.base.route) for \(name): "
+        guard let model = descriptor.model else { return prefix + "rounding count overflows Int" }
+        let ku32 = Double(model.k32) * RoundingBound.binary32
+        let ku64 = Double(model.k64) * RoundingBound.binary64
+        guard model.k32 >= 0, model.k64 >= 0, ku32 < 1, ku64 < 1 else {
+            return prefix + "gamma requires nonnegative counts and k*u < 1 (k32=\(model.k32), k64=\(model.k64))"
+        }
+        // gamma64 = ku64 / (1-ku64), so the relative denominator is positive exactly when ku64 < 1/2.
+        if case .relative = model.kind, ku64 >= 0.5 {
+            return prefix + "relative bound requires gamma64 < 1"
+        }
+        guard model.threshold.isFinite, model.threshold >= 0 else { return prefix + "threshold is not finite and nonnegative" }
+        return nil
     }
 
     static func rule(forCaseName name: String) -> CorrectnessRule {
@@ -250,6 +317,9 @@ enum CorrectnessPolicy {
         }
         guard c.status == .valid && c.samples > 0 else {
             return BenchmarkFailure(name: result.name, reason: c.reason ?? "Invalid comparison", boundary: result.boundary)
+        }
+        if let problem = domainProblem(forCaseName: result.name) {
+            return BenchmarkFailure(name: result.name, reason: problem, boundary: result.boundary)
         }
         let rule = rule(forCaseName: result.name)
         let relThr = overrideRel ?? rule.maxRel

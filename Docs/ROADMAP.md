@@ -1,7 +1,10 @@
 # VectorCore roadmap
 
-Status reviewed September 8, 2026. This is a direction-setting document,
-not a release schedule or an assertion that proposed work is implemented.
+Release-preparation references reviewed November 4, 2026. This is a
+direction-setting document, not a release schedule or an assertion that
+proposed work is implemented. The
+[0.4.0 qualification record](reviews/2026-11-04-release-qualification/README.md)
+tracks verified results and remaining release limits.
 The [API overview](API_Overview_Map.md) describes current code; the
 [changelog](../CHANGELOG.md) records releases.
 
@@ -21,10 +24,10 @@ universal routing coverage, allocation-free execution, or identical numerical
 behavior between implementations. The current limits belong in the reference
 docs, not in a list of future promises.
 
-## Current priority: documentation accuracy
+## Documentation maintenance
 
-The immediate work is to make the README and reference material agree with
-the code and to distinguish historical designs from supported interfaces.
+Keep the README and reference material aligned with the code and distinguish
+historical designs from supported interfaces.
 
 Acceptance criteria:
 
@@ -38,12 +41,13 @@ Acceptance criteria:
   version combinations.
 - Historical plans remain discoverable but are clearly not current API docs.
 
-Tutorials are a separate follow-up pass: review
-[`Guides/`](../Guides/), the [performance tutorial](Performance_Guide.md),
-and the [nearest-neighbor tutorial](HowTo_NearestNeighbor.md) together for
-prerequisites, progression, duplication, and runnable examples.
+The coordinated tutorial refresh remains a separate follow-up for
+[`Guides/`](../Guides/): review prerequisites, progression, duplication, and
+runnable examples. The [performance reference](Performance_Guide.md) and
+[nearest-neighbor how-to](HowTo_NearestNeighbor.md) are maintained references;
+their code fragments are outside the standalone consumer-program check.
 
-## Candidates after the documentation pass
+## Future candidates
 
 The following are proposals to evaluate against real consumers, not approved
 implementation commitments.

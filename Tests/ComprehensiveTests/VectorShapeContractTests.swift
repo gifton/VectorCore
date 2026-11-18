@@ -1,3 +1,4 @@
+import VectorCoreTestSupport
 import Foundation
 import Testing
 @testable import VectorCore
@@ -59,7 +60,7 @@ struct VectorShapeContractTests {
         }
     }
 
-    @Test func fixedStorageBoundaryMatrix() throws {
+    @Test(.enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation")) func fixedStorageBoundaryMatrix() throws {
         let logs = FileManager.default.temporaryDirectory.appendingPathComponent("S01-children-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: logs, withIntermediateDirectories: true)
         print("S01 child logs: \(logs.path)")
@@ -77,8 +78,7 @@ struct VectorShapeContractTests {
                     defer { try? output.close() }
                     // The launcher keeps SwiftPM's helper/bundle arguments on macOS and selects only the probe.
                     let process = try launchChildProbe(.swiftTesting(filter: "VectorShapeContractTests/childProbe"),
-                                                       environment: environment, output: output, deadline: 15,
-                                                       cleanup: .kill(seconds: 2))
+                                                       environment: environment, output: output, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
                     if process.timedOut {
                         let message = "\(specification): child deadline; cleanup=\(process.cleanup); log=\(url.path)"
                         throw NSError(domain: "VectorShapeContractTests.childTimeout", code: 1,

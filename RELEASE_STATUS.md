@@ -4,6 +4,22 @@ This is the entry point for the active release-preparation work. Dated reviews
 are historical evidence; directories ending in `-evidence` contain local records
 and build artifacts.
 
+## Platform coverage decision — 2026-11-17
+
+The user adopted the [0.4.0 platform coverage matrix](Docs/reviews/2026-11-17-platform-coverage/decision.md):
+Apple silicon macOS and iOS are the primary targets, iOS requires version 18.0
+or later, and an iOS 18 simulator run is required in addition to the current
+simulator and physical-device scopes. The macOS 14, tvOS 17 and visionOS 1
+deployment declarations and all existing required CI compilation checks remain.
+Minimum-macOS, Intel, tvOS, visionOS and additional Catalyst runtime qualification
+are explicitly deferred for 0.4.0; visionOS remains a future runtime target.
+
+**Fresh qualification is pending.** Raising the iOS minimum changes the compiled
+candidate. The accepted local/hosted results below belong to their original
+iOS-17-targeting candidate; they have not been rebound to the changed package.
+The new iOS 18 requirement is not satisfied by SDK compilation, simulator launch,
+or prior iOS 27 execution. Final release admission remains open.
+
 ## Compiler support decision — 2026-11-10
 
 The user adopted [bounded compiler qualification](Docs/reviews/2026-11-10-compiler-acceptance/decision.md)
@@ -35,8 +51,9 @@ passed both platform jobs and the required aggregate. Both reports return
 
 Stable iOS acceptance additionally requires at least one app-hosted Release
 consumer run on a physical iPhone or iPad. Minimum-OS, Intel and other declared
-platform coverage remain open; existing deployment declarations and required CI
-are unchanged. The [implementation plan](Docs/superpowers/plans/2026-11-10-compiler-acceptance.md)
+platform coverage were still undecided on November 10; the November 17
+[platform decision](Docs/reviews/2026-11-17-platform-coverage/decision.md) above
+now sets their requirements and deferrals. The [implementation plan](Docs/superpowers/plans/2026-11-10-compiler-acceptance.md)
 was approved for native execution on 2026-11-10. No candidate or release is admitted by the policy decision.
 
 ## Historical integration preview: 0.4.0-alpha.1

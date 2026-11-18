@@ -68,6 +68,11 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
 
 ### Changed
 
+- **iOS deployment minimum is now 18.0.** The 0.4.0 platform plan requires
+  iOS 18 simulator execution alongside current simulator and physical-device
+  qualification. See the [platform coverage decision](Docs/reviews/2026-11-17-platform-coverage/decision.md)
+  for the explicitly deferred runtime combinations and current gate status.
+
 - **Breaking: `SIMDStorage` uses `withUnsafeMutableElements`.** The new mutable-borrow
   requirement takes `(UnsafeMutableBufferPointer<Element>) throws -> R` by value and
   remains `rethrows`; the old descriptor-inout requirement is removed, with no default
@@ -86,8 +91,8 @@ published tag. A dependency resolved to `0.3.3` does not receive them.
   mutations must provide synchronized ownership. `COWDynamicStorage` delegates
   to the aligned value. See [migration details](Docs/Memory_Alignment.md#pools-copying-and-concurrency).
 
-- **watchOS support retired.** The supported deployment floors are macOS 14,
-  iOS 17, tvOS 17 and visionOS 1, with Mac Catalyst retained. Historical watchOS
+- **watchOS support retired.** The declared deployment floors are macOS 14,
+  iOS 18, tvOS 17 and visionOS 1, with Mac Catalyst retained. Historical watchOS
   findings describe the earlier baseline and are not marked repaired by this scope change.
 
 - **Breaking: fixed-size vector storage must have the type's lane count (S01).** On the optimized FP32

@@ -1,8 +1,7 @@
 // vc_lapack.c — LAPACK shim implementation.
 //
 // Apple platforms: routes to Accelerate's modern LAPACK interface
-// (ACCELERATE_NEW_LAPACK). Requires macOS 13.3+/iOS 16.4+ at the SDK level;
-// the package's platform floor (macOS 14 / iOS 17) already exceeds this.
+// (ACCELERATE_NEW_LAPACK). Requires macOS 13.3+/iOS 16.4+ at the SDK level.
 //
 // Other platforms: stubs returning VC_LAPACK_UNAVAILABLE. The Swift
 // SwiftLinearAlgebraProvider is the cross-platform fallback; this shim is

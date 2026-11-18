@@ -25230,8 +25230,8 @@
    "id": "V04-C-0902",
    "path": "README.md",
    "symbol": "section VectorCore",
-   "fingerprint": "7b25ff41a4caa0c2",
-   "statement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2017%2b%20|%20tvos%2017%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
+   "fingerprint": "b0d375137049f977",
+   "statement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2018%2b%20|%20tvos%2017%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
    "kind": "markdown",
    "lineHint": 3,
    "category": "non-claim",
@@ -25253,6 +25253,11 @@
       "statement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2017%2b%20|%20tvos%2017%2b%20|%20watchos%2010%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
       "fingerprint": "2fd5ac849e50ec04",
       "revision": "84798d3"
+     },
+     {
+      "statement": "[![swift](https://img.shields.io/badge/swift-6.0-orange.svg?style=flat)](https://swift.org) [![platforms](https://img.shields.io/badge/platforms-macos%2014%2b%20|%20ios%2017%2b%20|%20tvos%2017%2b%20|%20visionos%201%2b-blue.svg?style=flat)](https://swift.org) [![license](https://img.shields.io/badge/license-mit-green.svg?style=flat)](license) [![spm](https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/) [![ci](https://github.com/gifton/vectorcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/vectorcore/actions/workflows/ci.yml)",
+      "fingerprint": "7b25ff41a4caa0c2",
+      "revision": "eb11603"
      }
     ]
    }
@@ -32872,12 +32877,12 @@
    "id": "VC-AUDIT-PLATFORM",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Changed",
-   "fingerprint": "7c6d93e2582406d8",
-   "statement": "- **watchos support retired.** the supported deployment floors are macos 14, ios 17, tvos 17 and visionos 1, with mac catalyst retained. historical watchos findings describe the earlier baseline and are not marked repaired by this scope change.",
+   "fingerprint": "9a3bc6c62fa025cc",
+   "statement": "- **watchos support retired.** the declared deployment floors are macos 14, ios 18, tvos 17 and visionos 1, with mac catalyst retained. historical watchos findings describe the earlier baseline and are not marked repaired by this scope change.",
    "kind": "markdown",
-   "lineHint": 71,
+   "lineHint": 94,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "adjacent-invariant",
     "reference": "Package.swift platform declaration; .github/workflows/ci.yml destinations",
@@ -32886,8 +32891,8 @@
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
+    "originalStatement": "- **watchos support retired.** the supported deployment floors are macos 14, ios 17, tvos 17 and visionos 1, with mac catalyst retained. historical watchos findings describe the earlier baseline and are not marked repaired by this scope change.",
+    "originalFingerprint": "7c6d93e2582406d8",
     "origin": "2026-10-27 audit repairs"
    }
   },
@@ -33217,6 +33222,30 @@
     "originalStatement": null,
     "originalFingerprint": null,
     "origin": "Compiler acceptance implementation review, 2026-11-12"
+   }
+  },
+  {
+   "id": "PLATFORM-040-C-0001",
+   "path": "README.md",
+   "symbol": "section VectorCore::section Requirements and compatibility",
+   "fingerprint": "a3d1c91c59fedf9c",
+   "statement": "the [0.4.0 platform coverage decision](docs/reviews/2026-11-17-platform-coverage/decision.md) prioritizes apple silicon macos and ios. it requires an ios 18 simulator run, current-runtime simulator checks and a physical-iphone/ipad release consumer. intel, minimum-macos, tvos, visionos and additional catalyst runtime qualification are deferred; their existing compilation checks remain required. visionos is a future runtime target. these coverage limits do not certify untested combinations.",
+   "kind": "markdown",
+   "lineHint": 162,
+   "category": "non-claim",
+   "disposition": "not-a-claim",
+   "reason": "Adopted release coverage requirements and explicit deferrals, not a claim that pending runtime qualification passed.",
+   "evidence": {
+    "kind": "none",
+    "reference": "",
+    "domain": "",
+    "limitations": ""
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "2026-11-17 approved platform coverage"
    }
   }
  ],

@@ -1,7 +1,7 @@
 # VectorCore
 
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg?style=flat)](https://swift.org)
-[![Platforms](https://img.shields.io/badge/Platforms-macOS%2014%2B%20|%20iOS%2017%2B%20|%20tvOS%2017%2B%20|%20visionOS%201%2B-blue.svg?style=flat)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-macOS%2014%2B%20|%20iOS%2018%2B%20|%20tvOS%2017%2B%20|%20visionOS%201%2B-blue.svg?style=flat)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg?style=flat)](https://swift.org/package-manager/)
 [![CI](https://github.com/gifton/VectorCore/actions/workflows/ci.yml/badge.svg)](https://github.com/gifton/VectorCore/actions/workflows/ci.yml)
@@ -157,7 +157,14 @@ consumer to follow those contracts. See
 ## Requirements and compatibility
 
 The manifest requires Swift tools 6.0 and declares these minimum deployment
-targets: macOS 14, iOS 17, tvOS 17, and visionOS 1. watchOS is not supported.
+targets: macOS 14, iOS 18, tvOS 17, and visionOS 1. watchOS is not supported.
+
+The [0.4.0 platform coverage decision](Docs/reviews/2026-11-17-platform-coverage/decision.md)
+prioritizes Apple silicon macOS and iOS. It requires an iOS 18 simulator run,
+current-runtime simulator checks and a physical-iPhone/iPad Release consumer.
+Intel, minimum-macOS, tvOS, visionOS and additional Catalyst runtime qualification
+are deferred; their existing compilation checks remain required. visionOS is a
+future runtime target. These coverage limits do not certify untested combinations.
 
 For the selected 0.4.0 candidate, read the [Xcode 27.2 build 27B52 support
 restrictions](Docs/reviews/2026-11-10-compiler-acceptance/decision.md). This compiler can

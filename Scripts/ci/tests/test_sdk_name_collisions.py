@@ -10,6 +10,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
@@ -21,6 +22,22 @@ checker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(checker)
 
 TRIPLE = 'arm64-apple-macosx27.0'
+
+
+SWIFT_REFERENCE = re.compile(r"(?<![\w./-])(?:[\w.-]+/)*[\w.-]+\.swift(?![\w/-]|\.\w)")
+
+
+def missing_swift_references(root, reason):
+    """Missing .swift citations. A basename check establishes existence only."""
+    missing = []
+    for reference in sorted(set(SWIFT_REFERENCE.findall(reason))):
+        if "/" in reference:
+            exists = (root / reference).is_file()
+        else:
+            exists = any(path.is_file() for path in root.rglob(reference))
+        if not exists:
+            missing.append(reference)
+    return missing
 
 
 def graph(names, kind='swift.struct', access='public'):
@@ -295,6 +312,27 @@ class AllowlistTests(CheckerTestCase):
         self.assertEqual(code, 0)
         self.assertIn('allowed: VectorCore.Logger == os.Logger', out)
         self.assertIn('allowed: VectorCoreBenchmarking.Logger == os.Logger', out)
+
+    def test_reason_swift_references_resolve(self):
+        directory = self.root / "Sources"
+        directory.mkdir()
+        (directory / "Example.swift").touch()
+        (directory / "Decoy.swift").mkdir()
+        reason = (
+            "The forms are checked by Sources/Example.swift and Example.swift. "
+            "Deleted/Example.swift, LoggerNegative.swift and Decoy.swift are stale."
+        )
+        self.assertEqual(
+            missing_swift_references(self.root, reason),
+            ["Decoy.swift", "Deleted/Example.swift", "LoggerNegative.swift"],
+        )
+
+    def test_shipped_allowlist_swift_references_exist(self):
+        root = CHECKER.parents[2]
+        entries = json.loads((CHECKER.parent / "sdk_name_collision_allowlist.json").read_text())
+        for entry in entries:
+            with self.subTest(name=entry["name"], module=entry["module"]):
+                self.assertEqual(missing_swift_references(root, entry["reason"]), [])
 
     def test_shipped_allowlist_is_well_formed(self):
         entries = checker.load_allowlist(CHECKER.parent / 'sdk_name_collision_allowlist.json')

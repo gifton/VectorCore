@@ -13,14 +13,39 @@ from swift_lexing import _mask
 
 DECLARATION_OR_BRACE = re.compile(
     r"[{}]|(?<![`\w.])(?:public|open)\s+"
-    r"(?:(?:final|indirect|nonisolated(?:\s*\(\s*unsafe\s*\))?"
+    r"(?:(?:final|indirect|dynamic|distributed|nonisolated(?:\s*\(\s*unsafe\s*\))?"
     r"|(?:private|fileprivate|internal|package)\s*\(\s*set\s*\))\s+)*"
     r"(?P<kind>actor|class|enum|struct|protocol|typealias|func|let|var|macro)\b\s*"
 )
-IDENTIFIER = re.compile(r"(?:`\w+`|\w+)")
+# Keep Unicode identifier continuations, including combining marks and emoji.
+IDENTIFIER = re.compile(r"(?:`[^\s`]+`|[^\s`(){}\[\]<>,.:;=?!+*/&|^%~#\\-]+)")
 BINDING = re.compile(rf"{IDENTIFIER.pattern}|\(\s*{IDENTIFIER.pattern}(?:\s*,\s*{IDENTIFIER.pattern})+\s*,?\s*\)")
 FOLLOWING_BINDING = re.compile(rf",\s*(?P<binding>{BINDING.pattern})(?=\s*[:=,])")
-BINDING_DELIMITER = re.compile(r"[(){}\[\],;\n]")
+BINDING_DELIMITER = re.compile(r"[(){}\[\],;<\n]")
+GENERIC_DELIMITER = re.compile(r"[<>={};\n]")
+
+
+def generic_clause_end(text, start):
+    """Skip a balanced same-line angle clause attached to a name.
+
+    A binding initializer or statement boundary inside the candidate clause
+    cancels the skip. This keeps a comparison from swallowing the next binding.
+    """
+    if text[start - 1].isspace():
+        return start + 1
+    depth = 1
+    for token in GENERIC_DELIMITER.finditer(text, start + 1):
+        marker = token[0]
+        if marker == "<":
+            depth += 1
+        elif marker == ">":
+            if text[token.start() - 1] != "-":
+                depth -= 1
+                if depth == 0:
+                    return token.end()
+        else:
+            break
+    return start + 1
 
 
 def binding_names(text, start):
@@ -43,10 +68,13 @@ def binding_names(text, start):
         elif depth == 0:
             if punctuation in "\n;)}]":
                 return
-            next_binding = FOLLOWING_BINDING.match(text, delimiter.start())
-            if next_binding:
-                yield from IDENTIFIER.findall(next_binding["binding"])
-                consumed = next_binding.end()
+            if punctuation == "<":
+                consumed = generic_clause_end(text, delimiter.start())
+            else:
+                next_binding = FOLLOWING_BINDING.match(text, delimiter.start())
+                if next_binding:
+                    yield from IDENTIFIER.findall(next_binding["binding"])
+                    consumed = next_binding.end()
 
 
 def module_name_declarations(source, module_name):
@@ -55,6 +83,8 @@ def module_name_declarations(source, module_name):
     Uses the comment and literal boundaries of swift_lexing._mask. Variable
     bindings cover single names, flat tuples and comma lists whose next
     separator follows the current initializer on the same logical line.
+    Angles in same-line generic clauses attached to a name are balanced
+    heuristically. Nested tuple patterns and macro expansions are out of scope.
     """
     masked = _mask(source)
     depth = 0
@@ -101,6 +131,33 @@ class ModuleNamespaceTests(unittest.TestCase):
             with self.subTest(kind=kind):
                 self.assertEqual(list(module_name_declarations(source, "Demo")), [(1, kind)])
 
+    def test_dynamic_functions_and_distributed_actors_can_shadow_the_module(self):
+        controls = (
+            ("public dynamic func Demo() {}", "func", 1),
+            (
+                "import Distributed\npublic distributed actor Demo {"
+                " public typealias ActorSystem = LocalTestingDistributedActorSystem }",
+                "actor",
+                2,
+            ),
+        )
+        for source, kind, line in controls:
+            with self.subTest(kind=kind):
+                self.assertEqual(list(module_name_declarations(source, "Demo")), [(line, kind)])
+
+    def test_extended_identifiers_and_generic_arguments_leave_the_module_available(self):
+        controls = (
+            "public struct Demo🦊 {}",
+            "public typealias Demo\u0301 = Int",
+            "public let (first, Demo🦊) = (0, 1)",
+            "public let example: Triple<Int, Demo, Float> = Triple()",
+            "public let value = Triple<Int, Demo, Float>()",
+            "public let value = Pair<Triple<Int, Demo, Float>, Int>()",
+        )
+        for source in controls:
+            with self.subTest(source=source):
+                self.assertEqual(list(module_name_declarations(source, "Demo")), [])
+
     def test_attributes_indentation_and_conditional_compilation(self):
         source = """\
         #if canImport(Demo)
@@ -140,6 +197,10 @@ let multiline = """
             "public let first = 0, Demo = 1",
             "public let first = call(0, 1),\n    (Demo, x) = (2, 3)",
             "public let first: Result<Int, Error> = call(), Demo: Int = 1",
+            "public let first: Triple<Int, Demo, Float> = Triple(), Demo = 1",
+            "public let first = Triple<Int, Demo, Float>(), Demo = 1",
+            "public let first = 1 < 2, Demo = 1, last = 3 > 2",
+            "public let first = 1<2, Demo = 1, last = 3>2",
             "public private(set) var Demo = 1",
         )
         for source in bindings:

@@ -1130,9 +1130,25 @@ class T13PhaseTwoRegions(FixtureHelpers):
         problems = self.run_with(self.MAP, drop_row)
         self.assertEqual(rules(problems), {'R1'}, problems)
 
+    @staticmethod
+    def provider_example_hashes(text):
+        sections = re.findall(r'^## Provider boundaries[ \t]*\n(.*?)(?=^##[ \t]|\Z)', text, re.M | re.S)
+        blocks = [block for section in sections for block in re.findall(r'^```swift[ \t]*\n(.*?)^```[ \t]*$', section, re.M | re.S)]
+        return [hashlib.sha256(block.encode('utf-8')).hexdigest() for block in blocks]
+
     def test_c8b_api_map_swift_block_is_unchanged(self):
-        blocks = re.findall(r'```swift\n(.*?)```', (ROOT / self.MAP).read_text(encoding='utf-8'), re.S)
-        self.assertEqual([hashlib.sha256(block.encode('utf-8')).hexdigest() for block in blocks], [self.MAP_SWIFT_SHA])
+        text = (ROOT / self.MAP).read_text(encoding='utf-8')
+        self.assertEqual(self.provider_example_hashes(text), [self.MAP_SWIFT_SHA])
+
+    def test_c8b_hashes_only_provider_examples_and_keeps_their_multiplicity(self):
+        other = '## Migration\n\n```swift\nlet rows = []\n```\n'
+        heading = '## Provider boundaries\n\n'
+        block = '```swift\nprint(1)\n```\n'
+        expected = hashlib.sha256(b'print(1)\n').hexdigest()
+        self.assertEqual(self.provider_example_hashes(other + heading + block + other), [expected])
+        self.assertEqual(self.provider_example_hashes(other + heading + block + block), [expected, expected])
+        self.assertEqual(self.provider_example_hashes(other + heading), [])
+        self.assertNotEqual(self.provider_example_hashes(other + heading + block.replace('1', '2')), [expected])
 
     def test_c9_changelog_scope_is_the_unreleased_section(self):
         anchor = '### Documentation\n\n- Refresh the README and core references'

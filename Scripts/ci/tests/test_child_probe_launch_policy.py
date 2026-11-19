@@ -499,6 +499,16 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
         inventory = json.loads((ROOT / 'Docs/reviews/2026-11-04-release-phase-two/ios/capability-inventory.json').read_text())
         expected = {(row['path'], row['method']) for row in inventory
                     if row['contract'] == 'Swift Testing subprocess isolation'}
+        # Preserve the dated inventory. The removed namespace test routed its
+        # zero-filled case to the existing zero factory's negative-dimension
+        # contract, now exercised directly by zerosTrapsOnNegativeDimension.
+        method_renames = {
+            ('Tests/ComprehensiveTests/D02FactoryContractTests.swift', 'createVectorTrapsOnMalformedInput'):
+                'zerosTrapsOnNegativeDimension',
+        }
+        self.assertEqual(method_renames.keys() - expected, set(), 'stale inventory method rename')
+        current_expected = {(path, method_renames.get((path, method), method)) for path, method in expected}
+        self.assertEqual(len(current_expected), len(expected), 'inventory method rename merged distinct rows')
         observed = set()
         for path in (ROOT / 'Tests/ComprehensiveTests').glob('*.swift'):
             source = _mask(path.read_text())
@@ -508,7 +518,7 @@ class ChildProbeLaunchPolicyTests(unittest.TestCase):
             for match in re.finditer(r'@Test(?P<attributes>[^{}]*?)\bfunc\s+(?P<name>\w+)\s*\(', source):
                 if 'childProbeProcessesSupported' in match['attributes']:
                     observed.add((str(path.relative_to(ROOT)), match['name']))
-        self.assertEqual(observed, expected)
+        self.assertEqual(observed, current_expected)
         self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',
                           'portableTerminationPreservesExitAndSignalDiagnostics'), observed)
         self.assertNotIn(('Tests/ComprehensiveTests/ChildProbeLauncherTests.swift',

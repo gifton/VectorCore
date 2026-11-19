@@ -30,7 +30,7 @@ struct UMAPRangeContractTests {
             let reference = L03Reference.curves[fixture.reference]
             let spread = Float(bitPattern: fixture.spreadWord)
             let minDist = Float(bitPattern: fixture.minDistWord)
-            let result = try UMAPLayout.fitABParams(spread: spread, minDist: minDist)
+            let result = try Operations.umapCurveParameters(spread: spread, minDist: minDist)
             let ratio = Double(minDist) / Double(spread)
             let sse = curveSSE(a: result.a, b: result.b, spread: spread, ratio: ratio)
             print("L03_CURVE spreadWord=\(fixture.spreadWord) minDistWord=\(fixture.minDistWord) a=\(result.a) b=\(result.b) sse=\(sse) reference=\(reference.sse)")
@@ -51,7 +51,7 @@ struct UMAPRangeContractTests {
         for reference in L03Reference.regressionCurves {
             let spread = Float(bitPattern: reference.spreadWord)
             let minDist = Float(bitPattern: reference.minDistWord)
-            let result = try UMAPLayout.fitABParams(spread: spread, minDist: minDist)
+            let result = try Operations.umapCurveParameters(spread: spread, minDist: minDist)
             let sse = curveSSE(a: result.a, b: result.b, spread: spread, ratio: Double(minDist) / Double(spread))
             #expect(result.a.isFinite && result.a > 0 && result.b.isFinite && result.b > 0)
             #expect(sse.isFinite && abs(sse - reference.sse) < 1e-5)
@@ -104,7 +104,7 @@ struct UMAPRangeContractTests {
         let reference = L03Reference.curves.last!
         for word: UInt32 in [0x2f00_0000, 0x5000_0000] { // Exact 2^-33 and 2^33.
             let spread = Float(bitPattern: word)
-            let result = try UMAPLayout.fitABParams(spread: spread, minDist: spread)
+            let result = try Operations.umapCurveParameters(spread: spread, minDist: spread)
             let sse = curveSSE(a: result.a, b: result.b, spread: spread, ratio: 1)
             #expect(result.a.isFinite && result.a > 0 && result.b.isFinite && result.b > 0)
             #expect(sse.isFinite && abs(sse - reference.sse) < 1e-5)
@@ -112,7 +112,7 @@ struct UMAPRangeContractTests {
         }
         for (spreadWord, minDistWord): (UInt32, UInt32) in [(1, 0), (0x7f7fffff, 0), (0x67800000, 0x65cccccd)] {
             expectKind(.operationFailed) {
-                _ = try UMAPLayout.fitABParams(spread: Float(bitPattern: spreadWord), minDist: Float(bitPattern: minDistWord))
+                _ = try Operations.umapCurveParameters(spread: Float(bitPattern: spreadWord), minDist: Float(bitPattern: minDistWord))
             }
         }
     }

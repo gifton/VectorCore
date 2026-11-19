@@ -128,7 +128,7 @@ struct UMAPCurveFitSuite {
     func defaultParameters() throws {
         // Reference values from umap-learn's find_ab_params on the same
         // 300-point grid: a ≈ 1.57694, b ≈ 0.89506.
-        let (a, b) = try UMAPLayout.fitABParams(spread: 1.0, minDist: 0.1)
+        let (a, b) = try Operations.umapCurveParameters(spread: 1.0, minDist: 0.1)
         #expect(abs(a - 1.57694) < 0.02, "a = \(a)")
         #expect(abs(b - 0.89506) < 0.01, "b = \(b)")
     }
@@ -136,7 +136,7 @@ struct UMAPCurveFitSuite {
     @Test("Fitted kernel respects the plateau and the tail for other configs")
     func fitQuality() throws {
         for (minDist, spread) in [(Float(0), Float(1)), (0.5, 1.5), (0.25, 0.7)] {
-            let (a, b) = try UMAPLayout.fitABParams(spread: spread, minDist: minDist)
+            let (a, b) = try Operations.umapCurveParameters(spread: spread, minDist: minDist)
             #expect(a > 0 && b > 0)
             func kernel(_ x: Float) -> Float {
                 x > 0 ? 1 / (1 + a * Foundation.pow(x, 2 * b)) : 1

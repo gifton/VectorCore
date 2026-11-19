@@ -27,6 +27,12 @@ compiled-input identity. Old alpha receipts were not rebound to it.
 
 ## Assessed scopes
 
+**Runtime correction recorded 2026-11-18:** the physical profile, capture and
+app frame identify iOS 27.3 beta (24C5037i). The earlier summary incorrectly
+said iOS 27.2 (24B119). Those raw records are unchanged. The
+[new platform qualification](../2026-11-17-platform-coverage/results.md) includes
+a fresh stable-iOS 27.2 phone run for the iOS-18-targeting candidate.
+
 | Scope | Result on the frozen candidate |
 | --- | --- |
 | Native macOS 27.0.1 (26A434), arm64, Debug | 1,946 passed, 47 skipped, no failures; 1,993 declared cases |
@@ -37,11 +43,11 @@ compiled-input identity. Old alpha receipts were not rebound to it.
 | Full iOS 27.0 (24A434) arm64 simulator suite, Debug | 1,829 passed, 164 skipped, no failures; all three test bundles and 1,993 declared cases reconciled |
 | Same full simulator suite, Release | 1,828 passed, 164 skipped; only the unchanged lost-store canary fails |
 | Simulator app Debug/Release producer × client | 52 app groups; 96 supported rows and 168 control rows match; 14 wrong diagnostic rows remain visible |
-| Physical iPhone 16 Pro Max, iOS 27.2 (24B119), Release/Release | 13 app groups; all 24 supported rows and 42 control rows match; seven wrong diagnostic rows remain visible |
+| Physical iPhone 16 Pro Max, iOS 27.3 beta (24C5037i), Release/Release | 13 app groups; all 24 supported rows and 42 control rows match; seven wrong diagnostic rows remain visible |
 
 All scopes use exact Xcode 27.2 build 27B52 and frontend SHA-256
 `448457da9a8a56741f2c8c4b8931e85b7377fc009c16918cd8ac1a8a3210ea1f`.
-Profiles bind the additional compiler driver, SDK, architecture, target,
+Profiles bind the recorded compiler, SDK, architecture, target,
 language/optimization, producer/client, runtime, app invocation and artifact
 identities. The app scopes use the iOS 27.2 SDK and iOS 17 deployment targets;
 they are execution evidence only for the recorded runtimes.

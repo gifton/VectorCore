@@ -14,11 +14,14 @@ deployment declarations and all existing required CI compilation checks remain.
 Minimum-macOS, Intel, tvOS, visionOS and additional Catalyst runtime qualification
 are explicitly deferred for 0.4.0; visionOS remains a future runtime target.
 
-**Fresh qualification is pending.** Raising the iOS minimum changes the compiled
-candidate. The accepted local/hosted results below belong to their original
-iOS-17-targeting candidate; they have not been rebound to the changed package.
-The new iOS 18 requirement is not satisfied by SDK compilation, simulator launch,
-or prior iOS 27 execution. Final release admission remains open.
+**Required local qualification is complete** for the iOS-18-targeting candidate
+`510ea0259998219ef6c0656a2dfcec76190b518a`. [Recorded results](Docs/reviews/2026-11-17-platform-coverage/results.md)
+cover native macOS, full Debug/Release suites and app matrices on exact iOS 18.0
+and current iOS 27.0 simulators, and a physical iPhone 17 on stable iOS 27.2.
+All consumer checkers return `accepted / known-failing / releaseAdmitted=false`;
+full Release suites retain the known canary failure. Fresh PR/CI, hosted
+numerical qualification and the other release gates remain open. Earlier
+local/hosted results below retain their original candidate and evidence.
 
 ## Compiler support decision — 2026-11-10
 

@@ -22,8 +22,13 @@ numerical acceptance. Benchmark products remain macOS host tooling.
 
 ## Required evidence and current status
 
-**Platform acceptance remains pending.** The iOS 18 requirement needs actual
-test-body execution. Prefer an exact iOS 18.0 simulator and record its version,
+**Required local execution is complete; CI and final admission remain open.**
+[Fresh qualification results](results.md) cover the selected iOS 18 candidate,
+including exact iOS 18.0 execution and a stable-iOS physical phone. The evidence
+requirements below remain the basis for that assessment.
+
+The iOS 18 requirement needs actual test-body execution. Prefer an exact iOS
+18.0 simulator and record its version,
 build and architecture; a later 18.x run must not be called an 18.0-floor test.
 Run the normally enabled Debug/Release suites and the app-hosted producer/client
 matrix, reconciling individual outcomes, omitted-write controls and skips.

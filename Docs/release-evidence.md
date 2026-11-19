@@ -10,6 +10,7 @@ or admit a release.
 | Record | Purpose |
 |---|---|
 | [Platform coverage decision](reviews/2026-11-17-platform-coverage/decision.md) | iOS 18 minimum and required runtime checks, deferred platform scopes and fresh-candidate status |
+| [Platform qualification results](reviews/2026-11-17-platform-coverage/results.md) | Fresh native, iOS 18/current simulator and stable physical-iOS results; private evidence digests and remaining gates |
 | [Compiler acceptance decision](reviews/2026-11-10-compiler-acceptance/decision.md) | Adopted support restrictions, numerical requirements and admission boundaries |
 | [Frozen candidate](reviews/2026-11-10-compiler-acceptance/stable-candidate.md) | Local macOS, simulator and physical-device results, with remaining decisions |
 | [Hosted qualification results](reviews/2026-11-10-compiler-acceptance/hosted-evidence-2026-11-16.md) | Reviewed hosted profiles and the collection/verification runs |

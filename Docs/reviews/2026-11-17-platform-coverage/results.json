@@ -1,0 +1,110 @@
+{
+  "compiledInputs": 389,
+  "compiler": "Xcode 27.2 / 27B52 / Swift 6.4.2",
+  "compilerProfile": "known-failing",
+  "fullSimulatorSuites": {
+    "ios18": {
+      "debug": {
+        "Passed": 1829,
+        "Skipped": 164
+      },
+      "declaredMethods": 1993,
+      "release": {
+        "Failed": 1,
+        "Passed": 1828,
+        "Skipped": 164
+      },
+      "review": "ios18-suites-reviewed.json",
+      "reviewSHA256": "c38472148914d3affaba14fb471b0ae9e93a5e7fbe4ffde84933c9f63b23390b"
+    },
+    "ios27": {
+      "debug": {
+        "Passed": 1829,
+        "Skipped": 164
+      },
+      "declaredMethods": 1993,
+      "release": {
+        "Failed": 1,
+        "Passed": 1828,
+        "Skipped": 164
+      },
+      "review": "ios27-suites-reviewed.json",
+      "reviewSHA256": "7ec1eac7a01bb0dbfd50de38132f2397681dfc2973764b320a1b5c496b5413f1"
+    }
+  },
+  "privateArchive": "${EVIDENCE_ROOT}/VectorCore-compiler-acceptance-2026-11-10-evidence/platform-coverage-2026-11-17-510ea02",
+  "releaseAdmitted": false,
+  "retainedSource": "source-510ea02",
+  "scopes": {
+    "ios18": {
+      "caseGroups": 52,
+      "evidence": "ios18-consumers-510ea02",
+      "negativeControlRows": 168,
+      "profile": "ios18-profile.json",
+      "profileSHA256": "3f4c0a6caf40a6d32915415adfb3dcb924f2ed8a8ebba4651b525216cf9a7d4d",
+      "qualification": "accepted",
+      "runtime": {
+        "description": "Version 18.0 (Build 22A3351)",
+        "version": "18.0"
+      },
+      "supportedRows": 96,
+      "target": "arm64-apple-ios18.0-simulator",
+      "verification": "ios18-verification.json",
+      "verificationSHA256": "ef511083d1a59fbbe78b70909dc6470a36ea2954b4de258f1cc81ed2c890216c",
+      "wrongDiagnosticRows": 14
+    },
+    "ios27": {
+      "caseGroups": 52,
+      "evidence": "ios27-consumers-510ea02",
+      "negativeControlRows": 168,
+      "profile": "ios27-profile.json",
+      "profileSHA256": "c8d9964f443d2b1306f1c6c508fbaa7afbadabe2bb5b20a146d469c09ee54919",
+      "qualification": "accepted",
+      "runtime": {
+        "description": "Version 27.0 (Build 24A434)",
+        "version": "27.0"
+      },
+      "supportedRows": 96,
+      "target": "arm64-apple-ios18.0-simulator",
+      "verification": "ios27-verification.json",
+      "verificationSHA256": "175586d8fa740d5d143f96b0dd3dc4cf54023b1efff2902c9b42b3eefe007d3c",
+      "wrongDiagnosticRows": 14
+    },
+    "native": {
+      "caseGroups": 36,
+      "evidence": "native-510ea02",
+      "negativeControlRows": 166,
+      "profile": "native-profile-bound.json",
+      "profileSHA256": "986c648ac2d140504247289c05ef6abd02975e3f50323c1d482b883cfe8eefab",
+      "qualification": "accepted",
+      "runtime": {
+        "build": "26A434",
+        "version": "27.0.1"
+      },
+      "supportedRows": 96,
+      "target": "arm64-apple-macosx14.0",
+      "verification": "native-verification-bound.json",
+      "verificationSHA256": "796629e48f76a10158b5360de0e7e67d48c3e440298c31d250597504d5afc848",
+      "wrongDiagnosticRows": 11
+    },
+    "physical": {
+      "caseGroups": 13,
+      "evidence": "ios-device-510ea02-02",
+      "negativeControlRows": 42,
+      "profile": "device-profile.json",
+      "profileSHA256": "2c26f8a8b4195a56fafb457325b0669199a97896dd6e8e2a65179a110e9c2a59",
+      "qualification": "accepted",
+      "runtime": {
+        "description": "Version 27.2 (Build 24B119)",
+        "version": "27.2"
+      },
+      "supportedRows": 24,
+      "target": "arm64-apple-ios18.0",
+      "verification": "device-verification.json",
+      "verificationSHA256": "bd85b4e0581e9f16cbee0f5ff196a6080a39c82092cdaca967265899c527e76a",
+      "wrongDiagnosticRows": 7
+    }
+  },
+  "sourceCommit": "510ea0259998219ef6c0656a2dfcec76190b518a",
+  "sourceManifestSHA256": "87f176526a156632c55899477653ffcac4b544367ef0468fd20fb5edf8f77dd4"
+}

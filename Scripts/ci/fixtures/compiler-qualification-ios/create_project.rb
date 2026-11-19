@@ -5,8 +5,8 @@ directory = File.expand_path(__dir__)
 path = File.join(directory, 'QualificationHost.xcodeproj')
 abort('Project already exists') if File.exist?(path)
 project = Xcodeproj::Project.new(path)
-app = project.new_target(:application, 'QualificationHost', :ios, '17.0')
-witness = project.new_target(:static_library, 'BufferValueWitness', :ios, '17.0')
+app = project.new_target(:application, 'QualificationHost', :ios, '18.0')
+witness = project.new_target(:static_library, 'BufferValueWitness', :ios, '18.0')
 %w[App.swift ProbeAdapter.swift].each do |source|
   app.source_build_phase.add_file_reference(project.main_group.new_file(source))
 end

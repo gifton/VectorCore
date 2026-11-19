@@ -10,9 +10,9 @@ from qualification_ios import adapt_fixture, verify_adapter
 
 
 class IOSCaptureFixture(CaptureFixture):
-    def __init__(self, root):
+    def __init__(self, root, *, deployment_target='17.0'):
         super().__init__(root)
-        self.identity.update(platform='ios-simulator', target='arm64-apple-ios17.0-simulator',
+        self.identity.update(platform='ios-simulator', target='arm64-apple-ios' + deployment_target + '-simulator',
                              runtime={'version': '27.0', 'description': 'Version 27.0 (Build 24A434)'},
                              sdk=str(self.sdk.parent))
         self.capture['identity'] = copy.deepcopy(self.identity)

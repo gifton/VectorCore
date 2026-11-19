@@ -16,7 +16,7 @@ from compiler_qualification import observations
 from qualification_records import require, same, unique
 
 
-def destination_config(destination):
+def destination_config(destination, *, target=None):
     require(type(destination) is str, 'destination must be explicit')
     fields = {}
     for token in destination.split(','):
@@ -29,9 +29,17 @@ def destination_config(destination):
     simulator = fields['platform'] == 'iOS Simulator'
     if simulator:
         require(str(uuid.UUID(fields['id'])) == fields['id'].lower(), 'invalid simulator UUID')
+    suffix = '-simulator' if simulator else ''
+    if target is None:
+        target = 'arm64-apple-ios18.0' + suffix
+    # Current collection uses 18.0. Retained profiles bind their original 17.0
+    # or 18.0 target; IOSBindingTests covers both and crossed build targets.
+    require(type(target) is str and target in ('arm64-apple-ios17.0' + suffix,
+                                               'arm64-apple-ios18.0' + suffix),
+            'iOS target differs from destination or reviewed deployment floors')
     return {'identifier': fields['id'], 'platform': 'ios-simulator' if simulator else 'ios-device',
             'sdk': 'iphonesimulator' if simulator else 'iphoneos',
-            'target': 'arm64-apple-ios17.0' + ('-simulator' if simulator else '')}
+            'target': target}
 
 
 def configurations(producer, client):
@@ -141,7 +149,7 @@ def verify_ios_case(case, producer, identity, profile, commands, pins):
     from qualification_records import option, sha, verify_swift_tool
     app = case['app']
     require(app['kind'] == 'xcode-app', 'unknown app binding')
-    destination = destination_config(app['destination'])
+    destination = destination_config(app['destination'], target=identity['target'])
     require(identity['platform'] == destination['platform'] and identity['target'] == destination['target'],
             'app platform/target differs from destination')
     require(type(app['omittedWrites']) is bool, 'invalid omitted-write mode')

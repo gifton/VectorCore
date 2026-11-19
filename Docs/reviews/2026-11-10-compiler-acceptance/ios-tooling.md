@@ -5,10 +5,16 @@ policy on the preserved alpha inputs. Both reports retain
 `compilerProfile=known-failing` and `releaseAdmitted=false`. They do not qualify
 the separately selected 0.4.0 candidate.
 
+**Correction recorded 2026-11-18:** the physical run used iOS 27.3 beta
+(24C5037i), as recorded by its pinned profile, capture and app frames. The
+earlier summary incorrectly named iOS 27.2. Original evidence is unchanged;
+the [new platform qualification](../2026-11-17-platform-coverage/results.md)
+provides stable-iOS physical evidence for the current candidate.
+
 | Scope | Result |
 | --- | --- |
 | Simulator, iOS 27.0 (24A434), arm64 | Four Debug/Release producer × client cells; 52 app groups, 96 supported rows, 168 control rows; 14 incorrect diagnostic rows remain visible |
-| iPhone 16 Pro Max, iOS 27.2 (24B119), arm64 | Release producer/Release client; 13 app groups, 24 supported rows, 42 control rows; seven incorrect diagnostic rows remain visible |
+| iPhone 16 Pro Max, iOS 27.3 beta (24C5037i), arm64 | Release producer/Release client; 13 app groups, 24 supported rows, 42 control rows; seven incorrect diagnostic rows remain visible |
 | Full simulator package suites, alpha | Two Debug attempts failed only in the batch-throughput timing test, at 60 and 180 seconds respectively; each recorded 1,829 passed, 163 skipped, one failure. Neither attempt reached Release |
 
 Both app runs used Xcode 27.2 build 27B52, the adopted compiler fingerprint,

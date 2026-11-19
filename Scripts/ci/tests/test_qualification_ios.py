@@ -39,10 +39,10 @@ class IOSQualificationTests(unittest.TestCase):
         physical = self.mod.destination_config('platform=iOS,id=00008140-001234567890001E')
         self.assertEqual(simulator['platform'], 'ios-simulator')
         self.assertEqual(simulator['sdk'], 'iphonesimulator')
-        self.assertEqual(simulator['target'], 'arm64-apple-ios17.0-simulator')
+        self.assertEqual(simulator['target'], 'arm64-apple-ios18.0-simulator')
         self.assertEqual(physical['platform'], 'ios-device')
         self.assertEqual(physical['sdk'], 'iphoneos')
-        self.assertEqual(physical['target'], 'arm64-apple-ios17.0')
+        self.assertEqual(physical['target'], 'arm64-apple-ios18.0')
         for destination in ('', 'booted', 'generic/platform=iOS', 'platform=macOS,id=' + self.invocation,
                             'platform=iOS Simulator,name=iPhone', 'platform=iOS,id=a,id=b'):
             with self.subTest(destination=destination), self.assertRaises(ValueError):
@@ -57,6 +57,19 @@ class IOSQualificationTests(unittest.TestCase):
         for mode in ('Release', '-Ounchecked', ''):
             with self.assertRaises(ValueError):
                 self.mod.configurations('release', mode)
+
+    def test_explicit_historical_targets_preserve_floor_and_destination_binding(self):
+        for platform, suffix in (('iOS Simulator', '-simulator'), ('iOS', '')):
+            destination = 'platform=' + platform + ',id=' + self.invocation
+            for version in ('17.0', '18.0'):
+                target = 'arm64-apple-ios' + version + suffix
+                with self.subTest(platform=platform, version=version):
+                    self.assertEqual(self.mod.destination_config(destination, target=target)['target'], target)
+            for invalid in ('arm64-apple-ios18.0' + ('' if suffix else '-simulator'),
+                            'x86_64-apple-ios18.0' + suffix, 'arm64-apple-ios19.0' + suffix,
+                            'arm64-apple-ios18.0.1' + suffix, '', True, 18, []):
+                with self.subTest(platform=platform, target=invalid), self.assertRaises(ValueError):
+                    self.mod.destination_config(destination, target=invalid)
 
     def test_each_execution_gets_a_fresh_invocation(self):
         ids = {self.mod.new_invocation() for _ in range(20)}
@@ -229,6 +242,44 @@ class IOSBindingTests(unittest.TestCase):
         self.assertFalse(result['releaseAdmitted'])
         self.assertEqual(result['diagnosticFailures'], {'compiler': ['first']})
         self.assertFalse(result['observations']['omitted']['numericalCorrect'])
+
+    def test_ios18_capture_verifies_without_rebinding_legacy_ios17_capture(self):
+        import tempfile
+        from compiler_qualification import check
+        from ios_qualification_fixture import IOSCaptureFixture
+        with tempfile.TemporaryDirectory() as directory:
+            f = IOSCaptureFixture(directory, deployment_target='18.0')
+            with f.compiler_policy():
+                result = check(f.profile_path, f.evidence, f.source)
+                self.assertEqual(result['vectorCoreQualification'], 'accepted', result['problems'])
+                self.assertFalse(result['releaseAdmitted'])
+                self.assertEqual(result['diagnosticFailures'], {'compiler': ['first']})
+        historical = self.check()
+        self.assertEqual(historical['vectorCoreQualification'], 'accepted', historical['problems'])
+
+    def test_each_ios18_build_target_rejects_ios17_substitution_after_repinning(self):
+        import tempfile
+        from compiler_qualification import check
+        from ios_qualification_fixture import IOSCaptureFixture
+        for role in ('producer', 'host', 'witness', 'link'):
+            with self.subTest(role=role), tempfile.TemporaryDirectory() as directory:
+                f = IOSCaptureFixture(directory, deployment_target='18.0')
+                with f.compiler_policy():
+                    result = check(f.profile_path, f.evidence, f.source)
+                    self.assertEqual(result['vectorCoreQualification'], 'accepted', result['problems'])
+                    if role == 'producer':
+                        argv = f.commands['producer-build']['argv']
+                    elif role == 'link':
+                        argv = f.link
+                    else:
+                        argv = f.swift_commands['QualificationHost' if role == 'host' else 'BufferValueWitness']
+                    argv[argv.index('arm64-apple-ios18.0-simulator')] = 'arm64-apple-ios17.0-simulator'
+                    if role == 'producer':
+                        f.alter_receipt('producer-build', argv=argv)
+                    else:
+                        f.alter_stdout('app-build', f.build_log())
+                    f.save(repin=True)
+                    self.assertEqual(check(f.profile_path, f.evidence, f.source)['vectorCoreQualification'], 'rejected')
 
     def test_repinning_a_missing_app_body_does_not_turn_launch_success_into_acceptance(self):
         f = self.fixture

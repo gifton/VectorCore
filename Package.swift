@@ -5,7 +5,7 @@ let package = Package(
     name: "VectorCore",
     platforms: [
         .macOS(.v14),
-        .iOS(.v17),
+        .iOS(.v18),
         .tvOS(.v17),
         .visionOS(.v1)
     ],

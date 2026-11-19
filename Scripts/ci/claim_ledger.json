@@ -31096,40 +31096,46 @@
    "id": "D02-C-0012",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Documentation",
-   "fingerprint": "12145e1f06af9e6a",
-   "statement": "- **`vectorcore.createvector(dimension:data:)` and `hasoptimizedsupport(for:)`.** `createvector` states its preconditions (`dimension >= 0`, and `data`, when given, has `dimension` elements) and that a violation stops the process, with `vectortypefactory.vector(of:from:)` as the throwing alternative (`createvectortrapsonmalformedinput`). `hasoptimizedsupport(for:)` names the seven `vector<dimn>` widths it reports and claims no speed difference.",
+   "fingerprint": "b8c031e4c4a21f1e",
+   "statement": "- **factory conveniences after namespace removal.** `vectortypefactory.vector(of:from:)` is the checked replacement for creating a vector from values (`checkedentrythrows`); `zeros(dimension:)` retains its negative-dimension trap (`zerostrapsonnegativedimension`). both tests are in `d02factorycontracttests`. the migration table covers the removed batch, version and dimension-selection members.",
    "kind": "markdown",
-   "lineHint": 831,
+   "lineHint": 1464,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "named-test",
-    "reference": "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.createVectorTrapsOnMalformedInput",
-    "domain": "createVector(dimension: 3, data: [1]) and createVector(dimension: -1, data: []) in child processes",
-    "limitations": "The hasOptimizedSupport sentence is documentation of VectorTypeFactory.isSupported (D02FactoryContractTests.supportedListIsTheNamedList)."
+    "reference": [
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.checkedEntryThrows",
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.zerosTrapsOnNegativeDimension"
+    ],
+    "domain": "Checked negative-dimension and wrong-count inputs; subprocess zero-factory negative-dimension trap.",
+    "limitations": "Removed namespace traps are not retained; the migration directs callers to existing factories."
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
-    "origin": "D02 phase 5"
+    "originalStatement": "- **`vectorcore.createvector(dimension:data:)` and `hasoptimizedsupport(for:)`.** `createvector` states its preconditions (`dimension >= 0`, and `data`, when given, has `dimension` elements) and that a violation stops the process, with `vectortypefactory.vector(of:from:)` as the throwing alternative (`createvectortrapsonmalformedinput`). `hasoptimizedsupport(for:)` names the seven `vector<dimn>` widths it reports and claims no speed difference.",
+    "originalFingerprint": "12145e1f06af9e6a",
+    "origin": "D02 phase 5",
+    "originalSymbol": "section Changelog::section [Unreleased]::section Documentation",
+    "originalRevision": "0e7fbf1",
+    "correctedIn": "Consumer API foundations, 2026-11-18"
    }
   },
   {
    "id": "D02-C-0013",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section Documentation",
-   "fingerprint": "36248d1a2c32f06f",
-   "statement": "- **`logger` next to `os.logger`.** `logger` keeps its name. in a file that imports both `os` and vectorcore, `import struct vectorcore.logger` makes `logger` name vectorcore's type there, and apple's stays `os.logger`. client code cannot spell it `vectorcore.logger`: `vectorcore` resolves to the `vectorcore` enum. without the scoped import a bare `logger` is ambiguous under swift 6.4 and accepted by swift 6.0 (xcode 16.2), so write the scoped import rather than relying on either. checked by the d02 compile contracts `scripts/ci/tests/d02/loggerqualification.swift` and `loggernegative.swift`, which the consumer job compiles with xcode 16.2 and which were also run with swift 6.4.",
+   "fingerprint": "7dda72fbb04228cf",
+   "statement": "- **`logger` next to `os.logger`.** use `vectorcore.logger` and `os.logger` with both modules imported, or use `import struct vectorcore.logger` for the bare core spelling. the executable consumers `loggermodulequalification.swift` and `loggerqualification.swift` exercise these forms. the former expected module-qualification failure has been retired.",
    "kind": "markdown",
-   "lineHint": 1342,
+   "lineHint": 1469,
    "category": "robustness",
    "disposition": "corrected",
    "evidence": {
     "kind": "adjacent-invariant",
-    "reference": "Scripts/ci/tests/D02/LoggerQualification.swift (runs) and LoggerNegative.swift (one error per line) through Scripts/ci/tests/D02RunConsumers.py; VectorCore declares `public enum VectorCore`; compile contracts D02-logger-negative (line 8 required, line 7 optional) and D02-logger-qualification in Scripts/ci/consumer_smoke.py, run by the consumer job on Xcode 16.2",
-    "domain": "a client file importing os and VectorCore, Swift 6.4",
-    "limitations": "Evidence consumers, not CI tests; other compiler versions are not verified."
+    "reference": "Scripts/ci/tests/D02/LoggerModuleQualification.swift and LoggerQualification.swift; registered executable contracts in Scripts/ci/consumer_smoke.py",
+    "domain": "Ordinary import with both os and VectorCore, scoped and module-qualified spellings.",
+    "limitations": "Execution evidence applies to the tested toolchain; this does not specify bare-name lookup with two unscoped imports."
    },
    "acceptedContract": null,
    "history": {
@@ -31138,7 +31144,15 @@
     "originalSymbol": "section Changelog::section [Unreleased]::section Documentation",
     "originalRevision": "e68343c",
     "origin": "D02 phase 5",
-    "correctedIn": "PR #56 CI: Swift 6.0 accepts the bare Logger spelling (2026-10-24)"
+    "correctedIn": "Consumer API foundations, 2026-11-18",
+    "superseded": [
+     {
+      "statement": "- **`logger` next to `os.logger`.** `logger` keeps its name. in a file that imports both `os` and vectorcore, `import struct vectorcore.logger` makes `logger` name vectorcore's type there, and apple's stays `os.logger`. client code cannot spell it `vectorcore.logger`: `vectorcore` resolves to the `vectorcore` enum. without the scoped import a bare `logger` is ambiguous under swift 6.4 and accepted by swift 6.0 (xcode 16.2), so write the scoped import rather than relying on either. checked by the d02 compile contracts `scripts/ci/tests/d02/loggerqualification.swift` and `loggernegative.swift`, which the consumer job compiles with xcode 16.2 and which were also run with swift 6.4.",
+      "fingerprint": "36248d1a2c32f06f",
+      "symbol": "section Changelog::section [Unreleased]::section Documentation",
+      "revision": "0e7fbf1"
+     }
+    ]
    }
   },
   {
@@ -33246,6 +33260,82 @@
     "originalStatement": null,
     "originalFingerprint": null,
     "origin": "2026-11-17 approved platform coverage"
+   }
+  },
+  {
+   "id": "CA01-D-0001",
+   "path": "Docs/API_Overview_Map.md",
+   "symbol": "section VectorCore API overview::section Namespace migration",
+   "fingerprint": "2c5019181a2a79e5",
+   "statement": "the redundant `vectorcore` enum has been removed without an alias. the module qualifiers `vectorcore.umapinitialization`, `vectorcore.dynamicvector` and `vectorcore.logger` are exercised by the ordinary-import `modulequalification.swift` consumer, including a local type named `umapinitialization`.",
+   "kind": "markdown",
+   "lineHint": 58,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "adjacent-invariant",
+    "reference": "Scripts/ci/fixtures/compile-contracts/ModuleQualification.swift; Scripts/ci/tests/test_module_namespace.py",
+    "domain": "Local UMAPInitialization name plus the three module-qualified Core types; lexical guard fixtures.",
+    "limitations": "The lexical guard has the declaration syntax controls stated in its tests; it is not a Swift compiler."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "Consumer API foundations, 2026-11-18"
+   }
+  },
+  {
+   "id": "CA01-D-0002",
+   "path": "Docs/API_Overview_Map.md",
+   "symbol": "section VectorCore API overview::section Namespace migration",
+   "fingerprint": "f141506e9ed36110",
+   "statement": "the checked factory throws for a negative dimension or mismatching value count (`d02factorycontracttests.checkedentrythrows`). the zero factory keeps its negative-dimension trap (`zerostrapsonnegativedimension`). the batch replacement maps one vector per row; `vectortypefactory.batch(dimension:from:)` instead takes a flat array. `array<float>.tovector()` remains nonthrowing and keeps its factory selection and values (`emptyarraytovector`, `dynamicarraytovector`, `fixedwidtharraytovector`, `nonfinitearraytovector`). rebuild consumers after removing references to the namespace type.",
+   "kind": "markdown",
+   "lineHint": 71,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.checkedEntryThrows",
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.zerosTrapsOnNegativeDimension",
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.emptyArrayToVector",
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.dynamicArrayToVector",
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.fixedWidthArrayToVector",
+     "Tests/ComprehensiveTests/D02FactoryContractTests.swift::D02FactoryContractTests.nonfiniteArrayToVector"
+    ],
+    "domain": "Fixture dimensions/values and validation errors; row-wise migration is a direct map of the existing factory.",
+    "limitations": "Not an allocation-success guarantee."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "Consumer API foundations, 2026-11-18"
+   }
+  },
+  {
+   "id": "CA01-C-0001",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section API",
+   "fingerprint": "620e519a153c0c53",
+   "statement": "- **breaking: redundant `vectorcore` namespace enum (ca01).** no alias replaces it. use the module-qualified `vectorcore.umapinitialization`, `vectorcore.dynamicvector` and `vectorcore.logger` spellings, covered by `modulequalification.swift`. replace its five convenience members using the table in `docs/api_overview_map.md`. the row-based batch migration maps each row through the checked factory; `vectortypefactory.batch` takes a flat array. `array<float>.tovector()` retains its nonthrowing behavior (`d02factorycontracttests` array-conversion cases).",
+   "kind": "markdown",
+   "lineHint": 1068,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "adjacent-invariant",
+    "reference": "Sources/VectorCore/VectorCore.swift; Scripts/ci/fixtures/compile-contracts/ModuleQualification.swift; Tests/ComprehensiveTests/D02FactoryContractTests.swift",
+    "domain": "Removed enum and direct toVector factory forwarding; ordinary-import consumer and array conversion cases.",
+    "limitations": "No compatibility alias or binary compatibility promise; rebuild consumers."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "Consumer API foundations, 2026-11-18"
    }
   }
  ],

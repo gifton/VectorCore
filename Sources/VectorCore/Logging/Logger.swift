@@ -131,12 +131,10 @@ struct LogRecord: Sendable, Equatable {
 /// fallback) and `LoggingPublicConsumerTests`.
 ///
 /// ## Naming next to `os.Logger`
-/// Apple's `os` module also declares a `Logger`, so in a file that imports both `os` and VectorCore a bare
-/// `Logger` type is ambiguous. Add `import struct VectorCore.Logger` to that file: there `Logger` names this
-/// type, and Apple's stays reachable as `os.Logger`. Spelling this type `VectorCore.Logger` in client code
-/// does not compile, because `VectorCore` resolves to the `VectorCore` enum rather than to the module. The
-/// consumers `Scripts/ci/tests/D02/LoggerQualification.swift` (the scoped import) and `LoggerNegative.swift`
-/// (the ambiguous and enum-qualified spellings) check this with the Swift 6.4 compiler.
+/// Apple's `os` module also declares a `Logger`. Use `VectorCore.Logger` and `os.Logger`
+/// to distinguish the types, or add `import struct VectorCore.Logger` to use the bare `Logger`
+/// spelling for this type. The executable consumers `Scripts/ci/tests/D02/LoggerModuleQualification.swift`
+/// and `LoggerQualification.swift` exercise these two forms with both modules imported.
 public struct Logger: Sendable {
     private let subsystem: String
     private let category: String

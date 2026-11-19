@@ -1447,18 +1447,15 @@ coverage is not a claim of runtime coverage on every declared platform.
   `computeProvider`, `simdProvider` or `linearAlgebraProvider`, with the calls a spy installed through
   that hook records at the real route (`D02ProviderHookRouteTests`). `test_d02_surface_guards.py` fails
   when a hook read appears in a function the table does not cover.
-- **`VectorCore.createVector(dimension:data:)` and `hasOptimizedSupport(for:)`.** `createVector` states
-  its preconditions (`dimension >= 0`, and `data`, when given, has `dimension` elements) and that a
-  violation stops the process, with `VectorTypeFactory.vector(of:from:)` as the throwing alternative
-  (`createVectorTrapsOnMalformedInput`). `hasOptimizedSupport(for:)` names the seven `Vector<DimN>`
-  widths it reports and claims no speed difference.
-- **`Logger` next to `os.Logger`.** `Logger` keeps its name. In a file that imports both `os` and
-  VectorCore, `import struct VectorCore.Logger` makes `Logger` name VectorCore's type there, and Apple's
-  stays `os.Logger`. Client code cannot spell it `VectorCore.Logger`: `VectorCore` resolves to the
-  `VectorCore` enum. Without the scoped import a bare `Logger` is ambiguous under Swift 6.4 and accepted
-  by Swift 6.0 (Xcode 16.2), so write the scoped import rather than relying on either. Checked by the D02
-  compile contracts `Scripts/ci/tests/D02/LoggerQualification.swift` and `LoggerNegative.swift`, which the
-  consumer job compiles with Xcode 16.2 and which were also run with Swift 6.4.
+- **Factory conveniences after namespace removal.** `VectorTypeFactory.vector(of:from:)`
+  is the checked replacement for creating a vector from values (`checkedEntryThrows`);
+  `zeros(dimension:)` retains its negative-dimension trap (`zerosTrapsOnNegativeDimension`).
+  Both tests are in `D02FactoryContractTests`. The migration table covers the removed
+  batch, version and dimension-selection members.
+- **`Logger` next to `os.Logger`.** Use `VectorCore.Logger` and `os.Logger` with both
+  modules imported, or use `import struct VectorCore.Logger` for the bare Core spelling.
+  The executable consumers `LoggerModuleQualification.swift` and `LoggerQualification.swift`
+  exercise these forms. The former expected module-qualification failure has been retired.
 - **Products and hosts.** `Docs/Package_Boundaries.md` lists, for each product, the hosts that are
   supported, compiled in CI or not verified. `VectorCoreBenchmarking` and `vectorcore-bench` are macOS
   host tooling; `VectorCoreBenchmarking` compiles in CI for the simulator and Catalyst destinations, but
@@ -1474,6 +1471,22 @@ coverage is not a claim of runtime coverage on every declared platform.
   `VectorError.invalidDimension`, and their time and memory are not promised. Doc comments on
   `PCAModel.fit`, `Operations.pca`, `KNNGraph.bruteForce` and `Operations.umap` point to the record and
   state the work and storage their code implies. No code changed.
+
+### API
+
+- **Breaking: redundant `VectorCore` namespace enum (CA01).** No alias replaces it.
+  Use the module-qualified `VectorCore.UMAPInitialization`, `VectorCore.DynamicVector`
+  and `VectorCore.Logger` spellings, covered by `ModuleQualification.swift`.
+  Replace its five convenience members using the table in `Docs/API_Overview_Map.md`.
+  The row-based batch migration maps each row through the checked factory;
+  `VectorTypeFactory.batch` takes a flat array. `Array<Float>.toVector()` retains
+  its nonthrowing behavior (`D02FactoryContractTests` array-conversion cases).
+
+- **Public UMAP curve calibration (CA02).**
+  `Operations.umapCurveParameters(spread:minDist:)` returns the existing fitter's
+  throwing `(a: Float, b: Float)` tuple. Both UMAP entries use it; the fitter's
+  arithmetic and validation remain unchanged. See the public curve reference
+  and range tests and `UMAPCurveConsumer.swift`.
 
 ## [0.3.3] - 2026-09-06
 

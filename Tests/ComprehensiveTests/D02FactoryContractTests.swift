@@ -80,7 +80,7 @@ struct D02FactoryContractTests {
             let values = (0..<dimension).map { Float($0 % 7) }
             let vector: any VectorType = values.toVector()
             #expect(String(describing: type(of: vector)) == d02ExpectedType(dimension))
-            #expect(vector.toArray() == values)
+            #expect(vector.toArray().map(\.bitPattern) == values.map(\.bitPattern))
         }
     }
 

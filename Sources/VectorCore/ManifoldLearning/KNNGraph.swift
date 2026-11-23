@@ -145,6 +145,7 @@ extension KNNGraph {
         neighbors k: Int,
         execution: UMAPExecutionContext?
     ) throws -> KNNGraph where V.Scalar == Float {
+        try execution?.checkCancellation()
         let n = vectors.count
         guard n >= 2 else { throw VectorError.invalidDimension(n, reason: "KNNGraph.bruteForce needs at least 2 points") }
         guard k >= 1, k <= n - 1 else {
@@ -155,6 +156,7 @@ extension KNNGraph {
         let sizes = try checkedSizes(points: n, dimensions: d, neighbors: k)
         try execution?.report(.graph, completed: 0, total: n)
         let flat = try PCAModel.flattenColumnMajor(vectors, count: n, dimension: d)
+        try execution?.checkCancellation()
 
         var norms = [Float](repeating: 0, count: n)
         flat.withUnsafeBufferPointer { fb in
@@ -164,6 +166,7 @@ extension KNNGraph {
             }
         }
 
+        try execution?.checkCancellation()
         var neighborIndices = [Int32](repeating: 0, count: sizes.edges)
         var distances = [Float](repeating: 0, count: sizes.edges)
         var bestDistance = [Float](repeating: .infinity, count: k)
@@ -173,6 +176,7 @@ extension KNNGraph {
         let blockSize = min(n, 256)
         var start = 0
         while start < n {
+            try execution?.checkCancellation()
             let blockRows = min(blockSize, n - start)
             let panelCount = try UMAPChecked.count([blockRows, d], stride: MemoryLayout<Float>.stride, label: "KNN block")
             _ = try UMAPChecked.count([blockRows, n], stride: MemoryLayout<Float>.stride, label: "KNN Gram panel")
@@ -211,11 +215,14 @@ extension KNNGraph {
                 }
             }
             start += blockRows
+            try execution?.checkCancellation()
             if start < n { try execution?.report(.graph, completed: start, total: n) }
         }
 
+        try execution?.checkCancellation()
         var offsets = [Int](repeating: 0, count: sizes.offsets)
         for i in 0...n { offsets[i] = i * k } // i*k <= the checked n*k bound.
+        try execution?.checkCancellation()
         let result = try KNNGraph(
             pointCount: n,
             rowOffsets: offsets,

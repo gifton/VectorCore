@@ -246,7 +246,7 @@ extension Operations {
     /// build is about half. Larger n or d is not measured.
     ///
     /// - Throws: `VectorError` on invalid config/shapes, plus anything PCA
-    ///   or the brute-force builder throws.
+    ///   or the brute-force builder throws. Cancellation checkpoints throw `CancellationError`; see `UMAPProgress`.
     public static func umap<V: VectorProtocol>(
         _ vectors: [V],
         dimensions: Int = 2,
@@ -259,6 +259,7 @@ extension Operations {
     /// Self-contained UMAP with optional synchronous stage reporting on the calling thread.
     /// A supplied graph omits the graph stage. `UMAPProgressTests` covers stage order,
     /// counts, calling context, and coordinate preservation with and without a handler.
+    /// - Throws: The ordinary overload's errors, including `CancellationError`; see `UMAPProgress` for checkpoints.
     public static func umap<V: VectorProtocol>(
         _ vectors: [V],
         dimensions: Int = 2,
@@ -267,6 +268,7 @@ extension Operations {
         progress: ((UMAPProgress) -> Void)?
     ) throws -> UMAPResult where V.Scalar == Float {
         let execution = UMAPExecutionContext(progress: progress)
+        try execution.checkCancellation()
         try config.validate()
         let coordinateCount = try UMAPChecked.layoutCount(points: vectors.count, dimensions: dimensions)
         try UMAPChecked.schedule(epochs: config.epochs ?? (vectors.count <= 10_000 ? 500 : 200), negativeRate: config.negativeSampleRate)
@@ -278,13 +280,15 @@ extension Operations {
         }
         // UMAPPreflightTests.rejectedCurvePrecedesGraphConstructionForBothInitializers and
         // UMAPPreflightTests.rejectedCurvePrecedesPCAWithSuppliedGraph exercise early rejection.
+        try execution.checkCancellation()
         let curve = try umapCurveParameters(spread: config.spread, minDist: config.minDist)
+        try execution.checkCancellation()
         let knn = try graph ?? KNNGraph.bruteForce(vectors, neighbors: config.neighbors, execution: execution)
         try execution.report(.initialization, completed: 0, total: 1)
         let initial: [Float]
         switch config.initialization {
         case .pca:
-            initial = try pcaInitialCoordinates(vectors, dimensions: dimensions, config: config)
+            initial = try pcaInitialCoordinates(vectors, dimensions: dimensions, config: config, execution: execution)
         case .random:
             initial = UMAPLayout.randomCoordinates(
                 count: coordinateCount, seed: config.seed)
@@ -300,6 +304,7 @@ extension Operations {
     /// seed the layout; nil falls back to seeded random in [−10, 10].
     /// - Throws: `.invalidDimension` for fewer than two points (0.3.3 threw `.invalidOperation`) and for the other
     ///   count, configuration and scheduling rejections the entry validates before allocating.
+    ///   Cancellation checkpoints throw `CancellationError`; see `UMAPProgress`.
     public static func umap(
         graph: KNNGraph,
         dimensions: Int = 2,
@@ -313,6 +318,7 @@ extension Operations {
     /// Graph-only UMAP with optional synchronous stage reporting on the calling thread.
     /// Supplied coordinates omit initialization. `UMAPProgressTests` covers both
     /// initialization routes and exact epoch counts, including the initial zero report.
+    /// - Throws: The ordinary overload's errors, including `CancellationError`; see `UMAPProgress` for checkpoints.
     public static func umap(
         graph: KNNGraph,
         dimensions: Int = 2,
@@ -321,6 +327,7 @@ extension Operations {
         progress: ((UMAPProgress) -> Void)?
     ) throws -> UMAPResult {
         let execution = UMAPExecutionContext(progress: progress)
+        try execution.checkCancellation()
         try config.validate()
         let coordinateCount = try UMAPChecked.layoutCount(points: graph.pointCount, dimensions: dimensions)
         try UMAPChecked.schedule(epochs: config.epochs ?? (graph.pointCount <= 10_000 ? 500 : 200), negativeRate: config.negativeSampleRate)
@@ -339,7 +346,9 @@ extension Operations {
         }
         // Keep supplied-coordinate validation ahead of fitting; both precede coordinate allocation.
         // UMAPPreflightTests.cheapValidationPrecedesRejectedCurve pins this ordering.
+        try execution.checkCancellation()
         let curve = try umapCurveParameters(spread: config.spread, minDist: config.minDist)
+        try execution.checkCancellation()
         let initial: [Float]
         if let provided = initialCoordinates {
             var flat = [Float](repeating: 0, count: coordinateCount)
@@ -365,6 +374,7 @@ extension Operations {
         config: UMAPConfig,
         execution: UMAPExecutionContext
     ) throws -> UMAPResult {
+        try execution.checkCancellation()
         let n = graph.pointCount
         let coordinateCount = try UMAPChecked.layoutCount(points: n, dimensions: dimensions)
         guard initial.count == coordinateCount, initial.allSatisfy({ $0.isFinite }) else {
@@ -372,6 +382,7 @@ extension Operations {
         }
         try execution.report(.fuzzySet, completed: 0, total: 1)
         let edges = try FuzzySimplicialSet.build(graph)
+        try execution.checkCancellation()
         guard edges.count > 0 else {
             throw VectorError.invalidData("kNN graph produced no usable edges")
         }
@@ -392,6 +403,7 @@ extension Operations {
                 seed: config.seed),
             execution: execution)
         guard coordinates.allSatisfy({ $0.isFinite }) else { throw UMAPChecked.failure("nonfinite final coordinates") }
+        try execution.checkCancellation()
         return UMAPResult(coordinates: coordinates, pointCount: n, dimension: dimensions)
     }
 
@@ -401,11 +413,15 @@ extension Operations {
     private static func pcaInitialCoordinates<V: VectorProtocol>(
         _ vectors: [V],
         dimensions: Int,
-        config: UMAPConfig
+        config: UMAPConfig,
+        execution: UMAPExecutionContext
     ) throws -> [Float] where V.Scalar == Float {
+        try execution.checkCancellation()
         let model = try PCAModel.fit(
             vectors, components: dimensions, config: PCAConfig(seed: config.seed))
+        try execution.checkCancellation()
         let projected = try model.transform(vectors)
+        try execution.checkCancellation()
         let n = vectors.count
         let m = dimensions
         var flat = [Float](repeating: 0, count: try UMAPChecked.layoutCount(points: n, dimensions: m))
@@ -422,6 +438,7 @@ extension Operations {
             let scaled = maxAbs > 0 ? Float(10 * (Double(flat[idx]) / Double(maxAbs))) : flat[idx]
             flat[idx] = try UMAPChecked.finite(scaled + 1e-4 * noise.next(), "PCA initialization")
         }
+        try execution.checkCancellation()
         return flat
     }
 }
@@ -584,6 +601,7 @@ internal enum UMAPLayout {
         parameters: Parameters,
         execution: UMAPExecutionContext? = nil
     ) throws {
+        try execution?.checkCancellation()
         let count = try UMAPChecked.layoutCount(points: n, dimensions: m)
         try UMAPChecked.schedule(epochs: parameters.epochs, negativeRate: parameters.negativeSampleRate)
         guard coordinates.count == count, coordinates.allSatisfy({ $0.isFinite }) else {
@@ -633,8 +651,10 @@ internal enum UMAPLayout {
         var rng = SplitMix64(state: parameters.seed ^ 0xD6E8_FEB8_6659_FD93)
         let kernel = (a: parameters.a, b: parameters.b)
         let totalEpochs = parameters.epochs
+        try execution?.checkCancellation()
         try coordinates.withUnsafeMutableBufferPointer { coords in
             for epoch in 0..<totalEpochs {
+                try execution?.checkCancellation()
                 let fraction = 1 - Double(epoch) / Double(totalEpochs)
                 let alpha = try UMAPChecked.finite(Float(Double(parameters.learningRate) * fraction), "annealed step")
                 let now = Double(epoch)

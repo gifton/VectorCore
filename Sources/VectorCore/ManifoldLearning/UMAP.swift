@@ -229,7 +229,7 @@ public struct UMAPResult: Sendable {
 
 extension Operations {
     /// Self-contained UMAP: kNN (supplied or exhaustive Float Gram scores) →
-    /// fuzzy simplicial set → PCA (or random) init → SGD layout.
+    /// PCA (or random) init → fuzzy simplicial set → SGD layout.
     ///
     /// Pass `graph` to reuse an ANN-built kNN graph (VectorIndex, §3.2) —
     /// the vectors then only feed the PCA initialization. With `graph: nil`
@@ -253,6 +253,20 @@ extension Operations {
         graph: KNNGraph? = nil,
         config: UMAPConfig = UMAPConfig()
     ) throws -> UMAPResult where V.Scalar == Float {
+        try umap(vectors, dimensions: dimensions, graph: graph, config: config, progress: nil)
+    }
+
+    /// Self-contained UMAP with optional synchronous stage reporting on the calling thread.
+    /// A supplied graph omits the graph stage. `UMAPProgressTests` covers stage order,
+    /// counts, calling context, and coordinate preservation with and without a handler.
+    public static func umap<V: VectorProtocol>(
+        _ vectors: [V],
+        dimensions: Int = 2,
+        graph: KNNGraph? = nil,
+        config: UMAPConfig = UMAPConfig(),
+        progress: ((UMAPProgress) -> Void)?
+    ) throws -> UMAPResult where V.Scalar == Float {
+        let execution = UMAPExecutionContext(progress: progress)
         try config.validate()
         let coordinateCount = try UMAPChecked.layoutCount(points: vectors.count, dimensions: dimensions)
         try UMAPChecked.schedule(epochs: config.epochs ?? (vectors.count <= 10_000 ? 500 : 200), negativeRate: config.negativeSampleRate)
@@ -265,7 +279,8 @@ extension Operations {
         // UMAPPreflightTests.rejectedCurvePrecedesGraphConstructionForBothInitializers and
         // UMAPPreflightTests.rejectedCurvePrecedesPCAWithSuppliedGraph exercise early rejection.
         let curve = try umapCurveParameters(spread: config.spread, minDist: config.minDist)
-        let knn = try graph ?? KNNGraph.bruteForce(vectors, neighbors: config.neighbors)
+        let knn = try graph ?? KNNGraph.bruteForce(vectors, neighbors: config.neighbors, execution: execution)
+        try execution.report(.initialization, completed: 0, total: 1)
         let initial: [Float]
         switch config.initialization {
         case .pca:
@@ -274,7 +289,9 @@ extension Operations {
             initial = UMAPLayout.randomCoordinates(
                 count: coordinateCount, seed: config.seed)
         }
-        return try umapLayout(graph: knn, dimensions: dimensions, initial: initial, curve: curve, config: config)
+        try execution.report(.initialization, completed: 1, total: 1)
+        return try umapLayout(graph: knn, dimensions: dimensions, initial: initial, curve: curve,
+                              config: config, execution: execution)
     }
 
     /// Graph-only UMAP for callers that no longer hold the original
@@ -289,6 +306,21 @@ extension Operations {
         initialCoordinates: [[Float]]? = nil,
         config: UMAPConfig = UMAPConfig()
     ) throws -> UMAPResult {
+        try umap(graph: graph, dimensions: dimensions, initialCoordinates: initialCoordinates,
+                 config: config, progress: nil)
+    }
+
+    /// Graph-only UMAP with optional synchronous stage reporting on the calling thread.
+    /// Supplied coordinates omit initialization. `UMAPProgressTests` covers both
+    /// initialization routes and exact epoch counts, including the initial zero report.
+    public static func umap(
+        graph: KNNGraph,
+        dimensions: Int = 2,
+        initialCoordinates: [[Float]]? = nil,
+        config: UMAPConfig = UMAPConfig(),
+        progress: ((UMAPProgress) -> Void)?
+    ) throws -> UMAPResult {
+        let execution = UMAPExecutionContext(progress: progress)
         try config.validate()
         let coordinateCount = try UMAPChecked.layoutCount(points: graph.pointCount, dimensions: dimensions)
         try UMAPChecked.schedule(epochs: config.epochs ?? (graph.pointCount <= 10_000 ? 500 : 200), negativeRate: config.negativeSampleRate)
@@ -316,9 +348,12 @@ extension Operations {
             }
             initial = flat
         } else {
+            try execution.report(.initialization, completed: 0, total: 1)
             initial = UMAPLayout.randomCoordinates(count: coordinateCount, seed: config.seed)
+            try execution.report(.initialization, completed: 1, total: 1)
         }
-        return try umapLayout(graph: graph, dimensions: dimensions, initial: initial, curve: curve, config: config)
+        return try umapLayout(graph: graph, dimensions: dimensions, initial: initial, curve: curve,
+                              config: config, execution: execution)
     }
 
     /// Shared tail: fuzzy set → SGD with the entry point's preflighted curve.
@@ -327,19 +362,23 @@ extension Operations {
         dimensions: Int,
         initial: [Float],
         curve: (a: Float, b: Float),
-        config: UMAPConfig
+        config: UMAPConfig,
+        execution: UMAPExecutionContext
     ) throws -> UMAPResult {
         let n = graph.pointCount
         let coordinateCount = try UMAPChecked.layoutCount(points: n, dimensions: dimensions)
         guard initial.count == coordinateCount, initial.allSatisfy({ $0.isFinite }) else {
             throw VectorError.invalidData("UMAP initial buffer has invalid shape or nonfinite coordinates")
         }
+        try execution.report(.fuzzySet, completed: 0, total: 1)
         let edges = try FuzzySimplicialSet.build(graph)
         guard edges.count > 0 else {
             throw VectorError.invalidData("kNN graph produced no usable edges")
         }
+        try execution.report(.fuzzySet, completed: 1, total: 1)
         let epochs = config.epochs ?? (n <= 10_000 ? 500 : 200)
         var coordinates = initial
+        try execution.report(.layout, completed: 0, total: epochs)
         try UMAPLayout.optimize(
             edges: edges,
             coordinates: &coordinates,
@@ -350,7 +389,8 @@ extension Operations {
                 epochs: epochs,
                 learningRate: config.learningRate,
                 negativeSampleRate: config.negativeSampleRate,
-                seed: config.seed))
+                seed: config.seed),
+            execution: execution)
         guard coordinates.allSatisfy({ $0.isFinite }) else { throw UMAPChecked.failure("nonfinite final coordinates") }
         return UMAPResult(coordinates: coordinates, pointCount: n, dimension: dimensions)
     }
@@ -541,7 +581,8 @@ internal enum UMAPLayout {
         coordinates: inout [Float],
         pointCount n: Int,
         dimension m: Int,
-        parameters: Parameters
+        parameters: Parameters,
+        execution: UMAPExecutionContext? = nil
     ) throws {
         let count = try UMAPChecked.layoutCount(points: n, dimensions: m)
         try UMAPChecked.schedule(epochs: parameters.epochs, negativeRate: parameters.negativeSampleRate)
@@ -617,6 +658,7 @@ internal enum UMAPLayout {
                     guard increment.isFinite, negativeNext.isFinite else { throw UMAPChecked.failure("next negative epoch") }
                     nextNegative[e] = negativeNext
                 }
+                try execution?.report(.layout, completed: epoch + 1, total: totalEpochs)
             }
         }
     }

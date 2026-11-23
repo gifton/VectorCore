@@ -137,6 +137,14 @@ extension KNNGraph {
         _ vectors: [V],
         neighbors k: Int
     ) throws -> KNNGraph where V.Scalar == Float {
+        try bruteForce(vectors, neighbors: k, execution: nil)
+    }
+
+    internal static func bruteForce<V: VectorProtocol>(
+        _ vectors: [V],
+        neighbors k: Int,
+        execution: UMAPExecutionContext?
+    ) throws -> KNNGraph where V.Scalar == Float {
         let n = vectors.count
         guard n >= 2 else { throw VectorError.invalidDimension(n, reason: "KNNGraph.bruteForce needs at least 2 points") }
         guard k >= 1, k <= n - 1 else {
@@ -145,6 +153,7 @@ extension KNNGraph {
         }
         let d = vectors[0].scalarCount
         let sizes = try checkedSizes(points: n, dimensions: d, neighbors: k)
+        try execution?.report(.graph, completed: 0, total: n)
         let flat = try PCAModel.flattenColumnMajor(vectors, count: n, dimension: d)
 
         var norms = [Float](repeating: 0, count: n)
@@ -202,15 +211,18 @@ extension KNNGraph {
                 }
             }
             start += blockRows
+            if start < n { try execution?.report(.graph, completed: start, total: n) }
         }
 
         var offsets = [Int](repeating: 0, count: sizes.offsets)
         for i in 0...n { offsets[i] = i * k } // i*k <= the checked n*k bound.
-        return try KNNGraph(
+        let result = try KNNGraph(
             pointCount: n,
             rowOffsets: offsets,
             neighborIndices: neighborIndices,
             distances: distances)
+        try execution?.report(.graph, completed: n, total: n)
+        return result
     }
 
     /// Pure preflight used before allocation/BLAS and exercised at representability

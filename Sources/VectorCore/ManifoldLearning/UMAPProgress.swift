@@ -2,8 +2,8 @@
 /// Successful event order and counts are exercised by
 /// `UMAPProgressTests.stageOrderAndSkippedStages` and `graphReportsBlockBoundaries`.
 ///
-/// Both UMAP routes check task cancellation even without a handler. A cancelled
-/// call throws `CancellationError`; an already-cancelled task is rejected before
+/// Both UMAP routes check task cancellation even without a handler. A checkpoint
+/// that observes cancellation throws `CancellationError`; an already-cancelled task is rejected before
 /// validation (`UMAPCancellationTests.entryCancellationPrecedesWorkAndValidation`).
 /// Checks occur between stages, graph blocks, epochs and preparation passes.
 /// Packing, fuzzy-set construction, schedule preparation, and PCA/BLAS/LAPACK

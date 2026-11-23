@@ -79,7 +79,7 @@ jobs:
           --output "$RUNNER_TEMP/native-evidence" --upload "$RUNNER_TEMP/native-upload"
       - name: Retain unqualified evidence
         if: always() && inputs.mode == 'collect'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: native-evidence
           path: ${{ runner.temp }}/native-upload/
@@ -103,7 +103,7 @@ jobs:
           --archive "$RUNNER_TEMP/native-download/evidence.tar.gz" --output "$RUNNER_TEMP/native-verified"
       - name: Retain verification report
         if: always() && inputs.mode == 'verify'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: native-reviewed-report
           path: ${{ runner.temp }}/native-verified/verification.json
@@ -154,7 +154,7 @@ jobs:
           --output "$RUNNER_TEMP/ios-simulator-evidence" --upload "$RUNNER_TEMP/ios-simulator-upload"
       - name: Retain unqualified evidence
         if: always() && inputs.mode == 'collect'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ios-simulator-evidence
           path: ${{ runner.temp }}/ios-simulator-upload/
@@ -178,7 +178,7 @@ jobs:
           --archive "$RUNNER_TEMP/ios-simulator-download/evidence.tar.gz" --output "$RUNNER_TEMP/ios-simulator-verified"
       - name: Retain verification report
         if: always() && inputs.mode == 'verify'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ios-simulator-reviewed-report
           path: ${{ runner.temp }}/ios-simulator-verified/verification.json

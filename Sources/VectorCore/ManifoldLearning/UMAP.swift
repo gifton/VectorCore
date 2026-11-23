@@ -2,7 +2,7 @@
 //  UMAP.swift
 //  VectorCore
 //
-//  UMAP layout (gap analysis §3.3): fuzzy simplicial set → initialization →
+//  UMAP layout (gap analysis §3.3): initialization → fuzzy simplicial set →
 //  SGD with negative sampling. The math follows McInnes, Healy & Melville
 //  2018. Calibration and checked numerical boundaries follow the explicit
 //  contracts below; no exact reference-implementation equivalence is asserted.

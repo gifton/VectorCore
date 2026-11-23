@@ -10,7 +10,7 @@
 /// calls finish before their next checkpoint; no wall-clock response bound is promised.
 ///
 /// Handlers run synchronously on the calling thread and are not retained after
-/// the call. Cancellation from a handler is checked when it returns, including
+/// the call (`UMAPProgressConsumer.swift`). Cancellation from a handler is checked when it returns, including
 /// a final completion event (`UMAPCancellationTests.cancellationFromOnlyEpochCompletionThrows`).
 /// Completion reports work done; cancellation can still prevent returning a result.
 public struct UMAPProgress: Sendable, Equatable {

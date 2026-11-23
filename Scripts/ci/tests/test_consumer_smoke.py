@@ -151,10 +151,11 @@ class CompileContractTests(unittest.TestCase):
                     self.assertTrue(row.get("errorLines") or row.get("diagnostics"), "a negative names what must fail")
         self.assertEqual(len({row["id"] for row in rows}), len(rows), "ids are unique")
 
-    def test_namespace_and_curve_contracts_run_public_consumers(self):
+    def test_consumer_api_contracts_run_public_consumers(self):
         rows = {row["id"]: row for row in load_script().CONTRACTS}
         for name, marker in (("module-qualification", "MODULE_QUALIFICATION_OK"),
                              ("umap-public-curve", "UMAP_PUBLIC_CURVE_OK"),
+                             ("umap-progress", "UMAP_PROGRESS_OK"),
                              ("D02-logger-module-qualification", "D02_LOGGER_MODULE_QUALIFICATION_COMPLETE")):
             with self.subTest(name=name):
                 self.assertEqual(rows[name]["expect"], "run")

@@ -37,9 +37,10 @@ enum UMAPProgressFixtures {
         (0..<count).map { i in (0..<dimensions).map { c in Float(i * 7 - c * 3) / 11 } }
     }
 
-    static func run(_ route: Route, dimensions: Int, progress: ((UMAPProgress) -> Void)? = nil) throws -> UMAPResult {
+    static func run(_ route: Route, dimensions: Int, metric: KNNGraph.Metric? = nil, progress: ((UMAPProgress) -> Void)? = nil) throws -> UMAPResult {
         let data = vectors()
-        let config = config(initialization: route.initialization)
+        var config = config(initialization: route.initialization)
+        if let metric { config.metric = metric }
         switch route {
         case .builtRandom, .builtPCA:
             return try Operations.umap(data, dimensions: dimensions, config: config, progress: progress)

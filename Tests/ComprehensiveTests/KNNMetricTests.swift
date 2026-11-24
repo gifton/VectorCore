@@ -148,6 +148,27 @@ struct KNNMetricTests {
         }
     }
 
+    @Test(arguments: [257, 513])
+    func cosineBlockRowsMatchOracle(count: Int) throws {
+        let values = UMAPProgressFixtures.vectors(count: count)
+        let rows = values.map { $0.toArray() }
+        let graph = try KNNGraph.bruteForce(values, neighbors: 3, metric: .cosine)
+        for i in rows.indices {
+            let reference = rows.indices.map { KNNMetricFixtures.cosine(rows[i], rows[$0]) }
+            let ordered = rows.indices.filter { $0 != i }.sorted { reference[$0] < reference[$1] }
+            let indices = Array(graph.neighborIndices[(i * 3)..<(i * 3 + 3)]).map(Int.init)
+            #expect(Set(indices).count == 3 && !indices.contains(i))
+            for (edge, j) in indices.enumerated() {
+                #expect(abs(Double(graph.distances[i * 3 + edge]) - reference[j]) <= 2e-5)
+                #expect(reference[j] <= reference[ordered[2]] + 4e-5)
+            }
+            // Only compare exact identities where the independent oracle separates the cutoff.
+            if reference[ordered[3]] - reference[ordered[2]] > 4e-5 {
+                #expect(Set(indices) == Set(ordered.prefix(3)))
+            }
+        }
+    }
+
     @Test func cosineRejectsInvalidRows() throws {
         let valid: [[Float]] = [[1, 0], [0, 1], [-1, 0]]
         for row in [0, 2] {

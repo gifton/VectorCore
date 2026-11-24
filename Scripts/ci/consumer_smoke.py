@@ -64,6 +64,8 @@ CONTRACTS = (
      "expect": "run", "marker": "UMAP_PUBLIC_CURVE_OK"},
     {"id": "umap-progress", "path": "Scripts/ci/fixtures/compile-contracts/UMAPProgressConsumer.swift",
      "expect": "run", "marker": "UMAP_PROGRESS_OK"},
+    {"id": "knn-metric", "path": "Scripts/ci/fixtures/compile-contracts/KNNMetricConsumer.swift",
+     "expect": "run", "marker": "KNN_METRIC_OK"},
     # D02 negatives: every code line names a removed member and is one compile error.
     {"id": "D02-storage-negative", "path": "Scripts/ci/tests/D02/StorageNegative.swift", "expect": "fail", "errorLines": "code"},
     {"id": "D02-routed-negative", "path": "Scripts/ci/tests/D02/RoutedNegative.swift", "expect": "fail", "errorLines": "code"},

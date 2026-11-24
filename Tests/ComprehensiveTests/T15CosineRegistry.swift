@@ -11,7 +11,7 @@ import Foundation
 // Each site names how its exceptional behaviour is pinned:
 //   .table(prefixes)   rows of the T2 exceptional table (T15CosineExceptionalTableTests) whose id starts with a prefix;
 //   .selection(routes) T1 routes (T15CosineSelectionTests, `T15SelectionRoute` raw values) that reach the body;
-//   .external(test)    a test outside this target (`path::Suite.test`), checked to exist by the guard;
+//   .external(test)    a test outside the T2 table (`path::Suite.test`), checked to exist by the guard;
 //   .exempt(reason)    not a distance or similarity computation (reviewed reason);
 //   .tableAndSelection(prefixes, routes) both of the first two, for a body that rows and T1 routes reach (P02 phase C
 //                      review m3: the cosine clamp shared by the public matrix entries and the `.gram` route).
@@ -162,7 +162,12 @@ enum T15CosineRegistry {
         ("Benchmarks/VectorCoreBench/Suites/BatchBench.swift::runBatchCosineFP16_768",
          .exempt("benchmark driver over the registered mixed-precision range kernel")),
         ("Benchmarks/VectorCoreBench/Suites/BatchBench.swift::runBatchCosineFP16_1536",
-         .exempt("benchmark driver over the registered mixed-precision range kernel"))
+         .exempt("benchmark driver over the registered mixed-precision range kernel")),
+        // Opt-in graph construction has a strict throwing contract, unlike the permissive distance table.
+        ("Sources/VectorCore/ManifoldLearning/KNNCosine.swift::cosineDistance",
+         .external("Tests/ComprehensiveTests/KNNMetricTests.swift::KNNMetricTests.cosineRejectsNonfiniteIntermediates")),
+        ("Sources/VectorCore/ManifoldLearning/KNNCosine.swift::cosineGraph",
+         .external("Tests/ComprehensiveTests/KNNMetricTests.swift::KNNMetricTests.cosineRejectsInvalidRows")),
         // END T15 COSINE SITES
     ]
 }

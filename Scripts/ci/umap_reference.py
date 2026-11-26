@@ -28,7 +28,7 @@ def load_profile(path=PROFILE):
 
 
 def command_text(argv, *, cwd=ROOT):
-    return subprocess.check_output(argv, cwd=cwd, text=True, timeout=30).strip()
+    return subprocess.check_output(argv, cwd=cwd, text=True, stderr=subprocess.STDOUT, timeout=30).strip()
 
 
 def host_identity():

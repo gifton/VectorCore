@@ -102,6 +102,11 @@ class ReferenceRunnerTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, key):
                     self.module.require_host(changed, self.profile)
 
+    def test_tool_identity_includes_driver_stderr(self):
+        observed = self.module.command_text([sys.executable, '-c',
+            'import sys; sys.stderr.write("driver "); sys.stderr.flush(); print("compiler")'])
+        self.assertEqual(observed, 'driver compiler')
+
     def test_controlled_environment_sets_flag_after_sanitization(self):
         child = self.module.test_environment({'PATH': '/usr/bin', 'VECTORCORE_UMAP_CHECK_BASELINE_BITS': '0',
                                               'VECTORCORE_TEST_EXTENDED': '1', 'DYLD_INSERT_LIBRARIES': 'bad',

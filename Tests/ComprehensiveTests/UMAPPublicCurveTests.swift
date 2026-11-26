@@ -7,6 +7,12 @@ struct UMAPPublicCurveTests {
     private let nondefaultSpread: Float = 1.5
     private let nondefaultMinDist: Float = 0.5
 
+    @Test func defaultCurveMatchesBaselineCoefficients() throws {
+        let curve = try Operations.umapCurveParameters(spread: 1, minDist: 0.1)
+        try UMAPReferenceAssertions.compare([curve.a, curve.b], words: [0x3fc9d94a, 0x3f6522b3],
+                                             tolerance: 1e-6, caseID: "default-coefficients")
+    }
+
     @Test func nondefaultCurveMatchesBaselineCoefficients() throws {
         let curve = try Operations.umapCurveParameters(spread: nondefaultSpread, minDist: nondefaultMinDist)
         #expect(abs(curve.a - Float(bitPattern: 0x3eb7_f9d2)) < 1e-6)
@@ -85,16 +91,9 @@ struct UMAPPublicCurveTests {
             return
         }
 
-        // Opt in to frozen word checks on the matching compiler, OS build and configuration.
-        let checkBaselineBits = ProcessInfo.processInfo.environment["VECTORCORE_UMAP_CHECK_BASELINE_BITS"] == "1"
         for (entryPoint, result) in [("vectors", vectorResult), ("graph", graphResult)] {
-            try #require(result.coordinates.count == expected.count, "\(entryPoint)")
-            for (index, (actual, word)) in zip(result.coordinates, expected).enumerated() {
-                #expect(abs(actual - Float(bitPattern: word)) < 1e-4, "\(entryPoint) coordinate \(index)")
-            }
-            if checkBaselineBits {
-                #expect(result.coordinates.map(\.bitPattern) == expected, "\(entryPoint)")
-            }
+            try UMAPReferenceAssertions.compare(result.coordinates, words: expected, tolerance: 1e-4,
+                                                 caseID: "curve-\(dimensions)-\(usesDefaultCurve)-\(entryPoint)")
         }
         #expect(vectorResult.coordinates.map(\.bitPattern) == graphResult.coordinates.map(\.bitPattern))
     }

@@ -51,7 +51,7 @@ enum KNNMetricFixtures {
 
 @Suite
 struct KNNMetricTests {
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_UMAP_CHECK_BASELINE_BITS"] == "1"))
+    @Test
     func euclideanPreservesReferenceWords() throws {
         // Independently captured from alpha 44c9ffa before metric edits, checked against
         // parent 28ee9b5 in Debug/Release: Xcode 27.2 (27B52), Swift 6.4.2,
@@ -63,11 +63,12 @@ struct KNNMetricTests {
             1084531663, 1088064086, 1089770575, 1084531663, 1087074753, 1088580131,
             1084675332, 1089453298, 1089770575, 1084368393, 1087029165, 1089699138
         ]
-        for graph in [try KNNGraph.bruteForce(values, neighbors: 3),
-                      try KNNGraph.bruteForce(values, neighbors: 3, metric: .euclidean)] {
+        for (entry, graph) in [try KNNGraph.bruteForce(values, neighbors: 3),
+                      try KNNGraph.bruteForce(values, neighbors: 3, metric: .euclidean)].enumerated() {
             #expect(graph.rowOffsets == Array(stride(from: 0, through: 24, by: 3)))
             #expect(graph.neighborIndices == [6, 5, 3, 2, 7, 6, 1, 4, 5, 7, 5, 0, 5, 2, 6, 4, 3, 2, 0, 5, 4, 1, 3, 2])
-            #expect(graph.distances.map(\.bitPattern) == expected)
+            try UMAPReferenceAssertions.compare(graph.distances, words: expected, tolerance: 1e-5,
+                                                 caseID: "knn-\(entry == 0 ? "legacy" : "explicit")")
         }
     }
 

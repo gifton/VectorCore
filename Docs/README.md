@@ -3,7 +3,7 @@
 The references below describe the code in this checkout. For an installed
 release, read the files at its tag and consult the [changelog](../CHANGELOG.md).
 A feature on `main` is not necessarily in the latest published release.
-For the active 0.4.0 integration preview, start with [release status](../RELEASE_STATUS.md).
+For the current development pin and paused 0.4.0 release, start with [release status](../RELEASE_STATUS.md).
 In particular, `v0.3.3` does not include the subsequent MemoryPool and Intel
 macOS/Mac Catalyst FP16 fixes listed under [Unreleased](../CHANGELOG.md#unreleased).
 The installation example's version requirement does not itself include
@@ -25,6 +25,8 @@ unreleased commits.
 | [Contributing](../CONTRIBUTING.md) | Development, verification, performance evidence, and support policy |
 | [Maintaining and forks](Maintaining.md) | Review, release, and repository-policy maintenance |
 | [Configured CI contracts](executed-ci-contracts.md) | Required commands, selected workloads, and execution limits |
+| [UMAP reference checks](UMAP_Reference_Checks.md) | Mandatory paired exact checks, CI budgets and reviewed environment re-capture |
+| [Test environment controls](Test_Environment_Controls.md) | Tracked gate activation and child-selector ownership |
 | [Benchmark measurement boundaries](Benchmark_Measurement_Boundaries.md) | Report identity, timed work, comparison rules, and provenance limits |
 | [Security reporting](../SECURITY.md) / [Code of Conduct](../CODE_OF_CONDUCT.md) | Private reporting and community expectations |
 

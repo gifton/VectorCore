@@ -82,6 +82,17 @@ When a defect has occurred more than once, add a mechanical test covering the
 class of failure. When changing a routing or configuration gate, inspect and
 test every path newly reachable through that gate.
 
+## Mandatory UMAP, graph and PCA checks
+
+Any covered change requires passing exact-reference runs in Debug and Release
+**before editing** the pre-change code and **after the last change**, with both
+results recorded in the PR. Follow [UMAP reference checks](Docs/UMAP_Reference_Checks.md)
+for scope, commands, evidence, environment updates and the bootstrap procedure.
+Missing, failed, skipped or stale results prevent approval/merge; ordinary CI
+is not a substitute. This is a maintainer/reviewer merge requirement.
+New test environment gates must also satisfy the tracked
+[environment-control policy](Docs/Test_Environment_Controls.md).
+
 ## Performance changes
 
 Build and measure in Release. For example, from the repository root:

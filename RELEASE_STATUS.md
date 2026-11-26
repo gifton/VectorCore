@@ -1,8 +1,37 @@
 # VectorCore release status
 
-This is the entry point for the active release-preparation work. Dated reviews
-are historical evidence; directories ending in `-evidence` contain local records
-and build artifacts.
+## Current consumer development — 2026-11-26
+
+Stable 0.4.0 release preparation and candidate qualification are **paused** while
+consumer API work proceeds. Historical qualification below applies only to its
+named candidates and does not admit the current development branch.
+
+VectorAccelerate and SwiftTopics may pin the reviewed development snapshot:
+
+```swift
+.package(
+    url: "https://github.com/gifton/VectorCore.git",
+    revision: "a676d9745dec60450a2f1ff86da94824eb8b4f5e"
+)
+```
+
+The independent remote branch
+[`consumer-snapshots/2026-11-24-a676d97`](https://github.com/gifton/VectorCore/tree/consumer-snapshots/2026-11-24-a676d97)
+keeps that revision reachable outside the PR stack. Retain it without rebasing,
+force-updating or deleting until consumers have moved off it and removal is
+explicitly authorized. Remote readback and isolated SwiftPM resolution agreed on
+that full revision on 26 November. Keep `Package.resolved` as the consumer's exact
+identity: this snapshot reports version `0.4.0` with no prerelease marker, but is
+an unqualified development revision, not a stable release.
+
+That snapshot includes the reviewed curve API, fit progress/cancellation and
+cosine metric. It does not include the follow-up public `UMAPProgress` initializer.
+The verified cleanup will get a separate retained revision; this snapshot will
+not be retargeted. Consumers need not wait for that cleanup to re-pin.
+
+Dated reviews below remain historical evidence. See the
+[required development reference checks](Docs/UMAP_Reference_Checks.md) for the
+current UMAP/graph/PCA merge condition; it is separate from release qualification.
 
 ## Platform coverage decision — 2026-11-17
 

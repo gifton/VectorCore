@@ -67,6 +67,24 @@ jobs:
           set -o pipefail
           mkdir -p test-results
           swift test -c "$CONFIGURATION" --xunit-output test-results/results.xml 2>&1 | tee test-results/output.log
+      - name: Measure UMAP reference deviations
+        if: always()
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+        run: python3 -B Scripts/ci/observe_umap_reference.py --configuration "$CONFIGURATION" --output "$RUNNER_TEMP/umap-reference-$CONFIGURATION"
+      - name: Upload UMAP reference measurements
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: umap-reference-xcode-${{ matrix.xcode }}-${{ matrix.configuration }}
+          path: |
+            ${{ runner.temp }}/umap-reference-${{ matrix.configuration }}/summary.json
+            ${{ runner.temp }}/umap-reference-${{ matrix.configuration }}/deviations.md
+            ${{ runner.temp }}/umap-reference-${{ matrix.configuration }}/alpha.json
+            ${{ runner.temp }}/umap-reference-${{ matrix.configuration }}/accepted.json
+            ${{ runner.temp }}/umap-reference-${{ matrix.configuration }}/candidate.json
+            ${{ runner.temp }}/umap-reference-${{ matrix.configuration }}/*-build.log
+          retention-days: 14
       - name: Execute strict performance opt-out contracts
         env:
           CONFIGURATION: ${{ matrix.configuration }}

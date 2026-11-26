@@ -104,7 +104,7 @@ def command_lines(job)
     assert_policy(!step.key?('continue-on-error'), 'required steps cannot ignore errors')
     next [] unless step.key?('run')
 
-    assert_policy(!step.key?('if'), 'required commands cannot be conditional')
+    assert_policy(!step.key?('if') || step['if'] == 'always()', 'required commands cannot be conditional')
     step['run'].to_s.gsub(/\\
 \s*/, ' ').lines.map { |line| line.strip.gsub(/[ \t]+/, ' ') }.reject(&:empty?)
   end
@@ -127,7 +127,7 @@ def validate_executable_contracts(workflow, workflows, root)
   [workflow, workflows.fetch('sanitizers.yml')].each do |entry|
     assert_policy(entry.dig('env', 'VECTORCORE_TEST_EXTENDED') == '0' && entry.dig('env', 'VECTORCORE_STRICT_PERF') == '0', 'normal CI requires explicit extended/strict opt-outs')
   end
-  %w[Check\ memory\ pool\ under\ executor\ saturation Run\ all\ normally\ enabled\ tests Execute\ strict\ performance\ opt-out\ contracts].each do |name|
+  %w[Check\ memory\ pool\ under\ executor\ saturation Run\ all\ normally\ enabled\ tests Measure\ UMAP\ reference\ deviations Execute\ strict\ performance\ opt-out\ contracts].each do |name|
     step = jobs.fetch('test').fetch('steps').find { |entry| entry['name'] == name }
     assert_policy(step && step.dig('env', 'CONFIGURATION') == '${{ matrix.configuration }}', 'test command must use matrix configuration')
   end
@@ -135,6 +135,9 @@ def validate_executable_contracts(workflow, workflows, root)
   assert_policy(jobs.dig('test', 'strategy', 'matrix', 'configuration') == %w[debug release], 'tests require Debug and Release')
   assert_policy(jobs.dig('test', 'strategy', 'matrix', 'xcode') == ['16.2', '26.3'], 'preserve both test toolchains')
   require_command(lines['test'], %r{\Aswift test -c "\$CONFIGURATION" --xunit-output test-results/results\.xml 2>&1 \| tee test-results/output\.log\z}, 'normally enabled Swift tests')
+  require_command(lines['test'], %r{\Apython3 -B Scripts/ci/observe_umap_reference\.py --configuration "\$CONFIGURATION" --output "\$RUNNER_TEMP/umap-reference-\$CONFIGURATION"\z}, 'UMAP reference observations')
+  observation = jobs.fetch('test').fetch('steps').find { |entry| entry['name'] == 'Measure UMAP reference deviations' }
+  assert_policy(observation['if'] == 'always()', 'UMAP measurements must run even after a test failure')
   assert_policy(lines['test'].include?('set -o pipefail'), 'Swift test pipeline must propagate failure')
   require_command(lines['test'], %r{\Apython3 Scripts/ci/check_memory_pool\.py --configuration "\$CONFIGURATION"\z}, 'executor saturation check')
   require_command(lines['test'], %r{\Apython3 Scripts/ci/check_performance_gates\.py --configuration "\$CONFIGURATION" --scratch-root "\$RUNNER_TEMP/performance-gates" --output "test-results/performance-gates-\$CONFIGURATION" --jobs [1-6]\z}, 'actual strict performance process contracts')

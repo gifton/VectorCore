@@ -6,28 +6,36 @@ Stable 0.4.0 release preparation and candidate qualification are **paused** whil
 consumer API work proceeds. Historical qualification below applies only to its
 named candidates and does not admit the current development branch.
 
-VectorAccelerate and SwiftTopics may pin the reviewed development snapshot:
+VectorAccelerate and SwiftTopics may pin the verified cleanup development snapshot:
 
 ```swift
 .package(
     url: "https://github.com/gifton/VectorCore.git",
-    revision: "a676d9745dec60450a2f1ff86da94824eb8b4f5e"
+    revision: "59d5f33bb3eb067b47fd6a7b8c008e51b4e31a27"
 )
 ```
 
 The independent remote branch
-[`consumer-snapshots/2026-11-24-a676d97`](https://github.com/gifton/VectorCore/tree/consumer-snapshots/2026-11-24-a676d97)
-keeps that revision reachable outside the PR stack. Retain it without rebasing,
-force-updating or deleting until consumers have moved off it and removal is
-explicitly authorized. Remote readback and isolated SwiftPM resolution agreed on
-that full revision on 26 November. Keep `Package.resolved` as the consumer's exact
-identity: this snapshot reports version `0.4.0` with no prerelease marker, but is
-an unqualified development revision, not a stable release.
+[`consumer-snapshots/2026-11-26-59d5f33`](https://github.com/gifton/VectorCore/tree/consumer-snapshots/2026-11-26-59d5f33)
+keeps that revision reachable outside the PR stack. It includes the public
+`UMAPProgress(stage:completed:total:)` initializer and maintained reference checks,
+in addition to the reviewed curve API, fit progress/cancellation and cosine metric.
+A fresh isolated SwiftPM consumer resolved this full revision and ran the public
+progress fixture in Debug and Release. [PR #73](https://github.com/gifton/VectorCore/pull/73)
+records the numerical checks, hosted measurements and remaining qualification limits.
 
-That snapshot includes the reviewed curve API, fit progress/cancellation and
-cosine metric. It does not include the follow-up public `UMAPProgress` initializer.
-The verified cleanup will get a separate retained revision; this snapshot will
-not be retargeted. Consumers need not wait for that cleanup to re-pin.
+The previous snapshot
+[`consumer-snapshots/2026-11-24-a676d97`](https://github.com/gifton/VectorCore/tree/consumer-snapshots/2026-11-24-a676d97)
+remains at `a676d9745dec60450a2f1ff86da94824eb8b4f5e`; it does not expose the new
+progress initializer. Neither snapshot is retargeted. Retain both without rebasing,
+force-updating or deleting until consumers have moved off them and removal is
+explicitly authorized.
+
+Keep `Package.resolved` as the consumer's exact identity: both snapshots report
+version `0.4.0` with no prerelease marker, but are unqualified development revisions,
+not stable releases. The cleanup's local full Release suite still reproduces the
+known Xcode 27.2 lost-store compiler canary failure; its required numerical reference
+checks pass separately. Release and candidate qualification remain paused.
 
 Dated reviews below remain historical evidence. See the
 [required development reference checks](Docs/UMAP_Reference_Checks.md) for the

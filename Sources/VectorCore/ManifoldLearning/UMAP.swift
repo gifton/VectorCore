@@ -649,6 +649,9 @@ internal enum UMAPLayout {
             }
             maxWeight = max(maxWeight, weight)
         }
+        // Internal empty/all-zero graphs are no-ops (UMAPOptimizerInvariantTests.internalEmptyOrZeroEdgesAreNoOps).
+        // Public fuzzy construction drops zero weights and rejects empty edges before reporting layout
+        // (UMAPOptimizerInvariantTests.publicEmptyEdgesFailBeforeLayout).
         guard maxWeight > 0 else { return }
         let pruneBelow = parameters.epochs > 10 ? Double(maxWeight) / Double(parameters.epochs) : 0
         var heads = [Int32](), tails = [Int32](), cadence = [Double]()
@@ -659,6 +662,9 @@ internal enum UMAPLayout {
             guard interval.isFinite, interval > 0 else { throw UMAPChecked.failure("edge cadence") }
             heads.append(edges.heads[e]); tails.append(edges.tails[e]); cadence.append(interval)
         }
+        // For positive maxWeight and validated epochs >= 1, its own edge survives:
+        // pruneBelow is zero or Double(maxWeight)/epochs <= Double(maxWeight).
+        // UMAPOptimizerInvariantTests.positiveMaximumSurvivesPruning covers epochs 1/10/11 and tiny weights.
         guard !cadence.isEmpty else { return }
         let negativeRate = parameters.negativeSampleRate
         var nextSample = cadence

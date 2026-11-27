@@ -259,6 +259,25 @@ are Sendable values with immutable `stage`, `completed`, and `total` fields.
 The external [UMAPProgressConsumer.swift](../Scripts/ci/fixtures/compile-contracts/UMAPProgressConsumer.swift)
 checks these contracts and ordinary execution outside a Swift task.
 
+`UMAPProgress(stage:completed:total:)` is public and stores supplied counts
+unchanged, without clamping or validation. It supports synthetic consumer mapping
+tests, including deliberately invalid counts. The external consumer fixture
+constructs these values and compiles an exhaustive stage switch.
+
+The four fit stages are closed from retained revision
+`a676d9745dec60450a2f1ff86da94824eb8b4f5e` through the remaining pre-release 0.4.0
+development and all 0.4.x. Placement cannot add cases to this enum in that interval;
+it must reuse the existing meanings or use a separately designed progress type.
+This is source compatibility, not an ABI guarantee.
+
+Real fit events have `total > 0` and `0 <= completed <= total`. Within an emitted
+stage total is constant, the first count is zero, subsequent counts increase, and
+success reaches total. Unused stages emit nothing; errors/cancellation may stop
+early. These bounds are exercised across routes, dimensions and metrics by
+`stageOrderAndSkippedStages`, `graphReportsBlockBoundaries` and
+`layoutReportsEveryEpoch`. Consumers may divide completed by total for real events;
+arbitrary synthetic values do not carry that guarantee.
+
 Stages follow actual work: `.graph`, `.initialization`, `.fuzzySet`, `.layout`.
 A supplied graph skips `.graph`; supplied coordinates on the graph entry also
 skip `.initialization`. Graph progress counts completed query rows: zero, every
@@ -287,10 +306,19 @@ has no wall-clock latency guarantee or resumable partial result. Standalone
 (`standaloneGraphBuilderRetainsCancelledTaskBehavior`).
 
 Uncancelled callback and nil-callback routes retain coordinate words in the
-same build (`handlerPreservesCoordinates`). The opt-in frozen reference test in
-[UMAPProgressReferenceTests](../Tests/ComprehensiveTests/UMAPProgressReferenceTests.swift)
-compares the recorded alpha reference on its stated environment; it does not
-promise bits across compilers or platforms.
+same build (`handlerPreservesCoordinates`). The frozen tests in
+[UMAPProgressReferenceTests](../Tests/ComprehensiveTests/UMAPProgressReferenceTests.swift),
+`KNNMetricTests.euclideanPreservesReferenceWords` and `UMAPPublicCurveTests` also run
+ordinary tolerance comparisons. The [mandatory reference runner](UMAP_Reference_Checks.md)
+adds exact-word comparisons on the reviewed environment and requires execution
+receipts. These fixture checks do not promise bits across compilers or platforms.
+
+Public fits reject an empty fuzzy edge list before reporting layout; internal
+empty/all-zero optimizer input remains a no-op. A positive maximum-weight edge
+survives epoch pruning, so valid public layout stages reach their total on success.
+`UMAPOptimizerInvariantTests.publicEmptyEdgesFailBeforeLayout`,
+`internalEmptyOrZeroEdgesAreNoOps` and `positiveMaximumSurvivesPruning` exercise this
+chain, including epochs 1/10/11 and the smallest positive Float weight.
 
 ## UMAP calibration and checked numerical domain
 

@@ -137,6 +137,15 @@ extension KNNGraph {
         _ vectors: [V],
         neighbors k: Int
     ) throws -> KNNGraph where V.Scalar == Float {
+        try bruteForce(vectors, neighbors: k, execution: nil)
+    }
+
+    internal static func bruteForce<V: VectorProtocol>(
+        _ vectors: [V],
+        neighbors k: Int,
+        execution: UMAPExecutionContext?
+    ) throws -> KNNGraph where V.Scalar == Float {
+        try execution?.checkCancellation()
         let n = vectors.count
         guard n >= 2 else { throw VectorError.invalidDimension(n, reason: "KNNGraph.bruteForce needs at least 2 points") }
         guard k >= 1, k <= n - 1 else {
@@ -145,7 +154,9 @@ extension KNNGraph {
         }
         let d = vectors[0].scalarCount
         let sizes = try checkedSizes(points: n, dimensions: d, neighbors: k)
+        try execution?.report(.graph, completed: 0, total: n)
         let flat = try PCAModel.flattenColumnMajor(vectors, count: n, dimension: d)
+        try execution?.checkCancellation()
 
         var norms = [Float](repeating: 0, count: n)
         flat.withUnsafeBufferPointer { fb in
@@ -155,6 +166,7 @@ extension KNNGraph {
             }
         }
 
+        try execution?.checkCancellation()
         var neighborIndices = [Int32](repeating: 0, count: sizes.edges)
         var distances = [Float](repeating: 0, count: sizes.edges)
         var bestDistance = [Float](repeating: .infinity, count: k)
@@ -164,6 +176,7 @@ extension KNNGraph {
         let blockSize = min(n, 256)
         var start = 0
         while start < n {
+            try execution?.checkCancellation()
             let blockRows = min(blockSize, n - start)
             let panelCount = try UMAPChecked.count([blockRows, d], stride: MemoryLayout<Float>.stride, label: "KNN block")
             _ = try UMAPChecked.count([blockRows, n], stride: MemoryLayout<Float>.stride, label: "KNN Gram panel")
@@ -202,15 +215,21 @@ extension KNNGraph {
                 }
             }
             start += blockRows
+            try execution?.checkCancellation()
+            if start < n { try execution?.report(.graph, completed: start, total: n) }
         }
 
+        try execution?.checkCancellation()
         var offsets = [Int](repeating: 0, count: sizes.offsets)
         for i in 0...n { offsets[i] = i * k } // i*k <= the checked n*k bound.
-        return try KNNGraph(
+        try execution?.checkCancellation()
+        let result = try KNNGraph(
             pointCount: n,
             rowOffsets: offsets,
             neighborIndices: neighborIndices,
             distances: distances)
+        try execution?.report(.graph, completed: n, total: n)
+        return result
     }
 
     /// Pure preflight used before allocation/BLAS and exercised at representability

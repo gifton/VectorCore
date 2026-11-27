@@ -1488,6 +1488,19 @@ coverage is not a claim of runtime coverage on every declared platform.
   arithmetic and validation remain unchanged. See the public curve reference
   and range tests and `UMAPCurveConsumer.swift`.
 
+- **UMAP progress and cancellation (CA03).** Both entries accept an optional
+  synchronous `UMAPProgress` handler; legacy signatures and function references
+  remain available (`UMAPProgressConsumer.swift`). Stage counts and unchanged
+  uncancelled coordinate words are exercised by `UMAPProgressTests`
+  (`stageOrderAndSkippedStages`, `handlerPreservesCoordinates`). All UMAP
+  calls, including nil-handler calls, now throw `CancellationError` at cooperative
+  checkpoints (`UMAPCancellationTests.entryCancellationPrecedesWorkAndValidation`,
+  `cancellingEveryProgressEventStopsExecution`, `nilHandlerStillChecksCancellation`,
+  `cancellationFromOnlyEpochCompletionThrows`). Cancellation precedes entry
+  validation and is checked after the final callback. Preparation and vendor calls finish
+  before their next checkpoint; no wall-clock response bound is promised. See
+  `Docs/Linear_Algebra_and_Projection.md` for stage units and checkpoint limits.
+
 ## [0.3.3] - 2026-09-06
 
 ### Fixed

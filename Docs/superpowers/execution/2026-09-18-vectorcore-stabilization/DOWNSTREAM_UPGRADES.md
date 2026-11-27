@@ -8,6 +8,8 @@
 
 - **Consumer API update, 2026-11-18:** Namespace removal (CB-46) and public curve calibration (NA-15) are included below. These development changes do not admit a release. Appendix C remains the historical symbol inventory.
 
+- **Consumer API update, 2026-11-22:** UMAP progress (NA-16) and cooperative cancellation (BH-68) are included below. LM-09 records the earlier limitation; its UMAP cancellation portion is superseded by BH-68. Corpus budgets and the other manifold/PCA APIs remain outside this delivery. Release qualification stays paused.
+
 ## How to use this
 
 Upgrade in this order. (1) Make the client compile: work through section 1 (removed or renamed API, each with its replacement) and section 2 (changed signatures: new parameters, types, `throws`/`async`). (2) Rebuild every binary that links VectorCore from source: the package is not built with library evolution, and section 4 lists the layout and mangled-name changes that make old binaries invalid. (3) Audit section 3 line by line against the client's tests and assumptions: those changes compile silently and alter scores, rankings, NaN and tie handling, defaults, validation order, error kinds and traps. (4) Re-measure anything section 5 touches. (5) Consider section 6. (6) If the client uses `VectorCoreBenchmarking`, `vectorcore-bench` reports or the C headers, read section 7. (7) Read Appendix E for what the target does not promise. Each row has an ID, the change, the consumer action, its source and a tag; a row that names symbols lists them in backticks as `Type.member` paths from the public symbol graph. Rows never state an impact the sources do not state.
@@ -16,10 +18,10 @@ Upgrade in this order. (1) Make the client compile: work through section 1 (remo
 |---|---|
 | 1. Compile-breaking | 23 |
 | 2. Signature changes | 12 |
-| 3. Behaviour changes | 67 |
+| 3. Behaviour changes | 68 |
 | 4. ABI/layout | 10 |
 | 5. Performance | 10 |
-| 6. New APIs | 15 |
+| 6. New APIs | 16 |
 | 7. Benchmarking and C | 14 |
 | Appendix E. Limitations | 10 |
 
@@ -178,6 +180,12 @@ These compile unchanged and return different results, throw or trap in new place
 | BH-66 | Precision diagnostics retain Double statistics through outlier classification. | Re-baseline variance/outlier expectations for large finite inputs (`PrecisionStatisticsRangeTests`). Recommendations remain heuristic. | VC-F006 (d643292) | stated |
 | BH-67 | `OperationProgress.percentage` saturates at `Int.max` when its floating-point result cannot be represented. Ordinary truncation and percentages above 100 are preserved. | No source migration. Extreme overcomplete progress returns a capped integer (`OperationProgressSuite.testOperationProgress_PercentageRange`, `testOperationProgress_PercentageConversionBoundary`). | VC-F007 | stated |
 
+### 3i. Consumer UMAP execution, 2026-11-22
+
+| ID | Change | Consumer action | Source | Tag |
+|---|---|---|---|---|
+| BH-68 | All UMAP overloads, including legacy and nil-handler calls, check current-task cancellation. An already-cancelled task throws `CancellationError` before validation; cancellation from the final callback also throws. | Handle `CancellationError` separately from `VectorError`. Preparation/vendor calls complete before their next checkpoint; do not infer a response-time bound or a resumable result. Standalone graph construction is unchanged. | CA03 (2026-11-22); `UMAPCancellationTests`; `Docs/Linear_Algebra_and_Projection.md` | stated |
+
 ## 4. ABI and layout: rebuild-required changes
 
 VectorCore is not built with library evolution (CL-11), so any binary compiled against v0.3.3 must be rebuilt from source against the target. The rows below are the mechanical reasons; most are source-compatible.
@@ -233,6 +241,7 @@ A curated subset of the 280 added symbol-graph keys (all are in `symbol-diff/add
 | NA-13 | Benchmarking (`VectorCoreBenchmarking`): `MeasurementBoundary`, `BoundaryInclusions`, `Inclusion`, `TimingScope`, `FixtureIdentity`, `ComparisonMembership`, `ComparisonFamilies`, `UnavailableCase`, `BenchmarkFailure`, `BenchmarkReportError`, `ABReport` and `ABComparisons.report(cases:)`, `ABComparisons.missingSides(boundaries:)`, `PerOperationStatistics`, `RuntimeObservation`, `EnvCapture.thermalState()`, `EnvCapture.lowPowerMode()`, `CorrectnessStats.Status`/`init(invalidReason:)`, and the new report fields. | Required to produce schema-3 reports (BC-01). | V01, V02, V04; CL-14 | stated; observed |
 | NA-14 | Public initializers for `Tuning` and `CalibrationProbes`. | Construct manual overrides or callback observations. Tuning requires nonnegative `breakEvenN` and positive `minChunk`; invalid raw probes retain the existing fallback policy. | VC-F008 (a8f1fd5) | stated |
 | NA-15 | `Operations.umapCurveParameters(spread:minDist:)`. | Obtain the throwing Float `(a, b)` tuple used by both UMAP entry points; handle invalid inputs and coefficient-range failures. | CA02 (2026-11-18); `UMAPCurveFitSuite`, `UMAPRangeContractTests`, `UMAPCurveConsumer.swift` | stated |
+| NA-16 | `UMAPProgress` with nested `Stage` and immutable stage/completed/total fields; final `progress:` overloads for both `Operations.umap` entries. | Optionally observe synchronous stage counts. Existing calls and function references remain available; cancellation behavior also changes for those calls (BH-68). | CA03 (2026-11-22); `UMAPProgressTests`; `UMAPProgressConsumer.swift` | stated |
 
 ## 7. VectorCoreBenchmarking, `vectorcore-bench` and C-surface changes
 
@@ -386,6 +395,7 @@ CL keys number the top-level bullets of `CHANGELOG.md` `[Unreleased]` at the cur
 | CL-114 | Documentation | Measured workload envelope for PCA, kNN and UMAP (one host). | none | none |
 | CL-115 | API | Breaking: redundant `VectorCore` namespace enum (CA01). | CA01 | CB-46, BH-32, BH-51 |
 | CL-116 | API | Public UMAP curve calibration (CA02). | CA02 | NA-15 |
+| CL-117 | API | UMAP progress and cancellation (CA03). | CA03 | BH-68, NA-16 |
 
 ## Appendix B. CHANGELOG Breaking lines mapped to rows
 

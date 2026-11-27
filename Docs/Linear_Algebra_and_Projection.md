@@ -164,10 +164,15 @@ let vectors: [DynamicVector] = (0..<12).map { (i: Int) -> DynamicVector in
     return DynamicVector([x, y, z])
 }
 let graph = try KNNGraph.bruteForce(vectors, neighbors: 3)
+var completedEpochs: [Int] = []
 let layout = try Operations.umap(
     graph: graph,
     dimensions: 2,
-    config: UMAPConfig(neighbors: 3, epochs: 20, seed: 7))
+    config: UMAPConfig(neighbors: 3, epochs: 20, seed: 7),
+    progress: { event in
+        if event.stage == .layout { completedEpochs.append(event.completed) }
+    })
+precondition(completedEpochs == Array(0...20))
 precondition(layout.pointCount == vectors.count && layout.dimension == 2)
 precondition(layout.coordinates.allSatisfy { $0.isFinite })
 print("Layout coordinates: \(layout.coordinates.count)")
@@ -186,6 +191,49 @@ initialization. The API returns coordinates, not a fitted transform for new
 points. A low-dimensional visual separation is not proof of semantic clusters.
 See [UMAP implementation](../Sources/VectorCore/ManifoldLearning/UMAP.swift)
 and [UMAPTests](../Tests/ComprehensiveTests/UMAPTests.swift).
+
+### Progress and cancellation
+
+Both entries also accept a final `progress: ((UMAPProgress) -> Void)?` argument.
+The original signatures and defaults remain available, including typed and
+inferred function references. Handlers run synchronously on the calling thread
+and are released when the call returns. `UMAPProgress` and its nested `Stage`
+are Sendable values with immutable `stage`, `completed`, and `total` fields.
+The external [UMAPProgressConsumer.swift](../Scripts/ci/fixtures/compile-contracts/UMAPProgressConsumer.swift)
+checks these contracts and ordinary execution outside a Swift task.
+
+Stages follow actual work: `.graph`, `.initialization`, `.fuzzySet`, `.layout`.
+A supplied graph skips `.graph`; supplied coordinates on the graph entry also
+skip `.initialization`. Graph progress counts completed query rows: zero, every
+completed 256-row block, then the final row count after CSR validation, without
+a duplicate final event. Initialization and fuzzy-set construction report 0/1
+then 1/1. Layout reports 0/E then each completed epoch through E/E. See
+`stageOrderAndSkippedStages`, `graphReportsBlockBoundaries`, and
+`layoutReportsEveryEpoch` in [UMAPProgressTests](../Tests/ComprehensiveTests/UMAPProgressTests.swift).
+
+All UMAP calls check current-task cancellation, including legacy calls and
+`progress: nil`. An already-cancelled task throws `CancellationError` before
+validation or work. Later checks occur before/after handlers, between stages,
+graph blocks and epochs, and after preparation passes. Cancellation from the
+final callback still throws: a completion event reports work done, not successful
+return. These boundaries are exercised by
+[UMAPCancellationTests](../Tests/ComprehensiveTests/UMAPCancellationTests.swift),
+including `entryCancellationPrecedesWorkAndValidation`,
+`cancellingEveryProgressEventStopsExecution`, `nilHandlerStillChecksCancellation`,
+and `cancellationFromOnlyEpochCompletionThrows`.
+
+Packing/norm passes, CSR validation, fuzzy-set construction, schedule preparation,
+and PCA/BLAS/LAPACK calls finish before their next checkpoint. PCA checks between
+fit and transform (`cancellationAfterPCAFittingPrecedesTransform`). Cancellation
+has no wall-clock latency guarantee or resumable partial result. Standalone
+`KNNGraph.bruteForce` retains its prior cancellation behavior
+(`standaloneGraphBuilderRetainsCancelledTaskBehavior`).
+
+Uncancelled callback and nil-callback routes retain coordinate words in the
+same build (`handlerPreservesCoordinates`). The opt-in frozen reference test in
+[UMAPProgressReferenceTests](../Tests/ComprehensiveTests/UMAPProgressReferenceTests.swift)
+compares the recorded alpha reference on its stated environment; it does not
+promise bits across compilers or platforms.
 
 ## UMAP calibration and checked numerical domain
 

@@ -1,0 +1,471 @@
+{
+  "schema": 1,
+  "id": "xcode27.2-m3max",
+  "alphaRevision": "44c9ffaf145a59688f420023b28cdcf87c158070",
+  "acceptedRevision": "a676d9745dec60450a2f1ff86da94824eb8b4f5e",
+  "provider": "VectorCore.LAPACKLinearAlgebraProvider",
+  "host": {
+    "xcode": "Xcode 27.2\nBuild version 27B52",
+    "swift": "swift-driver version: 1.168.6 Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx27.0.0",
+    "architecture": "arm64",
+    "macOS": "27.0.1",
+    "macOSBuild": "26A434",
+    "model": "Mac15,9",
+    "cpu": "Apple M3 Max"
+  },
+  "cases": {
+    "progress-builtRandom-2-legacy": {
+      "reference": "random-2",
+      "tolerance": 0.0001
+    },
+    "progress-builtRandom-2-explicit": {
+      "reference": "random-2",
+      "tolerance": 0.0001
+    },
+    "progress-builtRandom-5-legacy": {
+      "reference": "random-5",
+      "tolerance": 0.0001
+    },
+    "progress-builtRandom-5-explicit": {
+      "reference": "random-5",
+      "tolerance": 0.0001
+    },
+    "progress-builtPCA-2-legacy": {
+      "reference": "pca-2",
+      "tolerance": 0.0001
+    },
+    "progress-builtPCA-2-explicit": {
+      "reference": "pca-2",
+      "tolerance": 0.0001
+    },
+    "progress-builtPCA-5-legacy": {
+      "reference": "pca-5",
+      "tolerance": 0.0001
+    },
+    "progress-builtPCA-5-explicit": {
+      "reference": "pca-5",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedRandom-2-legacy": {
+      "reference": "random-2",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedRandom-2-explicit": {
+      "reference": "random-2",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedRandom-5-legacy": {
+      "reference": "random-5",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedRandom-5-explicit": {
+      "reference": "random-5",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedPCA-2-legacy": {
+      "reference": "pca-2",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedPCA-2-explicit": {
+      "reference": "pca-2",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedPCA-5-legacy": {
+      "reference": "pca-5",
+      "tolerance": 0.0001
+    },
+    "progress-suppliedPCA-5-explicit": {
+      "reference": "pca-5",
+      "tolerance": 0.0001
+    },
+    "progress-graphRandom-2-legacy": {
+      "reference": "random-2",
+      "tolerance": 0.0001
+    },
+    "progress-graphRandom-2-explicit": {
+      "reference": "random-2",
+      "tolerance": 0.0001
+    },
+    "progress-graphRandom-5-legacy": {
+      "reference": "random-5",
+      "tolerance": 0.0001
+    },
+    "progress-graphRandom-5-explicit": {
+      "reference": "random-5",
+      "tolerance": 0.0001
+    },
+    "progress-graphProvided-2-legacy": {
+      "reference": "provided-2",
+      "tolerance": 0.0001
+    },
+    "progress-graphProvided-2-explicit": {
+      "reference": "provided-2",
+      "tolerance": 0.0001
+    },
+    "progress-graphProvided-5-legacy": {
+      "reference": "provided-5",
+      "tolerance": 0.0001
+    },
+    "progress-graphProvided-5-explicit": {
+      "reference": "provided-5",
+      "tolerance": 0.0001
+    },
+    "knn-legacy": {
+      "reference": "knn",
+      "tolerance": 1e-05
+    },
+    "knn-explicit": {
+      "reference": "knn",
+      "tolerance": 1e-05
+    },
+    "curve-2-true-vectors": {
+      "reference": "curve-2-true",
+      "tolerance": 0.0001
+    },
+    "curve-2-true-graph": {
+      "reference": "curve-2-true",
+      "tolerance": 0.0001
+    },
+    "curve-2-false-vectors": {
+      "reference": "curve-2-false",
+      "tolerance": 0.0001
+    },
+    "curve-2-false-graph": {
+      "reference": "curve-2-false",
+      "tolerance": 0.0001
+    },
+    "curve-5-true-vectors": {
+      "reference": "curve-5-true",
+      "tolerance": 0.0001
+    },
+    "curve-5-true-graph": {
+      "reference": "curve-5-true",
+      "tolerance": 0.0001
+    },
+    "curve-5-false-vectors": {
+      "reference": "curve-5-false",
+      "tolerance": 0.0001
+    },
+    "curve-5-false-graph": {
+      "reference": "curve-5-false",
+      "tolerance": 0.0001
+    },
+    "default-coefficients": {
+      "reference": "default-coefficients",
+      "tolerance": 1e-06
+    }
+  },
+  "words": {
+    "pca-2": [
+      3235368276,
+      1061322847,
+      1084638809,
+      3218050024,
+      1082442862,
+      3223188468,
+      1061352222,
+      1084759296,
+      3218592280,
+      3215336663,
+      3213817939,
+      3206796880,
+      3233092164,
+      1032957900,
+      1087671118,
+      1077070915
+    ],
+    "pca-5": [
+      3238454332,
+      1072097007,
+      1074496005,
+      3207333326,
+      3205403568,
+      1086095514,
+      3211970375,
+      1077472694,
+      3206179467,
+      1053298422,
+      1082605182,
+      3229342772,
+      1066515488,
+      3216851299,
+      3215956590,
+      1059281146,
+      1085492022,
+      3224693673,
+      3188468113,
+      3212337768,
+      3219573259,
+      3230012319,
+      3228926437,
+      1071178342,
+      1035454054,
+      3218452651,
+      3217483130,
+      3227541773,
+      3213308051,
+      1071047772,
+      3233839346,
+      3184061876,
+      1080877462,
+      1068363430,
+      1058461722,
+      1088782297,
+      1079299837,
+      1048935628,
+      1063308408,
+      1043110063
+    ],
+    "provided-2": [
+      1081787967,
+      1080644063,
+      3210385123,
+      3213898801,
+      1056827645,
+      1046776724,
+      3193782964,
+      3204072438,
+      1078806635,
+      1077662732,
+      1066723729,
+      1063518599,
+      1083325631,
+      1082753678,
+      1067517725,
+      1065106633
+    ],
+    "provided-5": [
+      1080321072,
+      1079162845,
+      1078021868,
+      1076861769,
+      1075720314,
+      1071003087,
+      1068714552,
+      1066426902,
+      1062923289,
+      1058347950,
+      1072028842,
+      1069745206,
+      1067456832,
+      1064994291,
+      1060417295,
+      1058851445,
+      1051556805,
+      1032305692,
+      3193207748,
+      3203779323,
+      1057800761,
+      1049483496,
+      999154104,
+      3196679422,
+      3205139260,
+      1075679202,
+      1074529707,
+      1073031510,
+      1070731193,
+      1068445225,
+      1076923836,
+      1075775830,
+      1074632727,
+      1073226569,
+      1070940159,
+      1067237095,
+      1064542412,
+      1059967441,
+      1053812043,
+      1040747957
+    ],
+    "random-2": [
+      1083488051,
+      3234147130,
+      3221532320,
+      3236212946,
+      1085553363,
+      1088876898,
+      1076097833,
+      1077757581,
+      3227210156,
+      1069307131,
+      1083319732,
+      1085123022,
+      1085513951,
+      1085559740,
+      1078792868,
+      1079458135
+    ],
+    "random-5": [
+      1083149557,
+      3236213498,
+      3223566517,
+      3237388282,
+      1084517604,
+      1091188177,
+      1044545584,
+      1070973598,
+      3230288850,
+      1065656624,
+      1090044013,
+      1090138811,
+      1086054581,
+      1087554466,
+      1084746446,
+      1082481733,
+      1064839818,
+      1067998554,
+      3214296294,
+      1073597596,
+      1067636553,
+      3224873917,
+      1061610961,
+      3238445569,
+      1068296503,
+      3221232339,
+      3234982291,
+      3215618113,
+      1079824579,
+      3235895326,
+      3215660036,
+      1081910260,
+      3214173247,
+      1082836032,
+      3234922030,
+      3211892878,
+      1086147472,
+      1079601919,
+      3201870543,
+      1090583017
+    ],
+    "knn": [
+      1084675332,
+      1089900892,
+      1090391252,
+      1083689109,
+      1084368393,
+      1089875284,
+      1083689109,
+      1088064086,
+      1088580131,
+      1087029165,
+      1087074753,
+      1090391252,
+      1084531663,
+      1088064086,
+      1089770575,
+      1084531663,
+      1087074753,
+      1088580131,
+      1084675332,
+      1089453298,
+      1089770575,
+      1084368393,
+      1087029165,
+      1089699138
+    ],
+    "curve-2-true": [
+      3223839275,
+      3226520360,
+      3222813897,
+      3223481722,
+      3235400792,
+      3231712334,
+      3238467040,
+      1061615693
+    ],
+    "curve-2-false": [
+      3233057842,
+      3231655076,
+      3235135356,
+      3231765818,
+      3238033813,
+      3230303844,
+      3238514300,
+      3206096103
+    ],
+    "curve-5-true": [
+      3203599709,
+      3223969342,
+      3225817151,
+      3232875179,
+      3238651605,
+      3237021373,
+      3238653454,
+      1073889714,
+      3237860978,
+      1080536360,
+      3232456318,
+      3237765426,
+      3214320506,
+      3216858356,
+      1084126621,
+      3239176065,
+      1091532044,
+      3216572084,
+      3234976566,
+      3238301410
+    ],
+    "curve-5-false": [
+      3206777720,
+      3224596332,
+      3225376266,
+      3232885190,
+      3238304993,
+      3236454416,
+      3238400014,
+      1071150246,
+      3236737702,
+      1079882109,
+      3232769539,
+      3237450259,
+      3212122787,
+      3221433693,
+      1083383373,
+      3239130662,
+      1091276814,
+      3216406301,
+      3234893822,
+      3238112197
+    ],
+    "default-coefficients": [
+      1070192970,
+      1063592627
+    ]
+  },
+  "rowOffsets": [
+    0,
+    3,
+    6,
+    9,
+    12,
+    15,
+    18,
+    21,
+    24
+  ],
+  "neighborIndices": [
+    6,
+    5,
+    3,
+    2,
+    7,
+    6,
+    1,
+    4,
+    5,
+    7,
+    5,
+    0,
+    5,
+    2,
+    6,
+    4,
+    3,
+    2,
+    0,
+    5,
+    4,
+    1,
+    3,
+    2
+  ]
+}

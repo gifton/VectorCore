@@ -33342,12 +33342,12 @@
    "id": "CA03-C-0001",
    "path": "CHANGELOG.md",
    "symbol": "section Changelog::section [Unreleased]::section API",
-   "fingerprint": "018e9e66ef800aca",
-   "statement": "- **umap progress and cancellation (ca03).** both entries accept an optional synchronous `umapprogress` handler; legacy signatures and function references remain available (`umapprogressconsumer.swift`). stage counts and unchanged uncancelled coordinate words are exercised by `umapprogresstests` (`stageorderandskippedstages`, `handlerpreservescoordinates`). all umap calls, including nil-handler calls, now throw `cancellationerror` at cooperative checkpoints (`umapcancellationtests.entrycancellationprecedesworkandvalidation`, `cancellingeveryprogresseventstopsexecution`, `nilhandlerstillcheckscancellation`, `cancellationfromonlyepochcompletionthrows`). cancellation precedes entry validation and is checked after the final callback. preparation and vendor calls finish before their next checkpoint; no wall-clock response bound is promised. see `docs/linear_algebra_and_projection.md` for stage units and checkpoint limits.",
+   "fingerprint": "1a975a639ee58ebf",
+   "statement": "- **umap progress and cancellation (ca03).** both entries accept an optional synchronous `umapprogress` handler; legacy signatures and function references remain available (`umapprogressconsumer.swift`). a public `init(stage:completed:total:)` stores synthetic counts unchanged. the four fit stages are closed from retained revision `a676d97` through pre-release 0.4.0 development and all 0.4.x. stage counts and same-build handler neutrality are exercised by `umapprogresstests` (`stageorderandskippedstages`, `handlerpreservescoordinates`). historical alpha comparison is exercised separately by `umapprogressreferencetests.frozenreference`, `knnmetrictests.euclideanpreservesreferencewords` and `umappubliccurvetests.bothentrypointspreservecurvelayout`: ordinary tolerance checks plus mandatory exact runs on the reviewed environment. all umap calls, including nil-handler calls, throw `cancellationerror` at cooperative checkpoints (`umapcancellationtests.entrycancellationprecedesworkandvalidation`, `cancellingeveryprogresseventstopsexecution`, `nilhandlerstillcheckscancellation`, `cancellationfromonlyepochcompletionthrows`). cancellation precedes entry validation and is checked after the final callback. preparation and vendor calls finish before their next checkpoint; no wall-clock response bound is promised. see `docs/linear_algebra_and_projection.md` for stage units and checkpoint limits, and `docs/umap_reference_checks.md` for required before/after evidence.",
    "kind": "markdown",
    "lineHint": 1491,
    "category": "robustness",
-   "disposition": "retained",
+   "disposition": "corrected",
    "evidence": {
     "kind": "named-test",
     "reference": [
@@ -33356,15 +33356,18 @@
      "Tests/ComprehensiveTests/UMAPCancellationTests.swift::UMAPCancellationTests.entryCancellationPrecedesWorkAndValidation",
      "Tests/ComprehensiveTests/UMAPCancellationTests.swift::UMAPCancellationTests.cancellingEveryProgressEventStopsExecution",
      "Tests/ComprehensiveTests/UMAPCancellationTests.swift::UMAPCancellationTests.nilHandlerStillChecksCancellation",
-     "Tests/ComprehensiveTests/UMAPCancellationTests.swift::UMAPCancellationTests.cancellationFromOnlyEpochCompletionThrows"
+     "Tests/ComprehensiveTests/UMAPCancellationTests.swift::UMAPCancellationTests.cancellationFromOnlyEpochCompletionThrows",
+     "Tests/ComprehensiveTests/UMAPProgressReferenceTests.swift::UMAPProgressReferenceTests.frozenReference",
+     "Tests/ComprehensiveTests/KNNMetricTests.swift::KNNMetricTests.euclideanPreservesReferenceWords",
+     "Tests/ComprehensiveTests/UMAPPublicCurveTests.swift::UMAPPublicCurveTests.bothEntryPointsPreserveCurveLayout"
     ],
     "domain": "Both UMAP entries, legacy/nil/handler forms, stage counts and cooperative cancellation boundaries.",
-    "limitations": "UMAPProgressConsumer.swift checks public function references, synchronous non-task execution and capture lifetime. Coordinate words are compared within one build; frozen alpha words require the recorded environment. No wall-clock cancellation bound, vendor-call interruption, cross-platform bit identity or release qualification."
+    "limitations": "UMAPProgressConsumer.swift checks public construction, raw synthetic counts, exhaustive stage mapping, function references, synchronous non-task execution and capture lifetime. Handler neutrality is within one build; the separately named alpha tests use ordinary fixture tolerances and exact receipts on a reviewed environment. No wall-clock cancellation bound, vendor-call interruption, cross-platform bit identity, ABI guarantee or release qualification."
    },
    "acceptedContract": null,
    "history": {
-    "originalStatement": null,
-    "originalFingerprint": null,
+    "originalStatement": "- **umap progress and cancellation (ca03).** both entries accept an optional synchronous `umapprogress` handler; legacy signatures and function references remain available (`umapprogressconsumer.swift`). stage counts and unchanged uncancelled coordinate words are exercised by `umapprogresstests` (`stageorderandskippedstages`, `handlerpreservescoordinates`). all umap calls, including nil-handler calls, now throw `cancellationerror` at cooperative checkpoints (`umapcancellationtests.entrycancellationprecedesworkandvalidation`, `cancellingeveryprogresseventstopsexecution`, `nilhandlerstillcheckscancellation`, `cancellationfromonlyepochcompletionthrows`). cancellation precedes entry validation and is checked after the final callback. preparation and vendor calls finish before their next checkpoint; no wall-clock response bound is promised. see `docs/linear_algebra_and_projection.md` for stage units and checkpoint limits.",
+    "originalFingerprint": "018e9e66ef800aca",
     "origin": "Consumer UMAP progress and cancellation, 2026-11-22"
    }
   },

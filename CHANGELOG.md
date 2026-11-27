@@ -1490,16 +1490,23 @@ coverage is not a claim of runtime coverage on every declared platform.
 
 - **UMAP progress and cancellation (CA03).** Both entries accept an optional
   synchronous `UMAPProgress` handler; legacy signatures and function references
-  remain available (`UMAPProgressConsumer.swift`). Stage counts and unchanged
-  uncancelled coordinate words are exercised by `UMAPProgressTests`
-  (`stageOrderAndSkippedStages`, `handlerPreservesCoordinates`). All UMAP
-  calls, including nil-handler calls, now throw `CancellationError` at cooperative
-  checkpoints (`UMAPCancellationTests.entryCancellationPrecedesWorkAndValidation`,
+  remain available (`UMAPProgressConsumer.swift`). A public `init(stage:completed:total:)`
+  stores synthetic counts unchanged. The four fit stages are closed from retained
+  revision `a676d97` through pre-release 0.4.0 development and all 0.4.x.
+  Stage counts and same-build handler neutrality are exercised by `UMAPProgressTests`
+  (`stageOrderAndSkippedStages`, `handlerPreservesCoordinates`). Historical alpha
+  comparison is exercised separately by `UMAPProgressReferenceTests.frozenReference`,
+  `KNNMetricTests.euclideanPreservesReferenceWords` and
+  `UMAPPublicCurveTests.bothEntryPointsPreserveCurveLayout`: ordinary tolerance
+  checks plus mandatory exact runs on the reviewed environment. All UMAP calls,
+  including nil-handler calls, throw `CancellationError` at cooperative checkpoints
+  (`UMAPCancellationTests.entryCancellationPrecedesWorkAndValidation`,
   `cancellingEveryProgressEventStopsExecution`, `nilHandlerStillChecksCancellation`,
-  `cancellationFromOnlyEpochCompletionThrows`). Cancellation precedes entry
-  validation and is checked after the final callback. Preparation and vendor calls finish
+  `cancellationFromOnlyEpochCompletionThrows`). Cancellation precedes entry validation
+  and is checked after the final callback. Preparation and vendor calls finish
   before their next checkpoint; no wall-clock response bound is promised. See
-  `Docs/Linear_Algebra_and_Projection.md` for stage units and checkpoint limits.
+  `Docs/Linear_Algebra_and_Projection.md` for stage units and checkpoint limits,
+  and `Docs/UMAP_Reference_Checks.md` for required before/after evidence.
 
 - **Cosine graph metric (CA04).** `KNNGraph.Metric` and a final `metric:` builder
   overload add opt-in cosine graphs; `UMAPConfig.metric` selects internal graph

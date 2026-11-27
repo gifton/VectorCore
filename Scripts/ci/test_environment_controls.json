@@ -1,0 +1,207 @@
+{
+  "controls": {
+    "ASAN_OPTIONS": {"kind": "system", "owner": "Apple dyld / sanitizer runtime", "scope": "Preserve loader/sanitizer settings in child-process tests."},
+    "BENCHMARK_TEST_FORMAT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "BENCHMARK_TEST_OUTPUT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "BENCHMARK_TEST_SCENARIO": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "BENCHMARK_TEST_STRICT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "D02_EDGE_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/D02DegenerateWidthTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "D02_NEGATIVE_ZEROS_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/D02FactoryContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "D02_SKIP_TRAPS": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Skip isolated traps while diagnosing in-process dimension checks."},
+    "D02_TRAP_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/D02DimensionReachabilityTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "D03_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/LoggingPublicConsumerTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "DYLD_FRAMEWORK_PATH": {"kind": "system", "owner": "Apple dyld / sanitizer runtime", "scope": "Preserve loader/sanitizer settings in child-process tests."},
+    "DYLD_INSERT_LIBRARIES": {"kind": "system", "owner": "Apple dyld / sanitizer runtime", "scope": "Preserve loader/sanitizer settings in child-process tests."},
+    "DYLD_LIBRARY_PATH": {"kind": "system", "owner": "Apple dyld / sanitizer runtime", "scope": "Preserve loader/sanitizer settings in child-process tests."},
+    "E01_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ExecutionBoundaryTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "E02_CAPTURE_DIRECTORY": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "E02_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ExecutionSchedulingContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "E03_CHILD_LOG_DIR": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "E03_GLOBAL_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ConfigurationTransactionTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "E04_CAPTURE_DIRECTORY": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "E04_GUARD_MODE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/MemoryPoolBoundaryTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "E04_SKIP_GUARDS": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Skip pool guard-page probes for in-process diagnosis."},
+    "E05_CHILD_LOG_DIR": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "E05_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "E06_CAPTURE_DIRECTORY": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "E06_ISOLATED": {"kind": "internal", "owner": "Tests/ComprehensiveTests/E06ConfigurationTestHelpers.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "E06_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/BatchConfigurationContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "F002_DESTRUCTION": {"kind": "internal", "owner": "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "F008_INVALID_TUNING": {"kind": "internal", "owner": "Tests/ComprehensiveTests/TuningInputBoundaryTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "F012_TEST_ARGUMENTS": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "F012_TEST_RESULT_NAME": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/BenchmarkModelDomainTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "I02_NEGATIVE_LIMIT": {"kind": "internal", "owner": "Tests/ComprehensiveTests/SoAFP16CacheIdentityTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "L01_CAPTURE_DIRECTORY": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "L01_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/LinearAlgebraRangeTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "L02_CAPTURE_DIRECTORY": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "L02_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/PCACenteringContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "L03_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/UMAPRangeContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "L03_VALID_ONLY": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Run only valid-path UMAP range diagnostics."},
+    "LAUNCHER_CONTROL": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "LAUNCHER_CONTROL_OUTPUT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_DIRECT_COMMAND": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_DIRECT_ENVIRONMENT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_DIRECT_ERROR_RESULT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_TEST_COMMAND": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_TEST_IGNORED_SIGNALS": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_TEST_LOADER_KEY": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_TEST_LOADER_VALUE": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_TEST_RESULT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "METADATA_TEST_TIMEOUT": {"kind": "internal", "owner": "Tests/BenchmarkContractTests/RunnerContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "N01_GUARD_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/NormalizationRangeContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "N01_SKIP_GUARDS": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Skip normalization guard-page probes for in-process diagnosis."},
+    "O04_INVALID": {"kind": "internal", "owner": "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "P01_CAPTURE_DIRECTORY": {"kind": "internal", "owner": "Scripts/ci/trap_guard_mutations.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "P01_RED": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Historical top-k defect reproductions; not ordinary-suite admission."},
+    "P01_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/P01RedSupport.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "Q01_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/QuantizationRangeContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "Q01_CHILD_LOG_DIR": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "Q03_CHILD_LOG_DIR": {"kind": "internal", "owner": "Scripts/ci/check_sanitizers.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "Q03_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "Q03_TSAN": {"kind": "gate", "activation": "Scripts/ci/check_sanitizers.py", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Sanitizer-aware FP16 diagnostics in the tracked sanitizer runner."},
+    "Q03_UNSAFE_BASELINE": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Intentionally unsafe historical sanitizer contrast; never accepting evidence."},
+    "Q04_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "Q04_SHARED": {"kind": "internal", "owner": "Tests/ComprehensiveTests/MixedPrecisionRangeWorkTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "R02_REENTRANT_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/VectorCollectionTransactionTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "R03_CAPTURE_DIRECTORY": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "R03_CONFIGURATION_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/MatrixMetricContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "R04_CAPTURE_DIRECTORY": {"kind": "internal", "owner": "Scripts/ci/trap_guard_mutations.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "R04_SCENARIO": {"kind": "internal", "owner": "Tests/ComprehensiveTests/HeapMembershipContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "R05_SCORE_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/SearchResultScoreContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "S01_SHAPE_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/VectorShapeContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "S02_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "SIZE_GUARD_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "SIZE_GUARD_SHARED": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "SWIFT_BACKTRACE": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
+    "SWIFT_TESTING_ENABLED": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
+    "T10_LAUNCHER_SELF_TEST": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "TRAP_CAPTURE_DIRECTORY": {"kind": "internal", "owner": "Scripts/ci/trap_guard_mutations.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "TRAP_OBSERVATION_CONTROL": {"kind": "internal", "owner": "Tests/ComprehensiveTests/TrapObservation.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "TSAN_OPTIONS": {"kind": "system", "owner": "Apple dyld / sanitizer runtime", "scope": "Preserve loader/sanitizer settings in child-process tests."},
+    "V02_CSV_OUTPUT": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "$TMPDIR/vectorcore-test.csv", "scope": "Optional diagnostic output destination; does not enable numerical coverage."},
+    "V03_GATE_CASE": {"kind": "internal", "owner": "Scripts/ci/check_performance_gates.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "V03_OBSERVATION_CASE": {"kind": "internal", "owner": "Scripts/ci/check_performance_gates.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "VECTORCORE_CHILD_PROBE": {"kind": "internal", "owner": "Tests/VectorCoreTestSupport/ChildProbeLauncher.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "VECTORCORE_STRICT_PERF": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Evaluate performance predicates; controlled failures are expected in the gate fixture."},
+    "VECTORCORE_TEST_EXTENDED": {"kind": "gate", "activation": ".github/workflows/benchmarks.yml", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Extended numerical/timing workloads in the manual benchmark workflow."},
+    "VECTORCORE_UMAP_CHECK_BASELINE_BITS": {"kind": "gate", "activation": "Scripts/ci/umap_reference.py", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Mandatory exact-reference runner only on its reviewed host profile."},
+    "VECTORCORE_UMAP_REFERENCE_CONTEXT": {"kind": "internal", "owner": "Scripts/ci/umap_reference.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "XCTestBundlePath": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
+    "XCTestConfigurationFilePath": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
+    "XCTestSessionIdentifier": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."}
+  },
+  "dynamic": {
+  "Tests/VectorCoreTestSupport/ChildProbeLauncher.swift": {
+    "launchChildProbe:<environment snapshot>": {
+      "keys": [
+        "VECTORCORE_CHILD_PROBE"
+      ],
+      "reason": "Snapshot passed to refuseNestedChildProbeLaunch, which reads only the globally declared child marker.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    },
+    "replaceMarkedChildProbe:<environment member:allSatisfy>": {
+      "keys": [],
+      "reason": "Validates environment strings for the execve representation, not feature selection.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    },
+    "replaceMarkedChildProbe:<environment member:map>": {
+      "keys": [],
+      "reason": "Serializes caller-supplied environment pairs for execve.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    },
+    "spawnChildProbeGroupLeader:<environment member:map>": {
+      "keys": [],
+      "reason": "Serializes caller-supplied environment pairs for posix_spawn.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    }
+  },
+  "Tests/BenchmarkContractTests/RunnerContractTests.swift": {
+    "testProcessFixture:<environment member:filter>": {
+      "keys": [
+        "ASAN_OPTIONS",
+        "TSAN_OPTIONS",
+        "SWIFT_BACKTRACE",
+        "DYLD_LIBRARY_PATH",
+        "DYLD_FRAMEWORK_PATH",
+        "VECTORCORE_TEST_EXTENDED",
+        "VECTORCORE_STRICT_PERF",
+        "VECTORCORE_CHILD_PROBE",
+        "SWIFT_TESTING_ENABLED",
+        "XCTestConfigurationFilePath",
+        "XCTestSessionIdentifier",
+        "XCTestBundlePath"
+      ],
+      "reason": "Captures only the named environment fields for the child environment-preservation assertion.",
+      "sourceSHA256": "93e615e03c543070fc39105e437e1c450f73b1a58a3c9c32160252ab4f6e2029"
+    },
+    "testProcessFixture:<environment member:merge>": {
+      "keys": [],
+      "reason": "Forwards a decoded explicit child environment into the marked child process; no new feature selection here.",
+      "sourceSHA256": "93e615e03c543070fc39105e437e1c450f73b1a58a3c9c32160252ab4f6e2029"
+    },
+    "runFixture:<environment member:merge>": {
+      "keys": [],
+      "reason": "Merges caller-supplied child environment before launching the fixture.",
+      "sourceSHA256": "93e615e03c543070fc39105e437e1c450f73b1a58a3c9c32160252ab4f6e2029"
+    }
+  },
+  "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift": {
+    "runChild:<environment member:removeValue>": {
+      "keys": [],
+      "reason": "Removes autotuning overrides before the child scenario sets its own values.",
+      "sourceSHA256": "2f15bb33b31d3a396bb9ea82dbf051501e68969243d89da40d389cc63d4281e1"
+    },
+    "runChild:<environment member:filter>": {
+      "keys": [],
+      "reason": "Copies matching environment entries into diagnostic metadata only.",
+      "sourceSHA256": "2f15bb33b31d3a396bb9ea82dbf051501e68969243d89da40d389cc63d4281e1"
+    }
+  },
+  "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift": {
+    "runChild:<environment member:filter>": {
+      "keys": [],
+      "reason": "Copies diagnostic sanitizer/loader entries into metadata only.",
+      "sourceSHA256": "63a329c555da97e94dda32bf24ae4142688c99697f11a6eb762c4285b2a1618c"
+    }
+  },
+  "Tests/ComprehensiveTests/P01RedSupport.swift": {
+    "p01RunChild:<environment member:removeValue>": {
+      "keys": [],
+      "reason": "Removes caller-selected override prefixes before child execution.",
+      "sourceSHA256": "92ccd81d9a4be39e169716ed834a48d02b47a41c19d92e92868e3a1bab84436c"
+    },
+    "p01RunChild:<environment member:keys>": {
+      "keys": [],
+      "reason": "Enumerates keys only to remove caller-selected overrides before child execution.",
+      "sourceSHA256": "92ccd81d9a4be39e169716ed834a48d02b47a41c19d92e92868e3a1bab84436c"
+    }
+  },
+  "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift": {
+    "destructionCanReenter:<environment member:merging>": {
+      "keys": [
+        "F002_DESTRUCTION"
+      ],
+      "reason": "Adds the explicitly classified destruction child selector.",
+      "sourceSHA256": "11591d0877052c85687df6a8e54fbdda4f40dab9c4b85b7d7dd2d7d10febbb65"
+    }
+  },
+  "Tests/ComprehensiveTests/TuningInputBoundaryTests.swift": {
+    "invalidTuningRejectsAtConstruction:<environment member:merging>": {
+      "keys": [
+        "F008_INVALID_TUNING"
+      ],
+      "reason": "Adds the explicitly classified tuning child selector.",
+      "sourceSHA256": "fece6494673536a58e9b7cde0b5ec16e1ed14adbb07db3a262851516a5339a45"
+    }
+  },
+  "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift": {
+    "invalidInputsRejectInBoundedChildren:<environment member:merging>": {
+      "keys": [
+        "O04_INVALID"
+      ],
+      "reason": "Adds the explicitly classified unsafe-memory child selector and disables child crash backtraces.",
+      "sourceSHA256": "02ffb2a33c5cf27a0150a27b1162ed2aa7a3d81818242db4b8ac4eeba8682365"
+    }
+  }
+}
+}

@@ -2,68 +2,6 @@ import Foundation
 import Testing
 @testable import VectorCore
 
-enum UMAPProgressFixtures {
-    enum Route: CaseIterable, Sendable {
-        case builtRandom, builtPCA, suppliedRandom, suppliedPCA, graphRandom, graphProvided
-
-        var initialization: UMAPInitialization {
-            self == .builtPCA || self == .suppliedPCA ? .pca : .random
-        }
-
-        var stages: [UMAPProgress.Stage] {
-            switch self {
-            case .builtRandom, .builtPCA: [.graph, .initialization, .fuzzySet, .layout]
-            case .suppliedRandom, .suppliedPCA, .graphRandom: [.initialization, .fuzzySet, .layout]
-            case .graphProvided: [.fuzzySet, .layout]
-            }
-        }
-    }
-
-    static func vectors(count: Int = 8) -> [DynamicVector] {
-        var state: UInt32 = 12345
-        return (0..<count).map { _ in
-            DynamicVector((0..<6).map { _ -> Float in
-                state = state &* 1664525 &+ 1013904223
-                return Float(Int((state >> 8) % 2001) - 1000) / 257
-            })
-        }
-    }
-
-    static func config(initialization: UMAPInitialization = .random, epochs: Int? = 7) -> UMAPConfig {
-        UMAPConfig(neighbors: 3, epochs: epochs, negativeSampleRate: 2, initialization: initialization, seed: 19)
-    }
-
-    static func initial(count: Int = 8, dimensions: Int) -> [[Float]] {
-        (0..<count).map { i in (0..<dimensions).map { c in Float(i * 7 - c * 3) / 11 } }
-    }
-
-    static func run(_ route: Route, dimensions: Int, metric: KNNGraph.Metric? = nil, progress: ((UMAPProgress) -> Void)? = nil) throws -> UMAPResult {
-        let data = vectors()
-        var config = config(initialization: route.initialization)
-        if let metric { config.metric = metric }
-        switch route {
-        case .builtRandom, .builtPCA:
-            return try Operations.umap(data, dimensions: dimensions, config: config, progress: progress)
-        case .suppliedRandom, .suppliedPCA:
-            let graph = try KNNGraph.bruteForce(data, neighbors: 3)
-            return try Operations.umap(data, dimensions: dimensions, graph: graph, config: config, progress: progress)
-        case .graphRandom:
-            let graph = try KNNGraph.bruteForce(data, neighbors: 3)
-            return try Operations.umap(graph: graph, dimensions: dimensions, config: config, progress: progress)
-        case .graphProvided:
-            let graph = try KNNGraph.bruteForce(data, neighbors: 3)
-            return try Operations.umap(graph: graph, dimensions: dimensions,
-                                       initialCoordinates: initial(dimensions: dimensions), config: config, progress: progress)
-        }
-    }
-
-    static func ring(count: Int) throws -> KNNGraph {
-        try KNNGraph(pointCount: count, rowOffsets: Array(0...count),
-                     neighborIndices: (0..<count).map { Int32(($0 + 1) % count) },
-                     distances: Array(repeating: 1, count: count))
-    }
-}
-
 @Suite
 struct UMAPProgressTests {
     @Test(arguments: UMAPProgressFixtures.Route.allCases, [2, 5])
@@ -75,25 +13,41 @@ struct UMAPProgressTests {
         #expect(!events.isEmpty)
     }
 
-    @Test(arguments: UMAPProgressFixtures.Route.allCases)
-    func stageOrderAndSkippedStages(route: UMAPProgressFixtures.Route) throws {
-        var actual: [UMAPProgress] = []
-        _ = try UMAPProgressFixtures.run(route, dimensions: 2) { actual.append($0) }
-        let expected = route.stages.flatMap { stage -> [UMAPProgress] in
-            let counts: [Int]
-            let total: Int
-            switch stage {
-            case .graph: counts = [0, 8]; total = 8
-            case .initialization, .fuzzySet: counts = [0, 1]; total = 1
-            case .layout: counts = Array(0...7); total = 7
+    @Test(arguments: UMAPProgressFixtures.Route.allCases, [2, 5])
+    func stageOrderAndSkippedStages(route: UMAPProgressFixtures.Route, dimensions: Int) throws {
+        let metrics: [KNNGraph.Metric] = route == .builtRandom || route == .builtPCA ? [.euclidean, .cosine] : [.euclidean]
+        for metric in metrics {
+            var actual: [UMAPProgress] = []
+            _ = try UMAPProgressFixtures.run(route, dimensions: dimensions, metric: metric) { actual.append($0) }
+            let expected = route.stages.flatMap { stage -> [UMAPProgress] in
+                let counts: [Int]
+                let total: Int
+                switch stage {
+                case .graph: counts = [0, 8]; total = 8
+                case .initialization, .fuzzySet: counts = [0, 1]; total = 1
+                case .layout: counts = Array(0...7); total = 7
+                }
+                return counts.map { UMAPProgress(stage: stage, completed: $0, total: total) }
             }
-            return counts.map { UMAPProgress(stage: stage, completed: $0, total: total) }
+            #expect(actual == expected)
+            expectEmittedBounds(actual)
         }
-        #expect(actual == expected)
     }
 
-    @Test(arguments: [255, 256, 257, 513])
-    func graphReportsBlockBoundaries(count: Int) throws {
+    private func expectEmittedBounds(_ events: [UMAPProgress]) {
+        #expect(!events.isEmpty)
+        for stage in [.graph, .initialization, .fuzzySet, .layout] as [UMAPProgress.Stage] {
+            let selected = events.filter { $0.stage == stage }
+            guard let first = selected.first, let last = selected.last else { continue }
+            #expect(first.completed == 0)
+            #expect(last.completed == last.total)
+            #expect(selected.allSatisfy { $0.total > 0 && $0.total == first.total && $0.completed >= 0 && $0.completed <= $0.total })
+            #expect(zip(selected, selected.dropFirst()).allSatisfy { pair in pair.0.completed < pair.1.completed })
+        }
+    }
+
+    @Test(arguments: [255, 256, 257, 513], [KNNGraph.Metric.euclidean, .cosine])
+    func graphReportsBlockBoundaries(count: Int, metric: KNNGraph.Metric) throws {
         let expected: [Int]
         switch count {
         case 255: expected = [0, 255]
@@ -102,14 +56,16 @@ struct UMAPProgressTests {
         default: expected = [0, 256, 512, 513]
         }
         var events: [UMAPProgress] = []
-        _ = try Operations.umap(UMAPProgressFixtures.vectors(count: count),
-                                 config: UMAPProgressFixtures.config(epochs: 1)) { events.append($0) }
+        var config = UMAPProgressFixtures.config(epochs: 1)
+        config.metric = metric
+        _ = try Operations.umap(UMAPProgressFixtures.vectors(count: count), config: config) { events.append($0) }
+        expectEmittedBounds(events)
         let graph = events.filter { $0.stage == .graph }
         #expect(graph.map(\.completed) == expected)
         #expect(graph.allSatisfy { $0.total == count })
     }
 
-    @Test(arguments: [1, 3, 0, -1])
+    @Test(arguments: [1, 3, 10, 11, 0, -1])
     func layoutReportsEveryEpoch(selection: Int) throws {
         let count = selection == -1 ? 10_001 : 2
         let expected = selection == -1 ? 200 : (selection == 0 ? 500 : selection)
@@ -123,6 +79,7 @@ struct UMAPProgressTests {
         }
         #expect(events.map(\.completed) == Array(0...expected))
         #expect(events.allSatisfy { $0.total == expected })
+        expectEmittedBounds(events)
     }
 
     @Test func callbackRunsSynchronouslyOnCaller() throws {

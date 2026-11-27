@@ -28,15 +28,32 @@ precondition(unchanged.allSatisfy { $0.coordinates.map(\.bitPattern) == expected
 
 func requireSendable<T: Sendable>(_ value: T) {}
 
+// Exhaustive consumer mapping pins the closed four-stage source contract.
+func stageName(_ stage: UMAPProgress.Stage) -> String {
+    switch stage {
+    case .graph: return "graph"
+    case .initialization: return "initialization"
+    case .fuzzySet: return "fuzzySet"
+    case .layout: return "layout"
+    }
+}
+let synthetic = UMAPProgress(stage: .layout, completed: 2, total: 4)
+precondition(stageName(synthetic.stage) == "layout")
+precondition(Double(synthetic.completed) / Double(synthetic.total) == 0.5)
+let rawSynthetic = UMAPProgress(stage: .graph, completed: -3, total: 0)
+precondition(rawSynthetic.completed == -3 && rawSynthetic.total == 0)
+
 var events: [UMAPProgress] = []
 let caller = Thread.current
 let observed = try Operations.umap(vectors, dimensions: 2, config: config) { event in
     precondition(Thread.current === caller)
     requireSendable(event)
     requireSendable(event.stage)
+    precondition(event.total > 0 && event.completed >= 0 && event.completed <= event.total)
     events.append(event)
 }
 precondition(observed.coordinates.map(\.bitPattern) == expected)
+precondition(events.first == UMAPProgress(stage: .graph, completed: 0, total: vectors.count))
 let stages: [UMAPProgress.Stage] = [.graph, .initialization, .fuzzySet, .layout]
 precondition(events.filter { $0.completed == 0 }.map(\.stage) == stages)
 for stage in stages {

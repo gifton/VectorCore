@@ -8,9 +8,8 @@ struct UMAPProgressReferenceTests {
     // captured before progress edits using Xcode 27.2 (27B52), Swift 6.4.2,
     // arm64 macOS 27.0.1 (26A434), default LAPACK provider. Debug/Release
     // controls are compared before these words are accepted. Cross-build words
-    // are opt-in; handlerPreservesCoordinates always checks within-build words.
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["VECTORCORE_UMAP_CHECK_BASELINE_BITS"] == "1"),
-          arguments: UMAPProgressFixtures.Route.allCases, [2, 5])
+    // are opt-in; ordinary runs compare every fixture at absolute tolerance 1e-4.
+    @Test(arguments: UMAPProgressFixtures.Route.allCases, [2, 5])
     func frozenReference(route: UMAPProgressFixtures.Route, dimensions: Int) throws {
         let prefix: String
         switch route {
@@ -21,7 +20,8 @@ struct UMAPProgressReferenceTests {
         let expected = try #require(Self.words["\(prefix)-\(dimensions)"])
         for metric: KNNGraph.Metric? in [nil, .euclidean] {
             let result = try UMAPProgressFixtures.run(route, dimensions: dimensions, metric: metric)
-            #expect(result.coordinates.map(\.bitPattern) == expected)
+            try UMAPReferenceAssertions.compare(result.coordinates, words: expected, tolerance: 1e-4,
+                                                 caseID: "progress-\(route)-\(dimensions)-\(metric == nil ? "legacy" : "explicit")")
         }
     }
 

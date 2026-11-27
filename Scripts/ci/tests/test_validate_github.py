@@ -53,6 +53,18 @@ class GithubPolicyTests(unittest.TestCase):
         result = self.validate()
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_umap_observation_is_required_even_after_test_failure(self):
+        for before, after in [
+            ('run: python3 -B Scripts/ci/observe_umap_reference.py', 'run: echo observation-skipped'),
+            ('      - name: Measure UMAP reference deviations\n        if: always()',
+             '      - name: Measure UMAP reference deviations\n        if: success()'),
+            ('      - name: Measure UMAP reference deviations\n        if: always()',
+             '      - name: Measure UMAP reference deviations'),
+        ]:
+            with self.subTest(after=after):
+                self.write('workflows/ci.yml', WORKFLOW.replace(before, after))
+                self.assertNotEqual(self.validate().returncode, 0)
+
     def test_parses_every_yaml_file_and_template_frontmatter(self):
         for path, content in [("other/nested.yaml", "invalid: [\n"),
                               ("ISSUE_TEMPLATE/extra.md", "---\nlabels: 'performance', 'regression'\n---\n"),

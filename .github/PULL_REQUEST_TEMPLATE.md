@@ -8,6 +8,20 @@
      Report skipped tests and checks you could not run. For documentation-only
      changes, link/example validation may be sufficient locally; CI still runs. -->
 
+## UMAP / graph / PCA reference evidence
+
+<!-- Required for covered changes, including comments in those source areas;
+     otherwise explain why out of scope. See Docs/UMAP_Reference_Checks.md.
+     Missing or stale exact evidence blocks approval/merge. -->
+
+| Run | Full revision | Production / fixture / runner / profile hashes | Host/profile | Debug cases/words | Release cases/words | Evidence |
+|---|---|---|---|---|---|---|
+| Before editing | | | | | | |
+| After final change | | | | | | |
+
+<!-- Record ordinary CI maximum deviations and any budget misses separately.
+     New environment profiles need reviewed alpha/control re-capture. -->
+
 ## Compatibility and performance
 
 <!-- Describe API/numerical behavior changes and migration, or write "Not affected".

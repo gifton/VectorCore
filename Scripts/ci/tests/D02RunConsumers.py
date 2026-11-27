@@ -5,12 +5,11 @@ Evidence script, not wired into CI.
 usage: D02RunConsumers.py BIN_PATH OUTPUT baseline|final
   BIN_PATH  a SwiftPM bin path of the tree under test (`swift build --show-bin-path`; native or swiftbuild layout)
   OUTPUT    a new directory (must not exist)
-  baseline  expectations at the pre-D02 base; final: expectations after D02 (phases 2-5).
+  baseline  expectations at the pre-D02 base; final: expectations at the current consumer API surface.
 
 Each fixture in Scripts/ci/tests/D02/ has one expectation per mode:
   positive  typecheck rc 0, link against the snapshot objects, run rc 0 and print its marker;
-  negative  typecheck rc 1 with exactly one `error:` on every code line of the file (one per removed entry), except
-            LoggerNegative, which shares consumer_smoke's required/optional-line contract;
+  negative  typecheck rc 1 with exactly one `error:` on every code line of the file (one per removed entry);
   fails     typecheck rc 1 containing a named diagnostic (a positive fixture that cannot compile at the base).
 The count guard checks that Reachability.swift calls every symbol of D02/gated-public-base.tsv in code (comments and
 strings masked). In final mode the binding check proves, from the SILGen `function_ref` targets, that each of those
@@ -34,7 +33,6 @@ import sys
 root = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(root / 'Scripts/ci'))
 import swiftpm_products as products  # noqa: E402
-import consumer_smoke  # noqa: E402
 from swift_lexing import _mask  # noqa: E402  (comments and string literals blanked, same length)
 
 FIXTURES = Path(__file__).resolve().parent / 'D02'
@@ -57,7 +55,9 @@ TABLE = {
     'RoutedNegative.swift': {'baseline': ('typechecks', None), 'final': ('negative', None)},
     'LoggerQualification.swift': {'baseline': ('positive', 'D02_LOGGER_QUALIFICATION_COMPLETE'),
                                   'final': ('positive', 'D02_LOGGER_QUALIFICATION_COMPLETE')},
-    'LoggerNegative.swift': {'baseline': ('negative', None), 'final': ('negative', None)},
+    # Namespace removal restores the module-qualified spelling; the pre-D02 namespace shadows it.
+    'LoggerModuleQualification.swift': {'baseline': ('fails', "type 'VectorCore' has no member 'Logger'"),
+                                         'final': ('positive', 'D02_LOGGER_MODULE_QUALIFICATION_COMPLETE')},
 }
 
 active = None
@@ -304,17 +304,10 @@ def main():
                     record.setdefault('executables', {})[exe.name] = sha(exe)
                 ok = outcome.get('runExit') == 0 and outcome.get('marker', False)
         elif kind == 'negative':
-            if fixture.name == 'LoggerNegative.swift':
-                contract = next(row for row in consumer_smoke.CONTRACTS if row['id'] == 'D02-logger-negative')
-                accepted, judgment = consumer_smoke.judge_contract(contract, status, text, fixture.read_text())
-                outcome.update({'expectedErrorLines': contract['errorLines'],
-                                'optionalErrorLines': contract['optionalErrorLines'], 'judgment': judgment})
-                ok = status == 1 and accepted
-            else:
-                expected = code_lines(fixture.read_text())
-                lines = sorted({int(n) for n, _ in errors})
-                outcome['expectedErrorLines'] = expected
-                ok = status == 1 and lines == expected and len(errors) == len(expected)
+            expected = code_lines(fixture.read_text())
+            lines = sorted({int(n) for n, _ in errors})
+            outcome['expectedErrorLines'] = expected
+            ok = status == 1 and lines == expected and len(errors) == len(expected)
         elif kind == 'fails':
             ok = status == 1 and detail in text
             outcome['requiredDiagnostic'] = detail

@@ -189,6 +189,27 @@ and [UMAPTests](../Tests/ComprehensiveTests/UMAPTests.swift).
 
 ## UMAP calibration and checked numerical domain
 
+`Operations.umapCurveParameters(spread:minDist:)` exposes the existing calibration
+as a throwing `(a: Float, b: Float)` tuple. Both UMAP entry points use this function.
+A consumer can use its coefficients for `q(d) = 1 / (1 + a * d^(2*b))` in a
+separate layout implementation. The function has no default arguments; pass the
+same spread and minimum distance as the layout configuration.
+
+```swift
+import VectorCore
+
+let curve = try Operations.umapCurveParameters(spread: 1, minDist: 0.1)
+precondition(abs(curve.a - 1.57694) < 0.001)
+precondition(abs(curve.b - 0.89506) < 0.001)
+print("UMAP curve: a=\(curve.a), b=\(curve.b)")
+```
+
+Nonfinite inputs, `spread <= 0`, `minDist < 0` and `minDist > spread` throw `invalidOperation`;
+convergence or coefficient-representation failure throws `operationFailed`.
+`UMAPRangeContractTests` and `UMAPCurveFitSuite` exercise the public fitter's
+range and reference cases. Fitting coefficients alone does not validate a
+consumer's layout implementation.
+
 `UMAPRangeContractTests` exercises these explicit contracts; they are not a claim
 of bitwise equivalence to another UMAP implementation or whole-layout convergence.
 

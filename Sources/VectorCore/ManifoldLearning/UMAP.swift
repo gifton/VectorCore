@@ -264,7 +264,7 @@ extension Operations {
         }
         // UMAPPreflightTests.rejectedCurvePrecedesGraphConstructionForBothInitializers and
         // UMAPPreflightTests.rejectedCurvePrecedesPCAWithSuppliedGraph exercise early rejection.
-        let curve = try UMAPLayout.fitABParams(spread: config.spread, minDist: config.minDist)
+        let curve = try umapCurveParameters(spread: config.spread, minDist: config.minDist)
         let knn = try graph ?? KNNGraph.bruteForce(vectors, neighbors: config.neighbors)
         let initial: [Float]
         switch config.initialization {
@@ -307,7 +307,7 @@ extension Operations {
         }
         // Keep supplied-coordinate validation ahead of fitting; both precede coordinate allocation.
         // UMAPPreflightTests.cheapValidationPrecedesRejectedCurve pins this ordering.
-        let curve = try UMAPLayout.fitABParams(spread: config.spread, minDist: config.minDist)
+        let curve = try umapCurveParameters(spread: config.spread, minDist: config.minDist)
         let initial: [Float]
         if let provided = initialCoordinates {
             var flat = [Float](repeating: 0, count: coordinateCount)

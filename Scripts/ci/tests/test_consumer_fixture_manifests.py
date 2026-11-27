@@ -163,12 +163,12 @@ class ConsumerFixtureManifests(unittest.TestCase):
 
 
 class D02DriverOrchestration(unittest.TestCase):
-    def run_driver(self, *, silgen=0, graph=0, logger_lines=(9, 10), logger_status=1, unbound=(), fallbacks=(), mode='final'):
+    def run_driver(self, *, silgen=0, graph=0, logger_status=0, logger_marker=True, unbound=(), fallbacks=(), mode='final'):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             fixtures = directory / 'fixtures'
             fixtures.mkdir()
-            for name in ('Reachability.swift', 'LoggerNegative.swift', 'gated-public-base.tsv', 'protocol-members-base.tsv'):
+            for name in ('Reachability.swift', 'LoggerModuleQualification.swift', 'gated-public-base.tsv', 'protocol-members-base.tsv'):
                 shutil.copy2(D02.FIXTURES / name, fixtures / name)
             output = directory / 'output'
             modulemap = directory / 'module.modulemap'
@@ -176,8 +176,8 @@ class D02DriverOrchestration(unittest.TestCase):
             snapshot = {'modules': directory, 'modulemap': modulemap, 'objects': [], 'records': []}
             rows = [line.split('\t')[0] for line in (fixtures / 'protocol-members-base.tsv').read_text().splitlines()
                     if line and not line.startswith(('#', 'path\t'))]
-            table = {name: D02.TABLE[name] for name in ('Reachability.swift', 'LoggerNegative.swift')}
-            # Only Logger's identical baseline/final diagnostic contract is under test in baseline mode.
+            table = {name: D02.TABLE[name] for name in ('Reachability.swift', 'LoggerModuleQualification.swift')}
+            # Keep Reachability positive when exercising the Logger fixture's baseline contract.
             if mode == 'baseline':
                 table['Reachability.swift'] = {'baseline': ('positive', 'D02_REACHABILITY_COMPLETE'),
                                                'final': ('positive', 'D02_REACHABILITY_COMPLETE')}
@@ -197,13 +197,14 @@ class D02DriverOrchestration(unittest.TestCase):
                             folder = Path(command[command.index('-output-dir') + 1])
                             (folder / 'VectorCore.symbols.json').write_text(json.dumps(
                                 {'symbols': [{'pathComponents': row.split('.', 1)} for row in rows]}))
-                    elif '-typecheck' in command and str(command[-1]).endswith('LoggerNegative.swift'):
+                    elif '-typecheck' in command and str(command[-1]).endswith('LoggerModuleQualification.swift'):
                         self.returncode = logger_status
-                        text = ''.join(f'{command[-1]}:{line}:1: error: ' +
-                                       ("type 'VectorCore' has no member 'Logger'" if line == 10 else 'ambiguous Logger') + '\n'
-                                       for line in logger_lines)
+                        if logger_status == 1:
+                            text = f"{command[-1]}:9:1: error: type 'VectorCore' has no member 'Logger'\n"
                     elif '-o' in command:
                         Path(command[command.index('-o') + 1]).write_bytes(b'controlled linked artifact')
+                    elif str(command[0]).endswith('bin-LoggerModuleQualification'):
+                        text = 'D02_LOGGER_MODULE_QUALIFICATION_COMPLETE\n' if logger_marker else ''
                     else:
                         text = 'D02_REACHABILITY_COMPLETE\n'
                     stdout.write(text.encode())
@@ -241,15 +242,17 @@ class D02DriverOrchestration(unittest.TestCase):
             self.assertIn('binding check FAILED', printed)
             self.assertTrue(record['problems'])
 
-    def test_logger_required_and_optional_diagnostics(self):
-        for mode in ('baseline', 'final'):
-            for lines, compiler_exit, expected in [((10,), 1, True), ((9, 10), 1, True), ((9,), 1, False),
-                                                  ((9, 9, 10), 1, False), ((8, 10), 1, False),
-                                                  ((10, 10), 1, False), ((10,), 0, False), ((10,), -5, False)]:
-                with self.subTest(mode=mode, lines=lines, compiler_exit=compiler_exit):
-                    status, _, record = self.run_driver(mode=mode, logger_lines=lines, logger_status=compiler_exit)
-                    self.assertEqual(record['results']['LoggerNegative.swift']['passed'], expected)
-                    self.assertEqual(status, 0 if expected else 1)
+    def test_logger_module_qualification_contract(self):
+        for mode, compiler_exit, marker, expected in [
+            ('final', 0, True, True), ('final', 0, False, False),
+            ('final', 1, True, False), ('final', -5, True, False),
+            ('baseline', 1, False, True), ('baseline', 0, True, False),
+            ('baseline', -5, False, False),
+        ]:
+            with self.subTest(mode=mode, compiler_exit=compiler_exit, marker=marker):
+                status, _, record = self.run_driver(mode=mode, logger_status=compiler_exit, logger_marker=marker)
+                self.assertEqual(record['results']['LoggerModuleQualification.swift']['passed'], expected)
+                self.assertEqual(status, 0 if expected else 1)
 
 
 if __name__ == '__main__':

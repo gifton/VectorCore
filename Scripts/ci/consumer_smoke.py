@@ -58,17 +58,18 @@ CONTRACTS = (
     {"id": "R02-missing-update", "path": _R02, "define": "MISSING_UPDATE", "expect": "fail",
      "diagnostics": ["does not conform to protocol 'MutableVectorCollection'"]},
     {"id": "R02-transactional-witness", "path": _R02, "expect": "run", "marker": "R02_PUBLIC_TRANSACTIONAL_WITNESS_OK"},
-    # D02 negatives: every code line names a removed member and is one compile error; the Logger pair is the
-    # scoped-import contract.
+    {"id": "module-qualification", "path": "Scripts/ci/fixtures/compile-contracts/ModuleQualification.swift",
+     "expect": "run", "marker": "MODULE_QUALIFICATION_OK"},
+    {"id": "umap-public-curve", "path": "Scripts/ci/fixtures/compile-contracts/UMAPCurveConsumer.swift",
+     "expect": "run", "marker": "UMAP_PUBLIC_CURVE_OK"},
+    # D02 negatives: every code line names a removed member and is one compile error.
     {"id": "D02-storage-negative", "path": "Scripts/ci/tests/D02/StorageNegative.swift", "expect": "fail", "errorLines": "code"},
     {"id": "D02-routed-negative", "path": "Scripts/ci/tests/D02/RoutedNegative.swift", "expect": "fail", "errorLines": "code"},
     {"id": "D02-hooks-negative", "path": "Scripts/ci/tests/D02/HooksNegative.swift", "expect": "fail", "errorLines": "code"},
     {"id": "D02-device-negative", "path": "Scripts/ci/tests/D02/DeviceNegative.swift", "expect": "fail", "errorLines": "code"},
-    # LoggerNegative line 10 (`VectorCore.Logger`) errors on every supported compiler; line 9 (a bare `Logger` with both
-    # modules imported) is ambiguous under Swift 6.4 and accepted by Swift 6.0 (Xcode 16.2, the consumer job). The line
-    # numbers are absolute: editing the fixture's header comment moves them.
-    {"id": "D02-logger-negative", "path": "Scripts/ci/tests/D02/LoggerNegative.swift", "expect": "fail", "errorLines": [10],
-     "optionalErrorLines": [9], "diagnostics": ["type 'VectorCore' has no member 'Logger'"]},
+    # The module qualifier is now usable; keep the scoped-import consumer as a separate positive control.
+    {"id": "D02-logger-module-qualification", "path": "Scripts/ci/tests/D02/LoggerModuleQualification.swift",
+     "expect": "run", "marker": "D02_LOGGER_MODULE_QUALIFICATION_COMPLETE"},
     {"id": "D02-logger-qualification", "path": "Scripts/ci/tests/D02/LoggerQualification.swift", "expect": "run",
      "marker": "D02_LOGGER_QUALIFICATION_COMPLETE"},
     # B01: no vector type conforms to BinaryCodable bare. `BinaryCodable` is BinaryEncodable & BinaryDecodable, so the

@@ -137,7 +137,7 @@ class CompileContractTests(unittest.TestCase):
         rows = module.CONTRACTS
         negatives = {row["path"] for row in rows if row["expect"] == "fail"}
         self.assertEqual(sorted(Path(p).name for p in negatives), [
-            "B01BareConformanceNegative.swift", "DeviceNegative.swift", "F001StorageLetNegative.swift", "HooksNegative.swift", "LoggerNegative.swift",
+            "B01BareConformanceNegative.swift", "DeviceNegative.swift", "F001StorageLetNegative.swift", "HooksNegative.swift",
             "R01MetricScalarContract.swift", "R02CollectionUpdateConsumer.swift", "R05OldPropertyNegative.swift",
             "RoutedNegative.swift", "SIMDStorageLegacyCallNegative.swift",
             "SIMDStorageLegacyConformerNegative.swift", "StorageNegative.swift"])
@@ -150,6 +150,16 @@ class CompileContractTests(unittest.TestCase):
                 if row["expect"] == "fail":
                     self.assertTrue(row.get("errorLines") or row.get("diagnostics"), "a negative names what must fail")
         self.assertEqual(len({row["id"] for row in rows}), len(rows), "ids are unique")
+
+    def test_namespace_and_curve_contracts_run_public_consumers(self):
+        rows = {row["id"]: row for row in load_script().CONTRACTS}
+        for name, marker in (("module-qualification", "MODULE_QUALIFICATION_OK"),
+                             ("umap-public-curve", "UMAP_PUBLIC_CURVE_OK"),
+                             ("D02-logger-module-qualification", "D02_LOGGER_MODULE_QUALIFICATION_COMPLETE")):
+            with self.subTest(name=name):
+                self.assertEqual(rows[name]["expect"], "run")
+                self.assertEqual(rows[name]["marker"], marker)
+        self.assertNotIn("D02-logger-negative", rows)
 
     def test_list_contracts_fails_on_a_missing_fixture_and_lists_them_otherwise(self):
         module = load_script()
@@ -209,8 +219,7 @@ class ContractJudgementTests(unittest.TestCase):
         self.assertFalse(self.judge(twice, 1, "Fixture.swift:5:1: error: needs BinaryEncodable\n")[0], "only one error")
 
     def test_optional_error_lines_absorb_compiler_dependent_diagnostics(self):
-        # D02 LoggerNegative line 7 (a bare `Logger` with both modules imported) is ambiguous under Swift 6.4 and accepted
-        # by Swift 6.0: the row requires line 8 and tolerates line 7, and still rejects any other line or a success.
+        # A required diagnostic must remain present when another diagnostic is compiler-dependent.
         row = {"expect": "fail", "errorLines": [8], "optionalErrorLines": [7]}
         self.assertTrue(self.judge(row, 1, "Fixture.swift:8:1: error: a\n")[0])
         self.assertTrue(self.judge(row, 1, "Fixture.swift:7:1: error: b\nFixture.swift:8:1: error: a\n")[0])

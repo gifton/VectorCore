@@ -42,6 +42,7 @@ allocation-free, or fastest-type guarantee. See
 | Dense factorizations | `LinearAlgebraProvider` | Thin QR, thin SVD, symmetric eigendecomposition; column-major buffers |
 | Linear projection | `PCAModel.fit`, `transform`; `Operations.pca` | Reusable model or one-shot fit-and-transform |
 | Nonlinear layout | `Operations.umap` | Coordinates from vectors or a `KNNGraph`; not a fitted out-of-sample transform |
+| UMAP curve calibration | `Operations.umapCurveParameters(spread:minDist:)` | Throwing Float `(a, b)` coefficients from the same fitter used by both layout entries |
 | Graph interchange | `KNNGraph` | Validated CSR neighbor graph, including a reference brute-force builder |
 | Quantized representation | [Quantization primitives](../Sources/VectorCore/Quantization/QuantizationSchemes.swift) | Representation/conversion support, not a compressed ANN index |
 | Serialization | [Vector serialization](../Sources/VectorCore/Vectors/VectorSerialization.swift) and [binary protocols](../Sources/VectorCore/Serialization/BinaryProtocols.swift) | Vector encoding, not a database durability or migration contract |
@@ -51,6 +52,43 @@ conventions, scale limits, and complete examples. For distance/search details,
 the implementations are [Operations](../Sources/VectorCore/Operations/Operations.swift),
 [BatchOperations](../Sources/VectorCore/Operations/BatchOperations.swift), and
 [MatrixDistance](../Sources/VectorCore/Operations/MatrixDistance.swift).
+
+## Namespace migration
+
+The redundant `VectorCore` enum has been removed without an alias. The module
+qualifiers `VectorCore.UMAPInitialization`, `VectorCore.DynamicVector` and
+`VectorCore.Logger` are exercised by the ordinary-import `ModuleQualification.swift`
+consumer, including a local type named `UMAPInitialization`.
+
+| Removed member | Replacement |
+|---|---|
+| `VectorCore.createVector(dimension:data:)` | With data: `try VectorTypeFactory.vector(of: dimension, from: data)`; without data: `VectorTypeFactory.zeros(dimension: dimension)` |
+| `VectorCore.createBatch(dimension:from:)` | `try rows.map { try VectorTypeFactory.vector(of: dimension, from: $0) }` |
+| `VectorCore.version` | `VectorCoreVersion.versionString` |
+| `VectorCore.hasOptimizedSupport(for:)` | `VectorTypeFactory.isSupported(dimension:)` |
+| `VectorCore.optimalDimension(for:)` | `VectorTypeFactory.optimalDimension(for:)` |
+
+The checked factory throws for a negative dimension or mismatching value count
+(`D02FactoryContractTests.checkedEntryThrows`). The zero factory keeps its
+negative-dimension trap (`zerosTrapsOnNegativeDimension`). The batch replacement
+maps one vector per row; `VectorTypeFactory.batch(dimension:from:)` instead takes
+a flat array. `Array<Float>.toVector()` remains nonthrowing and keeps its factory
+selection and values (`emptyArrayToVector`, `dynamicArrayToVector`,
+`fixedWidthArrayToVector`, `nonfiniteArrayToVector`). Rebuild consumers after
+removing references to the namespace type.
+
+```swift
+import VectorCore
+
+let rows: [[Float]] = [[1, 2, 3], [4, 5, 6]]
+let vectors: [any VectorType] = try rows.map {
+    try VectorTypeFactory.vector(of: 3, from: $0)
+}
+precondition(vectors.map { $0.toArray().map(\.bitPattern) } == rows.map { $0.map(\.bitPattern) })
+let empty: any VectorType = [Float]().toVector()
+precondition(empty.scalarCount == 0 && empty is DynamicVector)
+print("Factory migration: \(vectors.count) rows; version \(VectorCoreVersion.versionString)")
+```
 
 ## Provider boundaries
 

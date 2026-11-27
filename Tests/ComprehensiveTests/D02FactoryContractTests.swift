@@ -3,11 +3,6 @@ import Foundation
 import Testing
 import VectorCore
 
-// D02 phase 4: VectorTypeFactory keeps its concrete results (Vector<Dim128/256/384/512/768/1536/3072>, DynamicVector
-// elsewhere in the checked domain) and never routes to the separate Vector*Optimized types; createVector keeps its
-// nonthrowing signature and traps on malformed input (child-isolated). The external consumer
-// Scripts/ci/tests/D02/Factory.swift pins the same results without @testable.
-
 private func d02ExpectedType(_ dimension: Int) -> String {
     switch dimension {
     case 128, 256, 384, 512, 768, 1536, 3072: return "Vector<Dim\(dimension)>"
@@ -45,10 +40,9 @@ struct D02FactoryContractTests {
     func supportedListIsTheNamedList() {
         let supported = (-1...4096).filter { VectorTypeFactory.isSupported(dimension: $0) }
         #expect(supported == Self.named)
-        #expect(Self.named.allSatisfy { VectorCore.hasOptimizedSupport(for: $0) })
     }
 
-    @Test("The checked entry throws typed errors; createVector delegates without throwing on valid input")
+    @Test("The checked factory reports typed validation errors")
     func checkedEntryThrows() {
         #expect(throws: VectorError.self) { try VectorTypeFactory.vector(of: -1, from: []) }
         #expect(throws: VectorError.self) { try VectorTypeFactory.vector(of: 3, from: [1]) }
@@ -62,46 +56,75 @@ struct D02FactoryContractTests {
         } catch let error as VectorError {
             #expect(error.kind == .dimensionMismatch)
         } catch { Issue.record("unexpected error \(error)") }
-        let made: any VectorType = VectorCore.createVector(dimension: 512, data: [Float](repeating: 2, count: 512))
-        #expect(made is Vector<Dim512>)
-        #expect(VectorCore.createVector(dimension: 5) is DynamicVector)
-        #expect([Float](repeating: 1, count: 768).toVector() is Vector<Dim768>)
     }
 
-    @Test func createVectorChildProbe() {
-        guard let specification = ProcessInfo.processInfo.environment["D02_CREATE_VECTOR_PROBE"] else { return }
-        switch specification {
-        case "count-mismatch": _ = VectorCore.createVector(dimension: 3, data: [1])
-        case "negative-with-data": _ = VectorCore.createVector(dimension: -1, data: [])
-        case "negative-without-data": _ = VectorCore.createVector(dimension: -1)
-        default: break
+    @Test("An empty array converts to a zero-dimensional DynamicVector")
+    func emptyArrayToVector() {
+        let vector: any VectorType = [Float]().toVector()
+        #expect(vector is DynamicVector)
+        #expect(vector.scalarCount == 0)
+        #expect(vector.toArray().isEmpty)
+    }
+
+    @Test("An array of a non-specialized width converts to DynamicVector with the original values")
+    func dynamicArrayToVector() {
+        let values: [Float] = [1.25, -2.5, 4]
+        let vector: any VectorType = values.toVector()
+        #expect(vector is DynamicVector)
+        #expect(vector.toArray().map(\.bitPattern) == values.map(\.bitPattern))
+    }
+
+    @Test("Arrays of specialized widths convert to the corresponding fixed-width vector")
+    func fixedWidthArrayToVector() {
+        for dimension in Self.named {
+            let values = (0..<dimension).map { Float($0 % 7) }
+            let vector: any VectorType = values.toVector()
+            #expect(String(describing: type(of: vector)) == d02ExpectedType(dimension))
+            #expect(vector.toArray().map(\.bitPattern) == values.map(\.bitPattern))
         }
-        print("D02_CREATE_VECTOR_RETURNED \(specification)")
     }
 
-    @Test("createVector traps on malformed dimension or data (its documented preconditions; child-isolated)", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
-    func createVectorTrapsOnMalformedInput() throws {
+    @Test("Array conversion preserves nonfinite values and signed zero on both factory paths")
+    func nonfiniteArrayToVector() {
+        let values: [Float] = [Float(bitPattern: 0x7fc0_1234), .infinity, -.infinity, -0.0]
+        for dimension in [values.count, 128] {
+            let input = values + [Float](repeating: 1, count: dimension - values.count)
+            let vector: any VectorType = input.toVector()
+            #expect(vector.toArray().map(\.bitPattern) == input.map(\.bitPattern))
+        }
+    }
+
+    @Test func negativeZerosChildProbe() {
+        guard ProcessInfo.processInfo.environment["D02_NEGATIVE_ZEROS_PROBE"] == "1" else { return }
+        _ = VectorTypeFactory.zeros(dimension: -1)
+        print("D02_NEGATIVE_ZEROS_RETURNED")
+    }
+
+    @Test("zeros(dimension:) traps for a negative dimension", .enabled(if: childProbeProcessesSupported, "Requires macOS child-process isolation"))
+    func zerosTrapsOnNegativeDimension() throws {
         if ProcessInfo.processInfo.environment["D02_SKIP_TRAPS"] == "1" { return }
-        for specification in ["count-mismatch", "negative-with-data", "negative-without-data"] {
-            var environment = ProcessInfo.processInfo.environment
-            environment["D02_CREATE_VECTOR_PROBE"] = specification
-            environment["SWIFT_BACKTRACE"] = "enable=no"
-            let url = FileManager.default.temporaryDirectory
-                .appendingPathComponent("D02-createVector-\(specification)-\(UUID().uuidString).log")
-            _ = FileManager.default.createFile(atPath: url.path, contents: nil)
-            let handle = try FileHandle(forWritingTo: url)
-            let process = try launchChildProbe(.swiftTesting(filter: "D02FactoryContractTests/createVectorChildProbe"),
-                                               environment: environment, output: handle, deadline: ChildProbeBudget.standard.deadline, cleanup: ChildProbeBudget.standard.cleanup)
-            let timedOut = process.timedOut
-            try handle.close()
-            let diagnostic = try String(contentsOf: url, encoding: .utf8)
-            print("D02_CHILD_CAPTURE \(specification) \(url.path)")
-            if timedOut {
-                throw NSError(domain: "D02.childTimeout", code: 1,
-                              userInfo: [NSLocalizedDescriptionKey: "Child deadline exceeded: \(url.path)"])
-            }
-            #expect(process.terminationReason == .uncaughtSignal, "\(specification): \(diagnostic)")
-            #expect(!diagnostic.contains("D02_CREATE_VECTOR_RETURNED"), "\(specification)")
+        var environment = ProcessInfo.processInfo.environment
+        environment["D02_NEGATIVE_ZEROS_PROBE"] = "1"
+        environment["SWIFT_BACKTRACE"] = "enable=no"
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("D02-negativeZeros-\(UUID().uuidString).log")
+        _ = FileManager.default.createFile(atPath: url.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        let process = try launchChildProbe(
+            .swiftTesting(filter: "D02FactoryContractTests/negativeZerosChildProbe"),
+            environment: environment,
+            output: handle,
+            deadline: ChildProbeBudget.standard.deadline,
+            cleanup: ChildProbeBudget.standard.cleanup
+        )
+        let diagnostic = try String(contentsOf: url, encoding: .utf8)
+        print("D02_CHILD_CAPTURE negativeZeros \(url.path)")
+        if process.timedOut {
+            throw NSError(domain: "D02.childTimeout", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Child deadline exceeded: \(url.path)"])
         }
+        #expect(process.terminationReason == .uncaughtSignal, "\(diagnostic)")
+        #expect(!diagnostic.contains("D02_NEGATIVE_ZEROS_RETURNED"), "\(diagnostic)")
     }
 }

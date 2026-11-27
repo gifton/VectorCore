@@ -192,6 +192,63 @@ points. A low-dimensional visual separation is not proof of semantic clusters.
 See [UMAP implementation](../Sources/VectorCore/ManifoldLearning/UMAP.swift)
 and [UMAPTests](../Tests/ComprehensiveTests/UMAPTests.swift).
 
+### Selecting a graph metric
+
+`KNNGraph.bruteForce(_:neighbors:metric:)` accepts `.euclidean` or `.cosine`.
+The original overload remains Euclidean. `UMAPConfig.metric` also defaults to
+`.euclidean`; it selects the metric only when UMAP builds its own graph.
+Both supplied-graph routes consume the supplied distances unchanged and ignore
+this field. PCA initialization always uses the original vectors.
+
+```swift
+import VectorCore
+
+let vectors = [
+    DynamicVector([Float(1), 0, 1]), DynamicVector([Float(0), 1, 1]),
+    DynamicVector([Float(-1), 0, 1]), DynamicVector([Float(0), -1, 1])
+]
+let graph = try KNNGraph.bruteForce(vectors, neighbors: 2, metric: .cosine)
+let config = UMAPConfig(neighbors: 2, epochs: 10, initialization: .random, metric: .cosine)
+let layout = try Operations.umap(vectors, config: config)
+precondition(graph.distances.allSatisfy { $0.isFinite && $0 >= 0 && $0 <= 2 })
+precondition(layout.pointCount == vectors.count && layout.coordinates.allSatisfy { $0.isFinite })
+print("Cosine graph edges: \(graph.edgeCount)")
+```
+
+Cosine prepares a private packed copy using compensated Double squared norms,
+divides in Double, rounds coordinates to Float, and computes blocked Float dot
+products. Distances are `clamp(1 - dot, 0...2)`, without a square root. Self is
+excluded; neighbors sort by computed Float distance, then ascending source index
+for computed ties. Near ties can order differently across toolchains or BLAS
+providers. Identical arbitrary vectors are not promised an exact zero word.
+
+After complete shape validation, the first invalid row in ascending order throws
+`VectorError.invalidData`, naming its zero-based row and zero-vector or nonfinite
+reason. Signed-zero-only rows are invalid. Finite nonzero rows use no epsilon-based
+zero cutoff. Unexpected nonfinite normalization or dot results throw
+`.operationFailed` before clamping or selection. Input vectors are unchanged.
+Existing scalar/search cosine APIs retain their separate arithmetic and zero rules.
+
+[KNNMetricTests](../Tests/ComprehensiveTests/KNNMetricTests.swift) checks analytic
+distances, numerical extremes, computed ties, block boundaries and a bounded
+dimension matrix from 1 through 4096 against an independent Double oracle at
+absolute tolerance `2e-5`. This is a fixture acceptance tolerance, not a universal
+error bound. The Euclidean Gram-subtraction limitations described below remain.
+
+Cosine preparation adds O(nd) work to the O(n²d) matrix products and O(n²k)
+insertion selection. Storage includes one packed O(nd) copy, O(nk) graph data and
+a Gram panel of at most min(n, 256)·n Floats; these are algorithmic bounds, not an
+allocation budget or measured corpus capacity. Normalization runs once per row.
+
+[UMAPMetricTests](../Tests/ComprehensiveTests/UMAPMetricTests.swift) checks internal
+versus injected cosine graphs for PCA/random initialization, supplied graph
+authority, progress and cancellation. Normalization adds no stage or per-row
+callback; it completes before the next cancellation checkpoint. A cosine graph
+is insensitive to positive row scaling in exact arithmetic, subject to rounding
+here. PCA on original inputs means that the full layout need not be scale
+insensitive. Even unit vectors with matching neighbor sets can produce different
+Euclidean and cosine fuzzy weights and layouts.
+
 ### Progress and cancellation
 
 Both entries also accept a final `progress: ((UMAPProgress) -> Void)?` argument.
@@ -315,7 +372,7 @@ nonfinite value can be hidden by clipping. Thus finite extreme input or learning
 rate can throw operationFailed instead of producing a layout. Public input arrays
 remain unmodified; internal inout optimizer mutation on failure is not transactional.
 
-The KNN scoring route is unchanged: Float norms and GEMM dots feed Gram subtraction.
+The Euclidean KNN scoring route is unchanged: Float norms and GEMM dots feed Gram subtraction.
 It exhaustively enumerates computed scores, not stable direct Euclidean distances.
 The pinned `[10000,10002,10001]` characterization compares against independent
 Double differences and records the cancellation divergence. There is no reranking

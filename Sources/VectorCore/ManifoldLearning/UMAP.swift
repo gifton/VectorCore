@@ -120,6 +120,10 @@ public struct UMAPConfig: Sendable {
     /// point has to build its own graph; ignored when a graph is supplied.
     public var neighbors: Int
 
+    /// Metric for internal graph construction only; ignored for supplied graphs.
+    /// PCA still uses the original vectors. See UMAPMetricTests.metricControlsOnlyBuiltGraph.
+    public var metric: KNNGraph.Metric
+
     /// Minimum spacing between embedded points; the low-distance plateau of
     /// the output kernel. Must not exceed `spread`.
     public var minDist: Float
@@ -166,6 +170,25 @@ public struct UMAPConfig: Sendable {
         self.negativeSampleRate = negativeSampleRate
         self.initialization = initialization
         self.seed = seed
+        self.metric = .euclidean
+    }
+
+    /// Configure the internal graph metric while retaining the original initializer.
+    public init(
+        neighbors: Int = 15,
+        minDist: Float = 0.1,
+        spread: Float = 1.0,
+        epochs: Int? = nil,
+        learningRate: Float = 1.0,
+        negativeSampleRate: Int = 5,
+        initialization: UMAPInitialization = .pca,
+        seed: UInt64 = 0x5EED_CAFE,
+        metric: KNNGraph.Metric
+    ) {
+        self.init(neighbors: neighbors, minDist: minDist, spread: spread, epochs: epochs,
+                  learningRate: learningRate, negativeSampleRate: negativeSampleRate,
+                  initialization: initialization, seed: seed)
+        self.metric = metric
     }
 
     internal func validate() throws {
@@ -283,7 +306,7 @@ extension Operations {
         try execution.checkCancellation()
         let curve = try umapCurveParameters(spread: config.spread, minDist: config.minDist)
         try execution.checkCancellation()
-        let knn = try graph ?? KNNGraph.bruteForce(vectors, neighbors: config.neighbors, execution: execution)
+        let knn = try graph ?? KNNGraph.bruteForce(vectors, neighbors: config.neighbors, metric: config.metric, execution: execution)
         try execution.report(.initialization, completed: 0, total: 1)
         let initial: [Float]
         switch config.initialization {

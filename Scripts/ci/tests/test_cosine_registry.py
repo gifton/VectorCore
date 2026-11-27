@@ -1,9 +1,10 @@
 """Policy (T15, cosine class closure): every cosine implementation is registered in the T2 exceptional table.
 
 WHY: cosine distance clamped a NaN similarity to distance 0 (`min(1, NaN) == 1` in Swift), so NaN and infinite rows
-ranked nearest; 20 of 40 cosine bodies had the defect, several with their own copy of the clamp. T15 applies one
-exceptional-value policy to every body and pins it with a registry-driven table
-(Tests/ComprehensiveTests/T15CosineExceptionalTableTests.swift). This guard keeps the registry complete for the bodies
+ranked nearest; 20 of 40 cosine bodies had the defect, several with their own copy of the clamp. T15 applies a shared
+exceptional-value policy to the distance bodies and pins it with a registry-driven table
+(Tests/ComprehensiveTests/T15CosineExceptionalTableTests.swift). The opt-in graph builder instead rejects invalid
+rows; its strict throwing contract is covered by separately registered tests. This guard keeps the registry complete for the bodies
 its lexical discovery finds (below): such a body must be registered, so it is evaluated against the policy, and a
 removed one must be unregistered. It does not evaluate the policy itself; the T2 table does.
 

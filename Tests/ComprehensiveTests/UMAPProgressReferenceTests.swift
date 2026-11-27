@@ -19,8 +19,10 @@ struct UMAPProgressReferenceTests {
         default: prefix = "random"
         }
         let expected = try #require(Self.words["\(prefix)-\(dimensions)"])
-        let result = try UMAPProgressFixtures.run(route, dimensions: dimensions)
-        #expect(result.coordinates.map(\.bitPattern) == expected)
+        for metric: KNNGraph.Metric? in [nil, .euclidean] {
+            let result = try UMAPProgressFixtures.run(route, dimensions: dimensions, metric: metric)
+            #expect(result.coordinates.map(\.bitPattern) == expected)
+        }
     }
 
     private static let words: [String: [UInt32]] = [

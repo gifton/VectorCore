@@ -1501,6 +1501,16 @@ coverage is not a claim of runtime coverage on every declared platform.
   before their next checkpoint; no wall-clock response bound is promised. See
   `Docs/Linear_Algebra_and_Projection.md` for stage units and checkpoint limits.
 
+- **Cosine graph metric (CA04).** `KNNGraph.Metric` and a final `metric:` builder
+  overload add opt-in cosine graphs; `UMAPConfig.metric` selects internal graph
+  construction only. The default stays Euclidean, PCA uses original vectors,
+  and supplied graphs retain their distances (`UMAPMetricTests.metricControlsOnlyBuiltGraph`).
+  Cosine rejects zero and nonfinite rows with `.invalidData` identifying the row
+  (`KNNMetricTests.cosineRejectsInvalidRows`); finite intermediate checks precede
+  clamping (`cosineRejectsNonfiniteIntermediates`). `KNNMetricConsumer.swift`
+  covers old/new call and initializer references. Numerical tolerance and
+  progress/cancellation limits are in `Docs/Linear_Algebra_and_Projection.md`.
+
 ## [0.3.3] - 2026-09-06
 
 ### Fixed

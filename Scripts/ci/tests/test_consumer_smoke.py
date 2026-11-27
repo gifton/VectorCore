@@ -156,6 +156,7 @@ class CompileContractTests(unittest.TestCase):
         for name, marker in (("module-qualification", "MODULE_QUALIFICATION_OK"),
                              ("umap-public-curve", "UMAP_PUBLIC_CURVE_OK"),
                              ("umap-progress", "UMAP_PROGRESS_OK"),
+                             ("knn-metric", "KNN_METRIC_OK"),
                              ("D02-logger-module-qualification", "D02_LOGGER_MODULE_QUALIFICATION_COMPLETE")):
             with self.subTest(name=name):
                 self.assertEqual(rows[name]["expect"], "run")

@@ -33367,6 +33367,33 @@
     "originalFingerprint": null,
     "origin": "Consumer UMAP progress and cancellation, 2026-11-22"
    }
+  },
+  {
+   "id": "CA04-C-0001",
+   "path": "CHANGELOG.md",
+   "symbol": "section Changelog::section [Unreleased]::section API",
+   "fingerprint": "ef68f2b6162cbfd4",
+   "statement": "- **cosine graph metric (ca04).** `knngraph.metric` and a final `metric:` builder overload add opt-in cosine graphs; `umapconfig.metric` selects internal graph construction only. the default stays euclidean, pca uses original vectors, and supplied graphs retain their distances (`umapmetrictests.metriccontrolsonlybuiltgraph`). cosine rejects zero and nonfinite rows with `.invaliddata` identifying the row (`knnmetrictests.cosinerejectsinvalidrows`); finite intermediate checks precede clamping (`cosinerejectsnonfiniteintermediates`). `knnmetricconsumer.swift` covers old/new call and initializer references. numerical tolerance and progress/cancellation limits are in `docs/linear_algebra_and_projection.md`.",
+   "kind": "markdown",
+   "lineHint": 1504,
+   "category": "robustness",
+   "disposition": "retained",
+   "evidence": {
+    "kind": "named-test",
+    "reference": [
+     "Tests/ComprehensiveTests/UMAPMetricTests.swift::UMAPMetricTests.metricControlsOnlyBuiltGraph",
+     "Tests/ComprehensiveTests/KNNMetricTests.swift::KNNMetricTests.cosineRejectsInvalidRows",
+     "Tests/ComprehensiveTests/KNNMetricTests.swift::KNNMetricTests.cosineRejectsNonfiniteIntermediates"
+    ],
+    "domain": "Built versus supplied cosine graphs for PCA/random and 2/5 output dimensions; ordered invalid-row rejection and nonfinite dot guards.",
+    "limitations": "KNNMetricConsumer.swift checks external callable forms. Bounded cosine fixtures use absolute error 2e-5; no universal error bound or cross-build ordering guarantee. Frozen alpha words are opt-in on the recorded environment. No corpus digest checks or release qualification."
+   },
+   "acceptedContract": null,
+   "history": {
+    "originalStatement": null,
+    "originalFingerprint": null,
+    "origin": "Consumer cosine graph metric, 2026-11-23"
+   }
   }
  ],
  "bodyPinDescribers": [

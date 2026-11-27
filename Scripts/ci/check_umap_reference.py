@@ -39,7 +39,7 @@ def main():
                 argv += ['--scratch-path', str(args.scratch_path.resolve())]
             print(f'Running exact UMAP references: {configuration}', flush=True)
             exit_code = reference.bounded_run(argv, args.output / (configuration + '.log'),
-                                             env=reference.test_environment(os.environ, context, receipts))
+                                             env=reference.test_environment(os.environ, context, receipts, profile=profile))
             cell = dict(context, command=argv, exitCode=exit_code)
             result['configurations'][configuration] = cell
             cell.update(reference.validate_receipts(receipts, profile, context, exit_code))

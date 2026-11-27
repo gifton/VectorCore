@@ -38,7 +38,15 @@ for dimensions in [2, 5] {
             case "graphRandom":
                 result = try Operations.umap(graph: graph, dimensions: dimensions, config: config)
             default:
-                let coordinates = (0..<8).map { row in (0..<dimensions).map { Float(row * 7 - $0 * 3) / 11 } }
+                var coordinates: [[Float]] = []
+                for row: Int in 0..<8 {
+                    var values: [Float] = []
+                    for column: Int in 0..<dimensions {
+                        let numerator: Int = row * 7 - column * 3
+                        values.append(Float(numerator) / 11)
+                    }
+                    coordinates.append(values)
+                }
                 result = try Operations.umap(graph: graph, dimensions: dimensions,
                                              initialCoordinates: coordinates, config: config)
             }

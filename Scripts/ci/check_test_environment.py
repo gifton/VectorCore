@@ -6,6 +6,7 @@ and getenv. Dynamic keys require an exact file/expression classification. This i
 not interprocedural Swift data-flow analysis; see Docs/Test_Environment_Controls.md.
 """
 import ast
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -25,30 +26,53 @@ def literal(text):
         return None
 
 
+def string_constants(source):
+    """Only complete immutable string initializers are literal keys."""
+    mask = _unbacktick(_mask(source, keep_interpolations=True))
+    constants = {}
+    for match in re.finditer(r'\b(let|var)\s+(\w+)\s*(?::\s*String)?\s*=\s*("(?:\\.|[^"\\\n])*")', source):
+        if mask[match.start():match.start() + 3] not in ('let', 'var'):
+            continue
+        tail = mask[match.end():]
+        line_tail = tail.split('\n', 1)[0].strip()
+        complete = not line_tail or line_tail[0] in ';,}'
+        continued = re.match(r'\s*(?:[.+*/%&|^<>=?!-]|as\b|is\b)', tail)
+        value = literal(match[3]) if match[1] == 'let' and complete and not continued else None
+        name = match[2]
+        constants[name] = value if name not in constants or constants[name] == value else None
+    return constants
+
+
+def chain_pattern(name):
+    return re.escape(name).replace(r'\.', r'\s*\.\s*')
+
+
 def discover(source, shared_constants=None):
     mask = _unbacktick(_mask(source, keep_interpolations=True))
     constants = dict(shared_constants or {})
-    for match in re.finditer(r'\b(?:let|var)\s+(\w+)\s*(?::\s*String)?\s*=\s*("[^"\n]*")', source):
+    constants.update(string_constants(source))
+    info = {'ProcessInfo.processInfo', 'Foundation.ProcessInfo.processInfo'}
+    aliases = {'environment', 'env'}
+    assignments = []
+    for match in re.finditer(r'\b(?:let|var)\s+(\w+)(?:[ \t]*:[^=\n]+)?\s*=\s*', source):
         if mask[match.start():match.start() + 3] not in ('let', 'var'):
             continue
-        name, value = match[1], literal(match[2])
-        constants[name] = value if name not in constants or constants[name] == value else None
-    info = {'ProcessInfo.processInfo'}
-    aliases = {'environment', 'env'}
-    assignments = list(re.finditer(r'\b(?:let|var)[ \t]+(\w+)(?:[ \t]*:[^=\n]+)?[ \t]*=[ \t]*([\w.]+)', mask))
+        rhs = re.match(r'\w+(?:\s*\.\s*\w+)*', mask[match.end():])
+        if rhs:
+            assignments.append((match[1], re.sub(r'\s+', '', rhs[0]), match.end() + rhs.end()))
     for _ in range(len(assignments) + 1):
         prior = (set(info), set(aliases))
-        for match in assignments:
-            if re.match(r'\s*\[', mask[match.end():]):
+        for name, rhs, end in assignments:
+            if re.match(r'\s*\[', mask[end:]):
                 continue  # A subscript value is not an alias of the dictionary.
-            if match[2] in info:
-                info.add(match[1])
-            if match[2] in aliases or any(match[2] == name + '.environment' for name in info):
-                aliases.add(match[1])
+            if rhs in info:
+                info.add(name)
+            if rhs in aliases or any(rhs == owner + '.environment' for owner in info):
+                aliases.add(name)
         if prior == (info, aliases):
             break
     receivers = sorted(aliases | {name + '.environment' for name in info}, key=len, reverse=True)
-    pattern = r'(?<![\w.])(?:' + '|'.join(re.escape(name) for name in receivers) + r')\s*\['
+    pattern = r'(?<![\w.])(?:' + '|'.join(chain_pattern(name) for name in receivers) + r')\s*\['
     reads, writes, unresolved = set(), set(), set()
     scopes = _Scopes(source)
     loops = []
@@ -85,18 +109,24 @@ def discover(source, shared_constants=None):
             unresolved.add(unresolved_site('getenv:' + expression, match.start()))
         else:
             reads.add(key)
-    # Unrecognized environment access syntax must be reviewed, not silently lost.
-    for match in re.finditer(r'\bProcessInfo\s*\.\s*processInfo\s*\.\s*environment\b', mask):
+    # A following subscript is consumed only by the normalized receiver pattern.
+    # Other operations on a known environment dictionary require a named review.
+    dictionary_pattern = r'(?<![\w.])(?:' + '|'.join(chain_pattern(name) for name in receivers) + r')\b'
+    for match in re.finditer(dictionary_pattern, mask):
         rest = mask[match.end():]
         before = mask[max(0, match.start() - 200):match.start()]
-        if re.match(r'\s*\[', rest) or re.search(r'\b(?:let|var)\s+\w+(?:\s*:[^=\n]+)?\s*=\s*$', before):
+        if re.match(r'\s*\[', rest):
             continue
-        if re.match(r'\s*\.\s*merging\b', rest):
-            continue
-        unresolved.add(unresolved_site('<environment snapshot>', match.start()))
+        member = re.match(r'\s*\.\s*(\w+)', rest)
+        if member:
+            unresolved.add(unresolved_site('<environment member:' + member[1] + '>', match.start()))
+        elif '.' in re.sub(r'\s+', '', match[0]):
+            if re.search(r'\b(?:let|var)\s+\w+(?:\s*:[^=\n]+)?\s*=\s*$', before):
+                continue
+            unresolved.add(unresolved_site('<environment snapshot>', match.start()))
     for member in re.finditer(r'\.\s*environment\b', mask):
         prefix = mask[:member.start()]
-        known = any(re.search(re.escape(name).replace(r'\.', r'\s*\.\s*') + r'\s*$', prefix) for name in info)
+        known = any(re.search(chain_pattern(name) + r'\s*$', prefix) for name in info)
         if not known and not re.match(r'\s*=(?!=)', mask[member.end():]):
             unresolved.add(unresolved_site('<environment receiver>', member.start()))
     return reads, writes, unresolved
@@ -142,9 +172,34 @@ def has_setter(path, key, value=None):
                     return True
         return False
     if path.suffix in ('.yml', '.yaml'):
-        return any(re.match(r'\s*' + re.escape(key) + r':\s*[\'\"]?' + re.escape(value or '') + r'[\'\"]?\s*(?:#.*)?$', line)
-                   for line in source.splitlines())
-    # Human instructions count only when an executable command sets the value.
+        # Bounded workflow mapping traversal; ignore scalar run text/action inputs.
+        parents = []
+        scalar_indent = None
+        for line in source.splitlines():
+            if not line.strip() or line.lstrip().startswith('#'):
+                continue
+            indent = len(line) - len(line.lstrip())
+            if scalar_indent is not None and indent > scalar_indent:
+                continue
+            scalar_indent = None
+            while parents and indent <= parents[-1][0]:
+                parents.pop()
+            match = re.match(r"\s*(?:-\s+)?(['\"]?)([\w-]+)\1:\s*(.*?)\s*$", line)
+            if not match:
+                continue
+            name, setting = match[2], match[3].split(' #', 1)[0].strip()
+            ancestry = [entry[1] for entry in parents]
+            environment_scope = (ancestry == ['env'] or
+                                 len(ancestry) == 3 and ancestry[0] == 'jobs' and ancestry[-1] == 'env' or
+                                 len(ancestry) == 4 and ancestry[0] == 'jobs' and ancestry[-2:] == ['steps', 'env'])
+            if name == key and environment_scope and (value is None or setting.strip("'\"") == value):
+                return True
+            if setting.startswith(('|', '>')):
+                scalar_indent = indent
+            elif not setting or setting.startswith('#'):
+                parents.append((indent, name))
+        return False
+    # Supported shell forms have assignments before an actual swift/python command.
     blocks = re.findall(r'```(?:sh|bash|shell)\n(.*?)```', source, re.S) if path.suffix == '.md' else [source]
     for block in blocks:
         for line in block.splitlines():
@@ -152,8 +207,14 @@ def has_setter(path, key, value=None):
                 tokens = shlex.split(line, comments=True)
             except ValueError:
                 continue
-            if any(token == key + '=' + value if value is not None else token.startswith(key + '=') for token in tokens):
-                if 'swift' in tokens or 'python3' in tokens:
+            if tokens and tokens[0] == 'env':
+                tokens = tokens[1:]
+            settings = {}
+            while tokens and re.match(r'^[A-Za-z_][A-Za-z_0-9]*=', tokens[0]):
+                name, setting = tokens.pop(0).split('=', 1)
+                settings[name] = setting
+            if tokens and tokens[0] in ('swift', 'python3') and key in settings:
+                if value is None or settings[key] == value:
                     return True
     return False
 
@@ -168,15 +229,20 @@ def check(root, controls, special):
     used = set()
     shared = {}
     for path in (root / 'Tests').rglob('*.swift'):
-        for match in re.finditer(r'^(?:(?:public|package|internal) )?let (\w+)(?:\s*:\s*String)?\s*=\s*("[^"\n]*")', path.read_text(), re.M):
-            value = literal(match[2])
-            shared[match[1]] = value if match[1] not in shared or shared[match[1]] == value else None
+        source = path.read_text()
+        # Only file-level declarations may supply keys in a different source file.
+        values = string_constants(source)
+        for match in re.finditer(r'^(?:(?:public|package|internal) )?(?:let|var)\s+(\w+)\b', source, re.M):
+            name = match[1]
+            value = values.get(name)
+            shared[name] = value if name not in shared or shared[name] == value else None
     for path in sorted((root / 'Tests').rglob('*.swift')):
         relative = path.relative_to(root).as_posix()
         reads, _, unresolved = discover(path.read_text(), shared)
         for expression in unresolved:
             entry = special.get(relative, {}).get(expression)
-            if not entry or not entry.get('reason') or not entry.get('keys'):
+            if (not entry or not entry.get('reason') or not isinstance(entry.get('keys'), list)
+                    or entry.get('sourceSHA256') != hashlib.sha256(path.read_bytes()).hexdigest()):
                 issues.append(f'{relative}: unresolved environment access {expression}')
             else:
                 reads.update(entry['keys'])

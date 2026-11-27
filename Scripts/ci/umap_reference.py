@@ -69,14 +69,18 @@ def source_identity(root=ROOT):
     }
 
 
-def test_environment(inherited, context, directory, *, exact=True):
+def test_environment(inherited, context, directory, *, exact=True, profile=None):
     # Start from ordinary process prerequisites, not arbitrary test/provider controls.
     keep = {'PATH', 'HOME', 'TMPDIR', 'USER', 'LOGNAME', 'LANG', 'LC_ALL', 'DEVELOPER_DIR', 'SDKROOT'}
     env = {key: value for key, value in inherited.items() if key in keep}
     env.update(VECTORCORE_TEST_EXTENDED='0', VECTORCORE_STRICT_PERF='0', SWIFT_TESTING_ENABLED='1')
     if exact:
         env['VECTORCORE_UMAP_CHECK_BASELINE_BITS'] = '1'
-    env['VECTORCORE_UMAP_REFERENCE_CONTEXT'] = json.dumps(dict(context, directory=str(directory)))
+    child_context = dict(context, directory=str(directory))
+    if profile is not None:
+        child_context['oracle'] = {name: profile['words'][case['reference']]
+                                   for name, case in profile['cases'].items()}
+    env['VECTORCORE_UMAP_REFERENCE_CONTEXT'] = json.dumps(child_context)
     return env
 
 

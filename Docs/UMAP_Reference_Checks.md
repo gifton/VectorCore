@@ -52,7 +52,11 @@ tracked-execution condition in the earlier progress delivery.
 `UMAPReferenceAssertions.compare` always checks shape, finiteness and absolute
 tolerance. The runner sets `VECTORCORE_UMAP_CHECK_BASELINE_BITS=1` in the final
 Swift child environment, after removing inherited test/provider controls. Exact
-mode additionally requires actual Float words to equal the frozen words.
+mode passes the selected profile's per-case frozen words into the Swift child and
+requires equality before writing a receipt. Ordinary mode keeps the historical
+fixture tolerances; it does not substitute the selected profile's words.
+`UMAPReferenceProfileTests.alternateProfileSuppliesItsOwnWords` exercises both a
+one-word difference and a profile outside the historical tolerance.
 
 Each successful comparison writes a unique receipt containing the fresh run ID,
 configuration, profile/fixture identity, provider, logical case, count and actual

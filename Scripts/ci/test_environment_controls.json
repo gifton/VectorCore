@@ -72,6 +72,8 @@
     "S02_PROBE": {"kind": "internal", "owner": "Tests/ComprehensiveTests/VectorDispatchContractTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
     "SIZE_GUARD_CHILD": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
     "SIZE_GUARD_SHARED": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ReleaseSizeGuardTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "SWIFT_BACKTRACE": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
+    "SWIFT_TESTING_ENABLED": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
     "T10_LAUNCHER_SELF_TEST": {"kind": "internal", "owner": "Tests/ComprehensiveTests/ChildProbeLauncherTests.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
     "TRAP_CAPTURE_DIRECTORY": {"kind": "internal", "owner": "Scripts/ci/trap_guard_mutations.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
     "TRAP_OBSERVATION_CONTROL": {"kind": "internal", "owner": "Tests/ComprehensiveTests/TrapObservation.swift", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
@@ -83,7 +85,10 @@
     "VECTORCORE_STRICT_PERF": {"kind": "gate", "activation": "Docs/Test_Environment_Controls.md", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Evaluate performance predicates; controlled failures are expected in the gate fixture."},
     "VECTORCORE_TEST_EXTENDED": {"kind": "gate", "activation": ".github/workflows/benchmarks.yml", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Extended numerical/timing workloads in the manual benchmark workflow."},
     "VECTORCORE_UMAP_CHECK_BASELINE_BITS": {"kind": "gate", "activation": "Scripts/ci/umap_reference.py", "document": "Docs/Test_Environment_Controls.md", "value": "1", "scope": "Mandatory exact-reference runner only on its reviewed host profile."},
-    "VECTORCORE_UMAP_REFERENCE_CONTEXT": {"kind": "internal", "owner": "Scripts/ci/umap_reference.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."}
+    "VECTORCORE_UMAP_REFERENCE_CONTEXT": {"kind": "internal", "owner": "Scripts/ci/umap_reference.py", "scope": "Child-test selection, payload or output; set by the named tracked owner."},
+    "XCTestBundlePath": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
+    "XCTestConfigurationFilePath": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."},
+    "XCTestSessionIdentifier": {"kind": "system", "owner": "Swift test runtime / XCTest", "scope": "Child environment-preservation capture; not an external numerical gate."}
   },
   "dynamic": {
   "Tests/VectorCoreTestSupport/ChildProbeLauncher.swift": {
@@ -91,7 +96,111 @@
       "keys": [
         "VECTORCORE_CHILD_PROBE"
       ],
-      "reason": "Snapshot passed to refuseNestedChildProbeLaunch, which reads only the globally declared child marker."
+      "reason": "Snapshot passed to refuseNestedChildProbeLaunch, which reads only the globally declared child marker.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    },
+    "replaceMarkedChildProbe:<environment member:allSatisfy>": {
+      "keys": [],
+      "reason": "Validates environment strings for the execve representation, not feature selection.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    },
+    "replaceMarkedChildProbe:<environment member:map>": {
+      "keys": [],
+      "reason": "Serializes caller-supplied environment pairs for execve.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    },
+    "spawnChildProbeGroupLeader:<environment member:map>": {
+      "keys": [],
+      "reason": "Serializes caller-supplied environment pairs for posix_spawn.",
+      "sourceSHA256": "1d196b5c306c58b0455a615de357de9783d97781ec39a4fa0f9120ed50ce2161"
+    }
+  },
+  "Tests/BenchmarkContractTests/RunnerContractTests.swift": {
+    "testProcessFixture:<environment member:filter>": {
+      "keys": [
+        "ASAN_OPTIONS",
+        "TSAN_OPTIONS",
+        "SWIFT_BACKTRACE",
+        "DYLD_LIBRARY_PATH",
+        "DYLD_FRAMEWORK_PATH",
+        "VECTORCORE_TEST_EXTENDED",
+        "VECTORCORE_STRICT_PERF",
+        "VECTORCORE_CHILD_PROBE",
+        "SWIFT_TESTING_ENABLED",
+        "XCTestConfigurationFilePath",
+        "XCTestSessionIdentifier",
+        "XCTestBundlePath"
+      ],
+      "reason": "Captures only the named environment fields for the child environment-preservation assertion.",
+      "sourceSHA256": "93e615e03c543070fc39105e437e1c450f73b1a58a3c9c32160252ab4f6e2029"
+    },
+    "testProcessFixture:<environment member:merge>": {
+      "keys": [],
+      "reason": "Forwards a decoded explicit child environment into the marked child process; no new feature selection here.",
+      "sourceSHA256": "93e615e03c543070fc39105e437e1c450f73b1a58a3c9c32160252ab4f6e2029"
+    },
+    "runFixture:<environment member:merge>": {
+      "keys": [],
+      "reason": "Merges caller-supplied child environment before launching the fixture.",
+      "sourceSHA256": "93e615e03c543070fc39105e437e1c450f73b1a58a3c9c32160252ab4f6e2029"
+    }
+  },
+  "Tests/ComprehensiveTests/AutoTuningConcurrencyTests.swift": {
+    "runChild:<environment member:removeValue>": {
+      "keys": [],
+      "reason": "Removes autotuning overrides before the child scenario sets its own values.",
+      "sourceSHA256": "2f15bb33b31d3a396bb9ea82dbf051501e68969243d89da40d389cc63d4281e1"
+    },
+    "runChild:<environment member:filter>": {
+      "keys": [],
+      "reason": "Copies matching environment entries into diagnostic metadata only.",
+      "sourceSHA256": "2f15bb33b31d3a396bb9ea82dbf051501e68969243d89da40d389cc63d4281e1"
+    }
+  },
+  "Tests/ComprehensiveTests/FP16DiagnosticsBoundaryTests.swift": {
+    "runChild:<environment member:filter>": {
+      "keys": [],
+      "reason": "Copies diagnostic sanitizer/loader entries into metadata only.",
+      "sourceSHA256": "63a329c555da97e94dda32bf24ae4142688c99697f11a6eb762c4285b2a1618c"
+    }
+  },
+  "Tests/ComprehensiveTests/P01RedSupport.swift": {
+    "p01RunChild:<environment member:removeValue>": {
+      "keys": [],
+      "reason": "Removes caller-selected override prefixes before child execution.",
+      "sourceSHA256": "92ccd81d9a4be39e169716ed834a48d02b47a41c19d92e92868e3a1bab84436c"
+    },
+    "p01RunChild:<environment member:keys>": {
+      "keys": [],
+      "reason": "Enumerates keys only to remove caller-selected overrides before child execution.",
+      "sourceSHA256": "92ccd81d9a4be39e169716ed834a48d02b47a41c19d92e92868e3a1bab84436c"
+    }
+  },
+  "Tests/ComprehensiveTests/CollectionDestructionContractTests.swift": {
+    "destructionCanReenter:<environment member:merging>": {
+      "keys": [
+        "F002_DESTRUCTION"
+      ],
+      "reason": "Adds the explicitly classified destruction child selector.",
+      "sourceSHA256": "11591d0877052c85687df6a8e54fbdda4f40dab9c4b85b7d7dd2d7d10febbb65"
+    }
+  },
+  "Tests/ComprehensiveTests/TuningInputBoundaryTests.swift": {
+    "invalidTuningRejectsAtConstruction:<environment member:merging>": {
+      "keys": [
+        "F008_INVALID_TUNING"
+      ],
+      "reason": "Adds the explicitly classified tuning child selector.",
+      "sourceSHA256": "fece6494673536a58e9b7cde0b5ec16e1ed14adbb07db3a262851516a5339a45"
+    }
+  },
+  "Tests/ComprehensiveTests/UnsafeMemoryContractTests.swift": {
+    "invalidInputsRejectInBoundedChildren:<environment member:merging>": {
+      "keys": [
+        "O04_INVALID"
+      ],
+      "reason": "Adds the explicitly classified unsafe-memory child selector and disables child crash backtraces.",
+      "sourceSHA256": "02ffb2a33c5cf27a0150a27b1162ed2aa7a3d81818242db4b8ac4eeba8682365"
     }
   }
 }

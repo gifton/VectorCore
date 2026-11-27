@@ -119,5 +119,15 @@ class ReferenceRunnerTests(unittest.TestCase):
         self.assertEqual(json.loads(child['VECTORCORE_UMAP_REFERENCE_CONTEXT'])['directory'], str(self.directory))
 
 
+    def test_selected_oracle_is_sent_to_the_exact_child(self):
+        self.profile['words'][self.profile['cases']['default-coefficients']['reference']][0] ^= 1
+        child = self.module.test_environment({}, self.context, self.directory, profile=self.profile)
+        context = json.loads(child['VECTORCORE_UMAP_REFERENCE_CONTEXT'])
+        self.assertEqual(set(context['oracle']), set(self.profile['cases']))
+        for name, case in self.profile['cases'].items():
+            self.assertEqual(context['oracle'][name], self.profile['words'][case['reference']])
+        with self.assertRaisesRegex(ValueError, 'words'):
+            self.validate()
+
 if __name__ == '__main__':
     unittest.main()
